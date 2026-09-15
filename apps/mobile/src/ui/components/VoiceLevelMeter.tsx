@@ -5,12 +5,14 @@ import { computeVoiceLevelBarHeights, type VoiceLevelMeterSize } from './VoiceLe
 
 export function VoiceLevelMeter({
   level,
-  size
+  size,
+  onAction = false
 }: {
+  readonly onAction?: boolean;
   readonly level: number;
   readonly size: VoiceLevelMeterSize;
 }) {
-  const styles = createStyles(useAppearanceAwarePalette());
+  const styles = createStyles(useAppearanceAwarePalette(), onAction);
   const heights = computeVoiceLevelBarHeights(level, size);
   return (
     <View
@@ -32,10 +34,10 @@ export function VoiceLevelMeter({
   );
 }
 
-function createStyles(colors: MobileColorPalette) {
+function createStyles(colors: MobileColorPalette, onAction: boolean) {
   return StyleSheet.create({
   bar: {
-    backgroundColor: colors.onAction,
+    backgroundColor: onAction ? colors.onAction : colors.action,
     borderRadius: 2,
     opacity: 0.86
   },

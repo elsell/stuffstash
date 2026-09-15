@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { ExpirationField } from './ExpirationField';
@@ -24,30 +25,32 @@ it('preserves month precision, reports incomplete input, and clears explicitly',
   } finally { await harness.unmount(); }
 });
 
-it('does not change the date when the picker is cancelled', async () => {
+it('does not change the Android date when the system picker is cancelled', async () => {
   const harness = new MobileRenderHarness();
   const changes: unknown[] = [];
+  const platform = Platform.OS; Platform.OS = 'android';
   try {
     await harness.render(<ExpirationField initialValue={{ date: '2028-02-29', precision: 'day' }} initialPickerDate={new Date(2028, 0, 1)} onChange={(value) => changes.push(value)} />);
     await harness.press(harness.byLabel('Expiration'));
     await harness.press(harness.byLabel('Choose expiration date'));
     await harness.run(() => harness.byType('NativeDatePicker')?.props.onChange({ type: 'dismissed' }));
     expect(changes).toEqual([]);
-  } finally { await harness.unmount(); }
+  } finally { await harness.unmount(); Platform.OS = platform; }
 });
 
-it('commits the chosen local calendar day only after confirmation and retains precision drafts', async () => {
+it('edits the iOS date draft directly through the native picker and retains precision drafts', async () => {
   const harness = new MobileRenderHarness();
   const changes: unknown[] = [];
   try {
     await harness.render(<ExpirationField initialPickerDate={new Date(2028, 0, 1)} onChange={(value) => changes.push(value)} />);
     await harness.press(harness.byLabel('Expiration'));
-    await harness.press(harness.byLabel('Choose expiration date'));
-    await harness.run(() => harness.byType('NativeDatePicker')?.props.onChange({ type: 'set' }, new Date(2028, 1, 29, 12)));
     expect(changes).toEqual([]);
-    await harness.press(harness.byLabel('Use expiration date'));
+    await harness.press(harness.byLabel('Add expiration date'));
+    expect(changes.at(-1)).toEqual({ date: '2028-01-01', precision: 'day' });
+    await harness.run(() => harness.byType('NativeDatePicker')?.props.onChange({ type: 'set' }, new Date(2028, 1, 29, 12)));
     expect(changes.at(-1)).toEqual({ date: '2028-02-29', precision: 'day' });
-    expect(harness.byLabel('Choose expiration date')?.props.accessibilityValue).toEqual({ text: '2028-02-29' });
+    expect(harness.byLabel('Use expiration date')).toBeUndefined();
+    expect(harness.byType('NativeDatePicker')).toBeDefined();
     await harness.change(harness.byType('NativeSegmentedControl'), 'Month and year');
     expect(changes.at(-1)).toEqual({ date: '2028-02', precision: 'month' });
     await harness.change(harness.byType('NativeSegmentedControl'), 'Exact date');
@@ -67,5 +70,19 @@ it('does not revive a removed expiration when changing precision', async () => {
     await harness.press(harness.byLabel('Expiration'));
     await harness.change(harness.byType('NativeSegmentedControl'), 'Exact date');
     expect(value).toBeUndefined();
+  } finally { await harness.unmount(); }
+});
+
+it('ignores a native date change arriving after the editor becomes disabled', async () => {
+  const harness = new MobileRenderHarness(); const changes: unknown[] = [];
+  const form = (disabled: boolean) => <ExpirationField disabled={disabled}
+    initialValue={{ date: '2028-02-29', precision: 'day' }} initialPickerDate={new Date(2028, 0, 1)}
+    onChange={value => changes.push(value)} />;
+  try {
+    await harness.render(form(false));
+    await harness.press(harness.byLabel('Expiration'));
+    await harness.render(form(true));
+    await harness.run(() => harness.byType('NativeDatePicker')?.props.onChange({ type: 'set' }, new Date(2028, 2, 1)));
+    expect(changes).toEqual([]);
   } finally { await harness.unmount(); }
 });

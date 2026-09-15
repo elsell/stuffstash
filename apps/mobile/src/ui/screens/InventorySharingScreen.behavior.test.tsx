@@ -57,3 +57,30 @@ it('hides cached invitations after denial and cancels a departed scope read', as
     await h.render(view(scope, false)); expect(signal?.aborted).toBe(true);
   } finally { await h.unmount(); }
 });
+
+it('chooses access in place and preserves the submitted draft while creation fails', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let rejectCreate: ((error: Error) => void) | undefined;
+  const submitted: { email: string; relationship: string }[] = [];
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [] }),
+    create: async (_scope, input) => { submitted.push(input); return new Promise((_resolve, reject) => { rejectCreate = reject; }); },
+    cancel: async () => undefined
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h);
+    await h.press(h.byLabel('Choose invitation access'));
+    await h.press(h.byLabel('Editor'));
+    await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+    await h.press(h.byLabel('Create Invitation'));
+    expect(submitted).toEqual([{ email: 'friend@example.test', relationship: 'editor' }]);
+    expect(h.byLabel('Invitee email')?.props.editable).toBe(false);
+    expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(true);
+    await h.changeText(h.byLabel('Invitee email'), 'replacement@example.test');
+    await h.run(() => rejectCreate?.(new Error('offline')));
+    expect(h.byLabel('Invitee email')?.props.value).toBe('friend@example.test');
+    expect(h.byLabel('Invitee email')?.props.editable).toBe(true);
+    expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(false);
+  } finally { await h.unmount(); client.clear(); }
+});

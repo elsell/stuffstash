@@ -1,10 +1,30 @@
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
+import { setScreenFocused } from '../../test-support/navigation';
 import { NotificationInboxQueries } from '../../application/notifications/NotificationInboxQueries';
 import type { ExpirationNotification } from '../../domain/notifications/Notification';
 import { NotificationInboxScreen } from './NotificationInboxScreen';
 const alert: ExpirationNotification = { id: 'notice', assetId: 'item', title: 'Tylenol', parentAssetId: 'bin', customAssetTypeId: 'medicine', expiration: { date: '2027-02', precision: 'month' }, milestone: 'upcoming', createdAt: '2027-01-01T00:00:00Z' };
+it('clears a pending inbox pull indicator when navigating away and returning', async () => {
+  const h = new MobileRenderHarness(); let reads = 0; let finish!: () => void;
+  const queries = {
+    async list() { if (++reads > 1) await new Promise<void>(resolve => { finish = resolve; }); return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+    async open() { return 'item'; }, async setRead() {}, async markAllRead() {}
+  };
+  const refresh = () => h.byType('ScrollView')?.props.refreshControl as React.ReactElement<{ refreshing: boolean; onRefresh: () => void }>;
+  try {
+    await h.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => {}} onChanged={() => {}} onSettings={() => {}} />);
+    await h.settle();
+    await h.run(() => { refresh().props.onRefresh(); });
+    expect(refresh().props.refreshing).toBe(true);
+    await h.run(() => setScreenFocused(false));
+    expect(refresh().props.refreshing).toBe(false);
+    await h.run(() => setScreenFocused(true));
+    expect(refresh().props.refreshing).toBe(false);
+    await h.run(() => finish());
+  } finally { await h.unmount(); setScreenFocused(true); }
+});
 it('shows a calendar month and opens only the currently resolved item after marking read', async () => {
   const events: string[] = [];
   const queries = new NotificationInboxQueries({

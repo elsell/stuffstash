@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useCustomizationReads } from '../serverState/useCustomizationReads';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -38,7 +39,6 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
   const [context, setContext] = useState<Awaited<ReturnType<CustomizationContextQuery['execute']>>>();
   const [collection, setCollection] = useState<CustomizationCollectionState<Row>>({ lifecycle: 'active', rows: [] });
   const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'denied'>('loading');
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [incomplete, setIncomplete] = useState(false);
   const { lifecycle, pendingLifecycle, rows } = collection;
@@ -65,7 +65,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
 
   const load = useCallback(async (refresh = false, targetLifecycle = lifecycle) => {
     const request = ++requestRef.current;
-    if (refresh) setRefreshing(true); else if (rows.length === 0) setStatus('loading');
+    if (!refresh && rows.length === 0) setStatus('loading');
     try {
       if (refresh) await reads.invalidateResource();
       const nextContext = await contextQuery.execute();
@@ -96,10 +96,12 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       }
       if (rows.length) { feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: safeCustomizationMessage(error, 'Try again.') }); setCollection(rollbackLifecycleTransition); setStatus('ready'); }
       else setStatus('error');
-    } finally { if (request === requestRef.current) setRefreshing(false); }
+    }
   }, [accessPolicy, contextQuery, feedback, kind, lifecycle, query, rows.length, scope]);
 
   useEffect(() => { void load(); return () => { requestRef.current += 1; }; }, [reads.ownerKey]);
+
+  const { refreshing, refresh } = usePullRefresh(() => load(true));
 
   const canEdit = context && accessPolicy.canMutate(context, kind, scope);
   const filtered = useMemo(() => rows.filter((row) => row.displayName.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())), [rows, search]);
@@ -109,11 +111,11 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
   if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return <DeniedSettingsState message="You don’t have permission to view these settings." />;
   if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return <SettingsLoadingRow label="Loading settings…" />;
   if (status === 'loading') return <View style={settings.styles.shell}><View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View></View>;
-  if (status === 'error') return <View style={[settings.styles.shell, settings.styles.errorContainer]}><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><Pressable accessibilityRole="button" onPress={() => void load()} style={settings.styles.retryButton}><Text style={settings.styles.retryText}>Retry</Text></Pressable></View>;
+  if (status === 'error') return <ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><Pressable accessibilityRole="button" onPress={() => void load()} style={settings.styles.retryButton}><Text style={settings.styles.retryText}>Retry</Text></Pressable></ScrollView>;
   if (status === 'denied') return <DeniedSettingsState message="You don’t have permission to view these settings." />;
   if (!context) return null;
 
-  return <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.action} />} style={settings.styles.shell}>
+  return <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />} style={settings.styles.shell}>
     <View style={[styles.toolbar, settings.styles.contentBlock]}>
       <View style={styles.searchShell}><Search color={colors.textMuted} size={18} /><AppTextInput accessibilityLabel={`Search ${plural(kind)}`} onChangeText={setSearch} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`} placeholderTextColor={colors.textMuted} style={styles.searchInput} value={search} /></View>
       {canEdit && lifecycle === 'active' ? <Pressable accessibilityLabel={`Add ${singular(kind)}`} accessibilityRole="button" onPress={onAdd} style={styles.addButton}><Plus color={colors.onAction} size={19} /><Text style={styles.addText}>Add</Text></Pressable> : null}

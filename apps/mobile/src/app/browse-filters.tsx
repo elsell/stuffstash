@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ScrollView, ActivityIndicator, Text, View } from 'react-native';
 import { useAppServices } from '../ui/navigation/AppServicesContext';
 import { useMobileServerStateScope } from '../ui/navigation/MobileServerStateProvider';
 import { mobileQueryKeys } from '../adapters/serverState/MobileQueryClient';
@@ -32,11 +32,11 @@ export default function BrowseFiltersRoute() {
     queryFn: ({ signal }) => loadBrowseFilterTags(target, scope.scopeId, () => scope.loadInventoryScope({ signal }), () => services.inventoryAssetTagsQuery.execute({ signal }))
   });
   const matches = identity.data && target.sessionScope === scope.scopeId && target.tenantId === identity.data.tenantId && target.inventoryId === identity.data.inventoryId;
-  if (choices.isError || identity.isError || (identity.data && !matches)) return <View style={styles.shell}>
+  if (choices.isError || identity.isError || (identity.data && !matches)) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic">
     <Text accessibilityRole="alert" style={styles.errorMessage}>Filters are unavailable for this inventory.</Text>
     <SettingsActionRow label="Retry" onPress={() => { void identity.refetch(); void choices.refetch(); }} />
     <SettingsActionRow label="Cancel" onPress={dismiss} />
-  </View>;
+  </ScrollView>;
   if (!choices.data || !matches) return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading filters" color={palette.action} /></View>;
   return <View style={{ flex: 1, backgroundColor: palette.background }}>
     {error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text> : null}

@@ -127,11 +127,14 @@ export function mapLocation(
 ): LocationSummary {
   const children = assets.filter((asset) => asset.parentAssetId === location.id);
   const recentChildren = sortAssetsByUpdatedDesc(children).slice(0, 3);
+  const ancestors = ancestorTrail(location, assets);
 
   return {
     id: assetId(location.id),
     inventoryId: inventoryId(location.inventoryId),
     title: location.title,
+    parentLocationTrail: ancestors.map(ancestor => ({ id: assetId(ancestor.id), title: ancestor.title })),
+    parentLocationTrailIncomplete: !!(ancestors[0] ?? location).parentAssetId,
     description: location.description || 'Location asset',
     containedAssetCount: children.length,
     recentAssetTitles: recentChildren.map((asset) => asset.title),

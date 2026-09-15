@@ -3,10 +3,14 @@ type AlertRecord = { readonly title: string; readonly message?: string; readonly
 const alerts: AlertRecord[] = [];
 const focusHandles: unknown[] = [];
 const focusedInputs: string[] = [];
+let animationStarts = 0;
 let keyboardDismissals = 0;
 let keyboardVisible = false;
 const keyboardListeners = new Map<string, Set<() => void>>();
 const accessibilityListeners = new Map<string, Set<(enabled: boolean) => void>>();
+let reduceMotionEnabled = false;
+let screenReaderEnabled = false;
+const announcements: string[] = [];
 let darkerSystemColorsEnabled = false;
 let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
@@ -57,7 +61,9 @@ export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>(
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
 export const AccessibilityInfo = {
-  isReduceMotionEnabled: async () => false,
+  isReduceMotionEnabled: async () => reduceMotionEnabled,
+  isScreenReaderEnabled: async () => screenReaderEnabled,
+  announceForAccessibility(message: string) { announcements.push(message); },
   addEventListener(event: string, listener: (enabled: boolean) => void) {
     const listeners = accessibilityListeners.get(event) ?? new Set<(enabled: boolean) => void>();
     listeners.add(listener);
@@ -96,12 +102,17 @@ class AnimatedValue {
   interpolate() { return this.value; }
 }
 const animation = (value?: AnimatedValue, options?: { toValue: number }) => ({
-  start(callback?: (result: { finished: boolean }) => void) { if (value && options) value.setValue(options.toValue); callback?.({ finished: true }); }
+  stop() {},
+  start(callback?: (result: { finished: boolean }) => void) { animationStarts += 1; if (value && options) value.setValue(options.toValue); callback?.({ finished: true }); }
 });
 export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: (value: AnimatedValue, factor: number) => ({ value, factor }), parallel: animation, spring: animation, timing: animation };
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  reduceMotionEnabled = false;
+  screenReaderEnabled = false;
+  announcements.length = 0;
+  animationStarts = 0;
   alerts.length = 0;
   focusHandles.length = 0;
   focusedInputs.length = 0;
@@ -136,3 +147,15 @@ export function setSystemColorSchemeForTest(colorScheme: 'light' | 'dark') {
   systemColorScheme = colorScheme;
 }
 import { createElement, forwardRef, useImperativeHandle, type ReactNode } from 'react';
+
+export function setScreenReaderEnabledForTest(enabled: boolean) {
+  screenReaderEnabled = enabled;
+  accessibilityListeners.get('screenReaderChanged')?.forEach(listener => listener(enabled));
+}
+export function setReduceMotionEnabledForTest(enabled: boolean) {
+  reduceMotionEnabled = enabled;
+  accessibilityListeners.get('reduceMotionChanged')?.forEach(listener => listener(enabled));
+}
+export function accessibilityAnnouncements() { return [...announcements]; }
+
+export function animationStartCount() { return animationStarts; }

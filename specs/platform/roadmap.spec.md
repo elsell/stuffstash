@@ -23,15 +23,24 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
-The 2026-09-14 platform interaction audit updates the UI design skill to select
-appropriate platform patterns before components. See
-`specs/platform/platform-interaction-review.spec.md` and
-`docs/reports/platform-ui-audit-2026-09-14.md`. Prioritize draft recovery and
-switcher reachability, then short-choice selection, shared refresh presentation,
-toolbar consistency and accessibility. This is a source/design audit; native and
-browser acceptance evidence remains pending. Remediation is not yet implemented.
-The latest released Home refresh/header fix is 0.24.9 (96.1); the separately
-requested Add/Notifications/Profile reorder is merged in PR 124.
+The user now authorizes full mobile audit **and remediation**, beyond the previous
+source-only report. Follow `specs/platform/mobile-comprehensive-ui-audit.spec.md`
+and the surface/axis ledger under `docs/reports/mobile-ui-remediation-2026-09-14/`.
+Completion requires tracking every applicable cell and confirmed finding; do not
+close the effort after only fixing the original ten audit examples.
+
+
+The UI design skill now chooses platform patterns before components. Remediation
+is underway in PR 127, with 136 surfaces and 24 axes tracked individually. The
+remote mobile suite passes 1,372 tests at the pending asset-operation fix; source
+checks are not native acceptance. Native macOS runner fixtures have verified
+selected menu, date and feedback scenarios, but expiration sheet expansion and
+Add launch still fail. Keyboard readiness had a test-procedure error now corrected
+for a later run. Continue the source audit, native diagnosis, Android runtime
+coverage, and TestFlight release. On September 15 the user requested an interim
+TestFlight release of the current fixes while this audit continues. This milestone
+does not certify the full audit: retain the native failures and unreviewed cells,
+publish release notes, and continue remediation after delivery.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "task",
+    "axis": "Task clarity and platform-pattern fit"
+  },
+  {
+    "id": "navigation",
+    "axis": "Navigation, hierarchy and return"
+  },
+  {
+    "id": "selection",
+    "axis": "Value selection and current value"
+  },
+  {
+    "id": "modality",
+    "axis": "Presentation and dismissal"
+  },
+  {
+    "id": "layout",
+    "axis": "Safe areas, scroll edges and overlays"
+  },
+  {
+    "id": "adaptation",
+    "axis": "Phone/tablet/window reflow"
+  },
+  {
+    "id": "typography",
+    "axis": "Dynamic Type, wrapping and legibility"
+  },
+  {
+    "id": "appearance",
+    "axis": "Light/dark, contrast and materials"
+  },
+  {
+    "id": "localization",
+    "axis": "Locale, timezone, RTL and long strings"
+  },
+  {
+    "id": "imagery",
+    "axis": "Icons, photos and missing media"
+  },
+  {
+    "id": "targets",
+    "axis": "Touch target size and reachability"
+  },
+  {
+    "id": "gestures",
+    "axis": "Gestures and explicit alternatives"
+  },
+  {
+    "id": "keyboard",
+    "axis": "Keyboard, text entry and focus"
+  },
+  {
+    "id": "accessibility",
+    "axis": "VoiceOver/TalkBack names, roles, states and order"
+  },
+  {
+    "id": "motion",
+    "axis": "Reduced motion and feedback alternatives"
+  },
+  {
+    "id": "content",
+    "axis": "Lists, hierarchy, density and pagination"
+  },
+  {
+    "id": "search",
+    "axis": "Search, scope and filters"
+  },
+  {
+    "id": "loading",
+    "axis": "Loading, background refresh and progress"
+  },
+  {
+    "id": "recovery",
+    "axis": "Empty, error, denied and retry"
+  },
+  {
+    "id": "editing",
+    "axis": "Draft, save, cancel, undo and interruption"
+  },
+  {
+    "id": "privacy",
+    "axis": "Account scope, data use and permissions"
+  },
+  {
+    "id": "notifications",
+    "axis": "System notification entry and state"
+  },
+  {
+    "id": "media",
+    "axis": "Camera, library, files and audio"
+  },
+  {
+    "id": "lifecycle",
+    "axis": "Cold/warm start, blur, background and deep link"
+  }
+]

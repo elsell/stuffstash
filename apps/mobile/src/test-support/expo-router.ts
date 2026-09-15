@@ -1,7 +1,7 @@
 import { fakeNavigation, getScreenFocused, subscribeScreenFocus } from './navigation';
-import { useEffect, useSyncExternalStore } from 'react';
+import { createElement, Fragment, useEffect, useSyncExternalStore } from 'react';
 export function useNavigation() { return fakeNavigation; }
-export const Stack = { Screen: ({ options }: { options?: { headerRight?: () => import('react').ReactNode } }) => { useEffect(() => { fakeNavigation.setOptions(options); }, [options]); return options?.headerRight?.() ?? null; } };
+export const Stack = { Screen: ({ options }: { options?: { headerRight?: () => import('react').ReactNode; headerLeft?: () => import('react').ReactNode } }) => { useEffect(() => { fakeNavigation.setOptions(options); }, [options]); return createElement(Fragment, null, options?.headerLeft?.(), options?.headerRight?.()); } };
 export function useFocusEffect(effect: () => void | (() => void)) {
   const focused = useSyncExternalStore(subscribeScreenFocus, getScreenFocused);
   useEffect(() => focused ? effect() : undefined, [effect, focused]);

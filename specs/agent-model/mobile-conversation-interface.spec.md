@@ -102,3 +102,27 @@ approval/cancellation and staged-photo metadata as an initial-turn proposal.
 Exactly one decision is sent; completion settles the active turn. Socket errors
 and invalid response frames must reject the active follow-up and clear review
 availability, even when the initial turn's promise has already completed.
+
+### Voice accessory and composer audit corrections
+
+Recording-level indicators outside an action button use the semantic action
+foreground against the surface; indicators inside an action button use its
+on-action foreground. Do not reuse an on-action color on an unrelated background.
+The voice accessory's status target includes the complete presentation title and
+subtitle in its accessible name, even when its compact visible text truncates.
+These label/color corrections require native light/dark and assistive-technology
+review; source checks alone do not certify their runtime presentation.
+
+The composer presents one primary command at a time: Record for an empty draft,
+Send for typed text or a completed recording, and a native icon-only Cancel
+command while a cancellable request is processing. Use the familiar stop-square
+symbol with the accessible name “Cancel request”; do not squeeze a text label
+into an icon-sized frame or show an additional disabled Send command. During a
+non-cancellable action-plan commit, preserve its owned progress and expose no
+misleading cancellation action. Native command targets remain at least 48 points.
+
+Draft-photo review presents native Add photos and numbered Remove photo commands.
+Each Remove command identifies and removes only its associated draft attachment;
+other command rows and attachments remain unchanged. Read-only review preserves
+previews and hides editing commands. Keep the explanation that attachments are
+sent after approval. Retry photos uses a comfortably sized native command.

@@ -1,5 +1,7 @@
+import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack } from 'expo-router';
-import { CheckCheck, Settings, Mail, MailOpen } from 'lucide-react-native';
+import { Mail, MailOpen } from 'lucide-react-native';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useEffect, useRef, useState } from 'react';
@@ -25,7 +27,6 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const [cursor, setCursor] = useState<string | null>(null);
   const [locallyRead, setLocallyRead] = useState<ReadonlySet<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const pending = useRef(false);
@@ -52,12 +53,9 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     setCursor(page.pagination.hasMore ? page.pagination.nextCursor : null); setLoaded(true); setFilter(selected);
   }
   function load(selected: Filter, after?: string) { return run((signal) => fetchPage(selected, signal, after), 'Notifications could not be loaded. Try refreshing.'); }
-  async function refresh() {
-    if (pending.current) return;
-    setRefreshing(true);
-    try { await load(filter); }
-    finally { if (mounted.current) setRefreshing(false); }
-  }
+  const { refreshing, refresh } = usePullRefresh(async () => {
+    if (!pending.current) await load(filter);
+  });
   function open(row: ExpirationNotification) {
     return run(async (signal) => {
       const assetId = await queries.open(tenantId, inventoryId, row.id, { signal });
@@ -87,10 +85,10 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   }
   const button = (label: string, action: () => void, disabled = busy) => <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={action} style={[styles.button, { borderColor: colors.controlBorder, opacity: disabled ? 0.5 : 1 }]}><Text style={{ color: colors.text }}>{label}</Text></Pressable>;
   return <>
-    <Stack.Screen options={{ title: 'Notifications', headerRight: () => <View style={{ flexDirection: 'row' }}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Mark all read" disabled={busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id)))} onPress={() => void markAll()} style={styles.toolbarButton}><CheckCheck size={22} color={colors.action} /></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Reminder settings" onPress={onSettings} style={styles.toolbarButton}><Settings size={22} color={colors.action} /></Pressable>
-    </View> }} />
+    <Stack.Screen options={{ title: 'Notifications', ...nativeHeaderActionOptions([
+      { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
+      { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
+    ]) }} />
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />}>
     <NativeSegmentedControl colors={colors} value={filter} disabled={busy} segments={[{ label: 'All', value: 'all' }, { label: 'Unread', value: 'unread' }]} onChange={(value) => void load(value)} />
 
@@ -117,7 +115,6 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md }, heading: { fontSize: 24, fontWeight: '700' }, title: { fontSize: 18, fontWeight: '600' },
   actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 44, gap: spacing.sm },
-  toolbarButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   button: { minHeight: 44, padding: spacing.sm, justifyContent: 'center' }
 });

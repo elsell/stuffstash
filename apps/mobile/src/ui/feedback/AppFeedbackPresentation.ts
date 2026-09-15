@@ -13,7 +13,7 @@ export type AppNoticePresentation = {
   readonly accessibilityLabel: string;
   readonly backgroundColor: string;
   readonly borderColor: string;
-  readonly durationMs: number;
+  readonly durationMs: number | null;
   readonly message?: string;
   readonly textColor: string;
   readonly title: string;
@@ -31,7 +31,7 @@ export function buildAppNoticePresentation(
     accessibilityLabel: [title, message].filter(Boolean).join('. '),
     backgroundColor: palette.backgroundColor,
     borderColor: palette.borderColor,
-    durationMs: input.actionLabel ? 6500 : 4200,
+    durationMs: input.actionLabel || input.tone === 'warning' || input.tone === 'error' ? null : 4200,
     message,
     textColor: palette.textColor,
     title

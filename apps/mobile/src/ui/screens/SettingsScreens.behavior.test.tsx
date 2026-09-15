@@ -1,5 +1,7 @@
-import { ProviderProfileListScreen } from './ProviderProfileScreens';
+import { ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
+import { AppearanceProvider } from '../theme/AppearanceContext';
+import { AppearancePreferenceController, type AppearancePreference } from '../../application/settings/AppearancePreference';
 import { describe, expect, it } from 'vitest';
 import { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
 import type {
@@ -26,6 +28,7 @@ import {
 import { SettingsScreen } from './SettingsScreen';
 import {
   ProviderCredentialScreen,
+  ProviderPromptScreen,
   VoiceCapabilityScreen
 } from './VoiceSettingsScreens';
 
@@ -54,9 +57,28 @@ describe('mounted Settings behavior', () => {
   it('orders appearance choices and marks the selected radio', async () => {
     const { harness } = await mount(<AppearanceSettingsScreen />);
     try {
+      await harness.press(harness.byLabel('Choose appearance'));
       const choices = harness.allByType('Pressable').filter((node) => node.props.accessibilityRole === 'radio');
-      expect(choices.map((node) => node.props.accessibilityLabel)).toEqual(['System appearance', 'Light appearance', 'Dark appearance']);
+      expect(choices.map((node) => node.props.accessibilityLabel)).toEqual(['System', 'Light', 'Dark']);
       expect(choices.map((node) => node.props.accessibilityState)).toEqual([{ checked: true }, { checked: false }, { checked: false }]);
+    } finally { await harness.unmount(); }
+  });
+  it('changes appearance in place and restores the saved choice after persistence failure', async () => {
+    let saved: AppearancePreference = 'system'; let fail = false;
+    const controller = new AppearancePreferenceController({ load: async () => saved, save: async next => { if (fail) throw new Error('Storage unavailable'); saved = next; } });
+    const navigation: string[] = [];
+    const { harness } = await mount(<AppearanceProvider controller={controller}><SettingsScreen settingsQuery={settingsQuery()} onNavigate={destination => navigation.push(destination)} /></AppearanceProvider>);
+    try {
+      await harness.press(harness.byLabel('Choose appearance'));
+      await harness.press(harness.byLabel('Dark'));
+      expect(saved).toBe('dark'); expect(navigation).toEqual([]);
+      fail = true;
+      await harness.press(harness.byLabel('Choose appearance'));
+      await harness.press(harness.byLabel('Light'));
+      expect(saved).toBe('dark'); expect(navigation).toEqual([]);
+      expect(harness.byText('Appearance not saved')).toBeDefined();
+      await harness.press(harness.byLabel('Choose appearance'));
+      expect(harness.byLabel('Dark')?.props.accessibilityState.checked).toBe(true);
     } finally { await harness.unmount(); }
   });
   it.each(['signOut', 'server'] as const)('confirms %s and reports a rejected action', async (kind) => {
@@ -135,12 +157,16 @@ describe('mounted voice settings actions', () => {
 
 class FakeProviderRepository implements ProviderProfileRepository {
   readonly profile = profile({});
+  extraProfiles: ProviderProfileSummary[] = [];
+  pendingSelection?: Promise<VoiceProviderConfiguration>;
+  selectionInputs: UpdateVoiceProviderConfigurationInput[] = [];
   readonly configuration: VoiceProviderConfiguration;
   credentialInputs: ReplaceProviderProfileCredentialInput[] = [];
   lifecycleCalls: Array<{ id: string; action: ProviderProfileLifecycleAction }> = [];
   testCalls: string[] = [];
   pendingAction?: Promise<ProviderProfileSummary | ProviderProfileTestResult>;
   pendingCredential?: Promise<ProviderProfileSummary>;
+  pendingPrompt?: Promise<ProviderProfileSummary>;
 
   constructor(voiceSlot = slot('none')) {
     this.configuration = {
@@ -148,11 +174,11 @@ class FakeProviderRepository implements ProviderProfileRepository {
       profileIds: { languageInference: voiceSlot.selectedProfileId }, slots: [voiceSlot]
     };
   }
-  async listProviderProfiles() { return [this.profile]; }
+  async listProviderProfiles() { return [this.profile, ...this.extraProfiles]; }
   async getVoiceProviderConfiguration() { return this.configuration; }
-  async updateVoiceProviderConfiguration(_input: UpdateVoiceProviderConfigurationInput) { return this.configuration; }
+  async updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput) { this.selectionInputs.push(input); return this.pendingSelection ?? this.configuration; }
   async createProviderProfile(_input: CreateProviderProfileInput) { return this.profile; }
-  async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.profile; }
+  async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.pendingPrompt ?? this.profile; }
   async replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput) {
     this.credentialInputs.push(input);
     return this.pendingCredential ?? this.profile;
@@ -178,3 +204,69 @@ function slot(recommendedAction: VoiceProviderRecommendedAction) {
 function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'success', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
 
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done; }); return { promise, resolve }; }
+
+ it.each(['test', 'enable', 'archive'] as const)('shows only the pending %s profile operation and restores actions after failure', async operation => {
+  const repository = new FakeProviderRepository();
+  let rejectAction: ((error: Error) => void) | undefined;
+  repository.pendingAction = new Promise((_resolve, reject) => { rejectAction = reject; });
+  const { harness, client } = await mount(<ProviderProfileDetailScreen profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => {}} onEditPrompt={() => {}} />);
+  try {
+    const label = operation === 'test' ? 'Test connection for Gemini language' : operation === 'enable' ? 'enable Gemini language' : 'Archive Gemini language';
+    await harness.press(harness.byLabel(label));
+    if (operation === 'archive') await harness.run(() => pressAlertButton('Archive'));
+    expect(harness.allText()).toContain(operation === 'test' ? 'Testing…' : operation === 'enable' ? 'Updating…' : 'Archiving…');
+    for (const [kind, text] of [['test', 'Testing…'], ['enable', 'Updating…'], ['archive', 'Archiving…']]) {
+      if (kind !== operation) expect(harness.allText()).not.toContain(text);
+    }
+    expect(harness.byLabel('Replace credential for Gemini language')?.props.disabled).toBe(true);
+    expect(harness.byLabel('Edit prompt guidance for Gemini language')?.props.disabled).toBe(true);
+    await harness.run(() => rejectAction?.(new Error('offline')));
+    expect(harness.byLabel(label)?.props.disabled).toBe(false);
+    expect(harness.byLabel('Replace credential for Gemini language')?.props.disabled).toBe(false);
+    expect(harness.allText()).toContain('Gemini language');
+  } finally { await harness.unmount(); client.clear(); }
+});
+
+it.each(['credential', 'prompt'] as const)('preserves the submitted %s draft after rejected save', async kind => {
+  const repository = new FakeProviderRepository();
+  let rejectSave: ((error: Error) => void) | undefined;
+  const pending = new Promise<ProviderProfileSummary>((_resolve, reject) => { rejectSave = reject; });
+  if (kind === 'credential') repository.pendingCredential = pending; else repository.pendingPrompt = pending;
+  const Editor = kind === 'credential' ? ProviderCredentialScreen : ProviderPromptScreen;
+  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => {}} onSaved={() => {}} />);
+  const label = kind === 'credential' ? 'API key' : 'New prompt guidance';
+  try {
+    await harness.changeText(harness.byLabel(label), 'original draft');
+    await harness.press(textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
+    expect(harness.byLabel(label)?.props.editable).toBe(false);
+    await harness.changeText(harness.byLabel(label), 'later edit');
+    await harness.run(() => rejectSave?.(new Error('offline')));
+    expect(harness.byLabel(label)?.props.editable).toBe(true);
+    expect(harness.byLabel(label)?.props.value).toBe('original draft');
+    expect(JSON.stringify(client.getQueryCache().getAll().map(query => query.state.data))).not.toContain('original draft');
+  } finally { await harness.unmount(); client.clear(); }
+});
+
+it('selects a voice service in place without implying a connection test is running', async () => {
+  const repository = new FakeProviderRepository(slot('test_profile'));
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' }), profile({ id: 'archived', displayName: 'Archived language', lifecycleState: 'archived' })];
+  let rejectSelection: ((error: Error) => void) | undefined;
+  repository.pendingSelection = new Promise((_resolve, reject) => { rejectSelection = reject; });
+  const { harness, client } = await mount(<VoiceCapabilityScreen capability="language_inference" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onAddProfile={() => {}} onEditProfile={() => {}} onEditCredential={() => {}} />);
+  try {
+    await harness.press(harness.byLabel('Choose voice service'));
+    expect(harness.byLabel('Archived language')).toBeUndefined();
+    await harness.press(harness.byLabel('Gemini language'));
+    expect(repository.selectionInputs).toEqual([]);
+    await harness.press(harness.byLabel('Choose voice service'));
+    await harness.press(harness.byLabel('Other language'));
+    expect(repository.selectionInputs).toHaveLength(1);
+    expect(repository.selectionInputs[0]?.languageInferenceProfileId).toBe('other');
+    expect(harness.allText()).toContain('Selecting service…');
+    expect(harness.allText()).not.toContain('Testing…');
+    expect(harness.byLabel('Open provider profile Gemini language')?.props.disabled).toBe(true);
+    await harness.run(() => rejectSelection?.(new Error('offline')));
+    expect(harness.byLabel('Choose voice service')?.props.disabled).toBe(false);
+    expect(harness.allText()).toContain('Gemini language');
+  } finally { await harness.unmount(); client.clear(); }
+});

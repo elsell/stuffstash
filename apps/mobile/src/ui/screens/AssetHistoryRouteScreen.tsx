@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -64,20 +65,16 @@ export function AssetHistoryRouteScreen({
   const state: HistoryState = firstPage
     ? { ...firstPage, status: 'ready', records: history.data!.pages.flatMap((page) => page.records), hasMore: history.hasNextPage }
     : history.isError ? { status: 'error', ...historyLoadError(history.error) } : { status: 'loading' };
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const isLoadingMore = history.isFetchingNextPage;
   const pageError = history.isFetchNextPageError ? 'Older activity could not be loaded.' : undefined;
 
-  async function refresh(): Promise<void> {
-    setIsRefreshing(true);
+  const { refreshing: isRefreshing, refresh: refresh } = usePullRefresh(async () => {
     try {
       await history.refetch({ throwOnError: true });
     } catch {
       feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: 'Please try again when access and connectivity are available.' });
-    } finally {
-      setIsRefreshing(false);
     }
-  }
+  });
 
   async function loadMore(): Promise<void> {
     if (history.hasNextPage && !history.isFetching) await history.fetchNextPage();

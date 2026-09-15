@@ -52,8 +52,8 @@ function ThemedApp() {
         }}
       >
         <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
-        <Stack.Screen name="browse-filters" options={{ ...sheetOptions.move, sheetAllowedDetents: [0.7, 1], sheetInitialDetentIndex: 0, headerShown: true, title: 'Filters' }} />
-        <Stack.Screen name="expiration-filters" options={{ ...sheetOptions.move, sheetAllowedDetents: [1], sheetInitialDetentIndex: 0, headerShown: true, title: 'Filters' }} />
+        <Stack.Screen name="browse-filters" options={sheetOptions.filters} />
+        <Stack.Screen name="expiration-filters" options={sheetOptions.filters} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="voice"
@@ -138,9 +138,9 @@ function ThemedApp() {
           name="tenant-switcher"
           options={{
             contentStyle: { backgroundColor: palette.surface },
-            headerShown: false,
+            headerShown: true,
             presentation: 'formSheet',
-            sheetAllowedDetents: 'fitToContents',
+            sheetAllowedDetents: [0.5, 1],
             sheetCornerRadius: 24,
             sheetGrabberVisible: true
           }}

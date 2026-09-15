@@ -1,5 +1,5 @@
-import { Mic, SendHorizontal } from 'lucide-react-native';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { NativeConversationButton } from '../components/NativeConversationButton';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { AppTextInput } from '../components/AppTextInput';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
 import { useVoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
@@ -20,17 +20,17 @@ export function VoiceConversationComposer({ onMic }: { readonly onMic: () => voi
       onFocus={() => { if (listening) void pauseMedia(); }}
       style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceMuted, borderColor: colors.border }]} />
     {listening ? <VoiceLevelMeter level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0} size="regular" /> : null}
-    {busy && canCancelConversation(state.stage, state.status === 'ready' ? state.realtime : null) ? <Pressable accessibilityRole="button" accessibilityLabel="Cancel request" onPress={() => { void cancelRealtime(); }} style={styles.send}><Text style={{ color: colors.action }}>Cancel</Text></Pressable> : null}
-    <Pressable accessibilityRole="button" accessibilityLabel={composerText.trim() && !listening ? 'Send message' : listening ? 'Finish recording and send' : 'Start recording'}
-      accessibilityState={{ disabled: busy }} disabled={busy}
-      onPress={() => { if (composerText.trim() && !listening) void sendText(); else onMic(); }}
-      style={[styles.send, { backgroundColor: colors.action, opacity: busy ? 0.5 : 1 }]}>
-      {busy && !cardOwnsProgress ? <ActivityIndicator color={colors.onAction} /> : composerText.trim() || listening ? <SendHorizontal size={22} color={colors.onAction} /> : <Mic size={22} color={colors.onAction} />}
-    </Pressable>
+    {busy ? canCancelConversation(state.stage, state.status === 'ready' ? state.realtime : null)
+      ? <NativeConversationButton kind="cancel" label="Cancel request" onPress={() => { void cancelRealtime(); }} />
+      : !cardOwnsProgress ? <View style={styles.progress}><ActivityIndicator accessibilityLabel="Working on your request" color={colors.action} /></View> : null
+      : <NativeConversationButton kind={composerText.trim() || listening ? 'send' : 'record'}
+        label={composerText.trim() && !listening ? 'Send message' : listening ? 'Finish recording and send' : 'Start recording'}
+        onPress={() => { if (composerText.trim() && !listening) void sendText(); else onMic(); }} />}
+
   </View>;
 }
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, width: '100%' },
   input: { flex: 1, minHeight: 44, maxHeight: 120, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: spacing.sm, fontSize: 16 },
-  send: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }
+  progress: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }
 });

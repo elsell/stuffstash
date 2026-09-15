@@ -1,6 +1,7 @@
+import { usePreventRemove } from '@react-navigation/native';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
-import { Fragment, ReactNode, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
+import { router, Stack, useNavigation } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -85,16 +86,18 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), query: (signal) => inventoryAssetTypesQuery.execute(asset.tenantId ?? '', asset.inventoryId ?? '', { signal }) });
   const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
   const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
-  const [isSaving, setIsSaving] = useState(false);
+  const operation = useAssetSheetOperation();
+  const isSaving = operation.busy;
 
   function close(): void {
+    if (operation.locked()) return;
     if (!hasDirtyEditAssetDraft(asset, draft)) {
       router.back();
       return;
     }
     Alert.alert('Discard changes?', 'Your edits have not been saved.', [
       { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() }
+      { text: 'Discard', style: 'destructive', onPress: () => operation.change(() => router.back()) }
     ]);
   }
 
@@ -102,7 +105,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     if (!draft || !canSaveEditAsset(asset, draft)) {
       return;
     }
-    setIsSaving(true);
+    if (!operation.begin()) return;
     try {
       const normalized = normalizedEditDraft(draft);
       const result = await updateAssetCommand.execute({
@@ -115,18 +118,20 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
         newTags: normalized.newTags,
         activeTags: normalized.newTags?.length ? await tags.reconcile() : tags.data ?? []
       });
+      if (!operation.isMounted()) return;
       recordAssetActionCompletion({
         assetId,
         action: 'edit',
         message: result.message,
         undoableOperationId: result.undoableOperationId
       });
-      router.back();
+      operation.complete(() => router.back());
     } catch (error) {
+      if (!operation.isMounted()) return;
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
-      Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
+      if (operation.isMounted()) Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
     } finally {
-      setIsSaving(false);
+      operation.end();
     }
   }
 
@@ -134,7 +139,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     try {
       const assetTags = await tags.reconcile();
       const reconciled = reconcileCreatedAssetTags(stagedTags, assetTags);
-      if (reconciled.createdTagIds.length > 0) {
+      if (operation.isMounted() && reconciled.createdTagIds.length > 0) {
         setDraft((current) => current
           ? {
               ...current,
@@ -149,7 +154,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   }
 
   return (
-    <NativeSheetFrame title="Edit asset">
+    <NativeSheetFrame title="Edit asset" busy={isSaving} dismissible={false}>
       {types.isError ? <ErrorState message="Asset types could not be loaded." onRetry={() => void types.refetch()} /> : null}
       {tags.isError ? <ErrorState message="Tags could not be loaded." onRetry={() => void tags.refetch()} /> : null}
       {(
@@ -159,7 +164,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
           assetTags={tags.data ?? []}
           draft={draft}
           isSaving={isSaving}
-          onChange={setDraft}
+          onChange={next => operation.change(() => setDraft(next))}
           onClose={close}
           onSave={() => void save()}
         />
@@ -183,7 +188,8 @@ export function AssetMoveSheetRouteScreen(props: MoveProps) {
 function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLookupQuery }: MoveProps & { asset: AssetDetailViewModel }) {
   const assetId = asset.id;
   const [draft, setDraft] = useState<MoveDraft>(() => ({ createKind: 'location', query: '', matches: [], selectedParent: parentFromCurrentAssetPath(asset) }));
-  const [isSaving, setIsSaving] = useState(false);
+  const operation = useAssetSheetOperation();
+  const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
   const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(candidates.data ?? [], asset) };
 
@@ -193,10 +199,11 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
     if (name.length === 0) {
       return;
     }
-    setIsSaving(true);
+    if (!operation.begin('create')) return;
     try {
       const placement = moveDestinationCreatePlacement(asset);
       const created = await createAssetCommand.execute(moveDestinationCreateInput(createKind, name, placement));
+      if (!operation.isMounted()) return;
       const createdParent = createdMoveDestinationParent({
         id: created.id,
         kind: createKind,
@@ -210,9 +217,9 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
         selectedParent: createdParent
       });
     } catch (error) {
-      Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
+      if (operation.isMounted()) Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
     } finally {
-      setIsSaving(false);
+      operation.end();
     }
   }
 
@@ -220,35 +227,37 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
     if (!draft) {
       return;
     }
-    setIsSaving(true);
+    if (!operation.begin()) return;
     try {
       const result = await moveAssetCommand.execute({
         assetId,
         parentAssetId: draft.selectedParent?.id
       });
+      if (!operation.isMounted()) return;
       recordAssetActionCompletion({ assetId, action: 'move', message: result.message });
-      router.back();
+      operation.complete(() => router.back());
     } catch (error) {
-      Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
+      if (operation.isMounted()) Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
     } finally {
-      setIsSaving(false);
+      operation.end();
     }
   }
 
   return (
-    <NativeSheetFrame title="Move asset">
+    <NativeSheetFrame title="Move asset" busy={isSaving}>
       <CandidateStatus candidates={candidates} />
       {(
         <MoveAssetSheet
           asset={asset}
           draft={shownDraft}
           isSaving={isSaving}
-          onChangeCreateKind={(createKind) => setDraft((current) => current ? { ...current, createKind } : current)}
-          onChangeQuery={(query) => setDraft((current) => ({ ...current, query }))}
-          onClose={() => router.back()}
+          isCreatingDestination={operation.kind === 'create'}
+          onChangeCreateKind={(createKind) => operation.change(() => setDraft((current) => current ? { ...current, createKind } : current))}
+          onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
+          onClose={() => operation.change(() => router.back())}
           onCreateDestination={() => void createDestination(asset)}
-          onSelectParent={(selectedParent) => setDraft((current) => current ? { ...current, selectedParent } : current)}
-          onSelectRoot={() => setDraft((current) => current ? { ...current, selectedParent: null } : current)}
+          onSelectParent={(selectedParent) => operation.change(() => setDraft((current) => current ? { ...current, selectedParent } : current))}
+          onSelectRoot={() => operation.change(() => setDraft((current) => current ? { ...current, selectedParent: null } : current))}
           onSave={() => void save()}
         />
       )}
@@ -265,7 +274,8 @@ export function AssetMoveHereSheetRouteScreen(props: MoveHereProps) {
 }
 function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHereProps & { asset: AssetDetailViewModel }) {
   const [draft, setDraft] = useState<MoveIntoDraft>({ target: asset, query: '', matches: [], selectedAsset: undefined });
-  const [isSaving, setIsSaving] = useState(false);
+  const operation = useAssetSheetOperation();
+  const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
   const shownDraft = { ...draft, matches: (candidates.data ?? []).filter((match) => isSelectableMoveIntoCandidate(match, asset)) };
 
@@ -273,32 +283,33 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
     if (!draft?.selectedAsset) {
       return;
     }
-    setIsSaving(true);
+    if (!operation.begin()) return;
     try {
       const result = await moveAssetCommand.execute({
         assetId: draft.selectedAsset.id,
         parentAssetId: draft.target.id
       });
+      if (!operation.isMounted()) return;
       recordAssetActionCompletion({ assetId: draft.target.id, action: 'move', message: result.message });
-      router.back();
+      operation.complete(() => router.back());
     } catch (error) {
-      Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
+      if (operation.isMounted()) Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
     } finally {
-      setIsSaving(false);
+      operation.end();
     }
   }
 
   return (
-    <NativeSheetFrame title="Move something here">
+    <NativeSheetFrame title="Move something here" busy={isSaving}>
       <CandidateStatus candidates={candidates} />
       {(
         <MoveThingsHereSheet
           draft={shownDraft}
           isSaving={isSaving}
-          onChangeQuery={(query) => setDraft((current) => ({ ...current, query }))}
-          onClose={() => router.back()}
+          onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
+          onClose={() => operation.change(() => router.back())}
           onSave={() => void save()}
-          onSelectAsset={(selectedAsset) => setDraft((current) => current ? { ...current, selectedAsset } : current)}
+          onSelectAsset={(selectedAsset) => operation.change(() => setDraft((current) => current ? { ...current, selectedAsset } : current))}
         />
       )}
     </NativeSheetFrame>
@@ -307,15 +318,17 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
 
 function NativeSheetFrame({
   children,
-  title
+  title, busy, dismissible = true
 }: {
   readonly children: ReactNode;
   readonly title: string;
+  readonly busy: boolean;
+  readonly dismissible?: boolean;
 }) {
   const styles = useStyles();
   return (
     <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
-      <Stack.Screen options={{ title }} />
+      <Stack.Screen options={{ title, gestureEnabled: dismissible && !busy }} />
       {children}
     </SafeAreaView>
   );
@@ -390,4 +403,29 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0
   }
   });
+}
+
+/** One mutation owns the sheet draft until it settles. */
+function useAssetSheetOperation() {
+  const pending = useRef(false);
+  const mounted = useRef(true);
+  const [kind, setKind] = useState<'save' | 'create' | null>(null);
+  const navigation = useNavigation();
+  const completed = useRef(false);
+  usePreventRemove(kind !== null, ({ data }) => {
+    if (completed.current) navigation.dispatch(data.action);
+  });
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  return {
+    kind, busy: kind !== null,
+    isMounted: () => mounted.current,
+    locked: () => pending.current || !mounted.current,
+    begin: (next: 'save' | 'create' = 'save') => {
+      if (pending.current || !mounted.current) return false;
+      pending.current = true; completed.current = false; setKind(next); return true;
+    },
+    complete: (leave: () => void) => { if (mounted.current) { completed.current = true; leave(); } },
+    end: () => { pending.current = false; if (mounted.current) setKind(null); },
+    change: (change: () => void) => { if (!pending.current && mounted.current) change(); }
+  };
 }

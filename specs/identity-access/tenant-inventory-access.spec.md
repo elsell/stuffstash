@@ -294,3 +294,18 @@ Neither `viewer` nor `editor` allows sharing access onward.
 ## Open Questions
 
 - How should users switch between tenants and inventories?
+
+### Mobile invitation draft interaction
+
+Creating an invitation chooses Viewer or Editor through the shared in-place
+native value picker, with Access visibly labeled and Viewer selected initially.
+Do not introduce a navigation destination or custom radio-button group for these
+two flat choices. While creation is pending, preserve and disable the email and
+access draft; reject stale edit callbacks and duplicate submission. A failed
+creation retains the submitted values and re-enables editing. This changes no
+permission checks or invitation authority.
+
+Invitation acceptance and inventory-opening actions retain a visible task label
+and stable accessible name during progress, alongside the indicator. Expose busy
+and disabled state; joining and opening must remain distinguishable to assistive
+technology. Failed opening preserves accepted access and offers an explicit retry.

@@ -88,7 +88,7 @@ Lifecycle view and selected-record subroutes or query state must be canonical an
 - The custom-color modal uses the same horizontal inset, bottom safe-area clearance, fixed non-scrolling picker area, and aligned full-width actions. Its Cancel, Done, and Clear controls remain at least 44 points and usable with the keyboard visible.
 - Read-only, inherited, and archived mobile detail uses static labeled values rather than disabled text inputs, color pickers, or other controls that imply mutation.
 - Mobile create forms identify required values neutrally on first presentation. Field-level errors become assertive only after the user has interacted with the affected control or attempted submission; a blank untouched form must not open by announcing errors.
-- Custom-field type and applicability use compact value/disclosure rows that open a focused single-selection surface. The editor must not render a viewport-tall grid of radio cards for these single-value choices.
+- Custom-field type and applicability use the shared native menu-style picker in place. The editor must not render a viewport-tall grid of radio cards for these single-value choices.
 - The custom-color surface may scroll its overall content at large Dynamic Type or while the Android keyboard is visible, but the spectrum and hue controls retain gesture ownership and do not scroll during color gestures.
 
 ## Settings Information Architecture
@@ -163,6 +163,8 @@ Tenant and inventory lists must expose concise metadata: display name, field typ
 - Field and asset-type clients must use the same stable-key validator as their application managers. If a generated or manually entered key is invalid while technical details are collapsed, the form must reveal and focus that control, explain the accepted format, and keep Save unavailable.
 - Edit supports only compatibility-preserving operations already defined by the domain: display-name change, adding enum options, adding active eligible custom asset type targets, and expanding targeted applicability to all assets.
 - Immutable values must render as read-only details. Unsupported narrowing or removal controls must not be rendered as disabled editable controls.
+- While saving or performing a lifecycle operation, keep the populated editor visible and disable all draft-changing controls, including open pickers, stable key, enum additions, and target choices. Do not accept edits after capturing the submitted draft. Resume editing after a failed save or canceled lifecycle confirmation with the draft intact.
+- Target selection distinguishes saved immutable targets from unsaved additions. During creation every selected target can be deselected; during editing only draft additions can be deselected. Saved targets remain identified as existing and cannot be removed. Eligible draft targets use shared multiple-choice rows with checked state, without leaving the editor. Removing a draft choice does not narrow persisted applicability. If a draft target becomes unavailable, provide a safe aggregate deselection without revealing hidden names or removing saved targets.
 - Enum option and custom asset type target adders must prevent duplicate selections and explain why archived or wrong-scope targets are unavailable without exposing unauthorized records.
 
 ### Lifecycle
@@ -358,3 +360,33 @@ Each implementation pass must run the relevant type checks, unit/application tes
 - Tags have no archived-list, restore, or hard-delete contract. The active-only manager must make archive consequences clear without suggesting recovery that the domain cannot perform.
 - Complete client-side search over a paginated settings collection requires loading all pages until a server-side search contract exists; implementations must remain bounded and honest about progress.
 - Tenant-scoped customization lists require `tenant.configure`, so non-configuring tenant viewers cannot inspect tenant definitions directly even when they can see inherited definitions through an inventory effective list.
+
+
+### Reversible enum option drafts
+
+Persisted enum options remain immutable. Options added in the current create or
+edit draft can be removed in place before Save; they must not be labeled Existing.
+Removing a draft option changes only local state and requires no confirmation.
+Read-only and pending-save forms expose no enabled draft mutation. The final
+validated draft is the only value submitted through the existing application port.
+
+Use an ordinary platform text button for the Remove command, with the option in
+its accessible name. A command is not a checkbox or navigation destination. The
+shared native command adapter uses the same pinned SwiftUI/Compose integration as
+sheet actions, with no new dependency, and lets native text wrap and grow.
+
+Settings error and permission-denied content must use a scrollable container so
+messages and retry actions remain reachable with enlarged text or short windows.
+Preserve the denied heading's accessibility focus and announcement behavior. This
+includes shared denial states used by customization lists/editors and inventory
+sharing's load failures; loading-only indicators need no scroll conversion.
+
+Horizontal settings rows must constrain long values to available width and allow
+wrapping; values must not force labels or disclosure controls outside the row.
+The existing stacked layout for enlarged text remains in use. Apply this to both
+read-only values (including server URLs) and navigation-row trailing values.
+
+The same scrollable recovery requirement applies to customization collection and
+editor failures, notification route loading failures, stale or invalid reminder
+links, and filter loading failures. Retry and dismissal actions remain in their
+existing context; route validation and authorization behavior must not change.

@@ -1,0 +1,977 @@
+[
+  {
+    "id": "R001",
+    "surface": "(tabs)/(home)/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home)/_layout.tsx"
+  },
+  {
+    "id": "R002",
+    "surface": "(tabs)/(home)/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home)/index.tsx"
+  },
+  {
+    "id": "R003",
+    "surface": "(tabs)/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/_layout.tsx"
+  },
+  {
+    "id": "R004",
+    "surface": "(tabs)/search/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/search/_layout.tsx"
+  },
+  {
+    "id": "R005",
+    "surface": "(tabs)/search/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/search/index.tsx"
+  },
+  {
+    "id": "R006",
+    "surface": "_layout.tsx",
+    "source": "apps/mobile/src/app/_layout.tsx"
+  },
+  {
+    "id": "R007",
+    "surface": "add.tsx",
+    "source": "apps/mobile/src/app/add.tsx"
+  },
+  {
+    "id": "R008",
+    "surface": "assets/[assetId]/checkouts.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/checkouts.tsx"
+  },
+  {
+    "id": "R009",
+    "surface": "assets/[assetId]/edit.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/edit.tsx"
+  },
+  {
+    "id": "R010",
+    "surface": "assets/[assetId]/history/[activityId].tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/history/[activityId].tsx"
+  },
+  {
+    "id": "R011",
+    "surface": "assets/[assetId]/history/index.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/history/index.tsx"
+  },
+  {
+    "id": "R012",
+    "surface": "assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/index.tsx"
+  },
+  {
+    "id": "R013",
+    "surface": "assets/[assetId]/move-here.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/move-here.tsx"
+  },
+  {
+    "id": "R014",
+    "surface": "assets/[assetId]/move.tsx",
+    "source": "apps/mobile/src/app/assets/[assetId]/move.tsx"
+  },
+  {
+    "id": "R015",
+    "surface": "assets/index.tsx",
+    "source": "apps/mobile/src/app/assets/index.tsx",
+    "sources": [
+      "apps/mobile/src/app/assets/index.tsx",
+      "apps/mobile/src/ui/screens/InventoryAssetsRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "R016",
+    "surface": "browse-filters.tsx",
+    "source": "apps/mobile/src/app/browse-filters.tsx"
+  },
+  {
+    "id": "R017",
+    "surface": "expiration-filters.tsx",
+    "source": "apps/mobile/src/app/expiration-filters.tsx"
+  },
+  {
+    "id": "R018",
+    "surface": "expiration.tsx",
+    "source": "apps/mobile/src/app/expiration.tsx"
+  },
+  {
+    "id": "R019",
+    "surface": "invitations/accept.tsx",
+    "source": "apps/mobile/src/app/invitations/accept.tsx"
+  },
+  {
+    "id": "R020",
+    "surface": "locations/[locationId]/assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/locations/[locationId]/assets/[assetId]/index.tsx"
+  },
+  {
+    "id": "R021",
+    "surface": "locations/[locationId]/index.tsx",
+    "source": "apps/mobile/src/app/locations/[locationId]/index.tsx",
+    "sources": [
+      "apps/mobile/src/app/locations/[locationId]/index.tsx",
+      "apps/mobile/src/ui/screens/LocationAssetsRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "R022",
+    "surface": "notifications.tsx",
+    "source": "apps/mobile/src/app/notifications.tsx"
+  },
+  {
+    "id": "R023",
+    "surface": "settings/about.tsx",
+    "source": "apps/mobile/src/app/settings/about.tsx"
+  },
+  {
+    "id": "R024",
+    "surface": "settings/account.tsx",
+    "source": "apps/mobile/src/app/settings/account.tsx"
+  },
+  {
+    "id": "R025",
+    "surface": "settings/appearance.tsx",
+    "source": "apps/mobile/src/app/settings/appearance.tsx"
+  },
+  {
+    "id": "R026",
+    "surface": "settings/connection.tsx",
+    "source": "apps/mobile/src/app/settings/connection.tsx"
+  },
+  {
+    "id": "R027",
+    "surface": "settings/diagnostics.tsx",
+    "source": "apps/mobile/src/app/settings/diagnostics.tsx"
+  },
+  {
+    "id": "R028",
+    "surface": "settings/household/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/[resourceId].tsx"
+  },
+  {
+    "id": "R029",
+    "surface": "settings/household/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/index.tsx"
+  },
+  {
+    "id": "R030",
+    "surface": "settings/household/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/settings/household/asset-types/new.tsx"
+  },
+  {
+    "id": "R031",
+    "surface": "settings/household/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/[resourceId].tsx"
+  },
+  {
+    "id": "R032",
+    "surface": "settings/household/fields/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/index.tsx"
+  },
+  {
+    "id": "R033",
+    "surface": "settings/household/fields/new.tsx",
+    "source": "apps/mobile/src/app/settings/household/fields/new.tsx"
+  },
+  {
+    "id": "R034",
+    "surface": "settings/household/index.tsx",
+    "source": "apps/mobile/src/app/settings/household/index.tsx"
+  },
+  {
+    "id": "R035",
+    "surface": "settings/index.tsx",
+    "source": "apps/mobile/src/app/settings/index.tsx"
+  },
+  {
+    "id": "R036",
+    "surface": "settings/inventory/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/[resourceId].tsx"
+  },
+  {
+    "id": "R037",
+    "surface": "settings/inventory/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/index.tsx"
+  },
+  {
+    "id": "R038",
+    "surface": "settings/inventory/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/asset-types/new.tsx"
+  },
+  {
+    "id": "R039",
+    "surface": "settings/inventory/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/[resourceId].tsx"
+  },
+  {
+    "id": "R040",
+    "surface": "settings/inventory/fields/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/index.tsx"
+  },
+  {
+    "id": "R041",
+    "surface": "settings/inventory/fields/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/fields/new.tsx"
+  },
+  {
+    "id": "R042",
+    "surface": "settings/inventory/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/index.tsx"
+  },
+  {
+    "id": "R043",
+    "surface": "settings/inventory/notification-editor.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/notification-editor.tsx"
+  },
+  {
+    "id": "R044",
+    "surface": "settings/inventory/notifications.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/notifications.tsx"
+  },
+  {
+    "id": "R045",
+    "surface": "settings/inventory/tags/[resourceId].tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/[resourceId].tsx"
+  },
+  {
+    "id": "R046",
+    "surface": "settings/inventory/tags/index.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/index.tsx"
+  },
+  {
+    "id": "R047",
+    "surface": "settings/inventory/tags/new.tsx",
+    "source": "apps/mobile/src/app/settings/inventory/tags/new.tsx"
+  },
+  {
+    "id": "R048",
+    "surface": "settings/sharing.tsx",
+    "source": "apps/mobile/src/app/settings/sharing.tsx"
+  },
+  {
+    "id": "R049",
+    "surface": "settings/voice/[capability].tsx",
+    "source": "apps/mobile/src/app/settings/voice/[capability].tsx"
+  },
+  {
+    "id": "R050",
+    "surface": "settings/voice/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/index.tsx"
+  },
+  {
+    "id": "R051",
+    "surface": "settings/voice/profiles/[providerProfileId]/credential.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/credential.tsx"
+  },
+  {
+    "id": "R052",
+    "surface": "settings/voice/profiles/[providerProfileId]/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/index.tsx"
+  },
+  {
+    "id": "R053",
+    "surface": "settings/voice/profiles/[providerProfileId]/prompt.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/prompt.tsx"
+  },
+  {
+    "id": "R054",
+    "surface": "settings/voice/profiles/add.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/add.tsx"
+  },
+  {
+    "id": "R055",
+    "surface": "settings/voice/profiles/index.tsx",
+    "source": "apps/mobile/src/app/settings/voice/profiles/index.tsx"
+  },
+  {
+    "id": "R056",
+    "surface": "tenant-switcher.tsx",
+    "source": "apps/mobile/src/app/tenant-switcher.tsx"
+  },
+  {
+    "id": "R057",
+    "surface": "voice.tsx",
+    "source": "apps/mobile/src/app/voice.tsx"
+  },
+  {
+    "id": "S058",
+    "surface": "onboarding / server entry",
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
+  },
+  {
+    "id": "S059",
+    "surface": "onboarding / browser sign-in return",
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
+  },
+  {
+    "id": "S060",
+    "surface": "onboarding / household setup",
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
+  },
+  {
+    "id": "S061",
+    "surface": "onboarding / first inventory",
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
+  },
+  {
+    "id": "S062",
+    "surface": "onboarding / partial setup recovery",
+    "source": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
+      "apps/mobile/src/ui/screens/OnboardingPresentation.ts"
+    ]
+  },
+  {
+    "id": "S063",
+    "surface": "Home / expiration summary",
+    "source": "apps/mobile/src/ui/expiration/ExpirationHomeSection.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationHomeSection.tsx",
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
+  },
+  {
+    "id": "S064",
+    "surface": "Home / recent changes",
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
+  },
+  {
+    "id": "S065",
+    "surface": "Home / checked-out return",
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+    ]
+  },
+  {
+    "id": "S066",
+    "surface": "Home / native action header",
+    "source": "apps/mobile/src/ui/screens/HomeNavigationHeader.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeNavigationHeader.tsx",
+      "apps/mobile/src/ui/components/NativeHeaderActions.ios.tsx",
+      "apps/mobile/src/ui/components/NativeHeaderActions.android.tsx"
+    ]
+  },
+  {
+    "id": "S067",
+    "surface": "Browse / list grid",
+    "source": "apps/mobile/src/ui/screens/SearchScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SearchScreen.tsx",
+      "apps/mobile/src/ui/components/AssetCard.tsx",
+      "apps/mobile/src/ui/components/NativeNavigationSearch.tsx"
+    ]
+  },
+  {
+    "id": "S068",
+    "surface": "Browse / containment map columns",
+    "source": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+      "apps/mobile/src/ui/screens/useInventoryMapSearch.ts"
+    ]
+  },
+  {
+    "id": "S069",
+    "surface": "Browse / map search path",
+    "source": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
+      "apps/mobile/src/ui/screens/useInventoryMapSearch.ts"
+    ]
+  },
+  {
+    "id": "S070",
+    "surface": "Browse / list search",
+    "source": "apps/mobile/src/ui/screens/SearchScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SearchScreen.tsx",
+      "apps/mobile/src/ui/components/AssetCard.tsx",
+      "apps/mobile/src/ui/components/NativeNavigationSearch.tsx"
+    ]
+  },
+  {
+    "id": "S071",
+    "surface": "Browse / filter overview",
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
+  },
+  {
+    "id": "S072",
+    "surface": "Browse / tag selection",
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
+  },
+  {
+    "id": "S073",
+    "surface": "Browse / expiration handoff",
+    "source": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "apps/mobile/src/ui/components/SettingsPickerRow.tsx",
+      "apps/mobile/src/ui/components/NativeSheetActions.ios.tsx"
+    ]
+  },
+  {
+    "id": "S074",
+    "surface": "Expiration / soon expired all dates",
+    "source": "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx"
+    ]
+  },
+  {
+    "id": "S075",
+    "surface": "Expiration / filter overview",
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
+  },
+  {
+    "id": "S076",
+    "surface": "Expiration / types selection",
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
+  },
+  {
+    "id": "S077",
+    "surface": "Expiration / tags selection",
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
+  },
+  {
+    "id": "S078",
+    "surface": "Expiration / locations selection",
+    "source": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx"
+    ]
+  },
+  {
+    "id": "S079",
+    "surface": "Expiration / date range",
+    "source": "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx",
+    "sources": [
+      "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx"
+    ]
+  },
+  {
+    "id": "S080",
+    "surface": "Inventory switcher / inventory list",
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S081",
+    "surface": "Inventory switcher / household list",
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S082",
+    "surface": "Inventory switcher / load failure",
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S083",
+    "surface": "Inventory switcher / selection pending failure",
+    "source": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S084",
+    "surface": "Add / main draft",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S085",
+    "surface": "Add / kind choice",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S086",
+    "surface": "Add / parent search",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S087",
+    "surface": "Add / quick parent creation",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S088",
+    "surface": "Add / type choice",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S089",
+    "surface": "Add / tags select create",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S090",
+    "surface": "Add / photo selection",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S091",
+    "surface": "Add / custom fields",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S092",
+    "surface": "Add / expiration exact date",
+    "source": "apps/mobile/src/ui/components/ExpirationField.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx"
+    ]
+  },
+  {
+    "id": "S093",
+    "surface": "Add / expiration month year",
+    "source": "apps/mobile/src/ui/components/ExpirationField.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx"
+    ]
+  },
+  {
+    "id": "S094",
+    "surface": "Add / draft recovery",
+    "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S095",
+    "surface": "Asset / overflow commands",
+    "source": "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+      "apps/mobile/src/ui/screens/AssetOverflowMenu.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "S096",
+    "surface": "Asset / checkout action",
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "S097",
+    "surface": "Asset / return action",
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "S098",
+    "surface": "Asset / archive restore delete",
+    "source": "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+      "apps/mobile/src/ui/screens/AssetOverflowMenu.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx"
+    ]
+  },
+  {
+    "id": "S099",
+    "surface": "Asset / photo gallery",
+    "source": "apps/mobile/src/ui/components/AssetDetailPhotoGallery.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AssetDetailPhotoGallery.tsx"
+    ]
+  },
+  {
+    "id": "S100",
+    "surface": "Asset / full screen viewer",
+    "source": "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoViewerSheet.tsx"
+    ]
+  },
+  {
+    "id": "S101",
+    "surface": "Asset / upload retry",
+    "source": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoUploadProgressPresentation.ts"
+    ]
+  },
+  {
+    "id": "S102",
+    "surface": "Asset / contained items",
+    "source": "apps/mobile/src/ui/components/AssetContainedWorkspace.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AssetContainedWorkspace.tsx"
+    ]
+  },
+  {
+    "id": "S103",
+    "surface": "Asset / history revert",
+    "source": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetHistoryRevertAction.ts"
+    ]
+  },
+  {
+    "id": "S104",
+    "surface": "Settings / appearance selection",
+    "source": "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx"
+    ]
+  },
+  {
+    "id": "S105",
+    "surface": "Settings / field type choice",
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "id": "S106",
+    "surface": "Settings / field applicability",
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "id": "S107",
+    "surface": "Settings / enum options",
+    "source": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "id": "S108",
+    "surface": "Settings / tag color",
+    "source": "apps/mobile/src/ui/components/TagColorPicker.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/TagColorPicker.tsx",
+      "apps/mobile/src/ui/components/NativeTagColorPicker.ios.tsx",
+      "apps/mobile/src/ui/components/FullSpectrumTagColorPicker.tsx"
+    ]
+  },
+  {
+    "id": "S109",
+    "surface": "Settings / inherited definition",
+    "source": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "id": "S110",
+    "surface": "Settings / dirty editor exit",
+    "source": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx"
+    ]
+  },
+  {
+    "id": "S111",
+    "surface": "Reminders / defaults",
+    "source": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx"
+    ]
+  },
+  {
+    "id": "S112",
+    "surface": "Reminders / type override",
+    "source": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx"
+    ]
+  },
+  {
+    "id": "S113",
+    "surface": "Reminders / preset timing",
+    "source": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ReminderTimingEditor.tsx"
+    ]
+  },
+  {
+    "id": "S114",
+    "surface": "Reminders / custom timing",
+    "source": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/ReminderTimingEditor.tsx"
+    ]
+  },
+  {
+    "id": "S115",
+    "surface": "Reminders / timezone search",
+    "source": "apps/mobile/src/ui/components/TimeZonePicker.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/TimeZonePicker.tsx"
+    ]
+  },
+  {
+    "id": "S116",
+    "surface": "Reminders / push permissions",
+    "source": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "apps/mobile/src/ui/navigation/PushRegistrationLifecycle.tsx"
+    ]
+  },
+  {
+    "id": "S117",
+    "surface": "Voice / accessory",
+    "source": "apps/mobile/src/ui/navigation/VoiceBottomAccessory.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/VoiceBottomAccessory.tsx"
+    ]
+  },
+  {
+    "id": "S118",
+    "surface": "Voice / typed composer",
+    "source": "apps/mobile/src/ui/screens/VoiceConversationComposer.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceConversationComposer.tsx"
+    ]
+  },
+  {
+    "id": "S119",
+    "surface": "Voice / recording",
+    "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+    ]
+  },
+  {
+    "id": "S120",
+    "surface": "Voice / processing",
+    "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+    ]
+  },
+  {
+    "id": "S121",
+    "surface": "Voice / response",
+    "source": "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx",
+      "apps/mobile/src/ui/screens/VoiceResponseEntityText.tsx"
+    ]
+  },
+  {
+    "id": "S122",
+    "surface": "Voice / plan approval edits",
+    "source": "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx"
+    ]
+  },
+  {
+    "id": "S123",
+    "surface": "Voice / plan progress recovery",
+    "source": "apps/mobile/src/ui/screens/VoicePlanProgress.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoicePlanProgress.tsx"
+    ]
+  },
+  {
+    "id": "S124",
+    "surface": "Voice / provider readiness",
+    "source": "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
+      "apps/mobile/src/ui/screens/ProviderProfilesVoiceSetupPresentation.ts"
+    ]
+  },
+  {
+    "id": "S125",
+    "surface": "Voice / credential editor",
+    "source": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx"
+    ]
+  },
+  {
+    "id": "S126",
+    "surface": "Voice / prompt editor",
+    "source": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx"
+    ]
+  },
+  {
+    "id": "S127",
+    "surface": "System / keyboard accessory",
+    "source": "apps/mobile/src/ui/components/AppKeyboardAccessory.tsx",
+    "sources": [
+      "apps/mobile/src/ui/components/AppKeyboardAccessory.tsx",
+      "apps/mobile/src/ui/components/AppKeyboardProvider.tsx"
+    ]
+  },
+  {
+    "id": "S128",
+    "surface": "System / global notice",
+    "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+    "sources": [
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+    ]
+  },
+  {
+    "id": "S129",
+    "surface": "System / confirmation alert",
+    "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+    "sources": [
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+    ]
+  },
+  {
+    "id": "S130",
+    "surface": "System / push cold warm tap",
+    "source": "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx"
+    ]
+  },
+  {
+    "id": "S131",
+    "surface": "System / invitation link",
+    "source": "apps/mobile/src/ui/navigation/InventoryInvitationLinkContext.tsx",
+    "sources": [
+      "apps/mobile/src/ui/navigation/InventoryInvitationLinkContext.tsx",
+      "apps/mobile/src/ui/screens/InventoryInvitationScreen.tsx"
+    ]
+  },
+  {
+    "id": "S132",
+    "surface": "System / permission denied recovery",
+    "source": "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteErrorState.tsx"
+    ]
+  },
+  {
+    "id": "S133",
+    "surface": "Asset Edit / tag selection and creation",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S134",
+    "surface": "Asset Move / destination search and selection",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S135",
+    "surface": "Asset Move / destination creation",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S136",
+    "surface": "Asset Move here / asset search and selection",
+    "source": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  }
+]

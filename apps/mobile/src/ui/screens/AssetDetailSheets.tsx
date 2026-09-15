@@ -1,3 +1,5 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
 import { useState } from 'react';
@@ -36,7 +38,6 @@ import {
   moveDestinationRow,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
-  moveDestinationCreateKindLabel,
   moveDestinationCreatePlacement,
   moveDestinationCreatePlacementLabel,
   type MoveDestinationCreateKind,
@@ -45,7 +46,7 @@ import {
   MovePlacementPreview
 } from './AssetDetailMovePresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
   readonly query: string;
@@ -98,6 +99,7 @@ export function EditAssetSheet({
         </View>
         <Text style={styles.inputLabel}>Name</Text>
         <AppTextInput
+          accessibilityLabel="Asset name"
           autoCapitalize="sentences"
           editable={!isSaving}
           onChangeText={(title) => onChange({ ...draft, title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -106,6 +108,7 @@ export function EditAssetSheet({
         />
         <Text style={styles.inputLabel}>Description</Text>
         <AppTextInput
+          accessibilityLabel="Description"
           editable={!isSaving}
           multiline
           onChangeText={(description) => onChange({ ...draft, title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -118,11 +121,11 @@ export function EditAssetSheet({
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
-          onChange={(tagIds) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags: draft?.newTags ?? [] })}
-          onNewTagsChange={(newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags })}
+          onChange={(tagIds, newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags })}
         />
       </ScrollView>
       <SheetActions
+        busy={isSaving}
         disabled={!canSave}
         primaryLabel={isSaving ? 'Saving' : 'Save'}
         onClose={onClose}
@@ -136,14 +139,12 @@ function EditTagPicker({
   disabled,
   newTags,
   onChange,
-  onNewTagsChange,
   selectedTagIds,
   tags
 }: {
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
-  readonly onChange: (tagIds: readonly string[]) => void;
-  readonly onNewTagsChange: (tags: readonly CreateAssetTagDraft[]) => void;
+  readonly onChange: (tagIds: readonly string[], newTags: readonly CreateAssetTagDraft[]) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
@@ -158,10 +159,10 @@ function EditTagPicker({
       return;
     }
     if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId));
+      onChange(selectedTagIds.filter((current) => current !== tagId), newTags);
       return;
     }
-    onChange([...selectedTagIds, tagId]);
+    onChange([...selectedTagIds, tagId], newTags);
   }
 
   function addNewTag(): void {
@@ -180,8 +181,7 @@ function EditTagPicker({
       selectedTagIds,
       pendingTags: newTags
     });
-    onChange(transition.selectedTagIds);
-    onNewTagsChange(transition.pendingTags);
+    onChange(transition.selectedTagIds, transition.pendingTags);
     if (transition.shouldClearInputs) {
       setNewTagName('');
       setNewTagColor('');
@@ -207,7 +207,7 @@ function EditTagPicker({
               accessibilityState={{ disabled, selected: true }}
               disabled={disabled}
               key={`${tag.displayName}-${index.toString()}`}
-              onPress={() => onNewTagsChange(newTags.filter((_, currentIndex) => currentIndex !== index))}
+              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index))}
               style={[
                 styles.tagOption,
                 colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
@@ -266,22 +266,15 @@ function EditTagPicker({
           style={[styles.input, styles.newTagColorInput]}
           value={newTagColor}
         />
-        <Pressable
-          accessibilityRole="button"
-          disabled={disabled || !canAddNewTag}
-          onPress={addNewTag}
-          style={[styles.newTagButton, disabled || !canAddNewTag ? styles.disabledAction : null]}
-        >
-          <Text style={styles.newTagButtonText}>Add</Text>
-        </Pressable>
       </View>
       <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
+      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
     </View>
   );
 }
 
 export function MoveAssetSheet({
-  asset,
+  isCreatingDestination = false, asset,
   draft,
   isSaving,
   onChangeQuery,
@@ -295,6 +288,7 @@ export function MoveAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
   readonly isSaving: boolean;
+  readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -316,7 +310,7 @@ export function MoveAssetSheet({
         matches: draft.matches,
         parentAssetId: createPlacement.parentAssetId,
         query: draft.query
-      }) && !isSaving
+      })
     : false;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
@@ -325,6 +319,7 @@ export function MoveAssetSheet({
       {placement ? <PlacementPanel preview={placement} /> : null}
       <Text style={styles.inputLabel}>Put in</Text>
       <AppTextInput
+        accessibilityLabel="Put in"
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -336,20 +331,10 @@ export function MoveAssetSheet({
       <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
-            <View style={styles.createKindSegment} accessibilityRole="tablist">
-              <CreateKindOption
-                kind="location"
-                disabled={isSaving}
-                selectedKind={createKind}
-                onPress={onChangeCreateKind}
-              />
-              <CreateKindOption
-                kind="container"
-                disabled={isSaving}
-                selectedKind={createKind}
-                onPress={onChangeCreateKind}
-              />
-            </View>
+            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
+              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+              includeEmptyOption={false} disabled={isSaving}
+              onChange={value => { if (!isSaving && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
             <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
             <Text style={styles.createPlacementText}>
               {moveDestinationCreatePlacementLabel(createPlacement)}
@@ -367,6 +352,7 @@ export function MoveAssetSheet({
           </View>
         ) : null}
         <ParentRow
+          disabled={isSaving}
           isSelected={draft?.selectedParent === null}
           row={{
             title: 'No parent',
@@ -377,6 +363,7 @@ export function MoveAssetSheet({
         />
         {draft?.matches.map((match) => (
           <ParentRow
+            disabled={isSaving}
             key={match.id}
             isSelected={draft.selectedParent?.id === match.id}
             row={moveDestinationRow(match)}
@@ -385,8 +372,9 @@ export function MoveAssetSheet({
         ))}
       </ScrollView>
       <SheetActions
+        busy={isSaving}
         disabled={!canSaveMove}
-        primaryLabel={isSaving ? 'Moving' : 'Move'}
+        primaryLabel={isCreatingDestination ? 'Creating destination…' : isSaving ? 'Moving' : 'Move'}
         onClose={onClose}
         onSave={onSave}
       />
@@ -419,6 +407,7 @@ export function MoveThingsHereSheet({
       <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
       <Text style={styles.inputLabel}>Find item, box, or place</Text>
       <AppTextInput
+        accessibilityLabel="Find item, box, or place"
         autoCapitalize="sentences"
         editable={!isSaving}
         onChangeText={onChangeQuery}
@@ -436,6 +425,7 @@ export function MoveThingsHereSheet({
         ) : null}
         {draft?.matches.map((match) => (
           <ParentRow
+            disabled={isSaving}
             key={match.id}
             isSelected={draft.selectedAsset?.id === match.id}
             row={moveIntoCandidateRow(match)}
@@ -448,6 +438,7 @@ export function MoveThingsHereSheet({
         right={draft?.target.title ?? 'Here'}
       />
       <SheetActions
+        busy={isSaving}
         disabled={!canSave}
         primaryLabel={isSaving ? 'Moving' : 'Move here'}
         onClose={onClose}
@@ -457,46 +448,19 @@ export function MoveThingsHereSheet({
   );
 }
 
-function CreateKindOption({
-  disabled,
-  kind,
-  onPress,
-  selectedKind
-}: {
-  readonly disabled: boolean;
-  readonly kind: MoveDestinationCreateKind;
-  readonly onPress: (kind: MoveDestinationCreateKind) => void;
-  readonly selectedKind: MoveDestinationCreateKind;
-}) {
-  const styles = useStyles();
-  const isSelected = kind === selectedKind;
-  return (
-    <Pressable
-      accessibilityRole="tab"
-      accessibilityState={{ disabled, selected: isSelected }}
-      disabled={disabled}
-      onPress={() => onPress(kind)}
-      style={[styles.createKindOption, isSelected ? styles.createKindOptionSelected : null, disabled ? styles.disabledAction : null]}
-    >
-      <Text style={[styles.createKindOptionText, isSelected ? styles.createKindOptionTextSelected : null]}>
-        {moveDestinationCreateKindLabel(kind)}
-      </Text>
-    </Pressable>
-  );
-}
-
 function ParentRow({
-  isSelected,
+  disabled, isSelected,
   onPress,
   row
 }: {
+  readonly disabled: boolean;
   readonly isSelected: boolean;
   readonly onPress: () => void;
   readonly row: MoveDestinationRow;
 }) {
   const styles = useStyles();
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null]}>
+    <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled, selected: isSelected }} onPress={() => { if (!disabled) onPress(); }} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null, disabled && styles.disabledAction]}>
       <View style={styles.parentTextColumn}>
         <View style={styles.parentTitleRow}>
           <Text style={styles.parentTitle}>{row.title}</Text>
@@ -548,7 +512,7 @@ function MovePreview({ left, right }: { readonly left: string; readonly right: s
 }
 
 function SheetActions({
-  disabled,
+  busy, disabled,
   onClose,
   onSave,
   primaryLabel
@@ -557,11 +521,12 @@ function SheetActions({
   readonly onClose: () => void;
   readonly onSave: () => void;
   readonly primaryLabel: string;
+  readonly busy: boolean;
 }) {
   const styles = useStyles();
   return (
     <View style={styles.sheetActions}>
-      <Pressable accessibilityRole="button" onPress={onClose} style={styles.sheetSecondary}>
+      <Pressable accessibilityRole="button" disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => { if (!busy) onClose(); }} style={[styles.sheetSecondary, busy && styles.disabledAction]}>
         <Text style={styles.sheetSecondaryText}>Cancel</Text>
       </Pressable>
       <Pressable
@@ -667,7 +632,8 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.xs,
     maxWidth: '100%',
-    minHeight: 34,
+    minHeight: minimumTouchTargetSize,
+    minWidth: minimumTouchTargetSize,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6
   },
@@ -692,27 +658,14 @@ function createStyles(colors: MobileColorPalette) {
   },
   newTagNameInput: {
     flex: 1,
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     minWidth: 0
   },
   newTagColorInput: {
-    minHeight: 40,
+    minHeight: minimumTouchTargetSize,
     width: 96
   },
-  newTagButton: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 40,
-    paddingHorizontal: spacing.sm
-  },
-  newTagButtonText: {
-    color: colors.onAction,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
+
   sheetActions: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -756,34 +709,6 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.sm,
     marginVertical: spacing.xs,
     padding: spacing.sm
-  },
-  createKindSegment: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    padding: 4
-  },
-  createKindOption: {
-    alignItems: 'center',
-    borderRadius: radius.sm,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 36
-  },
-  createKindOptionSelected: {
-    backgroundColor: colors.action
-  },
-  createKindOptionText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  createKindOptionTextSelected: {
-    color: colors.onAction
   },
   createKindHelp: {
     color: colors.textMuted,

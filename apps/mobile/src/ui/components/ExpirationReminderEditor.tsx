@@ -1,6 +1,7 @@
+import { SettingsPickerRow } from './SettingsPickerRow';
 import { useEffect, useRef, useState } from 'react';
 import type { ExpirationReminderPolicy } from '../../domain/notifications/Notification';
-import { SettingsActionRow, SettingsChoiceRow, SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, SettingsSwitchRow } from '../screens/SettingsList';
+import { SettingsActionRow, SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, SettingsSwitchRow } from '../screens/SettingsList';
 
 export function reminderDaysLabel(days: number): string { return days === 0 ? 'Same day' : `${days} ${days === 1 ? 'day' : 'days'}`; }
 export function reminderSummary(policy: ExpirationReminderPolicy): string {
@@ -45,9 +46,9 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
   }
   return <>
     {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? `Inventory defaults: ${reminderSummary(displayed)}.` : undefined}>
-      <SettingsChoiceRow label="Use defaults" accessibilityLabel="Use inventory defaults" selected={mode === 'defaults'} disabled={locked || error} onPress={() => void commit(displayed, 'defaults')} />
-      <SettingsSeparator /><SettingsChoiceRow label="Custom" accessibilityLabel="Custom reminders" selected={mode === 'custom'} disabled={locked || error} onPress={() => void commit(displayed, 'custom')} />
-      <SettingsSeparator /><SettingsChoiceRow label="Off" accessibilityLabel="Turn off type reminders" selected={mode === 'off'} disabled={locked || error} onPress={() => void commit(displayed, 'off')} />
+      <SettingsPickerRow label="Reminders" accessibilityLabel="Choose reminder mode" value={mode}
+        options={[{value:'defaults',label:'Use defaults'},{value:'custom',label:'Custom'},{value:'off',label:'Off'}] as const}
+        disabled={locked || error} onChange={nextMode => { if (nextMode !== mode) void commit(displayed, nextMode); }} />
     </SettingsSection> : <SettingsSection title="Inventory defaults" footer="Types use these rules unless you customize them below.">
       <SettingsSwitchRow label="Default reminders" value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
     </SettingsSection>}

@@ -3,11 +3,12 @@ import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { BrowseFiltersScreen, type BrowseFilterDraft } from './BrowseFiltersScreen';
 const initial: BrowseFilterDraft = { scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' };
-it('drills into choices, keeps draft until Show results and resets all selections', async () => {
+it('selects short choices in place, keeps draft until Show results and resets all selections', async () => {
   const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
   try {
     await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[{ id: 'tag', key: 'tools', label: 'Tools' }]} onApply={draft => applied.push(draft)} onCancel={() => {}} onExpiration={() => {}} />);
     await h.press(h.byLabel('Choose availability'));
+    expect(h.byLabel('Choose tags')).toBeDefined();
     await h.press(h.byLabel('Checked out'));
     expect(applied).toEqual([]);
     await h.press(h.byLabel('Choose tags'));
@@ -41,5 +42,13 @@ it('cancels pending verification when Back returns to the filter overview', asyn
     await h.press(h.byLabel('Back to filters'));
     expect(cancelled).toBe(1);
     expect(h.byLabel('Choose availability')).toBeDefined();
+  } finally { await h.unmount(); }
+});
+
+it('shows the effective relevance order during search instead of an inactive saved sort', async () => {
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<BrowseFiltersScreen initial={initial} query="medicine" tags={[]} onApply={() => {}} onCancel={() => {}} onExpiration={() => {}} />);
+    expect(h.byLabel('Sort, Relevance while searching')).toBeDefined();
   } finally { await h.unmount(); }
 });

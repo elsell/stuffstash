@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 /** Native refresh presentation belongs to a pull gesture, not query activity. */
-export function useHomePullRefresh(refreshData: () => Promise<void>) {
+export function usePullRefresh(refreshData: () => Promise<void>) {
   const [refreshing, setRefreshing] = useState(false);
   const sequence = useRef(0);
   const active = useRef<number | undefined>(undefined);

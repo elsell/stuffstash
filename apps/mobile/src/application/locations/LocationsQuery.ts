@@ -4,6 +4,7 @@ import type { ReadRequest } from '../shared/ReadRequest';
 export type LocationBrowserItemViewModel = {
   readonly id: string;
   readonly title: string;
+  readonly pathLabel?: string;
   readonly description: string;
   readonly containedAssetCountLabel: string;
   readonly recentAssetLabel: string;
@@ -51,6 +52,7 @@ function toLocationViewModel(location: LocationSummary): LocationBrowserItemView
   return {
     id: location.id,
     title: location.title,
+    pathLabel: [...(location.parentLocationTrail ?? []).map(parent => parent.title), location.title].join(' / ') + (location.parentLocationTrailIncomplete ? ' (partial location path)' : ''),
     description: location.description,
     containedAssetCountLabel:
       location.containedAssetCount === 1

@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { router, Stack } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View
@@ -18,6 +19,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 
 type TenantSwitcherSheetScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
@@ -29,41 +31,63 @@ export function TenantSwitcherSheetScreen({
   selectInventoryCommand
 }: TenantSwitcherSheetScreenProps) {
   const styles = useStyles();
+  const [selecting, setSelecting] = useState(false);
+  const [selectionError, setSelectionError] = useState('');
+  const pending = useRef<AbortController | undefined>(undefined);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; pending.current?.abort(); }; }, []);
   const dashboard = useMobileInventoryServerQuery({
     key: mobileQueryKeys.home,
     query: (signal) => dashboardQuery.execute({ signal })
   });
 
   async function selectInventory(inventoryId: string): Promise<void> {
-    await selectInventoryCommand.execute(inventoryId);
-    router.back();
+    if (pending.current) return;
+    const request = new AbortController(); pending.current = request;
+    setSelecting(true); setSelectionError('');
+    try {
+      await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
+      if (mounted.current && !request.signal.aborted) router.back();
+    } catch {
+      if (mounted.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
+    } finally {
+      if (pending.current === request) pending.current = undefined;
+      if (mounted.current) setSelecting(false);
+    }
   }
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
+      <Stack.Screen options={{ title: 'Inventories', ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { pending.current?.abort(); router.back(); } }]) }} />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       {dashboard.isPending && !dashboard.data ? <LoadingState /> : null}
       {dashboard.isError && !dashboard.data ? (
-        <ErrorState message={readableError(dashboard.error, 'Could not load tenants.')} />
+        <ErrorState onRetry={() => { void dashboard.refetch(); }} />
       ) : null}
+      {selectionError ? <Text accessibilityRole="alert" style={styles.errorMessage}>{selectionError}</Text> : null}
       {dashboard.data ? (
         <TenantSwitcher
           dashboard={dashboard.data}
+          selecting={selecting}
           onSelectInventory={selectInventory}
         />
       ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 function TenantSwitcher({
   dashboard,
+  selecting,
   onSelectInventory
 }: {
   readonly dashboard: HomeDashboardViewModel;
+  readonly selecting: boolean;
   readonly onSelectInventory: (inventoryId: string) => Promise<void>;
 }) {
   const styles = useStyles();
-  const currentTenant = dashboard.tenants.find((tenant) => tenant.name === dashboard.tenantName);
+  const currentTenant = dashboard.tenants.find((tenant) => tenant.id === dashboard.tenantId);
   const [selectedTenantId, setSelectedTenantId] = useState(currentTenant?.id ?? dashboard.tenants[0]?.id);
   const [mode, setMode] = useState<'inventories' | 'tenants'>('inventories');
   const selectedTenant =
@@ -86,6 +110,7 @@ function TenantSwitcher({
         </View>
         <Pressable
           accessibilityRole="button"
+          disabled={selecting}
           onPress={() => {
             if (mode === 'tenants') {
               setMode('inventories');
@@ -97,7 +122,7 @@ function TenantSwitcher({
           style={styles.switchButton}
         >
           <Text style={styles.switchButtonText}>
-            {mode === 'tenants' ? 'Back' : 'Switch tenant'}
+            {mode === 'tenants' ? 'Back' : 'Switch household'}
           </Text>
         </Pressable>
       </View>
@@ -105,6 +130,7 @@ function TenantSwitcher({
       {mode === 'inventories' ? (
         <>
           <Text style={styles.sectionLabel}>Inventories</Text>
+          {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>No inventories are available in this household.</Text> : null}
 
           {selectedTenantInventories.map((inventory, index) => {
             const isSelected = inventory.id === dashboard.inventoryId;
@@ -112,7 +138,9 @@ function TenantSwitcher({
             return (
               <Pressable
                 accessibilityRole="button"
-                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`Switch to inventory ${inventory.name}`}
+                accessibilityState={{ selected: isSelected, disabled: selecting, busy: selecting }}
+                disabled={selecting}
                 key={inventory.id}
                 onPress={() => onSelectInventory(inventory.id)}
                 style={[
@@ -133,7 +161,7 @@ function TenantSwitcher({
         </>
       ) : (
         <>
-          <Text style={styles.sectionLabel}>Tenants</Text>
+          <Text style={styles.sectionLabel}>Households</Text>
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
@@ -180,18 +208,15 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ message }: { readonly message: string }) {
+function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>{message}</Text>
+      <Text style={styles.stateText}>Inventories could not be loaded. Try again.</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Retry inventories" onPress={onRetry} style={styles.switchButton}><Text style={styles.switchButtonText}>Retry</Text></Pressable>
     </View>
   );
-}
-
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 function useStyles() {
@@ -201,9 +226,13 @@ function useStyles() {
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
   sheet: {
+    flex: 1,
     backgroundColor: colors.surface,
+  },
+  content: {
     padding: spacing.md
   },
+  errorMessage: { color: colors.danger, fontSize: 17, paddingVertical: spacing.md },
   centerState: {
     alignItems: 'center',
     minHeight: 140,
@@ -244,7 +273,7 @@ function createStyles(colors: MobileColorPalette) {
     lineHeight: 31
   },
   switchButton: {
-    minHeight: 36,
+    minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: spacing.xs
   },

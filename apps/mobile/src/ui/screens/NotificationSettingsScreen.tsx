@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useCallback, useRef, useState } from 'react';
 import { Stack, useFocusEffect } from 'expo-router';
 import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -25,7 +26,6 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [types, setTypes] = useState<readonly CustomAssetTypeDefinition[]>([]);
   const [busy, setBusy] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [pushMessage, setPushMessage] = useState('');
   const pending = useRef(false); const mounted = useRef(true);
@@ -77,11 +77,9 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       });
     } catch { /* The shared save path presents errors without changing the switch optimistically. */ }
   }
-  async function refresh() {
-    if (pending.current) return;
-    setRefreshing(true);
-    try { await load(); } finally { if (mounted.current) setRefreshing(false); }
-  }
+  const { refreshing, refresh } = usePullRefresh(async () => {
+    if (!pending.current) await load();
+  });
   const typeId = page.kind === 'type' || page.kind === 'timing' ? page.typeId : undefined;
   const type = typeId ? types.find(entry => entry.id === typeId) : undefined;
   const override = preferences?.overrides.find(entry => entry.customAssetTypeId === typeId)?.settings;

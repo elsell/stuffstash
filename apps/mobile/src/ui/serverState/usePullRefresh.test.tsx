@@ -2,12 +2,12 @@ import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { setScreenFocused } from '../../test-support/navigation';
-import { useHomePullRefresh } from './useHomePullRefresh';
+import { usePullRefresh } from './usePullRefresh';
 
 it('tracks explicit pulls, ignores duplicate pulls, and clears presentation across navigation', async () => {
-  const h = new MobileRenderHarness(); let control!: ReturnType<typeof useHomePullRefresh>;
+  const h = new MobileRenderHarness(); let control!: ReturnType<typeof usePullRefresh>;
   const finishes: (() => void)[] = []; let calls = 0;
-  function Screen() { control = useHomePullRefresh(async () => { calls++; await new Promise<void>(resolve => finishes.push(resolve)); }); return null; }
+  function Screen() { control = usePullRefresh(async () => { calls++; await new Promise<void>(resolve => finishes.push(resolve)); }); return null; }
   try {
     await h.render(<Screen />); expect(control.refreshing).toBe(false);
     let first!: Promise<void>; let second!: Promise<void>;
@@ -23,8 +23,8 @@ it('tracks explicit pulls, ignores duplicate pulls, and clears presentation acro
   } finally { await h.unmount(); setScreenFocused(true); }
 });
 it('ends the pull control after a failed refresh', async () => {
-  const h = new MobileRenderHarness(); let control!: ReturnType<typeof useHomePullRefresh>;
-  function Screen() { control = useHomePullRefresh(async () => { throw new Error('Unavailable'); }); return null; }
+  const h = new MobileRenderHarness(); let control!: ReturnType<typeof usePullRefresh>;
+  function Screen() { control = usePullRefresh(async () => { throw new Error('Unavailable'); }); return null; }
   try {
     await h.render(<Screen />);
     await h.run(async () => { await expect(control.refresh()).rejects.toThrow('Unavailable'); });

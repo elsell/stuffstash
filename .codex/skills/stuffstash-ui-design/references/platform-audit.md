@@ -72,3 +72,13 @@ Update roadmap when this becomes the product focus. Do not silently fix or relea
 the audited UI under an audit-only request. Validate skill metadata/references and
 ask the required code critic to check findings and policy overreach. A skill update
 needs a realistic application, not a wording snapshot test.
+
+## Native accessibility instrumentation
+
+Use [Apple's XCTest accessibility audits](https://developer.apple.com/documentation/accessibility/performing-accessibility-audits-for-your-app)
+for named visible states when the runtime supports them. Check hit regions,
+descriptions, traits, contrast, Dynamic Type support and clipping; retain issue
+artifacts. Never blanket-ignore issues to obtain a green run. Record specific
+false positives with evidence before filtering one. These checks supplement
+pattern review and assistive-technology use; a viewport audit cannot certify
+unvisited controls, other configurations, or the whole application.

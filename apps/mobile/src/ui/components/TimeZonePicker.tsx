@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
-import { AppTextInput } from './AppTextInput';
+import { NativeNavigationSearch } from './NativeNavigationSearch';
 import { SettingsChoiceRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from '../screens/SettingsList';
 export function readableTimeZone(zone: string) { return zone.replaceAll('_', ' ').split('/').reverse().join(' · '); }
 export function TimeZonePicker({ value, disabled, onChange }: { readonly value: string; readonly disabled?: boolean; readonly onChange: (zone: string) => Promise<void> }) {
@@ -24,9 +24,8 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
   try { new Intl.DateTimeFormat(undefined, { timeZone: query.trim() }); validQuery = !!query.trim(); } catch { /* An incomplete search remains editable. */ }
   const choices=[...new Set([...matches, ...(validQuery ? [query.trim()] : [])])];
   return <>
-    <SettingsSection footer="Dates end at midnight in this time zone. It stays the same when you travel.">
-      <View style={styles.navigationRow}><AppTextInput accessibilityLabel="Search time zones" value={query} onChangeText={setQuery} placeholder="Search city or time zone" autoCapitalize="none" autoCorrect={false} clearButtonMode="while-editing" style={{ minHeight:44,color:palette.text,fontSize:17 }} /></View>
-    </SettingsSection>
+    <NativeNavigationSearch query={query} placeholder="Search city or time zone" onChange={setQuery} onSubmit={setQuery} onClear={() => setQuery('')} />
+    <View style={styles.detailHeader}><Text style={styles.secondaryText}>Dates end at midnight in this time zone. It stays the same when you travel.</Text></View>
     <SettingsSection footer={matches.length === 30 ? 'Search to find another city or time zone.' : undefined}>
       {choices.map((zone,index)=><View key={zone}>{index ? <SettingsSeparator /> : null}<SettingsChoiceRow label={readableTimeZone(zone)} selected={value===zone} disabled={disabled || saving} onPress={()=>void select(zone)}/></View>)}
       {!choices.length ? <View style={styles.navigationRow}><Text style={styles.secondaryText}>No matching time zones.</Text></View> : null}

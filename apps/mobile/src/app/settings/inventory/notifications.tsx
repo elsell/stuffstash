@@ -3,7 +3,7 @@ import { mobileQueryKeys } from '../../../adapters/serverState/MobileQueryClient
 import { useMemo } from 'react';
 import { router } from 'expo-router';
 import type { NotificationSettingsPage } from '../../../ui/presentation/NotificationSettingsDestination';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ScrollView, ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { MobileComposition } from '../../../bootstrap/mobileComposition';
 import { useAppServices } from '../../../ui/navigation/AppServicesContext';
 import { useMobileServerStateScopeId } from '../../../ui/navigation/MobileServerStateProvider';
@@ -17,12 +17,12 @@ export default function NotificationSettingsRoute({ page, expectedScope }: { rea
   const model = useSettingsModel(services.settingsQuery);
   const { styles, palette } = useSettingsListStyles();
   if (model.state.status === 'loading') return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading inventory" color={palette.action} /></View>;
-  if (model.state.status === 'error') return <View style={[styles.shell, styles.errorContainer]}>
+  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={[styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic">
     <Text accessibilityRole="alert" style={styles.errorMessage}>{model.state.message}</Text>
     <Pressable accessibilityRole="button" onPress={() => void model.load()} style={styles.retryButton}><Text style={styles.retryText}>Retry</Text></Pressable>
-  </View>;
+  </ScrollView>;
   const { selectedTenant, selectedInventory } = model.state.settings;
-  if (expectedScope && (expectedScope.tenantId !== selectedTenant.id || expectedScope.inventoryId !== selectedInventory.id)) return <View style={styles.shell}><Text style={styles.errorMessage}>This inventory is no longer selected. Go back to open its settings again.</Text></View>;
+  if (expectedScope && (expectedScope.tenantId !== selectedTenant.id || expectedScope.inventoryId !== selectedInventory.id)) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text style={styles.errorMessage}>This inventory is no longer selected. Go back to open its settings again.</Text></ScrollView>;
   return <ScopedNotifications page={page} key={JSON.stringify([scopeId, selectedTenant.id, selectedInventory.id])} services={services} tenantId={selectedTenant.id} inventoryId={selectedInventory.id} />;
 }
 

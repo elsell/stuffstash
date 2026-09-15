@@ -6,3 +6,7 @@ export const disabled=modifier('disabled');
 export const fixedSize=modifier('fixedSize');
 export const frame=modifier('frame');
 export const tint=modifier('tint');
+export const pickerStyle=modifier('pickerStyle');
+export const tag=modifier('tag');
+
+export const labelStyle=modifier('labelStyle');

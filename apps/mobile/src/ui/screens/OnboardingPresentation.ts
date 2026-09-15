@@ -24,7 +24,7 @@ export function onboardingError(error: unknown): string {
 export function onboardingStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
     shell: { flex: 1, backgroundColor: colors.background },
-    content: { flexGrow: 1, padding: spacing.lg },
+    content: { flexGrow: 1, width: '100%', maxWidth: 600, alignSelf: 'center', padding: spacing.lg },
     brand: { marginBottom: 54 },
     heading: { color: colors.text, fontSize: 30, lineHeight: 36, fontWeight: '700', marginBottom: 28 },
     field: { marginBottom: 22 },
@@ -37,7 +37,7 @@ export function onboardingStyles(colors: MobileColorPalette) {
     body: { color: colors.textMuted, fontSize: 14, lineHeight: 21 },
     notice: { backgroundColor: colors.surfaceMuted, borderRadius: 10, padding: spacing.md, marginBottom: spacing.lg },
     error: { color: colors.danger, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
-    footer: { marginTop: 'auto', paddingTop: spacing.xl },
+    footer: { paddingTop: spacing.xl },
     note: { color: colors.textMuted, fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: spacing.md },
     button: { minHeight: 54, borderRadius: 12, paddingVertical: 12, paddingHorizontal: spacing.md,
       alignItems: 'center', justifyContent: 'center', backgroundColor: colors.action },

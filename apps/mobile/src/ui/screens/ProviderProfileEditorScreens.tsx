@@ -109,7 +109,7 @@ function CredentialForm({
             accessibilityLabel={credentialLabel(profile.credentialPurpose)}
             autoCapitalize="none"
             autoCorrect={false}
-            onChangeText={setValue}
+            editable={!saving} onChangeText={next => { if (!savingRef.current) setValue(next); }}
             secureTextEntry
             style={local.input}
             value={value}
@@ -164,7 +164,7 @@ function PromptForm({
       <Text accessibilityRole="header" style={styles.detailTitle}>Prompt Guidance</Text>
       <Text style={styles.detailSubtitle}>Optional tenant guidance for {profile.displayName}. Existing hidden prompt text is never returned to the phone.</Text>
       <Text style={local.label}>New prompt guidance</Text>
-      <AppTextInput accessibilityLabel="New prompt guidance" multiline onChangeText={setValue} style={[local.input, local.multiline]} value={value} />
+      <AppTextInput accessibilityLabel="New prompt guidance" multiline editable={!saving} onChangeText={next => { if (!savingRef.current) setValue(next); }} style={[local.input, local.multiline]} value={value} />
       <View style={local.actions}>
         <Pressable accessibilityRole="button" disabled={saving} onPress={onCancel} style={local.secondaryButton}><Text style={styles.actionText}>Cancel</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityState={{ busy: saving, disabled: saving }} disabled={saving} onPress={() => void save()} style={local.primaryButton}><Text style={local.primaryText}>{saving ? 'Saving…' : 'Save Guidance'}</Text></Pressable>

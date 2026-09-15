@@ -2,6 +2,7 @@ import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { TestInstance } from 'test-renderer';
 import { MobileRenderHarness } from '../../test-support/render';
+import { Platform } from '../../test-support/react-native';
 import { darkPalette } from '../theme/tokens';
 import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
 import { swatchForeground, TagColorPicker, tagColorName } from './TagColorPicker';
@@ -16,6 +17,21 @@ async function renderPicker(value: string, changes: string[] = [], disabled = fa
 }
 
 describe('TagColorPicker', () => {
+  it('offers the native iOS color picker without a second custom editor', async () => {
+    const env = globalThis as unknown as { expo?: { getViewConfig: (module: string, view: string) => unknown } };
+    const previous = env.expo; const previousPlatform = Platform.OS;
+    env.expo = { getViewConfig: () => ({ validAttributes: {}, directEventTypes: {} }) }; Platform.OS = 'ios';
+    try {
+      const { screen, changes } = await renderPicker('');
+      expect(screen.byLabel('Choose a custom tag color')).toBeUndefined();
+      expect(screen.byTestId('custom-tag-color-panel')).toBeUndefined();
+      expect(changes).toEqual([]);
+      await screen.press(screen.byLabel('Choose Green tag color'));
+      await screen.press(screen.byLabel('No tag color'));
+      expect(changes).toEqual(['#2E7D32', '']);
+    } finally { env.expo = previous; Platform.OS = previousPlatform; }
+  });
+
   it('chooses checkmark contrast from the actual swatch color', () => {
     expect(swatchForeground('#2F80ED')).toBe('#000000');
     expect(swatchForeground('#2E7D32')).toBe('#FFFFFF');

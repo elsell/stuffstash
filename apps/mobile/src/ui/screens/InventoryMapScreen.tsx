@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { BrowseAddHeader } from './BrowseAddHeader';
 import { useInventoryMapSearch } from './useInventoryMapSearch';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -130,7 +131,6 @@ export function InventoryMapScreen({
   const query = searchQuery ?? localQuery;
   const setQuery = onChangeSearchQuery ?? setLocalQuery;
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingScrollLevel, setPendingScrollLevel] = useState<number | undefined>();
   const [highlightedAssetId, setHighlightedAssetId] = useState<string | undefined>();
   const [branchSwipeVisual, setBranchSwipeVisual] = useState<BranchSwipeVisualState | undefined>();
@@ -324,11 +324,9 @@ export function InventoryMapScreen({
     mapOffsetValue.current = clampedOffset;
   }, [mapOffset, maxMapOffset]);
 
-  async function refreshMap(): Promise<void> {
-    setIsRefreshing(true);
-    try { await mapQuery.refetch({ cancelRefetch: false }); }
-    finally { setIsRefreshing(false); }
-  }
+  const { refreshing: isRefreshing, refresh: refreshMap } = usePullRefresh(async () => {
+    await mapQuery.refetch({ cancelRefetch: false });
+  });
 
   function scrollToColumn(level: number): void {
     const targetOffset = clampInventoryMapOffset({

@@ -29,11 +29,11 @@ describe('onboarding screen', () => {
     await harness.changeText(harness.byLabel('Household name'), 'Maple Street');
     await harness.press(harness.byLabel('Sign out and start over'));
     expect(profiles.profile).toBeUndefined();
-    expect(harness.byLabel('Server address')?.props.value).toBe('');
+    expect(harness.byLabel('Server address')?.props.defaultValue).toBe('');
     await harness.changeText(harness.byLabel('Server address'), onboardingServer);
     await harness.press(harness.byLabel('Connect and sign in'));
-    expect(harness.byLabel('Household name')?.props.value).toBe('');
-    expect(harness.byLabel('First inventory')?.props.value).toBe('Home Inventory');
+    expect(harness.byLabel('Household name')?.props.defaultValue).toBe('');
+    expect(harness.byLabel('First inventory')?.props.defaultValue).toBe('Home Inventory');
     await harness.unmount();
   });
   it('shows field-specific errors and preserves the form for retry', async () => {
@@ -58,7 +58,7 @@ describe('onboarding screen', () => {
     await harness.press(harness.byLabel('Create household'));
     expect(harness.byText('Create your first inventory')).toBeDefined();
     expect(harness.byLabel('Household name')).toBeUndefined();
-    expect(harness.byLabel('Inventory name')?.props.value).toBe('Workshop');
+    expect(harness.byLabel('Inventory name')?.props.defaultValue).toBe('Workshop');
     api.failInventoryBeforeWrite = false;
     await harness.press(harness.byLabel('Create inventory'));
     expect(api.tenantWrites).toBe(1);

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform, pressAlertButton } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
@@ -9,6 +10,7 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { navigationOptions } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
@@ -21,6 +23,7 @@ it('keeps dirty Add parent/title across metadata refresh and exposes dismissal',
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={query} addDraftScopeQuery={scope} addAssetDraftStore={store} createAssetCommand={{ execute: async () => ({ id: 'new', title: 'New', message: 'Saved' }) }} parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} initialParent={{ id: 'initial', title: 'Initial', kind: 'container', pathLabel: 'Initial', selectionHint: '', subtitle: '', willPromoteToContainer: false }} onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(); await settle();
+    expect(navigationOptions().at(-1)).toMatchObject({ headerShown: true, title: 'Add item' });
     await h.changeText(h.byLabel('Asset name'), 'My dirty draft');
     // The draft store is a persistence port, not a live source of form state.
     store.save({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' }, { title: 'Stale stored draft', description: '', parentQuery: '', selectedPhotos: [], showDetails: false });
@@ -62,3 +65,83 @@ it('creates with a month expiration and retains the draft when saving fails', as
     expect(h.byLabel('Expiration year')).toBeUndefined();
   } finally { await h.unmount(); }
 });
+
+it('preserves the submitted draft and prevents duplicate saves while saving is pending', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  const store = new InMemoryAddAssetDraftStore('scope');
+  let rejectSave!: (error: Error) => void; let saves = 0; let dismissed = 0;
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }}
+      addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={store}
+      createAssetCommand={{ execute: async () => { saves++; return new Promise((_resolve, reject) => { rejectSave = reject; }); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })}
+      onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.changeText(h.byLabel('Asset name'), 'Submitted name');
+    const save = h.byLabel('Save item')!;
+    await h.run(() => { void save.props.onPress(); void save.props.onPress(); });
+    expect(saves).toBe(1);
+    expect(h.byLabel('Asset name')?.props.editable).toBe(false);
+    await h.changeText(h.byLabel('Asset name'), 'Late edit');
+    expect(h.byLabel('Asset name')?.props.value).toBe('Submitted name');
+    await h.press(h.byLabel('Close Add'));
+    expect(dismissed).toBe(0);
+    await h.run(() => rejectSave(new Error('Save unavailable')));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+    expect(h.byLabel('Asset name')?.props.editable).toBe(true);
+    expect(h.byLabel('Asset name')?.props.value).toBe('Submitted name');
+    await h.changeText(h.byLabel('Asset name'), 'Retry name');
+    expect(h.byLabel('Asset name')?.props.value).toBe('Retry name');
+  } finally { await h.unmount(); client.clear(); }
+});
+
+for (const operation of ['parent', 'photo'] as const) {
+  it(`preserves the draft during pending ${operation} selection and restores editing after failure or cancellation`, async () => {
+    const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+    const originalPlatform = Platform.OS; Platform.OS = 'android';
+    const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+    let finish!: () => void; let submissions = 0; let dismissed = 0;
+    try {
+      await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+        inventoryAssetTypesQuery={{ execute: async () => [] }}
+        addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+        addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })}
+        addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
+        createAssetCommand={{ execute: async () => { submissions++; return new Promise((_resolve, reject) => { finish = () => reject(new Error('Parent unavailable')); }); } }}
+        parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+        photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: () => new Promise(resolve => { finish = () => resolve([]); }), captureFromCamera: async () => [] })}
+        onDismiss={() => { dismissed++; }} /></AppFeedbackProvider></MobileServerStateProvider>);
+      await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+      await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
+      if (operation === 'parent') {
+        await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
+        await h.changeText(h.byLabel('Search parent'), 'New parent');
+        const create = h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')?.parent;
+        expect(create).toBeDefined();
+        await h.run(() => { void create!.props.onPress(); });
+      } else {
+        await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
+        await h.run(() => { void pressAlertButton('Choose from Library'); });
+      }
+      expect(finish).toBeDefined();
+      expect(h.byLabel('Asset name')?.props.editable).toBe(false);
+      await h.changeText(h.byLabel('Asset name'), 'Late edit');
+      await h.press(h.byLabel('Save item'));
+      await h.press(h.byLabel('Close Add'));
+      expect(submissions).toBe(operation === 'parent' ? 1 : 0);
+      expect(dismissed).toBe(0);
+      expect(h.byLabel('Asset name')?.props.value).toBe('Keep this draft');
+      await h.run(() => finish());
+      await h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+      expect(h.byLabel('Asset name')?.props.editable).toBe(true);
+      await h.changeText(h.byLabel('Asset name'), 'Recovered draft');
+      expect(h.byLabel('Asset name')?.props.value).toBe('Recovered draft');
+      await h.press(h.byLabel('Close Add'));
+      expect(dismissed).toBe(1);
+    } finally { await h.unmount(); client.clear(); Platform.OS = originalPlatform; }
+  });
+}

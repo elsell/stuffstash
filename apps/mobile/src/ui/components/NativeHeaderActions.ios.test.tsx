@@ -21,3 +21,22 @@ it('removes stale native actions when permission or scope changes', () => {
   const item = nativeHeaderActionOptions([{ kind: 'notifications', label: 'Notifications, loading unread count', onPress: () => {} }]).unstable_headerRightItems?.({ canGoBack: false })[0];
   expect(item).not.toHaveProperty('badge');
 });
+it('provides a system close action for native sheets', () => {
+  let closed = false;
+  const item = nativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { closed = true; } }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ accessibilityLabel: 'Close inventory switcher', icon: { type: 'sfSymbol', name: 'xmark' } });
+  if (item?.type === 'button') item.onPress?.();
+  expect(closed).toBe(true);
+});
+
+
+it('keeps invalid save commands disabled and exposes a leading close command', () => {
+  const calls: string[] = [];
+  const save = nativeHeaderActionOptions([{ kind: 'save', label: 'Save item', disabled: true, onPress: () => calls.push('save') }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(save).toMatchObject({ disabled: true, icon: { type: 'sfSymbol', name: 'checkmark' } });
+  if (save?.type === 'button') save.onPress?.();
+  expect(calls).toEqual([]);
+  const close = nativeHeaderActionOptions([{ kind: 'close', label: 'Cancel Add', onPress: () => calls.push('close') }], 'left').unstable_headerLeftItems?.({ canGoBack: false })[0];
+  if (close?.type === 'button') close.onPress?.();
+  expect(calls).toEqual(['close']);
+});

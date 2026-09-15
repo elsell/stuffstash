@@ -214,3 +214,20 @@ Required coverage:
 - Web tag create/edit using native color-input semantics for arbitrary selection and explicit clearing, including keyboard and screen-reader behavior.
 - iOS tag create/edit using the native SwiftUI picker and Android tag create/edit using the accessible full-spectrum project picker with labeled hex fallback, both covering arbitrary selection, explicit clearing, and VoiceOver/TalkBack behavior; fixed quick swatches may be tested only as an additional shortcut.
 - Visual verification of mixed colored and uncolored manager rows and the open picker in light, dark, increased-contrast, narrow/reflow, and large accessibility text presentations where the platform supports them.
+
+
+### Native mobile color editing audit correction
+
+When the native iOS color picker is available, expose it directly beside the
+optional quick swatches. Its selection updates the parent tag draft; the parent
+editor owns Save and cancellation. Do not require opening a custom intermediate
+color panel or confirming a second project-owned Done/Cancel pair. Clearing
+remains explicit and opening the picker must not replace an absent color.
+Android and runtimes without the native picker retain the documented accessible
+spectrum/hex fallback with its local draft. Disabled editors reject late changes.
+
+The mobile Edit tag picker applies inline tag resolution as one draft update:
+selected existing tag IDs and pending new-tag definitions change together. A
+normalized match to an existing tag selects that tag without creating another;
+updating pending definitions must not restore the previous selected IDs. Preserve
+all previously selected tags and unrelated draft fields.

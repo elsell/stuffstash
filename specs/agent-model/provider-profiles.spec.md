@@ -301,3 +301,26 @@ The database vault rejects records outside the requested full credential scope, 
 Evaluation configuration fingerprints are SHA-256 identities over a versioned canonical JSON record of tenant/profile ID, capability, provider kind, endpoint, model, runtime options, capability options, prompt, credential purpose, immutable credential record ID, and adapter-supplied runtime identity. Secret material, display names, lifecycle timestamps and test timestamps are excluded. Object key ordering must not affect identity. Runtime identity is required; unsupported factories fail rather than report a partial identity.
 
 For the Google adapter, runtime identity covers adapter contract version and, for server ADC, effective project, region, quota project and an explicit non-secret operator credential revision. The revision is supplied through `STUFF_STASH_GOOGLE_ADC_CREDENTIAL_VERSION` and must change whenever the mounted ADC account/credential changes. An absent revision prevents ADC evaluation pinning but does not break ordinary voice use. Token refresh alone does not change the revision. The same factory identity computation is used at queue and worker resolution; changing any effective configuration invalidates the queued binding. ADC profile overrides conflicting with operator bounds remain rejected.
+
+### Mobile profile operation feedback
+
+Profile detail identifies the one pending operation: testing, enabling/disabling,
+or archiving. Only that action changes its visible label to progress; unrelated
+actions must not imply they are executing. Disable credential/prompt navigation
+and all competing profile actions until completion. Failure preserves the profile
+and restores the available actions. Keep duplicate-operation guards independent
+of rendered disabled state.
+
+Credential and prompt editors preserve the submitted draft during Save. Disable
+text entry and reject stale edit callbacks while saving. Failure re-enables the
+same draft for correction/retry; successful credential replacement clears the
+secret. Raw secrets and prompt drafts remain outside the query cache.
+
+Voice-stage service selection uses the shared in-place native value picker. Show
+the currently selected service and include non-archived alternatives for the
+same capability. Preserve a currently selected archived service as the current
+value, without offering other archived profiles. Keep profile configuration as
+separate navigation. Selecting the existing value does not submit a command.
+Selection, connection testing and enablement expose distinct progress; disable
+competing controls/navigation until the operation settles. Selection failures
+retain the previous server-confirmed choice.

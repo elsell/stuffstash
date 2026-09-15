@@ -53,8 +53,10 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Shared mobile notices must render as native-feeling compact top banners below
   the safe-area/status-bar region so they remain visible while forms and the
   keyboard are active. Users must be able to dismiss a notice by tapping it or
-  swiping it upward. Notices must animate in and out with short, native-feeling
-  motion, including auto-dismiss and gesture-dismiss paths. Notices must support
+  swiping it upward. Respect Reduce Motion in entrance, dismissal and gesture
+  recovery. Actionable notices, warnings and errors remain until dismissed or
+  replaced; plain status notices may expire unless a screen reader is enabled.
+  Notices must support
   semantic tones for success, info, warning, and error; concise text; and at
   most one action such as `Retry`, `Undo`, or `Sign in`.
 - Blocking native dialogs remain appropriate for destructive confirmations,
@@ -403,7 +405,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Settings categories must open dedicated native stack destinations with disclosure-row semantics. The root must not repeat the Stuff Stash wordmark or a second in-content `Settings` title beneath the native navigation title.
   - It must show the current authenticated principal from the API when available.
   - The account destination must show a human-meaningful principal label and may expose the opaque principal ID only as secondary diagnostic detail. It must expose `Sign out` as a separate operation that clears secure authentication state while preserving the saved server URL and tenant hint for the next sign-in.
-  - The appearance destination must expose `System`, `Light`, and `Dark` as one checkmarked single-selection list. `System` must be presented first and remain the default. The list must reflow without truncation at every supported Dynamic Type size.
+  - Settings must expose Appearance as an in-place platform-native single-choice menu with `System`, `Light`, and `Dark`. This small flat choice does not require navigation. `System` must be first and remain the default. The existing appearance destination may remain reachable by an older route, using the same choice control. Apply changes immediately through the appearance controller, retain its failure rollback, and explain any persistence failure. Native rendering must support the supported Dynamic Type sizes.
   - The connection destination must use `Stuff Stash server` as the primary user-facing term while allowing `instance` in explanatory self-hosting copy. It must show the current server URL and expose `Change server` separately from `Sign out`.
   - `Change server` must state that the operation signs the user out and clears the saved server and tenant hint on this device without deleting server data. Its native confirmation must use the explicit action label `Change Server`, not a generic continuation label.
   - It must show About information for Stuff Stash, including the mobile app version.
@@ -477,3 +479,35 @@ This spec defines camera behavior only for attaching still photos during the Add
 - `pnpm --dir apps/mobile test` must run focused mobile application tests.
 - The Expo development server should start with `pnpm --dir apps/mobile start`.
 - iPhone verification is manual: install Expo Go, run the mobile dev server, scan the QR code, and confirm the Stuff Stash home screen appears.
+
+
+### Initial list recovery
+
+Inventory asset, location-content, and location-browser screens offer an in-place
+Retry command when the first query fails and no rows are available. Retry uses
+the existing scoped query; it does not navigate, switch inventory, clear a draft,
+or activate a pull-to-refresh indicator. Disable Retry while its read is pending,
+and preserve an actionable error if that read fails again. Native platform text
+buttons implement the command through the shared command adapter.
+
+
+### Native editor and inbox header commands
+
+Add item uses the native navigation title and native leading Cancel/Close and
+trailing Save command, replacing the hand-built content header. Its existing
+draft and dismissal semantics remain intact; pending save is indicated in the
+form and disables Save. The inbox uses native Mark all read and Reminder settings
+bar items. Custom reminder timing uses the same native Save command rather than a
+custom header Pressable. Native disabled state and handler guards prevent pending
+or invalid actions. Shared header adapters support both leading and trailing
+placement without changing the Home Add/notifications/profile order.
+
+### Add draft operation ownership
+
+Add keeps one draft-changing operation active at a time: saving an item, creating
+its parent, or collecting photos. While it is pending, retain the visible draft
+and disable edits, clear/reorder commands, Save, and dismissal. Guard callbacks
+as well as native disabled props so a previously opened control cannot alter the
+submitted draft. A failed operation restores editing with the same draft; success
+performs the existing transition. Scope/query refresh remains independent of this
+operation lock. Do not use background loading as a reason to lock the form.

@@ -127,12 +127,14 @@ export function InventoryInvitationScreen({
             </View>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Join inventory"
+              accessibilityState={{ busy: state.status === 'accepting', disabled: state.status === 'accepting' || startingOver }}
               disabled={state.status === 'accepting' || startingOver}
               onPress={() => void accept()}
               style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
             >
-              {state.status === 'accepting' ? <ActivityIndicator color={colors.onAction} /> :
-                <Text style={styles.primaryButtonText}>Join inventory</Text>}
+              {state.status === 'accepting' ? <ActivityIndicator color={colors.onAction} /> : null}
+              <Text style={styles.primaryButtonText}>{state.status === 'accepting' ? 'Joining…' : 'Join inventory'}</Text>
             </Pressable>
             {onStartOver ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over"
               disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()}
@@ -151,12 +153,14 @@ export function InventoryInvitationScreen({
             {state.status === 'open_error' ? <Text style={styles.message}>The inventory could not be opened. Your access was still added.</Text> : null}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Open inventory"
+              accessibilityState={{ busy: state.status === 'opening', disabled: state.status === 'opening' }}
               disabled={state.status === 'opening'}
               onPress={() => void openAcceptedInventory(state.inventoryId, state.inventoryName)}
               style={styles.primaryButton}
             >
-              {state.status === 'opening' ? <ActivityIndicator color={colors.onAction} /> :
-                <Text style={styles.primaryButtonText}>{state.status === 'open_error' ? 'Try opening again' : 'Open inventory'}</Text>}
+              {state.status === 'opening' ? <ActivityIndicator color={colors.onAction} /> : null}
+              <Text style={styles.primaryButtonText}>{state.status === 'opening' ? 'Opening…' : state.status === 'open_error' ? 'Try opening again' : 'Open inventory'}</Text>
             </Pressable>
           </>
         ) : (

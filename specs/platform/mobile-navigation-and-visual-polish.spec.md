@@ -269,3 +269,34 @@ gesture-driven containment exploration.
   retaining full accessible inventory/tenant names. Add symmetric 12-point inner
   horizontal padding and compact vertical padding. Use a single label at enlarged
   text sizes instead of compressing two lines into the navigation bar.
+
+Move destination creation chooses Location or Container through the shared native
+value picker labeled Kind. It is a form value, not a tab or navigation target.
+Keep the selected kind's explanation and proposed placement visible, and use that
+kind in the create command. Pending creation disables the choice.
+
+Asset Edit, Move, and Move here sheets own one pending mutation at a time. A
+synchronous guard rejects duplicate save/create callbacks and freezes all draft
+changes, destination selections, Cancel, and sheet gestures until completion.
+Failure restores editing with the submitted draft intact. Destination creation
+shares the same operation lock as Move. Completion after unmount must not navigate
+or display an alert in a different screen. Keep disabled controls visibly present
+and expose their disabled state to assistive technology.
+
+The pending sheet lock also prevents system Back/navigation removal. Successful
+submission explicitly permits its own return navigation; unavoidable teardown
+still suppresses late navigation and alerts.
+
+Asset Edit and Move text inputs expose stable accessible names matching their
+visible purpose: Asset name, Description, Put in, and Find item, box, or place.
+A preceding Text label alone does not label a native text field. Retain input
+names while fields contain values and while submission disables editing.
+
+The shared mobile minimum touch target is 48 logical points, covering both
+platforms. Add/Edit tag choices and inline tag-creation controls use that minimum
+without overlapping hit regions. Preserve tag selection and creation behavior.
+Voice photo controls use native command buttons; each draft photo has a separately
+reachable numbered Remove command below its preview, rather than an 18-point
+overlaid close target. Photo rails can scroll and commands can grow with text.
+Tag creation uses a native Add tag command below its fields/color choice, avoiding
+an undersized inline action squeezed beside text entry.

@@ -1,6 +1,7 @@
 import React from 'react';
+import { attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
-import { AssetEditSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
+import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetId } from '../../domain/assets/AssetSummary';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
@@ -20,7 +21,7 @@ it('opens Edit before tags load and preserves a dirty draft after background cor
       <AssetEditSheetRouteScreen inventoryAssetTypesQuery={{ execute: async () => [] }} assetId="asset" assetCoreQuery={query} inventoryAssetTagsQuery={{ execute: () => new Promise(() => undefined) }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
-    const name = harness.allByType('TextInput').find((input) => input.props.value === 'Tent');
+    const name = harness.byLabel('Asset name');
     expect(name).toBeDefined();
     await harness.changeText(name, 'My draft');
     title = 'Changed remotely';
@@ -41,7 +42,7 @@ it('keeps a Move draft mounted when background refresh discovers a different par
         createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
-    await harness.changeText(harness.allByType('TextInput').find((input) => input.props.placeholder === 'Search places, boxes, shelves'), 'My destination');
+    await harness.changeText(harness.byLabel('Put in'), 'My destination');
     parent = 'new-parent';
     await harness.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(harness);
     expect(harness.allByType('TextInput').some((input) => input.props.value === 'My destination')).toBe(true);
@@ -66,4 +67,143 @@ it('submits an expiration clear through the native edit route', async () => {
     await harness.press(harness.allByType('Pressable').at(-1));
     expect(saved).toEqual([expect.objectContaining({ assetId: 'asset', expiration: null })]);
   } finally { await harness.unmount(); }
+});
+
+it('creates the move destination with the kind selected in the native menu', async () => {
+  const client = createMobileQueryClient(); const h = new MobileRenderHarness(); const created: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        createAssetCommand={{ execute: async input => { created.push(input); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.allByType('TextInput').find(input => input.props.placeholder === 'Search places, boxes, shelves'), 'Camping box');
+    await settle(h);
+    await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
+    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "Camping box"')?.parent;
+    await h.press(create ?? undefined);
+    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'Camping box' })]);
+    expect(h.allText().join(' ')).toContain('Camping box');
+  } finally { await h.unmount(); }
+});
+
+it.each(['move', 'move-here'] as const)('freezes %s submission and restores its draft after failure', async mode => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const submitted: unknown[] = [];
+  let rejectSave: (error: Error) => void = () => {};
+  const waiting = new Promise<never>((_, reject) => { rejectSave = reject; });
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'container' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  const candidate = { id: 'box', title: 'Camping box', kind: 'container' as const, subtitle: '', pathLabel: 'Camping box', selectionHint: 'Container', willPromoteToContainer: false };
+  const props = { assetId: 'asset', assetCoreQuery: core, parentLookupQuery: { execute: async () => [candidate] }, moveAssetCommand: { execute: async (input: unknown) => { submitted.push(input); return waiting; } } };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
+    await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
+    await h.press(candidateRow ?? undefined);
+    const save = h.byText(mode === 'move' ? 'Move' : 'Move here')?.parent;
+    expect(save?.props.disabled).toBe(false);
+    const submit = save!.props.onPress;
+    await h.run(() => { submit(); submit(); });
+    expect(submitted).toHaveLength(1);
+    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
+    await h.changeText(input, 'Wrong destination');
+    expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
+    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+  } finally { await h.unmount(); }
+});
+
+it('shares the Move lock with destination creation and retains the query after failure', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creates = 0; let moves = 0;
+  let rejectCreate: (error: Error) => void = () => {};
+  const waiting = new Promise<never>((_, reject) => { rejectCreate = reject; });
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, parentAssetId: assetId('old'), locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core} parentLookupQuery={{ execute: async () => [] }}
+        createAssetCommand={{ execute: async () => { creates++; return waiting; } }}
+        moveAssetCommand={{ execute: async () => { moves++; return { id: 'asset', title: 'Tent', message: 'Moved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.allByType('TextInput')[0], 'New box');
+    const create = h.byText('Create location "New box"')?.parent;
+    const move = h.byText('Move')?.parent;
+    await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
+    expect(creates).toBe(1); expect(moves).toBe(0);
+    expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
+    expect(h.allText()).toContain('Creating destination…');
+    await h.changeText(h.allByType('TextInput')[0], 'Changed');
+    await h.run(() => rejectCreate(new Error('Failed'))); await settle(h);
+    expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
+    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+  } finally { await h.unmount(); }
+});
+
+it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft during submission and %s', async outcome => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let writes = 0; let unmounted = false;
+  resetNavigation();
+  let resolveSave: (value: { id: string; title: string; message: string }) => void = () => {};
+  let rejectSave: (error: Error) => void = () => {};
+  const waiting = new Promise<{ id: string; title: string; message: string }>((resolve, reject) => { resolveSave = resolve; rejectSave = reject; });
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async () => { writes++; return waiting; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    const input = h.allByType('TextInput')[0];
+    await h.changeText(input, 'Submitted name');
+    const save = h.byText('Save')!.parent!.props.onPress;
+    await h.run(() => { save(); save(); });
+    expect(writes).toBe(1);
+    await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
+    expect(dispatchedActions()).toEqual([]);
+    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    await h.changeText(input, 'Unsubmitted name');
+    expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
+    if (outcome === 'failure') {
+      await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
+      expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
+      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    } else if (outcome === 'success') {
+      await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
+      expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+    } else {
+      await h.unmount(); unmounted = true;
+      await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
+      expect(dispatchedActions()).toEqual([]);
+    }
+  } finally { if (!unmounted) await h.unmount(); resetNavigation(); }
+});
+
+it('keeps an existing tag selected when inline tag resolution updates the Edit draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Tent', description: 'Keep this description', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
+        inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
+    await h.press(h.byLabel('Add tag'));
+    const save = h.byText('Save')?.parent;
+    expect(save?.props.disabled).toBe(false);
+    await h.press(save ?? undefined);
+    expect(saved).toEqual([expect.objectContaining({ tagIds: ['camping'], newTags: [], description: 'Keep this description' })]);
+  } finally { await h.unmount(); }
 });

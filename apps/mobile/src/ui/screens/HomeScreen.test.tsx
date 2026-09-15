@@ -39,14 +39,6 @@ vi.mock('../serverState/useMobileInventoryServerQuery', () => ({
   useMobileInventoryServerQuery: () => serverQueryState.current
 }));
 
-vi.mock('lucide-react-native', () => ({
-  Bell: 'BellIcon',
-  ChevronDown: 'ChevronDownIcon',
-  Plus: 'PlusIcon',
-  UserCircle: 'UserCircleIcon',
-  Settings: 'SettingsIcon'
-}));
-
 vi.mock('react-native-safe-area-context', () => ({
   SafeAreaView: 'SafeAreaView'
 }));

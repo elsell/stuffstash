@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertButton, Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, AlertButton, Animated, Platform, useWindowDimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
@@ -8,6 +8,7 @@ import {
   AppNoticeTone,
   buildAppNoticePresentation
 } from './AppFeedbackPresentation';
+import { useNoticeAccessibility } from './useNoticeAccessibility';
 
 export type ShowAppNoticeInput = AppNoticeInput & {
   readonly action?: {
@@ -43,6 +44,7 @@ const AppFeedbackContext = createContext<AppFeedbackContextValue | null>(null);
 
 export function AppFeedbackProvider({ children }: { readonly children: ReactNode }) {
   const [activeNotice, setActiveNotice] = useState<ActiveNotice | null>(null);
+  const noticeSequence = useRef(0);
   const insets = useSafeAreaInsets();
 
   const value = useMemo<AppFeedbackContextValue>(() => ({
@@ -69,15 +71,15 @@ export function AppFeedbackProvider({ children }: { readonly children: ReactNode
       );
     },
     showNotice: (input) => {
-      setActiveNotice((current) => ({
+      setActiveNotice({
         ...input,
-        id: (current?.id ?? 0) + 1
-      }));
+        id: ++noticeSequence.current
+      });
     }
   }), []);
 
-  const dismissNotice = useCallback(() => {
-    setActiveNotice(null);
+  const dismissNotice = useCallback((id: number) => {
+    setActiveNotice(current => current?.id === id ? null : current);
   }, []);
 
   return (
@@ -85,6 +87,7 @@ export function AppFeedbackProvider({ children }: { readonly children: ReactNode
       {children}
       {activeNotice ? (
         <AppNotice
+          key={activeNotice.id}
           notice={activeNotice}
           topOffset={insets.top + spacing.sm}
           onDismiss={dismissNotice}
@@ -109,10 +112,12 @@ function AppNotice({
 }: {
   readonly topOffset: number;
   readonly notice: ActiveNotice;
-  readonly onDismiss: () => void;
+  readonly onDismiss: (id: number) => void;
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
+  const { reduceMotion, screenReader } = useNoticeAccessibility();
+  const { fontScale } = useWindowDimensions();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-120)).current;
   const isDismissingRef = useRef(false);
@@ -129,6 +134,11 @@ function AppNotice({
     }
 
     isDismissingRef.current = true;
+    if (reduceMotion) {
+      onDismiss(notice.id);
+      afterDismiss?.();
+      return;
+    }
     Animated.parallel([
       Animated.timing(translateY, {
         duration: 170,
@@ -141,13 +151,20 @@ function AppNotice({
         useNativeDriver: true
       })
     ]).start(() => {
-      onDismiss();
+      onDismiss(notice.id);
       afterDismiss?.();
     });
-  }, [onDismiss, opacity, translateY]);
+  }, [notice.id, onDismiss, opacity, reduceMotion, translateY]);
 
   useEffect(() => {
-    Animated.parallel([
+    if (reduceMotion) {
+      opacity.stopAnimation();
+      translateY.stopAnimation();
+      opacity.setValue(1);
+      translateY.setValue(0);
+      return;
+    }
+    const animation = Animated.parallel([
       Animated.spring(translateY, {
         speed: 20,
         bounciness: 5,
@@ -159,8 +176,17 @@ function AppNotice({
         toValue: 1,
         useNativeDriver: true
       })
-    ]).start();
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [opacity, reduceMotion, translateY]);
 
+  useEffect(() => {
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(presentation.accessibilityLabel);
+  }, [presentation.accessibilityLabel]);
+
+  useEffect(() => {
+    if (screenReader || presentation.durationMs === null) return;
     const timeout = setTimeout(() => {
       dismissWithAnimation();
     }, presentation.durationMs);
@@ -168,7 +194,12 @@ function AppNotice({
     return () => {
       clearTimeout(timeout);
     };
-  }, [dismissWithAnimation, opacity, presentation.durationMs, translateY]);
+  }, [dismissWithAnimation, presentation.durationMs, screenReader]);
+
+  const restorePosition = useCallback(() => {
+    if (reduceMotion) { translateY.setValue(0); return; }
+    Animated.spring(translateY, { speed: 22, bounciness: 4, toValue: 0, useNativeDriver: true }).start();
+  }, [reduceMotion, translateY]);
 
   const panResponder = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_event, gestureState) =>
@@ -182,22 +213,10 @@ function AppNotice({
         return;
       }
 
-      Animated.spring(translateY, {
-        speed: 22,
-        bounciness: 4,
-        toValue: 0,
-        useNativeDriver: true
-      }).start();
+      restorePosition();
     },
-    onPanResponderTerminate: () => {
-      Animated.spring(translateY, {
-        speed: 22,
-        bounciness: 4,
-        toValue: 0,
-        useNativeDriver: true
-      }).start();
-    }
-  }), [dismissWithAnimation, translateY]);
+    onPanResponderTerminate: restorePosition
+  }), [dismissWithAnimation, restorePosition, translateY]);
 
   return (
     <View
@@ -211,6 +230,7 @@ function AppNotice({
         {...panResponder.panHandlers}
         style={[
           styles.notice,
+          fontScale >= 1.3 && { flexDirection: 'column', alignItems: 'stretch' },
           {
             backgroundColor: presentation.backgroundColor,
             borderColor: presentation.borderColor,
@@ -221,10 +241,10 @@ function AppNotice({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss message"
+          accessibilityLabel={`${presentation.accessibilityLabel}. Dismiss message`}
           hitSlop={spacing.sm}
           onPress={() => dismissWithAnimation()}
-          style={styles.noticeBody}
+          style={[styles.noticeBody, fontScale >= 1.3 && { flex: 0 }]}
         >
           <NoticeToneDot palette={palette} tone={notice.tone} />
           <View style={styles.noticeText}>
@@ -241,6 +261,7 @@ function AppNotice({
         {notice.action ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={notice.action.label}
             onPress={() => {
               dismissWithAnimation(notice.action?.onPress);
             }}
@@ -297,7 +318,7 @@ function createStyles(colors: MobileColorPalette) {
     shadowRadius: 18
   },
   noticeAction: {
-    minHeight: 38,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: spacing.xs
   },
@@ -311,7 +332,7 @@ function createStyles(colors: MobileColorPalette) {
     flex: 1,
     flexDirection: 'row',
     gap: spacing.sm,
-    minHeight: 38
+    minHeight: 48
   },
   noticeDot: {
     borderRadius: 5,

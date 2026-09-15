@@ -1,3 +1,4 @@
+import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import {
@@ -118,7 +119,8 @@ export function VoiceCapabilityScreen({
   const { styles } = useSettingsListStyles();
   const feedback = useAppFeedback();
   const providers = useProviderSettings(query);
-  const [working, setWorking] = useState(false);
+  const [operation, setOperation] = useState<'select' | 'test' | 'enable'>();
+  const working = operation !== undefined;
   const workingRef = useRef(false);
   if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
@@ -126,13 +128,18 @@ export function VoiceCapabilityScreen({
   const stage = stagePresentation(capability);
   const selectedProfile = slot.selectedProfile;
   const recommendedAction = slot.recommendedAction;
-  const alternatives = providers.state.viewModel.profiles.filter((profile) =>
-    profile.capability === capability && profile.id !== slot.selectedProfileId && profile.lifecycleState !== 'archived');
+  const availableProfiles = providers.state.viewModel.profiles.filter(profile =>
+    profile.capability === capability && (profile.lifecycleState !== 'archived' || profile.id === slot.selectedProfileId));
+  const serviceOptions = availableProfiles.map(profile => ({ value: profile.id, label: profile.displayName }));
+  if (selectedProfile && !serviceOptions.some(option => option.value === selectedProfile.id)) {
+    serviceOptions.unshift({ value: selectedProfile.id, label: selectedProfile.displayName });
+  }
+  if (!slot.selectedProfileId) serviceOptions.unshift({ value: '', label: 'Not selected' });
 
-  async function act(action: () => Promise<void>, success: string): Promise<void> {
+  async function act(kind: 'select' | 'test' | 'enable', action: () => Promise<void>, success: string): Promise<void> {
     if (workingRef.current) return;
     workingRef.current = true;
-    setWorking(true);
+    setOperation(kind);
     try {
       await action();
       feedback.showNotice({ tone: 'success', title: success, message: `${stage.title} setup was updated.` });
@@ -141,7 +148,7 @@ export function VoiceCapabilityScreen({
       feedback.showNotice({ tone: 'error', title: 'Could not update voice', message: readableError(error) });
     } finally {
       workingRef.current = false;
-      setWorking(false);
+      setOperation(undefined);
     }
   }
 
@@ -171,16 +178,16 @@ export function VoiceCapabilityScreen({
         return selectedProfile
           ? {
               accessibilityLabel: `Enable ${selectedProfile.displayName} for ${stage.title}`,
-              label: working ? 'Enabling…' : 'Enable Service',
-              run: () => void act(() => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), 'Service enabled')
+              label: operation === 'enable' ? 'Enabling…' : 'Enable Service',
+              run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), 'Service enabled')
             }
           : undefined;
       case 'test_profile':
         return selectedProfile
           ? {
               accessibilityLabel: `Test ${selectedProfile.displayName} for ${stage.title}`,
-              label: working ? 'Testing…' : 'Test Connection',
-              run: () => void act(() => testCommand.execute(selectedProfile.id).then(() => undefined), 'Connection tested')
+              label: operation === 'test' ? 'Testing…' : 'Test Connection',
+              run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), 'Connection tested')
             }
           : undefined;
       default:
@@ -203,7 +210,8 @@ export function VoiceCapabilityScreen({
             accessibilityLabel={`Open provider profile ${slot.selectedProfile.displayName}`}
             context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || 'Default model'}`}
             label={slot.selectedProfile.displayName}
-            onPress={() => onEditProfile(slot.selectedProfile!.id)}
+            disabled={working}
+            onPress={() => { if (!workingRef.current) onEditProfile(slot.selectedProfile!.id); }}
             value={formatVoiceProviderReadinessLabel(slot.readiness)}
           />
         ) : <SettingsValueRow label="Service" value="Not selected" />}
@@ -221,25 +229,19 @@ export function VoiceCapabilityScreen({
             accessibilityLabel={directAction.accessibilityLabel}
             disabled={working}
             label={directAction.label}
-            onPress={directAction.run}
+            onPress={() => { if (!workingRef.current) directAction.run(); }}
           />
         </SettingsSection>
       ) : null}
-      {alternatives.length > 0 ? (
-        <SettingsSection footer="Changing the selection affects voice for everyone in this tenant." title="Other Services">
-          {alternatives.map((profile, index) => (
-            <View key={profile.id}>
-              {index > 0 ? <SettingsSeparator /> : null}
-              <SettingsActionRow
-                accessibilityLabel={`Use ${profile.displayName} for ${stage.title}`}
-                disabled={working}
-                label={`Use ${profile.displayName}`}
-                onPress={() => void act(() => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), 'Voice service selected')}
-              />
-            </View>
-          ))}
-        </SettingsSection>
-      ) : null}
+      {availableProfiles.length > 0 ? <SettingsSection footer="Changing the selection affects voice for everyone in this tenant.">
+        <SettingsPickerRow label="Service" accessibilityLabel="Choose voice service" value={slot.selectedProfileId ?? ''}
+          options={serviceOptions} disabled={working} onChange={id => {
+            if (workingRef.current || id === slot.selectedProfileId) return;
+            const profile = availableProfiles.find(candidate => candidate.id === id);
+            if (profile) void act('select', () => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), 'Voice service selected');
+          }} />
+        {operation === 'select' ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Selecting service…</Text> : null}
+      </SettingsSection> : null}
     </ScrollView>
   );
 }

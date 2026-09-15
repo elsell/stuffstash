@@ -1,3 +1,4 @@
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useCallback, useEffect, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
@@ -116,7 +117,6 @@ export function AssetDetailRouteScreen({
     : coreAsset.isError
       ? { status: 'error', ...assetDetailLoadErrorPresentation(coreAsset.error) }
       : { status: 'loading' };
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
@@ -201,8 +201,7 @@ export function AssetDetailRouteScreen({
     });
   }
 
-  async function refreshAsset(): Promise<void> {
-    setIsRefreshing(true);
+  const { refreshing: isRefreshing, refresh: refreshAsset } = usePullRefresh(async () => {
     setWorkspaceStatus(undefined);
 
     try {
@@ -213,10 +212,8 @@ export function AssetDetailRouteScreen({
         title: 'Could not refresh asset',
         message: readableError(error, 'Could not refresh asset.')
       });
-    } finally {
-      setIsRefreshing(false);
     }
-  }
+  });
 
   async function reloadAsset(): Promise<void> {
     await progressive.refresh();

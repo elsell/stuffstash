@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
-import { useHomePullRefresh } from './useHomePullRefresh';
+import { usePullRefresh } from '../serverState/usePullRefresh';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
 import type { NativeHeaderAction } from '../components/NativeHeaderActions.types';
 import {
@@ -55,7 +55,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
     }
   }
 
-  const pullRefresh = useHomePullRefresh(refreshDashboard);
+  const pullRefresh = usePullRefresh(refreshDashboard);
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
