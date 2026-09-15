@@ -71,3 +71,12 @@ findings remain valid; sheet occlusion is not evidence for this production path.
 The new runner fixture verifies the real detail route at largest accessibility
 text with independent recovery, absence of premature empty claims and Back.
 It does not verify actual Map path retention or screen-reader announcements.
+
+
+M88 search candidate: location contents now use NativeNavigationSearch with the
+existing20-row threshold. The inline field is removed and no-match Clear search
+uses NativeCommandButton. Route-owned search resets on asset/eligibility changes;
+owner guards and keyed adapter lifetime reject obsolete callbacks. A regression
+reproduced stale callbacks clearing a newer asset query before the guard. Shared
+adapter events after unmount are also ignored. Spatial and maintenance controls
+remain open under M88; search header/keyboard behavior is not native-verified yet.

@@ -707,3 +707,12 @@ commands at largest accessibility text, independent error removal and Back after
 recovery. Current Map info pushes the ordinary asset route; the fixture must not
 be described as a Map sheet test. Real Map return preservation remains a separate
 acceptance scenario. No fixture mutations or production credentials are used.
+
+
+M88 search revision adopts NativeNavigationSearch for location contents at the
+existing20-row threshold. Route-owned query state clears on asset replacement
+or loss of eligibility. The adapter explicitly removes search configuration when
+disabled. Existing Browse/Map/Expiration callers retain enabled behavior by default.
+Native verification must cover header coexistence, expansion, cancellation and
+return, in addition to query-fake tests for filtering and ownership. Spatial
+command modernization remains a separate part of M88.

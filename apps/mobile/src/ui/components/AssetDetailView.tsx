@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import {
   ActivityIndicator,
@@ -20,7 +20,6 @@ import {
   AssetDetailIdentitySection
 } from './AssetDetailIdentitySection';
 import {
-  ContainedContentsSearch,
   ContainedSpatialActions,
   ContainedWorkspaceListItemView,
   ContainedWorkspaceMaintenance,
@@ -43,6 +42,8 @@ export type AssetPhotoUploadProgressViewModel = {
 
 type AssetDetailViewProps = {
   readonly asset: AssetDetailViewModel;
+  readonly contentsQuery?: string;
+  readonly onClearContentsSearch?: () => void;
   readonly isActionPending?: boolean;
   readonly isPhotosLoading?: boolean;
   readonly isContentsLoading?: boolean;
@@ -78,6 +79,8 @@ export function assetDetailNavigationTitle(asset: Pick<AssetDetailViewModel, 'ki
 
 export function AssetDetailView({
   asset,
+  contentsQuery = '',
+  onClearContentsSearch = () => {},
   canRetryPhotos = false,
   isActionPending = false,
   isPhotosLoading = false,
@@ -108,7 +111,6 @@ export function AssetDetailView({
 }: AssetDetailViewProps) {
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
-  const [contentsQuery, setContentsQuery] = useState('');
   const showContentsSearch = shouldShowContainedContentsSearch(asset);
   const workspaceItems = asset.canContainAssets && contentsAvailable
     ? containedWorkspaceItems(asset, showContentsSearch ? contentsQuery : '')
@@ -127,7 +129,7 @@ export function AssetDetailView({
         <ContainedWorkspaceListItemView
           item={item}
           onChildPress={onChildPress}
-          onClearSearch={() => setContentsQuery('')}
+          onClearSearch={onClearContentsSearch}
         />
       )}
       ListHeaderComponent={(
@@ -190,9 +192,6 @@ export function AssetDetailView({
             />
           ) : null}
 
-          {showContentsSearch ? (
-            <ContainedContentsSearch onChangeQuery={setContentsQuery} query={contentsQuery} />
-          ) : null}
         </View>
       )}
       ListFooterComponent={(

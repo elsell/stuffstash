@@ -898,3 +898,16 @@ sheet. The earlier sheet-occlusion rationale does not apply to that current path
 false empty claims and lack of persistent local retry are still source-confirmed.
 A runner fixture now exercises the actual shared detail route at largest text,
 with independent contents/photo recovery and Back. Native execution is pending.
+
+
+M88 search candidate: location contents now use NativeNavigationSearch with the
+existing20-row threshold. The inline field is removed and no-match Clear search
+uses NativeCommandButton. Route-owned search resets on asset/eligibility changes;
+owner guards and keyed adapter lifetime reject obsolete callbacks. A regression
+reproduced stale callbacks clearing a newer asset query before the guard. Shared
+adapter events after unmount are also ignored. Spatial and maintenance controls
+remain open under M88; search header/keyboard behavior is not native-verified yet.
+
+M88 validation:41 final remote adapter/consumer/route checks passed, plus18
+detail-presentation checks before the ownership follow-up, TypeScript and
+structural checks. Critic confirmed the stale-event fix; native acceptance pending.

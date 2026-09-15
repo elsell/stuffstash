@@ -1,6 +1,8 @@
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
+import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
 import { AssetRegionRecovery } from '../components/AssetRegionRecovery';
 import { usePullRefresh } from '../serverState/usePullRefresh';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -117,6 +119,18 @@ export function AssetDetailRouteScreen({
     : coreAsset.isError
       ? { status: 'error', ...assetDetailLoadErrorPresentation(coreAsset.error) }
       : { status: 'loading' };
+  const contentsSearchEnabled = screenState.status === 'ready' && shouldShowContainedContentsSearch(screenState.asset);
+  const [contentsSearch, setContentsSearch] = useState({ assetId, query: '' });
+  const contentsQuery = contentsSearch.assetId === assetId && contentsSearchEnabled ? contentsSearch.query : '';
+  const searchOwner = useMemo(() => ({ active: false }), [assetId, contentsSearchEnabled]);
+  const changeContentsQuery = (query: string) => {
+    if (searchOwner.active && contentsSearchEnabled) setContentsSearch({ assetId, query });
+  };
+  useEffect(() => {
+    searchOwner.active = true;
+    setContentsSearch({ assetId, query: '' });
+    return () => { searchOwner.active = false; };
+  }, [assetId, contentsSearchEnabled, searchOwner]);
   const [pendingAction, setPendingAction] = useState<PendingAction | undefined>();
   const [failedPhotoDrafts, setFailedPhotoDrafts] = useState<readonly SelectedAssetPhoto[]>([]);
   const [photoUploads, setPhotoUploads] = useState<readonly PhotoUploadRow[]>([]);
@@ -434,6 +448,9 @@ export function AssetDetailRouteScreen({
   } : undefined;
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
+      <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
+        placeholder="Search this place" onChange={changeContentsQuery} onSubmit={changeContentsQuery}
+        onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
         ...(headerOverflow ? assetHeaderOverflowScreenOptions(headerOverflow) : {})
@@ -465,6 +482,7 @@ export function AssetDetailRouteScreen({
           })()}
           <AssetDetailView
             asset={screenState.asset}
+            contentsQuery={contentsQuery} onClearContentsSearch={() => changeContentsQuery('')}
             canRetryPhotos={photoStatus?.canRetry}
             isActionPending={pendingAction !== undefined}
             isContentsLoading={!assetContents.data && assetContents.isPending}

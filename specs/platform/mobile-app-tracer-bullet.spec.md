@@ -255,9 +255,12 @@ This spec defines camera behavior only for attaching still photos during the Add
     understandable. Container workspaces may continue to present immediate
     children only.
   - When a location workspace contains at least 20 combined space and item
-    rows, it must expose one compact inline contents search field that filters
-    both sections by title and relative path without leaving the workspace.
-    Smaller locations must not spend permanent vertical space on this control.
+    rows, it must expose native navigation search on demand using the existing
+    integrated search-button adapter. It filters both sections by title and
+    relative path without leaving the workspace. Smaller locations must not
+    expose this search control. Clear or cancel restores both sections; changing
+    the viewed asset or falling below the threshold clears the scoped query.
+    Search must preserve the detail title, Back and overflow actions.
     The search result state must preserve section headings, counts, and a clear
     no-match recovery action.
   - Contained children must have deterministic presentation ordering. The first ordering groups containers and locations before items so nested places remain easy to scan, then sorts each group by the user-visible title and asset ID as a stable tiebreaker.
