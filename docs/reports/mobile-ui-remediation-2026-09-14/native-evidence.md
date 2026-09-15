@@ -784,3 +784,27 @@ the sheet scroll view. The inspected349289 iPad screenshot shows visible checkou
 text despite failed hit-testing. The comparison is not a claim that M61 is solved.
 Remote structural check passes; critic found no blockers. Native compilation and
 comparison execution remain pending. No production layout changed in this pass.
+
+### Run349320 iPad screenshot review
+
+The completed download is /tmp/native349320-fixtures-ipad. Inspected the following
+named attachments against the logged test outcomes:
+
+- Expiration keyboard0221E6AF shows Tools search, a matching result, and both Apply
+  and Back fully above the keyboard inside the sheet. The corresponding native
+  interaction passed. This is default-light iPad evidence, not phone acceptance.
+- Add sheet5A26BCEC visibly remains on Loading inventory without its header.
+  Query8B426330 shows scope/principal success, plus scoped add-context/type/parent
+  entries that are pending/idle with zero observers. Unlike the earlier phone
+  snapshot with no scoped entries, these queries exist but have not fetched.
+  This does not establish why observers are absent; retain the pending header
+  configuration comparison rather than changing production query behavior by guess.
+- Add card70E2B336 visibly contains `N draft name`; confirms the text assertion
+  rather than a test-only string mismatch. M74 native-owned draft is not in this
+  source and remains to verify.
+- HistoryF27B98C9 shows the first checkout and return notes below its header.
+  The StaticText hit failure still cannot be interpreted as clipped rendering.
+  Expansion/pagination were not reached; the separate comparison remains needed.
+
+![iPad expiration actions with keyboard](evidence/ipad-expiration-keyboard-349320.png)
+![iPad Add sheet still loading](evidence/ipad-add-loading-349320.png)
