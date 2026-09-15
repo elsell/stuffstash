@@ -605,3 +605,10 @@ Runner diagnostics use a deliberately missing bundled-file sibling, not external
 URLs or user media. Verify error/Retry/Close native reachability; separate controlled
 loading tests must prove a new request and successful recovery. A native click
 on a still-failing fixture alone does not prove retry semantics.
+
+The pinned viewer dimension adapter accepts an explicit retry generation. Each
+source or generation change clears old dimensions and starts a fresh native size
+request; obsolete completions cannot affect the active photo. Remove its URI-only
+JavaScript dimensions cache so a changed source/header context cannot inherit a
+previous request's result. Native image caching remains the platform's concern.
+This internal lifecycle repair alone does not establish visible error/retry UI.

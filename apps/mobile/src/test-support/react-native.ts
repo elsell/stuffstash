@@ -21,7 +21,21 @@ let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
 export const Switch = 'Switch';
-export const Image = 'Image';
+type ImageSizeRequest = {
+  readonly uri: string;
+  readonly headers: unknown;
+  readonly succeed: (width: number, height: number) => void;
+  readonly fail: () => void;
+};
+const imageSizeRequests: ImageSizeRequest[] = [];
+export const Image = Object.assign(
+  (props: Record<string, unknown>) => createElement('Image', props),
+  { getSizeWithHeaders(uri: string, headers: unknown, succeed: ImageSizeRequest['succeed'], fail: () => void) {
+      imageSizeRequests.push({ uri, headers, succeed, fail });
+    },
+    resolveAssetSource: (asset: number) => ({ uri: `asset:${asset}`, width: 100, height: 100 }) }
+);
+export function imageSizeRequestsForTest() { return [...imageSizeRequests]; }
 export function FlatList(props: Record<string, unknown>) {
   const rows = (props.data ?? []) as readonly unknown[];
   const render = props.renderItem as ((input: { item: unknown; index: number }) => ReactNode) | undefined;
@@ -142,6 +156,7 @@ export const Animated = { ValueXY: AnimatedValueXY, Value: AnimatedValue, View: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  imageSizeRequests.length = 0;
   reducedMotionSnapshot = undefined;
   reduceMotionEnabled = false;
   screenReaderEnabled = false;

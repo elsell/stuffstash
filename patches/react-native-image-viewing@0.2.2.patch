@@ -87,3 +87,102 @@ index 4730fe40735bd80afc97abdd14150a2fb4abf3e5..e85bd50bd41d5763d5cb74860aba09d9
 +    return [headerTranslate.getTranslateTransform(), footerTranslate.getTranslateTransform(), toggleVisible];
  };
  export default useAnimatedComponents;
+diff --git a/dist/hooks/useImageDimensions.d.ts b/dist/hooks/useImageDimensions.d.ts
+index 5613dca24f2006c59ce53713b820950fab40a47b..9b609ce0514045cae45042bf9a2346ec74fc462d 100644
+--- a/dist/hooks/useImageDimensions.d.ts
++++ b/dist/hooks/useImageDimensions.d.ts
+@@ -6,5 +6,5 @@
+  *
+  */
+ import { Dimensions, ImageSource } from "../@types";
+-declare const useImageDimensions: (image: ImageSource) => Dimensions | null;
++declare const useImageDimensions: (image: ImageSource, attempt?: number) => Dimensions | null;
+ export default useImageDimensions;
+diff --git a/dist/hooks/useImageDimensions.js b/dist/hooks/useImageDimensions.js
+index d89a3a1280968b3b48b10f4e8ddaf164e23ee1b7..1a091a029f76844addc13b0a9362aa7c775cdd7a 100644
+--- a/dist/hooks/useImageDimensions.js
++++ b/dist/hooks/useImageDimensions.js
+@@ -7,58 +7,32 @@
+  */
+ import { useEffect, useState } from "react";
+ import { Image } from "react-native";
+-import { createCache } from "../utils";
+-const CACHE_SIZE = 50;
+-const imageDimensionsCache = createCache(CACHE_SIZE);
+-const useImageDimensions = (image) => {
+-    const [dimensions, setDimensions] = useState(null);
+-    const getImageDimensions = (image) => {
+-        return new Promise((resolve) => {
+-            if (typeof image == "number") {
+-                const cacheKey = `${image}`;
+-                let imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (!imageDimensions) {
+-                    const { width, height } = Image.resolveAssetSource(image);
+-                    imageDimensions = { width, height };
+-                    imageDimensionsCache.set(cacheKey, imageDimensions);
+-                }
+-                resolve(imageDimensions);
+-                return;
+-            }
+-            // @ts-ignore
+-            if (image.uri) {
+-                const source = image;
+-                const cacheKey = source.uri;
+-                const imageDimensions = imageDimensionsCache.get(cacheKey);
+-                if (imageDimensions) {
+-                    resolve(imageDimensions);
+-                }
+-                else {
+-                    // @ts-ignore
+-                    Image.getSizeWithHeaders(source.uri, source.headers, (width, height) => {
+-                        imageDimensionsCache.set(cacheKey, { width, height });
+-                        resolve({ width, height });
+-                    }, () => {
+-                        resolve({ width: 0, height: 0 });
+-                    });
+-                }
+-            }
+-            else {
+-                resolve({ width: 0, height: 0 });
+-            }
+-        });
+-    };
+-    let isImageUnmounted = false;
++const useImageDimensions = (image, attempt = 0) => {
++    const [result, setResult] = useState(null);
+     useEffect(() => {
+-        getImageDimensions(image).then((dimensions) => {
+-            if (!isImageUnmounted) {
+-                setDimensions(dimensions);
+-            }
+-        });
+-        return () => {
+-            isImageUnmounted = true;
++        let active = true;
++        let completed = false;
++        setResult(null);
++        const finish = (width, height) => {
++            if (!active || completed) return;
++            completed = true;
++            const valid = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
++            setResult({ image, attempt, dimensions: valid ? { width, height } : { width: 0, height: 0 } });
+         };
+-    }, [image]);
+-    return dimensions;
++        try {
++            if (typeof image === "number") {
++                const source = Image.resolveAssetSource(image);
++                finish(source?.width, source?.height);
++            } else if (image?.uri) {
++                Image.getSizeWithHeaders(image.uri, image.headers, finish, () => finish(0, 0));
++            } else {
++                finish(0, 0);
++            }
++        } catch {
++            finish(0, 0);
++        }
++        return () => { active = false; };
++    }, [image, attempt]);
++    return result?.image === image && result?.attempt === attempt ? result.dimensions : null;
+ };
+ export default useImageDimensions;

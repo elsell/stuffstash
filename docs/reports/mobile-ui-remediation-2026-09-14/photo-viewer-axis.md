@@ -36,3 +36,10 @@ acceptance test awaiting the M85 repair and native execution, not a passing resu
 The scenario deliberately keeps failing after Retry; separate controlled tests
 must establish fresh requests and successful recovery. Structural validation and
 the two fixture-preparation tests passed on the remote Linux validation host.
+
+M85 dimension lifecycle candidate: the pinned adapter now clears old dimensions,
+accepts an explicit retry generation, forwards the original headers, and ignores
+obsolete or duplicate completions. Its URI-only JavaScript cache was removed.
+Two regression tests failed against the previous dependency and pass against the
+patch on the remote validation host. This does not yet add visible Retry/error
+controls; M85 remains open until image-decode handling and native acceptance pass.
