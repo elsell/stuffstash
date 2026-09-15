@@ -583,3 +583,11 @@ of replacement start-over availability. Two regressions failed before correction
 13 invitation-screen checks, typecheck and structural checks pass remotely. See
 [Sharing and invitation review](sharing-axis.md). Native link replacement and
 route-side navigation effects remain pending; no broad deep-link acceptance claim.
+
+### M71 — failed system initial-link lookup leaves invitation initialization pending (P2)
+
+Implemented rejection readiness, foreground precedence and disposed-subscription
+guards behind the existing native Linking adapter. A mounted fake-source baseline
+reproduced the stall and unhandled rejections. Ten remote hook/domain checks plus
+typecheck/structural checks pass. See [Sharing/invitation audit](sharing-axis.md).
+Native deep-link delivery remains pending; no claim of whole-entrypoint acceptance.

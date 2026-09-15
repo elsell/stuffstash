@@ -67,3 +67,23 @@ initial URL result. Its initial lookup has no rejection handler; failure readine
 needs a controlled test before choosing recovery semantics. Existing provider tests
 replace React hooks and therefore do not establish real mounted lifecycle behavior.
 These are explicit outstanding review gaps, not passing coverage.
+
+## M71 — initial-link lookup rejection leaves initialization unfinished
+
+The preceding initial-lookup gap is now reproduced and corrected. Extracting the
+existing lifecycle into a mounted hook produced one failed readiness case and two
+unhandled rejection errors. The hook accepts a link-source interface, and the
+production provider retains Expo Linking plus runtime origin configuration.
+
+Rejected lookup now finishes readiness unless a foreground invitation already won.
+Disposal removes the listener and ignores late lookup/event completions. Existing
+route filtering and trusted parser remain unchanged. The old test that replaced
+React hooks was replaced by mounted tests with a controlled source fake, preserving
+foreground-versus-initial and null-result coverage. All ten selected hook/domain
+checks, TypeScript and structural checks pass remotely on paul. This verifies
+controlled lifecycle behavior, not OS universal-link delivery or complete account
+isolation. Native cold/warm link and account-transition scenarios remain pending.
+
+Critic follow-through: clearing now invalidates a pending initial lookup, preventing
+a dismissed invitation from reappearing. The added regression failed before the
+generation guard and passes afterward; later foreground links still work.

@@ -329,3 +329,19 @@ The new invitation begins with its own start-over availability. Existing preview
 and acceptance request-generation rules also govern these recovery completions.
 A still-current opening failure must continue to explain that access was added
 and offer retry; this rule does not roll back completed acceptance or account work.
+
+### Mobile initial invitation lookup failure
+
+A rejected system initial-URL lookup must finish invitation initialization with no
+invitation, unless a foreground invitation has already been captured. It must not
+leave the invitation screen indefinitely checking or produce an unhandled promise
+rejection. Later foreground links remain usable. Only links for the invitation
+route enter the existing origin/token parser. A disposed link subscription ignores
+late lookup completions and removes its event listener. The mounted React lifecycle
+must be testable with an injected link-source port; native Linking remains its
+production adapter. Failure readiness is not proof that no link was originally
+opened; the user can reopen the invitation to retry delivery.
+
+Explicitly clearing an invitation also supersedes a still-pending initial lookup;
+a late initial result must not resurrect dismissed invitation state. A newly
+received foreground invitation remains eligible after clearing.

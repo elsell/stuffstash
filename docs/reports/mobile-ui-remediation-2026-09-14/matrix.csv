@@ -3136,13 +3136,13 @@ S131,System / invitation link,accessibility,"VoiceOver/TalkBack names, roles, st
 S131,System / invitation link,motion,Reduced motion and feedback alternatives,pending,,
 S131,System / invitation link,content,"Lists, hierarchy, density and pagination",pending,,
 S131,System / invitation link,search,"Search, scope and filters",pending,,
-S131,System / invitation link,loading,"Loading, background refresh and progress",pending,,
-S131,System / invitation link,recovery,"Empty, error, denied and retry",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
+S131,System / invitation link,loading,"Loading, background refresh and progress",source-reviewed,; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M71
+S131,System / invitation link,recovery,"Empty, error, denied and retry",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M70;M71
 S131,System / invitation link,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
 S131,System / invitation link,privacy,"Account scope, data use and permissions",pending,,
 S131,System / invitation link,notifications,System notification entry and state,pending,,
 S131,System / invitation link,media,"Camera, library, files and audio",pending,,
-S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
+S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M70;M71
 S132,System / permission denied recovery,task,Task clarity and platform-pattern fit,pending,,
 S132,System / permission denied recovery,navigation,"Navigation, hierarchy and return",pending,,
 S132,System / permission denied recovery,selection,Value selection and current value,pending,,
