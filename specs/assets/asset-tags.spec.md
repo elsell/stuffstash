@@ -241,3 +241,10 @@ At the largest accessibility text size, reveal disclosure and completion control
 fully within the visible form. Discarding the test draft must return without any
 production mutation. Capture expanded and collapsed states; this supplements the
 route-level Save retention regression.
+
+Mobile Edit must retain the inline tag name and color in its route-owned draft
+until Add tag stages them or the user clears them. Nonblank unstaged input counts
+as unsaved work for Cancel/discard. Save must not silently omit that input: keep
+Save unavailable and explain beside the entry that the tag must be added or the
+entry cleared. Add tag remains the explicit staging action and atomically clears
+its entry while retaining unrelated edits. Whitespace-only entry is not dirty.

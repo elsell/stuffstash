@@ -58,3 +58,8 @@ production route. Captures distinguish expanded and collapsed states. Fixture
 isolation checks, TypeScript and structural checks passed remotely; XCTest
 execution and screenshot inspection remain pending. No Save or native visual
 acceptance is inferred from preparation checks.
+
+M95 follow-up supersedes the local unstaged-input observation: name and color now
+belong to the route draft and participate in discard protection. Save cannot omit
+them silently; the form explains Add/clear completion. Remote regression evidence
+does not establish native input or message acceptance.

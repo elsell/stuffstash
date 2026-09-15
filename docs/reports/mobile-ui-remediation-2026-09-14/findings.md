@@ -1029,3 +1029,18 @@ tags / Show fewer tags commands only change disclosure. A real-route regression
 failed before the fix and verifies ordering, hidden-tag selection, collapse and
 Save retention. Sixteen action-sheet tests, TypeScript and structural checks run
 remotely; native reachability and enlarged text remain pending.
+
+### M95 — Unstaged Edit tag input could be discarded silently
+
+**P1, source-confirmed draft loss.** EditTagPicker held name/color locally, outside
+the route dirty check. Typing a new tag then Cancel returned without confirmation;
+saving another field could omit that entry. The failing real-route regression
+confirmed missing discard feedback. The candidate moves the entry into EditDraft,
+counts nonblank name or color as dirty, and disables Save with a nearby instruction
+until Add tag stages it or the entry is cleared. Staging and entry clearing are
+atomic; normalized command data excludes the unfinished entry.
+
+Sixty-seven remote action-sheet/edit/expiration tests, TypeScript and structural
+checks pass; critic found no confirmed issue. Native input, color-picker callbacks,
+message placement and discard interaction remain pending. This correction is after
+PR146 and excluded from 0.24.21.

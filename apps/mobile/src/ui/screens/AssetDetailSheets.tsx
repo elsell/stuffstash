@@ -29,6 +29,7 @@ import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput
 import {
   assetEditContext,
   canSaveEditAsset,
+  hasUnstagedEditTag,
   EditDraft
 } from './AssetDetailEditPresentation';
 import {
@@ -125,7 +126,8 @@ export function EditAssetSheet({
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
-          onChange={(tagIds, newTags) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags })}
+          entry={draft?.inlineTag ?? { name: '', color: '' }}
+          onChange={(tagIds, newTags, inlineTag) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags, inlineTag })}
         />
       </ScrollView>
       <SheetActions
@@ -146,18 +148,21 @@ function EditTagPicker({
   newTags,
   onChange,
   selectedTagIds,
-  tags
+  tags,
+  entry
 }: {
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
-  readonly onChange: (tagIds: readonly string[], newTags: readonly CreateAssetTagDraft[]) => void;
+  readonly entry: NonNullable<EditDraft['inlineTag']>;
+  readonly onChange: (tagIds: readonly string[], newTags: readonly CreateAssetTagDraft[], entry: NonNullable<EditDraft['inlineTag']>) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('');
+  const { name: newTagName, color: newTagColor } = entry;
+  function setNewTagName(name: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, name }); }
+  function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
   const [showAllTags, setShowAllTags] = useState(false);
   const sortedTags = [...tags].sort((left, right) => left.label.localeCompare(right.label, undefined, { numeric: true, sensitivity: 'base' }));
@@ -168,10 +173,10 @@ function EditTagPicker({
       return;
     }
     if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId), newTags);
+      onChange(selectedTagIds.filter((current) => current !== tagId), newTags, entry);
       return;
     }
-    onChange([...selectedTagIds, tagId], newTags);
+    onChange([...selectedTagIds, tagId], newTags, entry);
   }
 
   function addNewTag(): void {
@@ -184,11 +189,7 @@ function EditTagPicker({
       selectedTagIds,
       pendingTags: newTags
     });
-    onChange(transition.selectedTagIds, transition.pendingTags);
-    if (transition.shouldClearInputs) {
-      setNewTagName('');
-      setNewTagColor('');
-    }
+    onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
   }
 
   const tagResolution = resolveInlineAssetTag({
@@ -211,7 +212,7 @@ function EditTagPicker({
               accessibilityState={{ disabled, selected: true }}
               disabled={disabled}
               key={`${tag.displayName}-${index.toString()}`}
-              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index))}
+              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}
               style={[
                 styles.tagOption,
                 colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
@@ -279,6 +280,7 @@ function EditTagPicker({
       {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
       <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
+      {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
     </View>
   );
 }

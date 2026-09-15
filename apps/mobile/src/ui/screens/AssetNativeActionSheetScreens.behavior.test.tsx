@@ -1,3 +1,4 @@
+import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
 import { attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
@@ -346,5 +347,32 @@ it('discloses large Edit tag sets without losing selections when collapsed', asy
     expect(h.byText('Tag 13')).toBeUndefined();
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['tag-14'], description: 'Keep description' })]);
+  } finally { await h.unmount(); }
+});
+
+
+it('protects an unstaged Edit tag from cancellation and silent omission on Save', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    await h.press(h.byLabel('Cancel'));
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await h.run(() => pressAlertButton('Keep editing'));
+    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
+    await h.changeText(h.byLabel('Description'), 'Keep this edit');
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([]);
+    expect(h.byText('Add this tag or clear its name and color before saving.')).toBeDefined();
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Keep this edit', newTags: [{ displayName: 'Camping' }] })]);
   } finally { await h.unmount(); }
 });
