@@ -34,7 +34,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,629 mobile tests (267 files), TypeScript and structural checks passed remotely against source 7a6a7bdd; native geometry and lifecycle acceptance remain open.
+The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,627 mobile tests (267 files), TypeScript and structural checks passed remotely against source 75923e21; native geometry and lifecycle acceptance remain open.
 
 The audit remains incomplete. After the Expiration filter source review, the 3384 cells
 comprise 2115 pending, 981 source-reviewed, 245 finding,
@@ -124,3 +124,5 @@ The [Expiration filter review](expiration-filters-axis.md) covers R017 and S075�
 [Keyboard accessory](keyboard-accessory-axis.md) reviews the shared dismissal control across all24 axes without claiming coverage of every input consumer.
 
 [Home expiration and recent summaries](home-summary-axis.md) have source review across all24 axes, with destination and native verification limits retained.
+
+Combined checkpoint75923e21: all1,627 tests across267 files, TypeScript and structural checks passed on paul (`/tmp/mobile-batch-75923e21.log`). A checksum comparison of mobile source was clean before this run. The count decreased because three grouped mounted Browse scenarios replaced six tree tests, while one invitation recovery test was added. This checkpoint includes M129–M133; native acceptance remains pending.
