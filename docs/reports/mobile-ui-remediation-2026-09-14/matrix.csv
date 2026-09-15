@@ -160,7 +160,7 @@ R007,add.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",p
 R007,add.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R007,add.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R007,add.tsx,search,"Search, scope and filters",pending,,
-R007,add.tsx,loading,"Loading, background refresh and progress",pending,,
+R007,add.tsx,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
 R007,add.tsx,recovery,"Empty, error, denied and retry",pending,,
 R007,add.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R007,add.tsx,privacy,"Account scope, data use and permissions",pending,,
@@ -184,7 +184,7 @@ R008,assets/[assetId]/checkouts.tsx,accessibility,"VoiceOver/TalkBack names, rol
 R008,assets/[assetId]/checkouts.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R008,assets/[assetId]/checkouts.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Checkout history renders timeline records with checkout/return details and explicit cursor load. Existing mounted test preserves rows through continuation failure then loads next page. Full loaded history uses ScrollView: large-data performance remains unverified.,
 R008,assets/[assetId]/checkouts.tsx,search,"Search, scope and filters",pending,,
-R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",pending,,
+R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
 R008,assets/[assetId]/checkouts.tsx,recovery,"Empty, error, denied and retry",pending,,
 R008,assets/[assetId]/checkouts.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R008,assets/[assetId]/checkouts.tsx,privacy,"Account scope, data use and permissions",pending,,
@@ -2008,7 +2008,7 @@ S084,Add / main draft,accessibility,"VoiceOver/TalkBack names, roles, states and
 S084,Add / main draft,motion,Reduced motion and feedback alternatives,pending,,
 S084,Add / main draft,content,"Lists, hierarchy, density and pagination",pending,,
 S084,Add / main draft,search,"Search, scope and filters",pending,,
-S084,Add / main draft,loading,"Loading, background refresh and progress",pending,,
+S084,Add / main draft,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
 S084,Add / main draft,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
