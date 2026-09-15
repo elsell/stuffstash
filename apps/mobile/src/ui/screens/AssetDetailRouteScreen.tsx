@@ -320,10 +320,10 @@ export function AssetDetailRouteScreen({
       await assetPhotos.reconcile();
     } catch (error) {
       if (!scope.active) return;
-      feedback.showNotice({
-        tone: 'error',
+      feedback.showDialog({
         title: 'Could not remove photo',
-        message: readableError(error, 'Photo removal failed.')
+        message: readableError(error, 'Photo removal failed.'),
+        primaryAction: { label: 'OK' }
       });
     } finally {
       scope.pending = false;

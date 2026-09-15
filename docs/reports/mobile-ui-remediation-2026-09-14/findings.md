@@ -767,3 +767,18 @@ guard, Sharing and notification checks plus TypeScript/structural checks pass
 an adjacent Loading older invitations status now preserves feedback while the
 native command retains its stable label. The nine Sharing checks and static
 checks passed again after that correction. Native recovery layout remains pending.
+
+### M83 — photo-removal recovery belongs above the viewer (P1)
+
+Source inspection finds AssetPhotoViewerSheet retains its overFullScreen viewer
+after failed removal, while AssetDetailRouteScreen sends failure to the root
+notice. The Add runtime evidence established that such notices can remain behind
+a native modal. Photo-specific visual failure is not yet captured.
+
+The rejected destructive operation now uses the existing native dialog adapter
+with one OK acknowledgment. It preserves the photo and retry state, and suppresses
+late failures after the operation owner leaves. The failure/teardown regression
+fails before correction and checks acknowledgment does not retry. Sixty-one
+remote asset/photo checks, TypeScript and structural checks pass
+(/tmp/photo-removal-alert-green.log); critic found no blockers. Native viewer/alert
+layering, VoiceOver focus return and retry remain required acceptance evidence.

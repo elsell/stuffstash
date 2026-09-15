@@ -563,3 +563,13 @@ use the shared native command adapter in their existing vertical containers.
 Preserve access decisions, retry destinations, cancellation and pagination
 disabling. This is a presentation change, not a change to access policy. Remove
 shared custom retry styling only after every consumer has migrated.
+
+### Photo removal failure above the full-screen viewer
+
+A rejected photo removal requires a native acknowledgment alert above the active
+viewer, rather than a root notice obscured by the full-screen modal. This
+operation-specific failure interrupts because the user needs to know the
+confirmed destructive request did not succeed. Retain the photo and enable retry
+after completion; acknowledgment must not perform another removal. Suppress
+late failures after the route's operation owner is gone. No authorization or
+removal service boundary changes. Native modal layering remains an acceptance gate.

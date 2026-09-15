@@ -161,9 +161,13 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
     await test.harness.run(() => firstRemoval.reject(new Error('Connection failed')));
     await settle(test.harness);
     if (leaveRoute) {
-      expect(test.harness.allText()).not.toContain('Could not remove photo');
+      expect(latestAlert()?.title).not.toBe('Could not remove photo');
     } else {
-      expect(test.harness.allText()).toContain('Could not remove photo');
+      expect(latestAlert()?.title).toBe('Could not remove photo');
+      expect(latestAlert()?.message).toBe('Connection failed');
+      expect(latestAlert()?.buttons.map(button => button.text)).toEqual(['OK']);
+      await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'OK')?.onPress?.(); });
+      expect(calls).toBe(1);
       expect(test.harness.byType('ImageViewing')?.props.visible).toBe(true);
       expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
       await test.harness.press(test.harness.byLabel('Remove photo'));
