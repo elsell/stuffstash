@@ -41,7 +41,7 @@ R002,(tabs)/(home)/index.tsx,motion,Reduced motion and feedback alternatives,pen
 R002,(tabs)/(home)/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R002,(tabs)/(home)/index.tsx,search,"Search, scope and filters",pending,,
 R002,(tabs)/(home)/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R002,(tabs)/(home)/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R002,(tabs)/(home)/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M130; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M130
 R002,(tabs)/(home)/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R002,(tabs)/(home)/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R002,(tabs)/(home)/index.tsx,notifications,System notification entry and state,pending,,
@@ -281,7 +281,7 @@ R012,assets/[assetId]/index.tsx,motion,Reduced motion and feedback alternatives,
 R012,assets/[assetId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R012,assets/[assetId]/index.tsx,search,"Search, scope and filters",pending,,
 R012,assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R012,assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R012,assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M129;M131
 R012,assets/[assetId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R012,assets/[assetId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R012,assets/[assetId]/index.tsx,notifications,System notification entry and state,pending,,
@@ -473,7 +473,7 @@ R020,locations/[locationId]/assets/[assetId]/index.tsx,motion,Reduced motion and
 R020,locations/[locationId]/assets/[assetId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,search,"Search, scope and filters",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R020,locations/[locationId]/assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",pending,,
+R020,locations/[locationId]/assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M129;M131
 R020,locations/[locationId]/assets/[assetId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,notifications,System notification entry and state,pending,,
@@ -1505,7 +1505,7 @@ S063,Home / expiration summary,motion,Reduced motion and feedback alternatives,s
 S063,Home / expiration summary,content,"Lists, hierarchy, density and pagination",source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
 S063,Home / expiration summary,search,"Search, scope and filters",source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
 S063,Home / expiration summary,loading,"Loading, background refresh and progress",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only; home-summary-axis.md; sourcea67157f9; native pending,M128
-S063,Home / expiration summary,recovery,"Empty, error, denied and retry",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only; home-summary-axis.md; sourcea67157f9; native pending,M128
+S063,Home / expiration summary,recovery,"Empty, error, denied and retry",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only; home-summary-axis.md; sourcea67157f9; native pending; findings.md M130; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M128;M130
 S063,Home / expiration summary,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
 S063,Home / expiration summary,privacy,"Account scope, data use and permissions",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only; home-summary-axis.md; sourcea67157f9; native pending,M128
 S063,Home / expiration summary,notifications,System notification entry and state,source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
@@ -1601,7 +1601,7 @@ S067,Browse / list grid,motion,Reduced motion and feedback alternatives,pending,
 S067,Browse / list grid,content,"Lists, hierarchy, density and pagination",pending,,
 S067,Browse / list grid,search,"Search, scope and filters",pending,,
 S067,Browse / list grid,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-S067,Browse / list grid,recovery,"Empty, error, denied and retry",pending,,
+S067,Browse / list grid,recovery,"Empty, error, denied and retry",finding,findings.md M131;M132; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M131;M132
 S067,Browse / list grid,editing,"Draft, save, cancel, undo and interruption",pending,,
 S067,Browse / list grid,privacy,"Account scope, data use and permissions",pending,,
 S067,Browse / list grid,notifications,System notification entry and state,pending,,
@@ -2009,7 +2009,7 @@ S084,Add / main draft,motion,Reduced motion and feedback alternatives,pending,,
 S084,Add / main draft,content,"Lists, hierarchy, density and pagination",pending,,
 S084,Add / main draft,search,"Search, scope and filters",pending,,
 S084,Add / main draft,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
-S084,Add / main draft,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M21;M82
+S084,Add / main draft,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md); findings.md M130; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified",M21;M82;M130
 S084,Add / main draft,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; text-entry-axis.md M74 native typing failure/candidate; acceptance pending,M21;M74
 S084,Add / main draft,privacy,"Account scope, data use and permissions",pending,,
 S084,Add / main draft,notifications,System notification entry and state,pending,,
