@@ -718,3 +718,16 @@ part of the audit. Twenty-seven existing remote Settings behavior tests,
 TypeScript and structural checks pass (/tmp/settings-native-retry.log on paul).
 This presentation change adds no prop-mirroring tests. Native error-state layout,
 large text and VoiceOver acceptance remain pending.
+
+
+M81 follow-up extends the native commands to scoped Settings, customization
+collections and editors (including Refresh access), provider state and voice
+setup. Shared refresh-notice consumers also include Sharing, scoped Settings,
+customization and provider/voice editors; their vertical composition was reviewed.
+Remaining route, navigation-guard and Sharing-specific retry controls are outside
+this pass, and their shared styles remain. The first validation caught a duplicate
+import and premature style removal; both were corrected before committing.
+All 115 tests across five Settings, customization, provider and Sharing suites
+pass on paul, followed by TypeScript and structural checks
+(`/tmp/settings-retry-consumers.log`, `/tmp/settings-retry-consumers-check.log`).
+The critic found no remaining blockers. Native layout acceptance remains pending.

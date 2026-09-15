@@ -1,9 +1,9 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Text,
   View
@@ -249,7 +249,7 @@ export function VoiceCapabilityScreen({
 function SettingsStateBridge({ state, onRetry }: { readonly state: ReturnType<typeof useSettingsModel>['state']; readonly onRetry: () => Promise<void> }) {
   const { palette, styles } = useSettingsListStyles();
   if (state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
-  if (state.status === 'error') return <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}><Text style={styles.errorTitle}>Could not load tenant context</Text><Text style={styles.errorMessage}>{state.message}</Text><Pressable accessibilityRole="button" onPress={() => void onRetry()} style={styles.retryButton}><Text style={styles.retryText}>Retry</Text></Pressable></ScrollView>;
+  if (state.status === 'error') return <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}><Text style={styles.errorTitle}>Could not load tenant context</Text><Text style={styles.errorMessage}>{state.message}</Text><NativeCommandButton label="Retry" onPress={() => void onRetry()} /></ScrollView>;
   return null;
 }
 

@@ -517,3 +517,10 @@ in-place command; they do not choose a value or navigate. Preserve Account and
 Connection recovery links, retained data, query retry behavior and error copy.
 Place the full-width native Host in vertical content. Inspect every shared-notice
 consumer; native error-state layout remains a separate verification requirement.
+
+The same command rule covers scoped household/inventory Settings, customization
+collection/editor load retries, the editor's Refresh access command, and provider
+and voice setup load retries. Refresh access still rechecks permission through its
+existing application flow and retains the read-only draft. The shared refresh
+notice also serves Sharing, customization, provider lists/editors, scoped Settings
+and voice setup; inspect those vertical placements and preserve their behavior.

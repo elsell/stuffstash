@@ -1,7 +1,8 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import type {
   ProviderProfileSettingsQuery,
   ProviderProfileSettingsViewModel
@@ -52,9 +53,7 @@ export function ProviderStateView({
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
       <Text accessibilityRole="header" style={styles.errorTitle}>Could not load Voice Setup</Text>
       <Text style={styles.errorMessage}>{state.message}</Text>
-      <Pressable accessibilityRole="button" onPress={() => void onRetry()} style={styles.retryButton}>
-        <Text style={styles.retryText}>Retry</Text>
-      </Pressable>
+      <NativeCommandButton label="Retry" onPress={() => void onRetry()} />
     </ScrollView>
   );
 }
