@@ -38,13 +38,10 @@ export default function BrowseFiltersRoute() {
     <SettingsActionRow label="Cancel" onPress={dismiss} />
   </ScrollView>;
   if (!choices.data || !matches) return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading filters" color={palette.action} /></View>;
-  return <View style={{ flex: 1, backgroundColor: palette.background }}>
-    {error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text> : null}
-    <BrowseFiltersScreen key={JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId])}
+  return <BrowseFiltersScreen key={JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId])}
       initial={{ scope: initial.initialScope, lifecycleState: initial.initialLifecycleState, checkoutState: initial.initialCheckoutState, tagIds: initial.initialTagIds, sort: initial.initialSort }}
-      query={initial.initialQuery} tags={choices.data} busy={busy} onCancel={dismiss} onCancelPending={cancel}
+      query={initial.initialQuery} tags={choices.data} busy={busy} error={error} onCancel={dismiss} onCancelPending={cancel}
       onApply={draft => { void navigate(() => router.dismissTo({ pathname: '/search', params: browseFilterApplyParams(draft, initial.initialQuery) })); }}
       onExpiration={(mode, draft) => { void navigate(() => router.replace({ pathname: '/expiration', params: expirationRouteParams(target.tenantId, target.inventoryId, browseExpirationFilter(mode, { ...draft, query: initial.initialQuery })) })); }}
-    />
-  </View>;
+    />;
 }

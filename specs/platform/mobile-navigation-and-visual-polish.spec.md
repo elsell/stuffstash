@@ -520,3 +520,8 @@ focus aborts the request and releases that visit's busy state; late success or
 failure must not navigate, show an error or unlock a newer request after return.
 Background callbacks cannot start verification while the sheet is unfocused.
 A new focused visit may retry without waiting for an aborted read to settle.
+
+The production Browse filter route must also preserve the direct native scroll
+body used by the filter fixture. Present verification errors inside that body;
+do not introduce a route-level View around the ready filter screen merely to show
+an error. Keep the error readable with the draft and persistent actions intact.

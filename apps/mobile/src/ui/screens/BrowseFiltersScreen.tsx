@@ -1,10 +1,11 @@
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useState } from 'react';
+import { Text } from 'react-native';
 import { Stack } from 'expo-router';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { AssetBrowseSort } from '../../application/home/InventorySummaryRepository';
 import type { BrowseDraftFilters } from './BrowseFilterState';
-import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, SettingsValueRow } from './SettingsList';
+import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, SettingsValueRow, useSettingsListStyles } from './SettingsList';
 import { NativeFilterSheet } from '../components/NativeFilterSheet';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
@@ -20,12 +21,14 @@ const choices = {
 } as const;
 const titles: Record<Page, string> = { overview: 'Filters', tags: 'Tags', expiration: 'Expiration' };
 
-export function BrowseFiltersScreen({ initial, query, tags, busy = false, onApply, onCancel, onCancelPending, onExpiration }: {
+export function BrowseFiltersScreen({ initial, query, tags, busy = false, error, onApply, onCancel, onCancelPending, onExpiration }: {
   readonly initial: BrowseFilterDraft; readonly query: string; readonly tags: readonly AssetTagOptionViewModel[];
+  readonly error?: string;
   readonly busy?: boolean; readonly onApply: (draft: BrowseFilterDraft) => void; readonly onCancel: () => void;
   readonly onCancelPending?: () => void;
   readonly onExpiration: (mode: ExpirationMode, draft: BrowseFilterDraft) => void;
 }) {
+  const { styles } = useSettingsListStyles();
   const [draft, setDraft] = useState(initial);
   const [page, setPage] = useState<Page>('overview');
   const [search, setSearch] = useState('');
@@ -41,6 +44,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, onAppl
       secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
       onApply: () => onApply(draft), onBack: () => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }
     }}>
+      {error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text> : null}
       {page === 'overview' ? <>
         <SettingsSection>
           <SettingsPickerRow label="Type" accessibilityLabel="Choose type" value={draft.scope} options={choices.scope} disabled={busy} onChange={value => setDraft({ ...draft, scope: value })} />

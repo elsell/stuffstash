@@ -82,3 +82,18 @@ it('explains unmatched tag search and restores the selected tag when search is c
     expect(applied[0].tagIds).toEqual(['tag']);
   } finally { await h.unmount(); resetNavigation(); }
 });
+
+it('keeps verification recovery inside scrollable content with the draft and actions intact', async () => {
+  const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
+  try {
+    await h.render(<BrowseFiltersScreen initial={{ ...initial, tagIds: ['tag'] }} query="" tags={[{ id: 'tag', key: 'tools', label: 'Tools' }]}
+      error="Inventory could not be verified" onApply={value => applied.push(value)} onCancel={() => {}} onExpiration={() => {}} />);
+    const error = h.allByType('Text').find(node => node.children.includes('Inventory could not be verified'));
+    expect(error?.props.accessibilityRole).toBe('alert');
+    let parent = error?.parent;
+    while (parent && parent.type !== 'ScrollView') parent = parent.parent;
+    expect(parent?.type).toBe('ScrollView');
+    await h.press(h.byLabel('Show results'));
+    expect(applied[0].tagIds).toEqual(['tag']);
+  } finally { await h.unmount(); }
+});

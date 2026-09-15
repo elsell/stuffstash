@@ -1512,3 +1512,12 @@ clear the new request's busy state. Existing scope validation is unchanged.
 Fifteen focused filter/navigation tests, TypeScript and structural checks pass
 remotely; code tests cover controlled focus events, not native sheet transitions.
 Native interruption/return remains pending. R016 navigation/lifecycle.
+
+M111 integration follow-up: source review at e303e4f7 found that the production
+ready Browse route still wrapped the filter screen in a View, unlike its direct
+native fixture. This violated the specified direct-scroll structure; no claim is
+made that it caused the user screenshot. The candidate now returns the screen
+directly and places verification error text inside its scroll content. A new
+controlled test reproduces missing in-content recovery before the change and
+verifies the alert, draft and Apply remain available afterward. Native route
+geometry still requires verification.
