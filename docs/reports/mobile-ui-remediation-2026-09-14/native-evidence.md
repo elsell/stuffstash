@@ -1000,3 +1000,30 @@ height. Retry asset types is reported as46.1points high although its two-line te
 visibly exceeds that region. Source also places metadata errors outside the edit
 form's scroll view; both scroll ownership and native hosted-label measurement need
 investigation. The test will continue to require accessible dismissal.
+
+## iPad native run34950225391: 31/40
+
+Completed job104319679738 used the same97edb367 checkout as the phone.
+Nine scenarios failed: three Add variants, original History hit check, color
+picker direct opening, Edit metadata Cancel reachability, Home Return draft text,
+no-accessory keyboard readiness, and uncontrolled address entry. Controlled URL,
+ordinary single/multiline text, expiration accessibility and footer/nested-sheet
+scenarios passed in this run; this does not erase the corresponding phone failures.
+Both unavailable-photo and failed-photo-removal scenarios passed.
+
+Inspected ipad-edit-errors-large-text-349502.png shows the Edit sheet cutting off
+Retry tags and no visible Cancel. The hierarchy reports Cancel at y971.5 even
+though the sheet ends above it; being inside the app viewport is insufficient.
+Retry asset types fits one line on iPad; this screenshot does not confirm the
+phone's two-line label-overlap cause. These results precede PR144 and the new
+PR146 scroll-ownership candidate, which remains awaiting native acceptance.
+
+Measurement investigation: pinned Expo UI55.0.17 HostView uses GeometryChangeModifier
+to report its measured dimensions through shadowNodeProxy.setStyleSize. The
+standard command currently requests ideal vertical sizing on its Text child,
+not on the outer Button. Apple's fixedSize documentation describes ideal-size
+proposals and notes that a child can exceed parent bounds. This makes outer-button
+measurement a hypothesis worth native comparison, not a proven root cause or fix.
+Current Expo documentation refers to a newer Host implementation and must not be
+assumed to describe the pinned dependency. Reference:
+https://developer.apple.com/documentation/swiftui/view/fixedsize(horizontal:vertical:)
