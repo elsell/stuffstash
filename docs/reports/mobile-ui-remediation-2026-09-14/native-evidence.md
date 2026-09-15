@@ -1410,3 +1410,30 @@ The actual tested merge is `1c4728f508dab1892d51ba7982bf19641acf7f34`. iPad onbo
 passed; both fixture jobs were still running when this evidence was recorded.
 Do not infer a keyboard-controller cause: production already disables preloading,
 and the existing no-accessory comparisons still need to be correlated.
+
+## Run34972540083 — iPad fixture log result
+
+The iPad mini(A17 Pro) job104392719258 completed with35/49 fixtures passing,
+14 failing. Tested merge revision:1c4728f508dab1892d51ba7982bf19641acf7f34
+(PR source36c45c3b). This predates M106/M107, focused-screen notice placement,
+M108 and M109. The phone fixture job remained live when this checkpoint was written;
+do not treat the whole run as complete or restart it.
+
+Checkout-history text bounds, expansion, older-page loading and dismissal passed.
+All five direct/nested/footer layout diagnostic variants passed on this iPad run,
+contrasting with the empty-body failures in349651. Those are named-run results,
+not proof that intermittent sheet layout defects or other device states are fixed.
+
+Normal-size failures include Add entry/typing, controlled address entry, Home
+return detail typing, Sharing email typing, color-row opening, place-content search
+and seeded-address keyboard readiness. Exact values include “Nve draft name,”
+“h://example.invalid,” “Returned cl,” and “audit@examvalidple.in.” They establish
+failed input expectations; product-versus-automation cause remains unresolved.
+Direct color-well opening passed while whole-row opening failed again.
+
+Both footer-appearance tests failed at tested-source line110: the fixture menu's
+“Audit footer appearance” button was not hittable. They did not reach the footer
+or establish its disabled-label contrast. Do not turn that result into a dark-mode
+contrast diagnosis or a claimed appearance fix. Artifact10400441420 contains the
+retained screenshots/xcresult; image inspection is still pending at this checkpoint.
+Enlarged-text failures remain recorded without advancing enlarged-text remediation.
