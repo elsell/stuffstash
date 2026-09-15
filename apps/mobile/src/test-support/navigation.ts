@@ -6,6 +6,8 @@ let preventCallback: PreventCallback | undefined;
 let dispatching = false;
 const dispatched: PreventedAction[] = [];
 const options: unknown[] = [];
+const optionListeners = new Set<() => void>();
+export function subscribeNavigationOptions(listener: () => void) { optionListeners.add(listener); return () => { optionListeners.delete(listener); }; }
 
 export const fakeNavigation = {
   dispatch(action: PreventedAction) {
@@ -16,7 +18,13 @@ export const fakeNavigation = {
     }
     dispatched.push(action);
   },
-  setOptions(value: unknown) { options.push(value); }
+  setOptions(value: unknown) {
+    const previous = options.at(-1) as Record<string, unknown> | undefined;
+    options.push(value);
+    const next = value as Record<string, unknown> | undefined;
+    const keys = new Set([...Object.keys(previous ?? {}), ...Object.keys(next ?? {})]);
+    if ([...keys].some(key => previous?.[key] !== next?.[key])) optionListeners.forEach(listener => listener());
+  }
 };
 
 export function installPreventRemove(enabled: boolean, callback: PreventCallback) {

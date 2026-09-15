@@ -66,7 +66,7 @@
 
 | M45 | History commands retain custom controls despite available native adapters | Implemented on continuation branch; native pending | Shared native Retry/pagination/reversal buttons and checkout-history native title/Close replace custom controls. Twelve remote History tests/check/structural pass; critic no product blocker. Runner-only production checkout-history fixture adds medium/expanded/older-page/Close acceptance; fixture typecheck/structural and two installer tests pass. Actual native layout and enlarged text still pending; excluded from0.24.11 |
 
-| M46 | Add crashes in a screen-options update loop on native launch | Open; native-observed, high priority | Run349150 iPad error boundary exposes Maximum update depth exceeded at Screen/StackScreen/ScopedAddAssetScreen; retained screenshot and stack in native-evidence. Inline dynamic header options are a source-grounded reproduction target. Must reproduce navigation update feedback, stabilize options without stale handlers, then pass native Add launch/type/save-failure recovery. No fixed claim yet |
+| M46 | Add crashes in a screen-options update loop on native launch | Implemented on continuation branch; native pending | Bounded navigation-feedback fake reproduces nonsettling header updates. Shared stable-presentation hook retains committed handlers and current disabled/removal guards; Add composes memoized options. Seven focused tests/check/structural pass, including latest draft, rejected-save recovery, stale actions and teardown. Critic no blocker; native Add launch/type/save-failure scenario must still pass |
 
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.

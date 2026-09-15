@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, pressAlertButton } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
@@ -10,7 +10,7 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
-import { navigationOptions } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, subscribeNavigationOptions } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
@@ -145,3 +145,51 @@ for (const operation of ['parent', 'photo'] as const) {
     } finally { await h.unmount(); client.clear(); Platform.OS = originalPlatform; }
   });
 }
+
+
+// Native navigation context consumers rerender when screen options change. A
+// bounded fake makes a failure to converge fail promptly instead of hanging CI.
+function NavigationOptionFeedback({ render }: { render: () => React.ReactNode }) {
+  const [, update] = useState(0);
+  useEffect(() => {
+    let updates = 0;
+    return subscribeNavigationOptions(() => {
+      if (++updates > 25) throw new Error('Native header options did not settle');
+      update(value => value + 1);
+    });
+  }, []);
+  return render();
+}
+
+it('settles navigation updates while header actions use the latest Add draft', async () => {
+  resetNavigation();
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  const submissions: string[] = [];
+  let dismissed = 0;
+  const props: React.ComponentProps<typeof AddAssetScreen> = {
+    inventoryAssetTypesQuery: { execute: async () => [] },
+    addAssetContextQuery: new AddAssetContextQuery({ getAddAssetContext: async () => context }),
+    addDraftScopeQuery: new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) }),
+    addAssetDraftStore: new InMemoryAddAssetDraftStore('scope'),
+    createAssetCommand: { execute: async input => { submissions.push(input.title); throw new Error('Save failed'); } },
+    parentLookupQuery: new ParentLookupQuery({ listParentCandidates: async () => [] }),
+    photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] }),
+    onDismiss: () => { dismissed++; }
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider>
+      <NavigationOptionFeedback render={() => <AddAssetScreen {...props} />} />
+    </AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.changeText(h.byLabel('Asset name'), 'First name');
+    await h.changeText(h.byLabel('Asset name'), 'Latest name');
+    await h.press(h.byLabel('Save item'));
+    expect(submissions).toEqual(['Latest name']);
+    await h.changeText(h.byLabel('Asset name'), 'Retry name');
+    await h.press(h.byLabel('Save item'));
+    expect(submissions).toEqual(['Latest name', 'Retry name']);
+    await h.press(h.byLabel('Close Add'));
+    expect(dismissed).toBe(1);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); }
+});

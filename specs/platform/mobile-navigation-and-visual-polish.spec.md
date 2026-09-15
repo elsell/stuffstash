@@ -309,3 +309,20 @@ an inspection action. Hide Add photos when permission or its callback is absent.
 Preserve the selected photo ID, authenticated image headers and numbered image
 accessibility labels. The custom full-screen viewer exception does not extend to
 this simple gallery command.
+
+## Dynamic native header update ownership
+
+Native header options must settle after a navigation-context update. Changing only
+an action callback's closure must not publish fresh toolbar option factories and
+trigger another navigation update. Add uses stable native header presentation
+options while handlers read the latest committed draft and dismissal callback.
+Visible labels, badge counts, enabled state, order and platform presentation still
+update when their inputs change; never freeze the header to hide an update loop.
+Each action kind identifies one command within a header side; kinds must be unique
+within that side. Stale native actions must respect current disabled state, removed
+actions and screen teardown.
+
+Verify a navigation fake that notifies consumers of changed options: initial Add
+entry and unrelated draft edits converge, Save submits the latest draft, busy
+Save/Close remain unavailable, and editing recovers after failure. Keep native
+launch, typing and rejected-save recovery as the release acceptance scenario.
