@@ -1778,3 +1778,21 @@ Remote TypeScript, structural checks and both fixture-preparation tests pass;
 critic found no confirmed blocker. The existing native failure is the regression
 case and its full-string assertions are unchanged. Native crash avoidance and
 text-entry outcomes remain pending on the candidate revision.
+
+
+### Run350037 iPhone onboarding completed
+
+Job104498364170 passed at actual revision
+818c3f38791e3d1535588f8d2015b2682f39aa1a, a merge of2771df9d into4b5f7f89.
+Connection help/keyboard/action reachability passed; two iPad-only cases were
+skipped on iPhone (one passed, two skipped, no failures). This is not three
+executed iPhone journeys. Log: /tmp/native350037-phone-onboarding.log.
+
+Inspected and retained phone-onboarding-keyboard-350037.png shows the full
+https://example.invalid address, Connect and sign in entirely above the keyboard,
+and help readable between the field and action. phone-onboarding-action-350037.png
+shows the same address retained with keyboard dismissed and the action visible.
+Normal-size light-mode iPhone evidence only; no universal typing fix or iPad
+acceptance is inferred. Both fixture jobs and iPad onboarding were still running
+when this record was written. The run predates M143–M145 and the disabled-accessory
+comparison candidate.
