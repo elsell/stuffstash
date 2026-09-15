@@ -1,7 +1,7 @@
 # Global notice review
 
 Reviewed at `ab1861d6`, normal-text remediation priority. The
-[consumer inventory](global-notice-consumers.csv) enumerates all 38 production
+[consumer inventory](global-notice-consumers.csv) enumerates all 36 production
 `.showNotice()` call sites in 14 source files under the mobile client. Test and
 runner fixtures are excluded. The inventory records call sites and task families;
 it is not a claim that each callback has native acceptance coverage.
@@ -33,7 +33,7 @@ actions; hiding text alone is insufficient.
 
 | Axis | Source conclusion and remaining evidence |
 | --- | --- |
-| Task | Shared nonmodal status/Undo/View has a purpose; 38 call sites include local recovery candidates. Review each migration by task. |
+| Task | Shared nonmodal status/Undo/View has a purpose; 36 call sites include local recovery candidates. Review each migration by task. |
 | Navigation | M103: root absolute layer does not account for native header; navigation success handoffs must remain supported. |
 | Selection | N/A: no value selection; the optional action is a command. |
 | Modality | Notice is nonmodal; explicit destructive/auth decisions use the separate native dialog surface. |
@@ -94,3 +94,5 @@ TypeScript and structural checks passed remotely. Critic found no extraction
 regression. Native sign-out/server-change visibility remains open before treating
 M104 as verified. The change does not repair M103 placement or modify API
 permissions.
+
+M106 removes the two provider-editor failure publications in favor of field-local recovery; the current inventory contains 36 production sites. Native acceptance remains pending.

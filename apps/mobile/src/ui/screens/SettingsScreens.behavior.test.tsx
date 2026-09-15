@@ -1,4 +1,4 @@
-import { setScreenFocused } from '../../test-support/navigation';
+import { setScreenFocused, attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { AddProviderProfileScreen, ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
 import { AppearanceProvider } from '../theme/AppearanceContext';
@@ -141,11 +141,11 @@ describe('mounted voice settings actions', () => {
     const repository = new FakeProviderRepository(slot('replace_credential'));
     const pending = deferred<ProviderProfileSummary>(); repository.pendingCredential = pending.promise;
     let saved = 0;
-    const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => undefined} onSaved={() => { saved++; }} profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} />);
+    const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} onSaved={() => { saved++; }} profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} />);
     try {
       expect(harness.byLabel('API key')?.props).toMatchObject({ autoCapitalize: 'none', autoCorrect: false, secureTextEntry: true });
       await harness.changeText(harness.byLabel('API key'), '  secret-value  ');
-      const button = textButton(harness, 'Save Credential')!;
+      const button = harness.byLabel('Save Credential')!;
       await harness.run(() => { button.props.onPress(); button.props.onPress(); });
       expect(repository.credentialInputs).toEqual([{ providerProfileId: 'profile-language', purpose: 'api_key', credential: 'secret-value' }]);
       expect(saved).toBe(0);
@@ -235,11 +235,11 @@ it.each(['credential', 'prompt'] as const)('preserves the submitted %s draft aft
   const pending = new Promise<ProviderProfileSummary>((_resolve, reject) => { rejectSave = reject; });
   if (kind === 'credential') repository.pendingCredential = pending; else repository.pendingPrompt = pending;
   const Editor = kind === 'credential' ? ProviderCredentialScreen : ProviderPromptScreen;
-  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => {}} onSaved={() => {}} />);
+  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onSaved={() => {}} />);
   const label = kind === 'credential' ? 'API key' : 'New prompt guidance';
   try {
     await harness.changeText(harness.byLabel(label), 'original draft');
-    await harness.press(textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
+    await harness.press(harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
     expect(harness.byLabel(label)?.props.editable).toBe(false);
     await harness.changeText(harness.byLabel(label), 'later edit');
     await harness.run(() => rejectSave?.(new Error('offline')));
@@ -309,6 +309,7 @@ it.each(['pending', 'failed'] as const)('keeps sign out available while identity
 
 
 it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => (['success', 'failure'] as const).map(outcome => [kind, outcome] as const)))('does not publish or navigate from a departed %s task after returning: %s', async (kind, outcome) => {
+  resetNavigation();
   const repository = new FakeProviderRepository();
   const pending = deferred<ProviderProfileSummary>();
   repository.pendingCredential = pending.promise;
@@ -318,7 +319,7 @@ it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => 
   let navigations = 0;
   const command = new ManageProviderProfileCommand(repository);
   const query = new ProviderProfileSettingsQuery(repository);
-  const editorProps = { manageCommand: command, query, profileId: 'profile-language', onCancel: () => undefined, onSaved: () => { navigations++; } };
+  const editorProps = { manageCommand: command, query, profileId: 'profile-language', onSaved: () => { navigations++; } };
   const element = kind === 'credential' ? <ProviderCredentialScreen {...editorProps} />
     : kind === 'prompt' ? <ProviderPromptScreen {...editorProps} />
     : kind === 'create' ? <AddProviderProfileScreen manageCommand={command} onCreated={() => { navigations++; }} />
@@ -326,7 +327,7 @@ it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => 
   const { harness, client } = await mount(element);
   try {
     if (kind === 'credential' || kind === 'prompt') await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'private draft');
-    const button = kind === 'credential' || kind === 'prompt' ? textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance')
+    const button = kind === 'credential' || kind === 'prompt' ? harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance')
       : kind === 'create' ? harness.all().find(node => String(node.props.accessibilityLabel ?? '').startsWith('Create draft '))
       : harness.byLabel('enable Gemini language');
     await harness.press(button);
@@ -335,7 +336,13 @@ it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => 
     await harness.run(() => outcome === 'success' ? pending.resolve(profile({ credentialStatus: 'configured' })) : pending.reject(new Error('Late private error')));
     await settle(harness);
     expect(navigations).toBe(0);
-    if (kind === 'credential') expect(harness.byLabel('API key')?.props.value).toBe(outcome === 'success' ? '' : 'private draft');
+    if (kind === 'credential' || kind === 'prompt') {
+      expect(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance')?.props.value).toBe(outcome === 'success' ? '' : 'private draft');
+      if (outcome === 'success') {
+        await harness.run(() => attemptNavigation({ type: 'manual-back' }));
+        expect(dispatchedActions()).toEqual([{ type: 'manual-back' }]);
+      }
+    }
     for (const title of ['Credential saved', 'Prompt guidance saved', 'Draft profile created', 'Profile enabled', 'Credential not saved', 'Prompt not saved', 'Could not create profile', 'Profile action failed', 'Late private error']) expect(harness.byText(title)).toBeUndefined();
   } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
 });
@@ -366,12 +373,12 @@ it('keeps a replacement profile credential when the previous form finishes savin
   function Editor() {
     const [id, setId] = React.useState('profile-language');
     replace = setId;
-    return <ProviderCredentialScreen manageCommand={command} query={query} profileId={id} onCancel={() => undefined} onSaved={() => { navigations++; }} />;
+    return <ProviderCredentialScreen manageCommand={command} query={query} profileId={id} onSaved={() => { navigations++; }} />;
   }
   const { harness, client } = await mount(<Editor />);
   try {
     await harness.changeText(harness.byLabel('API key'), 'old secret');
-    await harness.press(textButton(harness, 'Save Credential'));
+    await harness.press(harness.byLabel('Save Credential'));
     await harness.run(() => replace('other'));
     await harness.changeText(harness.byLabel('API key'), 'replacement secret');
     await harness.run(() => pending.resolve(profile({ credentialStatus: 'configured' })));
@@ -419,4 +426,67 @@ it.each((['select', 'test', 'enable'] as const).flatMap(kind => (['success', 'fa
     }
     expect(harness.byLabel('Choose voice service')?.props.disabled).toBe(false);
   } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+
+it.each(['credential', 'prompt'] as const)('protects the %s replacement draft and validates native Save before submission', async kind => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  repository.pendingPrompt = pending.promise;
+  let saves = 0;
+  const props = { manageCommand: new ManageProviderProfileCommand(repository), query: new ProviderProfileSettingsQuery(repository), profileId: 'profile-language', onSaved: () => { saves++; attemptNavigation({ type: 'saved-back' }); } };
+  const { harness, client } = await mount(kind === 'credential' ? <ProviderCredentialScreen {...props} /> : <ProviderPromptScreen {...props} />);
+  const field = () => harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance');
+  const save = () => harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance');
+  try {
+    expect(save()).toBeDefined();
+    expect(save()?.props.disabled).toBe(true);
+    await harness.changeText(field(), '   ');
+    expect(save()?.props.disabled).toBe(true);
+    await harness.changeText(field(), 'private replacement');
+    expect(save()?.props.disabled).toBe(false);
+    await harness.run(() => attemptNavigation({ type: 'back' }));
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await harness.run(() => pressAlertButton('Keep Editing'));
+    expect(dispatchedActions()).toEqual([]);
+    expect(field()?.props.value).toBe('private replacement');
+    await harness.press(save());
+    await harness.run(() => attemptNavigation({ type: 'during-save' }));
+    expect(dispatchedActions()).toEqual([]);
+    await harness.run(() => pending.reject(new Error('Try this replacement again')));
+    expect(field()?.props.value).toBe('private replacement');
+    const failure = harness.byText('Try this replacement again');
+    expect(failure).toBeDefined();
+    let ancestor = failure?.parent;
+    while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
+    expect(ancestor?.type).toBe('ScrollView');
+    repository.pendingCredential = undefined; repository.pendingPrompt = undefined;
+    await harness.press(save()); await settle(harness);
+    expect(saves).toBe(1);
+    expect(dispatchedActions()).toEqual([{ type: 'saved-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
+});
+
+it.each(['credential', 'prompt'] as const)('limits %s discard confirmation to the current visit and dispatches it once', async kind => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  const props = { manageCommand: new ManageProviderProfileCommand(repository), query: new ProviderProfileSettingsQuery(repository), profileId: 'profile-language', onSaved: () => undefined };
+  const { harness, client } = await mount(kind === 'credential' ? <ProviderCredentialScreen {...props} /> : <ProviderPromptScreen {...props} />);
+  try {
+    await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'replacement');
+    await harness.run(() => attemptNavigation({ type: 'old-back' }));
+    const oldDiscard = latestAlert()?.buttons?.find(button => button.text === 'Discard')?.onPress;
+    expect(oldDiscard).toBeDefined();
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => oldDiscard?.());
+    expect(dispatchedActions()).toEqual([]);
+    await harness.run(() => attemptNavigation({ type: 'current-back' }));
+    const discard = latestAlert()?.buttons?.find(button => button.text === 'Discard')?.onPress;
+    expect(discard).toBeDefined();
+    await harness.run(() => { discard?.(); discard?.(); });
+    expect(dispatchedActions()).toEqual([{ type: 'current-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
 });

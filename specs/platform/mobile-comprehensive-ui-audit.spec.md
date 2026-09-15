@@ -931,3 +931,19 @@ so replacing a tenant or stage invalidates earlier presentation callbacks.
 Preserve the in-place service picker, synchronous pending guard and scoped mutation
 observer. Do not show success/errors or explicitly reload a replacement stage
 from a departed operation; focused success and retry must continue to work.
+
+### Provider replacement form commands and removal
+
+Credential and prompt editors use the existing native header Save adapter, with
+normal navigation Back rather than duplicate in-form Cancel/Save buttons. Save is
+available only for nonblank required text, except server ADC which needs no secret.
+Both rendering and command entry enforce this readiness. Keep a local announced
+failure near the input, retain failed drafts, and clear stale errors when editing
+or retrying. Preserve scoped success notices for the return destination.
+
+Use the native navigation removal guard for dirty drafts and pending saves. A
+pending save blocks removal; an unsaved draft offers Keep Editing and Discard in a
+native alert. Confirmations are single-use and owned by the focused keyed form.
+Successful save disarms removal protection before invoking the return callback.
+A late confirmation or save from a replaced form/visit cannot leave the new task.
+Secrets remain transient and successful replacement clears the submitted value.

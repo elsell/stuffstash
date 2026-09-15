@@ -1346,7 +1346,7 @@ validation rejects it into a global notice. API failure also uses the global
 notice rather than the field context. This is source-confirmed; no current native
 editor placement is claimed. Use native Save, field readiness, local recovery and
 retained drafts; preserve empty-input server ADC. See
-[all-axis editor review](provider-editors-axis.md). Implementation is still pending.
+[all-axis editor review](provider-editors-axis.md). Native Save, required-input readiness and field-local errors are implemented as a candidate; native runtime acceptance remains pending.
 
 ### M107 — Provider editor navigation can discard an unsaved replacement
 
@@ -1356,5 +1356,4 @@ contract. Back/Cancel can remove entered replacement text; native Back is also n
 covered by the local buttons' saving state. Add a task-owned dirty/pending removal
 policy with a native discard decision and single authorized successful exit.
 Do not persist secrets to solve accidental navigation. M105 fixes departed
-completion ownership, not draft protection. Native gesture/removal acceptance and
-implementation remain open; see the editor review.
+completion ownership, not draft protection. A focused-visit removal guard, native discard decision and authorized successful exit are now implemented. Native gesture/removal acceptance remains open; see the editor review.

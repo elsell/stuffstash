@@ -64,3 +64,18 @@ Run normal-size phone/iPad journeys first: empty, filled, ADC, multiline, failed
 save, retry, Back/keep/discard, pending mutation, successful return, new profile,
 light/dark and keyboard. Retain native screenshots and command bounds. Existing
 mounted evidence is useful but does not replace those journeys.
+
+## Candidate implementation evidence
+
+The M106/M107 candidate replaces custom form commands with native Save and Back,
+disables submission for missing required text, retains the server-ADC exception,
+and displays recoverable errors beside the retained field. Dirty departure uses
+a native Keep Editing/Discard decision; pending saves block removal. Successful
+submission clears its keyed form even after blur and authorizes exit only for the
+original focused visit. Retained discard callbacks cannot exit a new visit.
+
+Remote validation on paul passed 48 settings behavior tests, TypeScript and the
+mobile structural check. The successful-prompt-after-return regression failed
+before correction. Critic re-review found no remaining confirmed source blocker.
+These are source/mounted results, not native keyboard, toolbar or gesture proof.
+Normal-size native acceptance above remains open.
