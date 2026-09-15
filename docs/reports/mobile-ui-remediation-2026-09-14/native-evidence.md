@@ -1700,3 +1700,23 @@ coverage, not native pass evidence.
 Critic identified that message existence alone did not verify visible recovery.
 The new journeys now require the entire notice container within the app viewport
 below navigation before the recovery capture. Native execution is still pending.
+
+
+### Run349983 iPhone fixtures:41/55 pass, long-tag footer verified
+
+Job104481672570 finished55 tests with14 failures; actual revision54714ab4 verified
+from downloaded revision.txt. Full artifacts are `/tmp/native349983-phone` and
+job log `/tmp/native349983-phone-terminal.log`. iPad fixture job remains running.
+
+Inspected `phone-last-tag-clear-footer-349983.png` and retained hierarchy establish
+M111's normal-size iPhone light-mode last-row separation: final row y594–646,
+footer y700–840, Show results y712–766 and Back y774–828. The footer is opaque,
+both actions fully visible. Native test also requires row hitability, taps it,
+returns Back, applies and observes `Browse selected tags: audit-last`.
+This is partial runtime evidence for S072, not all-device/theme/keyboard closure.
+
+Ordinary single-line/multiline and color open/clear tests passed in this run, while
+Add, Sharing and uncontrolled address typing still lost characters. Those passes
+do not establish a typing root cause or eliminate existing failures. Sheet notice
+and phone place-search failures predate their latest candidate corrections.
+Large-text-only failures remain deferred until normal-size findings are addressed.

@@ -1980,3 +1980,9 @@ this deliberate naming change instead of adding a nested accessibility wrapper.
 61 settings behavior/server-state tests, TypeScript and structural checks pass on
 paul. Native normal-size geometry and VoiceOver acceptance remain pending.
 Critic found no confirmed issue; native/assistive acceptance remains open.
+
+
+M111 native follow-up: run349983 iPhone actual54714ab4 passes last-tag scroll,
+selection, Back and Apply. Inspected screenshot/hierarchy retain final row entirely
+above the opaque footer and both contained buttons. See native-evidence.md and
+phone-last-tag-clear-footer-349983 evidence. iPad/dark/keyboard acceptance pending.
