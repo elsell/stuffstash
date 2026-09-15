@@ -556,3 +556,14 @@ These verify configuration and callbacks, not native hit-testing. The hierarchy
 also shows a possible62-point boundary/keyboard coordinate discrepancy; that
 remains unresolved. The original Apply/Back native hit/navigation assertion stays
 the acceptance gate. M19 remains open and no full keyboard fix is claimed.
+
+
+M68 implemented follow-up: localized Gregorian month choices and month-only
+summary formatting share the stored period's calendar, with a clarification for
+alternate-calendar locales. Exact-day labels/controls and storage are unchanged.
+One baseline label test failed;14 selected checks, TypeScript and structural
+checks pass on paul (`/tmp/month-calendar-green.log`). Critic found no implementation
+blocker; its domain wording correction was applied. Shared field/status/card,
+workspace heading, notification and voice-review consumers were inspected.
+Native alternate-calendar settings, digits and larger-text clarification remain
+unverified; this is source/test remediation, not complete localization acceptance.

@@ -5,8 +5,9 @@ translated product copy, calendar semantics and right-to-left layout. None prove
 the others. Apple’s [picker guidance](https://developer.apple.com/design/human-interface-guidelines/pickers)
 and [UIDatePicker documentation](https://developer.apple.com/documentation/uikit/uidatepicker/)
 explain that native date controls use the user's locale/calendar/time zone;
-the selected instant is calendar agnostic. A month-only period is different from
-an exact instant and cannot be relabeled by converting just its first day.
+the picker represents its selection with a calendar-agnostic NSDate. The domain
+still stores a calendar date. A month-only period cannot be relabeled by
+converting just its first day.
 
 | Family | Inspected behavior | Result / remaining work |
 | --- | --- | --- |
@@ -30,3 +31,12 @@ The intended correction needs a coherent month-entry and month-display contract
 that preserves the stored period and makes any calendar restriction clear.
 Do not globally force US formatting or replace native exact-date controls as a
 shortcut. M68 remains open pending that correction and its acceptance evidence.
+
+M68 correction: shared month choices and month-only summaries now use localized
+Gregorian names/years. If the locale selects another calendar, entry explains
+the restriction and summaries append “Gregorian.” Exact-day presentation and
+stored values are preserved. One baseline period-label assertion failed;14
+formatter/field/workspace checks, TypeScript and structural checks pass on paul.
+Critic found no implementation blocker; its date-versus-instant spec wording
+correction is incorporated. Native calendar defaults, localized numerals and
+clarification layout remain pending.

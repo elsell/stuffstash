@@ -415,7 +415,7 @@ R018,expiration.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R018,expiration.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R018,expiration.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R018,expiration.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",finding,localization-axis.md: alternate-calendar month period mismatch; M68 open,M68
+R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending,M68
 R018,expiration.tsx,imagery,"Icons, photos and missing media",pending,,
 R018,expiration.tsx,targets,Touch target size and reachability,pending,,
 R018,expiration.tsx,gestures,Gestures and explicit alternatives,pending,,
@@ -2215,7 +2215,7 @@ S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",
 S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,pending,,
 S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
 S093,Add / expiration month year,appearance,"Light/dark, contrast and materials",pending,,
-S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",finding,localization-axis.md: alternate-calendar month period mismatch; M68 open,M68
+S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending,M68
 S093,Add / expiration month year,imagery,"Icons, photos and missing media",pending,,
 S093,Add / expiration month year,targets,Touch target size and reachability,pending,,
 S093,Add / expiration month year,gestures,Gestures and explicit alternatives,pending,,

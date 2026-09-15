@@ -6,7 +6,12 @@ export function formatAssetExpiration(value: AssetExpiration, locale?: string): 
   const originalDate = value.date;
   if (!isAssetExpiration(value)) return originalDate;
   const calendarDate = value.precision === 'month' ? `${value.date}-01` : value.date;
-  return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', year: 'numeric', month: 'long', ...(value.precision === 'day' ? { day: 'numeric' as const } : {}) }).format(new Date(`${calendarDate}T00:00:00Z`));
+  const monthOnly = value.precision === 'month';
+  const formatted = new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC', year: 'numeric', month: 'long',
+    ...(monthOnly ? { calendar: 'gregory' } : { day: 'numeric' as const })
+  }).format(new Date(`${calendarDate}T00:00:00Z`));
+  return monthOnly && hasAlternativeCalendar(locale) ? `${formatted} (Gregorian)` : formatted;
 }
 
 export function formatExpirationChange(value?: AssetExpiration, cleared?: boolean): string | undefined {
@@ -31,4 +36,21 @@ export function expirationDateLabel(value: AssetExpiration, context?: AssetExpir
  const today = `${part('year')}-${part('month')}-${part('day')}`;
  const last = value.precision === 'month' ? new Date(Date.UTC(Number(value.date.slice(0,4)), Number(value.date.slice(5,7)), 0)).toISOString().slice(0,10) : value.date;
  return `${last === today ? 'Expires today' : expirationStatusLabel(context) ?? 'Expiration'}: ${precision}`;
+}
+
+/** Month values remain Gregorian periods, even when the device uses another calendar. */
+export function expirationMonthOptions(locale?: string): readonly { value: string; label: string }[] {
+  const formatter = new Intl.DateTimeFormat(locale, { calendar: 'gregory', month: 'long', timeZone: 'UTC' });
+  return Array.from({ length: 12 }, (_, index) => ({
+    value: String(index + 1),
+    label: formatter.format(new Date(Date.UTC(2000, index, 1)))
+  }));
+}
+
+export function expirationMonthCalendarNotice(locale?: string): string | undefined {
+  return hasAlternativeCalendar(locale) ? 'Month and year use the Gregorian calendar.' : undefined;
+}
+
+function hasAlternativeCalendar(locale?: string): boolean {
+  return new Intl.DateTimeFormat(locale).resolvedOptions().calendar !== 'gregory';
 }

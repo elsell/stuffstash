@@ -1,7 +1,7 @@
 import { NativeCommandButton } from './NativeCommandButton';
 import { NativeChoicePicker } from './NativeChoicePicker';
 import { SelectionRow } from './SelectionRow';
-import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
+import { expirationMonthCalendarNotice, expirationMonthOptions, formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -26,6 +26,7 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDate, setPickerDate] = useState(initialPickerDate);
   const monthValid = validMonthInput(month, year);
+  const monthCalendarNotice = expirationMonthCalendarNotice();
 
   function publishMonth(nextMonth: string, nextYear: string) {
     const empty = !nextMonth && !nextYear;
@@ -80,7 +81,8 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
     <NativeSegmentedControl colors={colors} disabled={disabled} value={precision} onChange={selectPrecision}
       segments={[{ value: 'day', label: 'Exact date' }, { value: 'month', label: 'Month and year' }]} />
     {precision === 'month' ? <>
-      <NativeChoicePicker label="Month" accessibilityLabel="Expiration month" value={month ? String(Number(month)) : ''} disabled={disabled} options={Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: new Intl.DateTimeFormat(undefined, { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2020, index, 1))) }))} onChange={value => { setMonth(value); publishMonth(value, year); }} />
+      {monthCalendarNotice ? <Text style={{ color: colors.textMuted }}>{monthCalendarNotice}</Text> : null}
+      <NativeChoicePicker label="Month" accessibilityLabel="Expiration month" value={month ? String(Number(month)) : ''} disabled={disabled} options={expirationMonthOptions()} onChange={value => { setMonth(value); publishMonth(value, year); }} />
       <Text style={{ color: colors.text }}>Year</Text>
       <AppTextInput accessibilityLabel="Expiration year" editable={!disabled} keyboardType="number-pad" value={year} placeholder="YYYY" style={[styles.input, { color: colors.text, borderColor: colors.controlBorder }]} onChangeText={(value) => { setYear(value); publishMonth(month, value); }} />
       <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{monthValid ? 'Tracked through the end of this month.' : 'Enter a month from 1 to 12 and a four-digit year.'}</Text>

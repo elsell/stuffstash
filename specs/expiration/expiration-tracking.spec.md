@@ -199,3 +199,20 @@ from the injected initial picker date; it does not save the asset. The user can
 change it with the compact picker or Clear expiration before saving. Android
 retains its system date dialog confirmation/dismissal semantics. Month/year
 precision remains separate and must never silently become an invented exact day.
+
+### Month-only calendar presentation
+
+The stored YYYY-MM period uses Gregorian month boundaries. A locale's calendar
+must not relabel that period by converting only its first day: lunar-calendar
+months have different boundaries. Mobile month choices and month-only summaries
+therefore use localized Gregorian month names and years, retaining the user's
+language and number formatting. When the locale's calendar differs, show a short
+Gregorian-calendar clarification in month entry and beside month-only summaries.
+Exact-day values retain their existing localized calendar presentation. Native
+date controls and exact-day labels retain their existing calendar behavior; the
+stored value is a calendar date, not an instant.
+
+Month entry, field summaries, cards, expiration group headings and review/change
+labels must share this rule. No stored date, precision, last-valid-day policy or
+reminder time zone changes. Arbitrary-calendar month storage would require a
+separate domain contract rather than an ambiguous display conversion.
