@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,628
-pending,1,262 source-reviewed,357 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,588
+pending,1,298 source-reviewed,361 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -87,6 +87,11 @@ existing visit/resource guard in the shared detail screen. Both asset and
 location-context detail routes consume it. All92 focused detail cases, TypeScript
 and structural checks pass on paul; full source-axis and native acceptance work
 for those routes remains open.
+
+[Household/inventory settings](scoped-settings-axis.md) now have all24 source
+axes reviewed. M164 reuses labeled settings progress for both initial loads.
+All59 mounted settings cases, TypeScript and structural checks pass on paul;
+native announcement/layout acceptance remains pending.
 
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full

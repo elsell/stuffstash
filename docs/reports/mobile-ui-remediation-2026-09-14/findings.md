@@ -2322,3 +2322,12 @@ focused detail cases, TypeScript and structural checks pass on paul. This is a
 targeted loading/recovery/lifecycle review, not a full24-axis detail pass or native
 navigation acceptance. Progressive section-specific errors remain independently
 owned by their query state.
+
+### M164 — Scoped settings loading does not identify its task
+
+P2 source/mounted at53975079. Household and inventory settings displayed only an
+unlabeled spinner while resolving scope. Both mounted task-label expectations
+failed before reuse of SettingsLoadingRow with scope-specific copy. The shared
+control supplies progress semantics and visible text, then disappears when rows
+load. Native announcements/layout remain unverified. See scoped-settings-axis.md
+for the full source review and its remaining acceptance limits.

@@ -34,7 +34,7 @@ import {
 } from './VoiceSettingsScreens';
 
 import { SettingsQuery } from '../../application/settings/SettingsQuery';
-import { HouseholdSettingsScreen } from './ScopedSettingsScreens';
+import { HouseholdSettingsScreen, InventorySettingsScreen } from './ScopedSettingsScreens';
 import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
@@ -55,6 +55,19 @@ function settingsQuery(permissions: readonly string[] = ['view', 'configure'], g
 const textButton = (harness: MobileRenderHarness, label: string) => harness.allByType('Pressable').find((node) => node.queryAll((child) => child.type === 'Text' && child.children.includes(label)).length > 0);
 
 describe('mounted Settings behavior', () => {
+  it.each(['household', 'inventory'] as const)('identifies pending %s settings and replaces progress with its content', async scope => {
+    const pending = deferred<Awaited<ReturnType<SettingsQuery['getSelectedScope']>>>();
+    const query = settingsQuery(['view', 'configure'], () => pending.promise);
+    const Screen = scope === 'household' ? HouseholdSettingsScreen : InventorySettingsScreen;
+    const { harness, client } = await mount(<Screen settingsQuery={query} onNavigate={() => undefined} />);
+    try {
+      expect(harness.byText(scope === 'household' ? 'Loading household settings' : 'Loading inventory settings')).toBeDefined();
+      await harness.run(() => pending.resolve({ tenant: { id: 'tenant-home', name: 'Home', permissions: ['view', 'configure'] }, inventory: { id: 'inventory-home', name: 'Household', permissions: ['view', 'share'] } }));
+      await settle(harness);
+      expect(harness.byText(scope === 'household' ? 'Loading household settings' : 'Loading inventory settings')).toBeUndefined();
+      expect(harness.byLabel(scope === 'household' ? 'Open Voice setup for Home' : 'Open Sharing for Household')).toBeDefined();
+    } finally { await harness.unmount(); client.clear(); }
+  });
   it('orders appearance choices and marks the selected radio', async () => {
     const { harness } = await mount(<AppearanceSettingsScreen />);
     try {

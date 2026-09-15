@@ -1,10 +1,10 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useEffect, useRef } from 'react';
-import { AccessibilityInfo, ActivityIndicator, findNodeHandle, ScrollView, Text, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, ScrollView, Text, View } from 'react-native';
 import { AudioLines, Bell, Braces, Share2, Tags } from 'lucide-react-native';
 import type { SettingsQuery } from '../../application/settings/SettingsQuery';
-import { SettingsNavigationRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from './SettingsList';
+import { SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from './SettingsList';
 import { useSettingsModel } from './SettingsScreenState';
 
 type ScopedDestination = 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice' | 'notifications';
@@ -21,7 +21,7 @@ export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonl
 
 function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
   const { palette, styles } = useSettingsListStyles();
-  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
+  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? 'Loading household settings' : 'Loading inventory settings'} /></View>;
   if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>Could not load settings</Text><Text style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label="Retry" onPress={() => void model.load()} /></ScrollView>;
   const settings = model.state.settings;
   const name = scope === 'tenant' ? settings.selectedTenant.name : settings.selectedInventory.name;
