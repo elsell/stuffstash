@@ -4,7 +4,7 @@ import { Keyboard, PlatformColor, Pressable, StyleSheet, View } from 'react-nati
 import { KeyboardController, KeyboardExtender } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export function AppKeyboardAccessory() {
+export function AppKeyboardAccessory({ enabled = true }: { readonly enabled?: boolean }) {
   const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(Keyboard.isVisible());
 
@@ -19,12 +19,12 @@ export function AppKeyboardAccessory() {
 
   return (
     <View
-      accessibilityElementsHidden={!keyboardVisible}
-      pointerEvents={keyboardVisible ? 'box-none' : 'none'}
+      accessibilityElementsHidden={!enabled || !keyboardVisible}
+      pointerEvents={enabled && keyboardVisible ? 'box-none' : 'none'}
       style={styles.host}
       testID="app-keyboard-accessory-host"
     >
-      <KeyboardExtender>
+      <KeyboardExtender enabled={enabled}>
         <View
           style={[
             styles.bar,

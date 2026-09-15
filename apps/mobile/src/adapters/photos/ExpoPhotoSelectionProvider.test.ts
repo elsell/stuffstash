@@ -70,17 +70,21 @@ describe('ExpoPhotoSelectionProvider', () => {
     expect(photos[0]?.contentBase64).toBe('ZmFrZQ==');
   });
 
-  it('drops unsupported selected file types', async () => {
-    const photos = await __expoPhotoSelectionProviderTestHooks.mapImagePickerResult({
-      canceled: false,
-      assets: [{
-        uri: 'file:///document.gif',
-        fileName: 'document.gif',
-        mimeType: 'image/gif',
-        fileSize: 3
-      }]
-    }, 0);
+  it.each(['library', 'camera'] as const)('reports unsupported %s images instead of treating selection as cancellation', async source => {
+    photoPickerFake.cameraGranted = true;
+    photoPickerFake.result = { canceled: false, assets: [{
+      uri: 'file:///document.gif', fileName: 'document.gif', mimeType: 'image/gif', fileSize: 3, width: 10, height: 10
+    }] };
+    const provider = new ExpoPhotoSelectionProvider();
+    await expect(source === 'library' ? provider.selectFromLibrary(2) : provider.captureFromCamera(2))
+      .rejects.toThrow('Choose JPEG, PNG, or WebP photos. This selection includes an unsupported image format.');
+  });
 
-    expect(photos).toEqual([]);
+  it('rejects a mixed selection rather than silently accepting only supported images', async () => {
+    photoPickerFake.result = { canceled: false, assets: [
+      { uri: 'file:///photo.jpg', fileName: 'photo.jpg', mimeType: 'image/jpeg', fileSize: 4, width: 10, height: 10 },
+      { uri: 'file:///animation.gif', fileName: 'animation.gif', mimeType: 'image/gif', fileSize: 3, width: 10, height: 10 }
+    ] };
+    await expect(new ExpoPhotoSelectionProvider().selectFromLibrary(0)).rejects.toThrow('unsupported image format');
   });
 });

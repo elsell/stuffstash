@@ -97,3 +97,17 @@ VoiceOver/TalkBack order and physical Settings-return still need runtime evidenc
 Critic found no overclaims. Late-completion suppression above specifically refers
 to successful save/navigation; retained child error presentation after focus
 changes is not independently certified by this review.
+
+
+## M108 — retained reminder completion follow-through
+
+The previously excluded child-error path is now reproduced and corrected. Mode,
+timing and timezone saves capture the initiating focus visit, reject departed
+feedback, and hold their pending lock through settlement. Timing completion is
+also visit-owned. Mode/timing reconcile departed optimistic state with current
+saved props; current-visit failure retains retry drafts. The real settings parent,
+session and repository regression covers failed PUT followed by an unchanged
+refresh. All 73 focused tests, TypeScript and structural checks pass remotely.
+Provider consumers also pass after moving their existing helper into navigation.
+Native interaction remains pending; this does not certify OS permission behavior,
+physical push delivery, app background policy or all lifecycle combinations.

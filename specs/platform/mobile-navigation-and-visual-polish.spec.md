@@ -422,3 +422,259 @@ and fully visible, not merely present in the accessibility tree behind the
 keyboard. Dismiss the keyboard through the provided control, reveal the matching
 row in the detail scroll, and check its bounds before capture. Retain exact query,
 nonmatch exclusion, clear, cancel and navigation return checks.
+
+Add quick parent creation requires a settled, available candidate result, including
+a known empty result. Debouncing, initial loading or failed lookup without cached
+results must not be treated as no duplicate. Retain the query and allow lookup
+retry. Apply the same availability/known-match guard to the creation command and
+its visible offer. Cached results may retain the existing name-based duplicate
+heuristic; this does not assert global uniqueness.
+
+Add parent lookup retry and quick creation are in-place commands. They use the
+existing native command button adapter, with an explicit label and disabled state
+while the draft is busy. Quick creation retains a readable “Creating place…”
+label while pending instead of replacing the command with only a spinner. Search,
+selection and the item draft remain in the current Add form; neither command
+creates a new navigation destination. Retry respects draft-operation ownership.
+Native large-text, keyboard and scroll reachability require runtime acceptance.
+
+Move uses a short task heading and a separate, wrapping asset name at body emphasis;
+a long name must not become the oversized sheet heading. Show the current location
+once in quiet form context. Show “Move to” only after selection differs from the
+current parent; identical From/To summaries add no information. The context and
+query stay in the same scrolling form. Existing valid-change, pending-operation,
+cancellation and destination-creation rules remain unchanged. This context repair
+does not establish native disabled-button contrast; verify that separately.
+
+Native command buttons must propose a finite available width while allowing the
+outer SwiftUI Button to take its ideal vertical size. Applying vertical ideal size
+only to its Text can leave the React Native host at the minimum height while text
+renders outside it. The large-text native comparison showed a 48-point button
+frame for three lines in the shipping control and 187.3 points with outer vertical
+ideal sizing, with following content moved below the label. Apply that outer
+measurement rule to the shared command adapter; preserve prominence and disabled
+semantics. The comparison also confirmed Retry received after a native tap. Its final return
+assertion must target the observed native BackButton identifier rather than assume
+the localized/contextual label is Back, then verify the audit menu returns. Shared
+consumer layouts, primary-button sizing and sheet-footer contrast require further
+acceptance.
+The diagnostic sizing fixture retains the old inner-only measurement as a named
+baseline and compares it against the shipping adapter, so future runs exercise
+production sizing rather than a copied candidate implementation.
+
+A runner-only footer appearance diagnostic must use the shipping NativeSheetActions
+inside the Move form-sheet container, with the app's real AppearanceProvider.
+Capture light and dark resolved appearance with Move disabled and enabled; assert
+Cancel remains reachable and an enabled Move invokes its callback. Use default
+text and the largest accessibility text size on phone and tablet. A capture is
+inspection evidence, not an automatic contrast pass. The diagnostic must not
+load production sessions or perform inventory mutations, and must restore its
+starting appearance on explicit cancellation. This investigates M100 without
+speculatively replacing native disabled styling.
+
+### Filter list and persistent action separation
+
+Browse and Expiration filter pages must share the measured native-action footer
+layout. Long tag lists must not remain visible through the footer or leave their
+last choices underneath Show results/Back. Give the fixed footer an opaque theme
+surface and reserve its measured height, including its safe-area padding, at the
+end of scroll content and in the scroll indicator. Re-measure when button height,
+keyboard state or sheet size changes; do not reserve a guessed button height.
+
+Reuse the existing Expiration direct-scroll/native-footer arrangement because
+nested sheet bodies have produced missing native content in the audit. The body
+must remain a direct native screen child. Share its measured keyboard boundary
+handling rather than letting the native action host and container both move it.
+Keep native search, staged selections, Back, Cancel and Apply semantics unchanged.
+Verify long lists at normal text size: scroll the final tag fully above the footer,
+select it, return to the overview, search with the keyboard, dismiss the keyboard
+and apply the retained draft. Include iPhone and iPad light/dark native checks.
+
+Checkout-history native acceptance must exercise a failed independent asset-name
+read while records remain visible, then retry the name without replacing the
+history. The controlled native fixture fails its first name read and succeeds on
+explicit retry; its existing pagination and dismissal journey also verifies the
+name error and retry control are fully reachable before recovery.
+
+Home and Browse native tab triggers must provide each platform's icon source:
+iOS SF symbols and Android Material symbols through the existing Expo adapter.
+Keep the two labels and destinations unchanged. Verify selected/unselected native
+rendering on Android; TypeScript/source checks do not establish runtime rendering.
+
+For M113, tab destinations on Android and iOS below26 must reserve a persistent
+voice action area beneath their native stack, inside the tab destination. Reuse
+the existing voice presentation and start/send/open commands; do not overlay the
+scroll body, insert another tab, or change Home's header action ordering. The
+existing native tab accessory is unavailable on those platforms, which justifies
+this bounded fallback. On iOS26+, render the stack directly and keep the native
+accessory without a duplicate fallback. Verify bottom-tab clearance and keyboard
+behavior on each supported fallback platform before claiming native acceptance.
+
+Browse tag filters must distinguish an inventory without tags from a search with
+no matching tags. Keep the selection draft and Back/Show results available in both
+states. Clearing the native search restores choices without clearing selections;
+an empty result must not look like an unfinished load or remove the user's draft.
+
+Browse filter navigation verification belongs to the focused sheet visit. Losing
+focus aborts the request and releases that visit's busy state; late success or
+failure must not navigate, show an error or unlock a newer request after return.
+Background callbacks cannot start verification while the sheet is unfocused.
+A new focused visit may retry without waiting for an aborted read to settle.
+
+The production Browse filter route must also preserve the direct native scroll
+body used by the filter fixture. Present verification errors inside that body;
+do not introduce a route-level View around the ready filter screen merely to show
+an error. Keep the error readable with the draft and persistent actions intact.
+
+Native audit geometry queries must follow the exported accessibility hierarchy.
+A ScrollView test ID may identify its native wrapper; use that identified host for
+viewport bounds rather than assuming its accessibility type. When one React Text
+exports nested identical-label elements with identical bounds, select a stable
+match for that text while retaining full viewport/interaction assertions. Record
+the observed hierarchy and do not classify a selector ambiguity as product failure
+or as a passing interaction.
+
+Browse and Expiration filter sheets must expose a native Cancel command while
+choices load, without waiting for any query to settle. Loading uses visible text
+and progress together. Cancel returns through the existing route cancellation
+handler; it never applies a draft. Keep this loading body directly scrollable and
+reuse existing native commands/settings loading presentation.
+
+### Compact search in expiration filter selections
+
+Expiration type, tag and location selection pages use the shared native integrated
+search button, matching Browse filters. Opening search reveals the native field;
+closing or clearing it restores all options without changing selected IDs. Leaving
+a selection page clears its search, and the overview has no search control. Keep
+selection staged until Apply. Reuse NativeNavigationSearch rather than maintaining
+a second set of native search callbacks. Verify open, type, clear, close, Back and
+retained selections on iPhone and iPad; component checks do not prove geometry.
+
+Expiration results also use integrated-button native search without toolbar
+integration, matching Browse. Preserve the existing debounced route query and
+flush pending text when opening filters or an item. Clearing/closing search applies
+an empty query immediately. Compact presentation must not discard pending input.
+
+Expiration error recovery is independent of pull refresh. Retry calls the failed
+query directly; its native command indicates loading and is disabled during a
+read. Only an explicit pull starts the native refresh indicator. A successful
+inventory-scope mismatch offers Return to Home instead of Retry. Loaded records
+remain visible during transient retry; access-failure hiding remains unchanged.
+
+Expiration search debounce belongs to the focused screen. Blur cancels pending
+route updates and ignores hidden native search callbacks. Retain unsubmitted text
+for return; when focus resumes, restart its debounce unless an external route
+query replaced it. Explicit filter/item navigation still flushes while focused.
+Unmount cancels pending work. Do not update a departed route from late input.
+
+Sharing email entry on iOS uses native-owned text initialized empty, avoiding
+controlled value feedback during typing. Retain application draft updates for
+validation and submission. Remount the native field only on scope change or
+successful creation; failure and metadata refresh preserve its lifetime. Android
+retains controlled text. Verify complete fast entry, failure retry, successful
+clear and scope replacement natively; source tests only establish reset contracts.
+
+If an access error temporarily hides the Sharing form, remount its native field
+from the retained same-scope email. Keep that seed stable during subsequent typing.
+A replacement scope must never seed the previous scope's email, including its
+first render before effects settle.
+
+The shared NativeNavigationSearch adapter accepts input, submit and clear only
+while its owning route is focused and search is enabled. Blur must ignore late
+native callbacks without clearing the caller's retained query. Refocus restores
+interaction. This applies to Browse list/map, filter selections, contents and
+timezone search consumers; it does not change each caller's query semantics.
+
+Browse's list search debounce also pauses on route blur. Pending text remains in
+the field and resumes after refocus, using current criteria and route callbacks.
+No hidden debounce may synchronize route parameters or start a new search.
+External route replacements still supersede pending text; immediate List/Map
+switches and explicit filter handoff retain their existing query semantics.
+
+Map path search pauses its debounce when the route loses focus and rejects hidden
+submissions. Resume an unfinished query when focus/data are ready. Preserve the
+existing deliberate-navigation cancellation: returning must not reopen a search
+path that the user already superseded by navigating the map.
+
+### Map recovery commands
+
+- Map Retry uses the shared native command adapter and disables itself while its
+  resource retry is pending. It must not start the pull-to-refresh indicator.
+- Empty-container Add uses the shared native command adapter, preserving the
+  view model's existing create/edit permission gate and destination context.
+
+### Map search outcome
+
+- Completed path search shows an inline result status: matched asset and placement,
+  or “No matching items” with a suggestion to try another name, kind or location.
+- No match preserves the current branch. Clear, changed query, refreshed data or
+  deliberate map navigation removes the previous outcome. Search status must not
+  display for data that is loading or unavailable.
+
+### Appearance selection completion
+
+Appearance remains an immediate in-place preference with queued persistence and
+provider rollback. Picker error feedback belongs to the latest selection in the
+initiating focused visit. Departed, superseded or hidden callbacks must not show
+an obsolete error or begin another preference save; persistence already started
+may finish and reconcile the application appearance.
+
+### Home expiration scope readiness
+
+Home expiration must not navigate or show cached expiration data until its inventory
+scope is usable. Scope errors hide cached counts/rows until scope recovery succeeds.
+See all is disabled while scope is unresolved or failed. Resource access errors
+also hide cached rows. Scope retry remains distinct from resource retry. Keep the
+query-driven content behind an injected expiration query and navigation callbacks
+so loading, failure and recovery are testable without application bootstrap.
+
+Asset detail load errors use the shared native command adapter for Retry asset.
+Non-retryable failures expose no retry command. Error content remains scrollable,
+with flexible height and wrapping explanation, beneath the native navigation bar.
+
+Home dashboard load, Home expiration refresh and Add context recovery must reuse
+the shared native command adapter, preserving their existing retry callbacks and
+scope/readiness gates. These local recovery commands do not initiate pull refresh.
+
+Browse inline recovery and asset photo-upload retry use native command adapters.
+Browse recovery stacks the explanation and command so a full-width native command
+cannot compress or overflow the message. Preserve existing retry eligibility,
+callbacks, failed-photo drafts and successful result context.
+
+Browse empty inventory/search/filter recovery, initial load retry and pagination
+retry use the shared native command adapter. Empty inventory Add remains absent
+for viewers; clear actions retain their specific target. Pagination recovery stays
+beside loaded results with standard prominence, while initial recovery and empty
+state actions retain primary prominence. Explanations and commands stack without
+horizontal compression; labels and callback semantics remain unchanged.
+
+Invitation review commands use NativeCommandButton. Join and Open keep stable
+command names, disable during their operation, and show adjacent named progress
+with busy semantics. Opening failure keeps the accepted-access explanation and
+re-enables Open without accepting again. Start-over also shows named pending
+feedback. Secondary dismissal and account-switch commands remain native; preserve
+existing invitation reference generation guards and command eligibility.
+
+Expiration entry rejects input callbacks while disabled, including year text events
+that arrive after a save begins. The displayed draft and published expiration must
+remain unchanged through the pending interval; re-enabling permits normal editing.
+
+Voice plan photo selection belongs to the initiating focused visit and proposed
+plan. A retained source choice cannot start after that owner changes. Late selection
+results and errors must not alter a replacement plan or present an obsolete alert.
+Current-owner failures retain the existing retry explanation; selection remains
+behind the injected photo query and native source chooser.
+
+On iOS form sheets with a visible native header, notice placement includes the
+reported native header height even when headerTransparent is false: form-sheet
+content extends beneath that header. Ordinary opaque pushed screens retain their
+content-relative placement. Header-hidden screens retain safe-area placement, and
+Android does not inherit this iOS-specific adjustment. Native acceptance must keep
+the full notice and its actions below the header, including after height changes.
+
+The iOS native color picker exposes an interactive well with a44-point target,
+separate from its visible label. Do not expose a full-width button whose center
+fails to activate the well. Retain SwiftUI ColorPicker, direct system presentation,
+optional empty selection, disabled guards and parent draft updates. Native center
+activation and open/close/clear acceptance remain required; a trailing-coordinate
+probe alone does not establish accessible activation.

@@ -1,3 +1,4 @@
+import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { InventoryAccessInvitation, StuffStashClient } from '@stuff-stash/api-client';
 import type {
@@ -42,8 +43,11 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
       scope.inventoryId,
       input
     );
-    if (!invitation.inviteUrl) {
+    if (invitation.tenantId !== scope.tenantId || invitation.inventoryId !== scope.inventoryId) {
       throw new Error('Stuff Stash did not return the one-time invitation link.');
+    }
+    if (!invitation.inviteUrl) {
+      throw new InventoryInvitationLinkUnavailableError();
     }
     let reference;
     try {
@@ -53,16 +57,14 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
         this.allowInsecureLocalHTTP
       );
     } catch {
-      throw new Error('Stuff Stash did not return the one-time invitation link.');
+      throw new InventoryInvitationLinkUnavailableError();
     }
     if (
-      invitation.tenantId !== scope.tenantId ||
-      invitation.inventoryId !== scope.inventoryId ||
       reference.tenantId !== scope.tenantId ||
       reference.inventoryId !== scope.inventoryId ||
       reference.invitationId !== invitation.id
     ) {
-      throw new Error('Stuff Stash did not return the one-time invitation link.');
+      throw new InventoryInvitationLinkUnavailableError();
     }
     return { ...mapSafeInvitation(invitation, scope), inviteUrl: invitation.inviteUrl };
   }

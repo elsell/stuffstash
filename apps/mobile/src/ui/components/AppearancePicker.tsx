@@ -1,3 +1,5 @@
+import { useCallback, useRef } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { appearancePreferences, isAppearancePreference } from '../../application/settings/AppearancePreference';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { appearanceLabel } from '../screens/SettingsScreenPresentation';
@@ -9,10 +11,18 @@ const options = appearancePreferences.map(value => ({ value, label: appearanceLa
 export function AppearancePicker() {
   const { preference, setPreference } = useAppearance();
   const feedback = useAppFeedback();
+  const focused = useRef(false);
+  const selection = useRef(0);
+  useFocusEffect(useCallback(() => {
+    focused.current = true;
+    return () => { focused.current = false; selection.current++; };
+  }, []));
   async function select(value: string) {
-    if (!isAppearancePreference(value) || value === preference) return;
+    if (!focused.current || !isAppearancePreference(value) || value === preference) return;
+    const request = ++selection.current;
     try { await setPreference(value); }
     catch {
+      if (!focused.current || selection.current !== request) return;
       feedback.showNotice({ tone: 'error', title: 'Appearance not saved', message: 'Stuff Stash could not save the appearance setting.' });
     }
   }

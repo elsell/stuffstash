@@ -1,3 +1,4 @@
+import { setScreenFocused } from '../../test-support/navigation';
 import React from 'react';
 import { expect, it, vi } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -21,4 +22,33 @@ it('debounces typing, applies clear immediately and restores external route chan
   await harness.run(()=>search.change('unmounted')); await harness.unmount();
   await harness.run(()=>vi.advanceTimersByTime(300)); expect(values.at(-1)).toBe('new:restored now');
  } finally { await harness.unmount(); vi.useRealTimers(); }
+});
+
+it('pauses pending search on blur, ignores hidden callbacks and resumes retained text on return', async () => {
+ vi.useFakeTimers(); setScreenFocused(true); const h=new MobileRenderHarness(); const values:string[]=[];
+ let search!:ReturnType<typeof useExpirationSearch>;
+ function Surface({query=''}:{query?:string}){search=useExpirationSearch(query,value=>values.push(value));return null;}
+ try {
+  await h.render(<Surface />);
+  await h.run(()=>search.change('retained'));
+  await h.run(()=>setScreenFocused(false));
+  await h.run(()=>vi.advanceTimersByTime(300));
+  expect(values).toEqual([]);
+  await h.run(()=>{search.change('late');search.clear();search.submit('hidden');vi.advanceTimersByTime(300);});
+  expect(values).toEqual([]);
+  await h.run(()=>setScreenFocused(true));
+  await h.run(()=>vi.advanceTimersByTime(300));
+  expect(values).toEqual(['retained']);
+  await h.run(()=>search.change('new'));
+  await h.run(()=>vi.advanceTimersByTime(300));
+  expect(values).toEqual(['retained','new']);
+  await h.run(()=>search.change('abandoned'));
+  await h.run(()=>setScreenFocused(false));
+  await h.render(<Surface query="external" />);
+  await h.run(()=>setScreenFocused(true));
+  await h.run(()=>vi.advanceTimersByTime(300));
+  expect(values).toEqual(['retained','new']);
+  await h.run(()=>search.flush());
+  expect(values).toEqual(['retained','new']);
+ }finally{await h.unmount();setScreenFocused(true);vi.useRealTimers();}
 });

@@ -10,7 +10,7 @@ export default function ProviderCredentialRoute() {
   const { manageProviderProfileCommand, providerProfileSettingsQuery, settingsQuery } = useAppServices();
   return (
     <VoiceAdminGuard settingsQuery={settingsQuery}>
-      <ProviderCredentialScreen manageCommand={manageProviderProfileCommand} profileId={profileId ?? ''} query={providerProfileSettingsQuery} onCancel={() => router.back()} onSaved={() => router.back()} />
+      <ProviderCredentialScreen manageCommand={manageProviderProfileCommand} profileId={profileId ?? ''} query={providerProfileSettingsQuery} onSaved={() => router.back()} />
     </VoiceAdminGuard>
   );
 }

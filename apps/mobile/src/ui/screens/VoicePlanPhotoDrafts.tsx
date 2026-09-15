@@ -13,14 +13,19 @@ import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { showPhotoSourceChooser } from './PhotoSourceChooser';
 
 export function showVoicePlanPhotoSourceChooser({
+  isCurrent,
   onCamera,
   onLibrary
 }: {
+  readonly isCurrent: () => boolean;
   readonly onCamera: () => Promise<void>;
   readonly onLibrary: () => Promise<void>;
 }) {
+  if (!isCurrent()) return;
   const run = (action: () => Promise<void>) => {
+    if (!isCurrent()) return;
     action().catch((error: unknown) => {
+      if (!isCurrent()) return;
       Alert.alert('Could not add photos', error instanceof Error ? error.message : 'Photo selection failed.');
     });
   };

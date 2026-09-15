@@ -1,6 +1,7 @@
+import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
-import { attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -91,10 +92,12 @@ it('creates the move destination with the kind selected in the native menu', asy
   } finally { await h.unmount(); }
 });
 
-it.each(['move', 'move-here'] as const)('freezes %s submission and restores its draft after failure', async mode => {
+it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', true, 'failure'], ['move-here', true, 'failure'], ['move', true, 'success'], ['move-here', true, 'success'], ['move', false, 'success'], ['move-here', false, 'success']] as const)('owns %s submission (returned=%s, outcome=%s)', async (mode, returned, outcome) => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const submitted: unknown[] = [];
   let rejectSave: (error: Error) => void = () => {};
-  const waiting = new Promise<never>((_, reject) => { rejectSave = reject; });
+  let resolveSave!: (value: { id: string; title: string; message: string }) => void;
+  const waiting = new Promise<{ id: string; title: string; message: string }>((resolve, reject) => { resolveSave = resolve; rejectSave = reject; });
+  resetNavigation(); consumeAssetActionCompletion('asset');
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'container' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   const candidate = { id: 'box', title: 'Camping box', kind: 'container' as const, subtitle: '', pathLabel: 'Camping box', selectionHint: 'Container', willPromoteToContainer: false };
@@ -104,11 +107,18 @@ it.each(['move', 'move-here'] as const)('freezes %s submission and restores its 
       {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    if (mode === 'move') {
+      expect(h.byText('Tent')).toBeDefined();
+      expect(h.byText('Current location')).toBeDefined();
+      expect(h.byText('Move to')).toBeUndefined();
+      expect(h.byLabel('Move')?.props.disabled).toBe(true);
+    }
     const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
     await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
     await h.press(candidateRow ?? undefined);
-    const save = h.byText(mode === 'move' ? 'Move' : 'Move here')?.parent;
+    if (mode === 'move') expect(h.byText('Move to')).toBeDefined();
+    const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
     expect(save?.props.disabled).toBe(false);
     const submit = save!.props.onPress;
     await h.run(() => { submit(); submit(); });
@@ -117,16 +127,24 @@ it.each(['move', 'move-here'] as const)('freezes %s submission and restores its 
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
-    await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
+    const alertBefore = latestAlert();
+    if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
+    await h.run(() => outcome === 'failure' ? rejectSave(new Error('Failed')) : resolveSave({ id: 'asset', title: 'Tent', message: 'Moved' })); await settle(h);
+    if (returned) expect(latestAlert()).toBe(alertBefore);
+    expect(dispatchedActions()).toEqual(outcome === 'success' && !returned ? [{ type: 'back' }] : []);
+    const completion = consumeAssetActionCompletion('asset');
+    if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
+    else expect(completion).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
-  } finally { await h.unmount(); }
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 
-it('shares the Move lock with destination creation and retains the query after failure', async () => {
+it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('shares Move creation lock (returned=%s, outcome=%s)', async (returned, outcome) => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creates = 0; let moves = 0;
   let rejectCreate: (error: Error) => void = () => {};
-  const waiting = new Promise<never>((_, reject) => { rejectCreate = reject; });
+  let resolveCreate!: (value: { id: string; title: string; message: string }) => void;
+  const waiting = new Promise<{ id: string; title: string; message: string }>((resolve, reject) => { resolveCreate = resolve; rejectCreate = reject; });
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, parentAssetId: assetId('old'), locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   try {
@@ -139,19 +157,23 @@ it('shares the Move lock with destination creation and retains the query after f
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     const create = h.byText('Create location "New box"')?.parent;
-    const move = h.byText('Move')?.parent;
+    const move = h.byLabel('Move');
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.allByType('TextInput')[0], 'Changed');
-    await h.run(() => rejectCreate(new Error('Failed'))); await settle(h);
+    const alertBefore = latestAlert();
+    if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
+    await h.run(() => outcome === 'failure' ? rejectCreate(new Error('Failed')) : resolveCreate({ id: 'new', title: 'Created destination', message: 'Created' })); await settle(h);
+    if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
+    expect(h.byText('Created destination')).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
-  } finally { await h.unmount(); }
+  } finally { await h.unmount(); setScreenFocused(true); }
 });
 
-it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft during submission and %s', async outcome => {
+it.each(['failure', 'success', 'late completion', 'return success', 'return failure'] as const)('protects Edit draft during submission and %s', async outcome => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let writes = 0; let unmounted = false;
   resetNavigation();
   let resolveSave: (value: { id: string; title: string; message: string }) => void = () => {};
@@ -175,7 +197,18 @@ it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
     await h.changeText(input, 'Unsubmitted name');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
-    if (outcome === 'failure') {
+    if (outcome === 'return success' || outcome === 'return failure') {
+      consumeAssetActionCompletion('asset');
+      const alertBefore = latestAlert();
+      await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true));
+      await h.run(() => outcome === 'return success' ? resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }) : rejectSave(new Error('Departed failure')));
+      await settle(h);
+      expect(dispatchedActions()).toEqual([]);
+      expect(latestAlert()).toBe(alertBefore);
+      expect(consumeAssetActionCompletion('asset')).toBeUndefined();
+      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
+    } else if (outcome === 'failure') {
       await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
       expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
@@ -187,7 +220,7 @@ it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft
       await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
       expect(dispatchedActions()).toEqual([]);
     }
-  } finally { if (!unmounted) await h.unmount(); resetNavigation(); }
+  } finally { if (!unmounted) await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 
 it('keeps an existing tag selected when inline tag resolution updates the Edit draft', async () => {
@@ -233,6 +266,7 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
       expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
     }
     expect(formScroll?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
+    expect(harness.byText('Loading expiration settings…')).toBeUndefined();
     await harness.changeText(harness.byLabel('Asset name'), 'My retained name');
     await harness.press(harness.byLabel('Retry tags')); await settle(harness);
     expect(tagReads).toBe(2); expect(typeReads).toBe(1);
@@ -376,4 +410,27 @@ it('protects an unstaged Edit tag from cancellation and silent omission on Save'
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep this edit', newTags: [{ displayName: 'Camping' }] })]);
   } finally { await h.unmount(); }
+});
+
+
+it.each(['draft', 'visit', 'unmount', 'current'] as const)('owns Edit discard confirmation across %s', async change => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'First draft'); await h.press(h.byLabel('Cancel'));
+    const confirm = latestAlert()?.buttons.find(button => button.text === 'Discard')?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    if (change === 'draft') await h.changeText(h.byLabel('Asset name'), 'Later draft');
+    if (change === 'visit') { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
+    if (change === 'unmount') await h.unmount();
+    const before = dispatchedActions().length;
+    await h.run(() => confirm?.()); await h.run(() => confirm?.());
+    expect(dispatchedActions().length - before).toBe(change === 'current' ? 1 : 0);
+    if (change === 'draft') expect(h.byLabel('Asset name')?.props.value).toBe('Later draft');
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });

@@ -1,3 +1,5 @@
+import { useLayoutEffect } from 'react';
+import { Text } from 'react-native';
 import { expect, it, vi } from 'vitest';
 import { setScreenReaderEnabledForTest, accessibilityAnnouncements, setReduceMotionEnabledForTest, animationStartCount } from '../../test-support/react-native';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -87,4 +89,62 @@ it('honors Reduce Motion for entry, preference changes, recovery, and dismissal'
     expect(animationStartCount()).toBe(starts);
     expect(h.byText('Check this item')).toBeUndefined();
   } finally { await h.unmount(); setReduceMotionEnabledForTest(false); }
+});
+
+it('invalidates old notice content, actions and publishers across service contexts', async () => {
+  const h = new MobileRenderHarness(); let feedback!: AppFeedbackContextValue; let actions = 0;
+  function Probe() { feedback = useAppFeedback(); return null; }
+  const view = (scopeKey: string) => <AppFeedbackProvider scopeKey={scopeKey}><Probe /></AppFeedbackProvider>;
+  try {
+    await h.render(view('server-a-session'));
+    const previous = feedback;
+    await h.run(() => feedback.showNotice({ tone: 'success', title: 'Saved private item', action: { label: 'Undo private edit', onPress: () => { actions++; } } }));
+    const oldAction = h.byLabel('Undo private edit');
+    await h.render(view('disconnected'));
+    expect(h.byText('Saved private item')).toBeUndefined();
+    await h.press(oldAction); expect(actions).toBe(0);
+    await h.run(() => previous.showNotice({ tone: 'error', title: 'Late old-server failure' }));
+    expect(h.byText('Late old-server failure')).toBeUndefined();
+    await h.render(view('server-b-session'));
+    await h.run(() => feedback.showNotice({ tone: 'success', title: 'Current item', action: { label: 'View current item', onPress: () => { actions++; } } }));
+    expect(h.byText('Current item')).toBeDefined();
+    await h.press(h.byLabel('View current item')); expect(actions).toBe(1);
+    await h.render(view('server-a-session'));
+    await h.run(() => previous.showNotice({ tone: 'error', title: 'Reused old publisher' }));
+    expect(h.byText('Reused old publisher')).toBeUndefined();
+  } finally { await h.unmount(); }
+});
+
+it('preserves same-context navigation notices but invalidates actions when the provider unmounts', async () => {
+  const h = new MobileRenderHarness(); let feedback!: AppFeedbackContextValue; let actions = 0;
+  function Probe() { feedback = useAppFeedback(); return null; }
+  const view = (page: string) => <AppFeedbackProvider scopeKey="same-session"><Probe /><Text>{page}</Text></AppFeedbackProvider>;
+  try {
+    await h.render(view('Editor'));
+    await h.run(() => feedback.showNotice({ tone: 'success', title: 'Saved', action: { label: 'View saved item', onPress: () => { actions++; } } }));
+    await h.render(view('Home'));
+    expect(h.byText('Saved')).toBeDefined();
+    await h.press(h.byLabel('View saved item')); expect(actions).toBe(1);
+    await h.run(() => feedback.showNotice({ tone: 'success', title: 'Another saved item', action: { label: 'Old action', onPress: () => { actions++; } } }));
+    const oldAction = h.byLabel('Old action');
+    await h.render(<Text>Signed out</Text>);
+    await h.press(oldAction); expect(actions).toBe(1);
+  } finally { await h.unmount(); }
+});
+
+
+it('keeps a new context notice published while old notice state is being cleared', async () => {
+  const h = new MobileRenderHarness();
+  function Publisher({ label }: { label: string }) {
+    const feedback = useAppFeedback();
+    useLayoutEffect(() => { feedback.showNotice({ tone: 'warning', title: label }); }, [feedback, label]);
+    return null;
+  }
+  try {
+    await h.render(<AppFeedbackProvider scopeKey="old"><Publisher label="Old context" /></AppFeedbackProvider>);
+    expect(h.byText('Old context')).toBeDefined();
+    await h.render(<AppFeedbackProvider scopeKey="new"><Publisher label="New context" /></AppFeedbackProvider>);
+    expect(h.byText('Old context')).toBeUndefined();
+    expect(h.byText('New context')).toBeDefined();
+  } finally { await h.unmount(); }
 });

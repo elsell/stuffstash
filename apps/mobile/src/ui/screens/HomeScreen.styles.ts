@@ -30,21 +30,6 @@ export function createHomeScreenStyles(colors: MobileColorPalette) {
       fontWeight: '700',
       letterSpacing: 0
     },
-    retryButton: {
-      alignItems: 'center',
-      backgroundColor: colors.action,
-      borderRadius: radius.md,
-      justifyContent: 'center',
-      marginTop: spacing.lg,
-      minHeight: 44,
-      minWidth: 96,
-      paddingHorizontal: spacing.md
-    },
-    retryButtonText: {
-      color: colors.onAction,
-      fontSize: 16,
-      fontWeight: '600'
-    },
     homeTopBar: {
       alignItems: 'flex-start',
       flexDirection: 'row',

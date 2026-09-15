@@ -1,4 +1,4 @@
-import { navigationOptions, resetNavigation, dispatchedActions } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, dispatchedActions, setScreenFocused } from '../../test-support/navigation';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { AssetDetailRouteScreen } from './AssetDetailRouteScreen';
@@ -9,6 +9,7 @@ import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverS
 import { AssetCoreQuery, type AssetCoreSnapshot } from '../../application/assets/AssetCoreQuery';
 import { AssetContentsQuery, type AssetContentsSnapshot } from '../../application/assets/AssetContentsQuery';
 import { AssetPhotosQuery } from '../../application/assets/AssetPhotosQuery';
+import { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCommand';
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { assetId, type AssetPhoto } from '../../domain/assets/AssetSummary';
 import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
@@ -472,5 +473,137 @@ it('uses scoped native contents search and clears it when detail eligibility cha
     await test.harness.run(() => test.harness.byType('RefreshControl')?.props.onRefresh()); await settle(test.harness);
     expect(search()).toBeUndefined();
     expect(test.harness.allText()).toContain('Tool 0');
+  } finally { await test.harness.unmount(); }
+});
+
+
+const visitActions = ['Check out', 'Return', 'Archive', 'Restore', 'Delete permanently'] as const;
+it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ label, outcome }))))(
+  'keeps $label $outcome completion in its originating visit', async ({ label, outcome }) => {
+    resetNavigation();
+    const command = deferred<void>();
+    let calls = 0;
+    let coreReads = 0;
+    const base = snapshot();
+    const test = setup({
+      assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => {
+        coreReads++;
+        return { ...base, asset: { ...base.asset,
+          lifecycleState: label === 'Restore' || label === 'Delete permanently' ? 'archived' : 'active',
+          currentCheckout: label === 'Return' ? { id: 'checkout', state: 'open', checkedOutAt: '2026-07-14T12:00:00Z', checkedOutByPrincipalId: 'principal' } : undefined } };
+      } }),
+      assetCheckoutCommand: { execute: async () => { calls++; await command.promise; return { id: 'checkout', assetId: assetId('tent') }; } },
+      assetLifecycleCommand: { execute: () => { calls++; return command.promise; } }
+    });
+    async function invoke() {
+      if (label === 'Check out' || label === 'Return') await test.harness.press(test.harness.byLabel(label));
+      else {
+        await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+        await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
+        const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+        expect(confirm).toBeTypeOf('function');
+        await test.harness.run(() => confirm!());
+      }
+    }
+    try {
+      await test.render(); await settle(test.harness);
+      await invoke(); expect(calls).toBe(1);
+      await test.harness.run(() => setScreenFocused(false));
+      await test.harness.run(() => setScreenFocused(true));
+      await test.harness.run(() => outcome === 'success' ? command.resolve() : command.reject(new Error('Departed task failure')));
+      await settle(test.harness);
+      expect(test.harness.allText().join(' ')).not.toContain('Departed task failure');
+      for (const message of ['Checked out Family tent.', 'Returned Family tent.', 'Archived Family tent.', 'Restored Family tent.']) {
+        expect(test.harness.allText().join(' ')).not.toContain(message);
+      }
+      expect(dispatchedActions()).toEqual([]);
+      expect(coreReads).toBe(1);
+      await invoke(); expect(calls).toBe(2);
+    } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
+  }
+);
+
+it.each(['Archive', 'Restore', 'Delete permanently'] as const)('rejects %s confirmation from an earlier visit', async label => {
+  resetNavigation(); let calls = 0;
+  const base = snapshot();
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => ({ ...base, asset: { ...base.asset, lifecycleState: label === 'Archive' ? 'active' : 'archived' } }) }),
+    assetLifecycleCommand: { execute: async () => { calls++; } }
+  });
+  try {
+    await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
+    const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    await test.harness.run(() => setScreenFocused(false));
+    await test.harness.run(() => setScreenFocused(true));
+    await test.harness.run(() => confirm!());
+    expect(calls).toBe(0);
+  } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
+});
+
+it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s confirmation once even after completion', async label => {
+  resetNavigation(); let calls = 0;
+  const base = snapshot();
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => ({ ...base, asset: { ...base.asset, lifecycleState: label === 'Archive' ? 'active' : 'archived' } }) }),
+    assetLifecycleCommand: { execute: async () => { calls++; } }
+  });
+  try {
+    await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
+    const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    await test.harness.run(() => confirm!());
+    await settle(test.harness);
+    expect(calls).toBe(1);
+    if (label !== 'Delete permanently') expect(test.harness.allText().join(' ')).toContain(label === 'Archive' ? 'Archived Family tent.' : 'Restored Family tent.');
+    const navigationAfterCompletion = dispatchedActions().length;
+    await test.harness.run(() => confirm!());
+    await settle(test.harness);
+    expect(calls).toBe(1);
+    expect(dispatchedActions()).toHaveLength(navigationAfterCompletion);
+  } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
+});
+
+
+it('retries only failed photos from the workspace without reopening selection', async () => {
+  const attempts: string[] = [];
+  const attached: string[] = [];
+  let selections = 0;
+  const secondPhoto = { ...selectedPhoto, id: 'second', fileName: 'second.jpg', uri: 'file:///second.jpg' };
+  const command = new AddAssetPhotosCommand({ addAssetPhoto: async (target, photo) => {
+    expect(target).toBe('tent');
+    attempts.push(photo.fileName);
+    if (attempts.length === 1) throw new Error('Upload interrupted.');
+    attached.push(photo.fileName);
+  } });
+  const test = setup({
+    addAssetPhotosCommand: command,
+    photoSelectionQuery: new PhotoSelectionQuery({
+      selectFromLibrary: async () => { selections++; return [selectedPhoto, secondPhoto]; },
+      captureFromCamera: async () => []
+    })
+  });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => latestActionSheetCallback()?.(1));
+    await settle(test.harness);
+    expect(test.harness.allText()).toContain('1 of 2 photos added.');
+    expect(test.harness.allText()).toContain('Needs retry');
+    expect(attached).toEqual(['second.jpg']);
+    await test.harness.press(test.harness.byLabel('Retry'));
+    await settle(test.harness);
+    expect(attempts).toEqual(['photo.jpg', 'second.jpg', 'photo.jpg']);
+    expect(attached).toEqual(['second.jpg', 'photo.jpg']);
+    expect(selections).toBe(1);
+    expect(test.harness.byLabel('Retry')).toBeUndefined();
+    expect(test.harness.allText()).not.toContain('Photo uploads');
+    expect(test.harness.allText()).toContain('1 photo added.');
+    expect(test.harness.allText()).toContain('Family tent');
   } finally { await test.harness.unmount(); }
 });

@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { type ReactNode } from 'react';
 import { useHomeReturnActions } from './useHomeReturnActions';
 import { router } from 'expo-router';
@@ -102,14 +103,7 @@ function ErrorState({ message, onRetry }: { readonly message: string; readonly o
     <View style={styles.centerState}>
       <Text style={styles.errorTitle}>Could not load</Text>
       <Text style={styles.stateText}>{message}</Text>
-      <Pressable
-        accessibilityLabel="Retry loading Home"
-        accessibilityRole="button"
-        onPress={onRetry}
-        style={styles.retryButton}
-      >
-        <Text style={styles.retryButtonText}>Retry</Text>
-      </Pressable>
+      <NativeCommandButton label="Retry loading Home" onPress={onRetry} />
     </View>
   );
 }

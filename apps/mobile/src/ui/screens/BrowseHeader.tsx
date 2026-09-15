@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   ActivityIndicator,
   Pressable,
@@ -137,13 +138,7 @@ export function SearchHeader({
         <View accessibilityLiveRegion="polite" style={styles.inlineError}>
           <Text style={styles.errorText}>{statusMessage}</Text>
           {onRetryResults ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={onRetryResults}
-              style={({ pressed }) => [styles.retryButton, pressed ? styles.controlPressed : null]}
-            >
-              <Text style={styles.retryText}>Retry</Text>
-            </Pressable>
+            <NativeCommandButton label="Retry" onPress={onRetryResults} />
           ) : null}
         </View>
       ) : null}
@@ -168,10 +163,8 @@ export function createBrowseHeaderStyles(palette: MobileColorPalette) {
     activeFilterTokenText: { color: palette.accentStrong, fontSize: 13, fontWeight: '700' },
     clearAllButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
     clearAllText: { color: palette.action, fontSize: 13, fontWeight: '700' },
-    inlineError: { alignItems: 'center', backgroundColor: palette.warningSurface, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, paddingLeft: spacing.md, paddingRight: spacing.xs, paddingVertical: spacing.xs },
-    errorText: { color: palette.warning, flex: 1, fontSize: 14, lineHeight: 20 },
-    retryButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm },
-    retryText: { color: palette.action, fontSize: 14, fontWeight: '700' },
+    inlineError: { alignItems: 'stretch', backgroundColor: palette.warningSurface, borderRadius: radius.md, gap: spacing.sm, marginTop: spacing.sm, paddingLeft: spacing.md, paddingRight: spacing.xs, paddingVertical: spacing.xs },
+    errorText: { color: palette.warning, fontSize: 14, lineHeight: 20 },
     controlPressed: { opacity: 0.82 }
   });
 }

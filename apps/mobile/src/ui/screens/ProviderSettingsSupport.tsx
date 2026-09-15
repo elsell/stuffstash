@@ -35,7 +35,7 @@ export function useProviderSettings(query: ProviderProfileSettingsQuery) {
   } } : profiles.isError || configuration.isError ? { status: 'error', message: 'Voice settings could not be loaded.' } : { status: 'loading' };
   const load = async () => { await Promise.all([profiles.reconcile(), configuration.reconcile()]); };
   const retry = async () => { await Promise.all([profiles.refetch(), configuration.refetch()]); };
-  return { state, load, retry, hasRefreshError: profiles.isRefetchError || configuration.isRefetchError };
+  return { state, ownerKey: JSON.stringify(profiles.resourceKey), load, retry, hasRefreshError: profiles.isRefetchError || configuration.isRefetchError };
 }
 
 export function ProviderStateView({

@@ -121,3 +121,40 @@ The new seeded URL/no-accessory comparison holds input settings and text constan
 and removes only the extender before focus. The keyboard provider remains. Native
 accessory attachment calls reloadInputViews in the pinned library; this is a
 plausible variable to isolate, not a proven cause or reason to remove production UI.
+
+### Run349725 phone address comparison could not reach the field
+
+The system-address [final capture](evidence/phone-address-below-viewport-349725.png)
+shows the fixture menu. Its hierarchy places the empty system field at y895.7–929.7
+while the visible scroll viewport ends at y874. Tested-source36c45c3b line882 is the
+pre-focus hittable assertion; the preceding loop always swipes down, away from a
+field below the viewport. All four phone address comparisons failed at this line.
+Those outcomes are not text-entry failures and do not contradict the earlier iPad
+system/uncontrolled typing passes. Add/Home/Sharing malformed values are separate.
+
+The address and ordinary comparison helpers now share bounded geometry-aware
+reveal, scrolling in the appropriate direction until the whole input is in view.
+Keyboard readiness, full-speed typing and native/application full-string checks
+are unchanged. Native execution remains required; this is a test-procedure fix,
+not a claim that product text corruption is resolved.
+
+Both fixture-preparation checks, mobile TypeScript and structural checks pass on
+paul. Critic found no blocker. The reveal helper checks vertical containment and
+hittability for these full-width fixture inputs; it is not a general horizontal
+clipping validator. Swift compilation and native interaction remain pending.
+
+### Sharing email candidate M121
+
+The iPad349789 capture retains a truncated email. Sharing now uses a mount-stable native
+seed on iOS with lifetime reset for successful creation or scope change, while
+Android retains controlled editing. Application state still drives submission and
+validation. Twenty-two Sharing checks cover reset/retry semantics; the unchanged
+native typing journey remains required. This supersedes the baseline controlled
+classification for this one site, not the other input families.
+
+M122 adds focused-route ownership to shared native search callbacks. Six consumers
+were inspected: list/map Browse, Browse tags, Expiration selections, asset contents
+and timezone choice. Full1,619-test validation passes; this does not establish
+caller debounce/request cancellation or native return behavior. Expiration filter
+selections now use the shared adapter; its results screen retains its separate
+debounced hook with M120 focus handling.

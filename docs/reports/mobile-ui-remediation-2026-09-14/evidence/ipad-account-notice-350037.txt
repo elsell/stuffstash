@@ -1,0 +1,61 @@
+Attributes: Application, 0x1182448c0, pid: 43500, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x1182448c0, pid: 43500, label: 'Stuff Stash'
+    Window (Main), 0x118244a00, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x118244b40, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x118244640, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x118244780, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x118244280, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x1182443c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x118244500, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x118244000, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x118244140, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x118244f00, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x118245040, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x118245180, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Account'
+                            Button, 0x1182452c0, {{10.0, 32.0}, {90.5, 44.0}}, identifier: 'BackButton', label: 'Back'
+                            StaticText, 0x118245400, {{338.5, 43.5}, {66.5, 21.0}}, label: 'Account'
+                          Other, 0x118245540, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x118245680, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x1182457c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x118245900, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x118245a40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x118245b80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x118245cc0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x118245e00, {{0.0, 86.0}, {744.0, 204.0}}
+                                          Other, 0x118245f40, {{0.0, 86.0}, {744.0, 204.0}}
+                                            Other, 0x118246080, {{16.0, 110.0}, {712.0, 52.0}}
+                                              StaticText, 0x1182461c0, {{32.0, 126.0}, {94.5, 20.5}}, label: 'Signed in as'
+                                                StaticText, 0x118246300, {{32.0, 126.0}, {94.5, 20.5}}, label: 'Signed in as'
+                                              StaticText, 0x118246440, {{136.5, 126.5}, {162.0, 19.5}}, label: 'audit@example.invalid'
+                                                StaticText, 0x118246580, {{136.5, 126.5}, {162.0, 19.5}}, label: 'audit@example.invalid'
+                                            StaticText, 0x1182466c0, {{16.0, 168.0}, {712.0, 18.0}}, label: 'Signing out keeps this server on your device so you can sign in again quickly.'
+                                              StaticText, 0x118246800, {{16.0, 168.0}, {712.0, 18.0}}, label: 'Signing out keeps this server on your device so you can sign in again quickly.'
+                                            Other, 0x118246940, {{16.0, 210.0}, {712.0, 48.0}}
+                                              Other, 0x118246a80, {{16.0, 210.0}, {712.0, 48.0}}
+                                                Other, 0x118246bc0, {{16.0, 210.0}, {712.0, 48.0}}
+                                                  Other, 0x118246d00, {{16.0, 210.0}, {712.0, 48.0}}
+                                                    Button, 0x118246e40, {{339.0, 210.0}, {66.0, 48.0}}, label: 'Sign Out'
+                                        Other, 0x118246f80, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x1182470c0, {{738.0, 944.5}, {3.0, 153.5}}
+                                        Other, 0x118247200, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x118247340, {{3.0, 1107.0}, {738.0, 3.0}}
+                                        Other, 0x118247480, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x1182475c0, {{738.0, 944.5}, {3.0, 153.5}}
+                                        Other, 0x118247700, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x118247840, {{3.0, 1107.0}, {738.0, 3.0}}
+                                    Other, 0x118247980, {{16.0, 96.0}, {712.0, 70.0}}, identifier: 'app-notice-layer'
+                                      Other, 0x118247ac0, {{16.0, 96.0}, {712.0, 70.0}}, identifier: 'app-notice-container', label: 'Could not sign out. Audit session action unavailable. Try again.'
+                                        Button, 0x118247c00, {{33.0, 107.0}, {678.0, 48.0}}, label: 'Could not sign out. Audit session action unavailable. Try again.. Dismiss message'
+                          Other, 0x118247d40, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x118247e80, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x117debe80, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x117deb980, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x117debc00, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x1182448c0, pid: 43500, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x117debd40, pid: 43500, label: 'Stuff Stash'
+  }

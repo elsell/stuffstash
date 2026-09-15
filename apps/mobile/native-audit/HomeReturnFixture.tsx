@@ -8,23 +8,32 @@ import { createMobileQueryClient } from '../src/adapters/serverState/MobileQuery
 import { MobileServerStateProvider } from '../src/ui/navigation/MobileServerStateProvider';
 import { HomeScreen } from '../src/ui/screens/HomeScreen';
 import { QueryReadinessDiagnostics } from './QueryReadinessDiagnostics';
+import { toAssetCardViewModel } from '../src/application/assets/AssetViewModels';
+import { ExpirationHomeSection } from '../src/ui/expiration/ExpirationHomeSection';
 
 const drill: AssetSummary = {
   id: assetId('audit-drill'), title: 'Audit drill', kind: 'item', lifecycleState: 'active', description: '',
   locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false,
   currentCheckout: { id: 'audit-checkout', state: 'open', checkedOutAt: '2026-09-10T12:00:00Z', checkedOutByPrincipalId: 'audit-user' }
 };
-export function HomeReturnFixture() {
+const headerAssets: readonly AssetSummary[] = [drill, ...['Audit camping equipment', 'Audit garden tools'].map((title, index) => ({
+  ...drill, id: assetId(`audit-header-${index}`), title,
+  currentCheckout: { ...drill.currentCheckout!, id: `audit-header-checkout-${index}` }
+}))];
+
+export function HomeHeaderFixture() { return <HomeReturnFixture headerAudit />; }
+
+export function HomeReturnFixture({ headerAudit = false }: { readonly headerAudit?: boolean }) {
   const [fixture] = useState(() => {
     let returned = false;
     let rejectDetails = true;
     const client = createMobileQueryClient();
     const query = new HomeDashboardQuery({ getHomeDashboardSnapshot: async (): Promise<HomeDashboardSnapshot> => ({
-      checkedOutAssets: returned ? [] : [drill], workspace: {
+      checkedOutAssets: returned ? [] : headerAudit ? headerAssets : [drill], workspace: {
         tenants: [{ id: tenantId('audit-tenant'), name: 'Audit home' }], defaultInventoryId: inventoryId('audit-inventory'),
-        inventories: [{ id: inventoryId('audit-inventory'), tenantId: tenantId('audit-tenant'), name: 'Audit inventory',
+        inventories: [{ id: inventoryId('audit-inventory'), tenantId: tenantId('audit-tenant'), name: headerAudit ? 'Main inventory with a long household name' : 'Audit inventory',
           role: 'owner', permissions: ['view', 'create_asset', 'edit_asset'], description: '', updatedAtLabel: '',
-          locationCount: 0, locations: [], assets: [drill] }]
+          locationCount: 0, locations: [], assets: headerAudit ? headerAssets : [drill] }]
       }
     }) });
     const command = new AssetCheckoutCommand({
@@ -39,7 +48,10 @@ export function HomeReturnFixture() {
   });
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
-    <HomeScreen dashboardQuery={fixture.query} assetCheckoutCommand={fixture.command} />
+    <HomeScreen dashboardQuery={fixture.query} assetCheckoutCommand={fixture.command}
+      notificationAction={headerAudit ? { kind: 'notifications', label: 'Notifications, 2 unread', badgeCount: 2, onPress: () => undefined } : undefined}
+      expirationSection={headerAudit ? <ExpirationHomeSection data={{ items: headerAssets.map(toAssetCardViewModel), counts: { expired: 3, soon: 0, all: 3 }, timezone: 'UTC' }} onOpen={() => undefined} onOpenAsset={() => undefined} onRetry={() => undefined} /> : undefined}
+    />
     <QueryReadinessDiagnostics client={fixture.client} />
   </MobileServerStateProvider>;
 }

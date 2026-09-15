@@ -1,3 +1,5 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -9,7 +11,6 @@ import type { TestProviderProfileCommand } from '../../application/providerProfi
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { spacing } from '../theme/tokens';
 import {
-  SettingsActionRow,
   SettingsNavigationRow,
   SettingsSection,
   SettingsSeparator,
@@ -47,7 +48,7 @@ export function ProviderProfileListScreen({
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <SettingsSection footer="Profiles are shared tenant-wide and supply one stage of the voice pipeline.">
-        <SettingsActionRow accessibilityLabel="Add a provider profile" label="Add Profile" onPress={onAdd} />
+        <SettingsNavigationRow accessibilityLabel="Add a provider profile" label="Add Profile" onPress={onAdd} />
       </SettingsSection>
       <SettingsSection title="Profiles">
         {providers.state.viewModel.profiles.length === 0 ? (
@@ -80,15 +81,18 @@ export function AddProviderProfileScreen({
   const feedback = useAppFeedback();
   const [workingKey, setWorkingKey] = useState<string>();
   const workingRef = useRef(false);
+  const capturePresentation = useTaskPresentation(manageCommand);
 
   async function create(key: string): Promise<void> {
-    if (workingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || workingRef.current) return;
     const template = recommendedProviderProfiles.find((item) => item.key === key);
     if (!template) return;
     workingRef.current = true;
     setWorkingKey(key);
     try {
       const profile = await manageCommand.createRecommended(template);
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'success',
         title: 'Draft profile created',
@@ -96,6 +100,7 @@ export function AddProviderProfileScreen({
       });
       onCreated(profile.id);
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not create profile',
@@ -117,10 +122,9 @@ export function AddProviderProfileScreen({
         {recommendedProviderProfiles.map((template, index) => (
           <View key={template.key}>
             {index > 0 ? <SettingsSeparator /> : null}
-            <SettingsActionRow
-              accessibilityLabel={`Create draft ${template.title} provider profile`}
+            <NativeCommandButton
               disabled={workingKey !== undefined}
-              label={workingKey === template.key ? `Creating ${template.title}…` : template.title}
+              label={workingKey === template.key ? `Creating ${template.title}…` : `Create ${template.title}`}
               onPress={() => void create(template.key)}
             />
             <Text style={[styles.secondaryText, {
@@ -155,6 +159,7 @@ export function ProviderProfileDetailScreen({
   const [operation, setOperation] = useState<'test' | 'lifecycle' | 'archive'>();
   const working = operation !== undefined;
   const workingRef = useRef(false);
+  const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
   if (providers.state.status !== 'ready') {
     return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
@@ -170,11 +175,13 @@ export function ProviderProfileDetailScreen({
   const profileDisplayName = profile.displayName;
 
   async function act(kind: 'test' | 'lifecycle' | 'archive', action: () => Promise<unknown>, title: string): Promise<void> {
-    if (workingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || workingRef.current) return;
     workingRef.current = true;
     setOperation(kind);
     try {
       await action();
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'success',
         title,
@@ -182,6 +189,7 @@ export function ProviderProfileDetailScreen({
       });
       void providers.load().catch(() => undefined);
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Profile action failed',
@@ -211,14 +219,23 @@ export function ProviderProfileDetailScreen({
         <SettingsValueRow label="Last tested" value={formatProviderProfileTestStatusLabel(profile.lastTestedAt)} />
       </SettingsSection>
       <SettingsSection title="Actions">
-        {profile.credentialPurpose ? <><SettingsActionRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label="Replace Credential" disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
-        {profile.capability === 'language_inference' ? <><SettingsActionRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label="Prompt Guidance" disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
-        <SettingsActionRow accessibilityLabel={`Test connection for ${profile.displayName}`} disabled={working} label={operation === 'test' ? 'Testing…' : 'Test Connection'} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
-        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={`${lifecycleAction} ${profile.displayName}`} disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
+        {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label="Replace Credential" disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
+        {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label="Prompt Guidance" disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
+        <NativeCommandButton disabled={working} label={operation === 'test' ? 'Testing…' : 'Test Connection'} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
+        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
         <SettingsSection footer="Archived profiles remain in history but can’t be selected for voice.">
-          <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => confirmArchive(profile, () => act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived'))} />
+          <NativeCommandButton disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => {
+            const canPresent = capturePresentation();
+            if (!canPresent() || workingRef.current) return;
+            let confirmed = false;
+            confirmArchive(profile, async () => {
+              if (confirmed || !canPresent() || workingRef.current) return;
+              confirmed = true;
+              await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived');
+            });
+          }} />
         </SettingsSection>
       ) : null}
     </ScrollView>

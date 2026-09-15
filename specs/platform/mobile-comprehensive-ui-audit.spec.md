@@ -140,6 +140,63 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Services-gate integration must be exercisable without replacing platform modules
+or React hooks. Keep native composition construction in AppServicesContext and
+extract the actual mounted gate/feedback wiring behind injected onboarding,
+profile-store and composition-factory dependencies. The gate owns startup,
+completion, sign-out, server change and session-expiry transitions. Controlled
+ports must verify notice/action invalidation through those real transitions and
+that notice context changes do not repeat startup or composition construction.
+This extraction preserves existing authentication and push-cleanup ordering.
+
+Global notices belong to a services context. The app's feedback provider receives
+the current ready composition's service-scope identity, or a disconnected identity
+while loading/onboarding. Changing identity immediately hides old notices and
+invalidates their action callbacks and retained notice publishers, including an
+old publisher used after returning to the same identity. A scope transition must
+not clear a newly published notice from the new context. Unmount also invalidates
+captured actions. Ordinary same-context navigation preserves completion notices
+and View/Undo. Native blocking dialogs remain a separate interaction; this notice
+ownership rule must not restart onboarding or rebuild services when context changes.
+
+Each pending invitation exposes a native contextual actions menu, with a named
+destructive Cancel invitation command instead of an ambiguous X. Cancellation is
+infrequent and irreversible; retain the confirmation naming the recipient before
+submitting. Each scope/invitation has an independent pending lock and visible
+Cancelling… status. Duplicate confirmations must not submit twice. One completion
+must not re-enable a different pending invitation, and failed rows retain retry.
+Confirmations captured before leaving the focused scope must
+not start a new cancellation after departure. Already-authorized operations may
+finish and update their scoped cache.
+
+The isolated native audit must exercise the actual Sharing screen at normal text
+size with controlled invitation and link-action ports. Cover unavailable creation
+link recovery, retained email, retry to a usable link, copy failure/retry, and
+cancellation failure/retry. Assert feedback stays below the native header and
+fully within the scroll viewport, commands can be reached, and Back remains usable.
+Retain screenshots and accessibility hierarchies. Fixture actions must not send
+invitations, copy secrets to the system clipboard, or open a real share destination.
+
+Sharing creation and one-time-link commands use the shared native command adapter:
+primary emphasis for Create Invitation, ordinary text commands for Copy link and
+Share invitation. Keep the system share sheet as the destination. While a link
+copy/share operation is pending, both link commands are disabled and duplicate
+activation is ignored; show a textual pending label. Completion re-enables the
+commands without losing the link. A new creation resets link-operation ownership,
+and a late result cannot unlock or annotate a newer operation. Creation retains
+its existing draft lock and command guard. Native appearance and keyboard
+reachability require current-build verification; using the adapter is not proof.
+
+Sharing's link copy result and link copy/share failures belong beside the current
+one-time link, inside its scroll content. Cancellation failures belong beside the
+affected invitation with its retry command retained. These task-owned messages
+must not cover native navigation with a global banner. Clear link feedback when
+another link action or invitation creation begins; clear cancellation feedback
+when that cancellation is retried. Clear both on focus/scope change, and reject
+late results from a previous focused session or replaced link. Keep the system
+share sheet and destructive cancellation confirmation. Other global notice
+consumers require their own positioning review; this does not certify them.
+
 Global notices with actions, warnings or errors remain until dismissed or replaced.
 Plain informational/success notices may expire after the normal display interval,
 but remain while a screen reader is enabled. Read accessibility preferences
@@ -403,9 +460,17 @@ fixture in a full-height sheet whose native header is declared visible with its
 known title before presentation. This isolates changing header visibility during
 presentation from the existing card-versus-sheet comparison. Preserve the original
 routes and complete draft/typing/rejected-save assertions. The comparison uses cold
-query state and the same application component; it must not preload resources or
-change production Add presentation. Fixture preparation must remain isolated from
-production routes.
+query state and the same application component; it must not preload resources.
+Fixture preparation must remain isolated from production routes.
+
+Run34965113594 on iPad reaches the focused form in the preconfigured-header sheet,
+while the hidden-header sheet remains loading with zero query observers. Apply the
+preconfigured native header and known Add item title to production Add before
+presentation. Keep the same full-height form sheet and the screen-owned Close,
+Save and busy/dismissal rules. Preserve the hidden-header diagnostic for comparison.
+This is a readiness candidate based on native evidence, not proof that typing or
+rejected-save recovery passes: the configured-header case separately fails exact
+text retention. Current phone/iPad acceptance remains required.
 
 ### M20 — full-width onboarding scroll content
 
@@ -496,9 +561,19 @@ screenshots. Do not touch real inventory selection or production services.
 Run34937278231 exposes nested StaticText wrappers with the same checkout note
 label. The bounds comparison must resolve an explicit first matching note inside
 its History scroll view before reading geometry, including the older-page note.
-Retain the original hit-testing diagnostic unchanged. This removes ambiguous
-XCTest lookup, not a production accessibility defect; pagination, expansion and
-Close must still execute on the native runtime before acceptance.
+Run34965113594's iPad capture confirms the note is visible while the legacy
+StaticText hit-test fails; the scoped bounds/pagination/dismissal case passes.
+Retire that duplicate tappability diagnostic and retain the full bounds-based
+journey. Static text need not be an interactive command. Continue asserting actual
+command hit targets, pagination, expansion and Close on the native runtime.
+
+Native integrated search may collapse after clearing an unfocused search field.
+After clearing, require the full result collection to return. Accept the native
+collapsed state only when the search field is absent and the Search button is
+reachable. Reopen it, enter a fresh query and exercise explicit cancellation while
+focused; require the query field and keyboard to disappear, the full collection
+to return, and native More/Back to remain reachable. Never require an obsolete
+Cancel button after UIKit has already closed search.
 
 ### Landscape capture cross-check
 
@@ -832,3 +907,362 @@ without exposing byte-count implementation details. Keep the typed value, color,
 selected tags and asset draft; clear the message when the name is valid. Use the
 existing application resolver as the validation authority. Empty untouched input
 does not need an error. Existing color validation remains with the color picker.
+
+### Provider task completion ownership
+
+Provider creation, credential replacement, prompt guidance, connection tests and
+lifecycle commands belong to the focused profile task that initiated them. Leaving
+and returning creates a new presentation session. Authorized mutations may finish,
+but their old completions must not navigate, publish notices or refresh the new
+screen. Keep synchronous duplicate guards and busy input protection until the
+pending command settles. A captured archive confirmation must not start a command
+after the initiating task loses focus or changes identity. Preserve domain/cache
+mutation observers, credential secrecy, draft retention on failure, and existing
+focused success behavior. Reuse one provider presentation-session hook across these
+consumers; do not cancel an authorized mutation merely because navigation changed.
+
+Successful credential replacement must still clear the submitted secret in its
+own keyed form after blur. Focus controls presentation, not secret cleanup. A
+replacement profile/form must retain its independently owned input.
+
+The same visit boundary applies to voice-stage service selection, connection test
+and enable commands. Key it by the current provider query scope and capability,
+so replacing a tenant or stage invalidates earlier presentation callbacks.
+Preserve the in-place service picker, synchronous pending guard and scoped mutation
+observer. Do not show success/errors or explicitly reload a replacement stage
+from a departed operation; focused success and retry must continue to work.
+
+### Provider replacement form commands and removal
+
+Credential and prompt editors use the existing native header Save adapter, with
+normal navigation Back rather than duplicate in-form Cancel/Save buttons. Save is
+available only for nonblank required text, except server ADC which needs no secret.
+Both rendering and command entry enforce this readiness. Keep a local announced
+failure near the input, retain failed drafts, and clear stale errors when editing
+or retrying. Preserve scoped success notices for the return destination.
+
+Use the native navigation removal guard for dirty drafts and pending saves. A
+pending save blocks removal; an unsaved draft offers Keep Editing and Discard in a
+native alert. Confirmations are single-use and owned by the focused keyed form.
+Successful save disarms removal protection before invoking the return callback.
+A late confirmation or save from a replaced form/visit cannot leave the new task.
+Secrets remain transient and successful replacement clears the submitted value.
+
+## Provider editor native acceptance fixtures
+
+Runner-only provider fixtures must render the production credential and prompt
+screens through real application commands and controlled repository ports. Use
+synthetic replacement input only; do not load a session or contact a provider.
+The first replacement fails locally and the next succeeds. Native journeys at
+normal text size must verify disabled empty Save, typing, Back/Keep Editing,
+retained input after failure, retry and successful navigation. A separate dirty
+Discard journey must verify return without saving. Keep phone/iPad keyboard,
+header and navigation evidence distinct from fixture installation or type checks.
+
+## Shared notice native placement regression
+
+A runner-only notice fixture must use the production AppFeedbackProvider and real
+native navigation, both pushed and presented as a full-height sheet. Show a
+persistent synthetic notice with an action and retain its screenshot/hierarchy.
+The notice's full bounds must be below the native navigation bar and within the
+visible application bounds; Back, notice action and dismissal remain reachable.
+Executing the action must update a visible fixture result exactly once. These
+checks intentionally expose M103 before a placement repair. Do not add a guessed
+header offset or replace the nonmodal handoff with an alert to satisfy the test.
+The sheet fixture supplies a native Close action; the pushed screen uses Back.
+Measure the full animated notice using a stable test identifier without changing
+its accessibility grouping, and compare with the active content viewport rather
+than the entire iPad window. Wait for presentation geometry before asserting bounds.
+
+## Notice presentation in the active screen
+
+Keep notice data and action ownership in the service-scoped provider, but render
+ready-app notices in the focused leaf screen's native content layer. Root and
+nested navigation containers must not create duplicate presenters. Preserve the
+screen's existing direct scroll child: add the presenter as a sibling rather than
+introducing a flex wrapper that changes native sheet measurement. Header overlap
+must follow the navigator's actual measured header height when transparent;
+ordinary headers already reserve their content area. Headerless screens use safe
+area insets. Disconnected onboarding retains its root presenter. Do not guess a
+constant navigation height or move domain action ownership to individual routes.
+Mounted acceptance must prove one presenter, background hiding, surviving
+same-service navigation and action ownership, and live measured-header updates.
+Native push/sheet regressions and Home/Browse transparent-header captures remain
+required before claiming M103 closed.
+Notice lifetime and accessibility announcement are shared with its data: changing
+focused presenters must not restart expiry or reannounce the same notice. Entry
+animation occurs on its first presentation only. Actionable/warning/error notices
+and screen-reader feedback retain their existing persistence policy.
+
+## Reminder completion belongs to the initiating visit
+
+Reminder mode, timing and time-zone controls must suppress result feedback and
+completion navigation from a save initiated in an earlier focused visit, including
+blur followed by return before settlement. Keep the save lock until that operation
+settles; a late completion must not unlock another operation. Preserve draft and
+retry behavior for a failure in the current visit and allow a fresh action after
+return. Reuse the focused-task presentation primitive across provider and reminder
+controls; component-only owners reset on unmount, and command/resource owners also
+reset when their identity changes. This is presentation ownership, not cancellation
+or reversal of an authorized server mutation.
+A departed save must not leave an optimistic value appearing saved without recovery.
+When it settles, mode/timing controls reconcile to the latest known saved policy,
+even if a parent refresh returns unchanged values. Current-visit failures keep the
+attempted selection and explicit retry/discard. Do not discard edits made after an
+operation unlocks or use a stale callback's captured policy for reconciliation.
+
+### Footer-appearance diagnostic body sizing
+
+The normal-size footer diagnostic must allocate remaining sheet height explicitly
+to its scroll body before auditing native button appearance. Run349725's iPad
+capture shows footer commands but no body controls; its failure is missing body,
+not established dark contrast. Match the explicit flex scroll sizing used by the
+passing footer-layout diagnostic, preserving the same production footer adapter.
+Re-run the native entry/appearance scenario; source layout changes cannot certify
+that the body or contrast is fixed. Preserve the failing capture.
+
+### Native audit job evidence budget
+
+Allow90 minutes for each macOS native-audit job, including dependency setup,
+compilation, the complete fixture suite and evidence export. Run349725's phone
+job exceeded the previous60-minute budget while its49-test suite and artifact
+upload completed, leaving a cancelled job conclusion despite retained results.
+Keep individual XCTest interaction waits bounded and retain failures. This changes
+job capacity, not acceptance criteria; do not cancel or restart existing live runs
+when changing the workflow budget.
+
+### Input-comparison fixture reachability
+
+Native input comparisons must scroll toward the actual field position, whether
+it is above or below the viewport. Run349725's phone system-address fixture shows
+the input below the viewport while the test repeatedly scrolls toward the top;
+its pre-typing failure cannot diagnose SwiftUI or React Native text fidelity.
+Use one bounded geometry-aware reveal for ordinary and address comparisons.
+Require the complete field inside the visible scroll area and hittable before
+focusing; keep keyboard readiness, typing speed and full-string assertions intact.
+Preserve this baseline as a test-procedure failure, distinct from actual malformed
+product text captured after typing.
+
+The Expiration native search journey must open the integrated Search button before
+typing, record its collapsed state, and assert the full entered query and filtered
+choices alongside existing keyboard/footer reachability. Do not retain the old
+assumption that the search field is permanently visible after M117.
+
+Run349789 still rendered no footer-diagnostic body after explicit flex sizing.
+The next diagnostic uses NativeFilterSheet's direct scroll body and measured
+opaque footer, retaining NativeSheetActions through that shared composition.
+Measure commands against the actual footer region rather than an enclosing root
+View. This removes the diagnostic's nested-scroll difference from working native
+filter layouts; it does not establish button contrast until runtime reaches it.
+
+Run349789's iPad Return-details assertion read a partial value immediately after
+typeText, but its final screenshot and hierarchy both show the complete requested
+value. That journey must wait at most5 seconds for the exact value before failing,
+without retyping, changing keyboard speed, or accepting a prefix. Keep subsequent
+failed-save/retry assertions unchanged. This evidence does not excuse Sharing's
+separately retained truncated email, nor establish Return acceptance before rerun.
+
+Native tag clearance verification must locate the tag by its accessible identifier
+without assuming checkbox rows have the Button element type. It must scroll the
+sheet containing that tag, not the background route's first scroll view. Preserve
+full-row/footer bounds, action reachability, selection and applied-ID assertions.
+
+Text-entry comparison fixtures must replace the fixture menu with a dedicated
+scroll page when opened. Inserting them earlier in the long menu can leave their
+native field offscreen and confound text-entry evidence with menu scroll position.
+Keep actual controls, ownership modes, keyboard options and exact full-speed
+entry assertions unchanged; preserve an explicit return action.
+
+Native fixture navigation must preserve production's explicit `Back` label. The
+fixture menu title is diagnostic content and must not become a long inherited
+Back label that competes with search and detail actions. Run34992079258 phone
+place search shows a bottom field instead of the expected integrated button;
+its fixture uses `Native UI audit` as Back text while production uses `Back`.
+Correct that configuration drift without relaxing the integrated-button assertion.
+This is a controlled fixture correction, not proof that Back width caused the
+placement or that production search has passed native acceptance.
+
+Expiration type-change confirmation belongs to the focused editor visit and the
+exact asset, draft, type definitions and enabled state that opened it. A retained
+confirmation after blur/refocus, replacement, settings refresh, draft change,
+disabling or unmount must not replace current edits or clear their expiration.
+A valid confirmation preserves other draft fields and applies once. Reuse the
+existing presentation-ownership primitive; no new navigation or dialog style.
+
+Stored-photo removal confirmation is valid only for the current focused viewer,
+selected photo, collection and removal availability. Closing/reopening the viewer,
+changing selection/collection, losing remove access, starting removal, leaving the
+screen or unmounting invalidates retained confirmation callbacks. Valid acceptance
+calls the existing removal command once for the confirmed photo. Preserve the
+existing destructive native alert and server-side authorization boundary.
+
+Account sign-out and server-change confirmations belong to their settings query
+and focused visit. Retained acceptance after leaving and returning must not start
+a session-changing action. A confirmation may start its command once. If a
+started command fails after departure, it must release its pending lock without
+publishing an error into the new visit. Current-visit failures remain retryable.
+This does not change session termination, persistence or authorization behavior.
+
+Account identity recovery must distinguish initial failure from failed refresh.
+When no principal has loaded, describe unavailable account details without claiming
+cached values are displayed. A failed refresh with retained principal data may
+explain that previous details remain. Retry and sign-out stay available in either
+case; loaded-provider and other retained-settings recovery keeps its existing copy.
+
+Account and Connection commands use NativeCommandButton within their existing
+settings groups. The native command's accessible name matches its visible Sign Out
+or Change Server label (and pending label); the adjacent selectable value row
+continues to identify the account/server, and the confirmation repeats the subject.
+Do not wrap native buttons in a second accessibility control to reproduce the old
+custom row label. Preserve disabled pending behavior, confirmations and retry.
+
+Runner-only Account/Connection acceptance composes the production settings screens
+with fake principal/diagnostic ports and a session action that rejects once, then
+returns to the fixture menu. It must never sign out or change a real server.
+At normal text size verify visible command bounds, native Cancel without mutation,
+first-confirmation error with retry enabled, second confirmation returning to the
+menu, and Back reachability. This provides control/recovery evidence, not proof of
+real authentication-provider/session teardown or VoiceOver operation.
+
+Query-provider lifecycle acceptance must include effect replay with mounted query
+consumers, not only measurement collectors. A replayed setup/cleanup/setup must
+leave active observers attached and reads usable, while actual replacement and
+unmount still cancel and clear the departed client. Native run349983 Add remained
+Loading inventory with idle zero-observer queries; effect replay is a hypothesis
+to test, not an established cause of that native capture.
+
+
+### Non-crashing keyboard accessory comparison
+
+Run349983 proves the removal-based comparison aborts at native input focus:
+KeyboardExtender reads the first child of an empty content view. Preserve this
+failure as evidence; do not infer a production typing cause. For the runner-only
+comparison, retain the existing accessory and its content, disabling attachment
+through the pinned native extender's enabled property before focus. The shared
+adapter defaults to enabled for every production consumer. Disabled state must
+also hide its accessibility controls and intercept no touches. Keep the original
+full-string and observed-value assertions, and require no visible Dismiss keyboard
+command. This compares attachment enabled versus disabled, not the presence of
+the native observer or the entire keyboard controller. Native execution must prove
+the comparison no longer crashes and reaches typing before drawing conclusions.
+
+
+### Draft-photo confirmation ownership
+
+Add's photo removal alert belongs to the visible draft photo selection and current
+navigation visit. A retained confirmation must not remove photos or close/change
+the viewer after selection, collection, close/reopen, navigation, busy-state change, or unmount.
+A current confirmation executes once, retaining the existing next-photo selection
+or closing after removal of the only photo. Reuse the presentation ownership
+mechanism; keep draft-photo presentation separate from the large Add screen.
+
+
+### Edit discard confirmation ownership
+
+The native Edit discard alert belongs to the current asset, draft and focused visit.
+A retained acceptance after a draft change, blur/refocus or unmount must not navigate
+away. A valid acceptance leaves once; pending saves remain protected by the existing
+operation lock. Preserve Keep editing and the current draft.
+
+
+### Provider archive confirmation consumption
+
+Each native provider Archive confirmation permits one attempt. Failure retains
+retry through a fresh confirmation; replaying the old acceptance after the request
+settles must not issue another archive request. Preserve current-visit checks and
+pending-operation exclusion.
+
+
+### Asset sheet mutation completion ownership
+
+Edit, Move, Move Here and destination creation retain their draft lock until the
+request settles, but completion presentation belongs to the initiating focused
+visit. A mounted sheet that lost focus and returned must not receive a stale
+completion notice, navigation, error alert or destination/draft replacement.
+Background work may settle normally; unlock the still-mounted form afterward so
+the current visit can continue. Preserve current-visit success, failure and retry.
+
+
+### Provider profile task controls
+
+Provider list Add Profile and detail Replace Credential/Prompt Guidance open
+substantial editor destinations and must use the existing settings navigation row
+with disclosure, rather than a command row. Creating a recommended draft, testing
+a connection, enabling/disabling and opening Archive confirmation are commands
+and must reuse NativeCommandButton. Accessible command names match their visible
+labels; the profile heading and archive confirmation carry subject context.
+Creation labels name the action (Create plus service name). Preserve pending
+labels, disabled navigation during work, single-use confirmation and retry. The
+archive confirmation retains its destructive semantic; no shared adapter changes.
+Native spacing, command sizing and assistive navigation require runtime acceptance.
+
+### Representative Home header acceptance
+
+The native audit must exercise Home with Add, Notifications and Profile together,
+a long inventory name, production header appearance and no root back button.
+Use production Home and expiration content with controlled domain data sufficient
+to scroll. Assert actual content movement, left-to-right action order in the
+English fixture, contained and hittable action bounds, selector separation, and
+stable header position after scrolling. Retain before/after screenshots for visual
+scroll-edge review. Geometry assertions do not prove material transparency or the
+full production tab/accessory composition; retain those acceptance limits.
+
+### Item-type query recovery in Add and Edit
+
+An initial failed item-type query must show actionable failure and native Retry,
+without simultaneously claiming expiration settings are still loading. Preserve
+the name, description and other draft values while retrying. A retry may show
+loading while no data is available; success restores the type/date editor. Keep
+cached usable type data visible during transient refresh failures. Access failure
+continues to hide unavailable data through the existing scoped query boundary.
+
+An expanded item-type search with no matches must say so beside the query. Clearing
+or changing the query restores matching choices without changing the selected type
+or expiration draft. Keep this descriptive, searchable selection in the current
+form; do not add a navigation destination for the empty state.
+
+Native notice acceptance must query the exposed accessible notice container and
+validate its message, not require separate static-text children that may be grouped
+for assistive reading. Keep whole-notice bounds, command reachability and retry
+assertions; a locator correction must not remove the behavior being verified.
+
+The compact iOS tag color well must retain a44-point minimum actionable target.
+Use the platform's larger control size and minimum frame constraints rather than
+scaling its drawing or widening an inactive label. Keep native target-size and
+center-activation assertions; if the framework does not honor this sizing, record
+the failed runtime evidence and investigate the adapter rather than certifying
+the React wrapper's dimensions.
+
+### Focused native diagnosis
+
+Manual native-audit dispatch may select the two color-picker interaction cases
+on both supported simulator devices. This shortens feedback on a changed native
+adapter while a full audit proceeds. The selection is a fixed workflow choice,
+not caller-supplied shell or XCTest arguments. Default/manual All and pull-request
+runs still execute both complete onboarding and fixture suites. Focused runs
+record their selection with revision artifacts and are diagnostic evidence only;
+they never satisfy full-batch native acceptance or release readiness. Keep existing
+live runs and their evidence intact.
+
+### Photo upload recovery audit acceptance
+
+S101 must exercise the mounted asset workspace with the real upload command and
+a controlled repository: one selected photo fails while another attaches, Retry
+resubmits only the failed selection without reopening the picker, and successful
+recovery removes retry/progress while preserving the asset. This complements
+command-level partial-failure checks; it does not establish native geometry,
+VoiceOver announcements, or physical camera/library permissions.
+
+### Root session callback ownership
+
+Authentication-required callbacks belong to the composition that created them.
+After replacement or root teardown, retained callbacks must not expire credentials
+or replace the current screen with old connection onboarding. Expiry completion
+and dialog actions must also ignore a superseded composition. Verify the mounted
+gate with the real onboarding command and controlled auth/profile ports across
+sign-out, server change and expiry followed by a new completed session.
+
+Composition ownership ends when sign-out, server change or expiry successfully
+returns to onboarding, including the interval before another sign-in completes.
+Failed push cleanup retains the current composition. Expiry dialogs need only a
+dismiss action, not a callback that mutates the next session’s prompt state.

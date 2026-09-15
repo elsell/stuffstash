@@ -68,6 +68,7 @@ export type MoveIntoDraft = {
 export function EditAssetSheet({
   asset,
   assetTypes,
+  assetTypesFailed = false,
   assetTags,
   metadataRecovery,
   draft,
@@ -78,6 +79,7 @@ export function EditAssetSheet({
 }: {
   readonly asset: AssetDetailViewModel;
   readonly assetTypes?: readonly CustomAssetTypeDefinition[];
+  readonly assetTypesFailed?: boolean;
   readonly assetTags: readonly AssetTagOptionViewModel[];
   readonly metadataRecovery?: ReactNode;
   readonly draft: EditDraft | undefined;
@@ -121,7 +123,7 @@ export function EditAssetSheet({
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
-        <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} />
+        {assetTypes || !assetTypesFailed ? <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} /> : null}
         <EditTagPicker
           disabled={isSaving}
           tags={assetTags}
@@ -329,8 +331,8 @@ export function MoveAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <Text style={styles.sheetTitle}>Move {asset.title}</Text>
-        <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
+        <Text accessibilityRole="header" style={styles.moveHeading}>Move</Text>
+        <Text style={styles.moveSubject}>{asset.title}</Text>
         {placement ? <PlacementPanel preview={placement} /> : null}
         <Text style={styles.inputLabel}>Put in</Text>
         <AppTextInput
@@ -498,8 +500,8 @@ function PlacementPanel({ preview }: { readonly preview: MovePlacementPreview })
   const styles = useStyles();
   return (
     <View style={styles.placementPanel}>
-      <PlacementRow label="From" value={preview.currentLocationLabel} />
-      <PlacementRow label="To" value={preview.proposedLocationLabel} isEmphasized={preview.hasChanged} />
+      <PlacementRow label="Current location" value={preview.currentLocationLabel} />
+      {preview.hasChanged ? <PlacementRow label="Move to" value={preview.proposedLocationLabel} isEmphasized /> : null}
     </View>
   );
 }
@@ -567,6 +569,16 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 26,
     fontWeight: '900',
     letterSpacing: 0
+  },
+  moveHeading: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600'
+  },
+  moveSubject: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '500'
   },
   sheetSubtitle: {
     color: colors.textMuted,
@@ -767,20 +779,15 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0
   },
   placementPanel: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-    padding: spacing.md
+    gap: spacing.sm
   },
   placementRow: {
     gap: 2
   },
   placementLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase'
+    fontSize: 13,
+    fontWeight: '400'
   },
   placementValue: {
     color: colors.text,

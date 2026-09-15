@@ -6,16 +6,16 @@ import { NativeCommandButton } from '../src/ui/components/NativeCommandButton';
 
 /** Runner-only sizing comparison. No production state or mutation. */
 export function CommandHeightFixture() {
-  const [outerIdeal, setOuterIdeal] = useState(false);
+  const [shipping, setShipping] = useState(false);
   const [pressed, setPressed] = useState(false);
   const label = 'Retry asset types';
   return <ScrollView contentContainerStyle={{ padding: 24, gap: 24 }}>
-    <RNButton title={outerIdeal ? 'Compare shipping sizing' : 'Compare outer sizing'} onPress={() => { setOuterIdeal(!outerIdeal); setPressed(false); }} />
-    <RNText>{outerIdeal ? 'Outer ideal size' : 'Shipping size'}</RNText>
+    <RNButton title={shipping ? 'Compare baseline sizing' : 'Compare shipping sizing'} onPress={() => { setShipping(!shipping); setPressed(false); }} />
+    <RNText>{shipping ? 'Shipping size' : 'Baseline size'}</RNText>
     <View style={{ width: 240, maxWidth: '100%', borderWidth: 1, borderColor: 'red' }}>
-      {outerIdeal ? <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 48 }}>
+      {!shipping ? <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 48 }}>
         <Button onPress={() => setPressed(true)} modifiers={[
-          buttonStyle('borderless'), disabled(false), accessibilityLabel(label), fixedSize({ horizontal: false, vertical: true })
+          buttonStyle('borderless'), disabled(false), accessibilityLabel(label)
         ]}>
           <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 48 })]}>{label}</Text>
         </Button>

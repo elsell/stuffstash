@@ -1,3 +1,4 @@
+import { NativeCommandButton } from './NativeCommandButton';
 import { type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
 import {
@@ -270,9 +271,7 @@ function StatusAndProgressSection({
         <View style={styles.statusPanel}>
           <Text style={styles.statusText}>{photoStatusMessage}</Text>
           {canRetryPhotos && onRetryPhotos ? (
-            <Pressable accessibilityRole="button" onPress={onRetryPhotos} style={styles.retryButton}>
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </Pressable>
+            <NativeCommandButton label="Retry" onPress={onRetryPhotos} />
           ) : null}
         </View>
       ) : null}
@@ -371,20 +370,6 @@ function createStyles(palette: MobileColorPalette) {
     color: palette.text,
     fontSize: 15,
     fontWeight: '500'
-  },
-  retryButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  retryButtonText: {
-    color: palette.action,
-    fontSize: 15,
-    fontWeight: '600'
   },
   uploadPanel: {
     borderColor: palette.border,

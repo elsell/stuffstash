@@ -1,18 +1,18 @@
-import { OnboardingStartState } from '../../application/onboarding/OnboardingCommand';
-import { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
-import { MobileComposition } from '../../bootstrap/mobileComposition';
+import type { OnboardingStartState } from '../../application/onboarding/OnboardingCommand';
+import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
+import type { MobileComposition } from '../../bootstrap/mobileComposition';
 
-export type AppServicesGateState =
+export type AppServicesGateState<C = MobileComposition> =
   | { readonly status: 'loading' }
   | { readonly status: 'onboarding'; readonly onboardingState: OnboardingStartState }
-  | { readonly status: 'ready'; readonly composition: MobileComposition };
+  | { readonly status: 'ready'; readonly composition: C };
 
 export type MobileCompositionFactory = (profile: ConnectionProfile) => MobileComposition;
 
-export function appServicesStateFromOnboardingStart(
+export function appServicesStateFromOnboardingStart<C>(
   startState: OnboardingStartState,
-  createComposition: MobileCompositionFactory
-): AppServicesGateState {
+  createComposition: (profile: ConnectionProfile) => C
+): AppServicesGateState<C> {
   if (startState.step === 'complete' && startState.profile) {
     return { status: 'ready', composition: createComposition(startState.profile) };
   }
@@ -20,24 +20,24 @@ export function appServicesStateFromOnboardingStart(
   return { status: 'onboarding', onboardingState: startState };
 }
 
-export function appServicesStateAfterStartupError(): AppServicesGateState {
+export function appServicesStateAfterStartupError(): Extract<AppServicesGateState, { status: 'onboarding' }> {
   return { status: 'onboarding', onboardingState: { step: 'instance' } };
 }
 
-export function appServicesStateAfterReset(): AppServicesGateState {
+export function appServicesStateAfterReset(): Extract<AppServicesGateState, { status: 'onboarding' }> {
   return { status: 'onboarding', onboardingState: { step: 'instance' } };
 }
 
-export function appServicesStateAfterServerChange(): AppServicesGateState {
+export function appServicesStateAfterServerChange(): Extract<AppServicesGateState, { status: 'onboarding' }> {
   return { status: 'onboarding', onboardingState: { step: 'instance' } };
 }
 
-export function appServicesStateAfterSignOut(profile: ConnectionProfile): AppServicesGateState {
+export function appServicesStateAfterSignOut(profile: ConnectionProfile): Extract<AppServicesGateState, { status: 'onboarding' }> {
   return { status: 'onboarding', onboardingState: { step: 'signIn', profile } };
 }
 
 export function appServicesStateAfterAuthenticationRequired(
   profile: ConnectionProfile
-): AppServicesGateState {
+): Extract<AppServicesGateState, { status: 'onboarding' }> {
   return { status: 'onboarding', onboardingState: { step: 'signIn', profile } };
 }

@@ -1,3 +1,4 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useNativeHeaderActionOptions } from './useNativeHeaderActionOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
@@ -12,6 +13,7 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
   readonly policy: ExpirationReminderPolicy; readonly disabled?: boolean;
   readonly onSave: (policy: ExpirationReminderPolicy) => Promise<void>; readonly onDone: () => void;
 }) {
+  const capturePresentation = useTaskPresentation();
   const { styles, palette } = useSettingsListStyles();
   const [selection, setSelection] = useState({upcoming:policy.upcoming,advanceDays:policy.advanceDays});
   const [custom, setCustom] = useState(policy.upcoming && !presets.some(days => days === policy.advanceDays));
@@ -25,11 +27,18 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
   const valid = /^\d+$/.test(days) && Number(days) <= 3650;
   const locked = disabled || saving;
   async function save(upcoming: boolean, advanceDays: number) {
-    if (locked || pending.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || locked || pending.current) return;
     pending.current = true; setSaving(true); setError(''); setDirty(true); setSelection({upcoming,advanceDays});
-    try { await onSave({ ...policy, upcoming, advanceDays }); if (mounted.current) onDone(); }
-    catch { if (mounted.current) setError('Could not save. Your selection is still here. Try again.'); }
-    finally { pending.current = false; if (mounted.current) setSaving(false); }
+    try { await onSave({ ...policy, upcoming, advanceDays }); if (canPresent()) onDone(); }
+    catch { if (canPresent()) setError('Could not save. Your selection is still here. Try again.'); }
+    finally {
+      pending.current = false;
+      if (mounted.current) {
+        if (!canPresent()) setDirty(false);
+        setSaving(false);
+      }
+    }
   }
   const actionOptions = useNativeHeaderActionOptions(custom ? [{ kind: 'save', label: 'Save reminder days', disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []);
   const headerOptions = useMemo(() => ({ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving, ...actionOptions }), [saving, actionOptions]);

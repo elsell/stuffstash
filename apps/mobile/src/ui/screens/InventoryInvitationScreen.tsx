@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { CheckCircle2, MailCheck } from 'lucide-react-native';
 import type { AcceptInventoryInvitationCommand } from '../../application/invitations/AcceptInventoryInvitationCommand';
 import {
@@ -11,6 +11,7 @@ import {
   type InventoryInvitationReference
 } from '../../application/invitations/InventoryInvitationRepository';
 import type { PreviewInventoryInvitationQuery } from '../../application/invitations/PreviewInventoryInvitationQuery';
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { BrandMark } from '../components/BrandMark';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -126,25 +127,15 @@ export function InventoryInvitationScreen({
                 <Text style={styles.detailValue}>{expirationLabel(state.preview.expiresAt)}</Text>
               </View>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Join inventory"
-              accessibilityState={{ busy: state.status === 'accepting', disabled: state.status === 'accepting' || startingOver }}
-              disabled={state.status === 'accepting' || startingOver}
-              onPress={() => void accept()}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-            >
-              {state.status === 'accepting' ? <ActivityIndicator color={colors.onAction} /> : null}
-              <Text style={styles.primaryButtonText}>{state.status === 'accepting' ? 'Joining…' : 'Join inventory'}</Text>
-            </Pressable>
-            {onStartOver ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over"
-              disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()}
-              style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Sign out and start over</Text>
-            </Pressable> : null}
-            <Pressable accessibilityRole="button" disabled={startingOver} onPress={onDismiss} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Not now</Text>
-            </Pressable>
+            <View style={styles.commands}>
+              <NativeCommandButton label="Join inventory" prominence="primary"
+                disabled={state.status === 'accepting' || startingOver} onPress={() => void accept()} />
+              {state.status === 'accepting' ? <InvitationProgress label="Joining…" /> : null}
+              {onStartOver ? <NativeCommandButton label="Sign out and start over"
+                disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()} /> : null}
+              {startingOver ? <InvitationProgress label="Starting over…" /> : null}
+              <NativeCommandButton label="Not now" disabled={startingOver} onPress={onDismiss} />
+            </View>
           </>
         ) : state.status === 'accepted' || state.status === 'opening' || state.status === 'open_error' ? (
           <>
@@ -152,35 +143,23 @@ export function InventoryInvitationScreen({
             <Text accessibilityRole="header" style={styles.title}>You’re in</Text>
             <Text style={styles.message}>You now have access to {state.inventoryName}.</Text>
             {state.status === 'open_error' ? <Text style={styles.message}>The inventory could not be opened. Your access was still added.</Text> : null}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Open inventory"
-              accessibilityState={{ busy: state.status === 'opening', disabled: state.status === 'opening' }}
-              disabled={state.status === 'opening'}
-              onPress={() => void openAcceptedInventory(state.inventoryId, state.inventoryName)}
-              style={styles.primaryButton}
-            >
-              {state.status === 'opening' ? <ActivityIndicator color={colors.onAction} /> : null}
-              <Text style={styles.primaryButtonText}>{state.status === 'opening' ? 'Opening…' : state.status === 'open_error' ? 'Try opening again' : 'Open inventory'}</Text>
-            </Pressable>
+            <View style={styles.commands}>
+              <NativeCommandButton label="Open inventory" prominence="primary" disabled={state.status === 'opening'}
+                onPress={() => void openAcceptedInventory(state.inventoryId, state.inventoryName)} />
+              {state.status === 'opening' ? <InvitationProgress label="Opening…" /> : null}
+            </View>
           </>
         ) : (
           <>
             <Text accessibilityRole="header" style={styles.title}>{state.title}</Text>
             <Text style={styles.message}>{state.message}</Text>
-            {state.retryable ? (
-              <Pressable accessibilityRole="button" disabled={startingOver} onPress={() => void (state.retryStartOver ? startOver() : load())} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Try again</Text>
-              </Pressable>
-            ) : null}
-            {state.canSwitchAccount ? (
-              <Pressable accessibilityRole="button" onPress={onSwitchAccount} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Switch account</Text>
-              </Pressable>
-            ) : null}
-            <Pressable accessibilityRole="button" onPress={onDismiss} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Done</Text>
-            </Pressable>
+            <View style={styles.commands}>
+              {state.retryable ? <NativeCommandButton label="Try again" prominence="primary" disabled={startingOver}
+                onPress={() => void (state.retryStartOver ? startOver() : load())} /> : null}
+              {startingOver ? <InvitationProgress label="Starting over…" /> : null}
+              {state.canSwitchAccount ? <NativeCommandButton label="Switch account" prominence="primary" onPress={onSwitchAccount} /> : null}
+              <NativeCommandButton label="Done" onPress={onDismiss} />
+            </View>
           </>
         )}
       </View>
@@ -205,6 +184,14 @@ export function InventoryInvitationScreen({
       if (generation === requestGeneration.current) setState({ status: 'open_error', inventoryId, inventoryName });
     }
   }
+}
+
+function InvitationProgress({ label }: { readonly label: string }) {
+  const colors = useAppearanceAwarePalette();
+  return <View accessibilityRole="progressbar" accessibilityLabel={label} accessibilityState={{ busy: true }}>
+    <ActivityIndicator color={colors.action} />
+    <Text style={{ color: colors.textMuted, textAlign: 'center' }}>{label}</Text>
+  </View>;
 }
 
 function StateMessage({ icon, message, styles, title }: {
@@ -273,10 +260,6 @@ function createStyles(colors: MobileColorPalette, accessibilityLayout = false) {
     detailRow: { alignItems: 'flex-start', alignSelf: 'stretch', minHeight: 48, paddingVertical: spacing.sm },
     detailLabel: { color: colors.textMuted, fontSize: 15 },
     detailValue: { color: colors.text, fontSize: 16, fontWeight: '700' },
-    primaryButton: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.action, borderRadius: 12, justifyContent: 'center', marginTop: spacing.lg, minHeight: 54, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-    primaryButtonPressed: { backgroundColor: colors.actionPressed },
-    primaryButtonText: { color: colors.onAction, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' },
-    secondaryButton: { alignItems: 'center', alignSelf: 'stretch', justifyContent: 'center', marginTop: spacing.sm, borderRadius: 12, minHeight: 54, paddingVertical: 12, paddingHorizontal: spacing.md },
-    secondaryButtonText: { color: colors.action, flexShrink: 1, fontSize: 16, fontWeight: '600', textAlign: 'center' }
+    commands: { alignSelf: 'stretch', gap: spacing.sm, marginTop: spacing.lg }
   });
 }

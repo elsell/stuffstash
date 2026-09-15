@@ -1,5 +1,5 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -33,19 +33,33 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
     queryFn: ({ signal, pageParam }) => assetCheckoutHistoryQuery.execute({ assetId, limit: 20, cursor: pageParam, signal }),
     getNextPageParam: (page) => page.hasMore ? page.nextCursor : undefined
   });
+  const coreIdentity = JSON.stringify(core.resourceKey);
+  const [coreAccess, setCoreAccess] = useState({ identity: coreIdentity, denied: false });
+  // Query retries clear error before returning data. Retain a denial until this
+  // asset's core read succeeds, without carrying it into another query scope.
+  const coreAccessDenied = isAccessFailure(core.error)
+    || (coreAccess.identity === coreIdentity && coreAccess.denied && !core.isSuccess);
+  if (coreAccess.identity !== coreIdentity || coreAccess.denied !== coreAccessDenied) {
+    setCoreAccess({ identity: coreIdentity, denied: coreAccessDenied });
+  }
   const assetTitle = core.data?.view.title ?? 'Asset';
-  const accessDenied = isAccessFailure(history.error) || isAccessFailure(inventory.error) || (core.isError && !core.data);
+  const accessDenied = isAccessFailure(history.error) || isAccessFailure(inventory.error) || coreAccessDenied;
   const first = accessDenied ? undefined : history.data?.pages[0];
   const state: AssetCheckoutHistorySheetState = first
     ? { status: 'ready', assetTitle, history: { ...first, records: history.data!.pages.flatMap((page) => page.records), hasMore: history.hasNextPage } }
     : accessDenied || history.isError || inventory.isError ? { status: 'error', assetTitle, message: 'Checkout history could not be loaded.' }
       : { status: 'loading', assetTitle };
-  const retry = () => { void (inventory.isError ? inventory.refetch() : (core.isError && !core.data) ? core.refetch() : history.refetch()); };
+  const retry = () => { void (inventory.isError ? inventory.refetch() : coreAccessDenied ? core.refetch() : history.refetch()); };
   const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]);
   const headerOptions = useMemo(() => ({ title: 'Checkout history', headerShown: true, ...actionOptions }), [actionOptions]);
   return <>
     <Stack.Screen options={headerOptions} />
     <AssetCheckoutHistorySheet state={state} footer={<>
+      {!accessDenied && core.isError && !core.data ? <>
+        <Text accessibilityRole="alert" style={{ color: palette.danger }}>Asset name could not be loaded.</Text>
+        <NativeCommandButton label={core.isFetching ? 'Loading asset name…' : 'Try loading asset name again'}
+          disabled={core.isFetching} onPress={() => { if (!core.isFetching) void core.refetch(); }} />
+      </> : null}
       {state.status === 'error' ? <NativeCommandButton label="Try again" onPress={retry} /> : null}
       {history.isRefetchError && state.status === 'ready' ? <>
         <Text accessibilityRole="alert" style={{ color: palette.danger }}>Checkout history could not be refreshed. Previously loaded checkouts are shown.</Text>

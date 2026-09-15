@@ -57,8 +57,7 @@ import {
 } from '../../application/add/PhotoSelectionQuery';
 import { AddAssetContextQuery, type AddAssetContext } from '../../application/add/AddAssetContextQuery';
 import { IdentityIcon, IdentityLabel } from '../components/IdentityIcon';
-import { FullScreenPhotoViewer, type FullScreenPhotoViewerPhoto } from '../components/FullScreenPhotoViewer';
-import { photoMetadataLabel } from '../components/AssetPhotoWorkspacePresentation';
+import { DraftPhotoPreviewModal } from './DraftPhotoPreviewModal';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -179,6 +178,9 @@ function ScopedAddAssetScreen({
   const parentMatches = createdParent && createdParent.title === parentQuery
     ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
     : candidates.data ?? [];
+  const normalizedParentQuery = normalizeParentName(parentQuery);
+  const canCreateParent = candidates.data !== undefined && normalizedParentQuery.length > 0
+    && ![createdParent, ...parentMatches].filter(isParentSelection).some(parent => normalizeParentName(parent.title) === normalizedParentQuery);
 
   useEffect(() => {
     if (!addContext.data) {
@@ -373,7 +375,7 @@ function ScopedAddAssetScreen({
 
   async function createParent(): Promise<void> {
     const parentName = parentQuery.trim();
-    if (loadState.status !== 'ready' || parentName.length === 0) {
+    if (loadState.status !== 'ready' || !canCreateParent) {
       return;
     }
 
@@ -550,7 +552,7 @@ function ScopedAddAssetScreen({
           <View style={styles.centerState}>
             <Text style={styles.errorTitle}>Could not load</Text>
             <Text style={styles.stateText}>{loadState.message}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Retry Add context" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable>
+            <NativeCommandButton label="Retry Add context" onPress={onRetry} />
           </View>
         ) : null}
         {loadState.status === 'ready' ? (
@@ -602,8 +604,9 @@ function ScopedAddAssetScreen({
                 />
 
                 {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
-                {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
+                {isParentMenuOpen && candidates.isError ? <NativeCommandButton label="Retry suggestions" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void candidates.refetch(); }} /> : null}
                 <ParentPicker disabled={draftBusy}
+                  canCreateParent={canCreateParent}
                   isCreatingParent={isCreatingParent}
                   createdParent={createdParent}
                   matches={parentMatches}
@@ -648,10 +651,10 @@ function ScopedAddAssetScreen({
                   )}
                 </Pressable>
 
-                {types.isError ? <Pressable accessibilityRole="button" accessibilityLabel="Retry asset types" onPress={() => void types.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.text }}>Asset types could not be loaded. Retry.</Text></Pressable> : null}
-                <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
+                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>Asset types could not be loaded.</Text><NativeCommandButton label="Retry asset types" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
+                {types.data || !types.isError ? <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
-                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
+                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} /> : null}
                 {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>Open More details to add or clear the unfinished tag before saving.</Text> : null}
                 {showDetails ? (
                   <View>
@@ -693,7 +696,8 @@ function ScopedAddAssetScreen({
         keyboardHeight={keyboardBar.keyboardHeight}
         visible={keyboardBar.isVisible}
       />
-      <PhotoPreviewModal
+      <DraftPhotoPreviewModal
+        disabled={draftBusy}
         currentIndex={previewPhotoIndex}
         onClose={() => setPreviewPhotoIndex(undefined)}
         onRemovePhoto={removePhoto}
@@ -904,61 +908,9 @@ function PhotoPreviewItem({
   );
 }
 
-function PhotoPreviewModal({
-  currentIndex,
-  onClose,
-  onRemovePhoto,
-  onSetIndex,
-  photos
-}: {
-  readonly currentIndex: number | undefined;
-  readonly onClose: () => void;
-  readonly onRemovePhoto: (photoId: string) => void;
-  readonly onSetIndex: (index: number | undefined) => void;
-  readonly photos: readonly SelectedAssetPhoto[];
-}) {
-  const viewerPhotos = useMemo(() => photos.map(photo => ({
-    id: photo.id,
-    label: photo.fileName,
-    metadataLabel: photoMetadataLabel(photo),
-    uri: photo.uri
-  })), [photos]);
-  function removeCurrentPhoto(photo: FullScreenPhotoViewerPhoto, index: number): void {
-    if (!photo.id) {
-      return;
-    }
-
-    Alert.alert('Remove photo?', 'This removes the photo from this new item draft.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          onRemovePhoto(photo.id as string);
-          if (photos.length <= 1) {
-            onClose();
-            return;
-          }
-
-          onSetIndex(Math.min(index, photos.length - 2));
-        }
-      }
-    ]);
-  }
-
-  return (
-    <FullScreenPhotoViewer
-      canRemove
-      currentIndex={currentIndex}
-      onClose={onClose}
-      onRemove={removeCurrentPhoto}
-      onSelectIndex={onSetIndex}
-      photos={viewerPhotos}
-    />
-  );
-}
 
 function ParentPicker({
+  canCreateParent,
   disabled,
   createdParent,
   isCreatingParent,
@@ -973,6 +925,7 @@ function ParentPicker({
   parentAssetId,
   query
 }: {
+  readonly canCreateParent: boolean;
   readonly disabled: boolean;
   readonly createdParent: ParentSelection | undefined;
   readonly isCreatingParent: boolean;
@@ -989,11 +942,6 @@ function ParentPicker({
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
-  const normalizedQuery = normalizeParentName(query);
-  const exactParent = [createdParent, ...matches].filter(isParentSelection).find(
-    (parent) => normalizeParentName(parent.title) === normalizedQuery
-  );
-  const canCreateParent = normalizedQuery.length > 0 && !exactParent;
   const selectedParent = resolveSelectedParent(matches, parentAssetId, query, lastParent);
   const createdParentId = createdParent?.id;
 
@@ -1044,18 +992,11 @@ function ParentPicker({
             style={styles.parentMenuResults}
           >
             {canCreateParent ? (
-              <Pressable
-                accessibilityRole="button"
+              <NativeCommandButton
+                label={isCreatingParent ? 'Creating place…' : `Create "${query.trim()}" as a place`}
                 disabled={disabled || isCreatingParent}
                 onPress={onCreateParent}
-                style={[styles.createParentButton, isCreatingParent ? styles.disabledButton : null]}
-              >
-                {isCreatingParent ? (
-                  <ActivityIndicator color={colors.action} />
-                ) : (
-                  <Text style={styles.createParentText}>Create "{query.trim()}" as a place</Text>
-                )}
-              </Pressable>
+              />
             ) : null}
             {createdParent ? (
               <ParentOption disabled={disabled}
@@ -1514,23 +1455,6 @@ function createStyles(colors: MobileColorPalette) {
   parentOptionDisabled: {
     opacity: 0.58
   },
-  createParentButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.action,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  createParentText: {
-    color: colors.action,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   parentCheck: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -1733,9 +1657,6 @@ function createStyles(colors: MobileColorPalette) {
     justifyContent: 'center',
     minHeight: 52,
     marginTop: spacing.sm
-  },
-  disabledButton: {
-    opacity: 0.65
   },
   saveButtonText: {
     color: colors.onAction,

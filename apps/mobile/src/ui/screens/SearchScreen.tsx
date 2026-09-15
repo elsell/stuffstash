@@ -3,8 +3,8 @@ import { BrowseAddHeader } from './BrowseAddHeader';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { isAccessFailure } from '../serverState/isAccessFailure';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Platform,
@@ -142,6 +142,11 @@ export function SearchScreen({
   const [sort, setSort] = useState<AssetBrowseSort>(initialSort);
   const [selectedTagIds, setSelectedTagIds] = useState<readonly string[]>(normalizedInitialTags);
   const queryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const searchFocused = useRef(false);
+  const latestQuery = useRef(query);
+  latestQuery.current = query;
+  const submitCurrent = useRef(submitQuery);
+  submitCurrent.current = submitQuery;
   const mapPathStore = useRef(new Map<string, readonly string[]>());
   const lastRequestedQuery = useRef(initialQuery.trim());
   const identity = inventoryScope.data;
@@ -192,9 +197,17 @@ export function SearchScreen({
   const inventoryContext = context.data;
   const isLoadingMore = browse.isFetchingNextPage;
   const localRouteEffectKeys = useRef(new Set<string>());
-  useEffect(() => () => {
-    if (queryTimer.current) clearTimeout(queryTimer.current);
-  }, []);
+  useFocusEffect(useCallback(() => {
+    searchFocused.current = true;
+    if (latestQuery.current.trim() !== lastRequestedQuery.current) {
+      queryTimer.current = setTimeout(() => submitCurrent.current(latestQuery.current), 300);
+    }
+    return () => {
+      searchFocused.current = false;
+      if (queryTimer.current) clearTimeout(queryTimer.current);
+      queryTimer.current = undefined;
+    };
+  }, []));
 
   useEffect(() => {
     mapPathStore.current.clear();
@@ -254,6 +267,7 @@ export function SearchScreen({
   }
 
   function scheduleSearch(nextQuery: string): void {
+    if (!searchFocused.current) return;
     setQuery(nextQuery);
     if (queryTimer.current) clearTimeout(queryTimer.current);
     if (nextQuery.trim() === lastRequestedQuery.current) return;
@@ -261,6 +275,7 @@ export function SearchScreen({
   }
 
   function submitQuery(nextQuery = query): void {
+    if (!searchFocused.current) return;
     if (queryTimer.current) clearTimeout(queryTimer.current);
     const normalized = nextQuery.trim();
     lastRequestedQuery.current = normalized;

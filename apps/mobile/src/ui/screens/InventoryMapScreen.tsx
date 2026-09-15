@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { BrowseAddHeader } from './BrowseAddHeader';
@@ -8,7 +9,7 @@ import { useMobileInventoryServerQuery } from '../serverState/useMobileInventory
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Animated,
@@ -22,7 +23,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import { ChevronRight, Info, Package, Plus } from 'lucide-react-native';
+import { ChevronRight, Info, Package } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
   InventoryMapAssetViewModel,
@@ -121,13 +122,23 @@ export function InventoryMapScreen({
     key: mobileQueryKeys.inventoryMap,
     query: (signal) => inventoryMapQuery.execute({ signal })
   });
+  const [retrying, setRetrying] = useState(false);
+  const retryPending = useRef(false);
+  const focused = useRef(false);
+  useFocusEffect(useCallback(() => {
+    focused.current = true;
+    return () => { focused.current = false; };
+  }, []));
   const state: InventoryMapState = mapQuery.data
     ? { status: 'ready', map: mapQuery.data }
-    : mapQuery.isError
+    : mapQuery.isError || retrying
       ? { status: 'error', message: 'Inventory map could not load.' }
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
   const [localQuery, setLocalQuery] = useState('');
+  const [searchOutcome, setSearchOutcome] = useState<{
+    readonly query: string; readonly map: InventoryMapViewModel; readonly message: string;
+  }>();
   const query = searchQuery ?? localQuery;
   const setQuery = onChangeSearchQuery ?? setLocalQuery;
   const reduceMotionEnabled = useReducedMotionPreference();
@@ -310,6 +321,14 @@ export function InventoryMapScreen({
     mapOffsetValue.current = clampedOffset;
   }, [mapOffset, maxMapOffset]);
 
+  async function retryMap(): Promise<void> {
+    if (!focused.current || retryPending.current) return;
+    retryPending.current = true;
+    setRetrying(true);
+    try { await mapQuery.refetch({ cancelRefetch: false }); }
+    finally { retryPending.current = false; setRetrying(false); }
+  }
+
   const { refreshing: isRefreshing, refresh: refreshMap } = usePullRefresh(async () => {
     await mapQuery.refetch({ cancelRefetch: false });
   });
@@ -343,7 +362,7 @@ export function InventoryMapScreen({
   }
 
   function selectBranch(asset: InventoryMapAssetViewModel): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     if (!map) {
       return;
     }
@@ -360,7 +379,7 @@ export function InventoryMapScreen({
   }
 
   function beginBranchSwipe(asset: InventoryMapAssetViewModel, dragX: number): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     if (!map || !asset.canContainAssets || activeBranchSwipe.current?.assetId === asset.id) {
       return;
     }
@@ -433,7 +452,7 @@ export function InventoryMapScreen({
   }
 
   function openBreadcrumb(level: number): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     const nextPath = pathForBreadcrumbLevel(openPath, level);
     setOpenPath(nextPath);
     setHighlightedAssetId(preserveInventoryMapHighlightForPath(nextPath, highlightedAssetId));
@@ -441,17 +460,20 @@ export function InventoryMapScreen({
   }
 
   function submitSearch(text = query): void {
-    if (!text.trim()) { setHighlightedAssetId(undefined); return; }
+    if (!text.trim()) { setSearchOutcome(undefined); setHighlightedAssetId(undefined); return; }
     if (!map) {
       return;
     }
 
     const match = findInventoryMapSearchMatch(map, text);
     if (!match) {
+      setSearchOutcome({ query: text.trim(), map, message: 'No matching items. Try another name, kind or location.' });
       setHighlightedAssetId(undefined);
       return;
     }
 
+    const asset = assetsById.get(match.assetId);
+    setSearchOutcome(asset ? { query: text.trim(), map, message: `Found ${asset.title} · ${asset.placementLabel}` } : undefined);
     setOpenPath(match.openPath);
     setHighlightedAssetId(match.assetId);
     setPendingScrollLevel(match.openPath.length);
@@ -459,14 +481,19 @@ export function InventoryMapScreen({
 
   const mapSearch = useInventoryMapSearch(query, !!map, submitSearch);
 
-  function clearSearch(): void {
+  function cancelMapSearch(): void {
     mapSearch.cancel();
+    setSearchOutcome(undefined);
+  }
+
+  function clearSearch(): void {
+    cancelMapSearch();
     setQuery('');
     setHighlightedAssetId(undefined);
   }
 
   function openAddHere(asset: InventoryMapAssetViewModel): void {
-    mapSearch.cancel();
+    cancelMapSearch();
     router.push({
       pathname: '/add',
       params: addHereRouteParams({
@@ -488,7 +515,7 @@ export function InventoryMapScreen({
           dy: gestureState.dy
         }),
       onPanResponderGrant: () => {
-        mapSearch.cancel();
+        cancelMapSearch();
         mapOffset.stopAnimation();
         mapPanStartOffset.current = mapOffsetValue.current;
       },
@@ -525,7 +552,7 @@ export function InventoryMapScreen({
 
   return (
     <View style={styles.shell}>
-      <BrowseAddHeader canAdd={canAdd} onAdd={() => { mapSearch.cancel(); onAdd(); }} />
+      <BrowseAddHeader canAdd={canAdd} onAdd={() => { cancelMapSearch(); onAdd(); }} />
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.titleBlock}>
@@ -540,6 +567,9 @@ export function InventoryMapScreen({
           />
         </View>
         <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
+        {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
+          <Text accessibilityLiveRegion="polite" style={styles.searchStatus}>{searchOutcome.message}</Text>
+        ) : null}
         {state.status === 'ready' ? (
           <>
             <ScrollView
@@ -579,9 +609,7 @@ export function InventoryMapScreen({
         <View style={styles.centerState}>
           <Text style={styles.errorTitle}>Map unavailable</Text>
           <Text style={styles.centerText}>{state.message}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="Retry map" onPress={() => void refreshMap()}>
-            <Text style={styles.sheetCloseText}>Retry</Text>
-          </Pressable>
+          <NativeCommandButton label="Retry map" disabled={retrying} onPress={() => { void retryMap(); }} />
         </View>
       ) : null}
       {state.status === 'ready' ? (
@@ -616,7 +644,7 @@ export function InventoryMapScreen({
                 onAddHere={openAddHere}
                 onBranchSwipeFinish={finishBranchSwipe}
                 onBranchSwipeProgress={driveBranchSwipeScroll}
-                onOpenInfo={(asset) => { mapSearch.cancel(); router.push(assetDetailHref(asset.id)); }}
+                onOpenInfo={(asset) => { cancelMapSearch(); router.push(assetDetailHref(asset.id)); }}
                 onPressAsset={selectBranch}
                 onRefresh={refreshMap}
                 openPath={openPath}
@@ -837,14 +865,7 @@ function InventoryMapColumn({
             <Package color={colors.accent} size={22} strokeWidth={2.4} />
             <Text style={styles.emptyColumnText}>{displayedColumn.emptyLabel}</Text>
             {emptyAction && displayedParentAsset ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onAddHere(displayedParentAsset)}
-                style={styles.emptyColumnAction}
-              >
-                <Plus color={colors.action} size={16} strokeWidth={2.6} />
-                <Text style={styles.emptyColumnActionText}>{emptyAction.label}</Text>
-              </Pressable>
+              <NativeCommandButton label={emptyAction.label} onPress={() => onAddHere(displayedParentAsset)} />
             ) : null}
           </View>
         }

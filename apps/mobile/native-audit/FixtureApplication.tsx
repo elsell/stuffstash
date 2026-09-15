@@ -1,3 +1,9 @@
+import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
+export { NoticePlacementFixture } from './NoticePlacementFixture';
+export { ProviderEditorFixture } from './ProviderEditorFixture';
+export { AccountConnectionFixture } from './AccountConnectionFixture';
+export { InventorySharingFixture } from './InventorySharingFixture';
+export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
@@ -5,13 +11,14 @@ export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecov
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
-export { HomeReturnFixture } from './HomeReturnFixture';
+export { HomeReturnFixture, HomeHeaderFixture } from './HomeReturnFixture';
+import { nativeTabHeaderOptions } from '../src/ui/navigation/NativeTabHeader';
 export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
 import { Host, TextField } from '@expo/ui/swift-ui';
 import { accessibilityLabel, autocorrectionDisabled, keyboardType, textFieldStyle, textInputAutocapitalization } from '@expo/ui/swift-ui/modifiers';
 import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Button, Image, ScrollView, Text, View } from 'react-native';
+import { Button, Image, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearance } from '../src/ui/theme/AppearanceContext';
@@ -60,9 +67,10 @@ function FixtureNavigation() {
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider><HomeReturnTaskProvider>
-    <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
+    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerBackTitle: 'Back', headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
+      <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
@@ -74,6 +82,13 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
+      <Stack.Screen name="audit-notice" options={{ title: 'Notice placement' }} />
+      <Stack.Screen name="audit-notice-sheet" options={{ title: 'Notice placement', presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
+      <Stack.Screen name="audit-provider-editor" options={{ title: 'Provider editor' }} />
+      <Stack.Screen name="audit-account" options={{ title: 'Account' }} />
+      <Stack.Screen name="audit-connection" options={{ title: 'Connection' }} />
+      <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
+      <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
@@ -83,7 +98,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
-    {keyboardAccessoryEnabled ? <AppKeyboardAccessory /> : null}
+    <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} />
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
@@ -97,14 +112,26 @@ export function FixtureMenu() {
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
+  if (inputMode) return <FixturePage key={`input-${inputMode}`}>
+    <InputFixture mode={inputMode} />
+    <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
+  </FixturePage>;
   if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
+    <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
+    <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
+    <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />
+    <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
+    <Button title="Audit Account" onPress={() => router.push('/audit-account' as Href)} />
+    <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
+    <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />
     <Button title="Audit Home Return" onPress={() => router.push('/audit-home-return' as Href)} />
+    <Button title="Audit Home header" onPress={() => router.push('/audit-home-header' as Href)} />
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
     <Button title="Audit medium expiration filters" onPress={() => router.push('/audit-expiration-medium' as Href)} />
@@ -118,7 +145,6 @@ export function FixtureMenu() {
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     <Button title="Audit input without accessory" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('uncontrolled'); }} />
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
-    {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
     <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />
     <Button title="Audit Add configured header" onPress={() => router.push('/audit-add-header' as Href)} />
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
@@ -132,6 +158,7 @@ export function FixtureMenu() {
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
+    <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />
@@ -151,8 +178,8 @@ export function BrowseFilterFixture() {
   const router = useRouter();
   const { setResult } = useContext(ResultContext);
   return <BrowseFiltersScreen initial={{ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' }}
-    query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }]}
-    onApply={draft => { setResult(`Browse availability: ${draft.checkoutState}`); router.back(); }}
+    query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }, ...Array.from({ length: 30 }, (_, index) => ({ id: `audit-tag-${index}`, key: `audit-tag-${index}`, label: `Long list tag ${String(index + 1).padStart(2, '0')}` })), { id: 'audit-last', key: 'audit-last', label: 'ZZ final tag' }]}
+    onApply={draft => { setResult(draft.tagIds.length ? `Browse selected tags: ${draft.tagIds.join(',')}` : `Browse availability: ${draft.checkoutState}`); router.back(); }}
     onCancel={() => router.back()}
     onExpiration={mode => { setResult(`Expiration mode: ${mode}`); router.back(); }} />;
 }

@@ -43,3 +43,21 @@ Stuff Stash iOS, Android, web, and human-facing documentation surfaces.
 Validate skill metadata, linked references, and topic/surface inventory completeness.
 Exercise the revised skill on concrete contrasting interaction examples. Run the
 code critic on the policy/skill/report changes. Report any runtime coverage gaps.
+
+## Audit release batching
+
+Prioritize all findings reproducible at normal system text size before work
+specific to enlarged text. This includes functional flows, platform interaction
+choices, navigation, layout, contrast, keyboard behavior, and recovery. Do not
+advance to enlarged-text remediation while known normal-size findings remain
+unresolved; continue independent normal-size work while native verification is
+pending. Preserve existing accessibility fixes and keep enlarged-text findings
+tracked for the subsequent pass. This is the user's remediation sequence, not a
+change to accessibility requirements or evidence standards.
+
+During comprehensive remediation, accumulate substantial groups of related fixes
+before releasing. Individual fixes remain atomic commits, but are not individual
+release boundaries. Review shared consumers and run combined validation for each
+batch. An explicit user request may cut an interim release from the validated
+subset. An already-running release may finish while the next batch accumulates.
+Do not replace completeness or native acceptance with a quota of commits.

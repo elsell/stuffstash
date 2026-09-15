@@ -1,4 +1,5 @@
-import { ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
+import { setScreenFocused, attemptNavigation, dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { AddProviderProfileScreen, ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
 import { AppearanceProvider } from '../theme/AppearanceContext';
 import { AppearancePreferenceController, type AppearancePreference } from '../../application/settings/AppearancePreference';
@@ -86,7 +87,7 @@ describe('mounted Settings behavior', () => {
     const action = async () => { calls++; throw new Error('Action failed safely.'); };
     const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
     try {
-      await harness.press(harness.byLabel(kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test'));
+      await harness.press(harness.byLabel(kind === 'signOut' ? 'Sign Out' : 'Change Server'));
       expect(latestAlert()?.message).toContain(kind === 'signOut' ? 'This Stuff Stash server will stay saved on your device.' : 'Your Stuff Stash data won’t be deleted.');
       await harness.run(() => pressAlertButton(kind === 'signOut' ? 'Sign Out' : 'Change Server')); await settle(harness);
       expect(calls).toBe(1);
@@ -140,11 +141,11 @@ describe('mounted voice settings actions', () => {
     const repository = new FakeProviderRepository(slot('replace_credential'));
     const pending = deferred<ProviderProfileSummary>(); repository.pendingCredential = pending.promise;
     let saved = 0;
-    const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => undefined} onSaved={() => { saved++; }} profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} />);
+    const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} onSaved={() => { saved++; }} profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} />);
     try {
       expect(harness.byLabel('API key')?.props).toMatchObject({ autoCapitalize: 'none', autoCorrect: false, secureTextEntry: true });
       await harness.changeText(harness.byLabel('API key'), '  secret-value  ');
-      const button = textButton(harness, 'Save Credential')!;
+      const button = harness.byLabel('Save Credential')!;
       await harness.run(() => { button.props.onPress(); button.props.onPress(); });
       expect(repository.credentialInputs).toEqual([{ providerProfileId: 'profile-language', purpose: 'api_key', credential: 'secret-value' }]);
       expect(saved).toBe(0);
@@ -167,6 +168,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   pendingAction?: Promise<ProviderProfileSummary | ProviderProfileTestResult>;
   pendingCredential?: Promise<ProviderProfileSummary>;
   pendingPrompt?: Promise<ProviderProfileSummary>;
+  pendingCreation?: Promise<ProviderProfileSummary>;
 
   constructor(voiceSlot = slot('none')) {
     this.configuration = {
@@ -177,7 +179,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   async listProviderProfiles() { return [this.profile, ...this.extraProfiles]; }
   async getVoiceProviderConfiguration() { return this.configuration; }
   async updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput) { this.selectionInputs.push(input); return this.pendingSelection ?? this.configuration; }
-  async createProviderProfile(_input: CreateProviderProfileInput) { return this.profile; }
+  async createProviderProfile(_input: CreateProviderProfileInput) { return this.pendingCreation ?? this.profile; }
   async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.pendingPrompt ?? this.profile; }
   async replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput) {
     this.credentialInputs.push(input);
@@ -203,7 +205,7 @@ function slot(recommendedAction: VoiceProviderRecommendedAction) {
 }
 function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'success', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
 
-function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done; }); return { promise, resolve }; }
+function deferred<T>() { let resolve!: (value: T) => void; let reject!: (error: Error) => void; const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; }
 
  it.each(['test', 'enable', 'archive'] as const)('shows only the pending %s profile operation and restores actions after failure', async operation => {
   const repository = new FakeProviderRepository();
@@ -211,7 +213,7 @@ function deferred<T>() { let resolve!: (value: T) => void; const promise = new P
   repository.pendingAction = new Promise((_resolve, reject) => { rejectAction = reject; });
   const { harness, client } = await mount(<ProviderProfileDetailScreen profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => {}} onEditPrompt={() => {}} />);
   try {
-    const label = operation === 'test' ? 'Test connection for Gemini language' : operation === 'enable' ? 'enable Gemini language' : 'Archive Gemini language';
+    const label = operation === 'test' ? 'Test Connection' : operation === 'enable' ? 'Enable Profile' : 'Archive Profile';
     await harness.press(harness.byLabel(label));
     if (operation === 'archive') await harness.run(() => pressAlertButton('Archive'));
     expect(harness.allText()).toContain(operation === 'test' ? 'Testing…' : operation === 'enable' ? 'Updating…' : 'Archiving…');
@@ -233,11 +235,11 @@ it.each(['credential', 'prompt'] as const)('preserves the submitted %s draft aft
   const pending = new Promise<ProviderProfileSummary>((_resolve, reject) => { rejectSave = reject; });
   if (kind === 'credential') repository.pendingCredential = pending; else repository.pendingPrompt = pending;
   const Editor = kind === 'credential' ? ProviderCredentialScreen : ProviderPromptScreen;
-  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onCancel={() => {}} onSaved={() => {}} />);
+  const { harness, client } = await mount(<Editor profileId="profile-language" query={new ProviderProfileSettingsQuery(repository)} manageCommand={new ManageProviderProfileCommand(repository)} onSaved={() => {}} />);
   const label = kind === 'credential' ? 'API key' : 'New prompt guidance';
   try {
     await harness.changeText(harness.byLabel(label), 'original draft');
-    await harness.press(textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
+    await harness.press(harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance'));
     expect(harness.byLabel(label)?.props.editable).toBe(false);
     await harness.changeText(harness.byLabel(label), 'later edit');
     await harness.run(() => rejectSave?.(new Error('offline')));
@@ -284,7 +286,7 @@ it('permits confirmed sign out without loading inventory settings', async () => 
   let scopeReads = 0; let signedOut = 0;
   const { harness } = await mount(<AccountSettingsScreen settingsQuery={settingsQuery([], async () => { scopeReads++; throw new Error('offline'); })} onSignOut={async () => { signedOut++; }} />);
   try {
-    await harness.press(harness.byLabel('Sign out john@example.com'));
+    await harness.press(harness.byLabel('Sign Out'));
     await harness.run(() => pressAlertButton('Sign Out'));
     expect(signedOut).toBe(1);
     expect(scopeReads).toBe(0);
@@ -299,8 +301,308 @@ it.each(['pending', 'failed'] as const)('keeps sign out available while identity
   } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => { throw new Error('Account must not load inventory settings'); } });
   const { harness } = await mount(<AccountSettingsScreen settingsQuery={query} onSignOut={async () => { signedOut++; }} />);
   try {
-    await harness.press(harness.byLabel('Sign out Current account'));
+    await harness.press(harness.byLabel('Sign Out'));
     await harness.run(() => pressAlertButton('Sign Out'));
     expect(signedOut).toBe(1);
   } finally { await harness.unmount(); }
+});
+
+
+it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => (['success', 'failure'] as const).map(outcome => [kind, outcome] as const)))('does not publish or navigate from a departed %s task after returning: %s', async (kind, outcome) => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  repository.pendingPrompt = pending.promise;
+  repository.pendingAction = pending.promise;
+  repository.pendingCreation = pending.promise;
+  let navigations = 0;
+  const command = new ManageProviderProfileCommand(repository);
+  const query = new ProviderProfileSettingsQuery(repository);
+  const editorProps = { manageCommand: command, query, profileId: 'profile-language', onSaved: () => { navigations++; } };
+  const element = kind === 'credential' ? <ProviderCredentialScreen {...editorProps} />
+    : kind === 'prompt' ? <ProviderPromptScreen {...editorProps} />
+    : kind === 'create' ? <AddProviderProfileScreen manageCommand={command} onCreated={() => { navigations++; }} />
+    : <ProviderProfileDetailScreen manageCommand={command} query={query} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />;
+  const { harness, client } = await mount(element);
+  try {
+    if (kind === 'credential' || kind === 'prompt') await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'private draft');
+    const button = kind === 'credential' || kind === 'prompt' ? harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance')
+      : kind === 'create' ? harness.all().find(node => String(node.props.accessibilityLabel ?? '').startsWith('Create '))
+      : harness.byLabel('Enable Profile');
+    await harness.press(button);
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => outcome === 'success' ? pending.resolve(profile({ credentialStatus: 'configured' })) : pending.reject(new Error('Late private error')));
+    await settle(harness);
+    expect(navigations).toBe(0);
+    if (kind === 'credential' || kind === 'prompt') {
+      expect(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance')?.props.value).toBe(outcome === 'success' ? '' : 'private draft');
+      if (outcome === 'success') {
+        await harness.run(() => attemptNavigation({ type: 'manual-back' }));
+        expect(dispatchedActions()).toEqual([{ type: 'manual-back' }]);
+      }
+    }
+    for (const title of ['Credential saved', 'Prompt guidance saved', 'Draft profile created', 'Profile enabled', 'Credential not saved', 'Prompt not saved', 'Could not create profile', 'Profile action failed', 'Late private error']) expect(harness.byText(title)).toBeUndefined();
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it('rejects an archive confirmation retained from a previous focus session', async () => {
+  const repository = new FakeProviderRepository();
+  const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
+  try {
+    await harness.press(harness.byLabel('Archive Profile'));
+    const confirm = latestAlert()?.buttons?.find(button => button.text === 'Archive')?.onPress;
+    expect(confirm).toBeDefined();
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => confirm?.());
+    expect(repository.lifecycleCalls).toEqual([]);
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it('keeps a replacement profile credential when the previous form finishes saving', async () => {
+  const repository = new FakeProviderRepository();
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' })];
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  const command = new ManageProviderProfileCommand(repository);
+  const query = new ProviderProfileSettingsQuery(repository);
+  let replace!: (id: string) => void;
+  let navigations = 0;
+  function Editor() {
+    const [id, setId] = React.useState('profile-language');
+    replace = setId;
+    return <ProviderCredentialScreen manageCommand={command} query={query} profileId={id} onSaved={() => { navigations++; }} />;
+  }
+  const { harness, client } = await mount(<Editor />);
+  try {
+    await harness.changeText(harness.byLabel('API key'), 'old secret');
+    await harness.press(harness.byLabel('Save Credential'));
+    await harness.run(() => replace('other'));
+    await harness.changeText(harness.byLabel('API key'), 'replacement secret');
+    await harness.run(() => pending.resolve(profile({ credentialStatus: 'configured' })));
+    expect(harness.byLabel('API key')?.props.value).toBe('replacement secret');
+    expect(harness.byLabel('API key')?.props.editable).toBe(true);
+    expect(navigations).toBe(0);
+    expect(harness.byText('Credential saved')).toBeUndefined();
+  } finally { await harness.unmount(); client.clear(); }
+});
+
+it.each((['select', 'test', 'enable'] as const).flatMap(kind => (['success', 'failure'] as const).flatMap(outcome => [true, false].map(departed => [kind, outcome, departed] as const))))('scopes voice-stage %s completion (%s, departed=%s)', async (kind, outcome, departed) => {
+  const repository = new FakeProviderRepository(slot(kind === 'enable' ? 'enable_profile' : 'test_profile'));
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' })];
+  const action = deferred<ProviderProfileSummary | ProviderProfileTestResult>();
+  const selection = deferred<VoiceProviderConfiguration>();
+  repository.pendingAction = action.promise;
+  repository.pendingSelection = selection.promise;
+  const { harness, client } = await mount(<VoiceCapabilityScreen capability="language_inference" manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} testCommand={new TestProviderProfileCommand(repository)} onAddProfile={() => undefined} onEditCredential={() => undefined} onEditProfile={() => undefined} />);
+  try {
+    if (kind === 'select') {
+      await harness.press(harness.byLabel('Choose voice service'));
+      await harness.press(harness.byLabel('Other language'));
+      expect(repository.selectionInputs).toHaveLength(1);
+    } else {
+      await harness.press(textButton(harness, kind === 'test' ? 'Test Connection' : 'Enable Service'));
+      expect(kind === 'test' ? repository.testCalls : repository.lifecycleCalls).toHaveLength(1);
+    }
+    if (departed) {
+      await harness.run(() => setScreenFocused(false));
+      await harness.run(() => setScreenFocused(true));
+    }
+    await harness.run(() => {
+      if (kind === 'select') {
+        if (outcome === 'success') selection.resolve(repository.configuration);
+        else selection.reject(new Error('Late stage error'));
+      } else if (outcome === 'success') action.resolve(kind === 'test' ? testResult() : profile({ lifecycleState: 'enabled' }));
+      else action.reject(new Error('Late stage error'));
+    });
+    await settle(harness);
+    if (departed) {
+      for (const title of ['Voice service selected', 'Connection tested', 'Service enabled', 'Could not update voice', 'Late stage error']) expect(harness.byText(title)).toBeUndefined();
+    } else {
+      const title = outcome === 'failure' ? 'Could not update voice' : kind === 'select' ? 'Voice service selected' : kind === 'test' ? 'Connection tested' : 'Service enabled';
+      expect(harness.byText(title)).toBeDefined();
+    }
+    expect(harness.byLabel('Choose voice service')?.props.disabled).toBe(false);
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+
+it.each(['credential', 'prompt'] as const)('protects the %s replacement draft and validates native Save before submission', async kind => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  repository.pendingPrompt = pending.promise;
+  let saves = 0;
+  const props = { manageCommand: new ManageProviderProfileCommand(repository), query: new ProviderProfileSettingsQuery(repository), profileId: 'profile-language', onSaved: () => { saves++; attemptNavigation({ type: 'saved-back' }); } };
+  const { harness, client } = await mount(kind === 'credential' ? <ProviderCredentialScreen {...props} /> : <ProviderPromptScreen {...props} />);
+  const field = () => harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance');
+  const save = () => harness.byLabel(kind === 'credential' ? 'Save Credential' : 'Save Guidance');
+  try {
+    expect(save()).toBeDefined();
+    expect(save()?.props.disabled).toBe(true);
+    await harness.changeText(field(), '   ');
+    expect(save()?.props.disabled).toBe(true);
+    await harness.changeText(field(), 'private replacement');
+    expect(save()?.props.disabled).toBe(false);
+    await harness.run(() => attemptNavigation({ type: 'back' }));
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await harness.run(() => pressAlertButton('Keep Editing'));
+    expect(dispatchedActions()).toEqual([]);
+    expect(field()?.props.value).toBe('private replacement');
+    await harness.press(save());
+    await harness.run(() => attemptNavigation({ type: 'during-save' }));
+    expect(dispatchedActions()).toEqual([]);
+    await harness.run(() => pending.reject(new Error('Try this replacement again')));
+    expect(field()?.props.value).toBe('private replacement');
+    const failure = harness.byText('Try this replacement again');
+    expect(failure).toBeDefined();
+    let ancestor = failure?.parent;
+    while (ancestor && ancestor.type !== 'ScrollView') ancestor = ancestor.parent;
+    expect(ancestor?.type).toBe('ScrollView');
+    repository.pendingCredential = undefined; repository.pendingPrompt = undefined;
+    await harness.press(save()); await settle(harness);
+    expect(saves).toBe(1);
+    expect(dispatchedActions()).toEqual([{ type: 'saved-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
+});
+
+it.each(['credential', 'prompt'] as const)('limits %s discard confirmation to the current visit and dispatches it once', async kind => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  const props = { manageCommand: new ManageProviderProfileCommand(repository), query: new ProviderProfileSettingsQuery(repository), profileId: 'profile-language', onSaved: () => undefined };
+  const { harness, client } = await mount(kind === 'credential' ? <ProviderCredentialScreen {...props} /> : <ProviderPromptScreen {...props} />);
+  try {
+    await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'replacement');
+    await harness.run(() => attemptNavigation({ type: 'old-back' }));
+    const oldDiscard = latestAlert()?.buttons?.find(button => button.text === 'Discard')?.onPress;
+    expect(oldDiscard).toBeDefined();
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => oldDiscard?.());
+    expect(dispatchedActions()).toEqual([]);
+    await harness.run(() => attemptNavigation({ type: 'current-back' }));
+    const discard = latestAlert()?.buttons?.find(button => button.text === 'Discard')?.onPress;
+    expect(discard).toBeDefined();
+    await harness.run(() => { discard?.(); discard?.(); });
+    expect(dispatchedActions()).toEqual([{ type: 'current-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
+});
+
+it('allows server credentials without a secret and blocks immediate Back while saving', async () => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  repository.extraProfiles = [profile({ id: 'server', credentialPurpose: 'server_adc' })];
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="server" onSaved={() => attemptNavigation({ type: 'saved-back' })} />);
+  try {
+    const save = harness.byLabel('Save Credential');
+    expect(save).toBeDefined();
+    expect(save?.props.disabled).toBe(false);
+    await harness.run(() => { save?.props.onPress(); attemptNavigation({ type: 'immediate-back' }); });
+    expect(dispatchedActions()).toEqual([]);
+    expect(repository.credentialInputs).toEqual([{ providerProfileId: 'server', purpose: 'server_adc', credential: undefined }]);
+    await harness.run(() => pending.resolve(profile({ id: 'server', credentialPurpose: 'server_adc', credentialStatus: 'configured' })));
+    expect(dispatchedActions()).toEqual([{ type: 'saved-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
+});
+
+it.each(['signOut', 'server'] as const)('rejects an earlier-visit %s confirmation and keeps current retry', async kind => {
+  let calls = 0;
+  const action = async () => { calls++; throw new Error('Retry this action'); };
+  const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  try {
+    await harness.press(harness.byLabel(label));
+    const stale = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    expect(stale).toBeTypeOf('function');
+    await harness.run(() => setScreenFocused(false)); await harness.run(() => setScreenFocused(true));
+    await harness.run(() => stale?.()); await settle(harness);
+    expect(calls).toBe(0);
+    await harness.press(harness.byLabel(label));
+    const current = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    await harness.run(() => current?.()); await settle(harness);
+    expect(calls).toBe(1);
+    await harness.run(() => current?.()); await settle(harness);
+    expect(calls).toBe(1);
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(button)); await settle(harness);
+    expect(calls).toBe(2);
+  } finally { await harness.unmount(); setScreenFocused(true); }
+});
+
+it.each(['signOut', 'server'] as const)('suppresses a departed %s failure and unlocks retry', async kind => {
+  const pending = deferred<void>(); let calls = 0;
+  const action = () => { calls++; return pending.promise; };
+  const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  try {
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(kind === 'signOut' ? 'Sign Out' : 'Change Server'));
+    await harness.run(() => setScreenFocused(false)); await harness.run(() => setScreenFocused(true));
+    await harness.run(() => pending.reject(new Error('Departed action failure'))); await settle(harness);
+    expect(harness.allText()).not.toContain('Departed action failure');
+    expect(harness.byLabel(label)?.props.disabled).toBe(false);
+    expect(calls).toBe(1);
+  } finally { await harness.unmount(); setScreenFocused(true); }
+});
+
+it.each(['signOut', 'server'] as const)('rejects %s confirmation after settings-query replacement', async kind => {
+  let calls = 0;
+  const action = async () => { calls++; };
+  const screen = (query: SettingsQuery) => kind === 'signOut' ? <AccountSettingsScreen settingsQuery={query} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={query} onChangeServer={action} />;
+  const { harness, client } = await mount(screen(settingsQuery()));
+  const label = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  try {
+    await harness.press(harness.byLabel(label));
+    const stale = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    expect(stale).toBeTypeOf('function');
+    await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })}><AppFeedbackProvider>{screen(settingsQuery())}</AppFeedbackProvider></MobileServerStateProvider>);
+    await harness.run(() => stale?.());
+    expect(calls).toBe(0);
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(button));
+    expect(calls).toBe(1);
+  } finally { await harness.unmount(); }
+});
+
+it('describes missing account details honestly and recovers with retry', async () => {
+  let reads = 0;
+  const query = new SettingsQuery({ getCurrentPrincipal: async () => {
+    if (++reads === 1) throw new Error('offline');
+    return { id: 'principal', email: 'recovered@example.com' };
+  } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://stash.home.test/api', appVersion: 'test', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => { throw new Error('Account must not load inventory'); } });
+  const { harness } = await mount(<AccountSettingsScreen settingsQuery={query} onSignOut={async () => {}} />);
+  try {
+    expect(harness.allText()).toContain('Could not load account details. You can retry or sign out.');
+    expect(harness.allText()).not.toContain('Some settings could not be refreshed. Previously loaded values are shown.');
+    expect(harness.byLabel('Sign Out')).toBeDefined();
+    await harness.press(harness.byLabel('Retry refresh')); await settle(harness);
+    expect(harness.byLabel('Sign Out')).toBeDefined();
+    expect(harness.allText()).toContain('recovered@example.com');
+    expect(harness.allText()).not.toContain('Could not load account details. You can retry or sign out.');
+  } finally { await harness.unmount(); }
+});
+
+
+it('consumes failed provider archive confirmation while permitting a freshly confirmed retry', async () => {
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>(); repository.pendingAction = pending.promise;
+  const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
+  try {
+    await harness.press(harness.byLabel('Archive Profile'));
+    const confirm = latestAlert()?.buttons.find(button => button.text === 'Archive')?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    await harness.run(() => confirm?.());
+    expect(repository.lifecycleCalls).toHaveLength(1);
+    await harness.run(() => pending.reject(new Error('Retry archive'))); await settle(harness);
+    repository.pendingAction = undefined;
+    await harness.run(() => confirm?.()); await settle(harness);
+    expect(repository.lifecycleCalls).toHaveLength(1);
+    await harness.press(harness.byLabel('Archive Profile'));
+    await harness.run(() => pressAlertButton('Archive')); await settle(harness);
+    expect(repository.lifecycleCalls).toHaveLength(2);
+  } finally { await harness.unmount(); client.clear(); }
 });

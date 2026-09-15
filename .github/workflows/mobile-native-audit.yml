@@ -2,6 +2,15 @@ name: Mobile native audit
 
 on:
   workflow_dispatch:
+    inputs:
+      test_case:
+        description: 'Diagnostic selection; only all can support full native acceptance'
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - color-picker
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -24,17 +33,18 @@ env:
 
 jobs:
   ios:
-    name: iOS ${{ matrix.suite }} (${{ matrix.device }})
+    name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case == 'color-picker' && ' [color-picker]' || '' }}
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         device: ['iPhone 17', 'iPad mini (A17 Pro)']
-        suite: ['onboarding', 'fixtures']
+        suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case == 'color-picker' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
     env:
       NODE_ENV: production
       AUDIT_SUITE: ${{ matrix.suite }}
+      AUDIT_TEST_CASE: ${{ inputs.test_case || 'all' }}
       EX_DEV_CLIENT_NETWORK_INSPECTOR: 'false'
       STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: 'true'
       EXPO_PUBLIC_STUFF_STASH_API_BASE_URL: ''
@@ -68,9 +78,23 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/native-audit"
+          audit_test_args=()
+          case "$AUDIT_TEST_CASE" in
+            all) ;;
+            color-picker)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
+              )
+              ;;
+            *) exit 1 ;;
+          esac
+          printf '%s\n' "$AUDIT_TEST_CASE" > "$RUNNER_TEMP/native-audit/selection.txt"
           xcrun simctl list devices available > "$RUNNER_TEMP/native-audit/simulators.txt"
           git rev-parse HEAD > "$RUNNER_TEMP/native-audit/revision.txt"
           xcodebuild test \
+            "${audit_test_args[@]}" \
             -workspace apps/mobile/ios/StuffStash.xcworkspace \
             -scheme StuffStashAudit \
             -configuration Release \

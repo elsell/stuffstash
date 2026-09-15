@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Stack } from 'expo-router';
+import { useCallback, useEffect, useRef } from 'react';
+import { Stack, useFocusEffect } from 'expo-router';
 import type { SearchBarCommands } from 'react-native-screens';
 
 /** Platform search field; callers own search scheduling and result semantics. */
@@ -10,7 +10,7 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
  const ref=useRef<SearchBarCommands|null>(null);
  const nativeText=useRef(query);
  const active=useRef(false);
- useEffect(()=>{active.current=enabled;return()=>{active.current=false;};},[enabled]);
+ useFocusEffect(useCallback(()=>{active.current=enabled;return()=>{active.current=false;};},[enabled]));
  useEffect(()=>{ref.current?.setText(query);},[]);
  useEffect(()=>{if(query!==nativeText.current){nativeText.current=query;ref.current?.setText(query);}},[query]);
  function clear(){if(!active.current)return;nativeText.current='';ref.current?.clearText();onClear();}

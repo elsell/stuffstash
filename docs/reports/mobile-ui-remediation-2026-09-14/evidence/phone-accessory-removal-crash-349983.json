@@ -1,0 +1,130 @@
+{
+  "procName": "StuffStash",
+  "captureTime": "2026-09-15 17:41:12.8338 +0000",
+  "exception": {
+    "codes": "0x0000000000000000, 0x0000000000000000",
+    "rawCodes": [
+      0,
+      0
+    ],
+    "type": "EXC_CRASH",
+    "signal": "SIGABRT"
+  },
+  "termination": {
+    "flags": 0,
+    "code": 6,
+    "namespace": "SIGNAL",
+    "indicator": "Abort trap: 6",
+    "byProc": "StuffStash",
+    "byPid": 15054
+  },
+  "faultingThread": 0,
+  "sourceArtifact": "8E2081ED-C88B-4CA6-9C95-A247FBCC65CD.ips",
+  "nativeRun": "34998354801",
+  "actualRevision": "54714ab4ec7a700316a81baabbd5d01048b15e50",
+  "triggeredFrames": [
+    {
+      "imageIndex": 10,
+      "symbolLocation": 8,
+      "imageOffset": 34956,
+      "symbol": "__pthread_kill"
+    },
+    {
+      "symbolLocation": 264,
+      "imageOffset": 25400,
+      "symbol": "pthread_kill",
+      "imageIndex": 11
+    },
+    {
+      "imageIndex": 96,
+      "imageOffset": 473476,
+      "symbol": "abort",
+      "symbolLocation": 116
+    },
+    {
+      "imageOffset": 83920,
+      "symbol": "__abort_message",
+      "imageIndex": 97,
+      "symbolLocation": 128
+    },
+    {
+      "symbolLocation": 268,
+      "symbol": "demangling_terminate_handler()",
+      "imageIndex": 97,
+      "imageOffset": 4404
+    },
+    {
+      "symbolLocation": 124,
+      "symbol": "_objc_terminate()",
+      "imageIndex": 98,
+      "imageOffset": 29084
+    },
+    {
+      "symbolLocation": 12,
+      "imageIndex": 97,
+      "imageOffset": 67472,
+      "symbol": "std::__terminate(void (*)())"
+    },
+    {
+      "symbol": "__cxxabiv1::failed_throw(__cxxabiv1::__cxa_exception*)",
+      "imageOffset": 79628,
+      "symbolLocation": 32,
+      "imageIndex": 97
+    },
+    {
+      "symbol": "__cxa_throw",
+      "imageOffset": 79596,
+      "symbolLocation": 88,
+      "imageIndex": 97
+    },
+    {
+      "symbolLocation": 384,
+      "imageOffset": 177520,
+      "imageIndex": 98,
+      "symbol": "objc_exception_throw"
+    },
+    {
+      "symbolLocation": 240,
+      "imageOffset": 4832,
+      "symbol": "-[__NSArray0 objectAtIndex:]",
+      "imageIndex": 99
+    },
+    {
+      "symbol": "-[KeyboardExtender createSharedInputAccessoryView]",
+      "symbolLocation": 60,
+      "imageOffset": 5437056,
+      "sourceFile": "KeyboardExtenderManager.mm",
+      "sourceLine": 146,
+      "imageIndex": 0
+    },
+    {
+      "symbol": "-[KeyboardExtender attachInputAccessoryViewTo:]",
+      "imageOffset": 5437304,
+      "sourceLine": 157,
+      "sourceFile": "KeyboardExtenderManager.mm",
+      "imageIndex": 0,
+      "symbolLocation": 56
+    },
+    {
+      "imageOffset": 5436960,
+      "symbol": "-[KeyboardExtender attachToTextInput:]",
+      "imageIndex": 0,
+      "sourceFile": "KeyboardExtenderManager.mm",
+      "symbolLocation": 96
+    },
+    {
+      "sourceFile": "KeyboardExtenderManager.mm",
+      "symbol": "-[KeyboardExtender handleTextInputDidBeginEditing:]",
+      "imageIndex": 0,
+      "sourceLine": 129,
+      "imageOffset": 5436788,
+      "symbolLocation": 76
+    },
+    {
+      "imageIndex": 99,
+      "symbol": "__CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__",
+      "imageOffset": 383564,
+      "symbolLocation": 140
+    }
+  ]
+}

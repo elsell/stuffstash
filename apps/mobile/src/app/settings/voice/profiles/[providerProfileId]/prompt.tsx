@@ -10,7 +10,7 @@ export default function ProviderPromptRoute() {
   const { manageProviderProfileCommand, providerProfileSettingsQuery, settingsQuery } = useAppServices();
   return (
     <VoiceAdminGuard settingsQuery={settingsQuery}>
-      <ProviderPromptScreen manageCommand={manageProviderProfileCommand} profileId={profileId ?? ''} query={providerProfileSettingsQuery} onCancel={() => router.back()} onSaved={() => router.back()} />
+      <ProviderPromptScreen manageCommand={manageProviderProfileCommand} profileId={profileId ?? ''} query={providerProfileSettingsQuery} onSaved={() => router.back()} />
     </VoiceAdminGuard>
   );
 }

@@ -1,5 +1,5 @@
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
-import { navigationOptions, dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { navigationOptions, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
@@ -228,4 +228,38 @@ it('settles pending search and opens a scoped native filter sheet', async () => 
     await h.run(() => new Promise(resolve => setTimeout(resolve, 320)));
     expect(dispatchedActions()).toHaveLength(count);
   } finally { await h.unmount(); }
+});
+
+it('pauses pending Browse query on blur and resumes it on return', async () => {
+ const h=new MobileRenderHarness();const client=createMobileQueryClient();resetNavigation();setScreenFocused(true);
+ const requests:string[]=[];const props=propsFor({searchAssetsQuery:new SearchAssetsQuery({browseAssets:async input=>{requests.push(input.query);return {assets:[],hasMore:false};}})});
+ try {
+  await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);await settle(h);await settle(h);
+  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+  await h.run(()=>search.onChangeText({nativeEvent:{text:'retained'}}));
+  await h.run(()=>setScreenFocused(false));
+  await h.run(()=>new Promise(resolve=>setTimeout(resolve,350)));
+  expect(requests).not.toContain('retained');
+  expect(dispatchedActions().filter(action=>action.type==='setParams')).toEqual([]);
+  await h.run(()=>setScreenFocused(true));
+  await h.run(()=>new Promise(resolve=>setTimeout(resolve,350)));await settle(h);
+  expect(requests).toContain('retained');
+ }finally{await h.unmount();client.clear();resetNavigation();setScreenFocused(true);}
+});
+
+it('uses external Browse criteria instead of a paused draft after returning', async () => {
+ const h=new MobileRenderHarness();const client=createMobileQueryClient();resetNavigation();setScreenFocused(true);
+ const requests:string[]=[];const props=propsFor({searchAssetsQuery:new SearchAssetsQuery({browseAssets:async input=>{requests.push(input.query);return {assets:[],hasMore:false};}})});
+ const view=(initialQuery:string)=><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props} initialQuery={initialQuery}/></AppFeedbackProvider></MobileServerStateProvider>;
+ try {
+  await h.render(view(''));await settle(h);await settle(h);
+  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+  await h.run(()=>search.onChangeText({nativeEvent:{text:'abandoned'}}));
+  await h.run(()=>setScreenFocused(false));
+  await h.render(view('replacement'));await settle(h);
+  await h.run(()=>setScreenFocused(true));
+  await h.run(()=>new Promise(resolve=>setTimeout(resolve,350)));await settle(h);
+  expect(requests).toContain('replacement');expect(requests).not.toContain('abandoned');
+  expect(dispatchedActions().filter(action=>action.type==='setParams')).toEqual([]);
+ }finally{await h.unmount();client.clear();resetNavigation();setScreenFocused(true);}
 });

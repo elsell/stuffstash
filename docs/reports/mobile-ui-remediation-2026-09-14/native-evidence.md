@@ -1165,3 +1165,734 @@ Changelog job104354176491 verified v0.24.21(109.1) at11:02:58 UTC after Apple
 processing. Logs: `/tmp/release349581-ios.log`, `/tmp/release349581-notes.log`.
 This fulfills the interim release checkpoint and excludes every PR148 change.
 Delivery is not native acceptance of the unresolved audit findings.
+
+## iPhone run 34958958425 — early PR148
+
+The iPhone fixtures job 104347687569 completed with 31/46 scenarios passing and
+15 failing. The iPad job subsequently completed as recorded below.
+The checkout was `07cb72e05c5e1dc46eb9845f330cdc63d1f3ab56`, the merge of
+`5890b169` into `de5d87b0`. It includes early Edit tag disclosure and PR146 fixes;
+it excludes later PR148 draft preservation/title changes and all PR150 changes.
+
+Failures: rejected Add save recovery; the original checkout-history hit test;
+color-picker direct opening; command height comparison; controlled address entry;
+Edit metadata recovery; Edit tag disclosure; expiration overview accessibility;
+footer full sheet; Move Here recovery; nested full sheet; ordinary single-line
+entry; place contents search; no-accessory address entry; uncontrolled address
+entry. Both onboarding jobs passed.
+
+The command-height journey reached both captures and Retry received after tapping;
+it then failed finding a navigation button with the assumed label Back. Move Here failed exact text entry (`T` versus
+`Tent`). Controlled and uncontrolled address tests saw `hs://example.invalid`
+instead of the full address. These are observed test outcomes, not yet diagnoses
+of product versus simulator input behavior. Detail commands and region recovery
+passed this run's checks; this does not establish all visual or accessibility axes.
+
+Job log was obtained from the jobs/logs API because `gh run view --log` refused
+while another job remained active. The approximately 907 MB phone artifact download
+was still in progress at initial recording; image inspection is recorded separately.
+
+Artifact download completed. Four images were inspected and retained:
+
+- [Shipping command](evidence/phone-command-shipping-349589.png): three-line Retry
+  asset types overflows its red host border and overlaps adjacent text. AX button
+  frame is 48 points high (hierarchy `0925919D-3202-4E3C-8F55-765A2D0DDCB9.txt`).
+- [Outer ideal sizing](evidence/phone-command-outer-sizing-349589.png): label fits
+  its host and following content is below. AX button height is 187.3 points
+  (hierarchy `6FE26995-159B-496A-A073-9432BF3EED18.txt`). The tap produced Retry received in the final hierarchy
+  (`C0965542-DEE3-4BA0-A1E3-BD497B939A2B.txt`). The failure was the subsequent
+  Back-label assertion at line 85; the observed identifier is BackButton and its
+  label is Native UI audit.
+- [Edit](evidence/phone-edit-native-footer-349589.png): the old fixed title consumes
+  most of the half sheet; metadata is clipped above the native footer. The later
+  PR148 title-in-scroll change is absent. Disabled Save is light gray in this light
+  fixture; this does not reproduce the user's dark Move contrast issue.
+- [Move Here](evidence/phone-move-here-keyboard-349589.png): query contains only T,
+  Retry overlaps the error text, and the keyboard accessory covers footer content.
+  This confirms visible overlap but does not identify why typing stopped.
+
+The shared NativeCommandButton candidate now applies outer vertical ideal sizing,
+as the comparison demonstrated. No disabled-button color repair is claimed. The return test now uses the observed
+BackButton identifier and verifies navigation back to the audit menu.
+Its callers span Add/Edit/Move, item details, history, notifications, settings,
+sharing guards, customization and voice; combined source validation is recorded
+when complete. Native consumer acceptance remains open.
+
+Combined remote validation passed all 1,525 mobile tests across 258 files, TypeScript
+and structural checks. All 12 changed mobile files matched the remote workspace
+by SHA-256 before the suite. The subsequent native Back selector edit requires
+macOS compilation/execution.
+The diagnostic fixture was then changed to keep the old inner-only sizing as a
+labeled baseline and exercise the actual shipping adapter in the second state.
+Its matching test retains callback and return assertions. TypeScript and structural
+checks passed again; native compilation and execution of this revision are pending.
+
+## M100 footer appearance diagnostic
+
+A runner-only route now hosts the shipping NativeSheetActions with the app's real
+AppearanceProvider in a Move form sheet. It changes light/dark preference through
+the real controller and toggles destination selection. Default and largest-text
+journeys capture both disabled and enabled states, check button containment within
+the identified sheet root (including iPad horizontal bounds), verify Move's callback,
+and cancel after restoring the starting appearance. No inventory mutation occurs.
+
+The preparation regression failed before registration, then both preparation tests,
+the project TypeScript check and mobile structural check passed remotely. Critic
+review caught an initial app-window-only geometry assertion; it now compares
+against the sheet root. Native compilation/execution and manual contrast inspection
+remain pending. No production colors or footer behavior changed in this pass.
+
+## Delivered TestFlight 0.24.22 (110.1)
+
+Release [34962249412](https://github.com/elsell/stuffstash/actions/runs/34962249412)
+completed successfully from `4b5f7f89` (PR148). Signed iOS upload job 104360930332
+reported Upload succeeded at 11:47:59 UTC on September 15. Apple processing and
+exact-build changelog job 104368062375 verified v0.24.22 (110.1) at 11:50:22 UTC.
+This includes Add/Edit tag draft preservation and discovery, overlong-name feedback,
+and the Edit title scrolling repair. It excludes all PR150 invitation, parent,
+Move-context and native command sizing changes. Delivery is not whole-app native
+acceptance; the audit remains open and the next release accumulates a larger batch.
+
+
+## iPad run 34958958425 — terminal results
+
+Job 104347687961 completed with 35/46 fixture scenarios passing and 11 failing,
+using the same early-PR148 checkout `07cb72e05c5e1dc46eb9845f330cdc63d1f3ab56`
+as the phone above. Both onboarding jobs passed; the workflow is terminal.
+The job log was retrieved directly from GitHub. Its captures have not been
+inspected in this pass.
+
+Failures: Add draft in navigation stack; rejected Add save recovery; original
+checkout-history hit test; command comparison Back assertion; Edit metadata;
+Edit tag disclosure; Move Here recovery; ordinary single-line entry; place
+contents search; no-accessory address entry; uncontrolled address entry.
+The single-line field contained `Ndraft name` rather than `Native draft name`;
+uncontrolled address contained `h://example.invalid` rather than the full URL.
+These observations do not establish whether text loss is a product or automation
+defect. Inspect the capture and compare current-build input paths before changing
+production behavior. Normal-text failures take priority over enlarged-text-only
+ones. No current Sharing, Move context, or footer appearance fix is validated by
+this older run.
+
+## Sharing normal-text native acceptance candidate
+
+The runner-only `audit-sharing` route composes the actual Sharing screen and
+query mutation observer with controlled invitation/link-action ports. The first
+creation stores safe metadata but returns an unusable-link outcome; cancellation
+and copy fail once and then succeed. Share produces an inline recovery case
+without opening a destination. No real invitation, clipboard write, or external
+share occurs.
+
+The normal-text XCTest enters an exact email, checks retained input after the
+unavailable link, cancels that invitation through failure/retry, creates a usable
+replacement, and exercises copy failure/retry and share failure. It reveals
+controls and feedback below the native header with bounded gestures, retains
+captures/hierarchies, and returns using native Back. This addresses M98/M99/M101
+acceptance coverage; it does not validate the REST contract, actual clipboard,
+real share sheet, other appearances, or the entire Sharing surface.
+
+The route-isolation regression failed before the fixture export was installed.
+Both preparation checks, mobile TypeScript (including native-audit TSX), and the
+mobile structural check passed remotely. Swift compilation, runtime behavior and
+capture inspection remain pending. No native pass is claimed from these checks.
+
+## Run 34965113594 — iPad normal-size evidence
+
+The iPad fixture job 104367623245 finished with 35/47 tests passing. Actual checkout
+was `969c77370a8253051f484816e9c4169799d494df`, merging `0f338635` into
+`4b5f7f89`. Both onboarding jobs passed; the phone fixture job was still running
+when this evidence was recorded. This revision predates the latest Sharing,
+footer appearance and feedback ownership changes.
+
+Two apparent failures are resolved at the assertion level by inspected captures:
+
+- [Checkout note](evidence/ipad-history-readable-349651.png) is readable inside
+  the sheet, although the legacy duplicate StaticText tappability assertion fails.
+  The scoped text-bounds test passes the complete expansion, pagination and Close
+  journey; its [older page](evidence/ipad-history-pagination-349651.png) is readable.
+  Retire the duplicate interactive-text diagnostic, retaining the bounds test and
+  all actual command hit-target checks. This is not a production accessibility fix.
+- [Cleared place search](evidence/ipad-search-cleared-349651.png) has returned all
+  items and collapsed to the Search icon. The test fails because it demands Cancel
+  after search has already closed. Update the journey to accept that native state,
+  then reopen search and exercise cancellation with an active query. Filtering,
+  clear, keyboard dismissal, More and Back assertions remain mandatory.
+
+The other failures remain unresolved: three Add draft/navigation cases, unfinished
+Add tag entry, controlled and uncontrolled address typing, the no-accessory
+keyboard case, and three enlarged-text recovery cases (Edit metadata, Edit tags,
+Move here). Truncated typed strings are observations, not proof that automation or
+production caused the loss. Normal-size cases take priority. Native command height
+comparison now passes on this iPad revision; it does not certify all consumers.
+
+The corrected assertion journey still needs a new native run. Preparation and
+structural checks do not establish Swift compilation or native success.
+
+Two further normal-size captures narrow the next investigation. The
+[navigation Add field](evidence/ipad-add-keyboard-349651.png) is focused and a
+keyboard is visibly present; its hierarchy identifies `UIKeyboardLayoutStar
+Preview`, while the interactive-key wait fails. This proves neither that typing
+works nor that the app loses focus. The [cold Add sheet](evidence/ipad-add-cold-loading-349651.png)
+remains at Loading inventory: its recorded query snapshot has online/focused true
+but pending/idle queries with zero observers. Keep that cold-start acceptance
+failure open; preloading synthetic data would conceal it rather than fix it.
+
+The configured-header comparison in this run reaches the form, then fails exact
+text (`Nft name` rather than `Native draft name`). Production Add now declares
+`headerShown: true` and its known title before presenting the same full-height
+sheet. The screen continues to supply its dynamic command states. This small M50
+readiness candidate follows the native comparison; it does not resolve the
+separate typing failure or establish complete Add acceptance. No production query
+behavior was changed, and both diagnostic configurations remain available.
+
+## Completed older batch: run 34965113594
+
+Both onboarding jobs passed. The fixture suite finished with 36/47 phone journeys
+and 35/47 iPad journeys passing. The tested merge is
+`969c77370a8253051f484816e9c4169799d494df`, incorporating the early PR150 native
+command geometry change, not the later provider, sharing or root Add changes.
+It cannot certify those changes. The run is terminal and needs no further polling.
+
+Phone normal-size failures include Add draft recovery, checkout expansion, direct
+color-picker opening, footer/nested full-sheet assertions and seeded address
+keyboard behavior. Classify from screenshots and hierarchy before changing product
+code or assertions. Enlarged-text failures remain recorded but are deferred until
+normal-size findings are addressed. Phone artifacts were downloaded and the following normal-size captures inspected.
+
+The [footer diagnostic](evidence/phone-footer-empty-body-349651.png) has visible
+Finish/Cancel controls but an empty body. The [nested diagnostic](evidence/phone-nested-empty-body-349651.png)
+also has an empty body. Their missing Diagnostic Tags assertion is supported by
+these captures; it is not a footer button-height failure. These are diagnostic
+route variants, not proof that every production sheet has the same failure.
+The [color journey](evidence/phone-color-unopened-349651.png) ends on the settings
+controls with the color picker closed. Opening failed in this journey; distinguish
+the row hit target from the actual color-well target before changing the adapter.
+
+The independent color-well probe passed on phone and iPad in the same run. The
+[inspected phone capture](evidence/phone-color-well-open-349651.png) shows the actual
+system picker open. This narrows M51 to activation targeting/semantics; preserve
+the row-center failure and do not infer VoiceOver behavior from the coordinate tap.
+
+## Provider editor normal-size journey coverage
+
+Runner-only routes now mount production credential/prompt editors through real
+application commands and a controlled repository. Three journeys cover native
+Save readiness, keyboard entry, Keep Editing, retained draft/local failure, retry,
+successful Back and explicit Discard. Failure evidence must be fully within the
+form viewport below navigation after keyboard dismissal, with Save/Back reachable.
+Installer tests failed before adding the route, then both passed. TypeScript and
+structural checks passed on paul. Swift compilation and native execution remain
+pending; these journeys are not runtime evidence yet.
+
+## Shared notice placement regression candidate
+
+Two normal-size journeys now exercise the production notice presenter in a pushed
+screen and a full-height native sheet. They require the complete animated notice
+and action inside the actual content viewport below navigation, then exercise the
+action, non-action dismissal, and native Back/Close. The sheet has an explicit
+native Close; iPad acceptance uses sheet content bounds, not only window bounds.
+A stable test identifier adds measurement without changing production layout.
+
+The installer regression failed for the missing routes, then both installer
+tests passed; eight feedback behavior tests, TypeScript and structural checks
+also passed remotely on paul. Critic review found no remaining confirmed issue.
+Swift/native execution is pending. M103 remains uncorrected: these regressions
+provide an acceptance target for a future geometry-aware placement repair.
+
+## Run 34972540083: phone keyboard readiness failure
+
+Phone onboarding ended before injected text because no key became hittable in
+the bounded keyboard-readiness check. The [retained final screenshot](evidence/phone-onboarding-keyboard-preview-349725.png)
+shows an empty focused address field and a visible keyboard. The hierarchy names
+`UIKeyboardLayoutStar Preview` and marks the address field Keyboard Focused. This
+is not evidence that a server request failed, nor proof that the input lost focus.
+The actual tested merge is `1c4728f508dab1892d51ba7982bf19641acf7f34`. iPad onboarding
+passed; both fixture jobs were still running when this evidence was recorded.
+Do not infer a keyboard-controller cause: production already disables preloading,
+and the existing no-accessory comparisons still need to be correlated.
+
+## Run34972540083 — iPad fixture log result
+
+The iPad mini(A17 Pro) job104392719258 completed with35/49 fixtures passing,
+14 failing. Tested merge revision:1c4728f508dab1892d51ba7982bf19641acf7f34
+(PR source36c45c3b). This predates M106/M107, focused-screen notice placement,
+M108 and M109. The phone fixture job remained live when this checkpoint was written;
+do not treat the whole run as complete or restart it.
+
+Checkout-history text bounds, expansion, older-page loading and dismissal passed.
+All five direct/nested/footer layout diagnostic variants passed on this iPad run,
+contrasting with the empty-body failures in349651. Those are named-run results,
+not proof that intermittent sheet layout defects or other device states are fixed.
+
+Normal-size failures include Add entry/typing, controlled address entry, Home
+return detail typing, Sharing email typing, color-row opening, place-content search
+and seeded-address keyboard readiness. Exact values include “Nve draft name,”
+“h://example.invalid,” “Returned cl,” and “audit@examvalidple.in.” They establish
+failed input expectations; product-versus-automation cause remains unresolved.
+Direct color-well opening passed while whole-row opening failed again.
+
+Both footer-appearance tests failed at tested-source line110, waiting for the
+“Footer appearance” heading after opening the sheet. The inspected normal-size
+[screenshot](evidence/ipad-footer-empty-body-349725.png) and hierarchy show an empty
+sheet body with Move and Cancel present; no heading or appearance controls exist
+in the sheet hierarchy. The menu entry did open the sheet. This does not establish
+dark-mode contrast because the appearance controls were never reached. The
+artifact10400441420 revision.txt confirms the tested merge above. Source line110
+was cross-checked against PR revision36c45c3b. Retain this as body-layout evidence,
+not a completed appearance audit.
+Enlarged-text failures remain recorded without advancing enlarged-text remediation.
+
+The footer diagnostic now gives its ScrollView explicit flex:1, matching the
+passing footer-layout diagnostic's body allocation. This is a diagnostic candidate,
+not a production-sheet or contrast fix. Remote TypeScript/structural checks pass;
+critic found no blocker. The existing native appearance scenario must verify the
+body is available before its contrast results can be used.
+
+## Run34972540083 — phone terminal result and job budget
+
+The phone fixture job104392719648 is terminal. GitHub reports cancelled, while
+its xcodebuild log completed49 tests with30 passing and19 failing, exit65.
+GitHub step records show screenshots, diagnostics and artifact upload succeeded.
+Job timestamps13:04:57–14:06:12UTC exceed its configured60-minute job budget;
+do not discard the retained suite result or report that it never ran. The artifact
+is downloaded at the tested merge1c4728f508dab1892d51ba7982bf19641acf7f34.
+No additional screenshots from the phone artifact have yet been inspected.
+
+Normal-size failures include Add, color-row opening, controlled/uncontrolled/system
+address comparisons, footer appearance, nested/footer diagnostic bodies, Home return,
+place search and Sharing. Ordinary single/multiline comparisons pass; the mixed
+input results do not isolate a single production input cause. The iPad Sharing
+capture additionally shows the malformed email and caret within its text, confirming
+the displayed value rather than only a stale text assertion. Existing failures are
+retained, and enlarged-text-specific remediation remains deferred.
+
+The workflow now allows90 minutes to preserve room for the full native suite and
+artifact export. Individual test waits/assertions are unchanged. Current live
+run34978984248, sourceafb81694, is left running under its original budget. Future runs containing this workflow revision use the new budget; already queued
+runs retain their original revision. No existing run was manually cancelled or restarted.
+
+Phone address-comparison follow-up: the inspected system-field capture shows the
+field below the visible menu viewport. All four address comparisons stop at the
+pre-focus hittable assertion, not a typed-value check. The old helper scrolled only
+toward the top. See text-entry-axis.md for the preserved capture, geometry and
+bounded bidirectional reveal correction shared with ordinary input comparisons.
+This does not resolve the separately observed malformed product text.
+
+### Run34978984248 — iPhone fixture result
+
+The iPhone job104415345336 completed with35/54 tests passing and19 failures.
+Its artifact revision is `b375d4eae2b07c9014da45ade37f150642000184`, whose parents
+are4b5f7f89 andafb81694. Later M108–M115 fixes and the newest filter integration
+are not certified by this run. Onboarding passed on both devices. The iPad fixture job subsequently completed
+with37/54 passing and17 failures; its log repeats the notice/provider selector
+failures and includes text-entry failures. iPad captures are not inspected in this
+entry. The whole run is terminal. No active job was restarted.
+
+Inspected screenshots and exported hierarchy distinguish these failures:
+
+- Notice push: the notice and action visibly sit below navigation. The lookup at
+  tested-source line28 expects `notice-placement-content` to be a ScrollView,
+  but the ID belongs to an Other wrapper with an inner ScrollView, both at
+  `{0,116,402,758}`. This prevented geometry/action assertions from executing;
+  it is not a passing notice journey. The candidate queries the identified host
+  independent of its accessibility type, preserving bounds assertions.
+  [Capture](evidence/phone-notice-selector-349789.png).
+- Provider credential/prompt recovery: failure at tested-source line98 is ambiguous
+  text lookup. The credential hierarchy exports parent/child StaticText nodes with
+  the identical error label and identical `{24,292,354,22}` bounds. One error is
+  visibly rendered. The candidate chooses the first matching text for geometry;
+  it still requires error visibility, reachable Save/Back and successful retry.
+  Retry completion is unverified. [Capture](evidence/phone-provider-error-selector-349789.png).
+- Footer appearance: the diagnostic body remains empty at normal text size,
+  with Move/Cancel visible. It fails waiting for the heading at tested-source
+  line208, before theme/contrast testing. The flex1 diagnostic change did not
+  establish a fix. M100 contrast acceptance remains open.
+  [Capture](evidence/phone-footer-empty-body-349789.png).
+
+Normal-text Add typing and Sharing typing still fail. Controlled address entry
+loses characters (`h://example.invalid`), while system and uncontrolled address
+entry pass in this run. Ordinary single/multiline input also pass. These contrasts
+require investigation, not a blanket input or automation diagnosis. Checkout
+history and Home return recovery pass their tested journeys; provider prompt
+Discard passes, but provider save recovery stops at the selector issue above.
+Enlarged-text failures remain deferred behind normal-text work.
+
+Two fixture-preparation checks, TypeScript and structural checks validate the
+selector change remotely; Swift execution remains pending. No result here closes
+the full native audit or authorizes a claim of current-build device acceptance.
+
+### Combined source validation at 62895a06
+
+The remote validation host passed all1,613 tests across265files, TypeScript and
+mobile structural checks. A checksum comparison of mobile/src found only an
+unsynced import consolidation; that file was synced and the full checks rerun
+successfully. Log on paul: /tmp/mobile-batch-current-full.log. This is source/test
+evidence, not native acceptance. Native run34985387290 remained in progress on
+its earlier source8f1ec146 and cannot validate the later M117 changes. PR150's
+description now includes the combined filter fixes and this validation scope.
+
+### Footer diagnostic follow-up after run349789
+
+The retained phone capture still shows no body controls after explicit flex sizing.
+The next candidate uses the shared NativeFilterSheet direct scroll body rather
+than a nested ScrollView under a root View. It retains shipping NativeSheetActions
+and checks command bounds within the measured footer region. No appearance
+assertion is removed. Two remote fixture-preparation tests, TypeScript and mobile
+structural checks pass; native body visibility and dark disabled contrast remain
+unverified. The live run34985387290 predates this diagnostic change. Its iPhone
+and iPad onboarding jobs succeeded while both fixture jobs remained in progress.
+
+### iPad input evidence inspected from run349789
+
+Downloaded the iPad artifact and verified revisionb375d4eae2b07c9014da45ade37f150642000184
+(sourceafb81694). The Return test logged `Returned c` immediately after typeText
+at14:47:37. Its final hierarchyD433D3FE and screenshot6B92BD86 both contain the
+complete `Returned clean`; the field is fully visible above the keyboard. Retained
+[Return capture](evidence/ipad-return-complete-after-assertion-349789.png). This
+supports a bounded exact-value readiness wait, not a product corruption conclusion
+for that sample. The candidate allows5seconds without retyping or slowing entry,
+then retains exact-value and failed-save/retry checks. Native rerun remains pending.
+
+Sharing differs: final hierarchyA731BC13 and screenshot90F2BC37 both still show
+`a@example.invalid` instead of `audit@example.invalid`. The field is visible and
+focused above the keyboard. Retained [Sharing capture](evidence/ipad-sharing-truncated-349789.png).
+This remains an input failure requiring investigation; the Return observation does
+not reclassify it. Two fixture-preparation checks pass remotely for the Return
+wait change; those checks do not compile Swift or validate the native journey.
+
+### Combined validation at cd245a20
+
+All1,618 mobile tests across265 files, TypeScript and mobile structural checks
+passed on paul. Checksum comparison of mobile/src against the validation tree
+reported no differences before execution. Remote log: /tmp/mobile-batch-cd245a20.log.
+This includes M118–M121 candidates, not their native acceptance. Run34985387290
+remained active on the earlier8f1ec146 source; onboarding succeeded on both devices
+and fixture jobs remained in progress. No new TestFlight release is claimed.
+
+### Shared-search coverage traceability
+
+M122 is mapped to the actual native-search surfaces: Browse list and map search,
+Browse tag selection, Expiration type/tag/location selections, contained items
+and reminder timezone search. M123 is mapped to Browse's route and list-search
+surface. Mapping does not mark those surfaces accepted: shared callback focus
+tests do not certify native text restoration, caller-owned asynchronous work or
+their entire navigation lifecycle. The broader audit remains incomplete.
+
+Native run34985387290 still reported both fixture jobs in progress at this
+checkpoint, with both onboarding jobs successful. The existing change-only
+sleep30 poller remains active; no replacement run was dispatched or live run
+cancelled for this review.
+
+## Run34985387290 partial terminal evidence
+
+Phone fixture job104436550809 is terminal failure:55 tests executed with20 failures.
+The iPad fixture job remains in progress; both onboarding jobs succeeded. The
+phone log is /tmp/native349853-phone-terminal.log. Artifact name identifies merge
+revision a3f3746897f92407e67c3d54d21e37be9a620feb; inspect its revision file and
+screenshots before attributing differences. This run excludes the latest Map
+command/search corrections and is not current-batch acceptance. It includes
+known notice/provider selector failures that later source already corrects;
+Sharing text corruption and sheet geometry failures still need artifact review.
+
+Run34985387290 is now terminal failure; iPad also executed55 tests with20 failures.
+Both onboarding jobs succeeded. Phone artifact revision.txt confirms a3f3746897f92407e67c3d54d21e37be9a620feb.
+Phone tag test failed before geometry checks because it queried a Button. Its
+final hierarchy DAF66796-1482-41BE-88D7-7D8A9B9EB1CC.txt contains the exact final
+tag as Other, value checkbox/unchecked, at y1998.4. The background and sheet
+both expose ScrollView; the sheet begins at y310.4 while the background begins at116.
+The final screenshot11273A16-A8FC-4736-85AA-3FE6434B9B0D.png shows visible initial
+tags and an opaque action footer. Retained as evidence/phone-tags-footer-before-scroll-349853.png.
+It does not establish last-row clearance: the test never scrolled.
+
+The candidate uses the exact identifier across element types and the scroll view
+containing that tag. It preserves full row/action/footer bounds and applied-ID
+checks. Fixture preparation passes2 tests remotely; critic found no confirmed
+issue. Corrected native execution remains pending. This is a procedure correction,
+not evidence that the original user defect is accepted.
+
+Phone ordinary multiline comparison in349853 failed before entry, unlike the
+previous run's ordinary-input pass. Final hierarchy8EFAEDF3-1083-4546-9226-97855276E066.txt
+places the input wrapper at y-778 with a zero-frame TextView. Screenshot417810F1-3301-43D4-BA08-A6D0633CFE35.png
+shows the scrolled fixture menu, not the input (retained as
+ evidence/phone-multiline-offscreen-349853.png). This is not evidence of lost keystrokes.
+The diagnostic inserted the field above many menu actions after a lower launcher
+was tapped. Comparison modes now replace the menu with a keyed dedicated scroll
+page and explicit Back; actual fields, keyboard options, ownership and full-speed
+exact-value assertions are unchanged. Remote fixture preparation passes2 tests.
+Native rerun is required to compare entry behavior on the corrected fixture.
+
+Combined source checkpoint79412f8d:1,624 tests/265files, TypeScript and structural checks pass on paul; mobile/src checksum comparison was clean before execution. Log: /tmp/mobile-batch-79412f8d.log on paul. Later6cb092ef changes diagnostic layout only; it has separate2-test preparation evidence. No native acceptance is inferred.
+
+Combined checkpoint7a6a7bdd:1,629 mobile tests across267 files, TypeScript and structural checks pass remotely on paul, log /tmp/mobile-batch-7a6a7bdd.log. Mobile source checksum comparison was clean before execution. Native run34992079258 remains in progress and excludes the later Appearance/Home corrections. No new native acceptance is claimed.
+
+## Run34992079258 — iPad terminal evidence
+
+Artifact downloaded and revision.txt verified as514032e0e290a7970262458ae4970c6d6d1edba4;
+workflow headf109567c. iPad executed55 tests with14 failures. Both onboarding jobs
+passed; iPhone fixture was still running at this checkpoint. Full iPad artifact is
+in /tmp/native349920-ipad and job log in /tmp/native349920-ipad-terminal.log.
+SharingRecoveryKeepsHeaderAndCommandsReachable passed, including its complete
+`audit@example.invalid` invitation interaction. This is named-journey evidence,
+not full Sharing acceptance. M136 records visually confirmed form-sheet notice
+header overlap. The tag test failed before geometry; this build predates71183cc6's
+checkbox/scroll-target correction. Ordinary multiline failed its input visibility
+precondition; the build also predates6cb092ef's isolated diagnostic page. Other
+normal-text failures (including Add text, color picker, and place-content keyboard
+dismissal) require artifact-specific triage. Enlarged-text failures remain deferred.
+
+
+### Run349920 place-search failures: distinguish phone and tablet
+
+Both fixtures ran actual514032e0. iPad reaches successful `19` filtering and then
+fails Dismiss keyboard hit testing (M137; retained image/hierarchy). Phone fails
+earlier waiting for the integrated Search button. Inspected image
+`evidence/phone-place-search-bottom-349920.png` shows an inactive bottom search
+field and the long inherited `Native UI audit` Back title. Production explicitly
+sets `headerBackTitle: Back`; the fixture did not. Fixture navigation now mirrors
+that setting; the original search-button/field/filter/dismiss/return assertions
+remain unchanged. This does not establish causality or production acceptance.
+
+Pinned keyboard-controller1.20.7 source also shows that its accessory container
+initializes at screen width and updates content geometry only when height changes.
+The iPad hierarchy's half-width ancestor merits targeted native investigation;
+no dependency patch or production keyboard removal is justified by source alone.
+
+For the Back-label fixture correction, both fixture-preparation tests, mobile
+TypeScript and structural checks pass on paul. Read-only critic found no confirmed
+issue; existing native navigation selectors use BackButton and remain valid.
+Native execution of this correction is pending.
+
+
+### Run34998354801 onboarding results (actual54714ab4)
+
+The iPhone onboarding job104481672371 passed. iPad job104481672540 completed
+three tests with one failure. `testConnectionHelpAndKeyboardKeepActionsReachable`
+fails the tappable-key prerequisite before typing; retained image and hierarchy
+are `evidence/ipad-onboarding-keyboard-unreachable-349983.png` and `.txt`.
+The inspected image shows the centered form, focused empty address and visible
+keyboard. The hierarchy exposes alphabetic keys but the test's per-index hit
+queries fail; keyboard presence alone cannot establish touch operability.
+
+`testIPadKeyboardDismissalFromInsideFormColumn` passes the same help-open/close,
+address focus, tappable-key prerequisite and complete-address typing sequence.
+Its gesture variation occurs only afterward. `testOnboardingAdaptsToLandscape`
+also passes. This contrast is evidence of intermittent failure, not proof of a
+root cause or grounds to bypass keyboard readiness. The failed ordinary journey
+still needs acceptance. Both fixture jobs remain running at this checkpoint.
+
+Downloaded artifact revision.txt verifies54714ab4ec7a700316a81baabbd5d01048b15e50.
+Full downloaded evidence is `/tmp/native349983-ipad-onboarding`; job log is
+`/tmp/native349983-ipad-onboarding.log`. This run predates subsequent corrections;
+no current-batch native pass is claimed.
+
+### Account/Connection command acceptance added after68a1a56c
+
+Two runner-only fixtures compose production AccountSettingsScreen and
+ConnectionSettingsScreen with controlled query ports. Their session callbacks
+reject the first accepted action and return to the fixture menu on the second;
+no real sign-out/server mutation occurs. XCTest requires44-point button height,
+visible bounds below navigation, Cancel, first-error recovery, enabled retry and
+return to the menu. These tests preserve session/auth integration as a separate
+gate rather than presenting fixture success as proof of real session teardown.
+Two fixture-preparation tests, TypeScript and structural checks pass remotely.
+Native Swift compilation and execution remain pending; this adds acceptance
+coverage, not native pass evidence.
+Critic identified that message existence alone did not verify visible recovery.
+The new journeys now require the entire notice container within the app viewport
+below navigation before the recovery capture. Native execution is still pending.
+
+
+### Run349983 iPhone fixtures:41/55 pass, long-tag footer verified
+
+Job104481672570 finished55 tests with14 failures; actual revision54714ab4 verified
+from downloaded revision.txt. Full artifacts are `/tmp/native349983-phone` and
+job log `/tmp/native349983-phone-terminal.log`. iPad fixture job remains running.
+
+Inspected `phone-last-tag-clear-footer-349983.png` and retained hierarchy establish
+M111's normal-size iPhone light-mode last-row separation: final row y594–646,
+footer y700–840, Show results y712–766 and Back y774–828. The footer is opaque,
+both actions fully visible. Native test also requires row hitability, taps it,
+returns Back, applies and observes `Browse selected tags: audit-last`.
+This is partial runtime evidence for S072, not all-device/theme/keyboard closure.
+
+Ordinary single-line/multiline and color open/clear tests passed in this run, while
+Add, Sharing and uncontrolled address typing still lost characters. Those passes
+do not establish a typing root cause or eliminate existing failures. Sheet notice
+and phone place-search failures predate their latest candidate corrections.
+Large-text-only failures remain deferred until normal-size findings are addressed.
+
+
+### Add failure before typing, run349983 phone
+
+Inspected Add rejected-save journey final screenshot shows only Loading inventory,
+not an editable name. Retained evidence: phone-add-idle-inventory-349983.png and
+safe query snapshot .json. At actual54714ab4 the diagnostic reports online/focused
+true with pending idle zero-observer queries, including inventory-scope. The test
+failed waiting for Asset name, before entering text. This differs from the other
+Add typing failures and must not be classified as character loss.
+
+A new mounted StrictMode test checks production MobileServerStateProvider with an
+active inventory consumer: data loads, the resource retains one observer, and
+actual unmount empties the cache. All8 provider tests pass without a production
+change. This does not reproduce the native failure or establish its cause; no
+speculative cleanup change is made. Native fixture-specific lifecycle/subscription
+investigation remains needed.
+TypeScript and structural checks also pass on paul. Critic found no confirmed issue;
+the existing acquisition test independently establishes that the harness replays
+effects. The native diagnosis remains open.
+
+
+### Run349983 final result
+
+All jobs are terminal: iPhone fixtures41/55 pass (14 failures), iPad fixtures43/55
+pass (12 failures), iPhone onboarding passes, iPad onboarding2/3 passes. iPad
+fixture log retained at `/tmp/native349983-ipad-terminal.log`. Cross-device Add and
+Sharing typing failures remain; the seeded-without-accessory comparison stops
+before typing and cannot establish that removing the accessory fixes character
+loss. Place-search and sheet-notice failures predate the subsequent candidates.
+No broad native pass is claimed. Next queued run35003739726 was confirmed running;
+no manual restart or cancellation was used.
+
+
+### Accessory isolation crashes before typing, run349983 phone
+
+The crash attachment exported beside Sharing belongs by capture time to the
+preceding seeded-without-accessory comparison: test starts17:41:02, removes the
+accessory17:41:10, focuses the input17:41:12, and the crash is captured17:41:12.8338.
+Sharing begins later and has a separate incomplete-text failure.
+
+Retained sanitized stack: evidence/phone-accessory-removal-crash-349983.json.
+It shows SIGABRT through NSArray objectAtIndex and KeyboardExtender
+createSharedInputAccessoryView at KeyboardExtenderManager.mm:146. The pinned
+native source reads _contentView.subviews[0] there while handling input focus.
+This establishes a native crash in the comparison after accessory removal; it
+does not establish the cause of production character loss. The comparison needs
+a non-crashing isolation setup before its typing result is meaningful. Preserve
+production typing assertions and do not classify this as a keyboard wait timeout
+alone. No production code change or native acceptance is claimed from this review.
+
+
+The isolation candidate now leaves AppKeyboardAccessory mounted and sets the
+pinned extender's enabled property false. Production defaults remain enabled.
+Remote TypeScript, structural checks and both fixture-preparation tests pass;
+critic found no confirmed blocker. The existing native failure is the regression
+case and its full-string assertions are unchanged. Native crash avoidance and
+text-entry outcomes remain pending on the candidate revision.
+
+
+### Run350037 iPhone onboarding completed
+
+Job104498364170 passed at actual revision
+818c3f38791e3d1535588f8d2015b2682f39aa1a, a merge of2771df9d into4b5f7f89.
+Connection help/keyboard/action reachability passed; two iPad-only cases were
+skipped on iPhone (one passed, two skipped, no failures). This is not three
+executed iPhone journeys. Log: /tmp/native350037-phone-onboarding.log.
+
+Inspected and retained phone-onboarding-keyboard-350037.png shows the full
+https://example.invalid address, Connect and sign in entirely above the keyboard,
+and help readable between the field and action. phone-onboarding-action-350037.png
+shows the same address retained with keyboard dismissed and the action visible.
+Normal-size light-mode iPhone evidence only; no universal typing fix or iPad
+acceptance is inferred. Both fixture jobs and iPad onboarding were still running
+when this record was written. The run predates M143–M145 and the disabled-accessory
+comparison candidate.
+
+
+Run350037 iPad onboarding job104498363866 also completed successfully at
+818c3f38791e3d1535588f8d2015b2682f39aa1a: all3 tests passed, none skipped.
+Connection help/keyboard/action reachability, inside-form keyboard dismissal and
+landscape acceptance each passed. Log: /tmp/native350037-ipad-onboarding.log.
+Screenshots from this iPad run have not yet been inspected; prior intermittent
+keyboard hit-test failures remain evidence and their cause is not declared fixed.
+Both fixture jobs remain in progress.
+
+
+Inspected iPad run350037 screenshots now retained: ipad-onboarding-keyboard-350037
+shows the full URL, visible help and primary action clear above the software
+keyboard; ipad-onboarding-landscape-350037 shows the centered constrained form
+and complete action within the screen. These normal-size/light-mode images resolve
+the visual review gap for these captures. They do not establish hardware keyboard,
+VoiceOver or uninterrupted typing reliability across other routes.
+
+
+## Native350037 — iPad fixtures terminal, September15
+
+Job104498364135 completed with45/57 tests passing and12 failures. Checkout log
+and artifact revision identify818c3f38791e3d1535588f8d2015b2682f39aa1a
+(2771df9d merged into4b5f7f89). The iPhone fixture job remained live when this
+result was recorded. No replacement run was started.
+
+Failures: Account and Connection command recovery; Add pushed draft, rejected-save
+draft and unfinished tag; color well target; controlled address entry; enlarged-text
+Edit metadata, Edit tags and Move Here; Place contents keyboard dismissal; seeded
+address with accessory removal. Normal-size failures retain priority. The color
+well accessible button measures36points against the44-point criterion, so its
+prior source correction does not close native target acceptance. The seeded
+comparison predates the correction that keeps the accessory mounted.
+
+Inspected retained ipad-account-notice-350037 and ipad-connection-notice-350037
+images/hierarchies show the expected errors below navigation, with the native
+command visible. Both notices expose the full message on app-notice-container
+and its dismiss button; they do not expose the expected message as a separate
+StaticText. The tests stopped at that locator, so retry completion was not tested.
+The candidate now waits for the accessible container and validates its message,
+preserving whole-notice bounds, action/back hittability and retry assertions.
+These two failures are procedure mismatches; the other failures are not dismissed
+on that basis. Corrected native execution remains pending.
+
+Raw terminal log: /tmp/native350037-ipad-terminal.log. Selected exported artifacts:
+/tmp/native350037-ipad-fixtures (screenshots/manifest.json, revision, build log and
+crash diagnostics). The downloaded archive was removed after extraction to conserve
+space; the authoritative Actions artifact remains available.
+
+Critic confirmed that the session-notice locator correction preserves the intended
+message, placement, reachability and retry checks. Swift compilation/execution
+remains pending; source checks do not establish a corrected native pass.
+
+
+## Native350037 — iPhone terminal and next full run
+
+Job104498364184 completed with38/57 fixture tests passing and19 failures at
+818c3f38791e3d1535588f8d2015b2682f39aa1a. Its checkout matches the iPad job.
+The terminal log is /tmp/native350037-phone-terminal.log; phone artifacts have
+not yet been downloaded/inspected for this run. Do not project the iPad locator
+diagnosis onto phone screenshots that have not been reviewed.
+
+Phone failures include Account/Connection notices; three Add entry/draft cases;
+color picker open and target size; controlled and ordinary single-line entry;
+Place contents; Sharing; seeded accessory comparison; full/nested sheet diagnostics;
+and enlarged-text asset-region, Edit metadata/tags, Expiration and Move Here.
+Some scenarios passed on iPad, so platform and timing differences remain material.
+No full native acceptance or TestFlight release follows from this run.
+
+A new full run35010077082 is active for PR headff7fbc74. It follows the completed
+run and includes the later operation ownership, item-type recovery, Home header
+scenario and corrected session-notice lookup. Its actual merged checkout must be
+verified from job evidence. It predates the new large-control-size color candidate.
+No live run was canceled or restarted for an observation timeout.
+
+
+## Focused color diagnosis workflow
+
+Manual dispatch can now select color-picker, running the existing direct-open/
+clear and compact-target/activation tests on both devices. PR and default manual
+runs retain both full suites and their original job names. Focused jobs have a
+separate label and selection.txt artifact; they cannot establish full acceptance.
+The Bash selection accepts only fixed choices and passes quoted fixed arguments.
+Remote YAML/shell syntax and six actual selection paths passed (both All suites,
+valid focused selection, wrong suite, unknown choice and shell-like invalid input).
+Critic found no confirmed blocker. No live full run is replaced by this diagnosis.
+
+### Focused color-picker diagnosis dispatched
+
+Manual run [35011368960](https://github.com/elsell/stuffstash/actions/runs/35011368960)
+was dispatched at `c8b460c2858e467610e5b48b23d053556930910a` with
+`test_case=color-picker`. It is queued; no native result is claimed. This selects
+two color-picker tests on iPhone and iPad and does not replace full run35010077082
+or constitute full release acceptance. The full run remains active.
+
+Full run35010077082 iPad onboarding job104520009386 completed3 tests with0 failures.
+Actual checkout `7c685ef9daf4e888c76bb0d2cdfd495b50103600` is confirmed in job
+logs (`/tmp/native350100-ipad-onboarding.log`). Fixtures and iPhone onboarding
+remain live; no new screenshot review is claimed. Focused color run35011368960
+now has both device jobs running.

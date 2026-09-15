@@ -1,6 +1,10 @@
+import { Stack } from 'expo-router';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
+import { useProviderEditorExit } from './useProviderEditorExit';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ManageProviderProfileCommand } from '../../application/providerProfiles/ManageProviderProfileCommand';
 import type {
   ProviderCredentialPurpose,
@@ -15,7 +19,6 @@ import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput
 
 type ProviderEditorProps = {
   readonly manageCommand: ManageProviderProfileCommand;
-  readonly onCancel: () => void;
   readonly onSaved: () => void;
   readonly profileId: string;
   readonly query: ProviderProfileSettingsQuery;
@@ -23,7 +26,6 @@ type ProviderEditorProps = {
 
 export function ProviderCredentialScreen({
   manageCommand,
-  onCancel,
   onSaved,
   profileId,
   query
@@ -36,12 +38,11 @@ export function ProviderCredentialScreen({
   if (!profile?.credentialPurpose) {
     return <ProviderStateView state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.retry} />;
   }
-  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><CredentialForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} /></>;
+  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><CredentialForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} /></>;
 }
 
 export function ProviderPromptScreen({
   manageCommand,
-  onCancel,
   onSaved,
   profileId,
   query
@@ -54,17 +55,15 @@ export function ProviderPromptScreen({
   if (!profile) {
     return <ProviderStateView state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.retry} />;
   }
-  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><PromptForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onCancel={onCancel} onSaved={onSaved} profile={profile} /></>;
+  return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><PromptForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={profile} /></>;
 }
 
 function CredentialForm({
   manageCommand,
-  onCancel,
   onSaved,
   profile
 }: {
   readonly manageCommand: ManageProviderProfileCommand;
-  readonly onCancel: () => void;
   readonly onSaved: () => void;
   readonly profile: ProviderProfileSummary & { readonly credentialPurpose: ProviderCredentialPurpose };
 }) {
@@ -73,32 +72,45 @@ function CredentialForm({
   const feedback = useAppFeedback();
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
   const savingRef = useRef(false);
+  const capturePresentation = useTaskPresentation(manageCommand, profile.id);
+  const authorizeExit = useProviderEditorExit({ dirty: value.length > 0, isSaving: () => savingRef.current, capturePresentation });
 
+  const valid = profile.credentialPurpose === 'server_adc' || Boolean(value.trim());
   async function save(): Promise<void> {
-    if (savingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || savingRef.current || !valid) return;
     savingRef.current = true;
     setSaving(true);
+    setError(undefined);
     try {
       await manageCommand.replaceCredential({
         providerProfileId: profile.id,
         purpose: profile.credentialPurpose,
         credential: value
       });
+      // This keyed form owns the submitted secret even after navigation blur.
       setValue('');
-      feedback.showNotice({ tone: 'success', title: 'Credential saved', message: `${profile.displayName} is ready to test.` });
-      onSaved();
+      if (!canPresent()) return;
+      authorizeExit(canPresent, () => {
+        feedback.showNotice({ tone: 'success', title: 'Credential saved', message: `${profile.displayName} is ready to test.` });
+        onSaved();
+      });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Credential not saved', message: readableError(error) });
+      if (!canPresent()) return;
+      setError(readableError(error));
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
   }
 
-  return (
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save Credential', disabled: saving || !valid, onPress: () => void save() }]);
+  const headerOptions = useMemo(() => ({ ...saveOptions, gestureEnabled: !saving, headerBackVisible: !saving }), [saveOptions, saving]);
+  return (<>
+    <Stack.Screen options={headerOptions} />
     <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
-      <Text accessibilityRole="header" style={styles.detailTitle}>Replace Credential</Text>
       <Text style={styles.detailSubtitle}>{profile.displayName}. Secrets are sent directly to your Stuff Stash server and aren’t stored on this device.</Text>
       {profile.credentialPurpose === 'server_adc' ? (
         <Text style={local.explanation}>Use the Application Default Credentials configured by the server operator. No provider secret is entered here.</Text>
@@ -109,30 +121,25 @@ function CredentialForm({
             accessibilityLabel={credentialLabel(profile.credentialPurpose)}
             autoCapitalize="none"
             autoCorrect={false}
-            editable={!saving} onChangeText={next => { if (!savingRef.current) setValue(next); }}
+            editable={!saving} onChangeText={next => { if (!savingRef.current) { setValue(next); setError(undefined); } }}
             secureTextEntry
             style={local.input}
             value={value}
           />
         </View>
       )}
-      <Text style={styles.secondaryText}>Leaving this screen keeps a newly created profile as a disabled draft.</Text>
-      <View style={local.actions}>
-        <Pressable accessibilityRole="button" disabled={saving} onPress={onCancel} style={local.secondaryButton}><Text style={styles.actionText}>Cancel</Text></Pressable>
-        <Pressable accessibilityRole="button" accessibilityState={{ busy: saving, disabled: saving }} disabled={saving} onPress={() => void save()} style={local.primaryButton}><Text style={local.primaryText}>{saving ? 'Saving…' : 'Save Credential'}</Text></Pressable>
-      </View>
+      {error ? <ProviderEditorError message={error} /> : null}
+      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Saving…</Text> : null}
     </ScrollView>
-  );
+  </>);
 }
 
 function PromptForm({
   manageCommand,
-  onCancel,
   onSaved,
   profile
 }: {
   readonly manageCommand: ManageProviderProfileCommand;
-  readonly onCancel: () => void;
   readonly onSaved: () => void;
   readonly profile: ProviderProfileSummary;
 }) {
@@ -141,36 +148,56 @@ function PromptForm({
   const feedback = useAppFeedback();
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
   const savingRef = useRef(false);
+  const capturePresentation = useTaskPresentation(manageCommand, profile.id);
+  const authorizeExit = useProviderEditorExit({ dirty: value.length > 0, isSaving: () => savingRef.current, capturePresentation });
 
+  const valid = Boolean(value.trim());
   async function save(): Promise<void> {
-    if (savingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || savingRef.current || !valid) return;
     savingRef.current = true;
     setSaving(true);
+    setError(undefined);
     try {
       await manageCommand.replacePromptTemplate({ providerProfileId: profile.id, promptTemplate: value });
-      feedback.showNotice({ tone: 'success', title: 'Prompt guidance saved', message: `${profile.displayName} was updated.` });
-      onSaved();
+      setValue('');
+      if (!canPresent()) return;
+      authorizeExit(canPresent, () => {
+        feedback.showNotice({ tone: 'success', title: 'Prompt guidance saved', message: `${profile.displayName} was updated.` });
+        onSaved();
+      });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Prompt not saved', message: readableError(error) });
+      if (!canPresent()) return;
+      setError(readableError(error));
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
   }
 
-  return (
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save Guidance', disabled: saving || !valid, onPress: () => void save() }]);
+  const headerOptions = useMemo(() => ({ ...saveOptions, gestureEnabled: !saving, headerBackVisible: !saving }), [saveOptions, saving]);
+  return (<>
+    <Stack.Screen options={headerOptions} />
     <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
-      <Text accessibilityRole="header" style={styles.detailTitle}>Prompt Guidance</Text>
       <Text style={styles.detailSubtitle}>Optional tenant guidance for {profile.displayName}. Existing hidden prompt text is never returned to the phone.</Text>
       <Text style={local.label}>New prompt guidance</Text>
-      <AppTextInput accessibilityLabel="New prompt guidance" multiline editable={!saving} onChangeText={next => { if (!savingRef.current) setValue(next); }} style={[local.input, local.multiline]} value={value} />
-      <View style={local.actions}>
-        <Pressable accessibilityRole="button" disabled={saving} onPress={onCancel} style={local.secondaryButton}><Text style={styles.actionText}>Cancel</Text></Pressable>
-        <Pressable accessibilityRole="button" accessibilityState={{ busy: saving, disabled: saving }} disabled={saving} onPress={() => void save()} style={local.primaryButton}><Text style={local.primaryText}>{saving ? 'Saving…' : 'Save Guidance'}</Text></Pressable>
-      </View>
+      <AppTextInput accessibilityLabel="New prompt guidance" multiline editable={!saving} onChangeText={next => { if (!savingRef.current) { setValue(next); setError(undefined); } }} style={[local.input, local.multiline]} value={value} />
+      {error ? <ProviderEditorError message={error} /> : null}
+      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Saving…</Text> : null}
     </ScrollView>
-  );
+  </>);
+}
+
+function ProviderEditorError({ message }: { readonly message: string }) {
+  const { palette } = useSettingsListStyles();
+  const styles = useMemo(() => editorStyles(palette), [palette]);
+  useEffect(() => {
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(message);
+  }, [message]);
+  return <Text accessibilityLiveRegion="polite" style={styles.error}>{message}</Text>;
 }
 
 function credentialLabel(purpose: ProviderCredentialPurpose): string {
@@ -188,9 +215,6 @@ function editorStyles(colors: MobileColorPalette) {
     input: { backgroundColor: colors.surface, borderColor: colors.controlBorder, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 17, minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     multiline: { minHeight: 160, textAlignVertical: 'top' },
     explanation: { backgroundColor: colors.surface, borderRadius: radius.md, color: colors.text, fontSize: 16, lineHeight: 23, padding: spacing.md },
-    actions: { gap: spacing.sm },
-    secondaryButton: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md },
-    primaryButton: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md },
-    primaryText: { color: colors.onAction, fontSize: 17, fontWeight: '600' }
+    error: { color: colors.danger, fontSize: 15, lineHeight: 22 }
   });
 }

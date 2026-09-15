@@ -93,3 +93,18 @@ it('keeps measurement active across StrictMode effect replay and stops after unm
   } finally { await h.unmount(); }
   expect(active.size).toBe(0);
 });
+
+it('retains active inventory query observers through effect replay', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  function Surface() {
+    const result = useMobileInventoryServerQuery({ key: mobileQueryKeys.home, query: async () => 'Usable inventory' });
+    return <Text>{result.data ?? 'Loading'}</Text>;
+  }
+  try {
+    await h.render(<React.StrictMode><MobileServerStateProvider client={client} scopeId="replay" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><Surface /></MobileServerStateProvider></React.StrictMode>);
+    await settle(h); await settle(h);
+    expect(h.allText()).toEqual(['Usable inventory']);
+    expect(client.getQueryCache().find({ queryKey: mobileQueryKeys.home('replay', 'tenant', 'inventory'), exact: true })?.getObserversCount()).toBe(1);
+  } finally { await h.unmount(); }
+  expect(client.getQueryCache().getAll()).toHaveLength(0);
+});

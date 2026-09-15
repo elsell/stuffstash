@@ -1,9 +1,11 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { NativeNavigationSearch } from './NativeNavigationSearch';
 import { SettingsChoiceRow, SettingsSection, SettingsSeparator, useSettingsListStyles } from '../screens/SettingsList';
 export function readableTimeZone(zone: string) { return zone.replaceAll('_', ' ').split('/').reverse().join(' · '); }
 export function TimeZonePicker({ value, disabled, onChange }: { readonly value: string; readonly disabled?: boolean; readonly onChange: (zone: string) => Promise<void> }) {
+  const capturePresentation = useTaskPresentation();
   const { palette, styles } = useSettingsListStyles();
   const [query, setQuery] = useState(''); const [error, setError] = useState(''); const [saving,setSaving]=useState(false);
   const pending=useRef(false);
@@ -17,9 +19,10 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
   const matches = zones.filter(zone => readableTimeZone(zone).toLocaleLowerCase().includes(normalizedQuery)
     || zone.toLocaleLowerCase().includes(normalizedQuery)).slice(0, 30);
   async function select(zone: string) {
-    if(disabled || pending.current)return;
+    const canPresent = capturePresentation();
+    if(!canPresent() || disabled || pending.current)return;
     pending.current=true;setSaving(true);setError('');
-    try { await onChange(zone); } catch { if(mounted.current)setError('Could not save the time zone. Try again.'); }
+    try { await onChange(zone); } catch { if(canPresent())setError('Could not save the time zone. Try again.'); }
     finally {pending.current=false;if(mounted.current)setSaving(false);}
   }
   let validQuery = false;

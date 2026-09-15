@@ -143,9 +143,12 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
       if (operation === 'parent') {
         await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
         await h.changeText(h.byLabel('Search parent'), 'New parent');
-        const create = h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')?.parent;
+        await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
+        await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+        const create = h.byLabel('Create "New parent" as a place');
         expect(create).toBeDefined();
         await h.run(() => { void create!.props.onPress(); });
+        expect(h.byLabel('Creating place…')?.props.accessibilityState).toMatchObject({ disabled: true });
       } else {
         await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
         await h.run(() => { void pressAlertButton(operation === 'camera-failure' ? 'Take Photo' : 'Choose from Library'); });
@@ -211,6 +214,43 @@ it('settles navigation updates while header actions use the latest Add draft', a
 
 afterEach(() => setNativeHeaderHeight(144));
 
+it('recovers unavailable item types without claiming loading or replacing the Add draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  client.setDefaultOptions({ queries: { retry: false } });
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  let reads = 0;
+  const store = new InMemoryAddAssetDraftStore('scope');
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => { if (++reads !== 2) throw new Error('Types unavailable'); return [{ kind: 'asset-type', id: 'medicine', key: 'medicine', displayName: 'Medicine', description: '', tenantId: 'tenant', inventoryId: 'inventory', scope: 'inventory', lifecycle: 'active', expirationEnabled: true }]; } }}
+      addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })}
+      addAssetDraftStore={store} createAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })}
+    /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.changeText(h.byLabel('Asset name'), 'Retained medicine');
+    expect(h.byLabel('Retry asset types')).toBeDefined();
+    expect(h.byText('Loading expiration settings…')).toBeUndefined();
+    await h.press(h.byLabel('Retry asset types'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(reads).toBe(2);
+    expect(h.byLabel('Retry asset types')).toBeUndefined();
+    await h.press(h.byLabel('Item type')); await h.press(h.byLabel('Medicine'));
+    expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })).toMatchObject({ title: 'Retained medicine', customAssetTypeId: 'medicine' });
+    expect(h.byLabel('Expiration')).toBeDefined();
+    await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant', 'inventory', 'inventory', 'asset-type-choices', 'active') }));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(reads).toBe(3);
+    expect(h.byLabel('Retry asset types')).toBeDefined();
+    expect(h.byLabel('Expiration')).toBeDefined();
+    expect(h.byLabel('Item type')?.props.accessibilityValue).toEqual({ text: 'Medicine' });
+    expect(h.byText('Loading expiration settings…')).toBeUndefined();
+    expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })?.title).toBe('Retained medicine');
+  } finally { await h.unmount(); client.clear(); }
+});
+
 
 it('retains unfinished Add tag input through disclosure and scoped draft restoration', async () => {
   const client = createMobileQueryClient(); const store = new InMemoryAddAssetDraftStore('scope');
@@ -273,5 +313,32 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await h.press(h.byLabel('Save item')); await settle();
     expect(saved).toEqual([expect.objectContaining({ title: 'Tent', newTags: [{ displayName: 'Camping' }] })]);
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
+  } finally { await h.unmount(); }
+});
+
+
+it('waits for known parent suggestions before offering quick creation in Add', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let attempts = 0;
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
+      createAssetCommand={{ execute: async () => { throw new Error('Creation not requested'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async input => { if (input === 'New parent' && ++attempts === 1) throw new Error('Lookup unavailable'); return []; } })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
+    await h.changeText(h.byLabel('Search parent'), 'New parent');
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    expect(h.byLabel('Retry suggestions')).toBeDefined();
+    await h.press(h.byLabel('Retry suggestions'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
+    expect(h.byLabel('Search parent')?.props.value).toBe('New parent');
   } finally { await h.unmount(); }
 });

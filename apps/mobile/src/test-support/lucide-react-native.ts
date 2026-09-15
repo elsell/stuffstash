@@ -52,3 +52,4 @@ export const Mic = 'MicIcon';
 export const ArrowUp = 'ArrowUpIcon';
 
 export const Square = 'SquareIcon';
+export const SendHorizontal = 'SendHorizontalIcon';

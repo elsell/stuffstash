@@ -5,7 +5,8 @@ import type { NativeCommandButtonProps } from './NativeCommandButton.types';
 export function NativeCommandButton({ label, disabled = false, onPress, prominence = 'standard' }: NativeCommandButtonProps) {
   return <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 48 }}>
     <Button onPress={() => { if (!disabled) onPress(); }} modifiers={[
-      buttonStyle(prominence === 'primary' ? 'borderedProminent' : 'borderless'), nativeDisabled(disabled), accessibilityLabel(label)
+      buttonStyle(prominence === 'primary' ? 'borderedProminent' : 'borderless'), nativeDisabled(disabled), accessibilityLabel(label),
+      fixedSize({ horizontal: false, vertical: true })
     ]}>
       {prominence === 'primary' ? <HStack><Spacer />
         <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 32 })]}>{label}</Text>

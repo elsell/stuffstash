@@ -1,3 +1,4 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsPickerRow } from './SettingsPickerRow';
 import { useEffect, useRef, useState } from 'react';
 import type { ExpirationReminderPolicy } from '../../domain/notifications/Notification';
@@ -17,12 +18,14 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
   readonly onSave: (value: ExpirationReminderPolicy | null) => Promise<void>;
   readonly onEditDays: () => void;
 }) {
+  const capturePresentation = useTaskPresentation();
   const initial = initialPolicy ?? inheritedPolicy;
   if (!initial) throw new Error('A reminder policy is required.');
   const [draft, setDraft] = useState({ ...initial });
   const [mode, setMode] = useState<Mode>(policyMode(initialPolicy));
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [reconciliation, setReconciliation] = useState(0);
   const pending = useRef(false);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -32,17 +35,24 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
     const policy = initialPolicy ?? inheritedPolicy;
     if (!policy) return;
     setDraft({ ...policy }); setMode(policyMode(initialPolicy));
-  }, [source, error]);
+  }, [source, error, reconciliation]);
   const displayed = mode === 'defaults' && inheritedPolicy ? inheritedPolicy : draft;
   const locked = disabled || saving;
   async function commit(next: ExpirationReminderPolicy, nextMode = mode) {
-    if (disabled || pending.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || disabled || pending.current) return;
     pending.current = true; setSaving(true); setError(false);
     const value = { ...next, enabled: nextMode !== 'off' };
     setDraft(value); setMode(nextMode);
     try { await onSave(nextMode === 'defaults' ? null : value); }
-    catch { if (mounted.current) setError(true); }
-    finally { pending.current = false; if (mounted.current) setSaving(false); }
+    catch { if (canPresent()) setError(true); }
+    finally {
+      pending.current = false;
+      if (mounted.current) {
+        if (!canPresent()) setReconciliation(current => current + 1);
+        setSaving(false);
+      }
+    }
   }
   return <>
     {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? `Inventory defaults: ${reminderSummary(displayed)}.` : undefined}>

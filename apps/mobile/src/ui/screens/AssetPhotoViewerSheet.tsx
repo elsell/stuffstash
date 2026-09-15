@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
 import {
   assetPhotoMetadataLabel,
@@ -32,21 +33,31 @@ export function AssetPhotoViewerSheet({
   const viewerPhotos = useMemo(() => photos.map(assetPhotoToFullScreenPhoto), [photos]);
   const selectedIndex = selectedAssetPhotoViewerIndex(photos, model);
 
+  const capturePresentation = useTaskPresentation(undefined, JSON.stringify([
+    photos.map(photo => photo.id), selectedIndex, canRemove, isRemoving
+  ]));
+
   if (selectedIndex === undefined) {
     return null;
   }
 
   function removePhoto(photo: FullScreenPhotoViewerPhoto): void {
-    if (!photo.id) {
+    if (!photo.id || !canRemove || isRemoving) {
       return;
     }
 
+    const isCurrent = capturePresentation();
+    let accepted = false;
     Alert.alert('Remove photo?', 'This removes the photo from this asset.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => onRemove(photo.id as string)
+        onPress: () => {
+          if (!isCurrent() || accepted) return;
+          accepted = true;
+          onRemove(photo.id as string);
+        }
       }
     ]);
   }

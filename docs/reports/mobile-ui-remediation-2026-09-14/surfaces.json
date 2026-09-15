@@ -535,7 +535,8 @@
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
-    ]
+    ],
+    "availability": "absent; see add-type-axis.md"
   },
   {
     "id": "S086",
@@ -574,7 +575,8 @@
     "surface": "Add / photo selection",
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
-      "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx"
     ]
   },
   {
@@ -583,7 +585,8 @@
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
-    ]
+    ],
+    "availability": "absent; see add-type-axis.md"
   },
   {
     "id": "S092",
@@ -824,7 +827,8 @@
     "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
-      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -833,7 +837,8 @@
     "source": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
-      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx"
+      "apps/mobile/src/ui/components/VoiceLevelMeter.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -851,7 +856,8 @@
     "source": "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
     "sources": [
       "apps/mobile/src/ui/screens/VoicePlanEdits.ts",
-      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx"
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {
@@ -909,7 +915,25 @@
     "surface": "System / confirmation alert",
     "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
     "sources": [
-      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx",
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+      "apps/mobile/src/ui/navigation/AppServicesFeedbackGate.tsx",
+      "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoViewerSheet.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "apps/mobile/src/ui/screens/InventorySharingScreen.tsx",
+      "apps/mobile/src/ui/screens/PhotoSourceChooser.ts",
+      "apps/mobile/src/ui/screens/ProviderProfileScreens.tsx",
+      "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
+      "apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx",
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/screens/useProviderEditorExit.ts",
+      "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx",
+      "apps/mobile/src/ui/screens/useNewConversation.ts"
     ]
   },
   {

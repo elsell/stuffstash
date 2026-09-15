@@ -1,6 +1,7 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { VoicePlanProgress } from './VoicePlanProgress';
-import { shouldConfirmNewConversation } from '../navigation/VoiceConversationHistory';
+import { useNewConversation } from './useNewConversation';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
@@ -10,7 +11,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -73,6 +73,7 @@ export function VoiceSessionSheetScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
   const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
+  const beginPhotoPresentation = useTaskPresentation(photoSelectionQuery, JSON.stringify([activePlanId, activePlanStatus]));
   const activePlanIdRef = useRef(activePlanId);
   const activePlanStatusRef = useRef(activePlanStatus);
   const parentPickerCommandIdRef = useRef<string | null>(null);
@@ -139,15 +140,15 @@ export function VoiceSessionSheetScreen() {
       }}
       onAddPhotos={(commandKey) => {
         const existingCount = photoDrafts[commandKey]?.length ?? 0;
-        const planIdAtOpen = activePlanId;
-        const planStatusAtOpen = activePlanStatus;
+        if (!activePlanId || activePlanStatus !== 'proposed') return;
+        const isCurrent = beginPhotoPresentation();
+        if (!isCurrent()) return;
         showVoicePlanPhotoSourceChooser({
+          isCurrent,
           onCamera: async () => {
             const photos = await photoSelectionQuery.captureFromCamera(existingCount);
             setPhotoDrafts((current) => (
-              activePlanIdRef.current === planIdAtOpen &&
-              activePlanStatusRef.current === planStatusAtOpen &&
-              activePlanStatusRef.current === 'proposed'
+              isCurrent()
                 ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
                 : current
             ));
@@ -155,9 +156,7 @@ export function VoiceSessionSheetScreen() {
           onLibrary: async () => {
             const photos = await photoSelectionQuery.selectFromLibrary(existingCount);
             setPhotoDrafts((current) => (
-              activePlanIdRef.current === planIdAtOpen &&
-              activePlanStatusRef.current === planStatusAtOpen &&
-              activePlanStatusRef.current === 'proposed'
+              isCurrent()
                 ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
                 : current
             ));
@@ -292,6 +291,7 @@ function VoiceSessionSheet({
     tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || 'Tenant'
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
+  const startNewConversation = useNewConversation(readyState?.realtime ?? null, photoDrafts, commandDrafts, onReset);
   const bottomAction = session.bottomAction;
   const actionPlan = session.actionPlan;
   const references = voiceConversationReferences(readyState?.realtime ?? null);
@@ -306,14 +306,7 @@ function VoiceSessionSheet({
             {session.contextLabel}
           </Text>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={() => {
-          if (shouldConfirmNewConversation(state.status === 'ready' ? state.realtime : null)) {
-            Alert.alert('Start a new conversation?', 'This clears the conversation and staged photos. It does not undo changes already submitted.', [
-              { text: 'Keep conversation', style: 'cancel' },
-              { text: 'New conversation', style: 'destructive', onPress: onReset }
-            ]);
-          } else { onReset(); }
-        }}><RotateCcw color={palette.textMuted} size={20} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={startNewConversation}><RotateCcw color={palette.textMuted} size={20} /></Pressable>
         <Pressable
           accessibilityLabel="Close voice session"
           accessibilityRole="button"

@@ -158,6 +158,15 @@ this to production connectivity without query-state evidence. Runner-only query
 metadata diagnostics are the next discrimination step; no cache pre-seeding or
 connectivity override is an acceptable substitute for the acceptance scenario.
 
+M50 Add readiness candidate after run34965113594: the hidden-header sheet remains
+loading with zero observers, while the otherwise identical preconfigured-header
+sheet reaches the focused form. Production Add now declares its native header and
+known title before presentation, retaining the same sheet and screen-owned
+commands. No query preloading or connectivity override was introduced. The
+configured-header comparison still fails exact typing; current phone/iPad loading,
+text retention and rejected-save recovery remain required. This does not close M50.
+
+
 ### M19 direct-root candidate after native comparisons
 
 ExpirationFiltersScreen now exposes its ScrollView directly to the native sheet;
@@ -226,7 +235,7 @@ Run34919776387 failed opening the system color picker on phone and iPad, after a
 earlier pass. The inspected iPad screenshot shows no presented picker. This is an
 observed acceptance failure, not yet a proven implementation defect: the native
 accessible row spans its label and trailing well, so a separate well-target probe
-is pending. Preserve both results and do not certify row activation from a well tap.
+passed on both phone and iPad in run34965113594. The inspected phone capture shows the system picker open. Preserve the failed row result: well activation does not certify row-center activation or VoiceOver activation. M51 remains open.
 
 ### M45 initial native header configuration
 
@@ -997,6 +1006,17 @@ tests, TypeScript and structural checks passed remotely. Critic review requires
 full query visibility before native typing, now reflected in the journey. Native
 footer/keyboard reachability remains pending; no visual closure is claimed.
 
+Add follow-up: S086/S087 had the same unknown-result creation offer. Add now
+shares one eligibility decision between the offer and command, requiring known
+current-query suggestions while retaining the existing name-match heuristic.
+The regression covers debounce, failed lookup, retry, known empty results and
+retained query; 10 Add tests, TypeScript and structural checks passed on paul.
+The render harness needs a second settle after debounce to observe the query
+subscription; the corrected test fails against the original creation offer.
+Critic review found no confirmed issue. Native suggestion controls, keyboard
+behavior and creation recovery remain pending. This follow-up is excluded from
+the interim release of PR148.
+
 ### M93 — Edit tag-name rejection has no explanation
 
 Source-confirmed P2, S133 recovery. Names over the resolver's limit disabled
@@ -1090,3 +1110,1101 @@ and shows No matching tags when appropriate. Native disclosure actions remain
 in-place. The Add regression failed before the fix;26 Add/Edit tests, TypeScript
 and structural checks passed remotely. Native discovery/large-text acceptance
 remains pending. This is a project contract, not an Apple numeric requirement.
+
+### M97 — Add parent commands use custom controls and lose their pending label
+
+Source-confirmed P2, S086/S087 task, targets and accessibility. Retry suggestions
+was a bare text Pressable without a minimum target; quick creation used a custom
+bordered button that replaced its label with a spinner while pending. These are
+in-place commands, so the existing NativeCommandButton is the selected platform
+adapter. Searchable parent selection remains in the form because the options are
+hierarchical and query-driven; changing these commands needs no new destination.
+
+The candidate gives Retry the shared native target and draft-busy guard and keeps
+Creating place… as a disabled, named command. Existing command ownership and
+failure recovery remain intact. Ten Add behavior tests, TypeScript and structural
+checks passed remotely after two failing command-label regressions. No shared
+adapter changed. Native multiline measurement, VoiceOver announcement and keyboard
+reachability still require verification; M97 remains open. Apple button guidance
+is the relevant topic, but the current documentation page returned a JavaScript
+shell during this pass; this is a project adapter decision, not a newly verified
+quotation or claim about an Apple requirement.
+
+### M98 — General TestFlight builds reject created invitation links
+
+P1, R048 privacy/recovery. The user supplied
+[evidence](evidence/user-invitation-link-error.jpg); exact installed build is unknown.
+Source confirms the release sets the invitation origin to empty, while the creation
+parser required a configured origin for HTTPS. Every normal creation response in
+that configuration failed validation. The error also conflates several rejection
+causes; the screenshot alone cannot establish the actual server mutation outcome.
+
+The spec now distinguishes outgoing authenticated creation responses from incoming
+links. The server that mints the token is the authority for its browser acceptance
+URL. The candidate permits a canonical HTTPS creation response in the general
+build, retaining explicit origin pins and all path, credential, token, field and
+identity checks. Incoming trust and verified app-link declarations do not change.
+There is no automatic navigation or credential request to the returned URL.
+
+Two regressions failed before the fix. Eighty-five mobile invitation/sharing tests,
+TypeScript and structural checks passed remotely. The generated HTTP client with a
+controlled transport verifies the selected API/auth header, valid response,
+401/403 rejection and malformed/cross-scope responses. Existing real API invitation
+create/accept/revoke, malformed-token and expiration endpoint tests also passed
+on paul. Critic review found no confirmed security blocker. Device creation and
+copy/share acceptance remain pending; this fix is outside the running PR148 release.
+
+### M99 — Sharing failure feedback hides the header and obscures mutation state
+
+P2, R048 layout/recovery. The same user screenshot shows a banner covering the
+navigation area. Source also refreshes invitations only after the creation response
+passes link validation, so a rejected link can leave the list stale after server
+creation. Preserve the email draft and validation boundary, refresh safe metadata
+when mutation succeeded, and explain an unavailable link separately from failed
+creation. The candidate moves creation failure feedback into the current form, outside the
+overlay system. A typed link-unavailable outcome is emitted only after a successful
+response matches tenant/inventory metadata. It invalidates safe list data and
+explains that the invitation was created but its link cannot be used; the user can
+cancel it before retrying. Rejected URLs never enter the error. Email/access are
+retained, and feedback is cleared on focus/scope change or another attempt. Late
+failures still require the captured focused scope.
+
+The new route regression failed before implementation and now verifies list refresh,
+inline scroll ancestry, draft retention and absence of a usable link. It covers
+success A followed by unavailable link B, with distinct B metadata proving refresh.
+A review-discovered stale A link is cleared when a new attempt starts; the link
+lifetime explanation now says this explicitly. Thirty-four
+sharing tests, TypeScript and structural checks passed remotely. Native inline
+feedback visibility/announcement remains pending. Other overlay uses, including
+copy/share/cancel feedback, were reviewed in a follow-up: link status and failures
+now appear beside the one-time link, and cancellation failures beside their row.
+Retries clear their old message; focus/scope changes clear task feedback. A link
+operation generation also rejects delayed results after another action or new
+creation. Five added regression cases cover local placement/retry and old-link
+success/failure after replacement. The earlier creation ancestry assertion now
+checks the actual ScrollView type, rather than accepting a null ancestor. Native
+visibility and announcements still need verification. Other screens using global
+banners remain outside this fix; it does not certify global banner layout.
+
+### M100 — Move has unreadable disabled action and excessive summary chrome
+
+P2, S134 appearance/layout/task. User
+[evidence](evidence/user-move-disabled-contrast.jpg) shows dark text on a black
+primary action, a large wrapped title and identical From/To blocks above the
+picker. Exact build is unknown; the current native footer must be tested for
+appearance inheritance, tint and disabled contrast before choosing a repair.
+Simplify the context and distinguish the current parent from an actual destination
+change. Keep Move disabled until a valid change is selected and Cancel reachable.
+Native verification must include dark/light, long titles and large text.
+
+Context candidate: Move now has a short task heading and a separate wrapping
+asset name, with no oversized name heading or instructional subtitle. Current
+location appears once in quiet form context; Move to appears only for a changed
+destination. The colored padded summary panel is removed. Seventeen action-sheet
+behavior tests, TypeScript and structural checks passed remotely after the changed
+context regression failed first. It preserves valid-change gating and mutation
+locks. Critic review found no blocker. Native long-title layout and disabled-action
+contrast remain unverified; M100 stays open. The appearance provider already calls
+Appearance.setColorScheme, so a missing explicit SwiftUI Host scheme alone is not
+evidence of the contrast cause.
+
+
+### M101 — Sharing commands lack native treatment and link-operation progress
+
+P2, R048 task/loading, source-confirmed. Create used a custom filled button and
+Copy/Share custom outlined controls despite an existing native command adapter.
+Copy and Share also accepted duplicate/overlapping operations without pending
+feedback. Two controlled regressions failed before the correction.
+
+Create now uses native primary emphasis; Copy and Share use ordinary native text
+commands. Their shared lock prevents overlapping activation, pending text names
+the operation, and failure restores both commands while retaining the link.
+Replacement/focus generation protects newer work from older completion; regression
+cases cover old success and failure while the replacement operation stays locked.
+No shared adapter behavior changed. Cancellation's custom row control was
+addressed in the subsequent M102 candidate; its native confirmation remains appropriate.
+
+This choice follows the project's native-control preference and Apple's
+[button guidance](https://developer.apple.com/design/human-interface-guidelines/buttons),
+which discusses appropriate button styling and communicating pending activity.
+The specific adapter and lock are engineering choices. Eighteen selected route
+and native-adapter tests, TypeScript and structural checks passed remotely.
+Current-build normal-text light/dark appearance, keyboard reachability and system
+share return remain pending; this is not native visual certification.
+
+
+### M102 — Invitation cancellation loses pending ownership and uses an ambiguous X
+
+P2, R048 task/loading/lifecycle, source and controlled-render findings. One
+`cancellingId` represented all rows, and the confirmation callback had no duplicate
+or focused-session guard. A second cancellation made the first row appear idle;
+replayed confirmations submitted again, including after leaving the route.
+Three failing regressions established these defects.
+
+The native contextual menu now names Cancel invitation as a destructive action.
+This adds discovery before an infrequent irreversible operation; retaining the
+recipient-naming confirmation is a deliberate project choice. Each scope and
+invitation has its own pending key and Cancelling… status. Confirmation callbacks
+are single-use and bound to their focused session; authorized in-flight commands
+still finish and update scoped cache. A follow-up regression also reproduced an
+old confirmation submitting again after its failed operation finished; a one-shot
+confirmation guard fixes that case.
+
+The normal-text native Sharing walkthrough now opens the menu, confirms, observes
+failure, and retries. Current-build menu presentation, progress visibility and
+return behavior remain pending. No shared native adapter or API permission rule
+changed.
+
+Combined validation after M102: all 1,535 mobile tests in 258 files passed remotely,
+followed by mobile TypeScript and structural checks. Critic review found no
+remaining blocker after the one-shot confirmation regression was added. These
+checks include the current branch's Sharing, parent-command, Move context and
+native-command changes; they do not establish native runtime appearance.
+
+### M103 — Global notices reserve no space for native navigation
+
+P2, S128 navigation/layout, source-confirmed with historical user evidence in M99.
+AppNotice is a root absolute layer at safe-area top plus small spacing, with no
+active-header geometry. Sharing's local-feedback fix does not repair the other
+38 call sites. See [global notice review](global-notice-axis.md) and its complete
+call-site inventory. A correction must preserve cross-navigation View/Undo while
+keeping notice actions and native chrome reachable; a guessed header offset or
+blanket alert replacement is insufficient. Current-build native placement remains
+unverified. A screen-scoped presentation candidate is now implemented; see the global notice review for source evidence and remaining native gates.
+
+### M104 — Global notice content/actions survive service transitions
+
+P1, S128 privacy/lifecycle, source-confirmed. AppFeedbackProvider wraps the inner
+services gate and retains ActiveNotice through sign-out, session expiry and server
+change. Those transitions do not clear the notice or invalidate its action closure.
+Old item/profile text and actions can remain on onboarding or a replacement session.
+This does not prove an API authorization bypass. Add controlled transition/action
+regressions before implementing a service-context ownership boundary; preserve
+same-session completion handoffs. See [global notice review](global-notice-axis.md).
+
+M104 candidate: services state now supplies the provider's notice scope. Owner
+cleanup rejects old publishers and action callbacks across transitions/unmount,
+while same-context View/Undo survives. The new-owner cleanup race is covered by a
+layout-effect publisher test. All 1,538 mobile tests, TypeScript and structural
+checks passed remotely. Five additional mounted cases exercise the production gate
+with the real OnboardingCommand and controlled ports: sign-out, server change,
+expiry, reconnection and rejected push cleanup. Startup/composition counts remain
+stable across notice changes; successful transitions invalidate old actions, while
+failed cleanup preserves the current session. The targeted 18 tests, TypeScript
+and structural checks pass remotely. Critic found no extraction regression. Native
+transition visibility remains pending; M104 stays open. See the global-notice
+appendix for evidence limits.
+
+### M105 — Departed provider tasks still navigate or present completion
+
+P1, provider creation/detail and credential/prompt editors; navigation/lifecycle.
+Source inspection and five initially failing mounted regressions show that saves
+and profile actions can publish notices or navigate after leaving and returning.
+A retained archive confirmation can also start its command from the earlier visit.
+The service-wide notice boundary does not invalidate same-session navigation tasks.
+
+Creation, credential, prompt and detail actions now capture a provider task focus
+session keyed by command/resource identity. Late outcomes cannot publish notices,
+navigate or explicitly refresh the new screen. Existing mutation observers still
+invalidate the original tenant's cache; authorized requests finish and synchronous
+pending guards remain held until settlement. Archive confirmation uses the visit
+that opened it. This changes presentation ownership, not API authorization.
+
+Tests cover success/failure after blur/return, retained confirmation, successful
+credential cleanup and replacement-profile input. Review caught the first patch
+skipping secret cleanup after blur; a failing regression was added and the keyed
+form now clears its own submitted secret even when navigation has changed. Failed
+credential replacement retains its draft. Native leave/return, keyboard, notice
+placement and current-profile interaction remain pending; M105 stays open.
+
+M105 validation: 46 settings/query/mutation-observer tests, mobile TypeScript and
+structural checks passed remotely; the final replacement-profile regression also
+passed in the 32-test Settings suite with TypeScript. Critic re-review found no
+remaining blocker after the credential cleanup correction.
+
+M105 neighboring-stage follow-through: VoiceCapabilityScreen had the same late
+feedback/reload path in service selection, test and enable. Six departed
+success/failure regressions failed before reusing the visit guard, keyed by query
+scope and capability. Six matching focused cases preserve normal success/error
+feedback. The 53-test settings/query/observer set passed with TypeScript and
+structural checks; the final 44-test Settings suite and TypeScript also pass.
+Native return and notice placement remain pending. In-place picker semantics and
+mutation observers are unchanged.
+
+Combined PR150 checkpoint after stage ownership: all 1,565 mobile tests in 259
+files, TypeScript and the mobile structural check pass remotely. This includes the
+services gate, provider/editor lifecycle and earlier Sharing changes. Critic found
+no remaining source blocker for this pass. This is source/runtime-harness evidence,
+not native acceptance or complete audit coverage.
+
+### M106 — Provider editor commands and recovery bypass native form patterns
+
+P2, credential/prompt editors. At da14195c, both forms use bespoke Pressable
+Cancel/Save controls despite existing native adapters. Save is disabled only while
+saving: blank/whitespace credential or prompt is still offered, then application
+validation rejects it into a global notice. API failure also uses the global
+notice rather than the field context. This is source-confirmed; no current native
+editor placement is claimed. Use native Save, field readiness, local recovery and
+retained drafts; preserve empty-input server ADC. See
+[all-axis editor review](provider-editors-axis.md). Native Save, required-input readiness and field-local errors are implemented as a candidate; native runtime acceptance remains pending.
+
+### M107 — Provider editor navigation can discard an unsaved replacement
+
+P1, credential/prompt editors. Local values live in keyed forms; route Cancel and
+success both go Back, and there is no usePreventRemove or equivalent dirty-draft
+contract. Back/Cancel can remove entered replacement text; native Back is also not
+covered by the local buttons' saving state. Add a task-owned dirty/pending removal
+policy with a native discard decision and single authorized successful exit.
+Do not persist secrets to solve accidental navigation. M105 fixes departed
+completion ownership, not draft protection. A focused-visit removal guard, native discard decision and authorized successful exit are now implemented. Native gesture/removal acceptance remains open; see the editor review.
+
+### M108 — Reminder edits retain outcomes from a departed visit
+
+P2, defaults/type mode, timing and timezone selection. Deferred saves can publish
+child errors after blur/refocus; the timing component can also call its completion
+callback after departure. The production parent already invalidates successful
+save/navigation on blur, but did not prevent the retained child error. Initial
+controlled component tests reproduced four failures before the fix.
+
+The shared focused-visit presentation helper now serves reminder and provider
+tasks. Pending guards stay locked until the actual request settles. Departed
+outcomes cannot publish local errors or navigate; fresh actions work afterward.
+Mode and timing drafts reconcile with the latest saved policy on departed
+settlement, including an unchanged-policy refresh. This closes an optimistic-state
+regression caught by review: suppressing an error alone could leave an unsaved
+value looking saved. Current-visit failures still retain the draft for retry.
+
+Six deferred component cases cover success/failure across mode, timing and timezone;
+a seventh uses the real settings screen, preference session and HTTP repository
+with a controlled failed PUT and unchanged refresh. The strengthened reconciliation
+checks failed before correction. All 73 focused tests, TypeScript and structural
+checks pass remotely; critic re-review found no remaining blocker. Native
+Back/swipe/refocus and keyboard acceptance remain pending. M108 is a source-tested
+candidate, not a native completion claim.
+
+Combined M108 checkpoint: all 1,580 mobile tests in 261 files, TypeScript and
+structural checks passed on paul. This is controlled-source evidence only.
+
+### M109 — Name-read failure hides successfully loaded checkout history
+
+P2, R008. AssetCheckoutHistoryScreen treated every failed core/name read as access
+denial, including a transient500. A mounted regression reproduced ready history
+being replaced by “Could not load checkout history.” The candidate preserves
+independently loaded records with a separate native name retry and local error.
+Actual401/403/404 still hide records. Review additionally found retry clears the
+query error before success; three deferred regressions reproduced premature
+redisplay. The candidate retains denial in the current scoped asset owner through
+pending/repeated failure until a successful core read. Name retry does not reload
+history pages. Sixteen remote history/query tests, TypeScript and structural
+checks pass. Native recovery reachability and remount-during-retry remain pending;
+see checkout-history-axis.md for the complete24-axis source review and limits.
+
+### M110 — Asset command completion revives after leaving and returning
+
+P1, S096/S097/S098. Checkout/return/archive/restore/delete used the mounted asset
+owner from M86, so blur/refocus retained permission to show status or errors and
+delete could navigate the later visit. A retained lifecycle confirmation could
+also start after its originating visit ended. Thirteen controlled cases reproduced
+these failures before correction.
+
+The commands now capture the focused visit and scoped core-resource identity.
+Late outcomes cannot publish status/notices, start explicit screen refresh or
+navigate a later visit. The synchronous operation lock remains until settlement;
+a fresh command works afterward. Lifecycle confirmation is single-use and rejects
+callbacks from an earlier visit. Authorized requests and mutation observers still
+finish. Ninety-one focused detail/query-observer tests plus TypeScript/structural
+checks pass remotely; three additional confirmation cases verify repeat callbacks
+after successful completion are ignored. This does not cover photos, edit undo,
+backgrounding without blur or every mutation path. Native menu/alert/Back and
+blur/refocus acceptance remain open.
+
+M110 combined checkpoint: all1,600 mobile tests in261 files, TypeScript and
+structural checks pass on paul. Critic found no remaining source blocker.
+
+### M111 — Browse tag rows paint behind persistent actions
+
+P2, R016/S071–S073. The user's normal-size Tags screenshot shows rows continuing
+behind Show results and Back; its build number is not established. Current Browse
+source uses a transparent sibling footer without measuring its height or reserving
+scroll clearance. Expiration already has an opaque measured footer and direct
+scroll body; that existing pattern is now shared as NativeFilterSheet.
+
+Browse and Expiration pages retain native actions/search and draft semantics. The
+footer uses an opaque theme surface, reserves its measured height in content and
+scroll indicators, and shares the existing sheet-boundary keyboard handling. The
+native body remains direct to avoid the separately observed nested-sheet failure.
+Two mounted consumer tests cover resizing and last-tag selection through Back and
+Apply: Browse failed before correction while Expiration passed. Thirteen focused
+checks plus TypeScript/structural checks pass remotely.
+
+A native long-tag journey now checks the last row above the entire visible footer,
+fully contained action bounds, selection, Back and applied IDs. Its execution,
+search/keyboard, light/dark and supported-device acceptance remain pending; callback
+and style tests do not prove pixel separation. The footer extraction does not claim
+all other sheet-layout findings fixed.
+
+## M112 — Android tab icon sources are missing
+
+P2, source-confirmed at e3367204. `(tabs)/_layout.tsx` supplies only `sf` icons
+for Home/Browse. Installed Expo NativeTabTrigger selects Android sources from
+`drawable`, `md` or `src`; its Android icon converter cannot use SF symbols.
+The tab labels remain, but the Android icon configuration is absent. Add native
+Android equivalents while preserving the iOS symbols, then verify both tab states
+on Android. No Android screenshot or runtime pass is claimed. R003 imagery;
+see [tab-shell-axis.md](tab-shell-axis.md). The candidate now supplies Material
+`home` and `grid_view` through the existing adapter; native acceptance remains open.
+
+## M113 — Voice entry depends on an iOS26-only accessory
+
+P1, source-confirmed at b74f28a1. R003 mounts its only fresh-conversation control
+inside NativeTabs.BottomAccessory. The installed react-native-screens
+`src/components/tabs/TabsHost.tsx` renders that subtree only for iOS with version
+at least26. The committed iOS project declares15.1 deployment target, and Android
+is an explicit product target. This is not merely a style difference: those
+platforms have no initial voice entry from Home/Browse in the inspected shell.
+
+Counterevidence checked: VoiceConversationReturn navigates to `/voice`, but only
+on asset/location paths and only when a ready context has realtime state or
+history. Settings routes configure voice providers; they do not start a
+conversation. A manually entered deep link is not an in-app entry alternative.
+No older-iOS or Android runtime capture is claimed.
+
+Provide a persistent, safe-area-aware entry on platforms without native accessory
+support. Reuse the voice state/actions and preserve Home's requested Add,
+Notifications, Profile ordering; do not add a third tab or force voice through
+Settings. Keep iOS26's native accessory. The unsupported native extension is a
+concrete reason for a fallback, not permission to replace native tab navigation.
+Acceptance: fresh session entry, loading/error entry, listening/send and review
+return on Android and older iOS, both tabs, keyboard visibility and tab changes;
+verify no duplicate accessory on iOS26. Candidate implementation uses
+VoiceTabContent inside both tab destinations, with a reserved sibling action area
+and direct stack rendering on iOS26+. VoiceAccessoryContent shares the existing
+presentation/actions with the native wrapper. Three platform rendering cases and
+a real provider/controller test cover fresh recording, sending, navigation and
+return to Browse. Controlled tests do not prove native tab or keyboard clearance.
+
+## M114 — Browse tag filters leave empty results unexplained
+
+P2, source-confirmed at7017709b. BrowseFiltersScreen rendered an empty section
+both when the inventory had no tag options and when the search matched nothing.
+Two controlled tests reproduced the missing explanation. The candidate uses the
+existing section footer to distinguish `No tags available` and `No matching tags`;
+Back and Show results remain available. Clearing native search restores choices
+with the existing selected draft intact. No tag-creation task is added to filters.
+
+Eight focused Browse/filter-footer tests, TypeScript and structural checks pass
+remotely. Expiration already renders a no-match message and is unchanged. Native
+search focus, message visibility and assistive-technology announcement remain
+unverified; source text assertions do not establish those properties. R016/S072
+recovery and search; implementation ready for native acceptance in the larger batch.
+
+## M115 — Browse filter verification can outlive its focused visit
+
+P2, source-confirmed at00706b0f. useBrowseFilterNavigation aborted on unmount,
+explicit cancellation and scope changes, but not on blur. An outstanding scope
+read could therefore navigate or show an error after leaving the sheet while it
+remained mounted. Two deferred success/failure cases reproduced the missing abort.
+
+The candidate binds presentation to the shared focused-visit owner and aborts on
+blur. Unfocused calls cannot start a read; returning permits a fresh request while
+the abandoned read settles. Its late success/failure cannot navigate, annotate or
+clear the new request's busy state. Existing scope validation is unchanged.
+Fifteen focused filter/navigation tests, TypeScript and structural checks pass
+remotely; code tests cover controlled focus events, not native sheet transitions.
+Native interruption/return remains pending. R016 navigation/lifecycle.
+
+M111 integration follow-up: source review at e303e4f7 found that the production
+ready Browse route still wrapped the filter screen in a View, unlike its direct
+native fixture. This violated the specified direct-scroll structure; no claim is
+made that it caused the user screenshot. The candidate now returns the screen
+directly and places verification error text inside its scroll content. A new
+controlled test reproduces missing in-content recovery before the change and
+verifies the alert, draft and Apply remain available afterward. Native route
+geometry still requires verification.
+
+## M116 — Loading filter sheets lack an explicit Cancel action
+
+P2, source-confirmed at c27b1e7c. Both Browse and Expiration filter routes rendered
+only a progress indicator until choices arrived. Their ready/error states had
+Cancel, but pending users had to rely on native dismissal gestures/platform Back.
+The candidate shares a direct scroll loading body with visible loading text and
+a native Cancel command wired to each route's existing dismissal handler. It does
+not wait for choices or apply any filter. A controlled regression verifies the
+command is usable while the loading body remains mounted. Native sheet dismissal
+and query transport cancellation are not established by that component test.
+
+## M117 — Expiration filter search retains the persistent header field
+
+P2, source-confirmed at b15a38d5. ExpirationFiltersScreen requests stacked search
+with hideWhenScrolling false on types, tags and locations. Browse uses the shared
+NativeNavigationSearch integrated button. This preserves the vertical-space
+problem the user asked to remove and duplicates native search lifecycle wiring.
+Reuse the shared adapter while preserving local filtering, selected IDs and
+page-return clearing. The candidate now reuses that adapter with a separate lifetime for each page;
+13 focused tests, TypeScript and structural checks pass remotely after a failing
+regression. Code review found no confirmed blockers. Native acceptance remains outstanding;
+verify compact initial presentation, open/search/clear/close, page changes, and
+retained selections on iPhone and iPad. This is a project consistency requirement,
+not a claim that Apple forbids stacked search in every context.
+
+M117 native follow-up updates the existing Expiration keyboard journey to open
+the Search button, capture the collapsed header, verify the full query, and
+observe a previously present nonmatching choice disappear while the matching
+choice remains. Footer reachability assertions remain. Two fixture-preparation
+checks pass remotely; this does not compile Swift or establish native acceptance.
+
+## M118 — Expiration results retain permanently expanded search
+
+P2, source-confirmed at4548bac1. ExpirationWorkspaceScreen still configured stacked
+search after Browse and filter selections adopted integrated-button search. The
+candidate changes native placement and disables toolbar integration, preserving
+the existing debounced route-query hook and its flush-before-navigation behavior.
+Unlike the immediate-query selection adapter, this screen needs pending text
+available to its filter action without waiting for debounce.
+
+A failing regression reproduced the stacked placement. Three focused tests,
+TypeScript and structural checks now pass remotely, including pending text passed
+to Filters and immediate clear with no later debounce. Native compact header,
+search focus, keyboard, filter return and scrolling acceptance remain pending.
+R018/S074 search and keyboard; this is not a full results-surface audit.
+
+## M119 — Expiration Retry starts the pull indicator and cannot recover mismatched scope
+
+P2, source-confirmed at50d48f3c. The error button receives the same onRefresh as
+the RefreshControl, calling usePullRefresh.refresh despite no pull gesture. A
+successfully loaded but mismatched inventory produces an error with that same
+Retry; its callback performs no read when matches is false. Separate command
+retry from gesture presentation and give inventory mismatch an actionable return
+path instead of an ineffective retry. Preserve loaded pages during recoverable
+errors and test command, pull, mismatch and navigation-return paths independently.
+The candidate separates query retry from gesture presentation and supplies a native
+Return to Home command for mismatch. Retry is disabled and labeled while reads
+are in flight. Eight focused component/refresh tests, TypeScript and structural
+checks pass remotely after a failing recovery regression. These checks prove the
+component action separation, not full route navigation or native spinner geometry.
+Native acceptance remains outstanding. R018/S074 loading/recovery.
+
+## M120 — Pending Expiration search can update a departed screen
+
+P2, source-confirmed at4eb45d62. Search debounce was cancelled on unmount but not
+blur, and hidden callbacks could still apply route queries. A controlled regression
+reproduced the hidden update. The candidate cancels pending timers on blur, ignores
+hidden input, and restores retained text with a fresh debounce on return. External
+query changes while blurred supersede retained input. Explicit focused flush is
+unchanged. Eight focused checks, TypeScript and structural checks passed remotely;
+the strengthened focus test also covers the timer alone and external replacement.
+Code review found no confirmed blockers. Native focus/text restoration and actual
+route transitions remain pending. R018/S074 search/lifecycle.
+
+## M121 — Sharing iOS email typing candidate after native truncation
+
+P2, native-observed in run349789 atb375d4: final iPad email remained
+`a@example.invalid` after typing `audit@example.invalid`. The field was visible
+and focused. The candidate removes per-keystroke controlled value feedback only
+for iOS Sharing email, using a mount-stable native seed. Scope changes and
+successful creation replace its lifetime; failed creation/metadata reads retain
+it. Android stays controlled and does not remount after success.
+
+A source regression first failed on the native-owned contract. Twenty-two Sharing
+tests, TypeScript and structural checks pass remotely, covering identical retry
+submission, native field retention, successful clear and scope replacement on
+both platforms. This is a candidate, not proof that controlled feedback caused
+the native truncation or that it is fixed. The existing full-speed native email
+and creation-recovery journey is unchanged and must pass on iPhone/iPad.
+
+M121 review caught a candidate mismatch after a403 temporarily hid the form: an
+empty native field could accompany retained submission state. The final candidate
+seeds remounted fields from the same-scope draft and gates first-render seeds for
+scope replacement. Both platform cases now cover denial/hide/recovery before retry
+and successful clear. This correction is not shipped native evidence.
+
+## M122 — Shared native search accepts callbacks while hidden
+
+P2, source-confirmed at01df88ac. NativeNavigationSearch only deactivated when
+disabled or unmounted, so a retained hidden route could receive input/submit/close
+and change its caller's query. A mounted regression reproduced all three events.
+The candidate binds active state to route focus and enabled state, ignoring hidden
+callbacks and re-enabling interaction on return. Reviewed consumers: Browse list
+(SearchScreen), InventoryMapScreen, Browse tags, Expiration selections, asset
+contents, and TimeZonePicker. Caller-owned timers/requests are not cancelled by
+this adapter fix and need separate ownership review.
+
+All1,619 tests/265files, TypeScript and structural checks pass remotely in
+/tmp/mobile-shared-search-full.log. Native search text restoration, focus delivery,
+keyboard transitions and each consumer's return behavior remain unverified.
+
+M122 critic found no confirmed source blocker. Native return must specifically
+check that the field text still agrees with retained results if UIKit clears its
+field during dismissal while the callback is ignored; callback availability alone
+does not establish that consistency.
+
+## M123 — Browse debounce submits after leaving its route
+
+P2, source and mounted-test confirmed atcd0ed36b. A typed query's300ms timer
+survived blur and started its search while hidden. The candidate cancels the
+timer on blur, retains text, and resumes using current submission callbacks on
+return. Hidden scheduling/submission is rejected. Existing List/Map handoff and
+filter-route settling semantics remain covered. Twenty-three focused tests,
+TypeScript and structural checks pass remotely after the reproduced failure.
+This does not cancel previously started query reads or certify native navigation;
+actual focus delivery, returned field text and external route transitions remain
+native acceptance work.
+
+M123 follow-up covers external route replacement while blurred: the repository
+receives the replacement query, never the abandoned draft, and no deferred
+setParams overwrites the replacement on return. All10 mounted Browse cases,
+TypeScript and structural checks pass remotely; critic found no confirmed issue.
+This is controlled route-prop evidence, not native navigation acceptance.
+
+## M124 — Map search updates its path after navigation away
+
+P2, source and mounted-test confirmed. The map search debounce survived blur and
+selected a path while the route was hidden. Focus cleanup now cancels the timer;
+unfinished searches resume on return, while deliberate branch-navigation
+cancellation stays cancelled. Hidden manual submission is ignored. The regression
+failed before correction; all13 focused Map/Browse cases, TypeScript and mobile
+structural checks pass on paul. Code critic found no confirmed blocker. Native
+focus delivery, returned search text and map scroll/highlight behavior remain
+pending acceptance.
+
+## M125 — Map search has no no-match feedback
+
+P2, S069, source-confirmed at608b1e54. submitSearch clears highlightedAssetId when
+findInventoryMapSearchMatch returns undefined, then returns without any status.
+The previous branch remains visible, so a completed unsuccessful search is
+indistinguishable from an unchanged map. Provide scoped no-match feedback while
+preserving navigation context; clear that feedback on query clear or deliberate
+navigation. No correction or runtime acceptance is claimed yet. See map-axis.md.
+
+## M126 — Map recovery and empty-column commands bypass native actions
+
+P2, S068, source-confirmed at608b1e54. Retry map invokes refreshMap, which owns the
+explicit pull indicator, and its text-only Pressable has no minimum hit area.
+Empty-column Add is a custom Pressable with minHeight40. Reuse native command
+adapters and separate Retry from the pull gesture. Verify loading/duplicate retry,
+empty-column navigation and native target geometry. Not yet corrected.
+
+M126 candidate now uses NativeCommandButton for Retry and empty-column Add,
+retaining the existing view-model permission gate. Retry owns separate pending
+state, stays visible/disabled during retry, rejects duplicate and hidden callbacks,
+and never starts the pull indicator. The regression failed before correction;
+21 Map behavior/presentation tests, TypeScript and structural checks pass on paul.
+Critic caught the initially omitted focused-start guard; it is now restored and
+tested. No remaining confirmed source blocker. Native recovery/command geometry
+remains pending.
+
+M125 candidate displays inline no-match guidance or matched title/placement,
+scoped to the searched query and map snapshot. Changed/cleared query, unavailable
+or refreshed data and deliberate navigation suppress stale outcomes. The mounted
+case failed before correction;9 focused Map tests, TypeScript and structural
+checks pass remotely. Critic also caught a retained pan cancellation callback
+recording an older query. Stable cancellation now reads the current query; a
+regression reproduced the old blur/refocus rerun and passes after correction.
+Critic reports no remaining confirmed blocker. Native outcome layout, announcements
+and gesture/return behavior remain pending.
+
+## M127 — Appearance save failures outlive their selection
+
+P2, source/mounted confirmed atbb3fc720. AppearancePicker showed a save error after
+leaving its screen or choosing a newer preference. Both cases failed before the
+correction. Focus and selection ownership now suppress obsolete feedback and
+hidden starts, preserving global provider rollback and queued persistence.
+Both consumers were inspected: inline Settings and the Appearance detail route.
+Seven focused picker/controller tests plus TypeScript/structural checks passed;
+an additional blur/refocus-before-rejection case also passes. Critic found no
+confirmed blocker. Native menu, navigation, error placement and theme-transition
+acceptance remain pending.
+
+## M128 — Home expiration entry lacks an inventory-scope gate
+
+P2, S063, source-confirmed at8b0dfc7b. ExpirationHomeEntry defaults unresolved
+tenant/inventory IDs to empty strings but still supplies active onOpen navigation.
+ExpirationHomeSection renders See all while data is loading or errored. A tap can
+therefore push /expiration with empty scope. Separately, the entry hides resource
+access failures but not inventory-scope errors; cached rows can remain visible
+when inventory scope has failed. Gate navigation on usable scope and hide data
+while scope is unavailable/errored, preserving explicit retry. Verify unresolved
+scope, cached-data scope failure, retry and recovered navigation at the mounted
+entry boundary. No server authorization bypass is claimed; this is client
+presentation/navigation correctness. Not yet corrected.
+
+M128 candidate extracts injected query-driven content from the bootstrap wrapper.
+Usable inventory scope now gates queries, cached presentation and See all. Scope
+failure and its pending retry keep counts hidden; successful recovery restores
+scoped navigation. Mounted regression reproduced empty IDs before correction.
+Critic caught retained ready-row callbacks bypassing the initial render guard;
+committed scope ownership now rejects them, including after unmount, with a
+reproduced/passing failure regression. Three focused tests, TypeScript and mobile
+structural checks pass on paul. Critic found no remaining confirmed blocker.
+Native loading/error/recovery layout and actual inventory switching remain pending.
+
+## M129 — Asset load recovery still uses a custom command
+
+P2 platform consistency, source-confirmed at801eb1e6. AssetDetailRouteErrorState
+used a hand-styled Pressable. It now uses NativeCommandButton labeled Retry asset,
+preserving canRetry and the flexible scrollable explanation. Both asset route
+wrappers share this screen. A mounted test replaces legacy mocked tree invocation
+and covers retry execution, non-retryable absence and scroll content. It failed
+before correction; the focused test, TypeScript and structural checks pass on
+paul. Critic found no confirmed blocker. Actual native spacing/wrapping remains
+pending and is not implied by the mounted test.
+
+## M130 — Home and Add recovery controls still use custom buttons
+
+P2 platform consistency, source-confirmed at8fb0a54d. Home dashboard load error,
+Home expiration refresh error and Add context load error now reuse the shared
+native command adapter. Existing accessible labels, callbacks and readiness/scope
+gates are retained; unused Home button styling is removed. Existing Home and
+expiration28 tests plus Add/Home styles15 tests pass remotely, with TypeScript
+and structural checks. Critic found no confirmed blocker. Native spacing and
+reachability remain pending; this bounded adapter migration introduces no new
+recovery semantics or claim of full screen acceptance.
+
+## M131 — Browse inline and photo recovery use custom commands
+
+P2 platform consistency at09c3506b. BrowseHeader's inline retry and AssetDetailView's
+failed-photo retry now use NativeCommandButton. Eligibility, callbacks and Retry
+labels remain unchanged. Browse explanation and command stack vertically so the
+full-width native host does not compress its error text. Unused custom styles are
+removed. Sixty-two existing Browse/asset behavior and view tests, TypeScript and
+structural checks pass remotely. Critic found no confirmed blocker. Native spacing,
+contrast and reachability remain pending. No new photo persistence semantics are
+introduced by this adapter change.
+
+## M132 — Browse empty and pagination commands bypass the native adapter
+
+P2 platform consistency, source-confirmed atf8677508. BrowseResultStates retained
+custom commands for empty inventory, empty search/refinements, initial load failure
+and pagination failure. All now use NativeCommandButton, retaining specific labels,
+callback targets, primary/standard prominence and viewer Add absence. Explanations
+stack above commands with stretch alignment for the native host. Mounted tests
+replace mocked tree traversal and verify recovery callbacks and viewer eligibility;
+their initial missing-label failure reflects adapter wiring, not proof of a prior
+runtime accessibility defect. All13 focused Browse tests, TypeScript and structural
+checks passed on paul. Critic found no confirmed regression. Native full-width
+geometry and actual retry/clear navigation remain acceptance work.
+
+## M133 — Invitation acceptance commands remain custom
+
+P2 platform consistency, source-confirmed at6f45c031, R019. InventoryInvitationScreen
+uses hand-styled Pressables for Join/Open, start-over, Not now, retry, account switch
+and Done. The existing native command adapter should supply these controls, while
+preserving pending labels, disabled states, explicit acceptance and recovery. The
+review route itself fits the task; no extra selection menu is recommended. See
+invitation-acceptance-axis.md for all24 axes and evidence limits. Implementation
+and normal-text native acceptance are pending. This is not a claim that source
+inspection established a particular rendering defect.
+
+M133 implementation now uses NativeCommandButton for all invitation commands.
+Join/Open retain stable names and disabled state, with adjacent named busy progress;
+start-over also has pending feedback. Opening failure preserves accepted access
+and re-enables Open. The legacy mocked-hook suite is replaced by mounted tests
+covering the same9 behavioral/adaptation cases. Retry/Done recovery is newly covered;
+its initial missing-label RED is wiring evidence, not a runtime accessibility
+finding. All17 focused invitation/route tests, TypeScript and structural checks
+pass on paul; the3 progress cases also verify start-over status. Critic found no
+confirmed blockers. Native spacing, announcements and reachability remain pending.
+
+## M134 — Disabled expiration year still accepts a text callback
+
+P2, source/mounted-confirmed atcd6f6556, S093. A year event delivered to the disabled
+render changes its local year and publishes expiration, unlike the already guarded
+date callback. The year handler now rejects disabled events. The regression failed
+before the correction and verifies unchanged publication/local draft plus resumed
+editing. Shared Add/Edit consumers were inspected. All10 focused expiration tests,
+TypeScript and structural checks pass on paul. Critic found no confirmed issue.
+This covers callbacks delivered to the disabled render, not arbitrary retained
+closures or proof of native event timing. Native keyboard and pending-save behavior
+remain unverified. See expiration-entry-axis.md for the full field review.
+
+## M135 — Voice photo-source callbacks outlive the review
+
+P2, source/mounted-confirmed ate295fc6f. VoicePlanPhotoDrafts reported selection
+errors without checking the active visit/plan, and a retained source choice could
+start camera/library selection after leaving. VoiceSessionSheetScreen now captures
+the shared visit owner keyed by photo service and plan ID/status; only proposed
+plans can open the chooser. The chooser rejects obsolete starts/errors, and photo
+results update the draft only while that owner remains current. Add and asset-detail
+chooser consumers retain their existing separate guards. The initial inactive-start
+regression failed; tests now cover suppression versus current-error feedback and
+mounted blur/refocus or plan replacement. All11 focused photo-draft/presentation
+tests, TypeScript and structural checks pass on paul. These checks do not establish
+native camera/library permission timing or full VoiceSession screen acceptance.
+Critic found no implementation blocker; caller-inventory line references were
+refreshed after its documentation correction. Full VoiceSession integration and
+native permission timing remain pending.
+
+## M136 — Form-sheet notice overlaps its visible native header
+
+P1, runtime-observed on iPad mini in run34992079258, actual artifact revision
+514032e0e290a7970262458ae4970c6d6d1edba4 (headf109567c). Inspected screenshot
+`evidence/ipad-notice-header-overlap-349920.png` shows the notice behind the title
+and Close control. Hierarchy27B6DF21 places the content at y236.5, header at
+246.5–300.5 and notice at246.5–316.5. AppNoticeScreenLayout uses zero header
+clearance for a nontransparent header; this formSheet's content extends underneath
+that header. The fixture declares presentation=formSheet and headerShown=true.
+Correction must account for this presentation while retaining ordinary pushed
+screen positioning and header-hidden behavior. Keep the native full-notice bounds
+and action/Close reachability checks; do not weaken the assertion. Not yet fixed.
+
+M136 candidate uses the reported header height for iOS formSheet notices with a
+visible header. Ordinary pushed screens, Android and hidden-header safe-area
+placement retain their branches. The mounted regression failed at10 versus74;
+12 focused notice tests, TypeScript and structural checks now pass on paul.
+Critic found no production blocker; the hidden-header test now asserts the exact
+zero-inset offset and its4-test suite passes again. Native full-bounds and action/
+Close hit tests are unchanged and must verify the correction in a newer build.
+
+M51 follow-up at062fd211: run34992079258 iPad actual514032e0 again failed center
+activation but passed the trailing-well probe. Inspected captures are retained as
+ipad-color-row-inactive-349920.png and ipad-color-well-open-349920.png. The native
+row exposed704×36 bounds while the actionable well was at its trailing edge.
+The candidate keeps SwiftUI ColorPicker but separates its visible label and hides
+the picker's own visual label, constraining its named target to44×44. Selection and
+disabled behavior remain unchanged. The original failing center/open/close/clear
+journey is unchanged; the diagnostic now requires44-point compact bounds and center
+activation instead of a trailing-coordinate workaround. All15 color tests,
+TypeScript, structural checks and2 fixture-preparation tests pass remotely. Critic
+found no blocker. Actual native target bounds, label layout and VoiceOver activation
+remain unverified; M51 is not closed by source geometry.
+
+
+## M137 — iPad search keyboard dismissal is visible but not hittable
+
+P2, S127 and place-detail search. Run34992079258, actual source514032e0,
+normal text on iPad mini (A17 Pro): native search accepts `19`, includes Tool19
+and excludes Tool0. The next assertion, `Dismiss keyboard.isHittable`, fails
+before any dismissal tap. Inspected final-state image and hierarchy are retained
+as evidence/ipad-place-search-dismiss-349920.png and .txt.
+
+The hierarchy exposes the button at x680,y739,width44,height44. An ancestor
+occupies x0,y749,width372,height44; the child extends outside that ancestor.
+This is a plausible hit-testing cause, not a verified root cause. The visible
+chevron and presence in the accessibility tree do not establish operability.
+The system Hide keyboard action also exists, but substituting it would bypass
+the project-required accessory acceptance check. Keep the failing assertion.
+
+Next acceptance: reproduce on the current candidate; verify the accessory's
+actual hit region and dismiss without clearing `19`, then open the matching
+result and return. Confirm phone, iPad, ordinary inputs and sheet consumers.
+No production change or native closure is claimed. The phone place-search test
+also failed in this run, at a different line; it needs separate screenshot triage.
+
+
+## M138 — Retained item-type confirmation can overwrite newer edits
+
+P2, AssetExpirationEditor type-change confirmation. Source68c4daec guards disabled
+state when opening the alert but not its retained Change type callback. That
+callback can replace a newer draft and clear its date after disabling, asset or
+settings replacement, navigation return or unmount. Seven mounted regression
+cases failed before correction (six obsolete-owner cases and one duplicate apply).
+
+The editor now uses the shared visit owner with the serialized asset/draft/type
+settings/disabled state and consumes a valid acceptance once. Current confirmation
+preserves title, notes and tags while clearing the type-dependent expiration.
+Fifteen focused expiration tests, TypeScript and structural checks pass on paul.
+Critic found no confirmed blocker. Native dialog timing/return verification remains
+pending; this is source and mounted evidence, not native visual acceptance.
+
+
+## M139 — Stored-photo removal confirmation outlives its viewer
+
+P2, AssetPhotoViewerSheet. Atce586b03 the retained destructive alert directly
+calls onRemove after viewer close/reopen, changed selection or collection, remove
+access loss, pending removal, focus return or unmount. The detail route has an
+operation guard, but that does not establish consent for the current viewer visit.
+Eight mounted cases failed before correction, including repeated valid acceptance.
+
+The viewer now captures the shared focused presentation owner keyed by collection
+IDs, selected index and removal availability, and consumes acceptance once.
+The existing deletion command and native destructive alert remain unchanged.
+Thirteen focused viewer tests, TypeScript and structural checks pass on paul.
+Native alert timing and gallery navigation acceptance remain pending. Add's draft
+photo removal is a separate call site and is not covered by this correction.
+
+Critic found no production blocker and requested independent collection coverage.
+Added a ninth passing confirmation case that appends a different photo while
+preserving the selected photo and index; collection invalidation is now exercised
+without relying on selection change. Native acceptance is still pending.
+
+
+## M140 — Account confirmation and failure feedback survive departure
+
+P2, AccountSettingsScreen and ConnectionSettingsScreen. At0b8e4102 native sign-out
+and change-server confirmation callbacks can start after navigating away and back;
+pending failures publish feedback in the new visit. Four mounted regression cases
+failed before correction. Current acceptance must remain available even when
+inventory or identity reads are unavailable; no new prerequisite is introduced.
+
+The existing focused owner now binds confirmation to settings query and principal
+or server identity. Acceptance is single-use; late failures suppress their notice
+but release the existing pending lock for retry. Current-visit failure feedback
+and session-changing callbacks are preserved. All53 settings behavior tests,
+TypeScript and mobile structural checks pass on paul. Existing tests retain
+legitimate sign-out while identity is pending/failed and inventory is unavailable.
+No authentication, authorization or session persistence implementation changed.
+Native alert/focus acceptance remains pending.
+
+Critic found no blocker and identified replacement coverage as a useful addition.
+Two added query-replacement cases pass while preserving current acceptance (55
+settings tests total). Direct principal/server-value changes remain source-covered;
+native acceptance remains pending.
+
+## M141 — Initial Account read failure claims retained details
+
+P2, R024 recovery. At570b804c initial principal failure displays the shared refresh
+notice's claim that previously loaded values are shown. No values have loaded.
+Account now supplies explicit unavailable-details text only when principal data
+is absent. Other consumers and retained principal refresh keep existing copy.
+A mounted failing-first retry journey now passes; sign-out stays available.
+61 settings tests, TypeScript and structural checks pass on paul. Native pending.
+
+## M142 — Account and Connection command rows bypass native adapter
+
+P2 platform-pattern review, R024/R026. SettingsActionRow implements Sign Out and
+Change Server with custom Pressable/Text styling although these are commands and
+the project has NativeCommandButton. The repository requires actual native adapters
+unless a concrete limitation is documented. No limitation was identified in these
+callers. Review shared consumers before migration; preserve accessibility labels,
+pending state, confirmation semantics and current-visit retry. This is a source
+finding against project policy, not an assertion that Apple prohibits grouped rows.
+Implementation and native normal-size verification remain pending.
+
+M141 critic found no confirmed blocker; query/session behavior remains unchanged.
+
+M142 implementation follow-up: Account and Connection now reuse the unchanged
+NativeCommandButton adapter. Native visible labels are also accessible names;
+subject context remains in the value row and confirmation. Pending labels, disabled
+state, one-shot ownership and recovery callbacks are retained. The spec records
+this deliberate naming change instead of adding a nested accessibility wrapper.
+61 settings behavior/server-state tests, TypeScript and structural checks pass on
+paul. Native normal-size geometry and VoiceOver acceptance remain pending.
+Critic found no confirmed issue; native/assistive acceptance remains open.
+
+
+M111 native follow-up: run349983 iPhone actual54714ab4 passes last-tag scroll,
+selection, Back and Apply. Inspected screenshot/hierarchy retain final row entirely
+above the opaque footer and both contained buttons. See native-evidence.md and
+phone-last-tag-clear-footer-349983 evidence. iPad/dark/keyboard acceptance pending.
+
+
+### M143 — Draft photo removal outlives its selection
+
+P2 source and mounted behavior, S090/R007. Add's native Remove photo alert kept
+callbacks after selection/collection changes, closing and reopening the viewer,
+navigation return, and unmount. It could remove a draft photo and change the viewer
+from an obsolete confirmation; repeated acceptance repeated those effects.
+Seven mounted cases reproduced failure before the ownership guard.
+
+DraftPhotoPreviewModal now owns the confirmation by collection, selected index,
+busy state and focused visit, and accepts it once. Extraction preserves the existing
+viewer and native confirmation. Current removal still selects the next valid index
+or closes after the only photo. Eight confirmation cases and20 existing Add tests
+pass on paul, with TypeScript and structural checks. Native acceptance remains
+pending; this is a behavioral correction, not a claim of visual verification.
+
+M143 critic found no confirmed blocker. Combined remote validation at this change
+passes1663 tests across269 files. Source checksum comparison against paul showed
+no differences before the run. Log: /tmp/mobile-batch-draft-photo.log. Native
+run35003739726 remains in progress and predates this final confirmation change.
+
+
+### M144 — New-conversation confirmation can reset newer work
+
+P2 source/mounted finding, Voice processing and plan editing. The reset alert
+retained onReset directly, allowing acceptance after navigation or newer edits,
+photo drafts and plan/status changes. Seven mounted cases failed before correction.
+The extracted useNewConversation preserves the native alert and immediate reset
+policy, owns acceptance by meaningful conversation state and visit, and accepts
+once. Meter-only updates keep the confirmation valid.
+
+Nine focused cases include replacement plan with unchanged status/drafts, as
+requested by critic, plus status, photos, edits, visit, unmount, meter, current and
+empty paths. Existing presentation/history/navigation tests are retained. Native
+confirmation timing remains pending. No controller or API behavior changed.
+
+M144 verification: nine focused cases pass on paul; the17 existing presentation,
+history and navigation tests also pass. TypeScript and structural checks pass.
+Critic found no confirmed blocker, and its additional plan-identity coverage is
+now included.
+
+
+### M145 — Edit discard acceptance outlives its draft
+
+P2 source/mounted finding, R009/S133. Edit's Discard alert checked the operation
+lock but accepted after a changed draft or blur/refocus, and repeated acceptance
+navigated twice. Mounted tests reproduced those three failures; existing unmount
+protection already passed. Acceptance now belongs to asset, draft, saving state
+and focused visit and executes once, preserving the pending-operation guard.
+All21 Edit/Move behavior cases, TypeScript and structural checks pass on paul.
+Native alert timing remains pending.
+
+M145 critic found no confirmed issue; native acceptance remains open.
+
+
+### M146 — Failed provider Archive confirmation can be reused
+
+P2 mounted behavior, R052. Existing focus/pending guards reject earlier visits and
+simultaneous commands, but a retained Archive acceptance could submit again after
+a failed request settled. The new mounted case reproduced that second call.
+Acceptance now consumes its confirmation before starting the request. The same
+test verifies a freshly confirmed retry remains available. All57 settings behavior
+tests, TypeScript and structural checks pass on paul; critic found no confirmed
+issue. Native alert interaction remains pending.
+
+
+### M147 — Mounted asset sheets present completion on a later visit
+
+P2 source/mounted finding, Edit/Move/Move Here/destination creation. The shared
+operation helper tracked mounting and pending work but not focused visit. New
+Edit tests reproduced late-success navigation and a late-error alert after
+blur/refocus. Completion ownership is now captured when the mutation begins.
+All four consumers check it before notices, navigation, error alerts, created
+destination selection and partial-tag draft replacement. The lock still lasts
+until settlement and the mounted current form is unlocked afterward.
+
+All26 Edit/Move behavior tests pass on paul, including returned-visit failure
+for Move, Move Here and destination creation, current-visit success/failure and
+the new Edit success/failure return cases. TypeScript and structural checks pass.
+Native presentation/lifecycle acceptance remains pending.
+
+M147 critic found no confirmed blocker. It noted that dedicated returned-visit
+success tests for Move/Move Here/destination creation are not yet present; current
+success tests and Edit return-success cover the shared helper, but do not replace
+those per-branch scenarios. That coverage gap and native timing remain open.
+
+
+M147 coverage follow-up: dedicated Move and Move Here tests now compare current
+and returned-visit success, asserting both navigation and completion records.
+Destination creation returned-success asserts the original query remains and the
+created destination is not inserted. All31 Edit/Move cases, TypeScript and structural
+checks pass on paul. Critic confirmed the added assertions cover those branches.
+This closes the per-branch mounted success coverage gap above; native lifecycle
+acceptance remains open.
+
+
+### M148 — Provider screens blur navigation and command controls
+
+P2 source pattern finding, R052/R054/R055. Provider screens used the same custom
+action row for editor navigation and mutations despite existing task-specific
+adapters. Add Profile, Replace Credential and Prompt Guidance now disclose their
+editor destinations with SettingsNavigationRow. Create recommended draft, Test,
+Enable/Disable and Archive reuse unchanged NativeCommandButton. Creation labels
+name the action; native command accessible names match visible labels. Subject
+context remains in the profile heading and Archive alert, whose destructive
+semantic is unchanged. This follows project native-adapter policy; it is not a
+claim that Apple prohibits all command rows.
+
+Three pending-operation cases failed against the new accessible names before
+migration. All57 settings behavior tests now pass, preserving retry, navigation
+locks, confirmation ownership and late-result behavior. TypeScript and structural
+checks pass on paul. Native spacing, targets and assistive acceptance remain open.
+
+M148 critic found no confirmed regression; native acceptance remains pending.
+
+
+### M149 — Failed item-type queries still claim loading
+
+P2 source/mounted finding, Add and Edit. Their recovery controls could coexist
+with AssetExpirationEditor's “Loading expiration settings…” when no type data
+was available after failure. New Add and strengthened Edit cases reproduced both
+contradictions. The consumers now hide only the unavailable editor on failed
+initial reads; cached usable arrays remain visible during refresh failure. Add
+Retry uses NativeCommandButton and respects the pending draft operation lock.
+All42 Add/Edit cases, TypeScript and structural checks passed on paul. Added
+background-refresh coverage also passes, preserving the selected type/date field
+and dirty name after a later failure. Critic found no confirmed regression. Native
+error, retry and keyboard acceptance remains open.
+
+### M150 — Item-type search has no empty-result explanation
+
+P2 source/mounted finding, shared Add/Edit AssetExpirationEditor. A nonmatching
+query left a blank choice list. A failing behavior case now requires visible
+no-match feedback and verifies that clearing search restores the checked type
+without publishing a changed draft. The list now shows a polite no-match message.
+It stays in the current form and does not add navigation or clear the selection.
+Native empty-state visibility/announcement remains pending.
+
+M150 verification: all10 shared editor cases, TypeScript and structural checks
+passed remotely. Critic found no confirmed issue in the implementation or audit
+classification. The final Add case also asserts the name after cached refresh
+failure; all11 Add cases pass. Native acceptance remains open.
+
+
+M51 native target follow-up: iPad350037 at818c3f38 exposes the compact well as
+36×36 despite the44-point SwiftUI wrapper. Retained ipad-color-target-350037
+image/hierarchy confirms the named button at x684,y326.5,width36,height36.
+Center activation is exercised separately; the minimum-target assertion remains
+failed. The candidate now requests SwiftUI's large control size and a minimum
+44-point frame, allowing native sizing rather than scaling the drawing. Apple
+documents controlSize as the platform sizing mechanism, but does not establish
+that this ColorPicker will honor the requested minimum; runtime evidence is
+required. No assertion is removed or relaxed.
+
+Consumers remain Add staged-tag color, Edit staged-tag color and Settings tag
+customization through TagColorPicker/FullSpectrumTagColorPicker.15 color behavior
+tests, TypeScript and structural checks pass remotely. Native bounds, hit testing
+and system-picker behavior remain pending; M51 is not closed.
+
+M51 critic found no confirmed source blocker in the native large-size candidate.
+The existing target-size/activation gate remains open pending an actual native
+run containing this change.
+
+
+### M151 — Unsupported photo selection silently disappears
+
+P2 source/test-confirmed at fc8f7cd2. ExpoPhotoSelectionProvider skipped known
+unsupported MIME types. A selection containing only those images returned an empty
+array (indistinguishable from cancellation); mixed selection silently returned a
+subset. All three new public-provider cases failed before correction.
+
+The provider now rejects that new selection with a supported-format explanation.
+This is an explicit atomic-selection policy, not a claim that Apple requires
+rejecting mixed selections. It avoids silently accepting a different set and adds
+no format conversion or mislabeled bytes. User cost: a mixed selection must be
+chosen again with supported photos; the error names JPEG, PNG and WebP.
+
+Shared consumers inspected: Add catches selection failure before appending to its
+photo draft; existing-asset detail catches before invoking upload; voice plan
+source chooser catches the rejection and only appends after a successful return.
+Existing photos/drafts are therefore untouched by rejection. Native notice/alert
+visibility and actual formats returned by each OS picker still require acceptance.
+
+55 related provider, Add-dismissal and asset-workspace tests pass remotely after
+correction. Native picker cancellation and mixed-format device journeys are not
+claimed verified. Verify supported selections still attach, unsupported selection
+shows the explanation, existing photos remain, and choosing again succeeds.
+
+M151 verification: the4 voice photo behavior cases also pass; TypeScript and
+structural validation passed remotely. Critic found no confirmed blocker. The
+existing absent-MIME JPEG fallback is unchanged: this finding covers reported
+unsupported types, not byte-sniffing or full media-format validation.
+
+
+### M152 — Old connection expiry callback replaces a new session
+
+P1 source/mounted finding in AppServicesFeedbackGate at bcaeadfa. The auth-required
+callback captured its connection profile but had no composition ownership check.
+After completing a replacement session, invoking an old callback still called the
+real onboarding expiry command. Regression cases failed after sign-out, server
+change and expiry transitions.
+
+The callback now checks its composition identity before initiating expiry and
+before publishing completion/error. Its dialog dismissal has no session mutation; root
+cleanup and successful transitions to onboarding invalidate callbacks. This prevents an obsolete callback from starting a
+new credential mutation. It does not cancel credential work already started before
+replacement, nor certify all possible overlapping sign-in/sign-out operations.
+
+The37 related gate/onboarding cases passed remotely, including the three previously
+failing transitions and existing OIDC boundary cases. Additional controlled cases
+exercise resolved/rejected late completion and callbacks after teardown. Native
+session-expiry presentation and full account transition acceptance remain open.
+
+M152 critic identified the between-session interval before replacement creation.
+Two added assertions failed when old callbacks ran after successful sign-out or
+server change; ownership now retires on successful onboarding transitions while
+failed push cleanup retains the current composition.
+
+M152 final focused validation:39 cases across5 files passed remotely, followed
+by TypeScript and structural checks. Critic confirmed retirement now covers the
+previously missed interval and found no remaining confirmed blocker in this fix.

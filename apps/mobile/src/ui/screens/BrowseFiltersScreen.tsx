@@ -1,13 +1,12 @@
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useState } from 'react';
+import { Text } from 'react-native';
 import { Stack } from 'expo-router';
-import { ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { AssetBrowseSort } from '../../application/home/InventorySummaryRepository';
 import type { BrowseDraftFilters } from './BrowseFilterState';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, SettingsValueRow, useSettingsListStyles } from './SettingsList';
-import { NativeSheetActions } from '../components/NativeSheetActions';
+import { NativeFilterSheet } from '../components/NativeFilterSheet';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
 
@@ -22,22 +21,30 @@ const choices = {
 } as const;
 const titles: Record<Page, string> = { overview: 'Filters', tags: 'Tags', expiration: 'Expiration' };
 
-export function BrowseFiltersScreen({ initial, query, tags, busy = false, onApply, onCancel, onCancelPending, onExpiration }: {
+export function BrowseFiltersScreen({ initial, query, tags, busy = false, error, onApply, onCancel, onCancelPending, onExpiration }: {
   readonly initial: BrowseFilterDraft; readonly query: string; readonly tags: readonly AssetTagOptionViewModel[];
+  readonly error?: string;
   readonly busy?: boolean; readonly onApply: (draft: BrowseFilterDraft) => void; readonly onCancel: () => void;
   readonly onCancelPending?: () => void;
   readonly onExpiration: (mode: ExpirationMode, draft: BrowseFilterDraft) => void;
 }) {
+  const { styles } = useSettingsListStyles();
   const [draft, setDraft] = useState(initial);
   const [page, setPage] = useState<Page>('overview');
   const [search, setSearch] = useState('');
-  const { palette } = useSettingsListStyles();
   const open = (next: Page) => { setSearch(''); setPage(next); };
   const searchMode = !!query.trim() || draft.tagIds.length > 0;
-  return <View style={{ flex: 1, backgroundColor: palette.background }}>
+  const visibleTags = [...tags].sort((a, b) => a.label.localeCompare(b.label))
+    .filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
+  return <>
     <Stack.Screen options={{ title: titles[page], headerSearchBarOptions: undefined }} />
     {page === 'tags' ? <NativeNavigationSearch query={search} placeholder="Search tags" onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} /> : null}
-    <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flex: 1 }}>
+    <NativeFilterSheet footerTestID="browse-filter-footer" actions={{
+      primaryLabel: 'Show results', secondaryLabel: page === 'overview' ? 'Cancel' : 'Back',
+      secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
+      onApply: () => onApply(draft), onBack: () => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }
+    }}>
+      {error ? <Text accessibilityRole="alert" style={styles.errorMessage}>{error}</Text> : null}
       {page === 'overview' ? <>
         <SettingsSection>
           <SettingsPickerRow label="Type" accessibilityLabel="Choose type" value={draft.scope} options={choices.scope} disabled={busy} onChange={value => setDraft({ ...draft, scope: value })} />
@@ -48,8 +55,8 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, onAppl
           <SettingsNavigationRow label="Expiration" context="Review active items by date" accessibilityLabel="Choose expiration review" onPress={() => open('expiration')} />
         </SettingsSection>
         <SettingsSection><SettingsActionRow label="Reset all" accessibilityLabel="Reset all filters" onPress={() => setDraft(defaults)} /></SettingsSection>
-      </> : page === 'tags' ? <SettingsSection>
-        {[...tags].sort((a, b) => a.label.localeCompare(b.label)).filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(tag =>
+      </> : page === 'tags' ? <SettingsSection footer={visibleTags.length ? undefined : tags.length ? 'No matching tags' : 'No tags available'}>
+        {visibleTags.map(tag =>
           <SettingsChoiceRow key={tag.id} multiple label={tag.label} accessibilityLabel={'Filter by tag ' + tag.label} selected={draft.tagIds.includes(tag.id)}
             onPress={() => setDraft({ ...draft, tagIds: draft.tagIds.includes(tag.id) ? draft.tagIds.filter(id => id !== tag.id) : [...draft.tagIds, tag.id] })} />
         )}
@@ -58,11 +65,6 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, onAppl
         <SettingsNavigationRow label="Expired" accessibilityLabel="Review expired items" onPress={() => onExpiration('expired', draft)} />
         <SettingsNavigationRow label="All dates" accessibilityLabel="Review all expiration dates" onPress={() => onExpiration('all', draft)} />
       </SettingsSection>}
-    </ScrollView>
-    <SafeAreaView edges={['bottom']} style={{ paddingHorizontal: 20, paddingTop: 12 }}>
-      <NativeSheetActions primaryLabel="Show results" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'}
-        secondaryAccessibilityLabel={page === 'overview' ? 'Cancel filters' : 'Back to filters'} disabled={busy}
-        onApply={() => onApply(draft)} onBack={() => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }} />
-    </SafeAreaView>
-  </View>;
+    </NativeFilterSheet>
+  </>;
 }
