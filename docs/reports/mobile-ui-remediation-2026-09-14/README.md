@@ -47,3 +47,8 @@ Current release cut: PR136 merged at **5775da93** on September15 at04:47UTC.
 [Release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409)
 is in progress; upload and Apple processing are not yet confirmed. Continued
 audit changes on `codex/mobile-audit-after-136` are excluded from that build.
+
+Latest delivered release: **0.24.16 (104.1)** from5775da93.
+Apple processing and exact-build TestFlight changelog verified at05:10:25UTC
+September15 in [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
+Post-PR136 badge, history-locale and keyboard-ownership changes are excluded.
