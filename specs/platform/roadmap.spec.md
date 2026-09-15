@@ -364,3 +364,13 @@ Native6076e824 verifies onboarding margin dismissal and switcher recovery, while
 Add typing/loading and other recorded findings remain unresolved. Continue the
 full 141-surface/24-axis audit after this authorized release checkpoint. Detailed
 evidence and remaining limitations live in the mobile remediation report.
+
+The subsequent requested PR150 cutoff shipped as TestFlight0.24.23 (112.1),
+release35028077706 at main438bd902. Apple VALID processing and exact-build
+changelog read-back completed September15 at22:20:03 UTC. The comprehensive audit
+is resumed in draft PR153: inherited definition ownership, read-only tracking,
+stale discard confirmation, native collection search/Add, and current Add
+permission handling are corrected in source. All1,704 mobile tests plus static
+checks pass remotely atfcc2f9b8. Native acceptance remains incomplete; focused
+text-entry diagnostics35029455242 and subsequent full collection/header
+verification remain required. Normal-size findings still precede enlarged text.

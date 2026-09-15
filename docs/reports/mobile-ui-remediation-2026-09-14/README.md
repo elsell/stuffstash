@@ -36,14 +36,23 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The larger PR150 batch remains unreleased. Source `a2ed8342` passes all **1,694
+The requested PR150 checkpoint is released as **TestFlight0.24.23 (112.1)**.
+[Run35028077706](https://github.com/elsell/stuffstash/actions/runs/35028077706)
+uploaded main438bd902 successfully; Apple processing and exact-build changelog
+verification completed September15 at22:20:03 UTC. The changelog verifier waits
+for Apple's VALID processing state and reads back the published notes. This does
+not establish physical-device UI acceptance or external beta review approval.
+
+The release's source `a2ed8342` passed all **1,694
 mobile tests across270 files**, TypeScript and structural checks remotely on paul
 (`/tmp/mobile-batch-a2ed8342.log`), with a clean source checksum comparison. This
 includes item-type failure/search recovery, failed-photo retry, unsupported-format
 feedback, retired session callbacks and the earlier interaction fixes.
-Native acceptance is incomplete: run350037 iPad fixtures passed45/57 and iPhone fixtures38/57.
-The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs passed.
-See [native evidence](native-evidence.md) for actual revisions and test limitations.
+Native acceptance remains incomplete: full run35012949816 passed43/58 phone
+fixtures and47/58 iPad fixtures; both onboarding jobs passed. See
+[latest native follow-up](native-350129-followup.md) for actual revisions and limits.
+The resumed audit continues in draft PR153. Checkpointfcc2f9b8 passes all1,704 mobile
+tests and static/fixture checks remotely; its new native collection journey is pending.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,384 cells comprise1,711
