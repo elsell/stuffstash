@@ -559,3 +559,28 @@ The iPhone onboarding job104247073503 completed successfully. iPad onboarding
 and both fixture jobs remain running. Sourceb275b0c5 includes the Home return
 command candidate and isolated query comparison, but predates M61–M64. This
 partial job outcome does not establish acceptance for those later changes.
+
+### Run34927007321 — iPad results inspected
+
+Artifact revision88e2fdb5d370ad9952f7d11117d83290926810c8 is the merge of
+sourceb275b0c556a4620d696c698488c8d7ea745a8ebc into50b598ae. iPad fixtures
+executed30 tests:26passed,4failed. Logs `/tmp/native349270-fixtures-ipad.log`;
+artifacts `/tmp/native349270-fixtures-ipad`.
+
+- Home Cancel reachability passes with M60's paired commands. Details typing now
+  fails (`Returned clean` → `leanR`); tracked M65 with screenshot. This is not a
+  full Return-flow pass. The subtitle also appears under the navigation material.
+- Add still shows Loading inventory. The isolated cold/dependent inventory query
+  comparison passes with populated scoped add-context and locations. This narrows
+  investigation to Add integration; it does not clear Add or prove a cause.
+- History still fails its native assertion; this build predates M61.
+- Controlled address comparison still loses text; native and uncontrolled address
+  comparisons and production button/Go address submissions pass.
+- Expiration expansion, keyboard actions and enlarged-text choice checks pass on
+  this iPad. The later M19 measured-footer candidate is not in this source.
+
+iPad onboarding executed3tests,2passed. Dragging inside the form column dismisses
+the keyboard; the original outside-column drag still fails. Landscape passes.
+Evidence `/tmp/native349270-onboarding-ipad.log`. Preserve both scenarios while
+assessing whether outside-content dismissal should be supported. iPhone onboarding
+passed; iPhone fixtures remain running at this checkpoint.
