@@ -348,13 +348,13 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
-    XCTAssertTrue(app.staticTexts["Tool 19"].firstMatch.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.staticTexts["Tool 0"].exists)
+    XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
     capture("place-search-filtered")
     let clear = field.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable)
     clear.tap()
-    XCTAssertTrue(app.staticTexts["Tool 0"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
     let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
     XCTAssertTrue(cancel.isHittable)
     cancel.tap()

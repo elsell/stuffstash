@@ -1119,3 +1119,16 @@ interaction scenario; later stronger visibility captures were not in this build.
 Evidence: completed job log `/tmp/native349548-ipad.log`; screenshot artifact
 downloaded to `/tmp/native349548-ipad`, not yet visually inspected at this checkpoint. No new visual claim or root cause is inferred
 from these assertions. The button-height comparison is in a later revision.
+
+Inspected iPad349548 captures: [Edit](evidence/ipad-edit-small-scroll-349548.png)
+shows the fixed large title, clipped metadata message and visible old Cancel/Save
+footer. Hierarchy reports the inner scroll at119 points high, with Retry asset
+types below that viewport. The title now scrolls with the form in a new candidate;
+this alone does not establish correct native footer/scroll measurement.
+
+[Place search](evidence/ipad-place-search-result-349548.png) shows query19 and one
+of20 items: Tool19. Hierarchy exposes `Open asset Tool 19. Item` as a Button,
+not a separate StaticText. The native test is corrected to use result buttons for
+matching, excluded and restored rows. This is a confirmed selector mismatch, not
+evidence that filtering failed. Search clear/return still awaits a completed
+corrected journey. Both screenshots are from the older82fa68e9 build.

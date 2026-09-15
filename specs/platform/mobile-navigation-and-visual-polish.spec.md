@@ -413,4 +413,6 @@ or host props alone do not prove the correction.
 The Edit asset form's body title must scroll with its metadata feedback and fields.
 Do not reserve a fixed, scaling title above a small sheet scroll viewport. Keep
 completion actions available separately, and verify actual large-text sheet
-geometry on phone and iPad.
+geometry on phone and iPad. Native search acceptance must address accessible
+asset-result buttons, rather than requiring their text children to be separate
+accessibility nodes; retain positive matching and negative nonmatching assertions.
