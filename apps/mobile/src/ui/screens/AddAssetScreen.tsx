@@ -605,7 +605,7 @@ function ScopedAddAssetScreen({
                 />
 
                 {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
-                {isParentMenuOpen && candidates.isError ? <Pressable accessibilityRole="button" onPress={() => void candidates.refetch()}><Text style={styles.fieldLabel}>Retry suggestions</Text></Pressable> : null}
+                {isParentMenuOpen && candidates.isError ? <NativeCommandButton label="Retry suggestions" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void candidates.refetch(); }} /> : null}
                 <ParentPicker disabled={draftBusy}
                   canCreateParent={canCreateParent}
                   isCreatingParent={isCreatingParent}
@@ -1045,18 +1045,11 @@ function ParentPicker({
             style={styles.parentMenuResults}
           >
             {canCreateParent ? (
-              <Pressable
-                accessibilityRole="button"
+              <NativeCommandButton
+                label={isCreatingParent ? 'Creating place…' : `Create "${query.trim()}" as a place`}
                 disabled={disabled || isCreatingParent}
                 onPress={onCreateParent}
-                style={[styles.createParentButton, isCreatingParent ? styles.disabledButton : null]}
-              >
-                {isCreatingParent ? (
-                  <ActivityIndicator color={colors.action} />
-                ) : (
-                  <Text style={styles.createParentText}>Create "{query.trim()}" as a place</Text>
-                )}
-              </Pressable>
+              />
             ) : null}
             {createdParent ? (
               <ParentOption disabled={disabled}
@@ -1515,23 +1508,6 @@ function createStyles(colors: MobileColorPalette) {
   parentOptionDisabled: {
     opacity: 0.58
   },
-  createParentButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.action,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  createParentText: {
-    color: colors.action,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   parentCheck: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -1734,9 +1710,6 @@ function createStyles(colors: MobileColorPalette) {
     justifyContent: 'center',
     minHeight: 52,
     marginTop: spacing.sm
-  },
-  disabledButton: {
-    opacity: 0.65
   },
   saveButtonText: {
     color: colors.onAction,

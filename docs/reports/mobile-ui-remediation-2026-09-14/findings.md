@@ -1101,3 +1101,22 @@ and shows No matching tags when appropriate. Native disclosure actions remain
 in-place. The Add regression failed before the fix;26 Add/Edit tests, TypeScript
 and structural checks passed remotely. Native discovery/large-text acceptance
 remains pending. This is a project contract, not an Apple numeric requirement.
+
+### M97 — Add parent commands use custom controls and lose their pending label
+
+Source-confirmed P2, S086/S087 task, targets and accessibility. Retry suggestions
+was a bare text Pressable without a minimum target; quick creation used a custom
+bordered button that replaced its label with a spinner while pending. These are
+in-place commands, so the existing NativeCommandButton is the selected platform
+adapter. Searchable parent selection remains in the form because the options are
+hierarchical and query-driven; changing these commands needs no new destination.
+
+The candidate gives Retry the shared native target and draft-busy guard and keeps
+Creating place… as a disabled, named command. Existing command ownership and
+failure recovery remain intact. Ten Add behavior tests, TypeScript and structural
+checks passed remotely after two failing command-label regressions. No shared
+adapter changed. Native multiline measurement, VoiceOver announcement and keyboard
+reachability still require verification; M97 remains open. Apple button guidance
+is the relevant topic, but the current documentation page returned a JavaScript
+shell during this pass; this is a project adapter decision, not a newly verified
+quotation or claim about an Apple requirement.

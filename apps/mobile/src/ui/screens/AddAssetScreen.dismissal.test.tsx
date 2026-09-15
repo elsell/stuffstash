@@ -145,9 +145,10 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
         await h.changeText(h.byLabel('Search parent'), 'New parent');
         await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
         await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
-        const create = h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')?.parent;
+        const create = h.byLabel('Create "New parent" as a place');
         expect(create).toBeDefined();
         await h.run(() => { void create!.props.onPress(); });
+        expect(h.byLabel('Creating place…')?.props.accessibilityState).toMatchObject({ disabled: true });
       } else {
         await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
         await h.run(() => { void pressAlertButton(operation === 'camera-failure' ? 'Take Photo' : 'Choose from Library'); });
@@ -297,7 +298,8 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
-    await h.press(h.byText('Retry suggestions')?.parent ?? undefined);
+    expect(h.byLabel('Retry suggestions')).toBeDefined();
+    await h.press(h.byLabel('Retry suggestions'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
     expect(h.byLabel('Search parent')?.props.value).toBe('New parent');

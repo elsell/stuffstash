@@ -429,3 +429,11 @@ results must not be treated as no duplicate. Retain the query and allow lookup
 retry. Apply the same availability/known-match guard to the creation command and
 its visible offer. Cached results may retain the existing name-based duplicate
 heuristic; this does not assert global uniqueness.
+
+Add parent lookup retry and quick creation are in-place commands. They use the
+existing native command button adapter, with an explicit label and disabled state
+while the draft is busy. Quick creation retains a readable “Creating place…”
+label while pending instead of replacing the command with only a spinner. Search,
+selection and the item draft remain in the current Add form; neither command
+creates a new navigation destination. Retry respects draft-operation ownership.
+Native large-text, keyboard and scroll reachability require runtime acceptance.
