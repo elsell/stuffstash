@@ -229,10 +229,44 @@ it.each(['success', 'failure'] as const)('does not attach delayed link %s feedba
     expect(finishCopy).toBeDefined();
     await h.changeText(h.byLabel('Invitee email'), 'second@example.test');
     await h.press(h.byLabel('Create Invitation')); await settle(h);
-    await h.run(() => finishCopy?.());
+    const finishOldCopy = finishCopy;
+    await h.press(h.byLabel('Copy link'));
+    expect(h.byLabel('Copying…')?.props.disabled).toBe(true);
+    await h.run(() => finishOldCopy?.());
+    expect(h.byLabel('Copying…')?.props.disabled).toBe(true);
+    expect(h.byLabel('Share invitation')?.props.disabled).toBe(true);
     expect(h.allText()).not.toContain('Invitation link copied');
     expect(h.allText()).not.toContain('Could not copy invitation');
     expect(h.allText()).not.toContain('First link failed');
     expect(h.byLabel('Complete invitation link')?.children.join('')).toContain('second@example.test');
+    await h.run(() => finishCopy?.());
+    expect(h.byLabel('Copy link')?.props.disabled).toBe(false);
+    expect(h.byLabel('Share invitation')?.props.disabled).toBe(false);
+  } finally { await h.unmount(); client.clear(); }
+});
+
+it.each(['copy', 'share'] as const)('locks both link commands during %s and recovers after failure', async action => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let rejectAction: ((error: Error) => void) | undefined; let calls = 0;
+  const operation = () => { calls++; return new Promise<void>((_resolve, reject) => { rejectAction = reject; }); };
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [] }),
+    create: async () => ({ ...item, inviteUrl: 'https://example.test/#token=secret' }), cancel: async () => undefined
+  };
+  const command = (label: string) => h.allByType('Pressable').find(node => node.props.accessibilityLabel === label || node.children.some(child => typeof child === 'object' && child !== null && 'children' in child && child.children.includes(label)));
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: operation, share: operation }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h); await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
+    await h.press(h.byLabel('Create Invitation')); await settle(h);
+    const copy = command('Copy link'); const share = command('Share invitation');
+    await h.press(action === 'copy' ? copy : share);
+    expect(command(action === 'copy' ? 'Copying…' : 'Sharing…')?.props.disabled).toBe(true);
+    expect(command(action === 'copy' ? 'Share invitation' : 'Copy link')?.props.disabled).toBe(true);
+    await h.press(copy); await h.press(share);
+    expect(calls).toBe(1);
+    await h.run(() => rejectAction?.(new Error('Link action unavailable')));
+    expect(command('Copy link')?.props.disabled).toBe(false);
+    expect(command('Share invitation')?.props.disabled).toBe(false);
+    expect(h.byLabel('Complete invitation link')).toBeDefined();
+    expect(h.byText(`Could not ${action} invitation`)).toBeDefined();
   } finally { await h.unmount(); client.clear(); }
 });

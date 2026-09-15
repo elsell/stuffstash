@@ -140,6 +140,16 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Sharing creation and one-time-link commands use the shared native command adapter:
+primary emphasis for Create Invitation, ordinary text commands for Copy link and
+Share invitation. Keep the system share sheet as the destination. While a link
+copy/share operation is pending, both link commands are disabled and duplicate
+activation is ignored; show a textual pending label. Completion re-enables the
+commands without losing the link. A new creation resets link-operation ownership,
+and a late result cannot unlock or annotate a newer operation. Creation retains
+its existing draft lock and command guard. Native appearance and keyboard
+reachability require current-build verification; using the adapter is not proof.
+
 Sharing's link copy result and link copy/share failures belong beside the current
 one-time link, inside its scroll content. Cancellation failures belong beside the
 affected invitation with its retry command retained. These task-owned messages

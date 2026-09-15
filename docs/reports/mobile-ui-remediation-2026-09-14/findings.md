@@ -1198,3 +1198,27 @@ locks. Critic review found no blocker. Native long-title layout and disabled-act
 contrast remain unverified; M100 stays open. The appearance provider already calls
 Appearance.setColorScheme, so a missing explicit SwiftUI Host scheme alone is not
 evidence of the contrast cause.
+
+
+### M101 — Sharing commands lack native treatment and link-operation progress
+
+P2, R048 task/loading, source-confirmed. Create used a custom filled button and
+Copy/Share custom outlined controls despite an existing native command adapter.
+Copy and Share also accepted duplicate/overlapping operations without pending
+feedback. Two controlled regressions failed before the correction.
+
+Create now uses native primary emphasis; Copy and Share use ordinary native text
+commands. Their shared lock prevents overlapping activation, pending text names
+the operation, and failure restores both commands while retaining the link.
+Replacement/focus generation protects newer work from older completion; regression
+cases cover old success and failure while the replacement operation stays locked.
+No shared adapter behavior changed. Cancellation's custom row control remains a
+separate follow-up; its native confirmation remains appropriate.
+
+This choice follows the project's native-control preference and Apple's
+[button guidance](https://developer.apple.com/design/human-interface-guidelines/buttons),
+which discusses appropriate button styling and communicating pending activity.
+The specific adapter and lock are engineering choices. Eighteen selected route
+and native-adapter tests, TypeScript and structural checks passed remotely.
+Current-build normal-text light/dark appearance, keyboard reachability and system
+share return remain pending; this is not native visual certification.

@@ -7,7 +7,7 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -19,7 +19,7 @@ import {
   Text,
   View
 } from 'react-native';
-import { Copy, Send, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import type {
   CancelInventoryInvitationCommand,
   CreatedInventoryInvitation,
@@ -58,6 +58,8 @@ export function InventorySharingScreen({
   const [linkFeedback, setLinkFeedback] = useState<{ title: string; message?: string }>();
   const [cancellationErrors, setCancellationErrors] = useState<Record<string, string>>({});
   const linkOperation = useRef(0);
+  const activeLinkOperation = useRef<number | undefined>(undefined);
+  const [linkWorking, setLinkWorking] = useState<'copy' | 'share'>();
   const [relationship, setRelationship] = useState<InventoryInvitationRelationship>('viewer');
   const [created, setCreated] = useState<CreatedInventoryInvitation>();
   const [createdScopeKey, setCreatedScopeKey] = useState<string>();
@@ -73,6 +75,8 @@ export function InventorySharingScreen({
     setLinkFeedback(undefined);
     setCancellationErrors({});
     linkOperation.current += 1;
+    activeLinkOperation.current = undefined;
+    setLinkWorking(undefined);
     return () => { if (feedbackSession.current === session) feedbackSession.current = undefined; };
   }, [scopeKey]));
   function captureFeedbackOwner(): () => boolean {
@@ -107,6 +111,8 @@ export function InventorySharingScreen({
     setCreationError(undefined);
     setLinkFeedback(undefined);
     linkOperation.current += 1;
+    activeLinkOperation.current = undefined;
+    setLinkWorking(undefined);
     setCreated(undefined);
     setCreatedScopeKey(undefined);
     const ownsFeedback = captureFeedbackOwner();
@@ -128,9 +134,11 @@ export function InventorySharingScreen({
   }
 
   async function performLinkAction(action: 'copy' | 'share'): Promise<void> {
-    if (!visibleCreated) return;
+    if (!visibleCreated || activeLinkOperation.current !== undefined) return;
     const ownsFeedback = captureFeedbackOwner();
     const operation = ++linkOperation.current;
+    activeLinkOperation.current = operation;
+    setLinkWorking(action);
     setLinkFeedback(undefined);
     const ownsLinkFeedback = () => ownsFeedback() && linkOperation.current === operation;
     try {
@@ -142,6 +150,11 @@ export function InventorySharingScreen({
       }
     } catch (error) {
       if (ownsLinkFeedback()) setLinkFeedback({ title: `Could not ${action} invitation`, message: readableError(error) });
+    } finally {
+      if (activeLinkOperation.current === operation) {
+        activeLinkOperation.current = undefined;
+        setLinkWorking(undefined);
+      }
     }
   }
 
@@ -212,17 +225,8 @@ export function InventorySharingScreen({
           <SettingsPickerRow label="Access" accessibilityLabel="Choose invitation access" value={relationship}
             options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }] as const}
             disabled={working} onChange={value => { if (!workingRef.current) setRelationship(value); }} />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Create Invitation"
-            accessibilityState={{ busy: working, disabled: working || email.trim().length === 0 }}
-            disabled={working || email.trim().length === 0}
-            onPress={() => void create()}
-            style={[styles.primaryButton, (working || email.trim().length === 0) && styles.disabled]}
-          >
-            {working ? <ActivityIndicator color={palette.onAction} /> : <Send color={palette.onAction} size={18} />}
-            <Text style={styles.primaryButtonText}>{working ? 'Creating…' : 'Create Invitation'}</Text>
-          </Pressable>
+          <NativeCommandButton prominence="primary" label={working ? 'Creating…' : 'Create Invitation'}
+            disabled={working || email.trim().length === 0} onPress={() => void create()} />
         </View>
       </SettingsSection>
 
@@ -240,8 +244,8 @@ export function InventorySharingScreen({
               {visibleCreated.inviteUrl}
             </Text>
             <View style={styles.linkActions}>
-              <LinkButton icon={<Copy color={palette.action} size={18} />} label="Copy link" onPress={() => void performLinkAction('copy')} />
-              <LinkButton icon={<Send color={palette.action} size={18} />} label="Share invitation" onPress={() => void performLinkAction('share')} />
+              <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : 'Copy link'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
+              <NativeCommandButton label={linkWorking === 'share' ? 'Sharing…' : 'Share invitation'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
             </View>
             {linkFeedback ? <View accessibilityLiveRegion="polite" accessibilityRole={linkFeedback.message ? 'alert' : undefined}>
               <Text style={styles.successTitle}>{linkFeedback.title}</Text>
@@ -293,16 +297,6 @@ export function InventorySharingScreen({
   );
 }
 
-function LinkButton({ icon, label, onPress }: { readonly icon: ReactNode; readonly label: string; readonly onPress: () => void }) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}>
-      {icon}<Text style={styles.linkButtonText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function statusLabel(invitation: InventoryInvitationSummary): string {
   if (invitation.isExpired) return 'Expired';
   return titleCase(invitation.status);
@@ -333,17 +327,11 @@ function createStyles(colors: MobileColorPalette) {
     form: { gap: spacing.sm, padding: spacing.md },
     label: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
     input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, color: colors.text, fontSize: 17, minHeight: 48, paddingHorizontal: spacing.md },
-    primaryButton: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', marginTop: spacing.xs, minHeight: 48, paddingHorizontal: spacing.md },
-    primaryButtonText: { color: colors.onAction, fontSize: 17, fontWeight: '700' },
-    disabled: { opacity: 0.5 },
     oneTimeLink: { gap: spacing.sm, padding: spacing.md },
     successTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
     linkContext: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
     linkText: { backgroundColor: colors.background, borderRadius: radius.sm, color: colors.text, fontSize: 13, lineHeight: 19, padding: spacing.sm },
-    linkActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    linkButton: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: spacing.xs, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.md },
-    linkButtonText: { color: colors.action, fontSize: 16, fontWeight: '600' },
-    pressed: { backgroundColor: colors.selected },
+    linkActions: { gap: spacing.xs },
     empty: { minHeight: 68, justifyContent: 'center', paddingHorizontal: spacing.md },
     emptyText: { color: colors.textMuted, fontSize: 16 },
     separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: spacing.md },
