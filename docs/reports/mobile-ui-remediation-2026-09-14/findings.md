@@ -235,3 +235,18 @@ shared sheet initially hid that header while the mounted screen requested it.
 The candidate now shows the title/header from the initial sheet configuration,
 matching the screen. Existing Close and expansion assertions remain the native
 acceptance gate; M45 is not closed by this source change.
+
+### M52 — Field-editor commands retain radio/custom-button presentation
+
+Source-confirmed task/pattern mismatch in `CustomizationEditorFields.tsx`:
+`Expand to all assets` was an always-unchecked radio although it changes the draft
+through a command. `Add option` used a custom inline button despite the shared
+native command adapter. Both now use that adapter, with Add below its input to
+avoid squeezing input beside a full-width native host. Type and initial Applies
+to remain pickers, and saved options/targets retain their existing protection.
+
+Two new tests reproduce the missing command semantics and verify expansion,
+normalized option addition, duplicate handling and draft clearing. Eight shared
+control and37 consumer behavior tests, TypeScript and mobile structural checks
+pass remotely. Household/inventory create/edit share this consumer. Native layout,
+keyboard, large text and assistive-technology acceptance remain pending.

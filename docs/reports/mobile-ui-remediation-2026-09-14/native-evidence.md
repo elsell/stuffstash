@@ -401,3 +401,17 @@ Job104232577094 verified Apple processing and the exact-build changelog at02:44:
 This delivers the requested current-fixes milestone; it excludes PR132's subsequent
 onboarding, native Home return sheet and History header candidates. The full audit
 remains active, with native failures and unreviewed cells retained.
+
+## Run34920888328 — onboarding jobs available before fixture completion
+
+Candidate890cf904 includes the iOS system-address field and native responder
+keyboard dismissal, but predates the Home return sheet. iPhone onboarding job
+104228556273 passed the full portrait help/input/dismissal scenario and correctly
+skipped unsupported phone landscape. This is a named scenario pass, not full
+onboarding or iPad certification.
+
+iPad job104228556347 failed launching the app: Xcode timed out during launch for
+portrait and acquiring a background assertion for landscape. These failures did
+not reach the UI assertions and provide no verdict on address preservation. Keep
+iPad verification pending and use the already queued newer candidate rather than
+restarting running fixture jobs. Full fixture results remain pending at this entry.

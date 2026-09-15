@@ -109,3 +109,41 @@ it('can remove the last option from a create draft and shows validation', async 
     expect(h.byText('Add at least one option.')).toBeDefined();
   } finally { await h.unmount(); }
 });
+
+it('expands applicability as a named command and updates the current draft', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [applicability, setApplicability] = useState<'all_assets' | 'custom_asset_types'>('custom_asset_types');
+    return <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability={applicability} canMutate eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="edit" newOption=""
+      onApplicability={setApplicability} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    const expand = h.byLabel('Expand to all assets');
+    expect(expand?.props.accessibilityRole).toBe('button');
+    await h.press(expand);
+    expect(h.byText('All assets')).toBeDefined();
+    expect(h.byLabel('Expand to all assets')).toBeUndefined();
+  } finally { await h.unmount(); }
+});
+
+it('adds a normalized option without changing persisted options and clears its input', async () => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [options, setOptions] = useState<readonly string[]>(['saved']);
+    const [draft, setDraft] = useState('');
+    return <CustomizationFieldControls persistedEnumOptions={['saved']} persistedTargetIds={[]} applicability="all_assets" canMutate eligibleTypes={[]} enumOptions={options} fieldType="enum" mode="edit" newOption={draft}
+      onApplicability={() => {}} onEnumOptions={setOptions} onFieldType={() => {}} onNewOption={setDraft} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    await h.changeText(h.byLabel('New enum option'), 'New Option');
+    await h.press(h.byLabel('Add option'));
+    expect(h.byLabel('Remove new-option')).toBeDefined();
+    expect(h.byText('saved · Existing')).toBeDefined();
+    expect(h.byLabel('New enum option')?.props.value).toBe('');
+    await h.changeText(h.byLabel('New enum option'), 'New Option');
+    await h.press(h.byLabel('Add option'));
+    expect(h.all().filter(node => node.props.accessibilityLabel === 'Remove new-option')).toHaveLength(1);
+  } finally { await h.unmount(); }
+});

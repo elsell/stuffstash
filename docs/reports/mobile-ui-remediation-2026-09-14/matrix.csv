@@ -719,9 +719,9 @@ R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and
 R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R030,settings/household/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
 R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
+R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
-R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,pending,,
+R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R031,settings/household/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R031,settings/household/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -729,10 +729,10 @@ R031,settings/household/fields/[resourceId].tsx,typography,"Dynamic Type, wrappi
 R031,settings/household/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
 R031,settings/household/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R031,settings/household/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,pending,,
+R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R031,settings/household/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
@@ -767,9 +767,9 @@ R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and pe
 R032,settings/household/fields/index.tsx,notifications,System notification entry and state,pending,,
 R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
+R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R033,settings/household/fields/new.tsx,selection,Value selection and current value,pending,,
+R033,settings/household/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R033,settings/household/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R033,settings/household/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -777,10 +777,10 @@ R033,settings/household/fields/new.tsx,typography,"Dynamic Type, wrapping and le
 R033,settings/household/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R033,settings/household/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R033,settings/household/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,pending,,
+R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R033,settings/household/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R033,settings/household/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R033,settings/household/fields/new.tsx,search,"Search, scope and filters",pending,,
@@ -911,9 +911,9 @@ R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and
 R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R038,settings/inventory/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
 R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -921,10 +921,10 @@ R039,settings/inventory/fields/[resourceId].tsx,typography,"Dynamic Type, wrappi
 R039,settings/inventory/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
@@ -959,9 +959,9 @@ R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and pe
 R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,pending,,
 R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
+R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,pending,,
+R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R041,settings/inventory/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R041,settings/inventory/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -969,10 +969,10 @@ R041,settings/inventory/fields/new.tsx,typography,"Dynamic Type, wrapping and le
 R041,settings/inventory/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R041,settings/inventory/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R041,settings/inventory/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,pending,,
+R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R041,settings/inventory/fields/new.tsx,search,"Search, scope and filters",pending,,
@@ -1379,7 +1379,7 @@ S058,onboarding / server entry,localization,"Locale, timezone, RTL and long stri
 S058,onboarding / server entry,imagery,"Icons, photos and missing media",pending,,
 S058,onboarding / server entry,targets,Touch target size and reachability,pending,,
 S058,onboarding / server entry,gestures,Gestures and explicit alternatives,pending,,
-S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending",M14
+S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,Native349208 candidate890cf904 iPhone production help/full URL/native keyboard dismissal passed. iPad launch/background-assertion failures prevented UI assertions. Submission fixtures and remaining configurations pending; not full M14 closure.,M14
 S058,onboarding / server entry,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S058,onboarding / server entry,motion,Reduced motion and feedback alternatives,pending,,
 S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination",pending,,
@@ -2519,9 +2519,9 @@ S105,Settings / field type choice,privacy,"Account scope, data use and permissio
 S105,Settings / field type choice,notifications,System notification entry and state,pending,,
 S105,Settings / field type choice,media,"Camera, library, files and audio",pending,,
 S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,navigation,"Navigation, hierarchy and return",pending,,
-S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,modality,Presentation and dismissal,pending,,
 S106,Settings / field applicability,layout,"Safe areas, scroll edges and overlays",pending,,
 S106,Settings / field applicability,adaptation,Phone/tablet/window reflow,pending,,
@@ -2529,10 +2529,10 @@ S106,Settings / field applicability,typography,"Dynamic Type, wrapping and legib
 S106,Settings / field applicability,appearance,"Light/dark, contrast and materials",pending,,
 S106,Settings / field applicability,localization,"Locale, timezone, RTL and long strings",pending,,
 S106,Settings / field applicability,imagery,"Icons, photos and missing media",pending,,
-S106,Settings / field applicability,targets,Touch target size and reachability,pending,,
+S106,Settings / field applicability,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,gestures,Gestures and explicit alternatives,pending,,
 S106,Settings / field applicability,keyboard,"Keyboard, text entry and focus",pending,,
-S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,motion,Reduced motion and feedback alternatives,pending,,
 S106,Settings / field applicability,content,"Lists, hierarchy, density and pagination",pending,,
 S106,Settings / field applicability,search,"Search, scope and filters",pending,,
@@ -2543,9 +2543,9 @@ S106,Settings / field applicability,privacy,"Account scope, data use and permiss
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,
 S106,Settings / field applicability,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M15; saved options immutable, draft removal in place; 43 focused tests/check/structural; native fixture pending",M15
+S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,navigation,"Navigation, hierarchy and return",pending,,
-S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M15; saved options immutable, draft removal in place; 43 focused tests/check/structural; native fixture pending",M15
+S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,modality,Presentation and dismissal,pending,,
 S107,Settings / enum options,layout,"Safe areas, scroll edges and overlays",pending,,
 S107,Settings / enum options,adaptation,Phone/tablet/window reflow,pending,,
@@ -2553,10 +2553,10 @@ S107,Settings / enum options,typography,"Dynamic Type, wrapping and legibility",
 S107,Settings / enum options,appearance,"Light/dark, contrast and materials",pending,,
 S107,Settings / enum options,localization,"Locale, timezone, RTL and long strings",pending,,
 S107,Settings / enum options,imagery,"Icons, photos and missing media",pending,,
-S107,Settings / enum options,targets,Touch target size and reachability,pending,,
+S107,Settings / enum options,targets,Touch target size and reachability,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,gestures,Gestures and explicit alternatives,pending,,
 S107,Settings / enum options,keyboard,"Keyboard, text entry and focus",pending,,
-S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,motion,Reduced motion and feedback alternatives,pending,,
 S107,Settings / enum options,content,"Lists, hierarchy, density and pagination",pending,,
 S107,Settings / enum options,search,"Search, scope and filters",pending,,
