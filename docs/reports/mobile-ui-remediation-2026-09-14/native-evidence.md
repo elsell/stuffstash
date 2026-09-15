@@ -304,3 +304,14 @@ accessibility and isolated direct/nested/footer layouts pass. Actual expiration
 sheet expansion still fails. The old iPad color Close procedure still fails;
 its popover correction is in the next queued candidate, not this source.
 The phone fixture job was still live when this iPad evidence was recorded.
+
+### Continuation run34917318548: phone onboarding
+
+Source50ebdabb, phone job104219118844 completed failure on September15 at01:48UTC.
+The complete-address assertion expected `https://example.invalid` but read
+`hexample.invalid` after the help/keyboard sequence. Landscape is explicitly
+skipped on the phone. This repeats M14; it is not evidence for a fixed production
+input path. The iPad and fixture jobs are still live, including the new native
+SwiftUI input comparison and Add header-loop candidate. Their outcomes must be
+inspected independently when terminal. Job log saved as
+`/tmp/native349173-onboarding-phone.log` on the audit host.
