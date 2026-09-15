@@ -31,15 +31,15 @@ pending, 438 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicabl
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
 
-Latest delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
+Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in
 [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
 
 Current interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
 publishing succeeded in
 [release34932422663](https://github.com/elsell/stuffstash/actions/runs/34932422663).
-Build105.1 uploaded successfully at05:49:31UTC; Apple processing and the exact-build
-TestFlight changelog are still being verified. This release contains filter badge contrast,
+Build105.1 uploaded successfully at05:49:31UTC. Apple processing and the exact-build
+TestFlight changelog were verified at05:52:22UTC: **0.24.17(105.1) is delivered**. This release contains filter badge contrast,
 history locale, month-calendar presentation and keyboard-ownership corrections.
 It does not certify the full audit or unresolved native footer behavior.
 

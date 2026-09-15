@@ -745,3 +745,8 @@ compilation and runtime comparison remain pending.
 Release checkpoint:0.24.17(105.1) uploaded05:49:31UTC in job104264788967.
 Job104268866634 is still publishing/verifying the changelog; Apple readiness is
 not yet confirmed. This release excludes the current PR140 comparisons/fixes.
+
+Delivery confirmed: release34932422663 completed successfully. Job104268866634
+verified the exact TestFlight changelog for0.24.17(105.1) at05:52:22UTC. The interim
+release request is fulfilled; full audit remediation and native acceptance remain
+active in PR140. Log /tmp/release349324-notes.log.
