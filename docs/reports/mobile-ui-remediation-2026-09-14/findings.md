@@ -2179,3 +2179,32 @@ M151 verification: the4 voice photo behavior cases also pass; TypeScript and
 structural validation passed remotely. Critic found no confirmed blocker. The
 existing absent-MIME JPEG fallback is unchanged: this finding covers reported
 unsupported types, not byte-sniffing or full media-format validation.
+
+
+### M152 — Old connection expiry callback replaces a new session
+
+P1 source/mounted finding in AppServicesFeedbackGate at bcaeadfa. The auth-required
+callback captured its connection profile but had no composition ownership check.
+After completing a replacement session, invoking an old callback still called the
+real onboarding expiry command. Regression cases failed after sign-out, server
+change and expiry transitions.
+
+The callback now checks its composition identity before initiating expiry and
+before publishing completion/error. Its dialog dismissal has no session mutation; root
+cleanup and successful transitions to onboarding invalidate callbacks. This prevents an obsolete callback from starting a
+new credential mutation. It does not cancel credential work already started before
+replacement, nor certify all possible overlapping sign-in/sign-out operations.
+
+The37 related gate/onboarding cases passed remotely, including the three previously
+failing transitions and existing OIDC boundary cases. Additional controlled cases
+exercise resolved/rejected late completion and callbacks after teardown. Native
+session-expiry presentation and full account transition acceptance remain open.
+
+M152 critic identified the between-session interval before replacement creation.
+Two added assertions failed when old callbacks ran after successful sign-out or
+server change; ownership now retires on successful onboarding transitions while
+failed push cleanup retains the current composition.
+
+M152 final focused validation:39 cases across5 files passed remotely, followed
+by TypeScript and structural checks. Critic confirmed retirement now covers the
+previously missed interval and found no remaining confirmed blocker in this fix.

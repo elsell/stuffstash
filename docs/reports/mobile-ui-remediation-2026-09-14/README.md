@@ -45,8 +45,8 @@ The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,885
-pending,1,079 source-reviewed,302 finding,22 runtime-partial and96 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,861
+pending,1,097 source-reviewed,306 finding,22 runtime-partial and98 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -192,3 +192,8 @@ partial-failure journey uses the real command and confirms failed-only retry
 without reopening the picker or duplicating the successful upload. All40 related
 cases, TypeScript and structural validation pass remotely; native acceptance
 remains open. This is additional focused evidence, not a new full-suite result.
+
+The [root presentation review](root-presentation-axis.md) covers all24 R006 axes
+and identifies M152, obsolete connection expiry callbacks acting on a new session.
+The ownership correction has mounted evidence; native account and root layering
+acceptance remain open.

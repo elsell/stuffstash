@@ -49,32 +49,34 @@ function ServicesController<C extends AppServicesGateComposition>({ runtime, sta
   const { showDialog } = useAppFeedback();
   const authPromptVisibleRef = useRef(false);
 
-  const buildComposition = useCallback((profile: ConnectionProfile) => runtime.createComposition(profile, () => {
-    if (authPromptVisibleRef.current) {
-      return;
-    }
-
-    authPromptVisibleRef.current = true;
-    runtime.onboarding
-      .expireSession({ profile })
-      .then((onboardingState) => {
+  const compositionVisit = useRef<object | undefined>(undefined);
+  const retireComposition = useCallback((visit: object | undefined) => {
+    if (!visit || compositionVisit.current !== visit) return false;
+    compositionVisit.current = undefined;
+    authPromptVisibleRef.current = false;
+    return true;
+  }, []);
+  const buildComposition = useCallback((profile: ConnectionProfile) => {
+    const visit = {};
+    compositionVisit.current = visit;
+    const isCurrent = () => compositionVisit.current === visit;
+    return runtime.createComposition(profile, () => {
+      if (!isCurrent() || authPromptVisibleRef.current) return;
+      authPromptVisibleRef.current = true;
+      runtime.onboarding.expireSession({ profile }).then(onboardingState => {
+        if (!retireComposition(visit)) return;
         setState(appServicesStateAfterAuthenticationRequired(onboardingState.profile ?? profile));
         showDialog({
           title: 'Session expired',
           message: 'Please sign in again to continue using Stuff Stash.',
-          primaryAction: {
-            label: 'Continue',
-            onPress: () => {
-              authPromptVisibleRef.current = false;
-            }
-          }
+          primaryAction: { label: 'Continue' }
         });
-      })
-      .catch(() => {
-        authPromptVisibleRef.current = false;
+      }).catch(() => {
+        if (!retireComposition(visit)) return;
         setState(appServicesStateAfterAuthenticationRequired(profile));
       });
-  }), [showDialog, runtime]);
+    });
+  }, [showDialog, runtime, retireComposition]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -95,32 +97,35 @@ function ServicesController<C extends AppServicesGateComposition>({ runtime, sta
 
     return () => {
       isCurrent = false;
+      compositionVisit.current = undefined;
     };
   }, [buildComposition, runtime.onboarding]);
 
   const signOut = async (): Promise<void> => {
     if (state.status !== 'ready') return;
     const composition = state.composition;
+    const visit = compositionVisit.current;
     await composition.pushSession.disconnect(async () => {
       composition.disposePerformance();
       const profile = await runtime.profiles.load();
       if (!profile) {
         await runtime.onboarding.reset();
-        setState(appServicesStateAfterServerChange());
+        if (retireComposition(visit)) setState(appServicesStateAfterServerChange());
         return;
       }
 
       await runtime.onboarding.expireSession({ profile });
-      setState(appServicesStateAfterSignOut(profile));
+      if (retireComposition(visit)) setState(appServicesStateAfterSignOut(profile));
     });
   };
   const changeServer = async (): Promise<void> => {
     if (state.status !== 'ready') return;
     const composition = state.composition;
+    const visit = compositionVisit.current;
     await composition.pushSession.disconnect(async () => {
       composition.disposePerformance();
       await runtime.onboarding.reset();
-      setState(appServicesStateAfterServerChange());
+      if (retireComposition(visit)) setState(appServicesStateAfterServerChange());
     });
   };
 
@@ -130,6 +135,9 @@ function ServicesController<C extends AppServicesGateComposition>({ runtime, sta
       authPromptVisibleRef.current = false;
       setState({ status: 'ready', composition: buildComposition(profile) });
     },
-    setOnboardingState: onboardingState => setState({ status: 'onboarding', onboardingState })
+    setOnboardingState: onboardingState => {
+      retireComposition(compositionVisit.current);
+      setState({ status: 'onboarding', onboardingState });
+    }
   });
 }

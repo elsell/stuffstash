@@ -1252,3 +1252,17 @@ resubmits only the failed selection without reopening the picker, and successful
 recovery removes retry/progress while preserving the asset. This complements
 command-level partial-failure checks; it does not establish native geometry,
 VoiceOver announcements, or physical camera/library permissions.
+
+### Root session callback ownership
+
+Authentication-required callbacks belong to the composition that created them.
+After replacement or root teardown, retained callbacks must not expire credentials
+or replace the current screen with old connection onboarding. Expiry completion
+and dialog actions must also ignore a superseded composition. Verify the mounted
+gate with the real onboarding command and controlled auth/profile ports across
+sign-out, server change and expiry followed by a new completed session.
+
+Composition ownership ends when sign-out, server change or expiry successfully
+returns to onboarding, including the interval before another sign-in completes.
+Failed push cleanup retains the current composition. Expiry dialogs need only a
+dismiss action, not a callback that mutates the next session’s prompt state.
