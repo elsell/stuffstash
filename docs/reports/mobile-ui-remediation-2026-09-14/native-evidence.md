@@ -489,3 +489,13 @@ reachability, controlled-address comparison, expiration accessibility label, pho
 keyboard footer, and nested/footer comparison layouts. Existing findings remain
 open; comparison failures are distinct from production acceptance. The iPad fixture
 job is still running.
+
+## Release0.24.14 delivered
+
+Run34923402256 completed successfully. Apple processing and exact-build TestFlight
+changelog readback for **0.24.14 (102.1)** were verified at03:42:54UTC in job
+104243759949. Tagged source remains30876406. This is delivery evidence, not a
+claim that open native audit failures are fixed.
+
+The user-requested PR135 cut, source50b598ae, is now running as34925606393. It
+contains the later M53–M56 fixes; its upload and changelog are not yet verified.
