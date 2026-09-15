@@ -6,7 +6,7 @@ const focusedInputs: string[] = [];
 let animationStarts = 0;
 let keyboardDismissals = 0;
 let keyboardVisible = false;
-const keyboardListeners = new Map<string, Set<() => void>>();
+const keyboardListeners = new Map<string, Set<(event?: unknown) => void>>();
 const accessibilityListeners = new Map<string, Set<(enabled: boolean) => void>>();
 let reduceMotionEnabled = false;
 let reducedMotionSnapshot: Promise<boolean> | undefined;
@@ -85,8 +85,10 @@ export const Appearance = { setColorScheme() {} };
 export const Platform = { OS: 'ios', select: <T>(values: { ios?: T; default?: T }) => values.ios ?? values.default };
 export const PlatformColor = (name: string) => `platform:${name}`;
 export const Keyboard = {
-  addListener(event: string, listener: () => void) {
-    const listeners = keyboardListeners.get(event) ?? new Set<() => void>();
+  metrics() { return undefined; },
+  scheduleLayoutAnimation() {},
+  addListener(event: string, listener: (event?: unknown) => void) {
+    const listeners = keyboardListeners.get(event) ?? new Set<(event?: unknown) => void>();
     listeners.add(listener);
     keyboardListeners.set(event, listeners);
     return { remove() { listeners.delete(listener); } };
@@ -173,4 +175,8 @@ export function holdReduceMotionSnapshotForTest() {
   let reject!: (cause: Error) => void;
   reducedMotionSnapshot = new Promise<boolean>((accept, fail) => { resolve = accept; reject = fail; });
   return { resolve, reject };
+}
+
+export function emitKeyboardEventForTest(name: string, event?: unknown) {
+  for (const listener of keyboardListeners.get(name) ?? []) listener(event);
 }

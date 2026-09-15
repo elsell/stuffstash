@@ -441,3 +441,18 @@ confirmed blockers.
 Native chooser interruption/dismissal remains unverified. Route focus without
 unmount and other mutation flows are separate lifecycle review work, not cleared
 by these checks.
+
+### M19 — Measured keyboard-clearance candidate
+
+The footer now measures an unmoved bottom boundary in the sheet's window and
+offsets only the overlap with the native keyboard frame. The direct-root scroll
+view remains intact. Pinned React Native0.83 RCTKeyboardObserver converts iOS
+keyboard frames from screen to key-window coordinates; no full-screen height or
+fixed keyboard offset is assumed. Superseded measurement callbacks and callbacks
+after hide/unmount are ignored. Already-resized sheets do not get a second offset.
+
+Seven geometry/hook/filter checks, TypeScript and structural checks pass on paul
+(`/tmp/footer-boundary-green.log`). Critic found no confirmed blockers. Existing
+native expansion, phone/iPad search-keyboard, rotation and enlarged-text scenarios
+remain the acceptance gate. This candidate does not clear M19 until those pass;
+keyboard animation and exact native coordinate alignment remain unverified.

@@ -359,3 +359,16 @@ snapshot resolves late. Remove subscriptions on unmount and ignore late reads.
 Reuse one UI-level preference hook; keep screen-reader notice timing independent.
 Native runtime tests must verify map navigation, voice rail movement and notice
 entry/dismissal with Reduce Motion, including live preference changes.
+
+### Measured expiration footer keyboard clearance
+
+Keep the direct-root ScrollView and bottom sibling footer. Measure an unshifted
+zero-height boundary at the sheet bottom in window coordinates; move the footer
+only by the overlap between that boundary and the reported keyboard frame. React
+Native0.83 converts iOS keyboard notification frames into the key window before
+emitting them, matching measureInWindow. Re-measure on sheet layout/frame changes;
+ignore superseded asynchronous measurements and clear on hide/unmount. A sheet
+already resized above the keyboard needs no extra movement. Floating keyboards
+that do not intersect the bottom boundary and off-window frames need no offset.
+Do not reintroduce a wrapping view around native scroll content. Existing phone
+and iPad keyboard/expansion tests are required acceptance of this candidate.
