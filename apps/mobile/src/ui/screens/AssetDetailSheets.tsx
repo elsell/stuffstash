@@ -1,3 +1,4 @@
+import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
@@ -531,22 +532,9 @@ function SheetActions({
   readonly primaryLabel: string;
   readonly busy: boolean;
 }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.sheetActions}>
-      <Pressable accessibilityRole="button" disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => { if (!busy) onClose(); }} style={[styles.sheetSecondary, busy && styles.disabledAction]}>
-        <Text style={styles.sheetSecondaryText}>Cancel</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={onSave}
-        style={[styles.sheetPrimary, disabled ? styles.disabledAction : null]}
-      >
-        <Text style={styles.sheetPrimaryText}>{primaryLabel}</Text>
-      </Pressable>
-    </View>
-  );
+  return <NativeSheetActions keyboardAvoidance="container"
+    primaryLabel={primaryLabel} secondaryLabel="Cancel"
+    disabled={disabled} secondaryDisabled={busy} onApply={onSave} onBack={onClose} />;
 }
 
 function useStyles() {
@@ -674,40 +662,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  sheetActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md
-  },
-  sheetPrimary: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 48
-  },
-  sheetPrimaryText: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  sheetSecondary: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 48
-  },
-  sheetSecondaryText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   parentList: {
     maxHeight: 280
   },

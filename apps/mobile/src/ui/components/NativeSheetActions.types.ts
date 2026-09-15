@@ -6,6 +6,7 @@ export interface NativeSheetActionsProps {
   readonly secondaryAccessibilityLabel?: string;
   readonly secondaryLabel: string;
   readonly disabled: boolean;
+  readonly secondaryDisabled?: boolean;
   readonly onApply: () => void;
   readonly onBack: () => void;
 }

@@ -779,3 +779,14 @@ query. Keep cached candidates on refresh failure and provide retry within the
 results scroll region. Retrying preserves the query and selection. Loading/error
 status must not occupy a separate fixed region above the form. Native large-text
 layout and keyboard/dismissal remain separate verification requirements.
+
+### Native asset-form completion controls
+
+Edit, Move and Move here use NativeSheetActions for their persistent completion
+and Cancel controls. Their KeyboardAvoidingView owns keyboard overlap; pass the
+container ownership mode to the iOS adapter. Extend the shared adapter with an
+optional secondaryDisabled flag, default false, so mutations disable both actions
+without changing filter forms where an invalid primary still permits dismissal.
+Guard callbacks as well as platform disabled state. Keep native primary emphasis,
+content-driven heights and full-width stacked actions. Verify footer reachability
+at narrow/large-text sizes; stacking is not proof the whole sheet fits.

@@ -965,3 +965,15 @@ Move and Move here. Native command adapters already exist; no concrete platform
 limitation is documented for this substitute. Choose the adapter while preserving
 busy semantics and one keyboard owner, then verify narrow/large-text sheet
 geometry and dismissal. Implementation remains pending. See move-axis.md.
+
+M91 candidate: Edit/Move/Move-here SheetActions now delegates to NativeSheetActions
+with container-owned keyboard avoidance. Optional secondaryDisabled preserves
+Cancel locking during mutation; default false leaves filter dismissal available.
+iOS, Android and preview callbacks honor their disabled states. The busy-action
+regression failed before the adapter extension;25 focused tests including filter
+consumers, TypeScript and structural checks passed remotely. Critic found no
+confirmed blocker. Native stacked footer is taller than the prior custom row;
+large-text form space and Cancel reachability remain unverified. M91 stays open.
+
+The full mobile suite also passed:1507 tests across258 files on paul. This is
+behavioral coverage, not native geometry evidence.

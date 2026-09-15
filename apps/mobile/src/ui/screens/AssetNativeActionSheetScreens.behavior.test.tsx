@@ -64,7 +64,7 @@ it('submits an expiration clear through the native edit route', async () => {
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
     await harness.press(harness.byLabel('Clear expiration'));
-    await harness.press(harness.allByType('Pressable').at(-1));
+    await harness.press(harness.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ assetId: 'asset', expiration: null })]);
   } finally { await harness.unmount(); }
 });
