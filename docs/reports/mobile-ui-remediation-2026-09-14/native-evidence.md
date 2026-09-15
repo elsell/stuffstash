@@ -542,3 +542,13 @@ cancellation assertions remain unchanged and must verify initial iPad reachabili
 
 Release0.24.15 run34925606393 is archiving. Upload/Apple processing and exact-build
 notes remain pending. These newer candidates are outside that release source.
+
+### Release 0.24.15 (103.1) delivered
+
+Release [34925606393](https://github.com/elsell/stuffstash/actions/runs/34925606393)
+completed successfully. Signed upload and Apple processing/changelog publication
+succeeded; the release log confirms the exact-build TestFlight changelog at
+2026-09-15 04:06:55 UTC. Source is
+`50b598ae46398cceb38759c44c012d61b8f33728` (PR135, M53–M56).
+PR136 fixes M57–M62 are subsequent work and are not included in this build.
+Delivery establishes availability, not native acceptance of open audit findings.
