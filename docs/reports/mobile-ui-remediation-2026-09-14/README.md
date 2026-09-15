@@ -73,7 +73,7 @@ Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) an
 
 Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
 
-Latest delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
+Historical delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
 succeeded at10:16:30UTC and exact TestFlight changelog verification completed
 at10:18:59UTC on September15 in
 [release34954415338](https://github.com/elsell/stuffstash/actions/runs/34954415338),
@@ -83,9 +83,8 @@ still require native acceptance. Earlier0.24.19 delivery is in the evidence log.
 
 Move source review: [destination selection, creation and Move here](move-axis.md).
 
-PR146 merged as `de5d87b0`. Its interim release is running in
+PR146 merged as `de5d87b0`. Its interim release completed in
 [release34958198826](https://github.com/elsell/stuffstash/actions/runs/34958198826).
 Required checks and final code review passed. This checkpoint includes native form
-actions, Move reflow, suggestion recovery and Edit tag-name feedback. Upload and
-exact-build TestFlight changelog verification are still pending. Later audit work
-on M94 is excluded.
+actions, Move reflow, suggestion recovery and Edit tag-name feedback. **0.24.21 (109.1) is delivered.** Upload succeeded at11:00:34 UTC; Apple
+processing and exact-build changelog verification succeeded at11:02:58 UTC. All later PR148 audit corrections are excluded.

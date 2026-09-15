@@ -1156,3 +1156,12 @@ and checks its full bounds before capture, then retains clear/cancel/return.
 Evidence lives in `/tmp/native349548-phone.log` and the completed screenshot
 artifact `/tmp/native349548-phone`. No cause is inferred for the other failures
 from this limited inspection. Updated XCTest execution remains pending.
+
+## TestFlight 0.24.21 (109.1) — delivered
+
+Release34958198826 completed successfully for source de5d87b0 (PR146). Signed
+archive/upload job104347543582 reported upload success at11:00:34 UTC September15.
+Changelog job104354176491 verified v0.24.21(109.1) at11:02:58 UTC after Apple
+processing. Logs: `/tmp/release349581-ios.log`, `/tmp/release349581-notes.log`.
+This fulfills the interim release checkpoint and excludes every PR148 change.
+Delivery is not native acceptance of the unresolved audit findings.
