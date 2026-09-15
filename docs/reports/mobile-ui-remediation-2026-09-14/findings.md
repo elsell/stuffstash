@@ -1277,7 +1277,11 @@ M104 candidate: services state now supplies the provider's notice scope. Owner
 cleanup rejects old publishers and action callbacks across transitions/unmount,
 while same-context View/Undo survives. The new-owner cleanup race is covered by a
 layout-effect publisher test. All 1,538 mobile tests, TypeScript and structural
-checks passed remotely. Critic found no source blocker and requested stronger
-integration evidence: the real mounted services gate must still demonstrate scope
-change without restarting initialization. That and native transition visibility
-remain pending; M104 stays open. See the global-notice appendix for evidence limits.
+checks passed remotely. Five additional mounted cases exercise the production gate
+with the real OnboardingCommand and controlled ports: sign-out, server change,
+expiry, reconnection and rejected push cleanup. Startup/composition counts remain
+stable across notice changes; successful transitions invalidate old actions, while
+failed cleanup preserves the current session. The targeted 18 tests, TypeScript
+and structural checks pass remotely. Critic found no extraction regression. Native
+transition visibility remains pending; M104 stays open. See the global-notice
+appendix for evidence limits.

@@ -1,6 +1,6 @@
 import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
 import { useRouter } from 'expo-router';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
   createMobileComposition,
@@ -10,18 +10,10 @@ import {
   MobileComposition
 } from '../../bootstrap/mobileComposition';
 import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
-import { AppFeedbackProvider, useAppFeedback } from '../feedback/AppFeedback';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
-import {
-  appServicesStateAfterAuthenticationRequired,
-  appServicesStateAfterServerChange,
-  appServicesStateAfterSignOut,
-  appServicesStateAfterStartupError,
-  appServicesStateFromOnboardingStart,
-  AppServicesGateState
-} from './AppServicesGate';
+import { AppServicesFeedbackGate, type AppServicesGateController } from './AppServicesFeedbackGate';
 import { VoiceInteractionStateProvider } from './VoiceInteractionStateContext';
 import { useInventoryInvitationLink } from './InventoryInvitationLinkContext';
 import { MobileServerStateProvider } from './MobileServerStateProvider';
@@ -40,76 +32,27 @@ type AppServicesProviderProps = {
 };
 
 export function AppServicesProvider({ children }: AppServicesProviderProps) {
-  const [state, setState] = useState<AppServicesState>({ status: 'loading' });
-  const feedbackScope = state.status === 'ready' ? state.composition.serviceScopeId : 'disconnected';
+  const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
+  const runtime = useMemo(() => ({
+    onboarding: onboardingCommand,
+    profiles: getConnectionProfileStore(),
+    createComposition: (profile: ConnectionProfile, onAuthenticationRequired: () => void) =>
+      createMobileComposition(profile, { onAuthenticationRequired })
+  }), [onboardingCommand]);
   return (
-    <AppFeedbackProvider scopeKey={feedbackScope}>
-      <AppServicesProviderInner state={state} setState={setState}>{children}</AppServicesProviderInner>
-    </AppFeedbackProvider>
+    <AppServicesFeedbackGate runtime={runtime}>
+      {controller => <AppServicesContent controller={controller} onboardingCommand={onboardingCommand}>{children}</AppServicesContent>}
+    </AppServicesFeedbackGate>
   );
 }
 
-function AppServicesProviderInner({ children, state, setState }: AppServicesProviderProps & {
-  readonly state: AppServicesState;
-  readonly setState: (state: AppServicesState) => void;
+function AppServicesContent({ children, controller, onboardingCommand }: AppServicesProviderProps & {
+  readonly controller: AppServicesGateController<MobileComposition>;
+  readonly onboardingCommand: ReturnType<typeof createOnboardingCommand>;
 }) {
   const invitationLink = useInventoryInvitationLink();
   const router = useRouter();
-  const onboardingCommand = useMemo(() => createOnboardingCommand(), []);
-  const { showDialog } = useAppFeedback();
-  const authPromptVisibleRef = useRef(false);
-
-  const buildComposition = useCallback((profile: ConnectionProfile) => createMobileComposition(profile, {
-    onAuthenticationRequired: () => {
-      if (authPromptVisibleRef.current) {
-        return;
-      }
-
-      authPromptVisibleRef.current = true;
-      onboardingCommand
-        .expireSession({ profile })
-        .then((onboardingState) => {
-          setState(appServicesStateAfterAuthenticationRequired(onboardingState.profile ?? profile));
-          showDialog({
-            title: 'Session expired',
-          message: 'Please sign in again to continue using Stuff Stash.',
-          primaryAction: {
-              label: 'Continue',
-              onPress: () => {
-                authPromptVisibleRef.current = false;
-              }
-            }
-          });
-        })
-        .catch(() => {
-          authPromptVisibleRef.current = false;
-          setState(appServicesStateAfterAuthenticationRequired(profile));
-        });
-    }
-  }), [showDialog, onboardingCommand]);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    onboardingCommand
-      .getStartState()
-      .then((startState) => {
-        if (!isCurrent) {
-          return;
-        }
-        setState(appServicesStateFromOnboardingStart(startState, buildComposition));
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setState(appServicesStateAfterStartupError());
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [buildComposition, onboardingCommand]);
-
+  const { state, signOut, changeServer } = controller;
   if (state.status === 'loading') {
     return <LoadingAppState />;
   }
@@ -122,35 +65,13 @@ function AppServicesProviderInner({ children, state, setState }: AppServicesProv
         initialState={state.onboardingState}
         invitationPending={Boolean(invitationLink.reference)}
         onStartOver={() => { invitationLink.clear(); router.replace('/'); }}
-        onComplete={(profile) => {
-          authPromptVisibleRef.current = false;
-          setState({ status: 'ready', composition: buildComposition(profile) });
-        }}
-        onStateChange={(onboardingState) => {
-          setState({ status: 'onboarding', onboardingState });
-        }}
+        onComplete={controller.complete}
+        onStateChange={controller.setOnboardingState}
       />
     );
   }
 
   const mobileComposition = state.composition;
-  const signOut = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
-    mobileComposition.disposePerformance();
-    const profile = await getConnectionProfileStore().load();
-    if (!profile) {
-      await onboardingCommand.reset();
-      setState(appServicesStateAfterServerChange());
-      return;
-    }
-
-    await onboardingCommand.expireSession({ profile });
-    setState(appServicesStateAfterSignOut(profile));
-  });
-  const changeServer = (): Promise<void> => mobileComposition.pushSession.disconnect(async () => {
-    mobileComposition.disposePerformance();
-    await onboardingCommand.reset();
-    setState(appServicesStateAfterServerChange());
-  });
 
   return (
     <MobileServerStateProvider
@@ -198,8 +119,6 @@ export function useAppConnectionActions(): AppConnectionActions {
 
   return actions;
 }
-
-type AppServicesState = AppServicesGateState;
 
 function LoadingAppState() {
   const palette = useAppearancePalette();

@@ -140,6 +140,15 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Services-gate integration must be exercisable without replacing platform modules
+or React hooks. Keep native composition construction in AppServicesContext and
+extract the actual mounted gate/feedback wiring behind injected onboarding,
+profile-store and composition-factory dependencies. The gate owns startup,
+completion, sign-out, server change and session-expiry transitions. Controlled
+ports must verify notice/action invalidation through those real transitions and
+that notice context changes do not repeat startup or composition construction.
+This extraction preserves existing authentication and push-cleanup ordering.
+
 Global notices belong to a services context. The app's feedback provider receives
 the current ready composition's service-scope identity, or a disconnected identity
 while loading/onboarding. Changing identity immediately hides old notices and
