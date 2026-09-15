@@ -1,7 +1,7 @@
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useCallback, useRef, useState } from 'react';
 import { Stack, useFocusEffect } from 'expo-router';
-import { Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { AppState, Linking, RefreshControl, ScrollView, Text, View } from 'react-native';
 import type { PushSession } from '../../application/notifications/PushSession';
 import type { NotificationPreferencesSession } from '../../application/notifications/NotificationPreferencesSession';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
@@ -27,12 +27,17 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const [types, setTypes] = useState<readonly CustomAssetTypeDefinition[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [pushMessage, setPushMessage] = useState('');
+  const [pushOutcome, setPushOutcome] = useState<'enabled' | 'denied'>();
+  const pushMessage = pushOutcome === 'enabled' ? 'Device setup completed.' : pushOutcome === 'denied' ? 'Allow notifications for Stuff Stash in your device settings, then try again.' : '';
   const pending = useRef(false); const mounted = useRef(true);
+  const feedbackGeneration = useRef(0);
   const controller = useRef<AbortController | null>(null);
   useFocusEffect(useCallback(() => {
-    mounted.current = true; void load();
-    return () => { mounted.current = false; controller.current?.abort(); controller.current = null; pending.current = false; };
+    mounted.current = true; feedbackGeneration.current += 1; setPushOutcome(undefined); void load();
+    const appState = AppState.addEventListener('change', state => {
+      if (state === 'background') { feedbackGeneration.current += 1; setPushOutcome(undefined); }
+    });
+    return () => { appState.remove(); feedbackGeneration.current += 1; mounted.current = false; controller.current?.abort(); controller.current = null; pending.current = false; };
   }, [session, tenantId, inventoryId]));
   async function load() {
     if (pending.current) return;
@@ -63,16 +68,17 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   }
   async function changePush(enabled: boolean) {
     if (!pushSession || pending.current) return;
-    setPushMessage('');
+    const feedbackOwner = feedbackGeneration.current;
+    setPushOutcome(undefined);
     try {
       await save(async (signal) => {
         if (!enabled) return session.savePushEnabled(false, { signal });
         const result = await pushSession.enable(tenantId, inventoryId, { signal });
-        if (result === 'denied' && mounted.current && !signal.aborted) {
-          setPushMessage('Allow notifications for Stuff Stash in your device settings, then try again.');
+        if (result === 'denied' && mounted.current && !signal.aborted && feedbackOwner === feedbackGeneration.current) {
+          setPushOutcome('denied');
         }
         const refreshed = await session.refresh({ signal });
-        if (result === 'enabled' && mounted.current && !signal.aborted) setPushMessage('Notifications allowed on this device.');
+        if (result === 'enabled' && mounted.current && !signal.aborted && feedbackOwner === feedbackGeneration.current) setPushOutcome('enabled');
         return refreshed;
       });
     } catch { /* The shared save path presents errors without changing the switch optimistically. */ }
@@ -99,8 +105,8 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
         <View style={styles.detailHeader}><Text style={styles.secondaryText}>Your reminders for this inventory.</Text></View>
         {pushSession ? <SettingsSection title="Notifications" footer={pushMessage || 'Push alerts also need server delivery support. In-app reminders are independent.'}>
           <SettingsSwitchRow label="Push notifications" value={preferences.pushEnabled} disabled={busy} onValueChange={enabled => void changePush(enabled)} />
-          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Set up alerts on this device" label={pushMessage === 'Notifications allowed on this device.' ? 'Open device settings' : 'Enable on this device'} disabled={busy} onPress={() => { if (pushMessage === 'Notifications allowed on this device.') void Linking.openSettings(); else void changePush(true); }} /></> : null}
-          {pushMessage.startsWith('Allow notifications') ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Open notification system settings" label="Open Settings" onPress={() => void Linking.openSettings()} /></> : null}
+          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Set up alerts on this device" label={pushOutcome === 'enabled' ? 'Open device settings' : 'Enable on this device'} disabled={busy} onPress={() => { if (pushOutcome === 'enabled') void Linking.openSettings(); else void changePush(true); }} /></> : null}
+          {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Open notification system settings" label="Open Settings" onPress={() => void Linking.openSettings()} /></> : null}
         </SettingsSection> : null}
         <ExpirationReminderEditor initialPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing'})} onSave={async value => { if (value) await save(signal => session.saveDefaults(value,{signal})); }} />
         <SettingsSection footer="Expiration dates use this time zone, even when you travel."><SettingsNavigationRow label="Time zone" accessibilityLabel="Time zone" value={readableTimeZone(preferences.timezone)} disabled={busy} onPress={() => onNavigate({kind:'timezone'})} /></SettingsSection>

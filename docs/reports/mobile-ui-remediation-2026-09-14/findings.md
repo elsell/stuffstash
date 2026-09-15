@@ -306,3 +306,19 @@ adapter. This matches their command task without extra navigation. Query scoping
 loading guards, recovery and pagination behavior are unchanged. Eleven existing
 inbox behavior tests, TypeScript and structural checks pass remotely. Critic found
 no issue. Native control sizing/appearance and paging acceptance remain pending.
+
+### M57 — Device setup feedback outlives the attempt's context
+
+Reminder settings retained a successful permission claim after returning from
+OS Settings, and compared display text to choose button behavior. Feedback now
+uses a typed outcome, describes a completed setup attempt, and clears on focus
+entry or backgrounding. A generation token rejects delayed enabled/denied feedback
+after backgrounding or navigation departure without canceling background setup
+persistence. Transient inactive permission prompts retain their feedback ownership.
+
+The delayed-background regression failed before the generation guard. Fifteen
+remote settings/setup/session tests pass, including background/inactive × granted/
+denied results, unchanged inventory preferences, and return/retry behavior.
+TypeScript and the mobile structural check pass. Critic's race finding is resolved.
+Physical permission prompts, external Settings changes and native lifecycle timing
+still need verification. This change follows the PR135 release cut.
