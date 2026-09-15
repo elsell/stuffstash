@@ -1,4 +1,5 @@
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { AddAssetNameField } from './AddAssetNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -121,6 +122,7 @@ function ScopedAddAssetScreen({
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const feedback = useAppFeedback();
+  const capturePhotoChooserVisit = useTaskPresentation(undefined, principalId);
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const formScrollRef = useRef<ScrollView>(null);
@@ -464,7 +466,10 @@ function ScopedAddAssetScreen({
 
   function choosePhotoSource(): void {
     if (draftOperation.current) return;
+    const canPresent = capturePhotoChooserVisit();
+    if (!canPresent()) return;
     showPhotoSourceChooser({
+      isCurrent: canPresent,
       onCamera: () => void takePhoto(),
       onLibrary: () => void addPhotosFromLibrary()
     });
@@ -741,6 +746,7 @@ function PhotoCapture({
         style={styles.photoStrip}
       >
         <Pressable
+          accessibilityLabel="Add photos"
           accessibilityHint="Choose camera or photo library"
           accessibilityRole="button"
           disabled={disabled}

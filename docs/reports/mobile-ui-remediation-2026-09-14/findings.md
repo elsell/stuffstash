@@ -2258,3 +2258,19 @@ the permission query changes; Add used the older context state. The new regressi
 reproduced the stale action. Mutation affordances now use the current permission
 snapshot and removed native handlers do nothing. Read-only rows stay visible when
 view permission remains. This is an affordance fix, not a server-authorization change.
+
+### M158 — Retained photo-source choice survives a departed visit
+
+P2 mounted finding at39a846d6. Add and asset detail accepted old camera/library
+choices after blur/return. All four iOS regression cases opened selection before
+correction. Source choosers now capture their opening visit; the shared adapter
+requires and checks current ownership before presentation/acceptance. Fresh
+choosers still work after return, with both Android choices also covered. Voice
+retains its existing ownership guard. See confirmation-review.md; physical picker
+acceptance remains pending, and already-started pickers are outside this correction.
+
+### M159 — Add photo tile has no accessible action name
+
+P2 source/mounted finding at39a846d6. The icon-only tile exposed a hint but no
+action label. The semantic-label regression failed before adding Add photos.
+Selection/geometry is unchanged. VoiceOver naming/order remains a native check.

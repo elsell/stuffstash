@@ -233,13 +233,12 @@ export function AssetDetailRouteScreen({
 
   function choosePhotos(currentPhotoCount: number): void {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
+    if (!canPresent()) return;
     showPhotoSourceChooser({
-      onCamera: () => {
-        if (scope.active) void addPhotos('camera', currentPhotoCount);
-      },
-      onLibrary: () => {
-        if (scope.active) void addPhotos('library', currentPhotoCount);
-      }
+      isCurrent: () => scope.active && canPresent(),
+      onCamera: () => void addPhotos('camera', currentPhotoCount),
+      onLibrary: () => void addPhotos('library', currentPhotoCount)
     });
   }
 

@@ -55,8 +55,8 @@ The resumed audit continues in draft PR153. Checkpointfcc2f9b8 passes all1,704 m
 tests and static/fixture checks remotely; its new native collection journey is pending.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,711
-pending,1,196 source-reviewed,340 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,710
+pending,1,195 source-reviewed,342 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.

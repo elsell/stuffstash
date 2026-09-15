@@ -31,6 +31,7 @@ export function showVoicePlanPhotoSourceChooser({
   };
 
   showPhotoSourceChooser({
+    isCurrent,
     onCamera: () => run(onCamera),
     onLibrary: () => run(onLibrary)
   });

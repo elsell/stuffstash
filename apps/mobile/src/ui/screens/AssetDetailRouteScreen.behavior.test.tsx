@@ -13,7 +13,7 @@ import { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCo
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { assetId, type AssetPhoto } from '../../domain/assets/AssetSummary';
 import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
-import { latestAlert, latestActionSheetCallback } from '../../test-support/react-native';
+import { latestAlert, latestActionSheetCallback, Platform } from '../../test-support/react-native';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
 
 function deferred<T>() {
@@ -568,6 +568,28 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s conf
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
 });
 
+
+it.each(['ios', 'android'].flatMap(platform => [0, 1].map(source => ({ platform, source }))))('ignores a stale photo-source choice after returning, $platform/$source', async ({ platform, source }) => {
+  resetNavigation(); let selections = 0;
+  const originalPlatform = Platform.OS; Platform.OS = platform;
+  const select = async () => { selections++; return []; };
+  const test = setup({ photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: select, captureFromCamera: select }) });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    const chooserAlert = latestAlert();
+    const choose = platform === 'ios' ? latestActionSheetCallback() : (index: number) => chooserAlert?.buttons[index].onPress?.();
+    expect(choose).toBeTypeOf('function');
+    await test.harness.run(() => setScreenFocused(false));
+    await test.harness.run(() => setScreenFocused(true));
+    await test.harness.run(() => choose!(source));
+    expect(selections).toBe(0);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => platform === 'ios' ? latestActionSheetCallback()!(source) : latestAlert()?.buttons[source].onPress?.());
+    expect(selections).toBe(1);
+  } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); Platform.OS = originalPlatform; }
+});
 
 it('retries only failed photos from the workspace without reopening selection', async () => {
   const attempts: string[] = [];

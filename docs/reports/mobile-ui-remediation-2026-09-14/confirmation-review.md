@@ -13,10 +13,31 @@ actual dismissal timing require their separate acceptance traces.
 | Provider credential / prompt discard | Native discard confirmation is appropriate for losing a replacement draft; Keep Editing preserves it. | useProviderEditorExit checks saving and captured presentation before acceptance, consumes the exit and disarms removal before dispatch. Mounted tests cover blur/refocus, duplicate acceptance and immediate Back during saving. | Native navigation removal and draft retention on the corrected build. |
 | Push-open failure | An acknowledgement explains why an explicitly requested destination cannot open. No mutation callback is attached to OK. | PushNotificationNavigation aborts an earlier request and its effect cleanup; only a non-aborted result can navigate or show the dialog. | Physical cold/warm notification taps and session replacement. Source review does not replace physical push evidence. |
 
+## September 15 photo-source follow-up
+
+At39a846d6, Add and detail source choosers could start camera/library selection
+from a callback retained across leaving and returning. M158 binds each chooser to
+the original visit/resource and makes `isCurrent` required by the shared chooser.
+The helper checks before presentation and acceptance on both platforms. Voice's
+existing plan/visit ownership is retained, including its late-error guard.
+
+iOS uses a native action sheet for choosing a source; Android uses its native
+choice dialog. Neither is a destructive confirmation. Cancel performs no action.
+Four stale iOS choices failed before correction; current tests also exercise both
+Android sources. Fresh choices after return still work. The Add photo tile now
+has the action name Add photos (M159), independently of its supplementary hint.
+All56 focused Add/detail/voice tests, TypeScript and structural checks pass remotely.
+Critic found no confirmed blocker. Physical picker/camera/permissions, iPad source
+sheet anchoring and assistive announcements remain native acceptance work.
+This change does not cancel or redefine an already-started system picker.
+
+Customization Discard ownership is now reviewed and corrected by M155;
+see settings-exit-axis.md. That review does not certify every lifecycle dialog.
+
 The shared AppFeedback dialog adapter forwards caller actions to the system alert;
 it does not establish their task ownership. Each mutating caller therefore remains
 responsible for its own validity and lifetime checks. AppServicesFeedbackGate,
-provider archive, customization dialogs, photo-source selection and sheet operation
+provider archive, customization lifecycle dialogs and sheet operation
 failure alerts still need completion of their individual reviews. Already-corrected
 photo, expiration, account, conversation and Edit discard entries retain their
 finding-specific evidence rather than being relabeled as fully verified here.
