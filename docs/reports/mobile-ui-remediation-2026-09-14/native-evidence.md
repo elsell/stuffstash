@@ -552,3 +552,10 @@ succeeded; the release log confirms the exact-build TestFlight changelog at
 `50b598ae46398cceb38759c44c012d61b8f33728` (PR135, M53–M56).
 PR136 fixes M57–M62 are subsequent work and are not included in this build.
 Delivery establishes availability, not native acceptance of open audit findings.
+
+### Native run 34927007321 partial outcome
+
+The iPhone onboarding job104247073503 completed successfully. iPad onboarding
+and both fixture jobs remain running. Sourceb275b0c5 includes the Home return
+command candidate and isolated query comparison, but predates M61–M64. This
+partial job outcome does not establish acceptance for those later changes.
