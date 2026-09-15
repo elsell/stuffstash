@@ -1867,3 +1867,25 @@ activation instead of a trailing-coordinate workaround. All15 color tests,
 TypeScript, structural checks and2 fixture-preparation tests pass remotely. Critic
 found no blocker. Actual native target bounds, label layout and VoiceOver activation
 remain unverified; M51 is not closed by source geometry.
+
+
+## M137 — iPad search keyboard dismissal is visible but not hittable
+
+P2, S127 and place-detail search. Run34992079258, actual source514032e0,
+normal text on iPad mini (A17 Pro): native search accepts `19`, includes Tool19
+and excludes Tool0. The next assertion, `Dismiss keyboard.isHittable`, fails
+before any dismissal tap. Inspected final-state image and hierarchy are retained
+as evidence/ipad-place-search-dismiss-349920.png and .txt.
+
+The hierarchy exposes the button at x680,y739,width44,height44. An ancestor
+occupies x0,y749,width372,height44; the child extends outside that ancestor.
+This is a plausible hit-testing cause, not a verified root cause. The visible
+chevron and presence in the accessibility tree do not establish operability.
+The system Hide keyboard action also exists, but substituting it would bypass
+the project-required accessory acceptance check. Keep the failing assertion.
+
+Next acceptance: reproduce on the current candidate; verify the accessory's
+actual hit region and dismiss without clearing `19`, then open the matching
+result and return. Confirm phone, iPad, ordinary inputs and sheet consumers.
+No production change or native closure is claimed. The phone place-search test
+also failed in this run, at a different line; it needs separate screenshot triage.

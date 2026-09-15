@@ -37,3 +37,9 @@ Run349853 phone's Expiration keyboard journey passed, but this is one consumer a
 not blanket accessory acceptance. The ordinary multiline comparison failed before
 entry due to fixture placement (now corrected). No whole-input or iPad keyboard
 pass is inferred from either result.
+
+
+Run34992079258 iPad place-search evidence confirms M137: the dismissal control
+is visible and exposed but fails native hit testing after a successful search.
+See findings.md and retained ipad-place-search-dismiss-349920 image/hierarchy.
+The source target-size declaration does not resolve the native ancestor geometry.
