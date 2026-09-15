@@ -2418,3 +2418,12 @@ focused rail/presentation/composer/lifecycle tests, TypeScript and structural ch
 pass on paul; code critic found no blockers. Native review actions are taller than
 the former custom row: short windows, keyboard and reading order need acceptance.
 Native layout verification remains open; this is not a full conversation audit.
+
+### M171 — Response navigation can outlive its originating conversation visit
+
+P2 source-confirmed at722ca46c. VoiceSessionSheetScreen's response-link handler
+awaits pauseMedia and then unconditionally dismisses/pushes asset details. If the
+user leaves or changes scope while pausing, completion can navigate from another
+screen. Capture visit and scope ownership before awaiting and check before
+navigation. Verify current completion, leave/return, and scope replacement with
+a delayed media fake. Correction and native transition acceptance remain open.

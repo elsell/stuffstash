@@ -1344,7 +1344,7 @@ R056,tenant-switcher.tsx,notifications,System notification entry and state,pendi
 R056,tenant-switcher.tsx,media,"Camera, library, files and audio",pending,,
 R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; M78 focus ownership and both completion/refocus orderings remote verified; native pending; M79 accepted selection observer ordering remote verified,M46;M78;M79
 R057,voice.tsx,task,Task clarity and platform-pattern fit,finding,findings.md M170; response/decision commands source review only,M170
-R057,voice.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R057,voice.tsx,navigation,"Navigation, hierarchy and return",finding,findings.md M171 delayed media/navigation ownership,M171
 R057,voice.tsx,selection,Value selection and current value,pending,,
 R057,voice.tsx,modality,Presentation and dismissal,pending,,
 R057,voice.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1366,7 +1366,7 @@ R057,voice.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R057,voice.tsx,privacy,"Account scope, data use and permissions",pending,,
 R057,voice.tsx,notifications,System notification entry and state,pending,,
 R057,voice.tsx,media,"Camera, library, files and audio",pending,,
-R057,voice.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R057,voice.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,findings.md M171 delayed media/navigation ownership,M171
 S058,onboarding / server entry,task,Task clarity and platform-pattern fit,source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S058,onboarding / server entry,navigation,"Navigation, hierarchy and return",pending,,
 S058,onboarding / server entry,selection,Value selection and current value,source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
@@ -2879,30 +2879,30 @@ S120,Voice / processing,privacy,"Account scope, data use and permissions",pendin
 S120,Voice / processing,notifications,System notification entry and state,pending,,
 S120,Voice / processing,media,"Camera, library, files and audio",pending,,
 S120,Voice / processing,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending,M144
-S121,Voice / response,task,Task clarity and platform-pattern fit,finding,findings.md M170; response/decision commands source review only,M170
-S121,Voice / response,navigation,"Navigation, hierarchy and return",pending,,
-S121,Voice / response,selection,Value selection and current value,pending,,
-S121,Voice / response,modality,Presentation and dismissal,pending,,
-S121,Voice / response,layout,"Safe areas, scroll edges and overlays",pending,,
-S121,Voice / response,adaptation,Phone/tablet/window reflow,pending,,
-S121,Voice / response,typography,"Dynamic Type, wrapping and legibility",pending,,
-S121,Voice / response,appearance,"Light/dark, contrast and materials",finding,findings.md M170; response/decision commands source review only,M170
-S121,Voice / response,localization,"Locale, timezone, RTL and long strings",pending,,
-S121,Voice / response,imagery,"Icons, photos and missing media",pending,,
-S121,Voice / response,targets,Touch target size and reachability,finding,findings.md M170; response/decision commands source review only,M170
-S121,Voice / response,gestures,Gestures and explicit alternatives,pending,,
-S121,Voice / response,keyboard,"Keyboard, text entry and focus",pending,,
-S121,Voice / response,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S121,Voice / response,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
-S121,Voice / response,content,"Lists, hierarchy, density and pagination",pending,,
-S121,Voice / response,search,"Search, scope and filters",pending,,
-S121,Voice / response,loading,"Loading, background refresh and progress",pending,,
-S121,Voice / response,recovery,"Empty, error, denied and retry",pending,,
-S121,Voice / response,editing,"Draft, save, cancel, undo and interruption",pending,,
-S121,Voice / response,privacy,"Account scope, data use and permissions",pending,,
-S121,Voice / response,notifications,System notification entry and state,pending,,
-S121,Voice / response,media,"Camera, library, files and audio",pending,,
-S121,Voice / response,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S121,Voice / response,task,Task clarity and platform-pattern fit,finding,findings.md M170; response/decision commands source review only; conversation-response-axis.md; source722ca46c; native acceptance pending,M170
+S121,Voice / response,navigation,"Navigation, hierarchy and return",finding,conversation-response-axis.md; source722ca46c; native acceptance pending; findings.md M171 delayed media/navigation ownership,M171
+S121,Voice / response,selection,Value selection and current value,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,modality,Presentation and dismissal,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,layout,"Safe areas, scroll edges and overlays",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,adaptation,Phone/tablet/window reflow,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,typography,"Dynamic Type, wrapping and legibility",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,appearance,"Light/dark, contrast and materials",finding,findings.md M170; response/decision commands source review only; conversation-response-axis.md; source722ca46c; native acceptance pending,M170
+S121,Voice / response,localization,"Locale, timezone, RTL and long strings",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,imagery,"Icons, photos and missing media",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,targets,Touch target size and reachability,finding,findings.md M170; response/decision commands source review only; conversation-response-axis.md; source722ca46c; native acceptance pending,M170
+S121,Voice / response,gestures,Gestures and explicit alternatives,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,keyboard,"Keyboard, text entry and focus",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,motion,Reduced motion and feedback alternatives,source-reviewed,motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending; conversation-response-axis.md; source722ca46c; native acceptance pending,M62
+S121,Voice / response,content,"Lists, hierarchy, density and pagination",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,search,"Search, scope and filters",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,loading,"Loading, background refresh and progress",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,recovery,"Empty, error, denied and retry",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,editing,"Draft, save, cancel, undo and interruption",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,privacy,"Account scope, data use and permissions",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,notifications,System notification entry and state,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,media,"Camera, library, files and audio",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
+S121,Voice / response,lifecycle,"Cold/warm start, blur, background and deep link",finding,conversation-response-axis.md; source722ca46c; native acceptance pending; findings.md M171 delayed media/navigation ownership,M171
 S122,Voice / plan approval edits,task,Task clarity and platform-pattern fit,pending,,
 S122,Voice / plan approval edits,navigation,"Navigation, hierarchy and return",pending,,
 S122,Voice / plan approval edits,selection,Value selection and current value,pending,,

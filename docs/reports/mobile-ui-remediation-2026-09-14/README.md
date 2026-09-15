@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,354
-pending,1,458 source-reviewed,433 finding,24 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,332
+pending,1,476 source-reviewed,437 finding,24 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -130,6 +130,10 @@ its native controls and pending request behavior are distinct from recording and
 plan approval acceptance. M170 tracks remaining custom response/decision commands.
 M170's native command migration passes46 focused tests and static checks. Review
 keeps the taller native decision area flagged for keyboard/short-window acceptance.
+
+The [response surface](conversation-response-axis.md) has all24 source axes
+reviewed;29 focused tests pass. Historical photo retry is plan-owned. M171 records
+an unguarded navigation completion after pausing media, pending correction.
 The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
 nested diagnostic layout from the direct-scroll structure used by production filters.
 
