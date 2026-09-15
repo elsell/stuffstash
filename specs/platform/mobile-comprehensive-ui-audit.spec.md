@@ -1088,3 +1088,10 @@ confirmation after blur/refocus, replacement, settings refresh, draft change,
 disabling or unmount must not replace current edits or clear their expiration.
 A valid confirmation preserves other draft fields and applies once. Reuse the
 existing presentation-ownership primitive; no new navigation or dialog style.
+
+Stored-photo removal confirmation is valid only for the current focused viewer,
+selected photo, collection and removal availability. Closing/reopening the viewer,
+changing selection/collection, losing remove access, starting removal, leaving the
+screen or unmounting invalidates retained confirmation callbacks. Valid acceptance
+calls the existing removal command once for the confirmed photo. Preserve the
+existing destructive native alert and server-side authorization boundary.

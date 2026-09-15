@@ -1905,3 +1905,24 @@ preserves title, notes and tags while clearing the type-dependent expiration.
 Fifteen focused expiration tests, TypeScript and structural checks pass on paul.
 Critic found no confirmed blocker. Native dialog timing/return verification remains
 pending; this is source and mounted evidence, not native visual acceptance.
+
+
+## M139 — Stored-photo removal confirmation outlives its viewer
+
+P2, AssetPhotoViewerSheet. Atce586b03 the retained destructive alert directly
+calls onRemove after viewer close/reopen, changed selection or collection, remove
+access loss, pending removal, focus return or unmount. The detail route has an
+operation guard, but that does not establish consent for the current viewer visit.
+Eight mounted cases failed before correction, including repeated valid acceptance.
+
+The viewer now captures the shared focused presentation owner keyed by collection
+IDs, selected index and removal availability, and consumes acceptance once.
+The existing deletion command and native destructive alert remain unchanged.
+Thirteen focused viewer tests, TypeScript and structural checks pass on paul.
+Native alert timing and gallery navigation acceptance remain pending. Add's draft
+photo removal is a separate call site and is not covered by this correction.
+
+Critic found no production blocker and requested independent collection coverage.
+Added a ninth passing confirmation case that appends a different photo while
+preserving the selected photo and index; collection invalidation is now exercised
+without relying on selection change. Native acceptance is still pending.
