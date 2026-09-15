@@ -1,5 +1,5 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { usePullRefresh } from '../serverState/usePullRefresh';
+import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -21,7 +21,6 @@ import {
   AssetActivityView
 } from '../../application/assets/AssetActivityQuery';
 import { groupHistoryRecords, historyFilterMenuGroups, historyLoadError } from './AssetHistoryPresentation';
-import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { NativeActionMenu } from '../components/NativeActionMenu';
@@ -53,7 +52,6 @@ export function AssetHistoryRouteScreen({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const feedback = useAppFeedback();
   const [view, setView] = useState<AssetActivityView>('changes');
   const scopeId = useMobileServerStateScopeId();
   const history = useInfiniteQuery({
@@ -69,12 +67,10 @@ export function AssetHistoryRouteScreen({
   const isLoadingMore = history.isFetchingNextPage;
   const pageError = history.isFetchNextPageError ? 'Older activity could not be loaded.' : undefined;
 
-  const { refreshing: isRefreshing, refresh: refresh } = usePullRefresh(async () => {
-    try {
-      await history.refetch({ throwOnError: true });
-    } catch {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh History', message: 'Please try again when access and connectivity are available.' });
-    }
+  const { refreshing: isRefreshing, refresh } = usePullRefreshFeedback({
+    refresh: () => history.refetch({ throwOnError: true }),
+    resourceKey: mobileQueryKeys.assetHistory(scopeId, tenantId, inventoryId, assetId, view),
+    failureTitle: 'Could not refresh History'
   });
 
   async function loadMore(): Promise<void> {
@@ -100,12 +96,12 @@ export function AssetHistoryRouteScreen({
         <View style={styles.centerState}>
           <Text accessibilityRole="header" style={styles.stateTitle}>{state.title}</Text>
           <Text style={styles.stateMessage}>{state.message}</Text>
-          {state.canRetry ? <NativeCommandButton label="Try again" onPress={() => void history.refetch()} /> : null}
+          {state.canRetry ? <NativeCommandButton label="Try again" disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} /> : null}
         </View>
       ) : null}
       {state.status === 'ready' && history.isRefetchError ? <View style={styles.heading}>
         <Text accessibilityRole="alert" style={styles.pageError}>History could not be refreshed. Previously loaded activity is shown.</Text>
-        <NativeCommandButton label="Try refreshing again" onPress={() => void refresh()} />
+        <NativeCommandButton label="Try refreshing again" disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} />
       </View> : null}
       {state.status === 'ready' ? (
         <SectionList

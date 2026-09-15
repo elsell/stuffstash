@@ -69,9 +69,15 @@ Combined post-M161 validation passes **1,722 tests across271 files**, TypeScript
 and mobile structural checks on paul (captured `/tmp/mobile-list-batch.log`).
 This includes M160 and M161; no native result is promoted by the source suite.
 
+[Asset History](history-list-axis.md) now has all24 source axes reviewed. M162
+retires delayed pull notices and separates inline Retry from the native pull
+indicator. Its12 focused tests, TypeScript and structural checks pass remotely;
+code critic found no blockers. Native acceptance remains pending. This follows
+the1,722-test checkpoint above.
+
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,646
-pending,1,251 source-reviewed,350 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,630
+pending,1,264 source-reviewed,353 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.

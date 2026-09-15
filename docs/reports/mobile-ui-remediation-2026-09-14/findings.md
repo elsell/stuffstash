@@ -2299,3 +2299,13 @@ recovery and access suppression still belong to the query adapter. All18 focused
 cases pass remotely; native notice placement/reachability remains pending. The
 legacy LocationsScreen has no current route consumer and is not claimed as a
 third shipped route. See asset-lists-axis.md.
+
+### M162 — History refresh feedback and Retry have the wrong owner
+
+P2 mounted at153a6be3. A delayed failed pull reported over a departed/returned
+visit, while inline cached-error Retry activated the pull indicator. Two visit
+tests and one Retry test failed before correction. History now uses shared scoped
+pull feedback, including history-view identity, and Retry refetches directly with
+pending controls disabled. Existing inline failure context, cached pages and
+access suppression remain. All12 focused History cases pass remotely; native
+acceptance remains pending. See history-list-axis.md.
