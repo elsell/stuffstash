@@ -535,7 +535,8 @@
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
-    ]
+    ],
+    "availability": "absent; see add-type-axis.md"
   },
   {
     "id": "S086",
@@ -584,7 +585,8 @@
     "source": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
     "sources": [
       "apps/mobile/src/ui/screens/AddAssetScreen.tsx"
-    ]
+    ],
+    "availability": "absent; see add-type-axis.md"
   },
   {
     "id": "S092",

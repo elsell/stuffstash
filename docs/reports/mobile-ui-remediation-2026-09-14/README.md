@@ -176,3 +176,7 @@ its stale creation-label correction is included.
 [Home action header](home-header-axis.md) reviews S066 across all24 axes and
 identifies why the existing Home Return fixture cannot verify three-action
 visibility or production transparent scroll edges. Those native checks remain open.
+
+[Add item type](add-type-axis.md) covers S088 across24 axes, records M149/M150
+recovery fixes and corrects S085/S091 inventory entries for controls absent from
+Add. Stable surface IDs remain; absent controls are not native passes.

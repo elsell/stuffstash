@@ -1206,3 +1206,17 @@ English fixture, contained and hittable action bounds, selector separation, and
 stable header position after scrolling. Retain before/after screenshots for visual
 scroll-edge review. Geometry assertions do not prove material transparency or the
 full production tab/accessory composition; retain those acceptance limits.
+
+### Item-type query recovery in Add and Edit
+
+An initial failed item-type query must show actionable failure and native Retry,
+without simultaneously claiming expiration settings are still loading. Preserve
+the name, description and other draft values while retrying. A retry may show
+loading while no data is available; success restores the type/date editor. Keep
+cached usable type data visible during transient refresh failures. Access failure
+continues to hide unavailable data through the existing scoped query boundary.
+
+An expanded item-type search with no matches must say so beside the query. Clearing
+or changing the query restores matching choices without changing the selected type
+or expiration draft. Keep this descriptive, searchable selection in the current
+form; do not add a navigation destination for the empty state.

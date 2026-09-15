@@ -171,6 +171,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
         </>}
         asset={asset}
         assetTypes={types.data}
+        assetTypesFailed={types.isError}
         assetTags={tags.data ?? []}
         draft={draft}
         isSaving={isSaving}

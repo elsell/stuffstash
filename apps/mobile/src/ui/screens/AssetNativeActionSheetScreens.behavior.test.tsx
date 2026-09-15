@@ -266,6 +266,7 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
       expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
     }
     expect(formScroll?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
+    expect(harness.byText('Loading expiration settings…')).toBeUndefined();
     await harness.changeText(harness.byLabel('Asset name'), 'My retained name');
     await harness.press(harness.byLabel('Retry tags')); await settle(harness);
     expect(tagReads).toBe(2); expect(typeReads).toBe(1);

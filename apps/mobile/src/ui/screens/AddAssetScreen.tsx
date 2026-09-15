@@ -651,10 +651,10 @@ function ScopedAddAssetScreen({
                   )}
                 </Pressable>
 
-                {types.isError ? <Pressable accessibilityRole="button" accessibilityLabel="Retry asset types" onPress={() => void types.refetch()} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.text }}>Asset types could not be loaded. Retry.</Text></Pressable> : null}
-                <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
+                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>Asset types could not be loaded.</Text><NativeCommandButton label="Retry asset types" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
+                {types.data || !types.isError ? <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
-                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} />
+                  onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} /> : null}
                 {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>Open More details to add or clear the unfinished tag before saving.</Text> : null}
                 {showDetails ? (
                   <View>

@@ -214,6 +214,43 @@ it('settles navigation updates while header actions use the latest Add draft', a
 
 afterEach(() => setNativeHeaderHeight(144));
 
+it('recovers unavailable item types without claiming loading or replacing the Add draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  client.setDefaultOptions({ queries: { retry: false } });
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  let reads = 0;
+  const store = new InMemoryAddAssetDraftStore('scope');
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => { if (++reads !== 2) throw new Error('Types unavailable'); return [{ kind: 'asset-type', id: 'medicine', key: 'medicine', displayName: 'Medicine', description: '', tenantId: 'tenant', inventoryId: 'inventory', scope: 'inventory', lifecycle: 'active', expirationEnabled: true }]; } }}
+      addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })}
+      addAssetDraftStore={store} createAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })}
+    /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    await h.changeText(h.byLabel('Asset name'), 'Retained medicine');
+    expect(h.byLabel('Retry asset types')).toBeDefined();
+    expect(h.byText('Loading expiration settings…')).toBeUndefined();
+    await h.press(h.byLabel('Retry asset types'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(reads).toBe(2);
+    expect(h.byLabel('Retry asset types')).toBeUndefined();
+    await h.press(h.byLabel('Item type')); await h.press(h.byLabel('Medicine'));
+    expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })).toMatchObject({ title: 'Retained medicine', customAssetTypeId: 'medicine' });
+    expect(h.byLabel('Expiration')).toBeDefined();
+    await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant', 'inventory', 'inventory', 'asset-type-choices', 'active') }));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(reads).toBe(3);
+    expect(h.byLabel('Retry asset types')).toBeDefined();
+    expect(h.byLabel('Expiration')).toBeDefined();
+    expect(h.byLabel('Item type')?.props.accessibilityValue).toEqual({ text: 'Medicine' });
+    expect(h.byText('Loading expiration settings…')).toBeUndefined();
+    expect(store.load({ tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' })?.title).toBe('Retained medicine');
+  } finally { await h.unmount(); client.clear(); }
+});
+
 
 it('retains unfinished Add tag input through disclosure and scoped draft restoration', async () => {
   const client = createMobileQueryClient(); const store = new InMemoryAddAssetDraftStore('scope');

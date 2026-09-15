@@ -68,6 +68,7 @@ export type MoveIntoDraft = {
 export function EditAssetSheet({
   asset,
   assetTypes,
+  assetTypesFailed = false,
   assetTags,
   metadataRecovery,
   draft,
@@ -78,6 +79,7 @@ export function EditAssetSheet({
 }: {
   readonly asset: AssetDetailViewModel;
   readonly assetTypes?: readonly CustomAssetTypeDefinition[];
+  readonly assetTypesFailed?: boolean;
   readonly assetTags: readonly AssetTagOptionViewModel[];
   readonly metadataRecovery?: ReactNode;
   readonly draft: EditDraft | undefined;
@@ -121,7 +123,7 @@ export function EditAssetSheet({
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
-        <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} />
+        {assetTypes || !assetTypesFailed ? <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} /> : null}
         <EditTagPicker
           disabled={isSaving}
           tags={assetTags}

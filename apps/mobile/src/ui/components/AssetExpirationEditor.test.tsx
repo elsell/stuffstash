@@ -6,6 +6,24 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { AssetExpirationEditor } from './AssetExpirationEditor';
 import type { EditDraft } from '../screens/AssetDetailEditPresentation';
 
+it('explains an empty type search and restores choices without changing the draft', async () => {
+  const h = new MobileRenderHarness(); const changes: EditDraft[] = [];
+  try {
+    await h.render(<AssetExpirationEditor asset={{ id: 'new-item', title: 'Medicine', description: '' }}
+      draft={{ title: 'Medicine', description: '', customAssetTypeId: 'medicine', expiration: { date: '2028-02', precision: 'month' } }}
+      types={[{ kind: 'asset-type', id: 'medicine', key: 'medicine', displayName: 'Medicine', description: '', tenantId: 'tenant', inventoryId: 'inventory', scope: 'inventory', lifecycle: 'active', expirationEnabled: true }]}
+      disabled={false} onChange={draft => changes.push(draft)} />);
+    await h.press(h.byLabel('Item type'));
+    await h.changeText(h.byLabel('Search item types'), 'No such type');
+    expect(h.byText('No matching item types.')).toBeDefined();
+    expect(h.byLabel('Medicine')).toBeUndefined();
+    await h.changeText(h.byLabel('Search item types'), '');
+    expect(h.byText('No matching item types.')).toBeUndefined();
+    expect(h.byLabel('Medicine')?.props.accessibilityState.checked).toBe(true);
+    expect(changes).toEqual([]);
+  } finally { await h.unmount(); }
+});
+
 it('clears a stored date without dropping the other edit fields', async () => {
   const harness = new MobileRenderHarness();
   let result: EditDraft | undefined;

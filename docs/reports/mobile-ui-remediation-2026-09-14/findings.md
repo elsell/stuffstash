@@ -2101,3 +2101,31 @@ locks, confirmation ownership and late-result behavior. TypeScript and structura
 checks pass on paul. Native spacing, targets and assistive acceptance remain open.
 
 M148 critic found no confirmed regression; native acceptance remains pending.
+
+
+### M149 — Failed item-type queries still claim loading
+
+P2 source/mounted finding, Add and Edit. Their recovery controls could coexist
+with AssetExpirationEditor's “Loading expiration settings…” when no type data
+was available after failure. New Add and strengthened Edit cases reproduced both
+contradictions. The consumers now hide only the unavailable editor on failed
+initial reads; cached usable arrays remain visible during refresh failure. Add
+Retry uses NativeCommandButton and respects the pending draft operation lock.
+All42 Add/Edit cases, TypeScript and structural checks passed on paul. Added
+background-refresh coverage also passes, preserving the selected type/date field
+and dirty name after a later failure. Critic found no confirmed regression. Native
+error, retry and keyboard acceptance remains open.
+
+### M150 — Item-type search has no empty-result explanation
+
+P2 source/mounted finding, shared Add/Edit AssetExpirationEditor. A nonmatching
+query left a blank choice list. A failing behavior case now requires visible
+no-match feedback and verifies that clearing search restores the checked type
+without publishing a changed draft. The list now shows a polite no-match message.
+It stays in the current form and does not add navigation or clear the selection.
+Native empty-state visibility/announcement remains pending.
+
+M150 verification: all10 shared editor cases, TypeScript and structural checks
+passed remotely. Critic found no confirmed issue in the implementation or audit
+classification. The final Add case also asserts the name after cached refresh
+failure; all11 Add cases pass. Native acceptance remains open.

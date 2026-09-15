@@ -41,10 +41,13 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
     else apply();
   }
   if (!types) return <Text style={{ color: colors.textMuted }}>Loading expiration settings…</Text>;
+  const matchingTypes = [{ id: undefined, displayName: 'None', expirationEnabled: false }, ...types]
+    .filter(type => !query || type.displayName.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <View style={{ gap: spacing.sm }}>
     {!asset.customAssetTypeId && types.length ? <SelectionRow label="Item type" value={selectedType?.displayName ?? 'None'} expanded={choosingType} disabled={disabled} onPress={() => setChoosingType(value => !value)}>
       <AppTextInput accessibilityLabel="Search item types" placeholder="Search types" value={query} onChangeText={setQuery} style={{ minHeight: 44, padding: spacing.sm, color: colors.text }} />
-      {[{ id: undefined, displayName: 'None', expirationEnabled: false }, ...types].filter(type => !query || type.displayName.toLocaleLowerCase().includes(query.toLocaleLowerCase())).map(type => <Pressable key={type.id ?? 'base'} accessibilityRole="radio" accessibilityState={{ checked: typeId === type.id, disabled }} accessibilityLabel={type.displayName} disabled={disabled} onPress={() => selectType(type.id)} style={{ minHeight: 48, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+      {matchingTypes.length === 0 ? <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>No matching item types.</Text> : null}
+      {matchingTypes.map(type => <Pressable key={type.id ?? 'base'} accessibilityRole="radio" accessibilityState={{ checked: typeId === type.id, disabled }} accessibilityLabel={type.displayName} disabled={disabled} onPress={() => selectType(type.id)} style={{ minHeight: 48, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <View style={{ flex: 1 }}><Text style={{ color: colors.text, fontSize: 17 }}>{type.displayName}</Text>{type.expirationEnabled ? <Text style={{ color: colors.textMuted }}>Tracks expiration dates</Text> : null}</View>
         {typeId === type.id ? <Check size={22} color={colors.action} /> : null}
       </Pressable>)}
