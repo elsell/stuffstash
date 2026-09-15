@@ -54,3 +54,34 @@ The account command still delegates to the existing push-session disconnect and
 onboarding teardown. Source review found performance disposal precedes asynchronous
 profile reset; failure recovery of that resource lifetime needs a separate
 engineering review. No implementation change or defect claim is made for it here.
+
+## September15 — About and Diagnostics
+
+Sourceb8d18f5b, R023/R027. Inspected AboutSettingsScreen,
+DiagnosticsSettingsScreen, SettingsModelScreen and SettingsQuery. About is a
+read-only product/version destination backed by synchronous local diagnostics.
+It does not need an inventory query, save action, chooser or modal confirmation.
+Keep its scope small; a tutorial or setup flow is not implied by an About screen.
+
+Diagnostics is an inspection task: grouped connection, identity and version rows,
+with no inline edits. It intentionally reads principal and selected scope to show
+those identifiers. Pending state shows an indicator; initial failure gives a
+scrollable error with Retry; a failed background refresh keeps data with a refresh
+notice. This differs from account recovery, which M73 decoupled from inventory
+availability. Diagnostic unavailability does not justify blocking Sign Out.
+
+SettingsQuery explicitly maps principal ID, selected tenant, URL, auth mode and
+version into the view model. No password/token field is rendered by these screens;
+this is source-field inspection, not a claim that arbitrary configured URL values
+are safe or a substitute for authentication/authorization testing. The screen
+uses developer identifiers because its task is diagnostics; ordinary inventory
+flows should retain household/inventory language.
+
+Both ready views scroll and use shared value rows; the Diagnostics error also
+scrolls. Long URLs/identifiers, copied diagnostic values, VoiceOver grouping,
+Dynamic Type, contrast and window adaptation need runtime review. No copy/export
+command is currently supplied; assess that as a task enhancement rather than
+inventing a compliance requirement. The load Retry still uses a custom command;
+include it with the shared native-command follow-through. These screens contain
+no search or media editor, but system notification interruption remains possible.
+Do not mark global lifecycle axes N/A merely because their content is read-only.

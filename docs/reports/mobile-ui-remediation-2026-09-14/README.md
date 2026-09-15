@@ -28,8 +28,8 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The audit remains incomplete. After the switcher source review based on064fbaf9, the 3384 cells comprise 2808
-pending, 530 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
+The audit remains incomplete. After the About/Diagnostics source review based onb8d18f5b, the 3384 cells comprise 2798
+pending, 540 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
 
