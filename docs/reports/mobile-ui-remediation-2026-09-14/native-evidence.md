@@ -1357,4 +1357,13 @@ Phone normal-size failures include Add draft recovery, checkout expansion, direc
 color-picker opening, footer/nested full-sheet assertions and seeded address
 keyboard behavior. Classify from screenshots and hierarchy before changing product
 code or assertions. Enlarged-text failures remain recorded but are deferred until
-normal-size findings are addressed. Phone artifact review is pending.
+normal-size findings are addressed. Phone artifacts were downloaded and the following normal-size captures inspected.
+
+The [footer diagnostic](evidence/phone-footer-empty-body-349651.png) has visible
+Finish/Cancel controls but an empty body. The [nested diagnostic](evidence/phone-nested-empty-body-349651.png)
+also has an empty body. Their missing Diagnostic Tags assertion is supported by
+these captures; it is not a footer button-height failure. These are diagnostic
+route variants, not proof that every production sheet has the same failure.
+The [color journey](evidence/phone-color-unopened-349651.png) ends on the settings
+controls with the color picker closed. Opening failed in this journey; distinguish
+the row hit target from the actual color-well target before changing the adapter.
