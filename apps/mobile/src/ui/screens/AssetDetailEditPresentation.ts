@@ -2,6 +2,7 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 
 export type EditDraft = {
+  readonly inlineTag?: { readonly name: string; readonly color: string };
   readonly expiration?: AssetDetailViewModel['expiration'] | null;
   readonly expirationValid?: boolean;
   readonly customAssetTypeId?: string;
@@ -51,6 +52,10 @@ export function normalizedEditDraft(draft: EditDraft): NormalizedEditDraft {
   };
 }
 
+export function hasUnstagedEditTag(entry: EditDraft['inlineTag']): boolean {
+  return Boolean(entry?.name.trim() || entry?.color.trim());
+}
+
 function editDraftState(
   asset: Pick<AssetDetailViewModel, 'title' | 'description' | 'tags' | 'expiration' | 'customAssetTypeId'>,
   draft: EditDraft | undefined
@@ -64,7 +69,7 @@ function editDraftState(
 
   const normalized = normalizedEditDraft(draft);
   const nextExpiration = normalized.expiration === undefined ? asset.expiration : normalized.expiration;
-  const isDirty = draft.expirationValid === false
+  const isDirty = hasUnstagedEditTag(draft.inlineTag) || draft.expirationValid === false
     || nextExpiration?.date !== asset.expiration?.date
     || nextExpiration?.precision !== asset.expiration?.precision
     || (normalized.customAssetTypeId !== undefined && normalized.customAssetTypeId !== asset.customAssetTypeId)
@@ -74,7 +79,7 @@ function editDraftState(
     || (normalized.newTags?.length ?? 0) > 0;
 
   return {
-    canSave: draft.expirationValid !== false && normalized.title.length > 0 && isDirty,
+    canSave: !hasUnstagedEditTag(draft.inlineTag) && draft.expirationValid !== false && normalized.title.length > 0 && isDirty,
     isDirty
   };
 }

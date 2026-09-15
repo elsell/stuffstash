@@ -6,19 +6,22 @@ import { AssetCoreQuery } from '../src/application/assets/AssetCoreQuery';
 import { assetId } from '../src/domain/assets/AssetSummary';
 import { tenantId, inventoryId } from '../src/domain/inventories/InventorySummary';
 
-/** Runner-only metadata failures; no production credentials or mutations. */
-export function AssetEditRecoveryFixture() {
+/** Runner-only Edit scenarios; no production credentials or mutations. */
+export function AssetEditTagsFixture() { return <AssetEditRecoveryFixture mode="tags" />; }
+
+export function AssetEditRecoveryFixture({ mode = 'recovery' }: { readonly mode?: 'recovery' | 'tags' }) {
   const [fixture] = useState(() => {
     let typeReads = 0; let tagReads = 0;
     const client = createMobileQueryClient();
     const defaults = client.getDefaultOptions();
     client.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
     return { client,
-      types: { execute: async () => { if (++typeReads === 1) throw new Error('Audit types unavailable'); return []; } },
-      tags: { execute: async () => { if (++tagReads === 1) throw new Error('Audit tags unavailable'); return []; } },
+      types: { execute: async () => { if (mode === 'recovery' && ++typeReads === 1) throw new Error('Audit types unavailable'); return []; } },
+      tags: { execute: async () => { if (mode === 'recovery' && ++tagReads === 1) throw new Error('Audit tags unavailable'); return mode === 'tags' ? Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, label: `Tag ${index + 1}` })).reverse() : []; } },
       core: new AssetCoreQuery({ getAssetCore: async () => ({
         tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'), permissions: ['edit_asset'], revision: 'audit',
         asset: { id: assetId('audit-tent'), title: 'Audit tent', kind: 'item', lifecycleState: 'active', description: '',
+          tags: mode === 'tags' ? [{ id: 'tag-14', key: 'tag-14', displayName: 'Tag 14' }] : [],
           locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
       }) })
     };

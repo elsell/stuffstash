@@ -1007,3 +1007,86 @@ The regression failed before the change;24 resolver/action-sheet tests, TypeScri
 and structural checks passed on paul. VoiceOver announcement and large-text
 placement remain unverified. Long selected-tag truncation is a separate pending
 review, not fixed by this validation message.
+
+### M94 — Edit ignores large-tag-set disclosure
+
+**P2, source-confirmed contract drift.** EditTagPicker in AssetDetailSheets.tsx
+uses tags.map with no bounded initial choices or show/hide control. The asset-tags
+spec requires twelve naturally sorted initial options, a retained selected-tag
+summary and explicit disclosure for larger sets. This is a project requirement,
+not a numeric Apple guideline. Large inventories crowd the form and move inline
+creation farther down. No runtime clipping is asserted.
+
+Acceptance: with more than twelve tags, initially show the specified ordered subset
+and retain all selected tags in the summary; expand/collapse without changing the
+draft; assign an initially hidden tag, collapse and save without losing it. Verify
+large text, keyboard, native disclosure actions and accessibility state on device.
+The correction is not in PR146 or its interim release. See edit-tags-axis.md.
+
+M94 correction candidate: Edit now sorts naturally and initially shows twelve
+options plus selected extras. Pending definitions remain visible. Native Show all
+tags / Show fewer tags commands only change disclosure. A real-route regression
+failed before the fix and verifies ordering, hidden-tag selection, collapse and
+Save retention. Sixteen action-sheet tests, TypeScript and structural checks run
+remotely; native reachability and enlarged text remain pending.
+
+### M95 — Unstaged Edit tag input could be discarded silently
+
+**P1, source-confirmed draft loss.** EditTagPicker held name/color locally, outside
+the route dirty check. Typing a new tag then Cancel returned without confirmation;
+saving another field could omit that entry. The failing real-route regression
+confirmed missing discard feedback. The candidate moves the entry into EditDraft,
+counts nonblank name or color as dirty, and disables Save with a nearby instruction
+until Add tag stages it or the entry is cleared. Staging and entry clearing are
+atomic; normalized command data excludes the unfinished entry.
+
+Sixty-seven remote action-sheet/edit/expiration tests, TypeScript and structural
+checks pass; critic found no confirmed issue. Native input, color-picker callbacks,
+message placement and discard interaction remain pending. This correction is after
+PR146 and excluded from 0.24.21.
+
+### M96 — Add drops unfinished tag input when details closes
+
+**P1, source-confirmed draft loss.** AssetTagPicker owns newTagName/newTagColor
+locally and is conditionally mounted by showDetails in AddAssetScreen. Collapsing
+More details discards that entry. AddAssetDraftStore persists selected IDs and
+staged definitions but has no unfinished-entry field; Save also omits it.
+
+Correction must route-own and persist unfinished entry within the existing scoped
+draft store, retain it across details collapse and close/resume, and prevent silent
+omission on Save. Clear draft and successful staging must clear the entry
+intentionally. Test name-only/color-only input, unrelated draft changes, and scope
+isolation; verify keyboard, native color callbacks and feedback on device.
+Source review only so far; no implementation or runtime claim. See add-tags-axis.md.
+
+M96 correction candidate: unfinished entry is now route-owned and included in the
+existing scoped Add draft. Disclosure and remount preserve it; native Save and
+its command guard reject omission. Collapsed details has an adjacent reopen
+instruction. Add tag updates selections, staged definitions and cleared entry in
+one callback; Clear draft and successful Save reset it. The regression failed on
+collapse before the fix, then19 remote Add tests, TypeScript and structural checks
+passed. It covers scoped restoration, color storage, clear and Save retention.
+Critic review found no confirmed issue. Native typing/color/layout acceptance is
+still pending; other Add search/validation findings remain separate.
+
+M87 follow-up after iPad349548 inspection: the Edit title moves into the form
+scroll with metadata and fields, retaining separate completion actions. Its
+containment regression failed before the change. Actual enlarged-text scrolling,
+button measurement and footer reachability remain pending on the corrected build.
+See native-evidence.md for the old119-point viewport and search-selector findings.
+
+M93 shared-consumer follow-up: Add had the same unexplained overlong-name
+rejection as Edit. It now resolves once per render for both eligibility and
+staging and displays Use a shorter tag name beside the field. The regression
+failed before the change, then18 Add/resolver checks, TypeScript and structural
+checks passed remotely. Critic found no confirmed issue. Native feedback and
+announcement remain pending; existing color validation is separate.
+
+M94 shared-consumer follow-up: Add previously hid all unselected tags until a
+query was entered, contrary to the initial-choice disclosure contract. Add/Edit
+now share naturally ordered choice presentation with twelve initial matches and
+retained selected extras. Add trims search, retains selected choices across search
+and shows No matching tags when appropriate. Native disclosure actions remain
+in-place. The Add regression failed before the fix;26 Add/Edit tests, TypeScript
+and structural checks passed remotely. Native discovery/large-text acceptance
+remains pending. This is a project contract, not an Apple numeric requirement.

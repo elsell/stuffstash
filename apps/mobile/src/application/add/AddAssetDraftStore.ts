@@ -13,6 +13,7 @@ export type AddAssetDraftParent = {
 };
 
 export type AddAssetDraft = {
+  readonly inlineTag?: { readonly name: string; readonly color: string };
   readonly expiration?: AssetExpiration;
   readonly customAssetTypeId?: string;
   readonly title: string;

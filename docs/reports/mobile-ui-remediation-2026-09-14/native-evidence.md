@@ -1098,3 +1098,70 @@ aecaeedc (PR144). This fulfills the interim delivery request; PR146 changes are
 excluded and the comprehensive audit remains open. The first attempt failed on
 GitHub's tag-push server error before upload; verified tag absence made the
 failed-job retry safe. No duplicate TestFlight upload was dispatched.
+
+## iPad fixture run34954814675 — first Edit scroll candidate
+
+Actual checkout82fa68e9e0ac54b5a659df6ab4ecffcc92109779, run for PR146
+f9330750, includes the first Edit recovery scroll change. It excludes the later
+native asset footer/reflow and all PR148 tag changes. iPad fixture job104334201965
+completed with33/43 tests passing. Both onboarding jobs passed; phone fixtures
+were still running at inspection.
+
+Failures: three Add input/readiness paths, original Checkout History hit test,
+controlled and uncontrolled address entry, Edit metadata recovery visibility,
+Home-return text fidelity, place contents search, and the no-accessory keyboard
+comparison. Edit fails the reveal helper's fully-visible assertion, so the first
+scroll change is not accepted. Place search fails waiting for Tool19 after entering
+19; inspect the screenshot/hierarchy before deciding whether this is route
+filtering, data or native search behavior. Region recovery passed its older
+interaction scenario; later stronger visibility captures were not in this build.
+
+Evidence: completed job log `/tmp/native349548-ipad.log`; screenshot artifact
+downloaded to `/tmp/native349548-ipad`, not yet visually inspected at this checkpoint. No new visual claim or root cause is inferred
+from these assertions. The button-height comparison is in a later revision.
+
+Inspected iPad349548 captures: [Edit](evidence/ipad-edit-small-scroll-349548.png)
+shows the fixed large title, clipped metadata message and visible old Cancel/Save
+footer. Hierarchy reports the inner scroll at119 points high, with Retry asset
+types below that viewport. The title now scrolls with the form in a new candidate;
+this alone does not establish correct native footer/scroll measurement.
+
+[Place search](evidence/ipad-place-search-result-349548.png) shows query19 and one
+of20 items: Tool19. Hierarchy exposes `Open asset Tool 19. Item` as a Button,
+not a separate StaticText. The native test is corrected to use result buttons for
+matching, excluded and restored rows. This is a confirmed selector mismatch, not
+evidence that filtering failed. Search clear/return still awaits a completed
+corrected journey. Both screenshots are from the older82fa68e9 build.
+
+## Phone fixture run34954814675 — completed
+
+Phone job104334202040 finished31/43 at the same82fa68e9 checkout; the run is now
+terminal, with iPad33/43 and both onboarding jobs passing. Failures: three Add
+input/readiness cases, original History hit check, controlled/uncontrolled address
+entry, Edit metadata visibility, Expiration accessibility, full/nested footer
+layout, place search and the no-accessory keyboard comparison.
+
+Inspected [Edit](evidence/phone-edit-small-scroll-349548.png): the huge fixed title
+and old footer leave a15.4-point inner scroll viewport, per hierarchyCE354EEE.
+Retry asset types lies below it. This reinforces the later title-scroll candidate;
+it does not verify the later native footer or corrected form geometry.
+
+Inspected [search](evidence/phone-place-search-keyboard-349548.png): query19 is
+retained, but the keyboard covers the item section. HierarchyDE848B00 contains
+`Open asset Tool 19. Item` as a Button at y627–715, confirming the old StaticText
+selector mismatch on phone too. It does not establish that the result is visible
+or usable. The corrected test now dismisses the keyboard, reveals that button
+and checks its full bounds before capture, then retains clear/cancel/return.
+
+Evidence lives in `/tmp/native349548-phone.log` and the completed screenshot
+artifact `/tmp/native349548-phone`. No cause is inferred for the other failures
+from this limited inspection. Updated XCTest execution remains pending.
+
+## TestFlight 0.24.21 (109.1) — delivered
+
+Release34958198826 completed successfully for source de5d87b0 (PR146). Signed
+archive/upload job104347543582 reported upload success at11:00:34 UTC September15.
+Changelog job104354176491 verified v0.24.21(109.1) at11:02:58 UTC after Apple
+processing. Logs: `/tmp/release349581-ios.log`, `/tmp/release349581-notes.log`.
+This fulfills the interim release checkpoint and excludes every PR148 change.
+Delivery is not native acceptance of the unresolved audit findings.

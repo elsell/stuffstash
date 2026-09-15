@@ -409,3 +409,16 @@ by default, container only for the measured expiration footer. Other safe areas
 remain active. Browse's unmeasured footer retains its existing native behavior.
 Verify actual button hit-testing and navigation after keyboard entry; screenshots
 or host props alone do not prove the correction.
+
+The Edit asset form's body title must scroll with its metadata feedback and fields.
+Do not reserve a fixed, scaling title above a small sheet scroll viewport. Keep
+completion actions available separately, and verify actual large-text sheet
+geometry on phone and iPad. Native search acceptance must address accessible
+asset-result buttons, rather than requiring their text children to be separate
+accessibility nodes; retain positive matching and negative nonmatching assertions.
+
+Native place-search acceptance must demonstrate the matched result is reachable
+and fully visible, not merely present in the accessibility tree behind the
+keyboard. Dismiss the keyboard through the provided control, reveal the matching
+row in the detail scroll, and check its bounds before capture. Retain exact query,
+nonmatch exclusion, clear, cancel and navigation return checks.

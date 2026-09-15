@@ -11,6 +11,8 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `add-tags-axis.md`: tag discovery, scoped draft preservation and all24 review axes.
+- `edit-tags-axis.md`: all 24 axes for tag selection, draft creation and remaining native acceptance.
 - `contained-items-axis.md`: scoped search, shared detail controls, unknown-data states and all24 review axes.
 - `inventory-switcher-axis.md`: hierarchy, context changes, completion ownership and remaining controls.
 - `onboarding-axis.md`: prerequisite task fit, editing/recovery and remaining native gates.
@@ -30,7 +32,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2723 pending, 551 source-reviewed, 86 finding,
+comprise 2719 pending, 547 source-reviewed, 94 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
@@ -71,7 +73,7 @@ Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) an
 
 Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
 
-Latest delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
+Historical delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
 succeeded at10:16:30UTC and exact TestFlight changelog verification completed
 at10:18:59UTC on September15 in
 [release34954415338](https://github.com/elsell/stuffstash/actions/runs/34954415338),
@@ -80,3 +82,15 @@ PR146's asset-form and suggestion-recovery changes are not in this release and
 still require native acceptance. Earlier0.24.19 delivery is in the evidence log.
 
 Move source review: [destination selection, creation and Move here](move-axis.md).
+
+PR146 merged as `de5d87b0`. Its interim release completed in
+[release34958198826](https://github.com/elsell/stuffstash/actions/runs/34958198826).
+Required checks and final code review passed. This checkpoint includes native form
+actions, Move reflow, suggestion recovery and Edit tag-name feedback. **0.24.21 (109.1) is delivered.** Upload succeeded at11:00:34 UTC; Apple
+processing and exact-build changelog verification succeeded at11:02:58 UTC. All later PR148 audit corrections are excluded.
+
+PR148 validation at a761b0d8: the complete mobile suite passed **1,512 tests across
+258 files** remotely on paul. Changed mobile/script files match the checked
+workspace by SHA-256. This expands the focused behavior evidence; native runs
+remain separate and do not yet cover the latest Add/Edit corrections. No local
+tests or builds were run.

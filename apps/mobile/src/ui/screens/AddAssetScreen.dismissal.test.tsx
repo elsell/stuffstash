@@ -210,3 +210,68 @@ it('settles navigation updates while header actions use the latest Add draft', a
 });
 
 afterEach(() => setNativeHeaderHeight(144));
+
+
+it('retains unfinished Add tag input through disclosure and scoped draft restoration', async () => {
+  const client = createMobileQueryClient(); const store = new InMemoryAddAssetDraftStore('scope');
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, displayName: `Tag ${index + 1}` })).reverse() };
+  const draftContext = { tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' };
+  const saved: unknown[] = [];
+  const render = (h: MobileRenderHarness) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+    inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+    addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={store}
+    createAssetCommand={{ execute: async input => { saved.push(input); return { id: 'created', title: input.title, message: 'Saved' }; } }}
+    parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+  let h = new MobileRenderHarness();
+  const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+  try {
+    await render(h); await settle();
+    await h.changeText(h.byLabel('Asset name'), 'Tent');
+    await h.press(h.byText('More details')?.parent ?? undefined);
+    expect(h.byText('Tag 1')).toBeDefined();
+    expect(h.byText('Tag 13')).toBeUndefined();
+    await h.press(h.byLabel('Show all tags'));
+    await h.press(h.byText('Tag 14')?.parent ?? undefined);
+    await h.press(h.byLabel('Show fewer tags'));
+    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
+    await h.changeText(h.byLabel('Search tags'), '  tag 13  ');
+    expect(h.byText('Tag 13')).toBeDefined();
+    expect(h.byText('Tag 1')).toBeUndefined();
+    expect(h.byText('Tag 14')).toBeDefined();
+    await h.changeText(h.byLabel('Search tags'), 'unknown tag');
+    expect(h.byText('No matching tags')).toBeDefined();
+    expect(h.byText('Tag 14')).toBeDefined();
+    await h.changeText(h.byLabel('Search tags'), '');
+    expect(h.byText('No matching tags')).toBeUndefined();
+    const overlongName = 'Camping'.repeat(20);
+    await h.changeText(h.byLabel('New tag name'), overlongName);
+    expect(h.byText('Use a shorter tag name.')).toBeDefined();
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe(overlongName);
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byText('More details')?.parent ?? undefined);
+    expect(h.byText('Open More details to add or clear the unfinished tag before saving.')).toBeDefined();
+    await h.press(h.byText('More details')?.parent ?? undefined);
+    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
+    expect(store.load(draftContext)).toMatchObject({ inlineTag: { name: 'Camping', color: '' } });
+    expect(store.load({ ...draftContext, inventoryId: 'other' })).toBeUndefined();
+    await h.press(h.byLabel('Save item')); expect(saved).toEqual([]);
+    expect(h.byText('Add this tag or clear its name and color before saving.')).toBeDefined();
+    await h.unmount(); h = new MobileRenderHarness(); await render(h); await settle();
+    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
+    await h.press(h.byLabel('Choose Blue tag color'));
+    expect(store.load(draftContext)?.inlineTag?.color).toBe('#2F80ED');
+    await h.press(h.byText('Clear draft')?.parent ?? undefined);
+    expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
+    expect(store.load(draftContext)?.inlineTag?.color ?? '').toBe('');
+    await h.changeText(h.byLabel('Asset name'), 'Tent');
+    await h.press(h.byText('More details')?.parent ?? undefined);
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    await h.press(h.byLabel('Save item')); await settle();
+    expect(saved).toEqual([expect.objectContaining({ title: 'Tent', newTags: [{ displayName: 'Camping' }] })]);
+    expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
+  } finally { await h.unmount(); }
+});

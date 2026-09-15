@@ -179,6 +179,8 @@ The iOS bridge must use pinned `@expo/ui 55.0.17`, justified in `specs/platform/
 
 Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
 
+In mobile Add and Edit, collapsed options include the first twelve naturally sorted active tags plus any selected active tags outside that subset. Pending new definitions remain visible. Native Show all tags / Show fewer tags commands expand or collapse without changing selected IDs, pending definitions, or unrelated draft fields.
+
 Tag selectors with more than twelve available tags must use progressive disclosure: show the first twelve naturally sorted options initially, preserve the selected-tag summary, and provide an explicit control to show or hide the complete list.
 
 Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.
@@ -231,3 +233,54 @@ selected existing tag IDs and pending new-tag definitions change together. A
 normalized match to an existing tag selects that tag without creating another;
 updating pending definitions must not restore the previous selected IDs. Preserve
 all previously selected tags and unrelated draft fields.
+
+Native Edit tag-disclosure acceptance must use isolated inventory choices exceeding
+twelve, preserve an initially selected option outside the first twelve, select
+another hidden option, collapse and confirm both selected states remain exposed.
+At the largest accessibility text size, reveal disclosure and completion controls
+fully within the visible form. Discarding the test draft must return without any
+production mutation. Capture expanded and collapsed states; this supplements the
+route-level Save retention regression.
+
+Mobile Edit must retain the inline tag name and color in its route-owned draft
+until Add tag stages them or the user clears them. Nonblank unstaged input counts
+as unsaved work for Cancel/discard. Save must not silently omit that input: keep
+Save unavailable and explain beside the entry that the tag must be added or the
+entry cleared. Add tag remains the explicit staging action and atomically clears
+its entry while retaining unrelated edits. Whitespace-only entry is not dirty.
+
+Native unfinished-entry acceptance starts with an otherwise unchanged Edit draft:
+type an inline tag name, dismiss the keyboard, Cancel and Keep editing, then
+verify the name remains. Save stays disabled with the Add/clear explanation
+visible. Add tag clears the entry and enables saving the staged change. The
+runner must verify keyboard readiness and exact input, and discard rather than
+write to any real inventory.
+
+Add must keep unfinished inline tag name/color in its existing principal-, tenant-
+and inventory-scoped draft store. Collapsing More details or closing/resuming Add
+must retain the entry. Save remains unavailable with an Add/clear explanation
+until the entry is staged or cleared. Do not replace Add's resume behavior with
+Edit's discard confirmation. Clear draft and successful asset Save reset the
+entry; staging a tag clears it atomically with selection/definition updates.
+
+When Add details is collapsed with unfinished entry, show an adjacent instruction
+to reopen More details and add or clear it, so disabled Save remains explained.
+
+Add and Edit must explain inline tag-name validation consistently: an overlong
+name shows Use a shorter tag name beside its entry, derived from the same resolver
+that controls Add tag. Correction removes the message without clearing unrelated
+draft fields. Keep existing color feedback separate.
+
+Native Add unfinished-tag acceptance must enter a valid asset name, verify Save
+is available, then enter a new tag and verify Save is blocked. Dismiss the
+keyboard, collapse/reopen details and assert retained entry and visible guidance.
+Stage the tag and verify Save becomes available, then clear the synthetic draft
+and close without a production mutation. Scoped close/resume remains covered
+separately by the real-route persistence regression.
+
+Add tag search trims its query and compares names case-insensitively. An empty
+query shows the normal initial choices; nonempty search shows matching choices
+while retaining selected tags. Use the same natural ordering and twelve-option
+disclosure policy for matches. A query with no matches says No matching tags,
+including when selected tags remain visible. Disclosure and search never change
+the draft selection. Share this choice-presentation policy between Add and Edit.

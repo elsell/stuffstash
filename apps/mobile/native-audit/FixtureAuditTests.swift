@@ -348,13 +348,33 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
-    XCTAssertTrue(app.staticTexts["Tool 19"].firstMatch.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.staticTexts["Tool 0"].exists)
+    XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
+    let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismissKeyboard.isHittable)
+    dismissKeyboard.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    let result = app.buttons["Open asset Tool 19. Item"].firstMatch
+    let scroll = app.scrollViews.containing(.button, identifier: "Open asset Tool 19. Item").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func resultVisible() -> Bool {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+      return result.isHittable && result.frame.minY >= top && result.frame.maxY <= bounds.maxY
+    }
+    for _ in 0..<12 where !resultVisible() {
+      let above = result.frame.minY < app.navigationBars.firstMatch.frame.maxY
+      let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+      let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+      start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    XCTAssertTrue(resultVisible())
+    XCTAssertEqual(field.value as? String, "19")
     capture("place-search-filtered")
     let clear = field.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable)
     clear.tap()
-    XCTAssertTrue(app.staticTexts["Tool 0"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
     let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
     XCTAssertTrue(cancel.isHittable)
     cancel.tap()
@@ -418,6 +438,87 @@ final class FixtureAuditTests: XCTestCase {
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
     back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
+  func testEditTagDisclosureAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Edit tags"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.waitForExistence(timeout: 10))
+    let cancel = app.buttons["Cancel"].firstMatch
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        return (!requiresHit || element.isHittable) && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<18 where !visible() {
+        let above = element.frame.minY < scroll.frame.minY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+      XCTAssertTrue(cancel.isHittable)
+      XCTAssertGreaterThanOrEqual(cancel.frame.minY, app.frame.minY)
+      XCTAssertLessThanOrEqual(cancel.frame.maxY, app.frame.maxY)
+    }
+    let retained = app.buttons["Tag 14"].firstMatch
+    XCTAssertTrue(retained.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Tag 13"].exists)
+    reveal(retained)
+    XCTAssertTrue(retained.isSelected)
+    let entry = app.textFields["New tag name"].firstMatch
+    reveal(entry)
+    entry.tap()
+    waitForKeyboard()
+    entry.typeText("Camping")
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismissKeyboard.isHittable)
+    dismissKeyboard.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Save"].firstMatch.isEnabled)
+    cancel.tap()
+    let keep = app.alerts.buttons["Keep editing"]
+    XCTAssertTrue(keep.waitForExistence(timeout: 5))
+    keep.tap()
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let explanation = app.staticTexts["Add this tag or clear its name and color before saving."].firstMatch
+    XCTAssertTrue(explanation.exists)
+    reveal(explanation, requiresHit: false)
+    capture("edit-unstaged-tag-retained-accessibility-size")
+    let add = app.buttons["Add tag"].firstMatch
+    reveal(add)
+    add.tap()
+    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
+    let expand = app.buttons["Show all tags"].firstMatch
+    reveal(expand)
+    expand.tap()
+    let extra = app.buttons["Tag 13"].firstMatch
+    XCTAssertTrue(extra.waitForExistence(timeout: 5))
+    reveal(extra)
+    extra.tap()
+    XCTAssertTrue(extra.isSelected)
+    capture("edit-tags-expanded-accessibility-size")
+    let collapse = app.buttons["Show fewer tags"].firstMatch
+    reveal(collapse)
+    collapse.tap()
+    reveal(extra)
+    XCTAssertTrue(extra.isSelected)
+    XCTAssertTrue(retained.isSelected)
+    capture("edit-tags-collapsed-selected-accessibility-size")
+    cancel.tap()
+    let discard = app.alerts.buttons["Discard"]
+    XCTAssertTrue(discard.waitForExistence(timeout: 5))
+    discard.tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
@@ -664,6 +765,80 @@ final class FixtureAuditTests: XCTestCase {
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
+
+  func testAddRetainsUnfinishedTagAcrossDetailsDisclosure() {
+    let open = app.buttons["Audit Add configured header"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        let top = max(bounds.minY, app.navigationBars["Add item"].frame.maxY)
+        return (!requiresHit || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<18 where !visible() {
+        let above = element.frame.minY < app.navigationBars["Add item"].frame.maxY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+    }
+    func dismissKeyboard() {
+      let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+      XCTAssertTrue(dismiss.isHittable)
+      dismiss.tap()
+      XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    }
+    reveal(name)
+    name.tap()
+    waitForKeyboard()
+    name.typeText("Tent")
+    XCTAssertEqual(name.value as? String, "Tent")
+    dismissKeyboard()
+    let save = app.buttons["Save item"].firstMatch
+    XCTAssertTrue(save.isEnabled)
+    let details = app.buttons["More details"].firstMatch
+    reveal(details)
+    details.tap()
+    let entry = app.textFields["New tag name"].firstMatch
+    reveal(entry)
+    entry.tap()
+    waitForKeyboard()
+    entry.typeText("Camping")
+    XCTAssertEqual(entry.value as? String, "Camping")
+    dismissKeyboard()
+    XCTAssertFalse(save.isEnabled)
+    reveal(details)
+    details.tap()
+    XCTAssertFalse(entry.exists)
+    let guidance = app.staticTexts["Open More details to add or clear the unfinished tag before saving."].firstMatch
+    XCTAssertTrue(guidance.exists)
+    reveal(guidance, requiresHit: false)
+    capture("add-unstaged-tag-collapsed")
+    reveal(details)
+    details.tap()
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let add = app.buttons["Add tag"].firstMatch
+    reveal(add)
+    add.tap()
+    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    XCTAssertTrue(save.isEnabled)
+    capture("add-tag-staged")
+    let clear = app.buttons["Clear draft"].firstMatch
+    reveal(clear)
+    clear.tap()
+    XCTAssertFalse(save.isEnabled)
+    let close = app.buttons["Close Add"].firstMatch
+    XCTAssertTrue(close.isHittable)
+    close.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
     verifyAddDraft(entry: "Audit Add draft")
