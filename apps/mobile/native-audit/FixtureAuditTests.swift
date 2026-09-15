@@ -24,7 +24,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
     XCTAssertTrue(action.waitForExistence(timeout: 5))
     let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
-    let content = app.scrollViews["notice-placement-content"]
+    let content = app.descendants(matching: .any).matching(identifier: "notice-placement-content").firstMatch
     XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
     func belowNavigation(_ control: XCUIElement) -> Bool {
       let bounds = content.frame.intersection(app.frame)
@@ -78,7 +78,7 @@ final class FixtureAuditTests: XCTestCase {
       alert.buttons["Keep Editing"].tap()
       XCTAssertTrue(field.exists); XCTAssertTrue(save.isEnabled)
       save.tap()
-      let error = app.staticTexts["Audit replacement unavailable. Try again."]
+      let error = app.staticTexts.matching(identifier: "Audit replacement unavailable. Try again.").firstMatch
       XCTAssertTrue(error.waitForExistence(timeout: 5))
       XCTAssertTrue(header.exists); XCTAssertTrue(save.isEnabled)
       if kind == "prompt" { XCTAssertEqual(field.value as? String, "Synthetic replacement") }

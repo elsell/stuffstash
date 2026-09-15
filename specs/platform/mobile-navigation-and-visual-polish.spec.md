@@ -525,3 +525,11 @@ The production Browse filter route must also preserve the direct native scroll
 body used by the filter fixture. Present verification errors inside that body;
 do not introduce a route-level View around the ready filter screen merely to show
 an error. Keep the error readable with the draft and persistent actions intact.
+
+Native audit geometry queries must follow the exported accessibility hierarchy.
+A ScrollView test ID may identify its native wrapper; use that identified host for
+viewport bounds rather than assuming its accessibility type. When one React Text
+exports nested identical-label elements with identical bounds, select a stable
+match for that text while retaining full viewport/interaction assertions. Record
+the observed hierarchy and do not classify a selector ambiguity as product failure
+or as a passing interaction.

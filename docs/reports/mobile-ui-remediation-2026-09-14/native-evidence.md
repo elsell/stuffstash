@@ -1477,3 +1477,46 @@ pre-focus hittable assertion, not a typed-value check. The old helper scrolled o
 toward the top. See text-entry-axis.md for the preserved capture, geometry and
 bounded bidirectional reveal correction shared with ordinary input comparisons.
 This does not resolve the separately observed malformed product text.
+
+### Run34978984248 — iPhone fixture result
+
+The iPhone job104415345336 completed with35/54 tests passing and19 failures.
+Its artifact revision is `b375d4eae2b07c9014da45ade37f150642000184`, whose parents
+are4b5f7f89 andafb81694. Later M108–M115 fixes and the newest filter integration
+are not certified by this run. Onboarding passed on both devices. The iPad fixture job subsequently completed
+with37/54 passing and17 failures; its log repeats the notice/provider selector
+failures and includes text-entry failures. iPad captures are not inspected in this
+entry. The whole run is terminal. No active job was restarted.
+
+Inspected screenshots and exported hierarchy distinguish these failures:
+
+- Notice push: the notice and action visibly sit below navigation. The lookup at
+  tested-source line28 expects `notice-placement-content` to be a ScrollView,
+  but the ID belongs to an Other wrapper with an inner ScrollView, both at
+  `{0,116,402,758}`. This prevented geometry/action assertions from executing;
+  it is not a passing notice journey. The candidate queries the identified host
+  independent of its accessibility type, preserving bounds assertions.
+  [Capture](evidence/phone-notice-selector-349789.png).
+- Provider credential/prompt recovery: failure at tested-source line98 is ambiguous
+  text lookup. The credential hierarchy exports parent/child StaticText nodes with
+  the identical error label and identical `{24,292,354,22}` bounds. One error is
+  visibly rendered. The candidate chooses the first matching text for geometry;
+  it still requires error visibility, reachable Save/Back and successful retry.
+  Retry completion is unverified. [Capture](evidence/phone-provider-error-selector-349789.png).
+- Footer appearance: the diagnostic body remains empty at normal text size,
+  with Move/Cancel visible. It fails waiting for the heading at tested-source
+  line208, before theme/contrast testing. The flex1 diagnostic change did not
+  establish a fix. M100 contrast acceptance remains open.
+  [Capture](evidence/phone-footer-empty-body-349789.png).
+
+Normal-text Add typing and Sharing typing still fail. Controlled address entry
+loses characters (`h://example.invalid`), while system and uncontrolled address
+entry pass in this run. Ordinary single/multiline input also pass. These contrasts
+require investigation, not a blanket input or automation diagnosis. Checkout
+history and Home return recovery pass their tested journeys; provider prompt
+Discard passes, but provider save recovery stops at the selector issue above.
+Enlarged-text failures remain deferred behind normal-text work.
+
+Two fixture-preparation checks, TypeScript and structural checks validate the
+selector change remotely; Swift execution remains pending. No result here closes
+the full native audit or authorizes a claim of current-build device acceptance.
