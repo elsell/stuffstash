@@ -1926,3 +1926,26 @@ Critic found no production blocker and requested independent collection coverage
 Added a ninth passing confirmation case that appends a different photo while
 preserving the selected photo and index; collection invalidation is now exercised
 without relying on selection change. Native acceptance is still pending.
+
+
+## M140 — Account confirmation and failure feedback survive departure
+
+P2, AccountSettingsScreen and ConnectionSettingsScreen. At0b8e4102 native sign-out
+and change-server confirmation callbacks can start after navigating away and back;
+pending failures publish feedback in the new visit. Four mounted regression cases
+failed before correction. Current acceptance must remain available even when
+inventory or identity reads are unavailable; no new prerequisite is introduced.
+
+The existing focused owner now binds confirmation to settings query and principal
+or server identity. Acceptance is single-use; late failures suppress their notice
+but release the existing pending lock for retry. Current-visit failure feedback
+and session-changing callbacks are preserved. All53 settings behavior tests,
+TypeScript and mobile structural checks pass on paul. Existing tests retain
+legitimate sign-out while identity is pending/failed and inventory is unavailable.
+No authentication, authorization or session persistence implementation changed.
+Native alert/focus acceptance remains pending.
+
+Critic found no blocker and identified replacement coverage as a useful addition.
+Two added query-replacement cases pass while preserving current acceptance (55
+settings tests total). Direct principal/server-value changes remain source-covered;
+native acceptance remains pending.

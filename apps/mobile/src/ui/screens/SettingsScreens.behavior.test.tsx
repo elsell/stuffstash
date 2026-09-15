@@ -509,3 +509,61 @@ it('allows server credentials without a secret and blocks immediate Back while s
     expect(dispatchedActions()).toEqual([{ type: 'saved-back' }]);
   } finally { await harness.unmount(); client.clear(); resetNavigation(); }
 });
+
+it.each(['signOut', 'server'] as const)('rejects an earlier-visit %s confirmation and keeps current retry', async kind => {
+  let calls = 0;
+  const action = async () => { calls++; throw new Error('Retry this action'); };
+  const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
+  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  try {
+    await harness.press(harness.byLabel(label));
+    const stale = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    expect(stale).toBeTypeOf('function');
+    await harness.run(() => setScreenFocused(false)); await harness.run(() => setScreenFocused(true));
+    await harness.run(() => stale?.()); await settle(harness);
+    expect(calls).toBe(0);
+    await harness.press(harness.byLabel(label));
+    const current = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    await harness.run(() => current?.()); await settle(harness);
+    expect(calls).toBe(1);
+    await harness.run(() => current?.()); await settle(harness);
+    expect(calls).toBe(1);
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(button)); await settle(harness);
+    expect(calls).toBe(2);
+  } finally { await harness.unmount(); setScreenFocused(true); }
+});
+
+it.each(['signOut', 'server'] as const)('suppresses a departed %s failure and unlocks retry', async kind => {
+  const pending = deferred<void>(); let calls = 0;
+  const action = () => { calls++; return pending.promise; };
+  const { harness } = await mount(kind === 'signOut' ? <AccountSettingsScreen settingsQuery={settingsQuery()} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={settingsQuery()} onChangeServer={action} />);
+  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  try {
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(kind === 'signOut' ? 'Sign Out' : 'Change Server'));
+    await harness.run(() => setScreenFocused(false)); await harness.run(() => setScreenFocused(true));
+    await harness.run(() => pending.reject(new Error('Departed action failure'))); await settle(harness);
+    expect(harness.allText()).not.toContain('Departed action failure');
+    expect(harness.byLabel(label)?.props.disabled).toBe(false);
+    expect(calls).toBe(1);
+  } finally { await harness.unmount(); setScreenFocused(true); }
+});
+
+it.each(['signOut', 'server'] as const)('rejects %s confirmation after settings-query replacement', async kind => {
+  let calls = 0;
+  const action = async () => { calls++; };
+  const screen = (query: SettingsQuery) => kind === 'signOut' ? <AccountSettingsScreen settingsQuery={query} onSignOut={action} /> : <ConnectionSettingsScreen settingsQuery={query} onChangeServer={action} />;
+  const { harness, client } = await mount(screen(settingsQuery()));
+  const label = kind === 'signOut' ? 'Sign out john@example.com' : 'Change Stuff Stash server from stash.home.test';
+  const button = kind === 'signOut' ? 'Sign Out' : 'Change Server';
+  try {
+    await harness.press(harness.byLabel(label));
+    const stale = latestAlert()?.buttons.find(value => value.text === button)?.onPress;
+    expect(stale).toBeTypeOf('function');
+    await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })}><AppFeedbackProvider>{screen(settingsQuery())}</AppFeedbackProvider></MobileServerStateProvider>);
+    await harness.run(() => stale?.());
+    expect(calls).toBe(0);
+    await harness.press(harness.byLabel(label)); await harness.run(() => pressAlertButton(button));
+    expect(calls).toBe(1);
+  } finally { await harness.unmount(); }
+});

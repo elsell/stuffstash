@@ -1095,3 +1095,10 @@ changing selection/collection, losing remove access, starting removal, leaving t
 screen or unmounting invalidates retained confirmation callbacks. Valid acceptance
 calls the existing removal command once for the confirmed photo. Preserve the
 existing destructive native alert and server-side authorization boundary.
+
+Account sign-out and server-change confirmations belong to their settings query
+and focused visit. Retained acceptance after leaving and returning must not start
+a session-changing action. A confirmation may start its command once. If a
+started command fails after departure, it must release its pending lock without
+publishing an error into the new visit. Current-visit failures remain retryable.
+This does not change session termination, persistence or authorization behavior.

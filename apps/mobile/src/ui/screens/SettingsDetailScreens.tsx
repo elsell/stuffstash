@@ -16,6 +16,7 @@ import {
 } from './SettingsList';
 import { serverHostname } from './SettingsScreenPresentation';
 import { useSettingsModel } from './SettingsScreenState';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 
 export function AccountSettingsScreen({
   onSignOut,
@@ -28,17 +29,18 @@ export function AccountSettingsScreen({
   const { styles } = useSettingsListStyles();
   const principal = useMobileServerQuery({ key: mobileQueryKeys.principal, query: signal => settingsQuery.getPrincipal({ signal }) });
   const principalLabel = principal.data?.email ?? 'Current account';
+  const capturePresentation = useTaskPresentation(settingsQuery, principal.data?.id ?? '');
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
 
-  async function signOut(): Promise<void> {
+  async function signOut(canPresent: () => boolean): Promise<void> {
     if (workingRef.current) return;
     workingRef.current = true;
     setWorking(true);
     try {
       await onSignOut();
     } catch (error) {
-      feedback.showNotice({
+      if (canPresent()) feedback.showNotice({
         tone: 'error',
         title: 'Could not sign out',
         message: readableError(error)
@@ -59,7 +61,7 @@ export function AccountSettingsScreen({
               accessibilityLabel={`Sign out ${principalLabel}`}
               disabled={working}
               label={working ? 'Signing Out…' : 'Sign Out'}
-              onPress={() => confirmSignOut(principalLabel, signOut)}
+              onPress={() => confirmSignOut(principalLabel, ownConfirmation(capturePresentation(), signOut))}
             />
           </SettingsSection>
     </ScrollView>
@@ -84,18 +86,19 @@ export function ConnectionSettingsScreen({
 }) {
   const { styles } = useSettingsListStyles();
   const diagnostics = settingsQuery.getDiagnostics();
+  const capturePresentation = useTaskPresentation(settingsQuery, diagnostics.apiBaseUrl);
   const feedback = useAppFeedback();
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
 
-  async function changeServer(): Promise<void> {
+  async function changeServer(canPresent: () => boolean): Promise<void> {
     if (workingRef.current) return;
     workingRef.current = true;
     setWorking(true);
     try {
       await onChangeServer();
     } catch (error) {
-      feedback.showNotice({
+      if (canPresent()) feedback.showNotice({
         tone: 'error',
         title: 'Could not change server',
         message: readableError(error)
@@ -120,7 +123,7 @@ export function ConnectionSettingsScreen({
           accessibilityLabel={`Change Stuff Stash server from ${serverHostname(diagnostics.apiBaseUrl)}`}
           disabled={working}
           label={working ? 'Changing Server…' : 'Change Server'}
-          onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, changeServer)}
+          onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, ownConfirmation(capturePresentation(), changeServer))}
         />
       </SettingsSection>
     </ScrollView>
@@ -215,4 +218,14 @@ function authenticationLabel(value: SettingsViewModel['authenticationMode']): st
 
 function readableError(error: unknown): string {
   return error instanceof Error ? error.message : 'The action failed safely. Try again.';
+}
+
+
+function ownConfirmation(canPresent: () => boolean, run: (canPresent: () => boolean) => Promise<void>): () => Promise<void> {
+  let accepted = false;
+  return async () => {
+    if (accepted || !canPresent()) return;
+    accepted = true;
+    await run(canPresent);
+  };
 }
