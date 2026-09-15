@@ -740,3 +740,9 @@ hit targets, minimum44-point height, horizontal containment and primary width.
 Capture each visible command region for multiline/visual review. This is layout
 acceptance only; downstream mutations and route destinations remain covered by
 separate behavior/native journeys. The fixture does not execute mutations.
+
+The Add rejected-draft native assertion must resolve one matching accessibility
+element before reading its frame. RN can expose the same rejected-body text on
+nested parent/child StaticText nodes; ambiguity is an instrumentation error, not
+proof that the error layout failed. Keep the heading-below-navigation and
+heading-before-body geometry assertions after resolving the first matching node.

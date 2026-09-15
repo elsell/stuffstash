@@ -966,3 +966,37 @@ September15. Apple processing and exact changelog verification completed in
 job104329510980 at09:38:48UTC: Verified TestFlight changelog for v0.24.19 (107.1).
 This is delivery evidence, not whole-app native acceptance. Subsequent PR144
 asset-detail recovery, search and command changes are excluded from this build.
+
+
+## Phone native run34950225391: source c5ee7b49
+
+Actual runner checkout97edb36794cec881c212f2499fa64e7d31c5f70d merges c5ee7b49
+into eca1ad7e. Phone job104319679884 completed with28/40 scenarios passing.
+Both onboarding jobs passed; iPad fixtures were still running when this was read.
+
+The unavailable-photo scenario passes with the M85 patch. Edit metadata retries
+are hittable at largest text, but Cancel is not (line233). Add with its header
+configured reached both retained-name and heading-below-navigation assertions,
+then failed because the rejected body matches nested StaticText nodes. That query
+now resolves firstMatch before geometry; the geometry criteria are retained.
+No complete Add acceptance is claimed from this run.
+
+Other failures: Add pushed draft text truncation and original input readiness;
+original History hit check; system color-picker opening; controlled URL truncation;
+expiration text-clipping audit; footer/nested sheet hit checks; ordinary single-line
+text truncation. The no-keyboard-accessory scenario fails at keyboard readiness,
+so it does not establish whether the accessory causes text loss. Screenshots
+are being retrieved for the new Edit/Photo results; do not infer visual acceptance
+from the summary alone. These results precede all PR144 fixes.
+
+
+Inspected phone screenshots now retained: phone-add-error-heading-349502.png
+shows the heading/body fully below the toolbar and the entire draft name;
+phone-photo-recovery-349502.png shows readable Photo unavailable, Retry photo and
+Close. These are partial native observations, not complete workflow certification.
+phone-edit-errors-large-text-349502.png shows overlapping retry/error text and no
+visible Cancel. Its hierarchy places Cancel at y911.8, below the phone's874-point
+height. Retry asset types is reported as46.1points high although its two-line text
+visibly exceeds that region. Source also places metadata errors outside the edit
+form's scroll view; both scroll ownership and native hosted-label measurement need
+investigation. The test will continue to require accessible dismissal.

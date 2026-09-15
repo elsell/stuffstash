@@ -585,7 +585,7 @@ final class FixtureAuditTests: XCTestCase {
     save.tap()
     XCTAssertFalse(save.isEnabled)
     XCTAssertFalse(close.isEnabled)
-    let rejected = app.staticTexts["Rejected draft: Native draft name"]
+    let rejected = app.staticTexts["Rejected draft: Native draft name"].firstMatch
     XCTAssertTrue(rejected.waitForExistence(timeout: 10))
     XCTAssertEqual(name.value as? String, "Native draft name")
     XCTAssertTrue(save.isEnabled)

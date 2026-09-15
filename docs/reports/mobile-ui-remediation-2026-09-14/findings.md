@@ -925,3 +925,12 @@ maintenance rows at large text remain unverified; M88 remains open for acceptanc
 The broader shared-adapter run passed all1505 mobile tests across258 files on
 paul. Code critic found no confirmed blocker. This does not establish native
 button geometry or Android runtime behavior.
+
+
+M87 native follow-up: phone run349502 at97edb367 confirms Cancel outside the
+visible sheet at largest text. Metadata errors are siblings above the entire edit
+form rather than part of its scrollable content. The retry labels also visibly
+overlap adjacent messages; their reported native button frame is46.1points despite
+a two-line large label. Do not treat hittability as proof of label layout. Repair
+scroll ownership and investigate hosted-label measurement before closing M87;
+keep existing native assertions. See phone-edit-errors-large-text-349502.png.
