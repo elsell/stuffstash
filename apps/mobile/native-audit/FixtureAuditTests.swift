@@ -12,6 +12,15 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testColdInventoryQueriesEnableDependentResource() {
+    let open = app.buttons["Audit inventory query"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    open.tap()
+    XCTAssertTrue(app.staticTexts["First query ready"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Dependent query ready"].waitForExistence(timeout: 10))
+    capture("cold-inventory-dependent-queries")
+  }
+
   private func waitForKeyboard() {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))

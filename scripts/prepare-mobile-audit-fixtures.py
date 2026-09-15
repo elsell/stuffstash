@@ -22,6 +22,7 @@ exports = {
     "index": "FixtureMenu",
     "audit-sheet-diagnostic": "SheetLayoutFixture",
     "audit-add": "AddAssetFixture",
+    "audit-inventory-query": "InventoryQueryFixture",
     "audit-home-return": "HomeReturnFixture",
     "home-return-details": "HomeReturnDetailsRoute",
     "audit-checkout-history": "CheckoutHistoryFixture",

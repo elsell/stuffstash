@@ -28,6 +28,7 @@ import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeShee
 
 export { SheetLayoutFixture } from './SheetLayoutFixture';
 
+export { InventoryQueryFixture } from './InventoryQueryFixture';
 export { AddAssetFixture } from './AddAssetFixture';
 export { CheckoutHistoryFixture } from './CheckoutHistoryFixture';
 
@@ -58,6 +59,7 @@ function FixtureNavigation() {
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
+      <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
@@ -81,6 +83,7 @@ export function FixtureMenu() {
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
+    <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit Home Return" onPress={() => router.push('/audit-home-return' as Href)} />
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />

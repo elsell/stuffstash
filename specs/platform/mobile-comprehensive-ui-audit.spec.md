@@ -362,3 +362,12 @@ keyboard. Retain this scenario. Add an independent drag inside the centered form
 column to distinguish gesture-region behavior from a general dismissal failure.
 Record both outcomes and screenshots; a passing comparison does not erase the
 original failure or certify all onboarding keyboard behavior.
+
+### Native dependent-query comparison
+
+Keep the failing production Add scenario and add an independent runner-only cold
+inventory-query comparison. It uses the production provider/hook and a fresh cache
+with local deterministic inventory/resource ports. Verify an initial scoped query
+and a second query enabled by its result become visible without user interaction.
+This isolates query readiness from Add draft/navigation composition. Retain cache
+readiness diagnostics; a comparison pass does not certify or replace Add acceptance.

@@ -525,3 +525,20 @@ address button/Go and Home optional-details recovery also pass. Four failures:
 
 Run34925606393 published tag0.24.15 at03:51:13UTC. Signed iOS delivery and
 exact-build notes remain pending. No second release was dispatched.
+
+## Cold dependent-query comparison queued
+
+The Add loading failure is not yet attributed to a cause. A runner-only
+InventoryQueryFixture now uses a fresh production QueryClient/provider and the
+production scoped-query hook for a first resource and a second resource enabled
+by its result. Both must become visible without interaction. The original Add
+scenario is unchanged, and no cache is seeded or connection state overridden.
+Installer isolation red1/2 then green2/2; critic found no blocker. Native Swift
+build and runtime remain pending. A comparison pass does not clear Add.
+
+The Home Return M60 candidate pairs existing native commands in a wrapping row.
+Twenty-five Home checks, TypeScript and structural checks pass; existing native
+cancellation assertions remain unchanged and must verify initial iPad reachability.
+
+Release0.24.15 run34925606393 is archiving. Upload/Apple processing and exact-build
+notes remain pending. These newer candidates are outside that release source.
