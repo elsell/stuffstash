@@ -47,12 +47,12 @@ R002,(tabs)/(home)/index.tsx,privacy,"Account scope, data use and permissions",p
 R002,(tabs)/(home)/index.tsx,notifications,System notification entry and state,pending,,
 R002,(tabs)/(home)/index.tsx,media,"Camera, library, files and audio",pending,,
 R002,(tabs)/(home)/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.,M46
-R003,(tabs)/_layout.tsx,task,Task clarity and platform-pattern fit,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
-R003,(tabs)/_layout.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
+R003,(tabs)/_layout.tsx,task,Task clarity and platform-pattern fit,finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
+R003,(tabs)/_layout.tsx,navigation,"Navigation, hierarchy and return",finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 R003,(tabs)/_layout.tsx,selection,Value selection and current value,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,modality,Presentation and dismissal,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
-R003,(tabs)/_layout.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
+R003,(tabs)/_layout.tsx,adaptation,Phone/tablet/window reflow,finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 R003,(tabs)/_layout.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
@@ -69,7 +69,7 @@ R003,(tabs)/_layout.tsx,recovery,"Empty, error, denied and retry",source-reviewe
 R003,(tabs)/_layout.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,privacy,"Account scope, data use and permissions",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R003,(tabs)/_layout.tsx,notifications,System notification entry and state,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
-R003,(tabs)/_layout.tsx,media,"Camera, library, files and audio",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
+R003,(tabs)/_layout.tsx,media,"Camera, library, files and audio",finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 R003,(tabs)/_layout.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R004,(tabs)/search/_layout.tsx,task,Task clarity and platform-pattern fit,source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
 R004,(tabs)/search/_layout.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,tab-shell-axis.md; source e3367204; native acceptance pending,
@@ -2783,12 +2783,12 @@ S116,Reminders / push permissions,privacy,"Account scope, data use and permissio
 S116,Reminders / push permissions,notifications,System notification entry and state,pending,,
 S116,Reminders / push permissions,media,"Camera, library, files and audio",pending,,
 S116,Reminders / push permissions,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S117,Voice / accessory,task,Task clarity and platform-pattern fit,pending,,
-S117,Voice / accessory,navigation,"Navigation, hierarchy and return",pending,,
+S117,Voice / accessory,task,Task clarity and platform-pattern fit,finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
+S117,Voice / accessory,navigation,"Navigation, hierarchy and return",finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 S117,Voice / accessory,selection,Value selection and current value,pending,,
 S117,Voice / accessory,modality,Presentation and dismissal,pending,,
 S117,Voice / accessory,layout,"Safe areas, scroll edges and overlays",pending,,
-S117,Voice / accessory,adaptation,Phone/tablet/window reflow,pending,,
+S117,Voice / accessory,adaptation,Phone/tablet/window reflow,finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 S117,Voice / accessory,typography,"Dynamic Type, wrapping and legibility",source-reviewed,"Accessory status title/subtitle truncate visually, explicit accessible name omits both. Native semantics require correction and runtime review.",M26
 S117,Voice / accessory,appearance,"Light/dark, contrast and materials",pending,,
 S117,Voice / accessory,localization,"Locale, timezone, RTL and long strings",pending,,
@@ -2805,7 +2805,7 @@ S117,Voice / accessory,recovery,"Empty, error, denied and retry",pending,,
 S117,Voice / accessory,editing,"Draft, save, cancel, undo and interruption",pending,,
 S117,Voice / accessory,privacy,"Account scope, data use and permissions",pending,,
 S117,Voice / accessory,notifications,System notification entry and state,pending,,
-S117,Voice / accessory,media,"Camera, library, files and audio",pending,,
+S117,Voice / accessory,media,"Camera, library, files and audio",finding,findings.md M113; installed TabsHost platform gate; first-entry paths inspected at b74f28a1; native pending,M113
 S117,Voice / accessory,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S118,Voice / typed composer,task,Task clarity and platform-pattern fit,pending,,
 S118,Voice / typed composer,navigation,"Navigation, hierarchy and return",pending,,

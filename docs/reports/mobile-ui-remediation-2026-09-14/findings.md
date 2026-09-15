@@ -1453,3 +1453,27 @@ Android equivalents while preserving the iOS symbols, then verify both tab state
 on Android. No Android screenshot or runtime pass is claimed. R003 imagery;
 see [tab-shell-axis.md](tab-shell-axis.md). The candidate now supplies Material
 `home` and `grid_view` through the existing adapter; native acceptance remains open.
+
+## M113 — Voice entry depends on an iOS26-only accessory
+
+P1, source-confirmed at b74f28a1. R003 mounts its only fresh-conversation control
+inside NativeTabs.BottomAccessory. The installed react-native-screens
+`src/components/tabs/TabsHost.tsx` renders that subtree only for iOS with version
+at least26. The committed iOS project declares15.1 deployment target, and Android
+is an explicit product target. This is not merely a style difference: those
+platforms have no initial voice entry from Home/Browse in the inspected shell.
+
+Counterevidence checked: VoiceConversationReturn navigates to `/voice`, but only
+on asset/location paths and only when a ready context has realtime state or
+history. Settings routes configure voice providers; they do not start a
+conversation. A manually entered deep link is not an in-app entry alternative.
+No older-iOS or Android runtime capture is claimed.
+
+Provide a persistent, safe-area-aware entry on platforms without native accessory
+support. Reuse the voice state/actions and preserve Home's requested Add,
+Notifications, Profile ordering; do not add a third tab or force voice through
+Settings. Keep iOS26's native accessory. The unsupported native extension is a
+concrete reason for a fallback, not permission to replace native tab navigation.
+Acceptance: fresh session entry, loading/error entry, listening/send and review
+return on Android and older iOS, both tabs, keyboard visibility and tab changes;
+verify no duplicate accessory on iOS26. Implementation remains open.

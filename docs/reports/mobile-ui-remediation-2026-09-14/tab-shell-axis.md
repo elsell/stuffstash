@@ -35,8 +35,10 @@ content or voice service. No new runtime acceptance is claimed.
 M112 is a source-confirmed configuration omission, not an Android screenshot claim.
 Use platform-provided Android tab icons alongside the existing iOS symbols. Do not
 copy SF symbols into Android assets or change the two-destination information
-architecture to address it. The voice accessory compatibility gap remains an
-unverified risk until all alternate entrypoints and supported OS scope are checked.
+architecture to address it. Follow-up inspection confirmed M113: TabsHost does not mount the accessory on
+Android or older iOS, and the only other conversation-return control requires an
+existing conversation on a detail route. See findings.md for source scope and
+required native verification.
 
 Apple's tab-bar guidance URL was checked during this review, but its HTML required
 JavaScript; no new normative claim is attributed to inaccessible text. Platform
