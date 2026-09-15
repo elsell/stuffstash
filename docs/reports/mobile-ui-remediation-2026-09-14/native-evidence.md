@@ -1088,3 +1088,13 @@ Release34954415338 attempt2 at aecaeedc successfully uploaded0.24.20 (108.2)
 at10:16:30UTC, September15, job104336505377. Apple processing and exact changelog
 verification job104341597194 is running. Do not report TestFlight delivery until
 that verification completes. This release includes PR144, not PR146 fixes.
+
+## Interim0.24.20 delivered
+
+Release34954415338 attempt2 completed successfully. Upload of0.24.20 (108.2)
+succeeded at10:16:30UTC; Apple processing and exact-build TestFlight changelog
+verification completed at10:18:59UTC, September15, job104341597194. Source is
+aecaeedc (PR144). This fulfills the interim delivery request; PR146 changes are
+excluded and the comprehensive audit remains open. The first attempt failed on
+GitHub's tag-push server error before upload; verified tag absence made the
+failed-job retry safe. No duplicate TestFlight upload was dispatched.

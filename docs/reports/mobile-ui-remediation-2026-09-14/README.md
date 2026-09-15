@@ -71,10 +71,12 @@ Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) an
 
 Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
 
-Latest delivered checkpoint: **0.24.19 (107.1)**, PR142 at2db6080c. Upload and
-exact TestFlight changelog were verified in release34950874885. PR144's next
-release34954415338 failed its first tag push with a GitHub server error; attempt2
-published v0.24.20 at09:59:26UTC after verifying no tag existed before retry.
-The signed iOS build is running; TestFlight delivery is not yet verified.
+Latest delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
+succeeded at10:16:30UTC and exact TestFlight changelog verification completed
+at10:18:59UTC on September15 in
+[release34954415338](https://github.com/elsell/stuffstash/actions/runs/34954415338),
+attempt2. The first attempt hit a GitHub tag-push server error before upload.
+PR146's asset-form and suggestion-recovery changes are not in this release and
+still require native acceptance. Earlier0.24.19 delivery is in the evidence log.
 
 Move source review: [destination selection, creation and Move here](move-axis.md).
