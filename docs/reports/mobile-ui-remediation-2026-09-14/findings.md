@@ -575,3 +575,11 @@ Three failing rendered departure regressions now pass; normal focused failure
 retains the draft and notice. See [Sharing review](sharing-axis.md) for task-fit,
 source evidence, privacy boundaries and pending native acceptance. This is the next
 batch after PR138 and is excluded from release workflow34932422663.
+
+### M70 — old invitation recovery replaces a newer invitation (P2)
+
+Implemented request-generation ownership for opening/start-over failures and reset
+of replacement start-over availability. Two regressions failed before correction;
+13 invitation-screen checks, typecheck and structural checks pass remotely. See
+[Sharing and invitation review](sharing-axis.md). Native link replacement and
+route-side navigation effects remain pending; no broad deep-link acceptance claim.

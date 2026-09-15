@@ -45,3 +45,25 @@ pending, as do enlarged text, keyboard reachability, VoiceOver/TalkBack and RTL.
 The acceptance screen uses request generations and separates successful acceptance
 from failure to open an inventory. Its remaining actions and cold/warm link races
 need their own complete audit; they are not cleared by this Sharing correction.
+
+## M70 — old invitation recovery overwrites a replacement
+
+Source and rendered failure confirmed (P2), covering R019/S131 recovery, editing
+and lifecycle. Preview and acceptance use a request generation, but opening and
+start-over recovery originally did not. A late open failure could replace a newer
+invitation with the old inventory's opening error. A pending start-over also left
+the new invitation disabled. Two regression scenarios reproduced these failures.
+
+Opening and start-over now use the existing generation guard; a replacement resets
+its start-over availability. All 13 invitation screen/progress/onboarding checks,
+TypeScript and structural checks pass remotely on paul. The existing current-open
+failure scenario still exposes retry and explains that acceptance succeeded.
+Native simultaneous link delivery/navigation remains pending. This correction
+covers screen state only: it does not cancel an authorized callback, roll back
+account changes, or certify the route callback's later navigation side effects.
+
+Further entry review: the link provider protects a foreground link from a late
+initial URL result. Its initial lookup has no rejection handler; failure readiness
+needs a controlled test before choosing recovery semantics. Existing provider tests
+replace React hooks and therefore do not establish real mounted lifecycle behavior.
+These are explicit outstanding review gaps, not passing coverage.

@@ -73,6 +73,7 @@ export function InventoryInvitationScreen({
   };
 
   useEffect(() => {
+    setStartingOver(false);
     if (!initialized) return;
     if (invalidLink || !reference) {
       setState({
@@ -188,19 +189,20 @@ export function InventoryInvitationScreen({
 
   async function startOver() {
     if (!onStartOver || startingOver) return;
-    requestGeneration.current++;
+    const generation = ++requestGeneration.current;
     setStartingOver(true);
     try { await onStartOver(); }
-    catch { setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true, retryStartOver: true }); }
-    finally { setStartingOver(false); }
+    catch { if (generation === requestGeneration.current) setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true, retryStartOver: true }); }
+    finally { if (generation === requestGeneration.current) setStartingOver(false); }
   }
 
   async function openAcceptedInventory(inventoryId: string, inventoryName: string): Promise<void> {
+    const generation = ++requestGeneration.current;
     setState({ status: 'opening', inventoryId, inventoryName });
     try {
       await onAccepted(inventoryId);
     } catch {
-      setState({ status: 'open_error', inventoryId, inventoryName });
+      if (generation === requestGeneration.current) setState({ status: 'open_error', inventoryId, inventoryName });
     }
   }
 }

@@ -32,3 +32,28 @@ it('keeps joining and opening named during progress and permits opening recovery
     expect(h.allText()).toContain('You now have access to ');
   } finally { await h.unmount(); }
 });
+
+it.each(['opening', 'start-over'] as const)('keeps a new invitation visible after an old %s failure', async operation => {
+  const h = new MobileRenderHarness();
+  let fail: ((error: Error) => void) | undefined;
+  const reference = { tenantId: 'tenant', inventoryId: 'old', invitationId: 'old', acceptanceToken: 'token' };
+  const repository: InventoryInvitationRepository = {
+    preview: async selected => ({ inventoryId: selected.inventoryId, inventoryName: selected.inventoryId, relationship: 'viewer', status: operation === 'opening' && selected.inventoryId === 'old' ? 'accepted' : 'pending', isExpired: false, expiresAt: '2027-01-01' }),
+    accept: async () => { throw new Error('not used'); }
+  };
+  const delayed = async () => new Promise<void>((_resolve, reject) => { fail = reject; });
+  const view = (selected: typeof reference) => <InventoryInvitationScreen initialized invalidLink={false} reference={selected}
+    previewQuery={new PreviewInventoryInvitationQuery(repository)} acceptCommand={new AcceptInventoryInvitationCommand(repository)}
+    onAccepted={delayed} onStartOver={delayed} onDismiss={() => {}} onSwitchAccount={() => {}} />;
+  try {
+    await h.render(view(reference));
+    await h.press(h.byLabel(operation === 'opening' ? 'Open inventory' : 'Sign out and start over'));
+    await h.render(view({ ...reference, inventoryId: 'new', invitationId: 'new' }));
+    expect(h.allText()).toContain('new');
+    expect(h.byLabel('Join inventory')?.props.disabled).toBe(false);
+    await h.run(() => fail?.(new Error('old operation failed')));
+    expect(h.allText()).toContain('new');
+    expect(h.allText()).not.toContain('Could not start over');
+    expect(h.allText()).not.toContain('Try opening again');
+  } finally { await h.unmount(); }
+});

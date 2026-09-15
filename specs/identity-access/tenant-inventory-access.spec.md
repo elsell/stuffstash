@@ -320,3 +320,12 @@ feedback session. This presentation rule does not cancel authorized server work,
 change permission enforcement, or suppress normal error recovery in the original
 focused session. Created invitation secrets remain subject to existing scope and
 in-memory lifetime rules.
+
+### Invitation replacement during recovery
+
+When a newer invitation replaces the one displayed, delayed opening or start-over
+failures from the old invitation must not replace the new preview or its progress.
+The new invitation begins with its own start-over availability. Existing preview
+and acceptance request-generation rules also govern these recovery completions.
+A still-current opening failure must continue to explain that access was added
+and offer retry; this rule does not roll back completed acceptance or account work.

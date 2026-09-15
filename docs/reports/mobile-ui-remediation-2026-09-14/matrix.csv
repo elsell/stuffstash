@@ -449,12 +449,12 @@ R019,invitations/accept.tsx,motion,Reduced motion and feedback alternatives,pend
 R019,invitations/accept.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R019,invitations/accept.tsx,search,"Search, scope and filters",pending,,
 R019,invitations/accept.tsx,loading,"Loading, background refresh and progress",source-reviewed,Preview shows Checking invitation; joining/opening retain progress labels M28. No background-query pull indicator.,M28
-R019,invitations/accept.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Expired/cancelled/revoked/malformed/auth/mismatched-account states and opening failure have distinct branches; actual backend boundaries outside this source-only review.,
-R019,invitations/accept.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R019,invitations/accept.tsx,recovery,"Empty, error, denied and retry",source-reviewed,Expired/cancelled/revoked/malformed/auth/mismatched-account states and opening failure have distinct branches; actual backend boundaries outside this source-only review.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
+R019,invitations/accept.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
 R019,invitations/accept.tsx,privacy,"Account scope, data use and permissions",pending,,
 R019,invitations/accept.tsx,notifications,System notification entry and state,pending,,
 R019,invitations/accept.tsx,media,"Camera, library, files and audio",pending,,
-R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.,
+R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
 R020,locations/[locationId]/assets/[assetId]/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,selection,Value selection and current value,pending,,
@@ -3137,12 +3137,12 @@ S131,System / invitation link,motion,Reduced motion and feedback alternatives,pe
 S131,System / invitation link,content,"Lists, hierarchy, density and pagination",pending,,
 S131,System / invitation link,search,"Search, scope and filters",pending,,
 S131,System / invitation link,loading,"Loading, background refresh and progress",pending,,
-S131,System / invitation link,recovery,"Empty, error, denied and retry",pending,,
-S131,System / invitation link,editing,"Draft, save, cancel, undo and interruption",pending,,
+S131,System / invitation link,recovery,"Empty, error, denied and retry",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
+S131,System / invitation link,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
 S131,System / invitation link,privacy,"Account scope, data use and permissions",pending,,
 S131,System / invitation link,notifications,System notification entry and state,pending,,
 S131,System / invitation link,media,"Camera, library, files and audio",pending,,
-S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
 S132,System / permission denied recovery,task,Task clarity and platform-pattern fit,pending,,
 S132,System / permission denied recovery,navigation,"Navigation, hierarchy and return",pending,,
 S132,System / permission denied recovery,selection,Value selection and current value,pending,,
