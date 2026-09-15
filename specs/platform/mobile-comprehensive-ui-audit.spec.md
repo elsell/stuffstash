@@ -1130,3 +1130,18 @@ leave active observers attached and reads usable, while actual replacement and
 unmount still cancel and clear the departed client. Native run349983 Add remained
 Loading inventory with idle zero-observer queries; effect replay is a hypothesis
 to test, not an established cause of that native capture.
+
+
+### Non-crashing keyboard accessory comparison
+
+Run349983 proves the removal-based comparison aborts at native input focus:
+KeyboardExtender reads the first child of an empty content view. Preserve this
+failure as evidence; do not infer a production typing cause. For the runner-only
+comparison, retain the existing accessory and its content, disabling attachment
+through the pinned native extender's enabled property before focus. The shared
+adapter defaults to enabled for every production consumer. Disabled state must
+also hide its accessibility controls and intercept no touches. Keep the original
+full-string and observed-value assertions, and require no visible Dismiss keyboard
+command. This compares attachment enabled versus disabled, not the presence of
+the native observer or the entire keyboard controller. Native execution must prove
+the comparison no longer crashes and reaches typing before drawing conclusions.

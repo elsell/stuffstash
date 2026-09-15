@@ -1770,3 +1770,11 @@ does not establish the cause of production character loss. The comparison needs
 a non-crashing isolation setup before its typing result is meaningful. Preserve
 production typing assertions and do not classify this as a keyboard wait timeout
 alone. No production code change or native acceptance is claimed from this review.
+
+
+The isolation candidate now leaves AppKeyboardAccessory mounted and sets the
+pinned extender's enabled property false. Production defaults remain enabled.
+Remote TypeScript, structural checks and both fixture-preparation tests pass;
+critic found no confirmed blocker. The existing native failure is the regression
+case and its full-string assertions are unchanged. Native crash avoidance and
+text-entry outcomes remain pending on the candidate revision.

@@ -96,7 +96,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
-    {keyboardAccessoryEnabled ? <AppKeyboardAccessory /> : null}
+    <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} />
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
