@@ -1319,9 +1319,9 @@ R055,settings/voice/profiles/index.tsx,privacy,"Account scope, data use and perm
 R055,settings/voice/profiles/index.tsx,notifications,System notification entry and state,pending,,
 R055,settings/voice/profiles/index.tsx,media,"Camera, library, files and audio",pending,,
 R055,settings/voice/profiles/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R056,tenant-switcher.tsx,task,Task clarity and platform-pattern fit,pending,,
-R056,tenant-switcher.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R056,tenant-switcher.tsx,selection,Value selection and current value,pending,,
+R056,tenant-switcher.tsx,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+R056,tenant-switcher.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+R056,tenant-switcher.tsx,selection,Value selection and current value,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 R056,tenant-switcher.tsx,modality,Presentation and dismissal,pending,,
 R056,tenant-switcher.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R056,tenant-switcher.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -1336,10 +1336,10 @@ R056,tenant-switcher.tsx,accessibility,"VoiceOver/TalkBack names, roles, states 
 R056,tenant-switcher.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R056,tenant-switcher.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R056,tenant-switcher.tsx,search,"Search, scope and filters",pending,,
-R056,tenant-switcher.tsx,loading,"Loading, background refresh and progress",pending,,
-R056,tenant-switcher.tsx,recovery,"Empty, error, denied and retry",pending,,
-R056,tenant-switcher.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R056,tenant-switcher.tsx,privacy,"Account scope, data use and permissions",pending,,
+R056,tenant-switcher.tsx,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+R056,tenant-switcher.tsx,recovery,"Empty, error, denied and retry",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+R056,tenant-switcher.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+R056,tenant-switcher.tsx,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 R056,tenant-switcher.tsx,notifications,System notification entry and state,pending,,
 R056,tenant-switcher.tsx,media,"Camera, library, files and audio",pending,,
 R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; M78 focus ownership and both completion/refocus orderings remote verified; native pending; M79 accepted selection observer ordering remote verified,M46;M78;M79
@@ -1895,9 +1895,9 @@ S079,Expiration / date range,privacy,"Account scope, data use and permissions",p
 S079,Expiration / date range,notifications,System notification entry and state,pending,,
 S079,Expiration / date range,media,"Camera, library, files and audio",pending,,
 S079,Expiration / date range,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S080,Inventory switcher / inventory list,task,Task clarity and platform-pattern fit,pending,,
-S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S080,Inventory switcher / inventory list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S080,Inventory switcher / inventory list,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S080,Inventory switcher / inventory list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S080,Inventory switcher / inventory list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
 S080,Inventory switcher / inventory list,modality,Presentation and dismissal,pending,,
 S080,Inventory switcher / inventory list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S080,Inventory switcher / inventory list,adaptation,Phone/tablet/window reflow,pending,,
@@ -1912,16 +1912,16 @@ S080,Inventory switcher / inventory list,accessibility,"VoiceOver/TalkBack names
 S080,Inventory switcher / inventory list,motion,Reduced motion and feedback alternatives,pending,,
 S080,Inventory switcher / inventory list,content,"Lists, hierarchy, density and pagination",pending,,
 S080,Inventory switcher / inventory list,search,"Search, scope and filters",pending,,
-S080,Inventory switcher / inventory list,loading,"Loading, background refresh and progress",pending,,
-S080,Inventory switcher / inventory list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S080,Inventory switcher / inventory list,editing,"Draft, save, cancel, undo and interruption",pending,,
-S080,Inventory switcher / inventory list,privacy,"Account scope, data use and permissions",pending,,
+S080,Inventory switcher / inventory list,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S080,Inventory switcher / inventory list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S080,Inventory switcher / inventory list,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S080,Inventory switcher / inventory list,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S080,Inventory switcher / inventory list,notifications,System notification entry and state,pending,,
 S080,Inventory switcher / inventory list,media,"Camera, library, files and audio",pending,,
 S080,Inventory switcher / inventory list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
-S081,Inventory switcher / household list,task,Task clarity and platform-pattern fit,pending,,
-S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S081,Inventory switcher / household list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S081,Inventory switcher / household list,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S081,Inventory switcher / household list,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S081,Inventory switcher / household list,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
 S081,Inventory switcher / household list,modality,Presentation and dismissal,pending,,
 S081,Inventory switcher / household list,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S081,Inventory switcher / household list,adaptation,Phone/tablet/window reflow,pending,,
@@ -1936,16 +1936,16 @@ S081,Inventory switcher / household list,accessibility,"VoiceOver/TalkBack names
 S081,Inventory switcher / household list,motion,Reduced motion and feedback alternatives,pending,,
 S081,Inventory switcher / household list,content,"Lists, hierarchy, density and pagination",pending,,
 S081,Inventory switcher / household list,search,"Search, scope and filters",pending,,
-S081,Inventory switcher / household list,loading,"Loading, background refresh and progress",pending,,
-S081,Inventory switcher / household list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S081,Inventory switcher / household list,editing,"Draft, save, cancel, undo and interruption",pending,,
-S081,Inventory switcher / household list,privacy,"Account scope, data use and permissions",pending,,
+S081,Inventory switcher / household list,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S081,Inventory switcher / household list,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S081,Inventory switcher / household list,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S081,Inventory switcher / household list,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S081,Inventory switcher / household list,notifications,System notification entry and state,pending,,
 S081,Inventory switcher / household list,media,"Camera, library, files and audio",pending,,
 S081,Inventory switcher / household list,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
-S082,Inventory switcher / load failure,task,Task clarity and platform-pattern fit,pending,,
-S082,Inventory switcher / load failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S082,Inventory switcher / load failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S082,Inventory switcher / load failure,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S082,Inventory switcher / load failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S082,Inventory switcher / load failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
 S082,Inventory switcher / load failure,modality,Presentation and dismissal,pending,,
 S082,Inventory switcher / load failure,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S082,Inventory switcher / load failure,adaptation,Phone/tablet/window reflow,pending,,
@@ -1960,16 +1960,16 @@ S082,Inventory switcher / load failure,accessibility,"VoiceOver/TalkBack names, 
 S082,Inventory switcher / load failure,motion,Reduced motion and feedback alternatives,pending,,
 S082,Inventory switcher / load failure,content,"Lists, hierarchy, density and pagination",pending,,
 S082,Inventory switcher / load failure,search,"Search, scope and filters",pending,,
-S082,Inventory switcher / load failure,loading,"Loading, background refresh and progress",pending,,
-S082,Inventory switcher / load failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S082,Inventory switcher / load failure,editing,"Draft, save, cancel, undo and interruption",pending,,
-S082,Inventory switcher / load failure,privacy,"Account scope, data use and permissions",pending,,
+S082,Inventory switcher / load failure,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S082,Inventory switcher / load failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S082,Inventory switcher / load failure,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S082,Inventory switcher / load failure,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S082,Inventory switcher / load failure,notifications,System notification entry and state,pending,,
 S082,Inventory switcher / load failure,media,"Camera, library, files and audio",pending,,
 S082,Inventory switcher / load failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
-S083,Inventory switcher / selection pending failure,task,Task clarity and platform-pattern fit,pending,,
-S083,Inventory switcher / selection pending failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S083,Inventory switcher / selection pending failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
+S083,Inventory switcher / selection pending failure,task,Task clarity and platform-pattern fit,source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S083,Inventory switcher / selection pending failure,navigation,"Navigation, hierarchy and return",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S083,Inventory switcher / selection pending failure,selection,Value selection and current value,source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
 S083,Inventory switcher / selection pending failure,modality,Presentation and dismissal,pending,,
 S083,Inventory switcher / selection pending failure,layout,"Safe areas, scroll edges and overlays",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
 S083,Inventory switcher / selection pending failure,adaptation,Phone/tablet/window reflow,pending,,
@@ -1984,10 +1984,10 @@ S083,Inventory switcher / selection pending failure,accessibility,"VoiceOver/Tal
 S083,Inventory switcher / selection pending failure,motion,Reduced motion and feedback alternatives,pending,,
 S083,Inventory switcher / selection pending failure,content,"Lists, hierarchy, density and pagination",pending,,
 S083,Inventory switcher / selection pending failure,search,"Search, scope and filters",pending,,
-S083,Inventory switcher / selection pending failure,loading,"Loading, background refresh and progress",pending,,
-S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.",M07
-S083,Inventory switcher / selection pending failure,editing,"Draft, save, cancel, undo and interruption",pending,,
-S083,Inventory switcher / selection pending failure,privacy,"Account scope, data use and permissions",pending,,
+S083,Inventory switcher / selection pending failure,loading,"Loading, background refresh and progress",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S083,Inventory switcher / selection pending failure,recovery,"Empty, error, denied and retry",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending.; inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps",M07
+S083,Inventory switcher / selection pending failure,editing,"Draft, save, cancel, undo and interruption",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
+S083,Inventory switcher / selection pending failure,privacy,"Account scope, data use and permissions",source-reviewed,inventory-switcher-axis.md; source pattern/state review with explicit custom-control and native gaps,
 S083,Inventory switcher / selection pending failure,notifications,System notification entry and state,pending,,
 S083,Inventory switcher / selection pending failure,media,"Camera, library, files and audio",pending,,
 S083,Inventory switcher / selection pending failure,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"TenantSwitcherSheetScreen: identity-based initial household, bounded ScrollView, native Close, safe retry and abort/pending protection; real command/cache tests. Sheet reachability at large text pending. Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.","M07,M46"
