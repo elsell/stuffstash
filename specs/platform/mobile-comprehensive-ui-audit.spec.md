@@ -1020,3 +1020,13 @@ not established dark contrast. Match the explicit flex scroll sizing used by the
 passing footer-layout diagnostic, preserving the same production footer adapter.
 Re-run the native entry/appearance scenario; source layout changes cannot certify
 that the body or contrast is fixed. Preserve the failing capture.
+
+### Native audit job evidence budget
+
+Allow90 minutes for each macOS native-audit job, including dependency setup,
+compilation, the complete fixture suite and evidence export. Run349725's phone
+job exceeded the previous60-minute budget while its49-test suite and artifact
+upload completed, leaving a cancelled job conclusion despite retained results.
+Keep individual XCTest interaction waits bounded and retain failures. This changes
+job capacity, not acceptance criteria; do not cancel or restart existing live runs
+when changing the workflow budget.

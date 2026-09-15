@@ -1447,3 +1447,26 @@ passing footer-layout diagnostic's body allocation. This is a diagnostic candida
 not a production-sheet or contrast fix. Remote TypeScript/structural checks pass;
 critic found no blocker. The existing native appearance scenario must verify the
 body is available before its contrast results can be used.
+
+## Run34972540083 — phone terminal result and job budget
+
+The phone fixture job104392719648 is terminal. GitHub reports cancelled, while
+its xcodebuild log completed49 tests with30 passing and19 failing, exit65.
+GitHub step records show screenshots, diagnostics and artifact upload succeeded.
+Job timestamps13:04:57–14:06:12UTC exceed its configured60-minute job budget;
+do not discard the retained suite result or report that it never ran. The artifact
+is downloaded at the tested merge1c4728f508dab1892d51ba7982bf19641acf7f34.
+No additional screenshots from the phone artifact have yet been inspected.
+
+Normal-size failures include Add, color-row opening, controlled/uncontrolled/system
+address comparisons, footer appearance, nested/footer diagnostic bodies, Home return,
+place search and Sharing. Ordinary single/multiline comparisons pass; the mixed
+input results do not isolate a single production input cause. The iPad Sharing
+capture additionally shows the malformed email and caret within its text, confirming
+the displayed value rather than only a stale text assertion. Existing failures are
+retained, and enlarged-text-specific remediation remains deferred.
+
+The workflow now allows90 minutes to preserve room for the full native suite and
+artifact export. Individual test waits/assertions are unchanged. Current live
+run34978984248, sourceafb81694, is left running under its original budget. Future runs containing this workflow revision use the new budget; already queued
+runs retain their original revision. No existing run was manually cancelled or restarted.
