@@ -445,3 +445,19 @@ current parent; identical From/To summaries add no information. The context and
 query stay in the same scrolling form. Existing valid-change, pending-operation,
 cancellation and destination-creation rules remain unchanged. This context repair
 does not establish native disabled-button contrast; verify that separately.
+
+Native command buttons must propose a finite available width while allowing the
+outer SwiftUI Button to take its ideal vertical size. Applying vertical ideal size
+only to its Text can leave the React Native host at the minimum height while text
+renders outside it. The large-text native comparison showed a 48-point button
+frame for three lines in the shipping control and 187.3 points with outer vertical
+ideal sizing, with following content moved below the label. Apply that outer
+measurement rule to the shared command adapter; preserve prominence and disabled
+semantics. The comparison also confirmed Retry received after a native tap. Its final return
+assertion must target the observed native BackButton identifier rather than assume
+the localized/contextual label is Back, then verify the audit menu returns. Shared
+consumer layouts, primary-button sizing and sheet-footer contrast require further
+acceptance.
+The diagnostic sizing fixture retains the old inner-only measurement as a named
+baseline and compares it against the shipping adapter, so future runs exercise
+production sizing rather than a copied candidate implementation.

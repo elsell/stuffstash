@@ -72,17 +72,20 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     let retry = app.buttons["Retry asset types"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["Shipping size"].exists)
-    capture("command-height-shipping")
-    let compare = app.buttons["Compare outer sizing"].firstMatch
+    XCTAssertTrue(app.staticTexts["Baseline size"].exists)
+    capture("command-height-baseline")
+    let compare = app.buttons["Compare shipping sizing"].firstMatch
     XCTAssertTrue(compare.isHittable)
     compare.tap()
-    XCTAssertTrue(app.staticTexts["Outer ideal size"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Shipping size"].waitForExistence(timeout: 5))
     XCTAssertTrue(retry.isHittable)
-    capture("command-height-outer-ideal")
+    capture("command-height-shipping")
     retry.tap()
     XCTAssertTrue(app.staticTexts["Retry received"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.navigationBars.buttons["Back"].firstMatch.isHittable)
+    let back = app.navigationBars.buttons["BackButton"].firstMatch
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
   }
 
   func testColdInventoryQueriesEnableDependentResource() {

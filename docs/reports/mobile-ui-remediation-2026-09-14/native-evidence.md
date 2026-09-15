@@ -1165,3 +1165,64 @@ Changelog job104354176491 verified v0.24.21(109.1) at11:02:58 UTC after Apple
 processing. Logs: `/tmp/release349581-ios.log`, `/tmp/release349581-notes.log`.
 This fulfills the interim release checkpoint and excludes every PR148 change.
 Delivery is not native acceptance of the unresolved audit findings.
+
+## iPhone run 34958958425 — early PR148
+
+The iPhone fixtures job 104347687569 completed with 31/46 scenarios passing and
+15 failing. Run-level iPad fixtures were still active when this was recorded.
+The checkout was `07cb72e05c5e1dc46eb9845f330cdc63d1f3ab56`, the merge of
+`5890b169` into `de5d87b0`. It includes early Edit tag disclosure and PR146 fixes;
+it excludes later PR148 draft preservation/title changes and all PR150 changes.
+
+Failures: rejected Add save recovery; the original checkout-history hit test;
+color-picker direct opening; command height comparison; controlled address entry;
+Edit metadata recovery; Edit tag disclosure; expiration overview accessibility;
+footer full sheet; Move Here recovery; nested full sheet; ordinary single-line
+entry; place contents search; no-accessory address entry; uncontrolled address
+entry. Both onboarding jobs passed.
+
+The command-height journey reached both captures and Retry received after tapping;
+it then failed finding a navigation button with the assumed label Back. Move Here failed exact text entry (`T` versus
+`Tent`). Controlled and uncontrolled address tests saw `hs://example.invalid`
+instead of the full address. These are observed test outcomes, not yet diagnoses
+of product versus simulator input behavior. Detail commands and region recovery
+passed this run's checks; this does not establish all visual or accessibility axes.
+
+Job log was obtained from the jobs/logs API because `gh run view --log` refused
+while another job remained active. The approximately 907 MB phone artifact download
+was still in progress at initial recording; image inspection is recorded separately.
+
+Artifact download completed. Four images were inspected and retained:
+
+- [Shipping command](evidence/phone-command-shipping-349589.png): three-line Retry
+  asset types overflows its red host border and overlaps adjacent text. AX button
+  frame is 48 points high (hierarchy `0925919D-3202-4E3C-8F55-765A2D0DDCB9.txt`).
+- [Outer ideal sizing](evidence/phone-command-outer-sizing-349589.png): label fits
+  its host and following content is below. AX button height is 187.3 points
+  (hierarchy `6FE26995-159B-496A-A073-9432BF3EED18.txt`). The tap produced Retry received in the final hierarchy
+  (`C0965542-DEE3-4BA0-A1E3-BD497B939A2B.txt`). The failure was the subsequent
+  Back-label assertion at line 85; the observed identifier is BackButton and its
+  label is Native UI audit.
+- [Edit](evidence/phone-edit-native-footer-349589.png): the old fixed title consumes
+  most of the half sheet; metadata is clipped above the native footer. The later
+  PR148 title-in-scroll change is absent. Disabled Save is light gray in this light
+  fixture; this does not reproduce the user's dark Move contrast issue.
+- [Move Here](evidence/phone-move-here-keyboard-349589.png): query contains only T,
+  Retry overlaps the error text, and the keyboard accessory covers footer content.
+  This confirms visible overlap but does not identify why typing stopped.
+
+The shared NativeCommandButton candidate now applies outer vertical ideal sizing,
+as the comparison demonstrated. No disabled-button color repair is claimed. The return test now uses the observed
+BackButton identifier and verifies navigation back to the audit menu.
+Its callers span Add/Edit/Move, item details, history, notifications, settings,
+sharing guards, customization and voice; combined source validation is recorded
+when complete. Native consumer acceptance remains open.
+
+Combined remote validation passed all 1,525 mobile tests across 258 files, TypeScript
+and structural checks. All 12 changed mobile files matched the remote workspace
+by SHA-256 before the suite. The subsequent native Back selector edit requires
+macOS compilation/execution.
+The diagnostic fixture was then changed to keep the old inner-only sizing as a
+labeled baseline and exercise the actual shipping adapter in the second state.
+Its matching test retains callback and return assertions. TypeScript and structural
+checks passed again; native compilation and execution of this revision are pending.
