@@ -1748,3 +1748,14 @@ and covers retry execution, non-retryable absence and scroll content. It failed
 before correction; the focused test, TypeScript and structural checks pass on
 paul. Critic found no confirmed blocker. Actual native spacing/wrapping remains
 pending and is not implied by the mounted test.
+
+## M130 — Home and Add recovery controls still use custom buttons
+
+P2 platform consistency, source-confirmed at8fb0a54d. Home dashboard load error,
+Home expiration refresh error and Add context load error now reuse the shared
+native command adapter. Existing accessible labels, callbacks and readiness/scope
+gates are retained; unused Home button styling is removed. Existing Home and
+expiration28 tests plus Add/Home styles15 tests pass remotely, with TypeScript
+and structural checks. Critic found no confirmed blocker. Native spacing and
+reachability remain pending; this bounded adapter migration introduces no new
+recovery semantics or claim of full screen acceptance.

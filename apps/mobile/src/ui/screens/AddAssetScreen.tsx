@@ -553,7 +553,7 @@ function ScopedAddAssetScreen({
           <View style={styles.centerState}>
             <Text style={styles.errorTitle}>Could not load</Text>
             <Text style={styles.stateText}>{loadState.message}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Retry Add context" onPress={onRetry}><Text style={styles.stateText}>Try again</Text></Pressable>
+            <NativeCommandButton label="Retry Add context" onPress={onRetry} />
           </View>
         ) : null}
         {loadState.status === 'ready' ? (

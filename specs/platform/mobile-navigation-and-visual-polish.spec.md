@@ -631,3 +631,7 @@ so loading, failure and recovery are testable without application bootstrap.
 Asset detail load errors use the shared native command adapter for Retry asset.
 Non-retryable failures expose no retry command. Error content remains scrollable,
 with flexible height and wrapping explanation, beneath the native navigation bar.
+
+Home dashboard load, Home expiration refresh and Add context recovery must reuse
+the shared native command adapter, preserving their existing retry callbacks and
+scope/readiness gates. These local recovery commands do not initiate pull refresh.

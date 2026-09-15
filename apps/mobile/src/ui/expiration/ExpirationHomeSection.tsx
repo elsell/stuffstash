@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
 import type { ExpirationWorkspaceQuery } from '../../application/expiration/ExpirationWorkspaceQuery';
@@ -21,7 +22,7 @@ export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetr
    <Text accessibilityRole="header" style={styles.sectionTitle}>Expiration</Text>
    <Pressable accessibilityRole="button" accessibilityLabel="View all expiration dates" disabled={!canOpen} accessibilityState={{ disabled: !canOpen }} style={styles.sectionActionButton} onPress={() => { if (canOpen) onOpen('all'); }}><Text style={styles.sectionAction}>See all</Text></Pressable>
   </View>
-  {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry expiration" onPress={onRetry} style={styles.sectionActionButton}><Text style={styles.sectionAction}>Retry</Text></Pressable></View> : null}
+  {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><NativeCommandButton label="Retry expiration" onPress={onRetry} /></View> : null}
   {!data && !error ? <ActivityIndicator accessibilityLabel="Loading expiration" color={colors.action} /> : null}
   {data ? <>
    {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>None expiring soon</Text> : <View>
