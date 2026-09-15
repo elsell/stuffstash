@@ -1813,3 +1813,38 @@ keyboard; ipad-onboarding-landscape-350037 shows the centered constrained form
 and complete action within the screen. These normal-size/light-mode images resolve
 the visual review gap for these captures. They do not establish hardware keyboard,
 VoiceOver or uninterrupted typing reliability across other routes.
+
+
+## Native350037 — iPad fixtures terminal, September15
+
+Job104498364135 completed with45/57 tests passing and12 failures. Checkout log
+and artifact revision identify818c3f38791e3d1535588f8d2015b2682f39aa1a
+(2771df9d merged into4b5f7f89). The iPhone fixture job remained live when this
+result was recorded. No replacement run was started.
+
+Failures: Account and Connection command recovery; Add pushed draft, rejected-save
+draft and unfinished tag; color well target; controlled address entry; enlarged-text
+Edit metadata, Edit tags and Move Here; Place contents keyboard dismissal; seeded
+address with accessory removal. Normal-size failures retain priority. The color
+well accessible button measures36points against the44-point criterion, so its
+prior source correction does not close native target acceptance. The seeded
+comparison predates the correction that keeps the accessory mounted.
+
+Inspected retained ipad-account-notice-350037 and ipad-connection-notice-350037
+images/hierarchies show the expected errors below navigation, with the native
+command visible. Both notices expose the full message on app-notice-container
+and its dismiss button; they do not expose the expected message as a separate
+StaticText. The tests stopped at that locator, so retry completion was not tested.
+The candidate now waits for the accessible container and validates its message,
+preserving whole-notice bounds, action/back hittability and retry assertions.
+These two failures are procedure mismatches; the other failures are not dismissed
+on that basis. Corrected native execution remains pending.
+
+Raw terminal log: /tmp/native350037-ipad-terminal.log. Selected exported artifacts:
+/tmp/native350037-ipad-fixtures (screenshots/manifest.json, revision, build log and
+crash diagnostics). The downloaded archive was removed after extraction to conserve
+space; the authoritative Actions artifact remains available.
+
+Critic confirmed that the session-notice locator correction preserves the intended
+message, placement, reachability and retry checks. Swift compilation/execution
+remains pending; source checks do not establish a corrected native pass.

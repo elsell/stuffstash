@@ -1519,12 +1519,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(action.isEnabled)
     action.tap(); XCTAssertTrue(alert.waitForExistence(timeout: 5))
     alert.buttons[command].tap()
-    let failure = app.staticTexts["Audit session action unavailable. Try again."]
-    XCTAssertTrue(failure.waitForExistence(timeout: 5))
+    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
+    XCTAssertTrue(notice.waitForExistence(timeout: 5))
+    XCTAssertTrue(notice.label.contains("Audit session action unavailable. Try again."))
     XCTAssertTrue(action.isEnabled); XCTAssertTrue(action.isHittable)
     XCTAssertTrue(header.buttons.element(boundBy: 0).isHittable)
-    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
-    XCTAssertTrue(notice.exists)
     let placement = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       let rect = notice.frame
       return rect.height > 0 && rect.minY >= header.frame.maxY && rect.maxY <= self.app.frame.maxY &&

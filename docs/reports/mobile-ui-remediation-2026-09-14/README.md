@@ -36,14 +36,20 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,627 mobile tests (267 files), TypeScript and structural checks passed remotely against source 75923e21; native geometry and lifecycle acceptance remain open.
+The larger PR150 batch remains unreleased. Source `eaf61bcf` passes all **1,689
+mobile tests across270 files**, TypeScript and structural checks remotely on paul
+(`/tmp/mobile-batch-eaf61bcf.log`), with a clean source checksum comparison. This
+includes item-type failure/search recovery and the earlier interaction fixes.
+Native acceptance is incomplete: run350037 iPad fixtures passed45/57; iPhone
+fixtures were still running at this checkpoint. Both onboarding jobs passed.
+See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
-The audit remains incomplete. After the Expiration filter source review, the 3384 cells
-comprise 2093 pending, 997 source-reviewed, 247 finding,
-19 runtime-partial and 28 not-applicable.
-The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
-36-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
-implemented corrections whose native acceptance is still pending.
+The audit ledger retains141 surface IDs ×24 axes, including two absent Add
+controls documented as inventory corrections. Its3,384 cells comprise1,911
+pending,1,061 source-reviewed,296 finding,22 runtime-partial and94 not-applicable.
+These are evidence states, not a compliance score. Finding cells can include
+implemented corrections whose native acceptance remains open. Absent controls
+are not native passes or claims of product feature parity.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in

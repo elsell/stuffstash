@@ -1220,3 +1220,8 @@ An expanded item-type search with no matches must say so beside the query. Clear
 or changing the query restores matching choices without changing the selected type
 or expiration draft. Keep this descriptive, searchable selection in the current
 form; do not add a navigation destination for the empty state.
+
+Native notice acceptance must query the exposed accessible notice container and
+validate its message, not require separate static-text children that may be grouped
+for assistive reading. Keep whole-notice bounds, command reachability and retry
+assertions; a locator correction must not remove the behavior being verified.

@@ -1,0 +1,69 @@
+Attributes: Application, 0x11e2ed040, pid: 76255, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11e2ed040, pid: 76255, label: 'Stuff Stash'
+    Window (Main), 0x11e2ed180, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11e2ed2c0, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11e2ecdc0, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x11e2ecf00, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x11e2eca00, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x11e2ecb40, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x11e2ecc80, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x11e2ec780, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x11e2ec8c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x11e2ec500, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x11e2ec640, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x11e2ec280, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Connection'
+                            Button, 0x11e2ec3c0, {{10.0, 32.0}, {90.5, 44.0}}, identifier: 'BackButton', label: 'Back'
+                            StaticText, 0x11e2ec000, {{326.0, 43.5}, {91.5, 21.0}}, label: 'Connection'
+                          Other, 0x11e2ec140, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11e2ed540, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x11e2ed680, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x11e2ed7c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x11e2ed900, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x11e2eda40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x11e2edb80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x11e2edcc0, {{0.0, 86.0}, {744.0, 320.5}}
+                                          Other, 0x11e2ede00, {{0.0, 86.0}, {744.0, 320.5}}
+                                            StaticText, 0x11e2edf40, {{16.0, 110.0}, {712.0, 16.0}}, label: 'CURRENT SERVER'
+                                              StaticText, 0x11e2ee080, {{16.0, 110.0}, {712.0, 16.0}}, label: 'CURRENT SERVER'
+                                            Other, 0x11e2ee1c0, {{16.0, 132.0}, {712.0, 104.5}}
+                                              StaticText, 0x11e2ee300, {{32.0, 148.0}, {51.5, 20.5}}, label: 'Server'
+                                                StaticText, 0x11e2ee440, {{32.0, 148.0}, {51.5, 20.5}}, label: 'Server'
+                                              StaticText, 0x11e2ee580, {{93.5, 148.5}, {151.5, 19.5}}, label: 'audit.example.invalid'
+                                                StaticText, 0x11e2ee6c0, {{93.5, 148.5}, {151.5, 19.5}}, label: 'audit.example.invalid'
+                                              StaticText, 0x11e2ee800, {{32.0, 200.5}, {64.5, 20.5}}, label: 'Address'
+                                                StaticText, 0x11e2ee940, {{32.0, 200.5}, {64.5, 20.5}}, label: 'Address'
+                                              StaticText, 0x11e2eea80, {{106.5, 201.0}, {229.0, 19.5}}, label: 'https://audit.example.invalid/api'
+                                                StaticText, 0x11e2eebc0, {{106.5, 201.0}, {229.0, 19.5}}, label: 'https://audit.example.invalid/api'
+                                            StaticText, 0x11e2eed00, {{16.0, 242.5}, {712.0, 18.0}}, label: 'This server determines where the app signs in and stores your Stuff Stash data.'
+                                              StaticText, 0x11e2eee40, {{16.0, 242.5}, {712.0, 18.0}}, label: 'This server determines where the app signs in and stores your Stuff Stash data.'
+                                            Other, 0x11e2eef80, {{16.0, 284.5}, {712.0, 48.0}}
+                                              Other, 0x11e2ef0c0, {{16.0, 284.5}, {712.0, 48.0}}
+                                                Other, 0x11e2ef200, {{16.0, 284.5}, {712.0, 48.0}}
+                                                  Other, 0x11e2ef340, {{16.0, 284.5}, {712.0, 48.0}}
+                                                    Button, 0x11e2ef480, {{315.5, 284.5}, {113.0, 48.0}}, label: 'Change Server'
+                                            StaticText, 0x11e2ef5c0, {{16.0, 338.5}, {712.0, 36.0}}, label: 'Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.'
+                                              StaticText, 0x11e2ef700, {{16.0, 338.5}, {712.0, 36.0}}, label: 'Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.'
+                                        Other, 0x11e2ef840, {{711.0, 93.0}, {30.0, 1018.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11e2ef980, {{738.0, 822.5}, {3.0, 286.0}}
+                                        Other, 0x11e2efac0, {{21.5, 1080.0}, {701.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11e2efc00, {{3.0, 1107.0}, {738.0, 3.0}}
+                                        Other, 0x11e2efd40, {{711.0, 93.0}, {30.0, 1018.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11e2efe80, {{738.0, 822.5}, {3.0, 286.0}}
+                                        Other, 0x11e209540, {{21.5, 1080.0}, {701.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11e209680, {{3.0, 1107.0}, {738.0, 3.0}}
+                                    Other, 0x11e2097c0, {{16.0, 96.0}, {712.0, 70.0}}, identifier: 'app-notice-layer'
+                                      Other, 0x11e209400, {{16.0, 96.0}, {712.0, 70.0}}, identifier: 'app-notice-container', label: 'Could not change server. Audit session action unavailable. Try again.'
+                                        Button, 0x11e2088c0, {{33.0, 107.0}, {678.0, 48.0}}, label: 'Could not change server. Audit session action unavailable. Try again.. Dismiss message'
+                          Other, 0x11e2ea800, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11e2eaa80, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x11e2eabc0, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11e2ead00, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11e2eae40, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x11e2ed040, pid: 76255, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11e2eaf80, pid: 76255, label: 'Stuff Stash'
+  }
