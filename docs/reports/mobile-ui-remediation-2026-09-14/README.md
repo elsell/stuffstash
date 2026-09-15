@@ -30,7 +30,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2741 pending, 544 source-reviewed, 75 finding,
+comprise 2739 pending, 544 source-reviewed, 77 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.

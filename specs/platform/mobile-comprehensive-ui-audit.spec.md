@@ -770,3 +770,12 @@ text. Capture both variants with a following text boundary. This isolates the
 outer sizing hypothesis without changing production controls. Completion of the
 diagnostic is not acceptance: inspect label bounds and adjacent text before
 choosing a repair. Neither variant invokes domain mutations.
+
+### Move-here suggestion recovery
+
+An unknown suggestions collection is not an empty search result. Move here must
+show its no-movable-matches state only after a result is available for the current
+query. Keep cached candidates on refresh failure and provide retry within the
+results scroll region. Retrying preserves the query and selection. Loading/error
+status must not occupy a separate fixed region above the form. Native large-text
+layout and keyboard/dismissal remain separate verification requirements.

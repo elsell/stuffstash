@@ -944,3 +944,15 @@ fully into view and checks Cancel throughout; native execution remains pending.
 The hosted native-label overlap remains under investigation, so M87 stays open.
 Adjacent Move/Move here candidate status is still outside their forms and needs
 its own large-text review; this Edit-only change does not certify those layouts.
+
+### M90 — Move here reports unknown suggestions as empty
+
+Source-confirmed, recovery priority P2, S136 loading/recovery. A failed current
+query previously rendered No movable matches beside its retry. The intended
+pattern distinguishes unavailable results from known empty results. The candidate
+fix gates empty copy on current-query data and places status/retry in the results
+scroll region; existing cached candidates and draft query remain. Regression
+failed before the change and all13 asset action-sheet checks, TypeScript and
+structural checks passed on paul. Critic found no confirmed issue. Native large
+text, keyboard and selection-retention acceptance remain pending. This does not
+resolve the other fixed-content layout risks in Move or Move here.

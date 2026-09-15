@@ -387,6 +387,8 @@ export function MoveAssetSheet({
 
 export function MoveThingsHereSheet({
   draft,
+  candidatesAvailable = true,
+  candidateStatus,
   isSaving,
   onChangeQuery,
   onClose,
@@ -394,6 +396,8 @@ export function MoveThingsHereSheet({
   onSelectAsset
 }: {
   readonly draft: MoveIntoDraft | undefined;
+  readonly candidatesAvailable?: boolean;
+  readonly candidateStatus?: ReactNode;
   readonly isSaving: boolean;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -420,7 +424,8 @@ export function MoveThingsHereSheet({
         value={draft?.query ?? ''}
       />
       <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {draft?.matches.length === 0 ? (
+        {candidateStatus}
+        {candidatesAvailable && draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
             <Text style={styles.parentTitle}>{emptyState.title}</Text>
             <Text style={styles.parentSubtitle}>{emptyState.message}</Text>

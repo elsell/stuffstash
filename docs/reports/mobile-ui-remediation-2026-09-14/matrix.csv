@@ -3256,8 +3256,8 @@ S136,Asset Move here / asset search and selection,accessibility,"VoiceOver/TalkB
 S136,Asset Move here / asset search and selection,motion,Reduced motion and feedback alternatives,pending,,
 S136,Asset Move here / asset search and selection,content,"Lists, hierarchy, density and pagination",pending,,
 S136,Asset Move here / asset search and selection,search,"Search, scope and filters",pending,,
-S136,Asset Move here / asset search and selection,loading,"Loading, background refresh and progress",pending,,
-S136,Asset Move here / asset search and selection,recovery,"Empty, error, denied and retry",pending,,
+S136,Asset Move here / asset search and selection,loading,"Loading, background refresh and progress",finding,M90: failed suggestions rendered false empty state. Current-query availability and scroll-local recovery candidate passes remote behavior regression; native acceptance pending.,M90
+S136,Asset Move here / asset search and selection,recovery,"Empty, error, denied and retry",finding,M90: failed suggestions rendered false empty state. Current-query availability and scroll-local recovery candidate passes remote behavior regression; native acceptance pending.,M90
 S136,Asset Move here / asset search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
 S136,Asset Move here / asset search and selection,privacy,"Account scope, data use and permissions",pending,,
 S136,Asset Move here / asset search and selection,notifications,System notification entry and state,pending,,

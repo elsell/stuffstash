@@ -301,9 +301,10 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
 
   return (
     <NativeSheetFrame title="Move something here" busy={isSaving}>
-      <CandidateStatus candidates={candidates} />
       {(
         <MoveThingsHereSheet
+          candidatesAvailable={candidates.data !== undefined}
+          candidateStatus={<CandidateStatus candidates={candidates} />}
           draft={shownDraft}
           isSaving={isSaving}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}

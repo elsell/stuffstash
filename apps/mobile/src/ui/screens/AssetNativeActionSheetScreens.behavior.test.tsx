@@ -240,3 +240,29 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
     expect(harness.byLabel('Asset name')?.props.value).toBe('My retained name');
   } finally { await harness.unmount(); }
 });
+
+it('does not call failed move-here suggestions empty and recovers inside results', async () => {
+  const client = createMobileQueryClient(); client.setDefaultOptions({ queries: { retry: false } });
+  const h = new MobileRenderHarness(); let unavailable = true;
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({
+    tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Camping box', description: '', kind: 'container', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveHereSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        parentLookupQuery={{ execute: async () => { if (unavailable) throw new Error('Unavailable'); return []; } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('Move not requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Find item, box, or place'), 'Tent');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    expect(h.byLabel('Retry suggestions')).toBeDefined();
+    expect(h.byText('No movable matches')).toBeUndefined();
+    expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
+    unavailable = false;
+    await h.press(h.byLabel('Retry suggestions')); await settle(h);
+    expect(h.byText('No movable matches')).toBeDefined();
+    expect(h.byLabel('Find item, box, or place')?.props.value).toBe('Tent');
+  } finally { await h.unmount(); }
+});
