@@ -1,0 +1,89 @@
+diff --git a/dist/hooks/useAnimatedComponents.js b/dist/hooks/useAnimatedComponents.js
+index 4730fe40735bd80afc97abdd14150a2fb4abf3e5..e85bd50bd41d5763d5cb74860aba09d90f7c6663 100644
+--- a/dist/hooks/useAnimatedComponents.js
++++ b/dist/hooks/useAnimatedComponents.js
+@@ -5,37 +5,54 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { Animated } from "react-native";
+-const INITIAL_POSITION = { x: 0, y: 0 };
+-const ANIMATION_CONFIG = {
+-    duration: 200,
+-    useNativeDriver: true,
+-};
++import { useCallback, useEffect, useRef, useState } from "react";
++import { AccessibilityInfo, Animated } from "react-native";
++const ANIMATION_CONFIG = { duration: 200, useNativeDriver: true };
+ const useAnimatedComponents = () => {
+-    const headerTranslate = new Animated.ValueXY(INITIAL_POSITION);
+-    const footerTranslate = new Animated.ValueXY(INITIAL_POSITION);
+-    const toggleVisible = (isVisible) => {
+-        if (isVisible) {
+-            Animated.parallel([
+-                Animated.timing(headerTranslate.y, { ...ANIMATION_CONFIG, toValue: 0 }),
+-                Animated.timing(footerTranslate.y, { ...ANIMATION_CONFIG, toValue: 0 }),
+-            ]).start();
+-        }
+-        else {
+-            Animated.parallel([
+-                Animated.timing(headerTranslate.y, {
+-                    ...ANIMATION_CONFIG,
+-                    toValue: -300,
+-                }),
+-                Animated.timing(footerTranslate.y, {
+-                    ...ANIMATION_CONFIG,
+-                    toValue: 300,
+-                }),
+-            ]).start();
++    const [headerTranslate] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
++    const [footerTranslate] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
++    const reduced = useRef(true);
++    const visible = useRef(true);
++    const animation = useRef(null);
++    const settle = useCallback(() => {
++        animation.current?.stop();
++        animation.current = null;
++        headerTranslate.y.setValue(visible.current ? 0 : -300);
++        footerTranslate.y.setValue(visible.current ? 0 : 300);
++    }, [headerTranslate, footerTranslate]);
++    useEffect(() => {
++        let active = true;
++        let changed = false;
++        const apply = (value) => {
++            reduced.current = value;
++            if (value) settle();
++        };
++        const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", value => {
++            changed = true;
++            if (active) apply(value);
++        });
++        AccessibilityInfo.isReduceMotionEnabled().then(value => {
++            if (active && !changed) apply(value);
++        }).catch(() => {});
++        return () => {
++            active = false;
++            subscription.remove();
++            animation.current?.stop();
++        };
++    }, [settle]);
++    const toggleVisible = useCallback((isVisible) => {
++        visible.current = isVisible;
++        if (reduced.current) {
++            settle();
++            return;
+         }
+-    };
+-    const headerTransform = headerTranslate.getTranslateTransform();
+-    const footerTransform = footerTranslate.getTranslateTransform();
+-    return [headerTransform, footerTransform, toggleVisible];
++        animation.current?.stop();
++        animation.current = Animated.parallel([
++            Animated.timing(headerTranslate.y, { ...ANIMATION_CONFIG, toValue: isVisible ? 0 : -300 }),
++            Animated.timing(footerTranslate.y, { ...ANIMATION_CONFIG, toValue: isVisible ? 0 : 300 }),
++        ]);
++        animation.current.start();
++    }, [headerTranslate, footerTranslate, settle]);
++    return [headerTranslate.getTranslateTransform(), footerTranslate.getTranslateTransform(), toggleVisible];
+ };
+ export default useAnimatedComponents;

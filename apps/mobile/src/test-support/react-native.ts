@@ -4,6 +4,9 @@ const alerts: AlertRecord[] = [];
 const focusHandles: unknown[] = [];
 const focusedInputs: string[] = [];
 let animationStarts = 0;
+let animationStops = 0;
+let deferAnimations = false;
+const runningAnimations = new Set<object>();
 let keyboardDismissals = 0;
 let keyboardVisible = false;
 const keyboardListeners = new Map<string, Set<(event?: unknown) => void>>();
@@ -109,14 +112,33 @@ class AnimatedValue {
   setValue(value: number) { this.value = value; for (const listener of this.listeners.values()) listener({ value }); }
   addListener(listener: (event: { value: number }) => void) { const id = String(this.listeners.size); this.listeners.set(id, listener); return id; }
   removeListener(id: string) { this.listeners.delete(id); }
+  __getValue() { return this.value; }
   stopAnimation() {}
   interpolate() { return this.value; }
 }
-const animation = (value?: AnimatedValue, options?: { toValue: number }) => ({
-  stop() {},
-  start(callback?: (result: { finished: boolean }) => void) { animationStarts += 1; if (value && options) value.setValue(options.toValue); callback?.({ finished: true }); }
+const animation = (value?: AnimatedValue, options?: { toValue: number }) => {
+  const handle = {
+    stop() { animationStops++; runningAnimations.delete(handle); },
+    start(callback?: (result: { finished: boolean }) => void) {
+      animationStarts++;
+      if (deferAnimations) { runningAnimations.add(handle); return; }
+      if (value && options) value.setValue(options.toValue);
+      callback?.({ finished: true });
+    }
+  };
+  return handle;
+};
+const parallelAnimation = (children: ReturnType<typeof animation>[]) => ({
+  stop() { children.forEach(child => child.stop()); },
+  start(callback?: (result: { finished: boolean }) => void) { children.forEach(child => child.start()); if (!deferAnimations) callback?.({ finished: true }); }
 });
-export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: (value: AnimatedValue, factor: number) => ({ value, factor }), parallel: animation, spring: animation, timing: animation };
+class AnimatedValueXY {
+  readonly x: AnimatedValue;
+  readonly y: AnimatedValue;
+  constructor(initial: { x: number; y: number }) { this.x = new AnimatedValue(initial.x); this.y = new AnimatedValue(initial.y); }
+  getTranslateTransform() { return [{ translateX: this.x }, { translateY: this.y }]; }
+}
+export const Animated = { ValueXY: AnimatedValueXY, Value: AnimatedValue, View: 'AnimatedView', multiply: (value: AnimatedValue, factor: number) => ({ value, factor }), parallel: parallelAnimation, spring: animation, timing: animation };
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
@@ -124,7 +146,7 @@ export function resetNativeTestState() {
   reduceMotionEnabled = false;
   screenReaderEnabled = false;
   announcements.length = 0;
-  animationStarts = 0;
+  animationStarts = 0; animationStops = 0; deferAnimations = false; runningAnimations.clear();
   alerts.length = 0;
   focusHandles.length = 0;
   focusedInputs.length = 0;
@@ -182,3 +204,8 @@ export function holdReduceMotionSnapshotForTest() {
 export function emitKeyboardEventForTest(name: string, event?: unknown) {
   for (const listener of keyboardListeners.get(name) ?? []) listener(event);
 }
+
+export function deferAnimationsForTest(value: boolean) { deferAnimations = value; }
+export function animationStopCount() { return animationStops; }
+export function pendingAnimationCount() { return runningAnimations.size; }
+export function animatedValueForTest(value: unknown) { if (!(value instanceof AnimatedValue)) throw new Error("Not an animated value"); return value.__getValue(); }

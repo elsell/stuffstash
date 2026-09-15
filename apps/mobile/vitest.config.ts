@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 const support = (file: string) => fileURLToPath(new URL(`./src/test-support/${file}`, import.meta.url));
 
 export default defineConfig({
-  test: { setupFiles: ['./native-runtime.setup.ts'] },
+  test: { setupFiles: ['./native-runtime.setup.ts'], server: { deps: { inline: ['react-native-image-viewing'] } } },
   resolve: {
     alias: [
       { find: /^@react-navigation\/elements$/, replacement: support('react-navigation-elements.ts') },

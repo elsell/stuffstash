@@ -804,3 +804,19 @@ handler to leave loading or offer retry. Both platform image components retain
 loading until their success path. The wrapper exposes no load-error callback.
 Source confirmed; failed-media runtime reproduction and dependency repair pending.
 Close remains an escape, but does not explain or retry the failure.
+
+M84 candidate repair: pnpm applies a content-hashed patch to0.2.2; the version
+and other package resolutions remain unchanged. The chrome hook keeps stable
+animation values, starts with motion suppressed, handles live preference changes
+and stale/failed initial reads, and stops animation when reduction is enabled.
+Tests import the installed dependency hook rather than the viewer test double.
+The initial regression fails against upstream;15 focused remote checks plus
+TypeScript/structural checks pass against the patch. A clean web-container-shaped
+frozen-lockfile install also passes. Dockerfile.web now copies patches before
+install. Native zoom/preference-change verification remains pending; M85 is open.
+
+Critic requested stronger motion evidence: the controlled animation fake now
+tracks pending children and stop operations; the regression verifies settled
+positions, stable values across rerenders and cleanup on unmount. Twenty-five
+focused viewer, route, Map and feedback checks pass, along with TypeScript and
+structural checks. This still does not establish native timing or zoom behavior.

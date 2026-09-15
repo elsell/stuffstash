@@ -579,3 +579,18 @@ AppFeedback native dialog adapter with a synthetic rejected removal. Verify the
 confirmation, failure alert, acknowledgment, retained viewer and retry controls,
 then close. This fixture establishes modal layering only; production command
 ownership and authorization remain covered by their separate boundary tests.
+
+### Pinned photo-viewer motion patch
+
+Use a pnpm content-hashed patch against react-native-image-viewing0.2.2 rather
+than an unreviewed version upgrade. Its chrome animation hook must start with
+motion suppressed, honor live Reduce Motion changes, ignore stale initial reads,
+stop ongoing movement when reduction becomes enabled, and keep animation values
+stable across rerenders. Re-enable optional animation only after an explicit
+platform value permits it. Cleanup subscriptions/late reads. Preserve the public
+viewer API and zoom controls. Test the installed patched hook through the existing
+native fake; source assertions alone cannot prove its behavior. Native zoom and
+preference changes remain required. The independent image-load recovery gap M85
+is not resolved by this patch.
+
+All workspace installation contexts, including the web container build, must include the pinned patch file before pnpm install. The lockfile must change only the patch declaration and affected dependency identity; retain existing package versions.
