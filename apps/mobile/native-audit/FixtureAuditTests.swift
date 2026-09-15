@@ -256,7 +256,15 @@ final class FixtureAuditTests: XCTestCase {
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
-    let open = app.buttons["Audit Add draft"]
+    verifyAddDraft(entry: "Audit Add draft")
+  }
+
+  func testAddDraftInNavigationStack() {
+    verifyAddDraft(entry: "Audit Add navigation draft")
+  }
+
+  private func verifyAddDraft(entry: String) {
+    let open = app.buttons[entry]
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()

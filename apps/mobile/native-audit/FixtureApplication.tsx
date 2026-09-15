@@ -60,6 +60,7 @@ function FixtureNavigation() {
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
+      <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
@@ -98,6 +99,7 @@ export function FixtureMenu() {
     <Button title="Audit uncontrolled input" onPress={() => setInputMode('uncontrolled')} />
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
     {inputMode ? <InputFixture key={inputMode} mode={inputMode} /> : null}
+    <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />

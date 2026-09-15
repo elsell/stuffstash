@@ -584,3 +584,22 @@ the keyboard; the original outside-column drag still fails. Landscape passes.
 Evidence `/tmp/native349270-onboarding-ipad.log`. Preserve both scenarios while
 assessing whether outside-content dismissal should be supported. iPhone onboarding
 passed; iPhone fixtures remain running at this checkpoint.
+
+### Run34927007321 completed — phone and next Add comparison
+
+The run is terminal failure. Phone fixtures executed30tests,23passed,7failed.
+`/tmp/native349270-fixtures-phone.log` records Add loading, History reachability,
+controlled-address text loss, expiration accessibility clipping and keyboard
+footer reachability, and nested/footer diagnostic layouts. Home Cancel and the
+entire existing Home return-details recovery scenario pass on phone. The cold
+inventory/dependent query comparison also passes on phone. This does not negate
+the iPad Return note failure or clear the failing phone surfaces.
+
+A new runner-only `audit-add-push` navigation-card route exports the identical Add
+fixture and shares its full draft/rejected-save/Close scenario with the original
+form-sheet test. It distinguishes presentation effects from Add data dependencies
+without preloading cache or bypassing queries. The original failing test remains.
+Route-isolation tests failed for the absent route then passed after installation;
+both tests, TypeScript and structural checks pass on paul
+(`/tmp/add-presentation-green.log`); critic found no blocker. Native comparison
+outcome is pending. This changes the diagnostic suite, not production Add behavior.
