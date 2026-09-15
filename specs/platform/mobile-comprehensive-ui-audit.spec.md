@@ -385,3 +385,13 @@ rejected Save, pending commands and Close assertions through both routes. No
 preseeded cache or query bypass is permitted. Compare presentation/entry before
 changing production query behavior; a passing comparison does not clear the
 original failing Add scenario. Generated routes remain isolated from release builds.
+
+### Accessibility issue attribution
+
+Native accessibility audits must retain a per-issue description, optional element
+hierarchy and screenshot when XCTest identifies an issue. A missing element is
+reported as unavailable, not treated as a false positive. The diagnostic handler
+must return false so XCTest continues to report the issue as a failure; it must
+not suppress an audit category. This distinguishes broad audit predictions from
+explicit enlarged-text interaction results and avoids attributing an unidentified
+clipping issue to whichever control was fixed most recently.

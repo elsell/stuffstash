@@ -176,13 +176,26 @@ final class FixtureAuditTests: XCTestCase {
     capture("choice-menu-accessibility-size")
   }
 
+  @available(iOS 17.0, *)
+  private func auditAccessibility(_ types: XCUIAccessibilityAuditType) throws {
+    try app.performAccessibilityAudit(for: types) { issue in
+      let element = issue.element?.debugDescription ?? "XCTest did not identify an element"
+      let details = XCTAttachment(string: "\(issue.compactDescription)\n\(issue.detailedDescription)\n\(element)")
+      details.name = "accessibility-issue-element"
+      details.lifetime = .keepAlways
+      self.add(details)
+      self.capture("accessibility-issue")
+      return false
+    }
+  }
+
   func testExpirationOverviewAccessibility() throws {
     app.buttons["Audit Expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     capture("expiration-overview-accessibility")
     if #available(iOS 17.0, *) {
-      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .dynamicType, .textClipped])
+      try auditAccessibility([.hitRegion, .sufficientElementDescription, .trait, .dynamicType, .textClipped])
     } else {
       throw XCTSkip("Accessibility auditing requires iOS 17 or later")
     }
@@ -428,7 +441,7 @@ final class FixtureAuditTests: XCTestCase {
     openDraftPhotos()
     capture("draft-photo-accessibility-before-audit")
     if #available(iOS 17.0, *) {
-      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .contrast, .dynamicType, .textClipped])
+      try auditAccessibility([.hitRegion, .sufficientElementDescription, .trait, .contrast, .dynamicType, .textClipped])
     } else {
       throw XCTSkip("XCTest accessibility audit requires iOS 17")
     }

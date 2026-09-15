@@ -700,3 +700,21 @@ and two layout diagnostics. M19 ownership changes from PR138 are excluded.
 Log /tmp/native349297-fixtures-phone.log; full artifacts requested under
 /tmp/native349297-fixtures-phone. Inspect the clipping hierarchy/screenshot and
 Add comparison before selecting the next implementation. iPad jobs remain active.
+
+### Run349297 phone M53 evidence clarification
+
+`testNativeChoiceLabelAtAccessibilityTextSize` PASSED. Inspected715806B3-B006-4816-AC1E-D013EF4AE529.png
+shows the label/value vertically stacked at the configured accessibility size;
+the test scrolls to Availability and opens its menu. This is positive named
+interaction evidence for M53. It does not clear every large-text layout.
+
+Separately `testExpirationOverviewAccessibility` fails Apple's textClipped audit.
+The normal-size screenshotsC192A94C/95214FA5 do not identify an obvious clipped
+label; issueED0C4A17 says only that text may clip at larger sizes. Therefore the
+previous wording “clipping despite M53 reflow” does not establish that the same
+label remains broken. The issue stays open and is not ignored. Added a per-issue
+XCTest handler to attach its optional element hierarchy/description/screenshot,
+returning false to retain failures. Swift compilation and resulting attribution
+await the next macOS run; no native visual correction is claimed by instrumentation.
+
+API reference: [XCUIAccessibilityAuditIssue](https://developer.apple.com/documentation/xcuiautomation/xcuiaccessibilityauditissue).
