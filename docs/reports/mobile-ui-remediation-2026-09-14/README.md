@@ -46,8 +46,8 @@ The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,861
-pending,1,097 source-reviewed,306 finding,22 runtime-partial and98 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,837
+pending,1,114 source-reviewed,310 finding,22 runtime-partial and101 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.

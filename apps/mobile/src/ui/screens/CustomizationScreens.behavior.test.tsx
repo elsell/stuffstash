@@ -221,6 +221,34 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).not.toContain('Inherited from Home. Manage it from household settings.');
   });
 
+  it.each([
+    ['field', 'tenant'], ['field', 'inventory'],
+    ['asset-type', 'tenant'], ['asset-type', 'inventory']
+  ] as const)('shows the loaded owner of %s definitions from %s in Details', async (kind, recordScope) => {
+    const record = kind === 'field'
+      ? field('definition', 'Shared definition', recordScope)
+      : assetType('definition', 'Shared definition', recordScope);
+    const screen = await renderEditor({
+      inherited: recordScope !== 'tenant', kind, mode: 'edit', resourceId: record.id,
+      query: collectionQuery(kind === 'field' ? { fields: [record] } : { assetTypes: [record] })
+    });
+    await screen.press(screen.byText('Show technical details')?.parent ?? undefined);
+    expect(screen.byLabel(`Scope, ${recordScope === 'tenant' ? 'Home' : 'Household'}`)).toBeDefined();
+    expect(screen.byLabel(`Scope, ${recordScope === 'tenant' ? 'Household' : 'Home'}`)).toBeUndefined();
+  });
+
+  it.each([true, false])('shows expiration tracking as a static inherited value: %s', async enabled => {
+    const record = { ...assetType('shared-type', 'Medicine', 'tenant'), expirationEnabled: enabled };
+    const screen = await renderEditor({
+      kind: 'asset-type', mode: 'edit', resourceId: record.id,
+      query: collectionQuery({ assetTypes: [record] })
+    });
+    expect(screen.byLabel('Track expiration dates')).toBeUndefined();
+    expect(screen.allText()).toContain('Track expiration dates');
+    expect(screen.allText()).toContain(enabled ? 'Enabled' : 'Disabled');
+    expect(screen.allText()).not.toContain('Save');
+  });
+
   it('shares a pending definition list and selects the latest editor route', async () => {
     const first = deferred<{ items: readonly ReturnType<typeof field>[]; complete: true }>();
     const resourceA = field('field-a', 'Resource A', 'inventory');

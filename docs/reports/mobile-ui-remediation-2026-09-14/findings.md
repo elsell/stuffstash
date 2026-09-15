@@ -2208,3 +2208,19 @@ failed push cleanup retains the current composition.
 M152 final focused validation:39 cases across5 files passed remotely, followed
 by TypeScript and structural checks. Critic confirmed retirement now covers the
 previously missed interval and found no remaining confirmed blocker in this fix.
+
+### M153 — Inherited definition shows the inventory as its owner
+
+P2 source/mounted finding at438bd902. Details used the screen scope instead of
+loaded ownership, contradicting the inheritance explanation. The label now uses
+effective inherited ownership. Four cases cover fields/types and household/local
+ownership with misleading route hints; the inherited cases failed before correction.
+
+### M154 — Read-only asset type presents an inactive tracking switch
+
+P2 source/mounted pattern finding at438bd902. Inherited/viewer/archived detail used
+a disabled mutation control even though the settings spec requires static values.
+Read-only tracking now displays Enabled or Disabled. Editable types retain their
+switch and pending-operation behavior. Both inherited values failed before the
+correction.49 related tests and static checks pass remotely; native presentation
+and assistive reading order remain pending. See inherited-definition-axis.md.
