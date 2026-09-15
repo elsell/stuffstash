@@ -1,3 +1,4 @@
+import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
 import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
@@ -91,7 +92,7 @@ it('creates the move destination with the kind selected in the native menu', asy
   } finally { await h.unmount(); }
 });
 
-it.each(['move', 'move-here'] as const)('freezes %s submission and restores its draft after failure', async mode => {
+it.each([['move', false], ['move-here', false], ['move', true], ['move-here', true]] as const)('freezes %s submission and restores after failure (returned=%s)', async (mode, returned) => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const submitted: unknown[] = [];
   let rejectSave: (error: Error) => void = () => {};
   const waiting = new Promise<never>((_, reject) => { rejectSave = reject; });
@@ -124,13 +125,16 @@ it.each(['move', 'move-here'] as const)('freezes %s submission and restores its 
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    const alertBefore = latestAlert();
+    if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
     await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
+    if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
-  } finally { await h.unmount(); }
+  } finally { await h.unmount(); setScreenFocused(true); }
 });
 
-it('shares the Move lock with destination creation and retains the query after failure', async () => {
+it.each([false, true])('shares the Move creation lock and retains query after failure (returned=%s)', async returned => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creates = 0; let moves = 0;
   let rejectCreate: (error: Error) => void = () => {};
   const waiting = new Promise<never>((_, reject) => { rejectCreate = reject; });
@@ -152,13 +156,16 @@ it('shares the Move lock with destination creation and retains the query after f
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.allByType('TextInput')[0], 'Changed');
+    const alertBefore = latestAlert();
+    if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
     await h.run(() => rejectCreate(new Error('Failed'))); await settle(h);
+    if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
-  } finally { await h.unmount(); }
+  } finally { await h.unmount(); setScreenFocused(true); }
 });
 
-it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft during submission and %s', async outcome => {
+it.each(['failure', 'success', 'late completion', 'return success', 'return failure'] as const)('protects Edit draft during submission and %s', async outcome => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let writes = 0; let unmounted = false;
   resetNavigation();
   let resolveSave: (value: { id: string; title: string; message: string }) => void = () => {};
@@ -182,7 +189,18 @@ it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
     await h.changeText(input, 'Unsubmitted name');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
-    if (outcome === 'failure') {
+    if (outcome === 'return success' || outcome === 'return failure') {
+      consumeAssetActionCompletion('asset');
+      const alertBefore = latestAlert();
+      await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true));
+      await h.run(() => outcome === 'return success' ? resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }) : rejectSave(new Error('Departed failure')));
+      await settle(h);
+      expect(dispatchedActions()).toEqual([]);
+      expect(latestAlert()).toBe(alertBefore);
+      expect(consumeAssetActionCompletion('asset')).toBeUndefined();
+      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
+    } else if (outcome === 'failure') {
       await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
       expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
@@ -194,7 +212,7 @@ it.each(['failure', 'success', 'late completion'] as const)('protects Edit draft
       await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
       expect(dispatchedActions()).toEqual([]);
     }
-  } finally { if (!unmounted) await h.unmount(); resetNavigation(); }
+  } finally { if (!unmounted) await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 
 it('keeps an existing tag selected when inline tag resolution updates the Edit draft', async () => {

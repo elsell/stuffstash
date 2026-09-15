@@ -2051,3 +2051,24 @@ Acceptance now consumes its confirmation before starting the request. The same
 test verifies a freshly confirmed retry remains available. All57 settings behavior
 tests, TypeScript and structural checks pass on paul; critic found no confirmed
 issue. Native alert interaction remains pending.
+
+
+### M147 — Mounted asset sheets present completion on a later visit
+
+P2 source/mounted finding, Edit/Move/Move Here/destination creation. The shared
+operation helper tracked mounting and pending work but not focused visit. New
+Edit tests reproduced late-success navigation and a late-error alert after
+blur/refocus. Completion ownership is now captured when the mutation begins.
+All four consumers check it before notices, navigation, error alerts, created
+destination selection and partial-tag draft replacement. The lock still lasts
+until settlement and the mounted current form is unlocked afterward.
+
+All26 Edit/Move behavior tests pass on paul, including returned-visit failure
+for Move, Move Here and destination creation, current-visit success/failure and
+the new Edit success/failure return cases. TypeScript and structural checks pass.
+Native presentation/lifecycle acceptance remains pending.
+
+M147 critic found no confirmed blocker. It noted that dedicated returned-visit
+success tests for Move/Move Here/destination creation are not yet present; current
+success tests and Edit return-success cover the shared helper, but do not replace
+those per-branch scenarios. That coverage gap and native timing remain open.

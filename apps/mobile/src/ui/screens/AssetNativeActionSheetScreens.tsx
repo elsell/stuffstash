@@ -127,7 +127,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
         newTags: normalized.newTags,
         activeTags: normalized.newTags?.length ? await tags.reconcile() : tags.data ?? []
       });
-      if (!operation.isMounted()) return;
+      if (!operation.canPresent()) return;
       recordAssetActionCompletion({
         assetId,
         action: 'edit',
@@ -136,9 +136,9 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       });
       operation.complete(() => router.back());
     } catch (error) {
-      if (!operation.isMounted()) return;
+      if (!operation.canPresent()) return;
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
-      if (operation.isMounted()) Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
+      if (operation.canPresent()) Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
     } finally {
       operation.end();
     }
@@ -148,7 +148,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     try {
       const assetTags = await tags.reconcile();
       const reconciled = reconcileCreatedAssetTags(stagedTags, assetTags);
-      if (operation.isMounted() && reconciled.createdTagIds.length > 0) {
+      if (operation.canPresent() && reconciled.createdTagIds.length > 0) {
         setDraft((current) => current
           ? {
               ...current,
@@ -212,7 +212,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
     try {
       const placement = moveDestinationCreatePlacement(asset);
       const created = await createAssetCommand.execute(moveDestinationCreateInput(createKind, name, placement));
-      if (!operation.isMounted()) return;
+      if (!operation.canPresent()) return;
       const createdParent = createdMoveDestinationParent({
         id: created.id,
         kind: createKind,
@@ -226,7 +226,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
         selectedParent: createdParent
       });
     } catch (error) {
-      if (operation.isMounted()) Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
+      if (operation.canPresent()) Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
     } finally {
       operation.end();
     }
@@ -242,11 +242,11 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
         assetId,
         parentAssetId: draft.selectedParent?.id
       });
-      if (!operation.isMounted()) return;
+      if (!operation.canPresent()) return;
       recordAssetActionCompletion({ assetId, action: 'move', message: result.message });
       operation.complete(() => router.back());
     } catch (error) {
-      if (operation.isMounted()) Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
+      if (operation.canPresent()) Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
     } finally {
       operation.end();
     }
@@ -299,11 +299,11 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
         assetId: draft.selectedAsset.id,
         parentAssetId: draft.target.id
       });
-      if (!operation.isMounted()) return;
+      if (!operation.canPresent()) return;
       recordAssetActionCompletion({ assetId: draft.target.id, action: 'move', message: result.message });
       operation.complete(() => router.back());
     } catch (error) {
-      if (operation.isMounted()) Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
+      if (operation.canPresent()) Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
     } finally {
       operation.end();
     }
@@ -430,6 +430,8 @@ function createStyles(colors: MobileColorPalette) {
 
 /** One mutation owns the sheet draft until it settles. */
 function useAssetSheetOperation() {
+  const capturePresentation = useTaskPresentation();
+  const completionOwner = useRef<(() => boolean) | undefined>(undefined);
   const pending = useRef(false);
   const mounted = useRef(true);
   const [kind, setKind] = useState<'save' | 'create' | null>(null);
@@ -441,13 +443,15 @@ function useAssetSheetOperation() {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   return {
     kind, busy: kind !== null,
-    isMounted: () => mounted.current,
+    canPresent: () => mounted.current && completionOwner.current?.() === true,
     locked: () => pending.current || !mounted.current,
     begin: (next: 'save' | 'create' = 'save') => {
-      if (pending.current || !mounted.current) return false;
+      const isCurrent = capturePresentation();
+      if (pending.current || !mounted.current || !isCurrent()) return false;
+      completionOwner.current = isCurrent;
       pending.current = true; completed.current = false; setKind(next); return true;
     },
-    complete: (leave: () => void) => { if (mounted.current) { completed.current = true; leave(); } },
+    complete: (leave: () => void) => { if (mounted.current && completionOwner.current?.()) { completed.current = true; leave(); } },
     end: () => { pending.current = false; if (mounted.current) setKind(null); },
     change: (change: () => void) => { if (!pending.current && mounted.current) change(); }
   };

@@ -1171,3 +1171,13 @@ Each native provider Archive confirmation permits one attempt. Failure retains
 retry through a fresh confirmation; replaying the old acceptance after the request
 settles must not issue another archive request. Preserve current-visit checks and
 pending-operation exclusion.
+
+
+### Asset sheet mutation completion ownership
+
+Edit, Move, Move Here and destination creation retain their draft lock until the
+request settles, but completion presentation belongs to the initiating focused
+visit. A mounted sheet that lost focus and returned must not receive a stale
+completion notice, navigation, error alert or destination/draft replacement.
+Background work may settle normally; unlock the still-mounted form afterward so
+the current visit can continue. Preserve current-visit success, failure and retry.
