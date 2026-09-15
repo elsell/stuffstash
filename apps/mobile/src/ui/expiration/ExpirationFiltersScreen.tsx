@@ -1,6 +1,6 @@
-import type { SearchBarCommands, SearchBarProps } from 'react-native-screens';
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
 import { Stack } from 'expo-router';
 import { NativeFilterSheet } from '../components/NativeFilterSheet';
@@ -14,15 +14,14 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const [draft, setDraft] = useState(initial); const [page, setPage] = useState<Page>('overview'); const [search, setSearch] = useState('');
  const { palette } = useSettingsListStyles();
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
- const searchRef = useRef<SearchBarCommands | null>(null);
- const open = (next: Page) => { searchRef.current?.clearText(); setSearch(''); setPage(next); };
+ const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
  const headerOptions = useMemo(() => ({ headerShown: true, title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
-   headerSearchBarOptions: searchable ? { ref:searchRef, placeholder:`Search ${page}`, placement:'stacked', hideWhenScrolling:false, hideNavigationBar:false, obscureBackground:false, autoCapitalize:'none', onChangeText:event=>setSearch(event.nativeEvent.text), onCancelButtonPress:()=>setSearch('') } satisfies SearchBarProps : undefined,
-  }), [page, searchable]);
+  }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
+  <NativeNavigationSearch key={page} enabled={searchable} query={search} placeholder={`Search ${page}`} onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
   <NativeFilterSheet footerTestID="expiration-filter-footer" actions={{
    primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
    secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,

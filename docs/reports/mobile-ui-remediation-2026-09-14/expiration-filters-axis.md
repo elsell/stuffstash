@@ -19,11 +19,11 @@ expiration query correctness and the results workspace are separate surfaces.
 | Imagery | No photos belong to these choices; native picker indicators and checkboxes express state. Native alignment remains pending. |
 | Targets | Whole settings rows and native commands are interactive. Measured footer does not itself prove targets or final choice reachability. |
 | Gestures | Back/Cancel are explicit alternatives to sheet gestures. Native date dialogs support dismissal. Swipe, keyboard and gesture arbitration remain pending. |
-| Keyboard | M117: selection pages still request permanently stacked search, differing from Browse's integrated search button and the requested compact pattern. Native focus/close behavior also needs acceptance. |
+| Keyboard | M117 found permanently stacked search. The candidate reuses Browse's integrated search adapter, keyed by page to reject departed callbacks. Native focus/close behavior also needs acceptance. |
 | Accessibility | Tags expose checkbox state; dates have first/last labels. Range error is an alert. VoiceOver order, picker values, and no-match announcements remain unverified. |
 | Motion | No custom animation is introduced here. System sheet/search/date transitions under Reduce Motion remain pending. |
 | Content | All choice rows render eagerly in supplied order. Location labels use paths, without an expanding tree. Large option counts need performance and findability acceptance. |
-| Search | Local substring matching does not clear selected IDs. Opening a page clears the previous search. No matches appears outside the section; empty options use the same copy. M117 covers compact search consistency. |
+| Search | Local substring matching does not clear selected IDs. Opening a page clears the previous search. No matches appears outside the section; empty options use the same copy. M117 implements compact search consistency; native verification remains pending. |
 | Loading | All three choice queries resolve before the editor mounts. M116 supplies explicit loading Cancel. Native dismissal and transport abort are not proved by the component test. |
 | Recovery | Route load failures show generic Retry/Cancel. Invalid date order disables Apply and shows explanatory alert. Native alert reachability and retry focus remain pending. |
 | Editing | State is local until Apply; Back preserves it, Cancel does not apply it. Date toggles initialize today; Android dismissal leaves the current value. Component tests cover selected draft paths, not every interruption. |

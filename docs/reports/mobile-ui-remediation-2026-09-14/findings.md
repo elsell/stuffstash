@@ -1540,7 +1540,9 @@ with hideWhenScrolling false on types, tags and locations. Browse uses the share
 NativeNavigationSearch integrated button. This preserves the vertical-space
 problem the user asked to remove and duplicates native search lifecycle wiring.
 Reuse the shared adapter while preserving local filtering, selected IDs and
-page-return clearing. Implementation and native acceptance remain outstanding;
+page-return clearing. The candidate now reuses that adapter with a separate lifetime for each page;
+13 focused tests, TypeScript and structural checks pass remotely after a failing
+regression. Code review found no confirmed blockers. Native acceptance remains outstanding;
 verify compact initial presentation, open/search/clear/close, page changes, and
 retained selections on iPhone and iPad. This is a project consistency requirement,
 not a claim that Apple forbids stacked search in every context.

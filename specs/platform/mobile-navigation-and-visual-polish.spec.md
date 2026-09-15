@@ -539,3 +539,13 @@ choices load, without waiting for any query to settle. Loading uses visible text
 and progress together. Cancel returns through the existing route cancellation
 handler; it never applies a draft. Keep this loading body directly scrollable and
 reuse existing native commands/settings loading presentation.
+
+### Compact search in expiration filter selections
+
+Expiration type, tag and location selection pages use the shared native integrated
+search button, matching Browse filters. Opening search reveals the native field;
+closing or clearing it restores all options without changing selected IDs. Leaving
+a selection page clears its search, and the overview has no search control. Keep
+selection staged until Apply. Reuse NativeNavigationSearch rather than maintaining
+a second set of native search callbacks. Verify open, type, clear, close, Back and
+retained selections on iPhone and iPad; component checks do not prove geometry.
