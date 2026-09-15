@@ -133,7 +133,12 @@ keeps the taller native decision area flagged for keyboard/short-window acceptan
 
 The [response surface](conversation-response-axis.md) has all24 source axes
 reviewed;29 focused tests pass. Historical photo retry is plan-owned. M171 records
-an unguarded navigation completion after pausing media, pending correction.
+an unguarded navigation completion after pausing media. Its candidate now guards
+pending completion and retained handlers across visit/scope replacement, with four
+mounted scenarios passing and code critic review complete; native acceptance remains.
+The combined checkpoint passed1,741 tests across273 files and static checks on paul;
+the subsequent retained-handler correction passed its four focused cases and static
+checks separately. Neither result is native transition verification.
 The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
 nested diagnostic layout from the direct-scroll structure used by production filters.
 

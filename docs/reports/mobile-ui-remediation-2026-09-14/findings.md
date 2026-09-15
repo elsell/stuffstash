@@ -2426,4 +2426,11 @@ awaits pauseMedia and then unconditionally dismisses/pushes asset details. If th
 user leaves or changes scope while pausing, completion can navigate from another
 screen. Capture visit and scope ownership before awaiting and check before
 navigation. Verify current completion, leave/return, and scope replacement with
-a delayed media fake. Correction and native transition acceptance remain open.
+a delayed media fake. The candidate now binds handlers to a focused visit and
+scope, retires that visit on cleanup, and checks again after media shutdown.
+Four mounted scenarios cover current, departed, returned and replaced scope;
+retained old callbacks cannot pause a new session, while fresh actions work.
+Tests reproduced three late-navigation failures before correction and a retained
+callback failure during review. All four now pass on paul with TypeScript and
+structural checks. Code critic found no remaining blockers. Native transition
+acceptance remains open.

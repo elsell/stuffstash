@@ -57,6 +57,10 @@ Keep the position count between flexible command columns and disable movement at
 the ends. Plan Approve/Cancel use native sheet actions with explicit accessible
 names and the existing pending-decision ownership; they must not introduce a
 second submission path or change the plan being approved.
+Opening a response reference may await media shutdown. That navigation belongs
+to the focused visit and inventory scope that initiated it; leaving, leaving and
+returning, or scope replacement retires it. A retired callback must not pause a
+new session or dismiss/navigate another screen. Fresh reference actions remain usable.
 User and assistant message text supports native selection and copy. The native text
 composer continues to support paste. A clearly labelled New conversation control is
 always available in the sheet header; resetting clears local history/drafts and cancels

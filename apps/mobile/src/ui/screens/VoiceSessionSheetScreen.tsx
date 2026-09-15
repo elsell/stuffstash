@@ -1,4 +1,5 @@
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
+import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
@@ -54,7 +55,7 @@ import {
 export function VoiceSessionSheetScreen() {
   const { parentLookupQuery, photoSelectionQuery } = useAppServices();
   const {
-    photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia,
+    photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia, scopeIdentity,
     approveRealtimeActionPlan,
     cancelRealtime,
     cancelRealtimeActionPlan,
@@ -65,6 +66,8 @@ export function VoiceSessionSheetScreen() {
     state,
     stopRealtime
   } = useVoiceInteractionState();
+  const openResponseReference = useVoiceReferenceNavigation({ scopeIdentity, pauseMedia,
+    onOpen: artifact => navigateAfterTransientDismissal(() => router.dismiss(), () => router.push(assetDetailHref(artifact.assetId))) });
   const pauseMediaRef = useRef(pauseMedia);
   pauseMediaRef.current = pauseMedia;
   useFocusEffect(useCallback(() => () => { void pauseMediaRef.current(); }, []));
@@ -203,14 +206,7 @@ export function VoiceSessionSheetScreen() {
           () => router.push('/settings/voice')
         );
       }}
-      onOpenResponseArtifact={async (artifact) => {
-        Keyboard.dismiss();
-        await pauseMedia();
-        navigateAfterTransientDismissal(
-          () => router.dismiss(),
-          () => router.push(assetDetailHref(artifact.assetId))
-        );
-      }}
+      onOpenResponseArtifact={openResponseReference}
       onSessionMic={() => {
         void handleSessionMic();
       }}

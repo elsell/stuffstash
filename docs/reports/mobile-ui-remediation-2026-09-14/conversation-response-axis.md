@@ -8,7 +8,7 @@ controller's plan-keyed retry lookup. This is source evidence, not full voice QA
 | Axis | Evidence and remaining acceptance |
 | --- | --- |
 | Task | Read the answer, inspect referenced inventory assets, and review saved plan history. Photo retry is a distinct command after partial media failure. |
-| Navigation | Inline references and cards open native asset details after pausing media and dismissing the transient sheet. M171: late pause completion lacks visit ownership. |
+| Navigation | Inline references and cards open native asset details after pausing media and dismissing the transient sheet. M171 candidate scopes pending completion and retained callbacks to the originating visit. |
 | Selection | Text is selectable; references are links/navigation, not editable value choices. Duplicate titles use disambiguating fallback references. |
 | Modality | Response reading stays in the conversation. Native asset navigation follows sheet dismissal; race and actual transition need acceptance. |
 | Layout | Content-sized response text and bounded horizontal rail; shared parent conversation scroll. Long responses, keyboard and footer reachability remain native work. |
@@ -33,5 +33,7 @@ controller's plan-keyed retry lookup. This is source evidence, not full voice QA
 | Lifecycle | History/rail offsets retained above sheet, bounded history20. M171 affects late asset navigation; native background/return acceptance remains open. |
 
 All29 focused response/link/markdown/history/retry-state and rail tests pass on
-paul. This does not reproduce the M171 race yet and does not establish native
-layout, audio, accessibility or real server authorization acceptance.
+paul. Four additional mounted M171 scenarios reproduce and guard delayed navigation
+and retained callbacks across leaving, returning and scope replacement. Review
+confirmed the corrected ownership. Native layout, transitions, audio, accessibility
+and real server authorization acceptance remain open.

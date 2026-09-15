@@ -36,6 +36,7 @@ export type VoiceInteractionState =
 type TitleEditor = { readonly commandId: string; readonly value: string } | null;
 type ConversationDraftState = { readonly planId?: string; readonly drafts: VoicePlanCommandDrafts };
 type VoiceInteractionStateContextValue = {
+  readonly scopeIdentity: string;
   readonly titleEditor: TitleEditor;
   readonly setTitleEditor: Dispatch<SetStateAction<TitleEditor>>;
   readonly history: readonly VoiceRealtimeState[];
@@ -152,6 +153,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           : { status: 'loading', stage };
 
     return {
+      scopeIdentity: scopeKey,
       titleEditor, setTitleEditor,
       history: stateOwner === scopeKey ? history : [], composerText: stateOwner === scopeKey ? composerText : '', setComposerText,
       photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, scrollOffset, railOffsets,
