@@ -1069,3 +1069,22 @@ Keep M89 open pending these captures and iPad evidence.
 
 The inspected images are retained as phone-region-error-partial-349521.png and
 phone-region-recovered-offscreen-349521.png in evidence/.
+
+## iPad run34952117013 recovery capture review
+
+Evidence is from run34952117013,
+iPad job104325296637 at26f91e4. The full fixture suite passed34/41, with the
+region-recovery journey passing. Both retry labels and error text are readable
+in ipad-region-errors-349521.png. The recovered capture shows No photos and
+No spaces here yet, but not the separate Nothing here yet state asserted by the
+test. Retain the new per-region captures; this is partial evidence for M89, not
+complete visual acceptance. Seven failures remain in Add (three scenarios),
+original History hit check, controlled address entry, Edit metadata reachability
+and no-accessory keyboard readiness. Both onboarding jobs passed.
+
+## Interim0.24.20 upload
+
+Release34954415338 attempt2 at aecaeedc successfully uploaded0.24.20 (108.2)
+at10:16:30UTC, September15, job104336505377. Apple processing and exact changelog
+verification job104341597194 is running. Do not report TestFlight delivery until
+that verification completes. This release includes PR144, not PR146 fixes.
