@@ -1567,3 +1567,14 @@ TypeScript and structural checks now pass remotely, including pending text passe
 to Filters and immediate clear with no later debounce. Native compact header,
 search focus, keyboard, filter return and scrolling acceptance remain pending.
 R018/S074 search and keyboard; this is not a full results-surface audit.
+
+## M119 — Expiration Retry starts the pull indicator and cannot recover mismatched scope
+
+P2, source-confirmed at50d48f3c. The error button receives the same onRefresh as
+the RefreshControl, calling usePullRefresh.refresh despite no pull gesture. A
+successfully loaded but mismatched inventory produces an error with that same
+Retry; its callback performs no read when matches is false. Separate command
+retry from gesture presentation and give inventory mismatch an actionable return
+path instead of an ineffective retry. Preserve loaded pages during recoverable
+errors and test command, pull, mismatch and navigation-return paths independently.
+Implementation and native acceptance remain outstanding. R018/S074 loading/recovery.

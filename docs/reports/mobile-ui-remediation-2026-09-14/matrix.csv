@@ -407,30 +407,30 @@ R017,expiration-filters.tsx,privacy,"Account scope, data use and permissions",so
 R017,expiration-filters.tsx,notifications,System notification entry and state,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,media,"Camera, library, files and audio",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-R018,expiration.tsx,task,Task clarity and platform-pattern fit,pending,,
-R018,expiration.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R018,expiration.tsx,selection,Value selection and current value,pending,,
-R018,expiration.tsx,modality,Presentation and dismissal,pending,,
-R018,expiration.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R018,expiration.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R018,expiration.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R018,expiration.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending,M68
-R018,expiration.tsx,imagery,"Icons, photos and missing media",pending,,
-R018,expiration.tsx,targets,Touch target size and reachability,pending,,
-R018,expiration.tsx,gestures,Gestures and explicit alternatives,pending,,
-R018,expiration.tsx,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
-R018,expiration.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R018,expiration.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R018,expiration.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R018,expiration.tsx,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
-R018,expiration.tsx,loading,"Loading, background refresh and progress",pending,,
-R018,expiration.tsx,recovery,"Empty, error, denied and retry",pending,,
-R018,expiration.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R018,expiration.tsx,privacy,"Account scope, data use and permissions",pending,,
-R018,expiration.tsx,notifications,System notification entry and state,pending,,
-R018,expiration.tsx,media,"Camera, library, files and audio",pending,,
-R018,expiration.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R018,expiration.tsx,task,Task clarity and platform-pattern fit,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,selection,Value selection and current value,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,modality,Presentation and dismissal,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending; expiration-results-axis.md; source50d48f3c; native pending,M68
+R018,expiration.tsx,imagery,"Icons, photos and missing media",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,targets,Touch target size and reachability,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,gestures,Gestures and explicit alternatives,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending; expiration-results-axis.md; source50d48f3c; native pending,M118
+R018,expiration.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending; expiration-results-axis.md; source50d48f3c; native pending,M118
+R018,expiration.tsx,loading,"Loading, background refresh and progress",finding,; expiration-results-axis.md; source50d48f3c; native pending,M119
+R018,expiration.tsx,recovery,"Empty, error, denied and retry",finding,; expiration-results-axis.md; source50d48f3c; native pending,M119
+R018,expiration.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,privacy,"Account scope, data use and permissions",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,notifications,System notification entry and state,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,media,"Camera, library, files and audio",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+R018,expiration.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 R019,invitations/accept.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Preview names inventory and access; explicit Join precedes Open; accepted state distinguishes access from opening.,
 R019,invitations/accept.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Open calls onAccepted only after acceptance. Failed open remains accepted with retry; onDismiss and account-switch callbacks explicit.; sharing-axis.md M72 route completion ownership; native pending,M72
 R019,invitations/accept.tsx,selection,Value selection and current value,pending,,
@@ -1751,30 +1751,30 @@ S073,Browse / expiration handoff,privacy,"Account scope, data use and permission
 S073,Browse / expiration handoff,notifications,System notification entry and state,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S073,Browse / expiration handoff,media,"Camera, library, files and audio",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 S073,Browse / expiration handoff,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
-S074,Expiration / soon expired all dates,task,Task clarity and platform-pattern fit,pending,,
-S074,Expiration / soon expired all dates,navigation,"Navigation, hierarchy and return",pending,,
-S074,Expiration / soon expired all dates,selection,Value selection and current value,pending,,
-S074,Expiration / soon expired all dates,modality,Presentation and dismissal,pending,,
-S074,Expiration / soon expired all dates,layout,"Safe areas, scroll edges and overlays",pending,,
-S074,Expiration / soon expired all dates,adaptation,Phone/tablet/window reflow,pending,,
-S074,Expiration / soon expired all dates,typography,"Dynamic Type, wrapping and legibility",pending,,
-S074,Expiration / soon expired all dates,appearance,"Light/dark, contrast and materials",pending,,
-S074,Expiration / soon expired all dates,localization,"Locale, timezone, RTL and long strings",pending,,
-S074,Expiration / soon expired all dates,imagery,"Icons, photos and missing media",pending,,
-S074,Expiration / soon expired all dates,targets,Touch target size and reachability,pending,,
-S074,Expiration / soon expired all dates,gestures,Gestures and explicit alternatives,pending,,
-S074,Expiration / soon expired all dates,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
-S074,Expiration / soon expired all dates,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S074,Expiration / soon expired all dates,motion,Reduced motion and feedback alternatives,pending,,
-S074,Expiration / soon expired all dates,content,"Lists, hierarchy, density and pagination",pending,,
-S074,Expiration / soon expired all dates,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
-S074,Expiration / soon expired all dates,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-S074,Expiration / soon expired all dates,recovery,"Empty, error, denied and retry",pending,,
-S074,Expiration / soon expired all dates,editing,"Draft, save, cancel, undo and interruption",pending,,
-S074,Expiration / soon expired all dates,privacy,"Account scope, data use and permissions",pending,,
-S074,Expiration / soon expired all dates,notifications,System notification entry and state,pending,,
-S074,Expiration / soon expired all dates,media,"Camera, library, files and audio",pending,,
-S074,Expiration / soon expired all dates,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+S074,Expiration / soon expired all dates,task,Task clarity and platform-pattern fit,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,navigation,"Navigation, hierarchy and return",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,selection,Value selection and current value,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,modality,Presentation and dismissal,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,layout,"Safe areas, scroll edges and overlays",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,adaptation,Phone/tablet/window reflow,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,appearance,"Light/dark, contrast and materials",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,localization,"Locale, timezone, RTL and long strings",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,imagery,"Icons, photos and missing media",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,targets,Touch target size and reachability,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,gestures,Gestures and explicit alternatives,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending; expiration-results-axis.md; source50d48f3c; native pending,M118
+S074,Expiration / soon expired all dates,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,motion,Reduced motion and feedback alternatives,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,content,"Lists, hierarchy, density and pagination",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending; expiration-results-axis.md; source50d48f3c; native pending,M118
+S074,Expiration / soon expired all dates,loading,"Loading, background refresh and progress",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; expiration-results-axis.md; source50d48f3c; native pending,M05; M119
+S074,Expiration / soon expired all dates,recovery,"Empty, error, denied and retry",finding,; expiration-results-axis.md; source50d48f3c; native pending,M119
+S074,Expiration / soon expired all dates,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,privacy,"Account scope, data use and permissions",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,notifications,System notification entry and state,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,media,"Camera, library, files and audio",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; expiration-results-axis.md; source50d48f3c; native pending,M05
 S075,Expiration / filter overview,task,Task clarity and platform-pattern fit,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M01
 S075,Expiration / filter overview,navigation,"Navigation, hierarchy and return",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M01
 S075,Expiration / filter overview,selection,Value selection and current value,source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M01
