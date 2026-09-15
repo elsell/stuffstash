@@ -385,3 +385,16 @@ cap or custom menu is introduced. This applies to all NativeChoicePicker consume
 (filters, appearance, customization, expiration month, invitations, move and voice
 settings). Recheck landscape/narrow layouts and all accessibility sizes on native.
 See [Apple Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/).
+
+### Refinement count badge contrast
+
+The small count badge on a refinement command must use a paired semantic
+foreground/background with at least 4.5:1 text contrast in light, dark and
+increased-contrast appearances. Use the existing `onAction`/`action` pair;
+`accent` is not a text-bearing background token. iOS, Android and fallback
+refinement controls share badge presentation so their contrast and count
+formatting cannot drift. The count remains supplementary visual information:
+the parent command names the applied count for assistive technology.
+
+This correction does not establish native target, Dynamic Type, badge placement
+or material acceptance; those require rendered checks on the affected clients.

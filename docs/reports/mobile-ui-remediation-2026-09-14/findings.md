@@ -497,3 +497,20 @@ its hit-testing/menu-open checks and the original accessibility audit. All nativ
 reflow, ordinary-size regression, and medium-category clipping outcomes remain
 pending; M53 is not cleared. Critic found no confirmed blocker and emphasized
 that vertical placement alone does not prove long-value fit.
+
+
+### M66 — Refinement count badges lose text contrast
+
+The iOS, Android and fallback refinement buttons repeated white badge text on
+`palette.accent`. Rendered foreground/background measurements were 3.39:1 in
+light and 2.22:1 in dark, below the 4.5:1 target for small text. Users have more
+difficulty reading the applied filter count. This is a source/numerical finding,
+not a screenshot-derived native geometry finding.
+
+The shared RefinementCountBadge now uses the semantic action/onAction pair.
+Eight new rendered checks failed before the change; all 39 selected badge/token
+checks, TypeScript and mobile structural checks pass on paul. Critic found no
+blocker; its duplicate contrast-helper concern was addressed with a shared test
+utility. Android uses the shared component but is not mounted by these tests.
+Native badge placement, text growth and material composition remain pending.
+This fix is after PR136 and is excluded from the interim release cut.
