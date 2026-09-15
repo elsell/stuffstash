@@ -170,7 +170,7 @@ R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending
 R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,pending,,
 R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R008,assets/[assetId]/checkouts.tsx,selection,Value selection and current value,pending,,
-R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,pending,,
+R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,source-reviewed,Read-only checkout history uses formSheet with two detents and explicit Close. AssetNativeSheetOptions hides native header; source rules out duplicate title. Shared-native dismissal adaptation M45 and real expansion/dismissal need verification.,M45
 R008,assets/[assetId]/checkouts.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R008,assets/[assetId]/checkouts.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R008,assets/[assetId]/checkouts.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -182,7 +182,7 @@ R008,assets/[assetId]/checkouts.tsx,gestures,Gestures and explicit alternatives,
 R008,assets/[assetId]/checkouts.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R008,assets/[assetId]/checkouts.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R008,assets/[assetId]/checkouts.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R008,assets/[assetId]/checkouts.tsx,content,"Lists, hierarchy, density and pagination",pending,,
+R008,assets/[assetId]/checkouts.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Checkout history renders timeline records with checkout/return details and explicit cursor load. Existing mounted test preserves rows through continuation failure then loads next page. Full loaded history uses ScrollView: large-data performance remains unverified.,
 R008,assets/[assetId]/checkouts.tsx,search,"Search, scope and filters",pending,,
 R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",pending,,
 R008,assets/[assetId]/checkouts.tsx,recovery,"Empty, error, denied and retry",pending,,
@@ -215,8 +215,8 @@ R009,assets/[assetId]/edit.tsx,privacy,"Account scope, data use and permissions"
 R009,assets/[assetId]/edit.tsx,notifications,System notification entry and state,pending,,
 R009,assets/[assetId]/edit.tsx,media,"Camera, library, files and audio",pending,,
 R009,assets/[assetId]/edit.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R010,assets/[assetId]/history/[activityId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R010,assets/[assetId]/history/[activityId].tsx,navigation,"Navigation, hierarchy and return",pending,,
+R010,assets/[assetId]/history/[activityId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.",
+R010,assets/[assetId]/history/[activityId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 R010,assets/[assetId]/history/[activityId].tsx,selection,Value selection and current value,pending,,
 R010,assets/[assetId]/history/[activityId].tsx,modality,Presentation and dismissal,pending,,
 R010,assets/[assetId]/history/[activityId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -234,14 +234,14 @@ R010,assets/[assetId]/history/[activityId].tsx,content,"Lists, hierarchy, densit
 R010,assets/[assetId]/history/[activityId].tsx,search,"Search, scope and filters",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,loading,"Loading, background refresh and progress",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,recovery,"Empty, error, denied and retry",pending,,
-R010,assets/[assetId]/history/[activityId].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R010,assets/[assetId]/history/[activityId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 R010,assets/[assetId]/history/[activityId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,notifications,System notification entry and state,pending,,
 R010,assets/[assetId]/history/[activityId].tsx,media,"Camera, library, files and audio",pending,,
-R010,assets/[assetId]/history/[activityId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R011,assets/[assetId]/history/index.tsx,task,Task clarity and platform-pattern fit,pending,,
+R010,assets/[assetId]/history/[activityId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
+R011,assets/[assetId]/history/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,History is an asset-scoped chronological collection. Two flat Show values use existing NativeActionMenu with current selection; row navigation opens substantial change detail. No text search is offered or required by current History spec; native selection still pending.,
 R011,assets/[assetId]/history/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R011,assets/[assetId]/history/index.tsx,selection,Value selection and current value,pending,,
+R011,assets/[assetId]/history/index.tsx,selection,Value selection and current value,source-reviewed,History is an asset-scoped chronological collection. Two flat Show values use existing NativeActionMenu with current selection; row navigation opens substantial change detail. No text search is offered or required by current History spec; native selection still pending.,
 R011,assets/[assetId]/history/index.tsx,modality,Presentation and dismissal,pending,,
 R011,assets/[assetId]/history/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R011,assets/[assetId]/history/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -254,8 +254,8 @@ R011,assets/[assetId]/history/index.tsx,gestures,Gestures and explicit alternati
 R011,assets/[assetId]/history/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R011,assets/[assetId]/history/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R011,assets/[assetId]/history/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R011,assets/[assetId]/history/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R011,assets/[assetId]/history/index.tsx,search,"Search, scope and filters",pending,,
+R011,assets/[assetId]/history/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,"SectionList groups loaded activity by date, keyed by record ID; explicit Load older activity supports cursor pagination. Long collection/native scroll performance remains unverified.",
+R011,assets/[assetId]/history/index.tsx,search,"Search, scope and filters",source-reviewed,History is an asset-scoped chronological collection. Two flat Show values use existing NativeActionMenu with current selection; row navigation opens substantial change detail. No text search is offered or required by current History spec; native selection still pending.,
 R011,assets/[assetId]/history/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 R011,assets/[assetId]/history/index.tsx,recovery,"Empty, error, denied and retry",pending,,
 R011,assets/[assetId]/history/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
@@ -2447,8 +2447,8 @@ S102,Asset / contained items,privacy,"Account scope, data use and permissions",p
 S102,Asset / contained items,notifications,System notification entry and state,pending,,
 S102,Asset / contained items,media,"Camera, library, files and audio",pending,,
 S102,Asset / contained items,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S103,Asset / history revert,task,Task clarity and platform-pattern fit,pending,,
-S103,Asset / history revert,navigation,"Navigation, hierarchy and return",pending,,
+S103,Asset / history revert,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.",
+S103,Asset / history revert,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 S103,Asset / history revert,selection,Value selection and current value,pending,,
 S103,Asset / history revert,modality,Presentation and dismissal,pending,,
 S103,Asset / history revert,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -2466,11 +2466,11 @@ S103,Asset / history revert,content,"Lists, hierarchy, density and pagination",p
 S103,Asset / history revert,search,"Search, scope and filters",pending,,
 S103,Asset / history revert,loading,"Loading, background refresh and progress",pending,,
 S103,Asset / history revert,recovery,"Empty, error, denied and retry",pending,,
-S103,Asset / history revert,editing,"Draft, save, cancel, undo and interruption",pending,,
+S103,Asset / history revert,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 S103,Asset / history revert,privacy,"Account scope, data use and permissions",pending,,
 S103,Asset / history revert,notifications,System notification entry and state,pending,,
 S103,Asset / history revert,media,"Camera, library, files and audio",pending,,
-S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
 S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
 S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
 S104,Settings / appearance selection,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Appearance native menu selects Dark in place and displays saved value. See native-evidence.md.,M22

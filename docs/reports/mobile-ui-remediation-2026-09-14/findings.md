@@ -62,6 +62,10 @@
 
 | M43 | Gallery Add photos uses a custom styled command despite an available native adapter | Implemented on continuation branch; native pending | Shared native command preserves permission/callback gating and separate placement below imagery. Eight remote gallery/route tests, typecheck and structural check pass; critic no blockers. Legacy mocked style snapshots replaced with mounted behavior checks; paging and appearance runtime remain pending. Not included in interim0.24.11 |
 
+| M44 | History reversal completion can navigate after leaving its detail | Implemented on continuation branch; native pending | Deferred repository tests reproduced extra Back after blur/refocus, stale confirmation execution, and inherited activity busy state. Activity/focus ownership now gates presentation; completion still invalidates cache. Applied outcome prevents resubmission. Ten focused History tests/check/structural pass; critic finding addressed. Native Back/gesture acceptance pending; excluded from0.24.11 |
+
+| M45 | History commands retain custom controls despite available native adapters | Open; source-confirmed pattern mismatch | Checkout history uses a bespoke Close button and custom sheet heading; route header is deliberately hidden, so there is no duplicate native title. Retry/pagination/reversal commands in History also use styled Pressables. Review migration to shared native command/header adapters while preserving read-only sheet dismissal, pagination and confirmation. Actual touch bounds, detent expansion and long-content layout remain unverified |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

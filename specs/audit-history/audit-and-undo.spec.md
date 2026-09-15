@@ -331,3 +331,21 @@ The full audited action set should eventually include:
 - Should audit history be exportable with tenant-level exports?
 - Should authorization denied records be visible in normal user audit history, security-only history, or both?
 - Should undoable operation history be listable before the product UI timeline is designed?
+
+## Mobile History reversal ownership
+
+- Revert change uses a native confirmation describing the selected compensating
+  operation. Confirmation and asynchronous presentation belong to the originating
+  activity detail and uninterrupted focus session.
+- Users may leave while reversal runs. A completed reversal still invalidates its
+  activity cache, but must not navigate or show route feedback after leaving,
+  including leaving and returning before completion. Stale confirmation callbacks
+  must not begin a reversal after focus or activity identity changes.
+- A successful reversal retained on screen is marked applied; it must not offer
+  the already-applied command again while its cached detail is stale.
+- Duplicate confirmation submits only once. Pending state belongs to that activity;
+  changing activity must not inherit its busy or terminal-failure state. Failed
+  reversal on the originating screen retains retry unless the failure is terminal.
+- Verify success, retry, blur/refocus, teardown, changed activity and stale callbacks
+  with a deferred repository fake; native back/gesture behavior remains a separate
+  acceptance check.
