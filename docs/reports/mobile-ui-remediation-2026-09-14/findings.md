@@ -93,3 +93,45 @@ coverage feedback was addressed. Native verification remains pending.
 
 These preventive changes follow the PR129 release snapshot and are not included
 in that snapshot.
+
+### M47 — Home return details uses an inline panel instead of its specified sheet
+
+Source-confirmed, open. `HomeScreen.tsx` renders `ReturnDetailsSheet` as a `View`
+at the end of dashboard content, with bespoke buttons and a placeholder-only
+input. The asset checkout spec explicitly calls for a native sheet. The follow-up
+may be offscreen after Return, has no modal focus boundary, and lacks a persistent
+input label. A bounded optional-details task fits a native sheet with clear Save
+and Cancel return semantics; this is consistent with [Apple's sheets guidance](https://developer.apple.com/design/human-interface-guidelines/sheets).
+Acceptance must include actual sheet presentation, keyboard, long content, error,
+dismissal/undo, and phone/iPad adaptation. This finding is not closed by replacing
+buttons alone.
+
+### M48 — Home return operations have no workflow owner
+
+Implemented; native acceptance pending. `DashboardHeader` has no synchronous duplicate guard,
+focus ownership or tenant/inventory reset. Only the currently returning card is
+disabled. A second Return can replace the first optional-details editor, and a
+late completion can open that editor after leaving Home. Save/undo callbacks also
+accept repeat invocations while their rendered disabled state catches up.
+Acceptance: deferred operations reject stale/repeated commands, retain failure
+recovery, suppress new presentation after blur/refocus or scope change, reconcile
+successful operations, and prevent repeat returns from stale cards.
+
+### M49 — Home exposes Return without a mutation-permission projection
+
+Source-confirmed, open. `HomeDashboardViewModel` carries only `canAdd` for toolbar
+creation. Checked-out Home cards always create a Return footer whenever a
+checkout command is present, including viewer inventories. The API remains the
+authorization boundary, but this violates the mobile requirement that viewers
+never see checkout/return actions. Add a correctly scoped permission projection
+and real viewer/editor boundary tests before changing this interaction; do not
+substitute create permission for edit/return permission.
+
+M48 validation: four failing regressions reproduced duplicate submissions, late
+presentation, late refresh feedback, and a newer checkout incorrectly disabled.
+The scope-owned hook now serializes Return/Save/undo, uses current checkout
+identity, preserves failure drafts and gates reconciliation feedback. Home's
+dashboard subtree is keyed by tenant/inventory. Twenty focused query/interaction
+tests, TypeScript and structural checks pass; full remote suite passes 1,394 tests
+in 246 files. Critic findings were fixed and re-reviewed with no further blockers.
+Native return/keyboard/dismissal acceptance is still pending, including open M47.

@@ -217,6 +217,7 @@ describe('HomeDashboardQuery', () => {
     expect(dashboard.checkedOutAssets).toEqual([
       {
         id: 'asset-camera-bag',
+        checkoutId: 'checkout-camera-bag',
         title: 'Camera bag',
         kindLabel: 'Container',
         customTypeLabel: undefined,

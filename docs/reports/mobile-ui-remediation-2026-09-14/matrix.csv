@@ -1538,7 +1538,7 @@ S064,Home / recent changes,lifecycle,"Cold/warm start, blur, background and deep
 S065,Home / checked-out return,task,Task clarity and platform-pattern fit,pending,,
 S065,Home / checked-out return,navigation,"Navigation, hierarchy and return",pending,,
 S065,Home / checked-out return,selection,Value selection and current value,pending,,
-S065,Home / checked-out return,modality,Presentation and dismissal,pending,,
+S065,Home / checked-out return,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
 S065,Home / checked-out return,layout,"Safe areas, scroll edges and overlays",pending,,
 S065,Home / checked-out return,adaptation,Phone/tablet/window reflow,pending,,
 S065,Home / checked-out return,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -1547,18 +1547,18 @@ S065,Home / checked-out return,localization,"Locale, timezone, RTL and long stri
 S065,Home / checked-out return,imagery,"Icons, photos and missing media",pending,,
 S065,Home / checked-out return,targets,Touch target size and reachability,pending,,
 S065,Home / checked-out return,gestures,Gestures and explicit alternatives,pending,,
-S065,Home / checked-out return,keyboard,"Keyboard, text entry and focus",pending,,
-S065,Home / checked-out return,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S065,Home / checked-out return,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S065,Home / checked-out return,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
 S065,Home / checked-out return,motion,Reduced motion and feedback alternatives,pending,,
 S065,Home / checked-out return,content,"Lists, hierarchy, density and pagination",pending,,
 S065,Home / checked-out return,search,"Search, scope and filters",pending,,
 S065,Home / checked-out return,loading,"Loading, background refresh and progress",pending,,
 S065,Home / checked-out return,recovery,"Empty, error, denied and retry",pending,,
-S065,Home / checked-out return,editing,"Draft, save, cancel, undo and interruption",pending,,
+S065,Home / checked-out return,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
 S065,Home / checked-out return,privacy,"Account scope, data use and permissions",pending,,
 S065,Home / checked-out return,notifications,System notification entry and state,pending,,
 S065,Home / checked-out return,media,"Camera, library, files and audio",pending,,
-S065,Home / checked-out return,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S065,Home / checked-out return,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
 S066,Home / native action header,task,Task clarity and platform-pattern fit,pending,,
 S066,Home / native action header,navigation,"Navigation, hierarchy and return",pending,,
 S066,Home / native action header,selection,Value selection and current value,pending,,
@@ -3263,3 +3263,75 @@ S136,Asset Move here / asset search and selection,privacy,"Account scope, data u
 S136,Asset Move here / asset search and selection,notifications,System notification entry and state,pending,,
 S136,Asset Move here / asset search and selection,media,"Camera, library, files and audio",pending,,
 S136,Asset Move here / asset search and selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S137,Home return / optional details,task,Task clarity and platform-pattern fit,pending,,
+S137,Home return / optional details,navigation,"Navigation, hierarchy and return",pending,,
+S137,Home return / optional details,selection,Value selection and current value,pending,,
+S137,Home return / optional details,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S137,Home return / optional details,layout,"Safe areas, scroll edges and overlays",pending,,
+S137,Home return / optional details,adaptation,Phone/tablet/window reflow,pending,,
+S137,Home return / optional details,typography,"Dynamic Type, wrapping and legibility",pending,,
+S137,Home return / optional details,appearance,"Light/dark, contrast and materials",pending,,
+S137,Home return / optional details,localization,"Locale, timezone, RTL and long strings",pending,,
+S137,Home return / optional details,imagery,"Icons, photos and missing media",pending,,
+S137,Home return / optional details,targets,Touch target size and reachability,pending,,
+S137,Home return / optional details,gestures,Gestures and explicit alternatives,pending,,
+S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S137,Home return / optional details,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S137,Home return / optional details,motion,Reduced motion and feedback alternatives,pending,,
+S137,Home return / optional details,content,"Lists, hierarchy, density and pagination",pending,,
+S137,Home return / optional details,search,"Search, scope and filters",pending,,
+S137,Home return / optional details,loading,"Loading, background refresh and progress",pending,,
+S137,Home return / optional details,recovery,"Empty, error, denied and retry",pending,,
+S137,Home return / optional details,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S137,Home return / optional details,privacy,"Account scope, data use and permissions",pending,,
+S137,Home return / optional details,notifications,System notification entry and state,pending,,
+S137,Home return / optional details,media,"Camera, library, files and audio",pending,,
+S137,Home return / optional details,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S138,Home return / save pending and recovery,task,Task clarity and platform-pattern fit,pending,,
+S138,Home return / save pending and recovery,navigation,"Navigation, hierarchy and return",pending,,
+S138,Home return / save pending and recovery,selection,Value selection and current value,pending,,
+S138,Home return / save pending and recovery,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S138,Home return / save pending and recovery,layout,"Safe areas, scroll edges and overlays",pending,,
+S138,Home return / save pending and recovery,adaptation,Phone/tablet/window reflow,pending,,
+S138,Home return / save pending and recovery,typography,"Dynamic Type, wrapping and legibility",pending,,
+S138,Home return / save pending and recovery,appearance,"Light/dark, contrast and materials",pending,,
+S138,Home return / save pending and recovery,localization,"Locale, timezone, RTL and long strings",pending,,
+S138,Home return / save pending and recovery,imagery,"Icons, photos and missing media",pending,,
+S138,Home return / save pending and recovery,targets,Touch target size and reachability,pending,,
+S138,Home return / save pending and recovery,gestures,Gestures and explicit alternatives,pending,,
+S138,Home return / save pending and recovery,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S138,Home return / save pending and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S138,Home return / save pending and recovery,motion,Reduced motion and feedback alternatives,pending,,
+S138,Home return / save pending and recovery,content,"Lists, hierarchy, density and pagination",pending,,
+S138,Home return / save pending and recovery,search,"Search, scope and filters",pending,,
+S138,Home return / save pending and recovery,loading,"Loading, background refresh and progress",pending,,
+S138,Home return / save pending and recovery,recovery,"Empty, error, denied and retry",pending,,
+S138,Home return / save pending and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S138,Home return / save pending and recovery,privacy,"Account scope, data use and permissions",pending,,
+S138,Home return / save pending and recovery,notifications,System notification entry and state,pending,,
+S138,Home return / save pending and recovery,media,"Camera, library, files and audio",pending,,
+S138,Home return / save pending and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S139,Home return / cancellation and recovery,task,Task clarity and platform-pattern fit,pending,,
+S139,Home return / cancellation and recovery,navigation,"Navigation, hierarchy and return",pending,,
+S139,Home return / cancellation and recovery,selection,Value selection and current value,pending,,
+S139,Home return / cancellation and recovery,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S139,Home return / cancellation and recovery,layout,"Safe areas, scroll edges and overlays",pending,,
+S139,Home return / cancellation and recovery,adaptation,Phone/tablet/window reflow,pending,,
+S139,Home return / cancellation and recovery,typography,"Dynamic Type, wrapping and legibility",pending,,
+S139,Home return / cancellation and recovery,appearance,"Light/dark, contrast and materials",pending,,
+S139,Home return / cancellation and recovery,localization,"Locale, timezone, RTL and long strings",pending,,
+S139,Home return / cancellation and recovery,imagery,"Icons, photos and missing media",pending,,
+S139,Home return / cancellation and recovery,targets,Touch target size and reachability,pending,,
+S139,Home return / cancellation and recovery,gestures,Gestures and explicit alternatives,pending,,
+S139,Home return / cancellation and recovery,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S139,Home return / cancellation and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S139,Home return / cancellation and recovery,motion,Reduced motion and feedback alternatives,pending,,
+S139,Home return / cancellation and recovery,content,"Lists, hierarchy, density and pagination",pending,,
+S139,Home return / cancellation and recovery,search,"Search, scope and filters",pending,,
+S139,Home return / cancellation and recovery,loading,"Loading, background refresh and progress",pending,,
+S139,Home return / cancellation and recovery,recovery,"Empty, error, denied and retry",pending,,
+S139,Home return / cancellation and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S139,Home return / cancellation and recovery,privacy,"Account scope, data use and permissions",pending,,
+S139,Home return / cancellation and recovery,notifications,System notification entry and state,pending,,
+S139,Home return / cancellation and recovery,media,"Camera, library, files and audio",pending,,
+S139,Home return / cancellation and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48

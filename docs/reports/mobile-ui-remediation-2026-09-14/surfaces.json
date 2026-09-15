@@ -359,7 +359,8 @@
     "surface": "Home / checked-out return",
     "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
     "sources": [
-      "apps/mobile/src/ui/screens/HomeScreen.tsx"
+      "apps/mobile/src/ui/screens/HomeScreen.tsx",
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
     ]
   },
   {
@@ -972,6 +973,33 @@
     "sources": [
       "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
       "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx"
+    ]
+  },
+  {
+    "id": "S137",
+    "surface": "Home return / optional details",
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx",
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
+    ]
+  },
+  {
+    "id": "S138",
+    "surface": "Home return / save pending and recovery",
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx",
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
+    ]
+  },
+  {
+    "id": "S139",
+    "surface": "Home return / cancellation and recovery",
+    "source": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/HomeScreen.tsx",
+      "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
     ]
   }
 ]

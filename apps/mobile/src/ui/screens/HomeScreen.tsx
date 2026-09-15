@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { useHomeReturnActions, type PendingHomeReturn } from './useHomeReturnActions';
 import { router } from 'expo-router';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
@@ -43,10 +44,11 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
     query: (signal) => dashboardQuery.execute({ signal })
   });
 
-  async function refreshDashboard(): Promise<void> {
+  async function refreshDashboard(shouldNotify: () => boolean = () => true): Promise<void> {
     try {
       await Promise.all([dashboardState.refetch({ throwOnError: true }), onRefreshAdditional?.()]);
     } catch (error) {
+      if (!shouldNotify()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not refresh Home',
@@ -127,7 +129,7 @@ function Dashboard({
   readonly dashboard: HomeDashboardViewModel;
   readonly isRefreshing: boolean;
   readonly onRefresh: () => void | Promise<void>;
-  readonly onDashboardChanged: () => void | Promise<void>;
+  readonly onDashboardChanged: (shouldNotify: () => boolean) => void | Promise<void>;
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
@@ -146,6 +148,7 @@ function Dashboard({
       }
     >
       <DashboardHeader
+        key={`${dashboard.tenantId}:${dashboard.inventoryId}`}
           expirationSection={expirationSection}
         assetCheckoutCommand={assetCheckoutCommand}
         dashboard={dashboard}
@@ -154,14 +157,6 @@ function Dashboard({
     </ScrollView>
   );
 }
-
-type PendingReturnState = {
-  readonly asset: AssetCardViewModel;
-  readonly checkoutId: string;
-  readonly undoableOperationId: string | undefined;
-  readonly details: string;
-  readonly isSaving: boolean;
-};
 
 function DashboardHeader({
   expirationSection,
@@ -172,92 +167,11 @@ function DashboardHeader({
   readonly expirationSection?: ReactNode;
   readonly assetCheckoutCommand: AssetCheckoutCommand;
   readonly dashboard: HomeDashboardViewModel;
-  readonly onDashboardChanged: () => void | Promise<void>;
+  readonly onDashboardChanged: (shouldNotify: () => boolean) => void | Promise<void>;
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
-  const feedback = useAppFeedback();
-  const [returningAssetId, setReturningAssetId] = useState<string | undefined>();
-  const [pendingReturn, setPendingReturn] = useState<PendingReturnState | undefined>();
-
-  async function returnAsset(asset: AssetCardViewModel): Promise<void> {
-    setReturningAssetId(asset.id);
-
-    try {
-      const checkout = await assetCheckoutCommand.execute({ action: 'return', assetId: asset.id });
-      if (!checkout.undoableOperationId) {
-        feedback.showNotice({
-          tone: 'warning',
-          title: 'Return completed without undo',
-          message: 'The asset was returned, but this return cannot be canceled.'
-        });
-      }
-      setPendingReturn({
-        asset,
-        checkoutId: checkout.id,
-        undoableOperationId: checkout.undoableOperationId,
-        details: '',
-        isSaving: false
-      });
-      void onDashboardChanged();
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not return asset',
-        message: readableError(error, 'The asset was not returned.')
-      });
-    } finally {
-      setReturningAssetId(undefined);
-    }
-  }
-
-  async function saveReturnDetails(): Promise<void> {
-    if (!pendingReturn) {
-      return;
-    }
-    setPendingReturn({ ...pendingReturn, isSaving: true });
-
-    try {
-      await assetCheckoutCommand.updateReturnedCheckoutDetails({
-        assetId: pendingReturn.asset.id,
-        checkoutId: pendingReturn.checkoutId,
-        details: pendingReturn.details
-      });
-      setPendingReturn(undefined);
-      await onDashboardChanged();
-    } catch (error) {
-      setPendingReturn({ ...pendingReturn, isSaving: false });
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not save return details',
-        message: readableError(error, 'Return details were not saved.')
-      });
-    }
-  }
-
-  async function cancelReturn(): Promise<void> {
-    if (!pendingReturn) {
-      return;
-    }
-    if (!pendingReturn.undoableOperationId) {
-      setPendingReturn(undefined);
-      return;
-    }
-    setPendingReturn({ ...pendingReturn, isSaving: true });
-
-    try {
-      await assetCheckoutCommand.undoOperation({ operationId: pendingReturn.undoableOperationId });
-      setPendingReturn(undefined);
-      await onDashboardChanged();
-    } catch (error) {
-      setPendingReturn({ ...pendingReturn, isSaving: false });
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not cancel return',
-        message: readableError(error, 'The asset is still returned.')
-      });
-    }
-  }
+  const { returningAssetId, pendingReturn, returnAsset, isReturnDisabled, saveReturnDetails, cancelReturn, changeDetails } = useHomeReturnActions(assetCheckoutCommand, onDashboardChanged, dashboard.checkedOutAssets);
 
   return (
     <View>
@@ -311,7 +225,7 @@ function DashboardHeader({
                 density="row"
                 footerAction={{
                   accessibilityLabel: `Return ${asset.title}`,
-                  disabled: returningAssetId === asset.id,
+                  disabled: isReturnDisabled(asset),
                   label: returningAssetId === asset.id ? 'Returning...' : 'Return',
                   onPress: () => void returnAsset(asset)
                 }}
@@ -328,11 +242,7 @@ function DashboardHeader({
       <ReturnDetailsSheet
         pendingReturn={pendingReturn}
         onCancel={() => void cancelReturn()}
-        onChangeDetails={(details) => {
-          if (pendingReturn) {
-            setPendingReturn({ ...pendingReturn, details });
-          }
-        }}
+        onChangeDetails={changeDetails}
         onSave={() => void saveReturnDetails()}
       />
     </View>
@@ -345,7 +255,7 @@ function ReturnDetailsSheet({
   onChangeDetails,
   onSave
 }: {
-  readonly pendingReturn: PendingReturnState | undefined;
+  readonly pendingReturn: PendingHomeReturn | undefined;
   readonly onCancel: () => void;
   readonly onChangeDetails: (details: string) => void;
   readonly onSave: () => void;

@@ -19,6 +19,8 @@ export type HomeDashboardTenantViewModel = {
   readonly name: string;
 };
 
+export type HomeCheckedOutAssetViewModel = AssetCardViewModel & { readonly checkoutId?: string };
+
 export type HomeDashboardViewModel = {
   readonly tenantId: string;
   readonly tenantName: string;
@@ -28,7 +30,7 @@ export type HomeDashboardViewModel = {
   readonly inventories: readonly HomeDashboardInventoryViewModel[];
   readonly canAdd: boolean;
   readonly recentAssets: readonly AssetCardViewModel[];
-  readonly checkedOutAssets: readonly AssetCardViewModel[];
+  readonly checkedOutAssets: readonly HomeCheckedOutAssetViewModel[];
 };
 
 export class HomeDashboardQuery {
@@ -76,7 +78,7 @@ export class HomeDashboardQuery {
         .filter((asset) => asset.lifecycleState === 'active')
         .slice(0, 10)
         .map(toAssetCardViewModel),
-      checkedOutAssets: checkedOutAssets.slice(0, 10).map(toAssetCardViewModel)
+      checkedOutAssets: checkedOutAssets.slice(0, 10).map(asset => ({ ...toAssetCardViewModel(asset), ...(asset.currentCheckout ? { checkoutId: asset.currentCheckout.id } : {}) }))
     };
   }
 }

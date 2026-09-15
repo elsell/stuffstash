@@ -7,7 +7,7 @@ import { assetId, type AssetSummary } from '../../domain/assets/AssetSummary';
 import { inventoryId, tenantId } from '../../domain/inventories/InventorySummary';
 import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
 import { MobileRenderHarness } from '../../test-support/render';
-import { dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { HomeScreen } from './HomeScreen';
@@ -48,21 +48,29 @@ describe('Home interactions through mounted components', () => {
   let repository: DashboardRepository;
   let client: ReturnType<typeof createMobileQueryClient>;
   let returns: string[];
+  let updates: string[];
+  let updateDetails: () => Promise<AssetCheckoutResult>;
+  let undos: string[];
   let returnResult: () => Promise<AssetCheckoutResult>;
   const settle = async () => { await h.run(() => new Promise(resolve => setTimeout(resolve, 10))); };
   const refresh = () => h.byType('ScrollView')!.props.refreshControl.props;
   async function render() {
-    const command = new AssetCheckoutCommand({ returnAsset: async id => { returns.push(id); return returnResult(); } });
+    const command = new AssetCheckoutCommand({
+      returnAsset: async id => { returns.push(id); return returnResult(); },
+      updateReturnedCheckoutDetails: async (_id, _checkout, input) => { updates.push(input?.details ?? ''); return updateDetails(); },
+      undoInventoryOperation: async id => { undos.push(id); }
+    });
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant-home', inventoryId: 'inventory-home' })}>
       <AppFeedbackProvider><HomeScreen dashboardQuery={new HomeDashboardQuery(repository)} assetCheckoutCommand={command} /></AppFeedbackProvider>
     </MobileServerStateProvider>);
     await settle(); await settle();
   }
   beforeEach(() => {
-    resetNavigation(); h = new MobileRenderHarness(); repository = new DashboardRepository(); client = createMobileQueryClient(); returns = [];
+    resetNavigation(); setScreenFocused(true); h = new MobileRenderHarness(); repository = new DashboardRepository(); client = createMobileQueryClient(); returns = []; updates = []; undos = [];
+    updateDetails = async () => ({ id: 'checkout-one', assetId: checkedOut.id });
     returnResult = async () => ({ id: 'checkout-one', assetId: checkedOut.id, undoableOperationId: 'operation-one' });
   });
-  afterEach(async () => { await h.unmount(); client.clear(); resetNavigation(); });
+  afterEach(async () => { await h.unmount(); client.clear(); resetNavigation(); setScreenFocused(true); });
 
   it('opens recent and checked-out items and their parent location', async () => {
     await render();
@@ -144,4 +152,79 @@ describe('Home interactions through mounted components', () => {
     repository.load = async () => snapshot(); await h.press(h.byLabel('Retry loading Home')); await settle();
     expect(h.byLabel('Open asset Recent bowl')).toBeDefined(); expect(h.byLabel('Retry loading Home')).toBeUndefined();
   });
+  it('rejects repeated Return callbacks before rendering disabled state and while details are open', async () => {
+    const pending = deferred<AssetCheckoutResult>(); returnResult = () => pending.promise;
+    await render(); const press = h.byLabel('Return Cordless drill')!.props.onPress;
+    await h.run(() => { press(); press(); });
+    expect(returns).toEqual(['asset-checked-out']);
+    await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id, undoableOperationId: 'operation-one' })); await settle();
+    await h.run(press);
+    expect(returns).toEqual(['asset-checked-out']);
+  });
+  it('reconciles but does not open details when Return finishes after blur and refocus', async () => {
+    const pending = deferred<AssetCheckoutResult>(); returnResult = () => pending.promise;
+    await render(); await h.press(h.byLabel('Return Cordless drill'));
+    await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true));
+    await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id, undoableOperationId: 'operation-one' })); await settle();
+    expect(repository.reads).toBeGreaterThan(1);
+    expect(h.byText('Return details')).toBeUndefined();
+    expect(h.byLabel('Return Cordless drill')?.props.disabled).toBe(true);
+  });
+
+  it('guards Save and Cancel together, preserves failed details, and permits retry', async () => {
+    await render(); await h.press(h.byLabel('Return Cordless drill')); await settle();
+    await h.changeText(h.byType('TextInput'), 'All accessories included');
+    const pending = deferred<AssetCheckoutResult>();
+    updateDetails = async () => { await pending.promise; throw new Error('Try again'); };
+    const save = h.byText('Save')!.parent!.props.onPress;
+    const cancel = h.byText('Cancel return')!.parent!.props.onPress;
+    await h.run(() => { save(); save(); cancel(); });
+    expect(updates).toEqual(['All accessories included']); expect(undos).toEqual([]);
+    await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id })); await settle();
+    expect(h.byType('TextInput')?.props.value).toBe('All accessories included');
+    expect(h.byText('Could not save return details')).toBeDefined();
+    updateDetails = async () => ({ id: 'checkout-one', assetId: checkedOut.id });
+    await h.run(save); await settle();
+    expect(updates).toEqual(['All accessories included', 'All accessories included']);
+    expect(h.byText('Return details')).toBeUndefined();
+    await h.press(h.byLabel('Return Cordless drill'));
+    expect(returns).toHaveLength(1);
+  });
+  it('permits a restored checkout after Cancel return', async () => {
+    await render(); await h.press(h.byLabel('Return Cordless drill')); await settle();
+    await h.press(h.byText('Cancel return')!.parent ?? undefined); await settle();
+    expect(undos).toEqual(['operation-one']); expect(h.byText('Return details')).toBeUndefined();
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(returns).toHaveLength(2);
+  });
+  it('permits a later checkout after reconciliation removes the original card', async () => {
+    await render(); await h.press(h.byLabel('Return Cordless drill')); await settle();
+    repository.load = async () => snapshot([]);
+    await h.press(h.byText('Save')!.parent ?? undefined); await settle();
+    expect(h.byLabel('Return Cordless drill')).toBeUndefined();
+    repository.load = async () => snapshot();
+    await h.run(() => client.invalidateQueries()); await settle();
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(returns).toHaveLength(2);
+  });
+
+  it('keeps failed reconciliation silent after leaving Home', async () => {
+    const pending = deferred<AssetCheckoutResult>(); returnResult = () => pending.promise;
+    await render(); await h.press(h.byLabel('Return Cordless drill'));
+    await h.run(() => setScreenFocused(false));
+    repository.load = async () => { throw new Error('Unavailable'); };
+    await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id })); await settle();
+    expect(h.byText('Could not refresh Home')).toBeUndefined();
+    expect(h.byText('Return details')).toBeUndefined();
+  });
+  it('permits a new checkout of the same asset without an intermediate empty snapshot', async () => {
+    await render(); await h.press(h.byLabel('Return Cordless drill')); await settle();
+    await h.press(h.byText('Save')!.parent ?? undefined); await settle();
+    repository.load = async () => snapshot([{ ...checkedOut, currentCheckout: { ...checkedOut.currentCheckout!, id: 'checkout-two' } }]);
+    await h.run(() => client.invalidateQueries()); await settle();
+    expect(h.byLabel('Return Cordless drill')?.props.disabled).toBe(false);
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(returns).toHaveLength(2);
+  });
+
 });
