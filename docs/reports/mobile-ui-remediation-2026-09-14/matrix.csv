@@ -1131,7 +1131,7 @@ R048,settings/sharing.tsx,task,Task clarity and platform-pattern fit,source-revi
 R048,settings/sharing.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R048,settings/sharing.tsx,selection,Value selection and current value,source-reviewed,Viewer/Editor now shared in-place SettingsPickerRow; runtime pending (M27).; sharing-axis.md: source/controlled-render review; native pending,M27
 R048,settings/sharing.tsx,modality,Presentation and dismissal,source-reviewed,Cancellation uses native destructive confirmation naming invitee; link sharing delegates to linkActions port.,
-R048,settings/sharing.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
+R048,settings/sharing.tsx,layout,"Safe areas, scroll edges and overlays",finding, User screenshots and source follow-up: M99 in findings.md; native acceptance pending.,M99
 R048,settings/sharing.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R048,settings/sharing.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R048,settings/sharing.tsx,appearance,"Light/dark, contrast and materials",pending,,
@@ -1145,9 +1145,9 @@ R048,settings/sharing.tsx,motion,Reduced motion and feedback alternatives,pendin
 R048,settings/sharing.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Paged invitation list with explicit Load older and repeat-cursor guard; runtime density pending.,
 R048,settings/sharing.tsx,search,"Search, scope and filters",pending,,
 R048,settings/sharing.tsx,loading,"Loading, background refresh and progress",source-reviewed,Explicit usePullRefresh; initial load indicator and separate pending creation/cancellation indicators.,
-R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",finding,Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M69;M81
+R048,settings/sharing.tsx,recovery,"Empty, error, denied and retry",finding,"Refresh notice preserves visible records; retry/empty states exist. Permission denial currently shares generic load error copy; further review needed.; sharing-axis.md: source/controlled-render review; native pending; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md) User screenshots and source follow-up: M98,M99 in findings.md; native acceptance pending.",M69;M81;M98;M99
 R048,settings/sharing.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Pending email/access disabled and guarded; rejected creation retains draft; remote behavior test.; sharing-axis.md: source/controlled-render review; native pending,M27
-R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.; sharing-axis.md: source/controlled-render review; native pending,
+R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",finding,Source and existing tests hide denied cached invitations and keep created secret outside query cache; no new boundary changes.; sharing-axis.md: source/controlled-render review; native pending User screenshots and source follow-up: M98 in findings.md; native acceptance pending.,M98
 R048,settings/sharing.tsx,notifications,System notification entry and state,pending,,
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",pending,,
 R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; sharing-axis.md: source/controlled-render review; native pending,M05;M69
@@ -3191,14 +3191,14 @@ S133,Asset Edit / tag selection and creation,privacy,"Account scope, data use an
 S133,Asset Edit / tag selection and creation,notifications,System notification entry and state,pending,edit-tags-axis.md records source observations and the unresolved acceptance for this axis.,
 S133,Asset Edit / tag selection and creation,media,"Camera, library, files and audio",pending,edit-tags-axis.md records source observations and the unresolved acceptance for this axis.,
 S133,Asset Edit / tag selection and creation,lifecycle,"Cold/warm start, blur, background and deep link",pending,edit-tags-axis.md records source observations and the unresolved acceptance for this axis.,
-S134,Asset Move / destination search and selection,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md.,M91
+S134,Asset Move / destination search and selection,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md. User screenshots and source follow-up: M100 in findings.md; native acceptance pending.,M91;M100
 S134,Asset Move / destination search and selection,navigation,"Navigation, hierarchy and return",pending,,
 S134,Asset Move / destination search and selection,selection,Value selection and current value,source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S134,Asset Move / destination search and selection,modality,Presentation and dismissal,pending,,
-S134,Asset Move / destination search and selection,layout,"Safe areas, scroll edges and overlays",pending,,
+S134,Asset Move / destination search and selection,layout,"Safe areas, scroll edges and overlays",finding, User screenshots and source follow-up: M100 in findings.md; native acceptance pending.,M100
 S134,Asset Move / destination search and selection,adaptation,Phone/tablet/window reflow,pending,,
 S134,Asset Move / destination search and selection,typography,"Dynamic Type, wrapping and legibility",pending,,
-S134,Asset Move / destination search and selection,appearance,"Light/dark, contrast and materials",pending,,
+S134,Asset Move / destination search and selection,appearance,"Light/dark, contrast and materials",finding, User screenshots and source follow-up: M100 in findings.md; native acceptance pending.,M100
 S134,Asset Move / destination search and selection,localization,"Locale, timezone, RTL and long strings",pending,,
 S134,Asset Move / destination search and selection,imagery,"Icons, photos and missing media",pending,,
 S134,Asset Move / destination search and selection,targets,Touch target size and reachability,pending,,

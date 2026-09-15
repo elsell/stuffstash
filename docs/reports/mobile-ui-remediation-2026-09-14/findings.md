@@ -1120,3 +1120,47 @@ reachability still require verification; M97 remains open. Apple button guidance
 is the relevant topic, but the current documentation page returned a JavaScript
 shell during this pass; this is a project adapter decision, not a newly verified
 quotation or claim about an Apple requirement.
+
+### M98 — General TestFlight builds reject created invitation links
+
+P1, R048 privacy/recovery. The user supplied
+[evidence](evidence/user-invitation-link-error.jpg); exact installed build is unknown.
+Source confirms the release sets the invitation origin to empty, while the creation
+parser required a configured origin for HTTPS. Every normal creation response in
+that configuration failed validation. The error also conflates several rejection
+causes; the screenshot alone cannot establish the actual server mutation outcome.
+
+The spec now distinguishes outgoing authenticated creation responses from incoming
+links. The server that mints the token is the authority for its browser acceptance
+URL. The candidate permits a canonical HTTPS creation response in the general
+build, retaining explicit origin pins and all path, credential, token, field and
+identity checks. Incoming trust and verified app-link declarations do not change.
+There is no automatic navigation or credential request to the returned URL.
+
+Two regressions failed before the fix. Eighty-five mobile invitation/sharing tests,
+TypeScript and structural checks passed remotely. The generated HTTP client with a
+controlled transport verifies the selected API/auth header, valid response,
+401/403 rejection and malformed/cross-scope responses. Existing real API invitation
+create/accept/revoke, malformed-token and expiration endpoint tests also passed
+on paul. Critic review found no confirmed security blocker. Device creation and
+copy/share acceptance remain pending; this fix is outside the running PR148 release.
+
+### M99 — Sharing failure feedback hides the header and obscures mutation state
+
+P2, R048 layout/recovery. The same user screenshot shows a banner covering the
+navigation area. Source also refreshes invitations only after the creation response
+passes link validation, so a rejected link can leave the list stale after server
+creation. Preserve the email draft and validation boundary, refresh safe metadata
+when mutation succeeded, and explain an unavailable link separately from failed
+creation. Banner placement needs shared-consumer inspection. Unfixed.
+
+### M100 — Move has unreadable disabled action and excessive summary chrome
+
+P2, S134 appearance/layout/task. User
+[evidence](evidence/user-move-disabled-contrast.jpg) shows dark text on a black
+primary action, a large wrapped title and identical From/To blocks above the
+picker. Exact build is unknown; the current native footer must be tested for
+appearance inheritance, tint and disabled contrast before choosing a repair.
+Simplify the context and distinguish the current parent from an actual destination
+change. Keep Move disabled until a valid change is selected and Cancel reachable.
+Native verification must include dark/light, long titles and large text. Unfixed.

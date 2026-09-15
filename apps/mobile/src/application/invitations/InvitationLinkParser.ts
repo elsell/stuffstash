@@ -23,6 +23,7 @@ export function parseInventoryInvitationLink(
   return parseLink(source, (link) => validateTrustedRoute(link, configuredPublicOrigin, allowInsecureLocalHTTP));
 }
 
+/** Only for a direct creation response from the connected, authenticated API. */
 export function parseCreatedInventoryInvitationLink(
   source: string,
   trustedInvitationOrigin?: string,
@@ -75,7 +76,7 @@ function validateCreatedRoute(link: URL, trustedInvitationOrigin?: string, allow
     : parseConfiguredOrigin(trustedInvitationOrigin, allowInsecureLocalHTTP);
   const trustedConfiguredOrigin = trustedOrigin !== undefined && link.origin === trustedOrigin.origin;
   const unconfiguredLoopback = trustedOrigin === undefined && isLoopbackHostname(link.hostname);
-  if (!(secure && trustedConfiguredOrigin) && !(
+  if (!(secure && (trustedOrigin === undefined || trustedConfiguredOrigin)) && !(
     link.protocol === 'http:' &&
     allowInsecureLocalHTTP &&
     (trustedConfiguredOrigin || unconfiguredLoopback)

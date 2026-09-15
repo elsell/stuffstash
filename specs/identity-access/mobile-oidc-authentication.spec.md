@@ -360,3 +360,22 @@ field when its form step mounts; preserve the entered value through errors and
 initialize the next step from the current draft. Start-over creates clean fields.
 Do not apply this policy indiscriminately to search or externally controlled
 editors. Keep the full-address native assertion and verify both devices again.
+
+### Outbound invitation links from the connected server
+
+Creation responses are different from incoming deep links. For an authenticated
+create request to the user-selected API, that server is the authority that mints
+the token and configures the browser acceptance origin. The general mobile build
+must accept a canonical HTTPS creation-response URL without a build-time origin.
+An explicitly configured invitation origin continues to pin creation URLs to that
+origin. Unconfigured HTTP, custom schemes, credentials, malformed/duplicate or
+extra fields, invalid tokens, and mismatched tenant/inventory/invitation identities
+remain rejected. The existing explicit local-development HTTP rules remain.
+
+This policy applies only to the direct creation response from the connected API;
+it does not trust incoming URLs, alter associated domains, navigate automatically,
+or send credentials to the returned URL. Incoming invitation parsing retains its
+configured-origin boundary. Copy/share is an explicit user action. API errors,
+including unauthenticated or unauthorized responses, cannot yield a usable link.
+Tests must exercise the generated HTTP client and mobile adapter with adversarial
+response bodies/statuses as well as the legitimate general-build creation path.

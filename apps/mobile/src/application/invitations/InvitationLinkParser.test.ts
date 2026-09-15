@@ -124,10 +124,10 @@ describe('parseCreatedInventoryInvitationLink', () => {
     expect(() => parseCreatedInventoryInvitationLink(link, 'https://stash.example.test')).toThrow('This invitation link is invalid.');
   });
 
-  it('rejects an arbitrary HTTPS origin and fails closed when no trusted origin is configured', () => {
+  it('pins configured creation origins and accepts a server-provided HTTPS origin in the general build', () => {
     expect(() => parseCreatedInventoryInvitationLink(webLink, 'https://other.example.test')).toThrow(
       'This invitation link is invalid.'
     );
-    expect(() => parseCreatedInventoryInvitationLink(webLink)).toThrow('This invitation link is invalid.');
+    expect(parseCreatedInventoryInvitationLink(webLink)).toMatchObject({ invitationId: 'invite-one' });
   });
 });
