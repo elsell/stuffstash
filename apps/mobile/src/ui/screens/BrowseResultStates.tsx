@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { StyleSheet, Text, View } from 'react-native';
 import {
   radius,
   spacing,
@@ -32,13 +33,9 @@ export function BrowseEmptyState(props: BrowseEmptyStateProps) {
     <View accessibilityLiveRegion="polite" style={styles.statePanel}>
       <Text style={styles.title}>{presentation.title}</Text>
       <Text style={styles.message}>{presentation.message}</Text>
-      {presentation.actionLabel && presentation.onAction
-        ? browseStateAction({
-            label: presentation.actionLabel,
-            onPress: presentation.onAction,
-            styles
-          })
-        : null}
+      {presentation.actionLabel && presentation.onAction ? (
+        <NativeCommandButton label={presentation.actionLabel} onPress={presentation.onAction} prominence="primary" />
+      ) : null}
     </View>
   );
 }
@@ -58,7 +55,7 @@ export function BrowseLoadError({
     <View accessibilityLiveRegion="polite" style={styles.statePanel}>
       <Text style={styles.title}>Could not load this inventory</Text>
       <Text style={styles.message}>{message}</Text>
-      {browseStateAction({ label: 'Retry', onPress: onRetry, styles })}
+      <NativeCommandButton label="Retry" onPress={onRetry} prominence="primary" />
     </View>
   );
 }
@@ -77,36 +74,8 @@ export function BrowsePaginationRetry({
   return (
     <View accessibilityLiveRegion="polite" style={styles.paginationFooter}>
       <Text style={styles.paginationMessage}>{message}</Text>
-      {browseStateAction({ label: 'Try again', onPress: onRetry, quiet: true, styles })}
+      <NativeCommandButton label="Try again" onPress={onRetry} />
     </View>
-  );
-}
-
-function browseStateAction({
-  label,
-  onPress,
-  styles,
-  quiet = false
-}: {
-  readonly label: string;
-  readonly onPress: () => void;
-  readonly styles: ReturnType<typeof createStyles>;
-  readonly quiet?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.action,
-        quiet ? styles.quietAction : styles.primaryAction,
-        pressed ? (quiet ? styles.quietActionPressed : styles.primaryActionPressed) : undefined
-      ]}
-    >
-      <Text style={[styles.actionText, quiet ? styles.quietActionText : styles.primaryActionText]}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -146,7 +115,7 @@ function emptyStatePresentation(props: BrowseEmptyStateProps): {
 function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
     statePanel: {
-      alignItems: 'flex-start',
+      alignItems: 'stretch',
       backgroundColor: palette.surface,
       borderColor: palette.border,
       borderRadius: radius.md,
@@ -165,41 +134,8 @@ function createStyles(palette: MobileColorPalette) {
       fontSize: 15,
       lineHeight: 22
     },
-    action: {
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      borderRadius: radius.sm,
-      justifyContent: 'center',
-      marginTop: spacing.sm,
-      minHeight: 44,
-      paddingHorizontal: spacing.md
-    },
-    primaryAction: {
-      backgroundColor: palette.action
-    },
-    primaryActionPressed: {
-      backgroundColor: palette.actionPressed
-    },
-    quietAction: {
-      backgroundColor: palette.surface,
-      borderColor: palette.border,
-      borderWidth: StyleSheet.hairlineWidth
-    },
-    quietActionPressed: {
-      opacity: 0.82
-    },
-    actionText: {
-      fontSize: 15,
-      fontWeight: '600'
-    },
-    primaryActionText: {
-      color: palette.onAction
-    },
-    quietActionText: {
-      color: palette.action
-    },
     paginationFooter: {
-      alignItems: 'center',
+      alignItems: 'stretch',
       gap: spacing.xs,
       paddingBottom: spacing.sm,
       paddingTop: spacing.md

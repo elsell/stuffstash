@@ -1770,3 +1770,16 @@ removed. Sixty-two existing Browse/asset behavior and view tests, TypeScript and
 structural checks pass remotely. Critic found no confirmed blocker. Native spacing,
 contrast and reachability remain pending. No new photo persistence semantics are
 introduced by this adapter change.
+
+## M132 — Browse empty and pagination commands bypass the native adapter
+
+P2 platform consistency, source-confirmed atf8677508. BrowseResultStates retained
+custom commands for empty inventory, empty search/refinements, initial load failure
+and pagination failure. All now use NativeCommandButton, retaining specific labels,
+callback targets, primary/standard prominence and viewer Add absence. Explanations
+stack above commands with stretch alignment for the native host. Mounted tests
+replace mocked tree traversal and verify recovery callbacks and viewer eligibility;
+their initial missing-label failure reflects adapter wiring, not proof of a prior
+runtime accessibility defect. All13 focused Browse tests, TypeScript and structural
+checks passed on paul. Critic found no confirmed regression. Native full-width
+geometry and actual retry/clear navigation remain acceptance work.

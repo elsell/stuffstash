@@ -640,3 +640,10 @@ Browse inline recovery and asset photo-upload retry use native command adapters.
 Browse recovery stacks the explanation and command so a full-width native command
 cannot compress or overflow the message. Preserve existing retry eligibility,
 callbacks, failed-photo drafts and successful result context.
+
+Browse empty inventory/search/filter recovery, initial load retry and pagination
+retry use the shared native command adapter. Empty inventory Add remains absent
+for viewers; clear actions retain their specific target. Pagination recovery stays
+beside loaded results with standard prominence, while initial recovery and empty
+state actions retain primary prominence. Explanations and commands stack without
+horizontal compression; labels and callback semantics remain unchanged.
