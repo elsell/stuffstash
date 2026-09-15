@@ -25,3 +25,9 @@ September 15 release checkpoint: the user requested an interim TestFlight build
 with the current fixes, followed by continued audit work. Native sheet expansion,
 Add launch diagnosis, keyboard scenarios, Android runtime coverage and remaining
 review cells stay open; this release is not full audit acceptance.
+
+
+Interim release delivered: **0.24.11 (99.1)**, processed with TestFlight changelog
+verified on September 15 at 00:53 UTC. [Release workflow](https://github.com/elsell/stuffstash/actions/runs/34913014534).
+The comprehensive audit remains active. Photo-removal and gallery follow-up fixes
+are in draft PR 129 and are not part of this interim build.

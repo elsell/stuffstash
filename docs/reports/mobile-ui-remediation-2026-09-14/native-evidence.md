@@ -208,6 +208,32 @@ not whole-surface or whole-app acceptance.
 The user requested delivery of the current fixes before continuing the audit.
 PR 127 merged as `34ae627f3caedd41a22e8b52456e79c8e5154035` after CI
 34912595716 passed. Remote source validation passed 1,374 mobile tests, TypeScript
-and structural checks. Release 34913014534 is in progress; upload and exact-build
-changelog verification remain pending. The audit and unresolved native findings
+and structural checks. Release [34913014534](https://github.com/elsell/stuffstash/actions/runs/34913014534) completed successfully.
+Signed **0.24.11 (99.1)** uploaded at 2026-09-15 00:50:40 UTC; Apple processing
+and the exact-build TestFlight changelog were verified at 00:53:08 UTC. The audit and unresolved native findings
 remain active. Subsequent changes belong to the continuation branch.
+
+
+## Follow-up native evidence — run 34912595714, iPad fixture
+
+Source `231afec0`, tested merge `c4b3f395443e6819679367fcb33a42e11a7769e5`.
+iPad controlled/uncontrolled address entry, complete onboarding submission,
+expiration search with keyboard and reminder-mode menu scenarios passed with the
+corrected procedures. Production onboarding after help expansion/collapse still
+retained only `h`, so M14 remains open. The actual filter expansion failure remains.
+
+The named draft-photo state passed XCTest accessibility checks for hit regions,
+sufficient descriptions, traits, contrast, Dynamic Type and clipping. The inspected
+[screenshot](evidence/draft-photo-ipad-34912595714.png) shows the four photos and
+48-point Remove commands. This is partial evidence for this state only. The
+interaction case stopped at its rail selector: the native hierarchy attaches the
+testID to an Other wrapper containing a ScrollView, not directly to the ScrollView.
+The next procedure targets that observed container; removal/read-only behavior
+has not yet passed natively.
+
+Add still fails before the name field. Its retained crash includes
+RCTExceptionsManager/reportFatal and a native segmentation fault during cleanup,
+without a useful JS message. A runner-only React error boundary is added to expose
+render failures in the next run; it does not catch native or asynchronous crashes.
+The color picker now opens, but its close button was not hittable in the test.
+These unresolved states remain in the audit, independently of interim delivery.
