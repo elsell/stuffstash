@@ -179,6 +179,8 @@ The iOS bridge must use pinned `@expo/ui 55.0.17`, justified in `specs/platform/
 
 Web tag selection lists and web or mobile tag filter option lists must sort active tags alphabetically by display name using locale-aware, case-insensitive collation. Assigned tag chips may preserve the order supplied by the asset when that order is used for compact overflow or otherwise communicates content order.
 
+In mobile Edit, collapsed options include the first twelve naturally sorted active tags plus any selected active tags outside that subset. Pending new definitions remain visible. Native Show all tags / Show fewer tags commands expand or collapse without changing selected IDs, pending definitions, or unrelated draft fields.
+
 Tag selectors with more than twelve available tags must use progressive disclosure: show the first twelve naturally sorted options initially, preserve the selected-tag summary, and provide an explicit control to show or hide the complete list.
 
 Web and mobile clients must load active inventory tags through client adapter boundaries, map API tag DTOs into client domain models, and submit complete `tagIds` lists on asset create and update. Clients must not treat generated API DTOs as UI domain models.

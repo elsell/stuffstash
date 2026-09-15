@@ -1022,3 +1022,10 @@ and retain all selected tags in the summary; expand/collapse without changing th
 draft; assign an initially hidden tag, collapse and save without losing it. Verify
 large text, keyboard, native disclosure actions and accessibility state on device.
 The correction is not in PR146 or its interim release. See edit-tags-axis.md.
+
+M94 correction candidate: Edit now sorts naturally and initially shows twelve
+options plus selected extras. Pending definitions remain visible. Native Show all
+tags / Show fewer tags commands only change disclosure. A real-route regression
+failed before the fix and verifies ordering, hidden-tag selection, collapse and
+Save retention. Sixteen action-sheet tests, TypeScript and structural checks run
+remotely; native reachability and enlarged text remain pending.

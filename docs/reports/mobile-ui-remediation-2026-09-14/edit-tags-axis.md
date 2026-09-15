@@ -45,3 +45,8 @@ M93 has remote regression evidence; this pass adds no native verification.
 Next: repair M94 with selected-tag retention and explicit native disclosure actions;
 review unstaged tag input before choosing a draft-loss correction; capture long
 names, large text, color selection, keyboard and Save/Cancel on native builds.
+
+Follow-up candidate after PR146: M94 now has native disclosure commands with
+selected extras retained when collapsed and natural ordering. The remote route
+regression covers expansion, collapse and saved selection. This supersedes the
+unbounded-list source observation above; native layout acceptance remains open.

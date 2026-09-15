@@ -139,6 +139,8 @@ export function EditAssetSheet({
   );
 }
 
+const initialTagOptionLimit = 12;
+
 function EditTagPicker({
   disabled,
   newTags,
@@ -157,6 +159,9 @@ function EditTagPicker({
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('');
   const selected = new Set(selectedTagIds);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const sortedTags = [...tags].sort((left, right) => left.label.localeCompare(right.label, undefined, { numeric: true, sensitivity: 'base' }));
+  const visibleTags = showAllTags ? sortedTags : sortedTags.filter((tag, index) => index < initialTagOptionLimit || selected.has(tag.id));
 
   function toggleTag(tagId: string): void {
     if (disabled) {
@@ -220,7 +225,7 @@ function EditTagPicker({
             </Pressable>
           );
         })}
-        {tags.map((tag) => {
+        {visibleTags.map((tag) => {
           const isSelected = selected.has(tag.id);
           const colorStyle = assetTagChipStylePresentation(tag);
           return (
@@ -245,6 +250,11 @@ function EditTagPicker({
           );
         })}
       </View>
+      {tags.length > initialTagOptionLimit ? <NativeCommandButton
+        label={showAllTags ? 'Show fewer tags' : 'Show all tags'}
+        disabled={disabled}
+        onPress={() => { if (!disabled) setShowAllTags(current => !current); }}
+      /> : null}
       <View style={styles.newTagRow}>
         <AppTextInput
           accessibilityLabel="New tag name"
