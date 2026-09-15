@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack, useFocusEffect } from 'expo-router';
@@ -91,7 +92,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       await fetchPage(filter, signal);
     }, 'Could not update this notification. Try again.');
   }
-  const button = (label: string, action: () => void, disabled = busy) => <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={action} style={[styles.button, { borderColor: colors.controlBorder, opacity: disabled ? 0.5 : 1 }]}><Text style={{ color: colors.text }}>{label}</Text></Pressable>;
+  const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
       { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
       { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
@@ -125,6 +126,5 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md }, heading: { fontSize: 24, fontWeight: '700' }, title: { fontSize: 18, fontWeight: '600' },
   actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 44, gap: spacing.sm },
-  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  button: { minHeight: 44, padding: spacing.sm, justifyContent: 'center' }
+  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }
 });

@@ -416,3 +416,10 @@ session that initiated the open. Leaving and returning creates a new focus
 session; an older completion must not push another asset screen over it. An open
 callback invoked while the inbox is unfocused must not start a new read. Normal
 focused opening remains resolve, mark read, reconcile count, then navigate.
+
+## Inbox recovery and paging controls
+
+Inbox loading recovery and older-page loading are commands. Use the existing
+platform-native command adapter for Retry and Load more, including the route's
+inventory-load failure. Preserve the existing loading guard, error recovery,
+pagination merge and scoped query behavior; do not substitute an extra screen.

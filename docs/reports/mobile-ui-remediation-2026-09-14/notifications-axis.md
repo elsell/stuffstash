@@ -45,6 +45,6 @@ changes, native inbox navigation interruption, system foreground presentation,
 physical cold/warm pushes, badges, assistive technology and Android. Existing user
 push confirmation is historical evidence, not verification of every current path.
 
-Additional source concern: inbox Retry/Load more and route-load Retry still use
-bespoke Pressable command styling despite the shared native command adapter. Keep
-this task/pattern review open; native adaptation is not certified by callback tests.
+M56 follow-up replaces inbox Retry/Load more and route-load Retry with the shared
+native command adapter. Eleven inbox behavior tests/typecheck/structural pass and
+critic found no issue; native adaptation is not certified by callback tests.

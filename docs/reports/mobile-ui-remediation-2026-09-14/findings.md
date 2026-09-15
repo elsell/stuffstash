@@ -298,3 +298,11 @@ blocker and requested proof that a fresh open works after the old request settle
 the final11 inbox tests include that passing case. Native navigation interruption
 remains pending. See `notifications-axis.md` for the broader140-surface ownership
 map and explicitly unverified paths.
+
+### M56 — Inbox recovery and paging use custom command controls
+
+Inbox Retry/Load more and route-load Retry now use the existing native command
+adapter. This matches their command task without extra navigation. Query scoping,
+loading guards, recovery and pagination behavior are unchanged. Eleven existing
+inbox behavior tests, TypeScript and structural checks pass remotely. Critic found
+no issue. Native control sizing/appearance and paging acceptance remain pending.
