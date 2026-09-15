@@ -545,3 +545,12 @@ query in a generic predicate waiter. Record screenshot/hierarchy evidence when
 the assertion times out; a later closed snapshot does not prove timely collapse.
 Do not count unreached keyboard steps as passed. This is a test observation
 change, not a production repair.
+
+### Ordinary-keyboard text-entry comparisons
+
+Runner-only diagnostics must compare seeded single-line and multiline RN inputs
+with default keyboard/correction settings, alongside the existing URL and SwiftUI
+comparisons. Use identical full-string entry and verify native text plus the
+application-observed value. Do not replace failing product scenarios, disable
+autocorrection in production, slow typing to obtain a pass, or equate URL-field
+success with general text-entry acceptance. Native execution is required.

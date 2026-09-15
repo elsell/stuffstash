@@ -90,3 +90,26 @@ reviewing the current tree rather than treating the baseline counts as current.
 The added successful-reset case caught a candidate key collision with the expiration
 editor. A name-specific key prefix corrected it; the final run has no duplicate-key
 warnings and all six checks pass. This caught regression is not shipped native evidence.
+
+### Ordinary keyboard comparison added after run349397
+
+AddAssetNameField and ReturnNoteInput both already seed defaultValue through a
+stable ref; neither supplies controlled value on iOS. Their ordinary-keyboard
+failures therefore cannot be attributed solely to controlled JS value updates.
+The runner's existing RN uncontrolled URL and SwiftUI URL inputs have different
+keyboard and correction settings from those product fields.
+
+Runner-only seeded single-line and multiline comparisons now use ordinary default
+keyboard settings and check both native and application-observed full text.
+Existing product scenarios and typing speed remain unchanged. Remote structural
+checks pass; macOS compilation and execution are pending. This is diagnostic
+coverage, not a fix or product acceptance.
+
+An [older React Native controlled-input issue](https://github.com/facebook/react-native/issues/44157)
+relates correction and JS synchronization, but it is marked fixed and does not
+establish the cause here: this repository pins RN0.83.6 and the failing fields
+are already seeded. No dependency or system keyboard preference was changed.
+
+Critic identified the new bottom entries can be farther than one swipe from
+the shared input slot; the test now uses a bounded reachability loop and retains
+the hittable assertion before typing. Both fixture-preparation checks pass.

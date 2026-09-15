@@ -330,6 +330,26 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
 
+  private func verifyOrdinaryTextEntry(_ mode: String) {
+    let open = app.buttons["Audit \(mode) input"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let input = mode == "multiline" ? app.textViews["Audit \(mode) text"] : app.textFields["Audit \(mode) text"]
+    XCTAssertTrue(input.waitForExistence(timeout: 5))
+    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(input.isHittable)
+    input.tap()
+    waitForKeyboard()
+    input.typeText("Native draft name")
+    capture("\(mode)-ordinary-text-entry")
+    XCTAssertEqual(input.value as? String, "Native draft name")
+    XCTAssertTrue(app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5))
+  }
+
+  func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
+  func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
+
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }

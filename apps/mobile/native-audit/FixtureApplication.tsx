@@ -82,7 +82,7 @@ export function FixtureMenu() {
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState(false);
   const [draftPhotos, setDraftPhotos] = useState(false);
-  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system'>();
+  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
@@ -112,6 +112,8 @@ export function FixtureMenu() {
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
+    <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
+    <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -149,8 +151,13 @@ function DraftOptionsFixture() {
     persistedTargetIds={[]} targetIds={[]} onTargets={() => {}} onApplicability={() => {}} onFieldType={() => {}} />;
 }
 
-function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' | 'system' }) {
+function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' }) {
   const [value, setValue] = useState('');
+  if (mode === 'plain' || mode === 'multiline') return <View>
+    <AppTextInput accessibilityLabel={`Audit ${mode} text`} defaultValue="" multiline={mode === 'multiline'}
+      onChangeText={setValue} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
+    <Text>{`Observed ${mode} input: ${value}`}</Text>
+  </View>;
   if (mode === 'system') return <View>
     <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
       <TextField defaultValue="" placeholder="https://example.invalid" onValueChange={setValue}
