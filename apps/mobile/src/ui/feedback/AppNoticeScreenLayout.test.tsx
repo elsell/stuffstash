@@ -57,3 +57,26 @@ it('preserves a plain notice lifetime and announcement through focus handoff', a
     expect(harness.byText('Handoff lifetime')).toBeUndefined();
   } finally { await harness.unmount(); setScreenFocused(true); vi.useRealTimers(); }
 });
+
+it('reserves the iOS form-sheet header and follows its measured height', async () => {
+  const { Platform } = await import('react-native');
+  const h = new MobileRenderHarness(); let feedback!: AppFeedbackContextValue;
+  const previousPlatform = Platform.OS;
+  function Source() { feedback = useAppFeedback(); return null; }
+  const view = (headerShown = true) => <AppFeedbackProvider noticePlacement="screen"><Source />
+    <AppNoticeScreenLayout route={{ name: 'add' }} options={{ presentation: 'formSheet', headerShown, headerTransparent: false }}><Source /></AppNoticeScreenLayout>
+  </AppFeedbackProvider>;
+  const layer = () => h.byTestId('app-notice-layer');
+  try {
+    Platform.OS = 'ios'; setNativeHeaderHeight(64);
+    await h.render(view());
+    await h.run(() => feedback.showNotice({ tone: 'error', title: 'Could not save', action: { label: 'Review', onPress: () => {} } }));
+    expect(layer()?.props.style).toContainEqual({ top: 74 });
+    await h.run(() => setNativeHeaderHeight(80));
+    expect(layer()?.props.style).toContainEqual({ top: 90 });
+    await h.render(view(false));
+    expect(layer()?.props.style).toContainEqual({ top: 10 });
+    Platform.OS = 'android'; await h.render(view());
+    expect(layer()?.props.style).toContainEqual({ top: 10 });
+  } finally { await h.unmount(); Platform.OS = previousPlatform; setNativeHeaderHeight(144); }
+});

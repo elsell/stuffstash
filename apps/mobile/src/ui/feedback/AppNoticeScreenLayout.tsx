@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +9,7 @@ import { AppNoticePresenter } from './AppFeedback';
 type NoticeScreenLayoutProps = {
   readonly children: ReactNode;
   readonly route: { readonly name: string };
-  readonly options: { readonly headerTransparent?: boolean; readonly headerShown?: boolean };
+  readonly options: { readonly headerTransparent?: boolean; readonly headerShown?: boolean; readonly presentation?: string };
 };
 
 /** Preserve the native screen's direct scroll child; container routes delegate to leaves. */
@@ -20,6 +21,7 @@ function FocusedNotice({ options }: Pick<NoticeScreenLayoutProps, 'options'>) {
   const focused = useIsFocused();
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
-  const top = options.headerShown === false ? insets.top : options.headerTransparent ? headerHeight : 0;
+  const headerOverlaysContent = options.headerTransparent || (Platform.OS === 'ios' && options.presentation === 'formSheet');
+  const top = options.headerShown === false ? insets.top : headerOverlaysContent ? headerHeight : 0;
   return focused ? <AppNoticePresenter topOffset={top + spacing.sm} /> : null;
 }

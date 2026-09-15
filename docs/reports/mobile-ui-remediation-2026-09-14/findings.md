@@ -1846,3 +1846,11 @@ that header. The fixture declares presentation=formSheet and headerShown=true.
 Correction must account for this presentation while retaining ordinary pushed
 screen positioning and header-hidden behavior. Keep the native full-notice bounds
 and action/Close reachability checks; do not weaken the assertion. Not yet fixed.
+
+M136 candidate uses the reported header height for iOS formSheet notices with a
+visible header. Ordinary pushed screens, Android and hidden-header safe-area
+placement retain their branches. The mounted regression failed at10 versus74;
+12 focused notice tests, TypeScript and structural checks now pass on paul.
+Critic found no production blocker; the hidden-header test now asserts the exact
+zero-inset offset and its4-test suite passes again. Native full-bounds and action/
+Close hit tests are unchanged and must verify the correction in a newer build.

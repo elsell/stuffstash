@@ -664,3 +664,10 @@ plan. A retained source choice cannot start after that owner changes. Late selec
 results and errors must not alter a replacement plan or present an obsolete alert.
 Current-owner failures retain the existing retry explanation; selection remains
 behind the injected photo query and native source chooser.
+
+On iOS form sheets with a visible native header, notice placement includes the
+reported native header height even when headerTransparent is false: form-sheet
+content extends beneath that header. Ordinary opaque pushed screens retain their
+content-relative placement. Header-hidden screens retain safe-area placement, and
+Android does not inherit this iOS-specific adjustment. Native acceptance must keep
+the full notice and its actions below the header, including after height changes.
