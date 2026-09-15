@@ -718,3 +718,30 @@ returning false to retain failures. Swift compilation and resulting attribution
 await the next macOS run; no native visual correction is claimed by instrumentation.
 
 API reference: [XCUIAccessibilityAuditIssue](https://developer.apple.com/documentation/xcuiautomation/xcuiaccessibilityauditissue).
+
+### Run349297 iPad fixtures and Add header comparison
+
+Job104259682259 completed27/31 passes,4 failures. Add card reaches text entry but
+keyboard readiness fails with an infinite-frame key (line30), not a measured text
+corruption result on this iPad comparison. The Add sheet fails waiting for Asset
+name (line273). History reachability(line87) and controlled address h://example.invalid
+instead of the full URL(line251) also fail. All other cases, including explicit
+large-text menu and broad expiration accessibility, passed on this iPad run.
+Artifacts downloaded to /tmp/native349297-fixtures-ipad; log suffix.log.
+
+The phone sheet snapshot94B4F2B5 shows successful inventory scope and principal,
+but only inventory-pending resources with zero observers; no scoped Add query was
+created. The card comparison reaches the same application's form. This narrows
+presentation-dependent update timing, not a proven API failure.
+
+Added a runner-only audit-add-header route: same full-height sheet/cold Add fixture,
+with native header visible and titled before presentation. Original sheet/card
+comparisons and complete typing/rejected-save assertions remain. Production Add
+still starts with header hidden; no change is justified until this comparison runs.
+Fixture isolation: one missing-route regression failed before implementation, then
+two preparation checks, TypeScript and structural checks passed remotely. Swift
+compilation and runtime comparison remain pending.
+
+Release checkpoint:0.24.17(105.1) uploaded05:49:31UTC in job104264788967.
+Job104268866634 is still publishing/verifying the changelog; Apple readiness is
+not yet confirmed. This release excludes the current PR140 comparisons/fixes.

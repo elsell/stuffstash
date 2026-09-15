@@ -395,3 +395,14 @@ must return false so XCTest continues to report the issue as a failure; it must
 not suppress an audit category. This distinguishes broad audit predictions from
 explicit enlarged-text interaction results and avoids attributing an unidentified
 clipping issue to whichever control was fixed most recently.
+
+### Add sheet header configuration comparison
+
+The native Add audit must compare the existing full-height sheet with the same Add
+fixture in a full-height sheet whose native header is declared visible with its
+known title before presentation. This isolates changing header visibility during
+presentation from the existing card-versus-sheet comparison. Preserve the original
+routes and complete draft/typing/rejected-save assertions. The comparison uses cold
+query state and the same application component; it must not preload resources or
+change production Add presentation. Fixture preparation must remain isolated from
+production routes.

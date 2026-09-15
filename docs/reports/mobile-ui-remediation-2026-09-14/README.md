@@ -38,8 +38,8 @@ Apple processing and the exact-build changelog were verified at05:10:25UTC in
 Current interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
 publishing succeeded in
 [release34932422663](https://github.com/elsell/stuffstash/actions/runs/34932422663).
-The signed iOS job is running; upload, Apple processing, build number and TestFlight
-changelog are not yet confirmed. This release contains filter badge contrast,
+Build105.1 uploaded successfully at05:49:31UTC; Apple processing and the exact-build
+TestFlight changelog are still being verified. This release contains filter badge contrast,
 history locale, month-calendar presentation and keyboard-ownership corrections.
 It does not certify the full audit or unresolved native footer behavior.
 
@@ -53,7 +53,8 @@ Latest completed native slice: iPhone17 onboarding in
 [run34929746647](https://github.com/elsell/stuffstash/actions/runs/34929746647),
 actual sourcebabf6765 (parents50b598ae and904684a1). One applicable test passed;
 two iPad-only tests skipped. The phone fixture job then completed with22 passes
-and9 failures; iPad fixtures and onboarding remain active. The run predates PR138 and PR140; it cannot verify their changes.
+and9 failures; iPad fixtures completed27 passes and4 failures. iPad onboarding
+remains active. The run predates PR138 and PR140; it cannot verify their changes.
 
 Priority open work: native Add loading diagnosis, filter keyboard hit targets,
 large-text choice reflow, history accessibility reachability, Android runtime

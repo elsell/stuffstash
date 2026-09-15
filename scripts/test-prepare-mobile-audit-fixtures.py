@@ -34,7 +34,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
         self.assertEqual({p.name for p in self.routes.iterdir()},
-                         {"_layout.tsx", "index.tsx", "audit-add.tsx", "audit-add-push.tsx", "audit-inventory-query.tsx", "audit-home-return.tsx", "home-return-details.tsx", "audit-checkout-history.tsx", "audit-sheet-diagnostic.tsx", "audit-browse.tsx", "audit-expiration.tsx", "audit-expiration-medium.tsx"})
+                         {"_layout.tsx", "index.tsx", "audit-add.tsx", "audit-add-push.tsx", "audit-add-header.tsx", "audit-inventory-query.tsx", "audit-home-return.tsx", "home-return-details.tsx", "audit-checkout-history.tsx", "audit-sheet-diagnostic.tsx", "audit-browse.tsx", "audit-expiration.tsx", "audit-expiration-medium.tsx"})
         self.assertIn("FixtureMenu as default", (self.routes / "index.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")

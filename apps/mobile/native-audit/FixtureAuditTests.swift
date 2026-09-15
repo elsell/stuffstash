@@ -281,6 +281,10 @@ final class FixtureAuditTests: XCTestCase {
     verifyAddDraft(entry: "Audit Add navigation draft")
   }
 
+  func testAddDraftWithHeaderConfiguredBeforePresentation() {
+    verifyAddDraft(entry: "Audit Add configured header")
+  }
+
   private func verifyAddDraft(entry: String) {
     let open = app.buttons[entry]
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

@@ -23,6 +23,7 @@ exports = {
     "audit-sheet-diagnostic": "SheetLayoutFixture",
     "audit-add": "AddAssetFixture",
     "audit-add-push": "AddAssetFixture",
+    "audit-add-header": "AddAssetFixture",
     "audit-inventory-query": "InventoryQueryFixture",
     "audit-home-return": "HomeReturnFixture",
     "home-return-details": "HomeReturnDetailsRoute",
