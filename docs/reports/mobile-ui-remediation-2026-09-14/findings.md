@@ -881,3 +881,13 @@ root notice may be obscured; that occlusion is a source risk, not a new screensh
 observation. Retain available content and provide explicit independent native
 contents/photo retries; do not claim an unknown collection is empty. Source
 confirmed; reproduction tests, implementation and runtime acceptance are pending.
+
+
+M89 candidate: contents and photos now expose independent native retry commands
+inside their owning detail screen/sheet. Unknown contents and photos no longer
+render empty claims; initial retry returns to the loading indicator, while cached
+content remains visible. A real query regression reproduced false empty copy
+before implementation; independent failure/retry and cached-refresh retention
+checks pass.35 remote detail tests, TypeScript and mobile structural checks passed.
+Critic found no blocker. Native sheet placement and announcements remain pending;
+M89 is not closed by this source result. This change is after the PR142 release.

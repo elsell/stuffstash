@@ -687,7 +687,8 @@ Do not remove production keyboard controls based only on this source observation
 
 The contained-items audit includes the normal detail route and the shared Map
 detail sheet. Unknown contents must not be described as an empty collection.
-Initial loading and failed loads without data must suppress empty-result claims;
+Initial loading and failed loads without data must suppress empty-result claims
+for both contents and photos;
 a failed refresh must preserve any available contents. Contents and photo query
 errors must have persistent region-level status and independent native retry
 commands, rather than requiring a pull gesture or relying on a root notice behind

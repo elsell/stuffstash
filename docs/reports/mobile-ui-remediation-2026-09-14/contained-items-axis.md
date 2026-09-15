@@ -52,3 +52,12 @@ prominence and quiet maintenance. For query failure, retain available content,
 replace unknown-data empty claims with persistent inline status and independent
 native Retry contents/Retry photos actions. Test failures and retries through real
 query fakes before implementation, then verify on iPhone and iPad.
+
+
+M89 implementation follow-up: AssetDetailView now receives region availability
+and recovery content from the route. Unknown collections are not rendered as
+empty; cached results remain. AssetRegionRecovery uses NativeCommandButton and
+region-specific Retry labels. Two query-fake scenarios cover unknown/failed data,
+independent retries and retained contents after a failed refresh.35 remote checks,
+TypeScript and structural validation pass; no native acceptance is claimed.
+The table above records the discovery baseline. M88 remains unimplemented.

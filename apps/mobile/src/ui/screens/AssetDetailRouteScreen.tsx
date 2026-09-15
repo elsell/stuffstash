@@ -1,3 +1,4 @@
+import { AssetRegionRecovery } from '../components/AssetRegionRecovery';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
@@ -169,26 +170,6 @@ export function AssetDetailRouteScreen({
     }
     setWorkspaceStatus(assetWorkspaceSuccessStatus(completion.action, { message: completion.message }));
   }, [assetId, coreAsset.data, feedback, screenState, undoAssetEditCommand]));
-
-  useEffect(() => {
-    if (coreAsset.data && assetContents.isError) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Asset contents could not load',
-        message: 'The asset is available, but its location or contents may be incomplete. Pull to refresh.'
-      });
-    }
-  }, [assetContents.data, assetContents.error, assetContents.isError, coreAsset.data, feedback]);
-
-  useEffect(() => {
-    if (coreAsset.data && assetPhotos.isError) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Asset photos could not load',
-        message: 'The asset and its contents are still available. Pull to refresh photos.'
-      });
-    }
-  }, [assetPhotos.data, assetPhotos.error, assetPhotos.isError, coreAsset.data, feedback]);
 
   async function undoSavedEdit(input: { readonly tenantId: string; readonly inventoryId: string; readonly operationId: string; readonly title: string }): Promise<void> {
     try {
@@ -487,6 +468,16 @@ export function AssetDetailRouteScreen({
             canRetryPhotos={photoStatus?.canRetry}
             isActionPending={pendingAction !== undefined}
             isContentsLoading={!assetContents.data && assetContents.isPending}
+            contentsAvailable={Boolean(assetContents.data)}
+            photosAvailable={Boolean(assetPhotos.data)}
+            contentsRecovery={assetContents.isError ? <AssetRegionRecovery
+              region="contents" isRetrying={assetContents.isFetching}
+              onRetry={() => { void assetContents.refetch({ cancelRefetch: false }); }}
+            /> : undefined}
+            photosRecovery={assetPhotos.isError ? <AssetRegionRecovery
+              region="photos" isRetrying={assetPhotos.isFetching}
+              onRetry={() => { void assetPhotos.refetch({ cancelRefetch: false }); }}
+            /> : undefined}
             isPhotosLoading={!assetPhotos.data && assetPhotos.isPending}
             onAddHere={screenState.asset.canAddContainedAssets ? () => router.push({
               pathname: '/add',
