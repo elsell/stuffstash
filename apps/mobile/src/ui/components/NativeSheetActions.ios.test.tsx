@@ -40,3 +40,17 @@ it('lets a measured container own keyboard avoidance without moving hosted contr
     expect(h.byType('SwiftUIHost')?.props.ignoreSafeArea).toBe('keyboard');
   } finally { await h.unmount(); }
 });
+
+it('blocks both native actions during a mutation and restores Cancel afterwards', async () => {
+  const h = new MobileRenderHarness(); const actions: string[] = [];
+  try {
+    await h.render(<NativeSheetActions primaryLabel="Saving" secondaryLabel="Cancel" disabled secondaryDisabled onApply={() => actions.push('save')} onBack={() => actions.push('cancel')} />);
+    const buttons = h.allByType('SwiftUIButton');
+    for (const button of buttons) await h.press(button);
+    expect(actions).toEqual([]);
+    expect(buttons[1].props.modifiers).toContainEqual({ type: 'disabled', value: true });
+    await h.render(<NativeSheetActions primaryLabel="Save" secondaryLabel="Cancel" disabled onApply={() => actions.push('save')} onBack={() => actions.push('cancel')} />);
+    await h.press(h.allByType('SwiftUIButton')[1]);
+    expect(actions).toEqual(['cancel']);
+  } finally { await h.unmount(); }
+});

@@ -925,3 +925,85 @@ maintenance rows at large text remain unverified; M88 remains open for acceptanc
 The broader shared-adapter run passed all1505 mobile tests across258 files on
 paul. Code critic found no confirmed blocker. This does not establish native
 button geometry or Android runtime behavior.
+
+
+M87 native follow-up: phone run349502 at97edb367 confirms Cancel outside the
+visible sheet at largest text. Metadata errors are siblings above the entire edit
+form rather than part of its scrollable content. The retry labels also visibly
+overlap adjacent messages; their reported native button frame is46.1points despite
+a two-line large label. Do not treat hittability as proof of label layout. Repair
+scroll ownership and investigate hosted-label measurement before closing M87;
+keep existing native assertions. See phone-edit-errors-large-text-349502.png.
+
+M87 scroll-ownership candidate: Edit metadata recovery now renders inside its
+form ScrollView rather than above the form. Cancel/Save retain their existing
+fixed action region. A regression first failed on the old layout and now passes
+while preserving independent retries and dirty names (12 action-sheet tests,
+TypeScript and structural checks on paul). Native acceptance scrolls each retry
+fully into view and checks Cancel throughout; native execution remains pending.
+The hosted native-label overlap remains under investigation, so M87 stays open.
+Adjacent Move/Move here candidate status is still outside their forms and needs
+its own large-text review; this Edit-only change does not certify those layouts.
+
+### M90 — Move here reports unknown suggestions as empty
+
+Source-confirmed, recovery priority P2, S136 loading/recovery. A failed current
+query previously rendered No movable matches beside its retry. The intended
+pattern distinguishes unavailable results from known empty results. The candidate
+fix gates empty copy on current-query data and places status/retry in the results
+scroll region; existing cached candidates and draft query remain. Regression
+failed before the change and all13 asset action-sheet checks, TypeScript and
+structural checks passed on paul. Critic found no confirmed issue. Native large
+text, keyboard and selection-retention acceptance remain pending. This does not
+resolve the other fixed-content layout risks in Move or Move here.
+
+### M91 — asset form completion commands remain custom
+
+Source-confirmed platform-pattern gap, P2. Shared SheetActions in
+AssetDetailSheets.tsx renders custom Pressable Cancel/Save/Move commands for Edit,
+Move and Move here. Native command adapters already exist; no concrete platform
+limitation is documented for this substitute. Choose the adapter while preserving
+busy semantics and one keyboard owner, then verify narrow/large-text sheet
+geometry and dismissal. Implementation remains pending. See move-axis.md.
+
+M91 candidate: Edit/Move/Move-here SheetActions now delegates to NativeSheetActions
+with container-owned keyboard avoidance. Optional secondaryDisabled preserves
+Cancel locking during mutation; default false leaves filter dismissal available.
+iOS, Android and preview callbacks honor their disabled states. The busy-action
+regression failed before the adapter extension;25 focused tests including filter
+consumers, TypeScript and structural checks passed remotely. Critic found no
+confirmed blocker. Native stacked footer is taller than the prior custom row;
+large-text form space and Cancel reachability remain unverified. M91 stays open.
+
+The full mobile suite also passed:1507 tests across258 files on paul. This is
+behavioral coverage, not native geometry evidence.
+
+### M92 — Move offers creation while suggestions are unknown
+
+Source-confirmed P2, S134/S135 loading and recovery. Current-query suggestions
+were converted to an empty array, so the existing same-kind/title/parent check
+offered Create during debounce or failed lookup. The candidate now requires known
+results before offering creation and locates retry/loading in the results scroll.
+Cached results still support the existing check; this is not global uniqueness.
+The regression failed before the change;14 action-sheet tests, TypeScript and
+structural checks pass remotely. Native layout and creation recovery remain
+unverified. Query and selected destination are not reset by retry.
+
+Move layout follow-up to M91/M92: both forms now scroll their title, help,
+query, previews and results together, with only completion controls fixed. The
+280-point result cap is removed. Two regression assertions failed before the
+change because query entry was outside the scrolling region;14 action-sheet
+tests, TypeScript and structural checks passed remotely. Critic review requires
+full query visibility before native typing, now reflected in the journey. Native
+footer/keyboard reachability remains pending; no visual closure is claimed.
+
+### M93 — Edit tag-name rejection has no explanation
+
+Source-confirmed P2, S133 recovery. Names over the resolver's limit disabled
+Add tag without feedback. The candidate adds Use a shorter tag name beside the
+entry controls using the existing resolver status; it preserves the typed value
+and draft and clears after correction. Native color validation remains separate.
+The regression failed before the change;24 resolver/action-sheet tests, TypeScript
+and structural checks passed on paul. VoiceOver announcement and large-text
+placement remain unverified. Long selected-tag truncation is a separate pending
+review, not fixed by this validation message.

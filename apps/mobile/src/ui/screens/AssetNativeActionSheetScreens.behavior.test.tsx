@@ -64,7 +64,7 @@ it('submits an expiration clear through the native edit route', async () => {
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
     await harness.press(harness.byLabel('Clear expiration'));
-    await harness.press(harness.allByType('Pressable').at(-1));
+    await harness.press(harness.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ assetId: 'asset', expiration: null })]);
   } finally { await harness.unmount(); }
 });
@@ -81,7 +81,7 @@ it('creates the move destination with the kind selected in the native menu', asy
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     await h.changeText(h.allByType('TextInput').find(input => input.props.placeholder === 'Search places, boxes, shelves'), 'Camping box');
-    await settle(h);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
     const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "Camping box"')?.parent;
     await h.press(create ?? undefined);
@@ -136,6 +136,7 @@ it('shares the Move lock with destination creation and retains the query after f
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     await h.changeText(h.allByType('TextInput')[0], 'New box');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     const create = h.byText('Create location "New box"')?.parent;
     const move = h.byText('Move')?.parent;
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
@@ -223,6 +224,13 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
         updateAssetCommand={{ execute: async () => { throw new Error('Save not requested'); } }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
+    const formScroll = harness.allByType('ScrollView').find(node =>
+      node.queryAll(child => child.props.accessibilityLabel === 'Asset name').length > 0);
+    expect(formScroll).toBeDefined();
+    for (const label of ['Retry asset types', 'Retry tags']) {
+      expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
+    }
+    expect(formScroll?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
     await harness.changeText(harness.byLabel('Asset name'), 'My retained name');
     await harness.press(harness.byLabel('Retry tags')); await settle(harness);
     expect(tagReads).toBe(2); expect(typeReads).toBe(1);
@@ -232,4 +240,87 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
     expect(typeReads).toBe(2);
     expect(harness.byLabel('Asset name')?.props.value).toBe('My retained name');
   } finally { await harness.unmount(); }
+});
+
+it('does not call failed move-here suggestions empty and recovers inside results', async () => {
+  const client = createMobileQueryClient(); client.setDefaultOptions({ queries: { retry: false } });
+  const h = new MobileRenderHarness(); let unavailable = true;
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({
+    tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Camping box', description: '', kind: 'container', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveHereSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        parentLookupQuery={{ execute: async () => { if (unavailable) throw new Error('Unavailable'); return []; } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('Move not requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Find item, box, or place'), 'Tent');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    expect(h.byLabel('Retry suggestions')).toBeDefined();
+    const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Find item, box, or place').length).toBeGreaterThan(0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
+    expect(h.byText('No movable matches')).toBeUndefined();
+    expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
+    unavailable = false;
+    await h.press(h.byLabel('Retry suggestions')); await settle(h);
+    expect(h.byText('No movable matches')).toBeDefined();
+    expect(h.byLabel('Find item, box, or place')?.props.value).toBe('Tent');
+  } finally { await h.unmount(); }
+});
+
+it('waits for known Move suggestions before offering destination creation', async () => {
+  const client = createMobileQueryClient(); client.setDefaultOptions({ queries: { retry: false } });
+  const h = new MobileRenderHarness(); let unavailable = true;
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: '', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        createAssetCommand={{ execute: async () => { throw new Error('Create not requested'); } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('Move not requested'); } }}
+        parentLookupQuery={{ execute: async () => { if (unavailable) throw new Error('Unavailable'); return []; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Put in'), 'New room');
+    expect(h.byText('Create location "New room"')).toBeUndefined();
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    expect(h.byLabel('Retry suggestions')).toBeDefined();
+    const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Put in').length).toBeGreaterThan(0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
+    expect(h.byText('Create location "New room"')).toBeUndefined();
+    expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
+    unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);
+    expect(h.byText('Create location "New room"')).toBeDefined();
+    expect(h.byLabel('Put in')?.props.value).toBe('New room');
+  } finally { await h.unmount(); }
+});
+
+it('explains an overlong Edit tag name and preserves the asset draft through correction', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    const longName = 'Camping equipment '.repeat(8);
+    await h.changeText(h.byLabel('New tag name'), longName);
+    expect(h.byText('Use a shorter tag name.')).toBeDefined();
+    expect(h.byLabel('New tag name')?.props.value).toBe(longName);
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe(longName);
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byLabel('Add tag')); await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Keep me', newTags: [{ displayName: 'Camping' }] })]);
+  } finally { await h.unmount(); }
 });

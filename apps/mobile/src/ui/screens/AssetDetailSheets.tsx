@@ -1,8 +1,9 @@
+import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,7 +19,7 @@ import type { AssetTagOptionViewModel } from '../../application/assets/Inventory
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
   applyInlineAssetTagResolution,
-  canResolveInlineAssetTag,
+  canApplyInlineAssetTagResolution,
   type CreateAssetTagDraft,
   resolveInlineAssetTag
 } from '../../application/assets/AssetTagDraftResolution';
@@ -66,6 +67,7 @@ export function EditAssetSheet({
   asset,
   assetTypes,
   assetTags,
+  metadataRecovery,
   draft,
   isSaving,
   onChange,
@@ -75,6 +77,7 @@ export function EditAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly assetTypes?: readonly CustomAssetTypeDefinition[];
   readonly assetTags: readonly AssetTagOptionViewModel[];
+  readonly metadataRecovery?: ReactNode;
   readonly draft: EditDraft | undefined;
   readonly isSaving: boolean;
   readonly onChange: (draft: EditDraft) => void;
@@ -87,7 +90,8 @@ export function EditAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
           <Text style={styles.readOnlyContextValue}>
@@ -170,14 +174,8 @@ function EditTagPicker({
     if (disabled || displayName.length === 0) {
       return;
     }
-    const resolution = resolveInlineAssetTag({
-      displayName,
-      color: newTagColor,
-      activeTags: tags,
-      pendingTags: newTags
-    });
     const transition = applyInlineAssetTagResolution({
-      resolution,
+      resolution: tagResolution,
       selectedTagIds,
       pendingTags: newTags
     });
@@ -188,12 +186,13 @@ function EditTagPicker({
     }
   }
 
-  const canAddNewTag = canResolveInlineAssetTag({
+  const tagResolution = resolveInlineAssetTag({
     displayName: newTagName,
     color: newTagColor,
     activeTags: tags,
     pendingTags: newTags
   });
+  const canAddNewTag = canApplyInlineAssetTagResolution(tagResolution);
 
   return (
     <View style={styles.tagPicker}>
@@ -267,6 +266,7 @@ function EditTagPicker({
           value={newTagColor}
         />
       </View>
+      {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
       <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
     </View>
@@ -276,6 +276,8 @@ function EditTagPicker({
 export function MoveAssetSheet({
   isCreatingDestination = false, asset,
   draft,
+  candidatesAvailable = true,
+  candidateStatus,
   isSaving,
   onChangeQuery,
   onChangeCreateKind,
@@ -287,6 +289,8 @@ export function MoveAssetSheet({
 }: {
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
+  readonly candidatesAvailable?: boolean;
+  readonly candidateStatus?: ReactNode;
   readonly isSaving: boolean;
   readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
@@ -304,7 +308,7 @@ export function MoveAssetSheet({
   const createPlacement = moveDestinationCreatePlacement(asset);
   const createTitle = draft?.query.trim() ?? '';
   const createKind = draft?.createKind ?? 'location';
-  const canCreate = draft
+  const canCreate = draft && candidatesAvailable
     ? canCreateMoveDestination({
         kind: createKind,
         matches: draft.matches,
@@ -314,21 +318,22 @@ export function MoveAssetSheet({
     : false;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
-      <Text style={styles.sheetTitle}>Move {asset.title}</Text>
-      <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
-      {placement ? <PlacementPanel preview={placement} /> : null}
-      <Text style={styles.inputLabel}>Put in</Text>
-      <AppTextInput
-        accessibilityLabel="Put in"
-        autoCapitalize="sentences"
-        editable={!isSaving}
-        onChangeText={onChangeQuery}
-        placeholder="Search places, boxes, shelves"
-        placeholderTextColor={palette.textMuted}
-        style={styles.input}
-        value={draft?.query ?? ''}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <Text style={styles.sheetTitle}>Move {asset.title}</Text>
+        <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
+        {placement ? <PlacementPanel preview={placement} /> : null}
+        <Text style={styles.inputLabel}>Put in</Text>
+        <AppTextInput
+          accessibilityLabel="Put in"
+          autoCapitalize="sentences"
+          editable={!isSaving}
+          onChangeText={onChangeQuery}
+          placeholder="Search places, boxes, shelves"
+          placeholderTextColor={palette.textMuted}
+          style={styles.input}
+          value={draft?.query ?? ''}
+        />
+        {candidateStatus}
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
             <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
@@ -384,6 +389,8 @@ export function MoveAssetSheet({
 
 export function MoveThingsHereSheet({
   draft,
+  candidatesAvailable = true,
+  candidateStatus,
   isSaving,
   onChangeQuery,
   onClose,
@@ -391,6 +398,8 @@ export function MoveThingsHereSheet({
   onSelectAsset
 }: {
   readonly draft: MoveIntoDraft | undefined;
+  readonly candidatesAvailable?: boolean;
+  readonly candidateStatus?: ReactNode;
   readonly isSaving: boolean;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -403,21 +412,22 @@ export function MoveThingsHereSheet({
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
-      <Text style={styles.sheetTitle}>Move something here</Text>
-      <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
-      <Text style={styles.inputLabel}>Find item, box, or place</Text>
-      <AppTextInput
-        accessibilityLabel="Find item, box, or place"
-        autoCapitalize="sentences"
-        editable={!isSaving}
-        onChangeText={onChangeQuery}
-        placeholder="Search your inventory"
-        placeholderTextColor={palette.textMuted}
-        style={styles.input}
-        value={draft?.query ?? ''}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {draft?.matches.length === 0 ? (
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <Text style={styles.sheetTitle}>Move something here</Text>
+        <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
+        <Text style={styles.inputLabel}>Find item, box, or place</Text>
+        <AppTextInput
+          accessibilityLabel="Find item, box, or place"
+          autoCapitalize="sentences"
+          editable={!isSaving}
+          onChangeText={onChangeQuery}
+          placeholder="Search your inventory"
+          placeholderTextColor={palette.textMuted}
+          style={styles.input}
+          value={draft?.query ?? ''}
+        />
+        {candidateStatus}
+        {candidatesAvailable && draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
             <Text style={styles.parentTitle}>{emptyState.title}</Text>
             <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
@@ -432,11 +442,11 @@ export function MoveThingsHereSheet({
             onPress={() => onSelectAsset(match)}
           />
         ))}
+        <MovePreview
+          left={draft?.selectedAsset?.title ?? 'Choose something'}
+          right={draft?.target.title ?? 'Here'}
+        />
       </ScrollView>
-      <MovePreview
-        left={draft?.selectedAsset?.title ?? 'Choose something'}
-        right={draft?.target.title ?? 'Here'}
-      />
       <SheetActions
         busy={isSaving}
         disabled={!canSave}
@@ -447,6 +457,7 @@ export function MoveThingsHereSheet({
     </KeyboardAvoidingView>
   );
 }
+
 
 function ParentRow({
   disabled, isSelected,
@@ -523,22 +534,9 @@ function SheetActions({
   readonly primaryLabel: string;
   readonly busy: boolean;
 }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.sheetActions}>
-      <Pressable accessibilityRole="button" disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => { if (!busy) onClose(); }} style={[styles.sheetSecondary, busy && styles.disabledAction]}>
-        <Text style={styles.sheetSecondaryText}>Cancel</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={onSave}
-        style={[styles.sheetPrimary, disabled ? styles.disabledAction : null]}
-      >
-        <Text style={styles.sheetPrimaryText}>{primaryLabel}</Text>
-      </Pressable>
-    </View>
-  );
+  return <NativeSheetActions keyboardAvoidance="container"
+    primaryLabel={primaryLabel} secondaryLabel="Cancel"
+    disabled={disabled} secondaryDisabled={busy} onApply={onSave} onBack={onClose} />;
 }
 
 function useStyles() {
@@ -565,7 +563,7 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 14,
     lineHeight: 20
   },
-  editScrollContent: {
+  formScrollContent: {
     gap: spacing.sm,
     paddingBottom: spacing.sm
   },
@@ -666,43 +664,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  sheetActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md
-  },
-  sheetPrimary: {
-    alignItems: 'center',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 48
-  },
-  sheetPrimaryText: {
-    color: colors.onAction,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  sheetSecondary: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 48
-  },
-  sheetSecondaryText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  parentList: {
-    maxHeight: 280
-  },
   createDestinationPanel: {
     backgroundColor: colors.brandDustyBlueSoft,
     borderRadius: radius.md,

@@ -30,7 +30,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2741 pending, 544 source-reviewed, 75 finding,
+comprise 2723 pending, 551 source-reviewed, 86 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
@@ -39,7 +39,7 @@ Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in
 [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
 
-Current interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
+Historical interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
 publishing succeeded in
 [release34932422663](https://github.com/elsell/stuffstash/actions/runs/34932422663).
 Build105.1 uploaded successfully at05:49:31UTC. Apple processing and the exact-build
@@ -70,3 +70,13 @@ Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) an
 [findings.md](findings.md). No historical release is full audit acceptance.
 
 Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
+
+Latest delivered checkpoint: **0.24.20 (108.2)**, PR144 at aecaeedc. Upload
+succeeded at10:16:30UTC and exact TestFlight changelog verification completed
+at10:18:59UTC on September15 in
+[release34954415338](https://github.com/elsell/stuffstash/actions/runs/34954415338),
+attempt2. The first attempt hit a GitHub tag-push server error before upload.
+PR146's asset-form and suggestion-recovery changes are not in this release and
+still require native acceptance. Earlier0.24.19 delivery is in the evidence log.
+
+Move source review: [destination selection, creation and Move here](move-axis.md).

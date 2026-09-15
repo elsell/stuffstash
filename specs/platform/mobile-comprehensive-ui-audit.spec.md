@@ -740,3 +740,95 @@ hit targets, minimum44-point height, horizontal containment and primary width.
 Capture each visible command region for multiline/visual review. This is layout
 acceptance only; downstream mutations and route destinations remain covered by
 separate behavior/native journeys. The fixture does not execute mutations.
+
+The Add rejected-draft native assertion must resolve one matching accessibility
+element before reading its frame. RN can expose the same rejected-body text on
+nested parent/child StaticText nodes; ambiguity is an instrumentation error, not
+proof that the error layout failed. Keep the heading-below-navigation and
+heading-before-body geometry assertions after resolving the first matching node.
+
+M87 native follow-up: supplementary Edit metadata errors and their retry commands
+belong inside the same scrolling form as the editable fields. They must not
+consume fixed space above that form or displace its persistent Cancel/Save actions.
+Preserve independent retries and the dirty draft. Scroll containment is a source
+regression check; native largest-text acceptance must still verify label geometry,
+scroll reachability and dismissal. Moving content alone does not establish a fix
+for overlapping hosted native labels.
+
+Edit native acceptance may scroll each retry into full view before tapping; it
+must not require all metadata to fit simultaneously at accessibility text sizes.
+Require the complete retry frame inside the visible form, and Cancel hittable
+before and after scrolling/retry. Capture each region for label-overlap review.
+
+### Native command height comparison
+
+A runner-only diagnostic compares the shipping standard native command with an
+otherwise equivalent SwiftUI button that requests ideal vertical size on the
+outer button as well as its label. Hold label, width, font category and host
+configuration constant; use a narrow240-point region and largest accessibility
+text. Capture both variants with a following text boundary. This isolates the
+outer sizing hypothesis without changing production controls. Completion of the
+diagnostic is not acceptance: inspect label bounds and adjacent text before
+choosing a repair. Neither variant invokes domain mutations.
+
+### Move-here suggestion recovery
+
+An unknown suggestions collection is not an empty search result. Move here must
+show its no-movable-matches state only after a result is available for the current
+query. Keep cached candidates on refresh failure and provide retry within the
+results scroll region. Retrying preserves the query and selection. Loading/error
+status must not occupy a separate fixed region above the form. Native large-text
+layout and keyboard/dismissal remain separate verification requirements.
+
+### Native asset-form completion controls
+
+Edit, Move and Move here use NativeSheetActions for their persistent completion
+and Cancel controls. Their KeyboardAvoidingView owns keyboard overlap; pass the
+container ownership mode to the iOS adapter. Extend the shared adapter with an
+optional secondaryDisabled flag, default false, so mutations disable both actions
+without changing filter forms where an invalid primary still permits dismissal.
+Guard callbacks as well as platform disabled state. Keep native primary emphasis,
+content-driven heights and full-width stacked actions. Verify footer reachability
+at narrow/large-text sizes; stacking is not proof the whole sheet fits.
+
+A runner-only Move-here recovery fixture fails the first lookup for each search
+query, then returns one known movable asset after explicit retry. Exercise the
+production sheet at largest accessibility text: enter a query, observe the local
+error without an empty-match claim, retry to the actual candidate, retain the
+query and dismiss through Cancel. No move is performed. Require scrolling rather
+than assuming every result fits; failure to reach controls remains an audit
+finding, not a reason to reduce the text size.
+
+Region-recovery native captures must reveal each retry and its settled empty
+state completely inside the visible detail scroll region, below navigation.
+Existence or a partly hittable control does not establish readable layout. Capture
+photo and contents recovery separately; preserve positive settled-state waits and
+independent-query assertions. Screenshot evidence must not certify offscreen text.
+
+### Destination creation requires known suggestions
+
+The Move form must not infer that a destination is new from an unavailable
+suggestions collection. Hide inline creation until current-query results exist;
+keep retry/loading status within the results region. Preserve the query, selected
+destination and existing move action during lookup failure. Cached results may
+still support the existing same-kind/title/parent duplicate check; this is not a
+global uniqueness guarantee. Explicit retry can restore creation after a known
+empty result. Native layout acceptance remains required.
+
+### Move form reflow
+
+Move and Move here must place title, help, placement preview, query, status and
+selection content in one scrolling form. Keep only the native completion actions
+outside this scroll region. Do not cap the results to280points while surrounding
+text remains fixed; available space must adapt to sheet height, keyboard and text
+size. Keep one keyboard-avoidance owner and preserve search/selection behavior.
+Source containment tests verify ownership; native checks verify actual reachability.
+
+### Edit tag-name validation
+
+When inline tag resolution rejects a name as too long, explain how to recover
+next to the name field instead of only disabling Add tag. Use concise user copy
+without exposing byte-count implementation details. Keep the typed value, color,
+selected tags and asset draft; clear the message when the name is valid. Use the
+existing application resolver as the validation authority. Empty untouched input
+does not need an error. Existing color validation remains with the color picker.

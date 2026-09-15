@@ -12,6 +12,79 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testMoveHereRecoveryAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit Move here recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let query = app.textFields["Find item, box, or place"]
+    XCTAssertTrue(query.waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.textField, identifier: "Find item, box, or place").firstMatch
+    XCTAssertTrue(form.exists)
+    func queryVisible() -> Bool {
+      let bounds = form.frame.intersection(app.frame)
+      return query.isHittable && query.frame.minY >= bounds.minY && query.frame.maxY <= bounds.maxY
+    }
+    for _ in 0..<12 where !queryVisible() {
+      let above = query.frame.minY < form.frame.minY
+      form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        .press(forDuration: 0.05, thenDragTo: form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
+    }
+    XCTAssertTrue(queryVisible())
+    query.tap()
+    waitForKeyboard()
+    query.typeText("Tent")
+    XCTAssertEqual(query.value as? String, "Tent")
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.isHittable)
+    dismiss.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    let retry = app.buttons["Retry suggestions"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts["No movable matches"].exists)
+    let results = app.scrollViews.containing(.button, identifier: "Retry suggestions").firstMatch
+    XCTAssertTrue(results.exists)
+    for _ in 0..<8 where !retry.isHittable { results.swipeUp() }
+    XCTAssertTrue(retry.isHittable)
+    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    capture("move-here-suggestions-error")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Audit tent"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertEqual(query.value as? String, "Tent")
+    capture("move-here-suggestions-recovered")
+    app.buttons["Cancel"].firstMatch.tap()
+    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
+  }
+
+  func testCommandHeightComparisonAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit command height"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let retry = app.buttons["Retry asset types"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Shipping size"].exists)
+    capture("command-height-shipping")
+    let compare = app.buttons["Compare outer sizing"].firstMatch
+    XCTAssertTrue(compare.isHittable)
+    compare.tap()
+    XCTAssertTrue(app.staticTexts["Outer ideal size"].waitForExistence(timeout: 5))
+    XCTAssertTrue(retry.isHittable)
+    capture("command-height-outer-ideal")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Retry received"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars.buttons["Back"].firstMatch.isHittable)
+  }
+
   func testColdInventoryQueriesEnableDependentResource() {
     let open = app.buttons["Audit inventory query"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))
@@ -309,18 +382,38 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(photos.waitForExistence(timeout: 10))
     XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
     XCTAssertFalse(app.staticTexts["No photos"].exists)
-    XCTAssertTrue(photos.isHittable)
-    capture("asset-region-errors-accessibility-size")
+    let scroll = app.scrollViews.firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+        return (element.elementType != .button || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<12 where !visible() {
+        let top = max(scroll.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+        let above = element.frame.minY < top
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+    }
+    reveal(photos)
+    capture("asset-region-photo-error-accessibility-size")
     photos.tap()
     XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["No photos"].firstMatch.waitForExistence(timeout: 5))
-    for _ in 0..<8 where !contents.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(contents.isHittable)
+    reveal(app.staticTexts["No photos"].firstMatch)
+    capture("asset-region-photo-recovered-accessibility-size")
+    reveal(contents)
+    capture("asset-region-contents-error-accessibility-size")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
     XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
     let empty = app.staticTexts["Nothing here yet"].firstMatch
     XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    reveal(empty)
     capture("asset-region-recovered-accessibility-size")
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
@@ -341,21 +434,39 @@ final class FixtureAuditTests: XCTestCase {
     let tags = app.buttons["Retry tags"]
     XCTAssertTrue(types.waitForExistence(timeout: 10))
     XCTAssertTrue(tags.waitForExistence(timeout: 10))
-    XCTAssertTrue(types.isHittable)
-    XCTAssertTrue(tags.isHittable)
+    let cancel = app.buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.isHittable)
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        return element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<12 where !visible() {
+        let above = element.frame.minY < scroll.frame.minY
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+      }
+      XCTAssertTrue(visible())
+      XCTAssertTrue(cancel.isHittable)
+    }
+    reveal(types)
     let message = app.staticTexts["Asset types could not be loaded."].firstMatch
     XCTAssertGreaterThan(message.frame.height, 30)
-    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
-    capture("edit-metadata-errors-accessibility-size")
+    capture("edit-metadata-types-accessibility-size")
+    reveal(tags)
+    capture("edit-metadata-tags-accessibility-size")
     tags.tap()
     XCTAssertTrue(tags.waitForNonExistence(timeout: 5))
-    XCTAssertTrue(types.isHittable)
+    reveal(types)
     types.tap()
     XCTAssertTrue(types.waitForNonExistence(timeout: 5))
     let name = app.textFields["Asset name"]
     XCTAssertTrue(name.waitForExistence(timeout: 5))
     XCTAssertEqual(name.value as? String, "Audit tent")
-    XCTAssertTrue(name.isHittable)
+    reveal(name)
     XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("edit-metadata-recovered")
   }
@@ -585,7 +696,7 @@ final class FixtureAuditTests: XCTestCase {
     save.tap()
     XCTAssertFalse(save.isEnabled)
     XCTAssertFalse(close.isEnabled)
-    let rejected = app.staticTexts["Rejected draft: Native draft name"]
+    let rejected = app.staticTexts["Rejected draft: Native draft name"].firstMatch
     XCTAssertTrue(rejected.waitForExistence(timeout: 10))
     XCTAssertEqual(name.value as? String, "Native draft name")
     XCTAssertTrue(save.isEnabled)

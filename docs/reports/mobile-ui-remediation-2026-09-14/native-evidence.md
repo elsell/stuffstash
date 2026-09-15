@@ -966,3 +966,135 @@ September15. Apple processing and exact changelog verification completed in
 job104329510980 at09:38:48UTC: Verified TestFlight changelog for v0.24.19 (107.1).
 This is delivery evidence, not whole-app native acceptance. Subsequent PR144
 asset-detail recovery, search and command changes are excluded from this build.
+
+
+## Phone native run34950225391: source c5ee7b49
+
+Actual runner checkout97edb36794cec881c212f2499fa64e7d31c5f70d merges c5ee7b49
+into eca1ad7e. Phone job104319679884 completed with28/40 scenarios passing.
+Both onboarding jobs passed; iPad fixtures were still running when this was read.
+
+The unavailable-photo scenario passes with the M85 patch. Edit metadata retries
+are hittable at largest text, but Cancel is not (line233). Add with its header
+configured reached both retained-name and heading-below-navigation assertions,
+then failed because the rejected body matches nested StaticText nodes. That query
+now resolves firstMatch before geometry; the geometry criteria are retained.
+No complete Add acceptance is claimed from this run.
+
+Other failures: Add pushed draft text truncation and original input readiness;
+original History hit check; system color-picker opening; controlled URL truncation;
+expiration text-clipping audit; footer/nested sheet hit checks; ordinary single-line
+text truncation. The no-keyboard-accessory scenario fails at keyboard readiness,
+so it does not establish whether the accessory causes text loss. Screenshots
+are being retrieved for the new Edit/Photo results; do not infer visual acceptance
+from the summary alone. These results precede all PR144 fixes.
+
+
+Inspected phone screenshots now retained: phone-add-error-heading-349502.png
+shows the heading/body fully below the toolbar and the entire draft name;
+phone-photo-recovery-349502.png shows readable Photo unavailable, Retry photo and
+Close. These are partial native observations, not complete workflow certification.
+phone-edit-errors-large-text-349502.png shows overlapping retry/error text and no
+visible Cancel. Its hierarchy places Cancel at y911.8, below the phone's874-point
+height. Retry asset types is reported as46.1points high although its two-line text
+visibly exceeds that region. Source also places metadata errors outside the edit
+form's scroll view; both scroll ownership and native hosted-label measurement need
+investigation. The test will continue to require accessible dismissal.
+
+## iPad native run34950225391: 31/40
+
+Completed job104319679738 used the same97edb367 checkout as the phone.
+Nine scenarios failed: three Add variants, original History hit check, color
+picker direct opening, Edit metadata Cancel reachability, Home Return draft text,
+no-accessory keyboard readiness, and uncontrolled address entry. Controlled URL,
+ordinary single/multiline text, expiration accessibility and footer/nested-sheet
+scenarios passed in this run; this does not erase the corresponding phone failures.
+Both unavailable-photo and failed-photo-removal scenarios passed.
+
+Inspected ipad-edit-errors-large-text-349502.png shows the Edit sheet cutting off
+Retry tags and no visible Cancel. The hierarchy reports Cancel at y971.5 even
+though the sheet ends above it; being inside the app viewport is insufficient.
+Retry asset types fits one line on iPad; this screenshot does not confirm the
+phone's two-line label-overlap cause. These results precede PR144 and the new
+PR146 scroll-ownership candidate, which remains awaiting native acceptance.
+
+Measurement investigation: pinned Expo UI55.0.17 HostView uses GeometryChangeModifier
+to report its measured dimensions through shadowNodeProxy.setStyleSize. The
+standard command currently requests ideal vertical sizing on its Text child,
+not on the outer Button. Apple's fixedSize documentation describes ideal-size
+proposals and notes that a child can exceed parent bounds. This makes outer-button
+measurement a hypothesis worth native comparison, not a proven root cause or fix.
+Current Expo documentation refers to a newer Host implementation and must not be
+assumed to describe the pinned dependency. Reference:
+https://developer.apple.com/documentation/swiftui/view/fixedsize(horizontal:vertical:)
+
+A runner-only CommandHeightFixture now compares the shipping standard command
+with the same SwiftUI composition plus ideal vertical sizing on its outer Button.
+Both use Retry asset types and a240-point bordered region with following text.
+The XCTest captures each at the largest accessibility size and exercises the
+comparison control and retry. Preparation tests (2), TypeScript and structural
+checks pass on paul. Native execution and visual comparison remain pending;
+production NativeCommandButton is unchanged. Diagnostic completion alone must not
+be reported as label-layout acceptance.
+
+## Move-here recovery native preparation
+
+The runner now mounts the actual Move-here route with first-lookup failure per
+query and a known movable candidate after retry. Largest-text acceptance enters
+Tent, checks native field retention, dismisses the keyboard, retries within
+results, waits for Audit tent and returns through Cancel. No mutation is performed.
+Preparation tests (2), TypeScript and structural checks pass on paul; native
+execution remains pending. It does not establish selection/commit behavior.
+
+## Phone run34952117013: 31/41
+
+Actual checkout26f91e4ba3274e0ff47cd92f39d6a06bc0dda9a7 includes the initial
+PR144 recovery fixture (314ac3e8). testAssetRegionRecoveryAtAccessibilityTextSize
+passed: independent photos/contents retries settle to known empty states and Back
+remains available. Screenshot inspection is pending. Ten other scenarios failed:
+three Add cases, original History hit check, controlled URL entry, Edit metadata
+reachability, expiration accessibility, footer/nested-sheet checks and the
+no-accessory keyboard-readiness comparison. Both onboarding jobs passed; iPad
+fixtures remain running. No overall native acceptance is claimed, and this build
+precedes PR144 search/commands and PR146 changes.
+
+Inspected phone349521 E004366D and AA91AFCA captures. Photo failure text and
+Retry photos are readable. Retry contents is partly below the error capture;
+Nothing here yet is offscreen in the recovered capture. The interaction pass
+therefore does not establish complete visual acceptance. Native capture logic
+now reveals each retry and settled empty state within the scroll viewport below
+navigation, and captures them separately. Button reachability is checked; static
+text is evaluated by geometry rather than requiring an interaction hit target.
+Keep M89 open pending these captures and iPad evidence.
+
+The inspected images are retained as phone-region-error-partial-349521.png and
+phone-region-recovered-offscreen-349521.png in evidence/.
+
+## iPad run34952117013 recovery capture review
+
+Evidence is from run34952117013,
+iPad job104325296637 at26f91e4. The full fixture suite passed34/41, with the
+region-recovery journey passing. Both retry labels and error text are readable
+in ipad-region-errors-349521.png. The recovered capture shows No photos and
+No spaces here yet, but not the separate Nothing here yet state asserted by the
+test. Retain the new per-region captures; this is partial evidence for M89, not
+complete visual acceptance. Seven failures remain in Add (three scenarios),
+original History hit check, controlled address entry, Edit metadata reachability
+and no-accessory keyboard readiness. Both onboarding jobs passed.
+
+## Interim0.24.20 upload
+
+Release34954415338 attempt2 at aecaeedc successfully uploaded0.24.20 (108.2)
+at10:16:30UTC, September15, job104336505377. Apple processing and exact changelog
+verification job104341597194 is running. Do not report TestFlight delivery until
+that verification completes. This release includes PR144, not PR146 fixes.
+
+## Interim0.24.20 delivered
+
+Release34954415338 attempt2 completed successfully. Upload of0.24.20 (108.2)
+succeeded at10:16:30UTC; Apple processing and exact-build TestFlight changelog
+verification completed at10:18:59UTC, September15, job104341597194. Source is
+aecaeedc (PR144). This fulfills the interim delivery request; PR146 changes are
+excluded and the comprehensive audit remains open. The first attempt failed on
+GitHub's tag-push server error before upload; verified tag absence made the
+failed-job retry safe. No duplicate TestFlight upload was dispatched.
