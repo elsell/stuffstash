@@ -647,30 +647,30 @@ R027,settings/diagnostics.tsx,privacy,"Account scope, data use and permissions",
 R027,settings/diagnostics.tsx,notifications,System notification entry and state,pending,,
 R027,settings/diagnostics.tsx,media,"Camera, library, files and audio",pending,,
 R027,settings/diagnostics.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R028,settings/household/asset-types/[resourceId].tsx,selection,Value selection and current value,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,modality,Presentation and dismissal,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,targets,Touch target size and reachability,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R028,settings/household/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R028,settings/household/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
-R028,settings/household/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R028,settings/household/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R028,settings/household/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R028,settings/household/asset-types/[resourceId].tsx,selection,Value selection and current value,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R028,settings/household/asset-types/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R028,settings/household/asset-types/[resourceId].tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R028,settings/household/asset-types/[resourceId].tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R028,settings/household/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R028,settings/household/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R028,settings/household/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R029,settings/household/asset-types/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R029,settings/household/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
 R029,settings/household/asset-types/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
@@ -695,50 +695,50 @@ R029,settings/household/asset-types/index.tsx,privacy,"Account scope, data use a
 R029,settings/household/asset-types/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R029,settings/household/asset-types/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R029,settings/household/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
-R030,settings/household/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R030,settings/household/asset-types/new.tsx,selection,Value selection and current value,pending,,
-R030,settings/household/asset-types/new.tsx,modality,Presentation and dismissal,pending,,
-R030,settings/household/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R030,settings/household/asset-types/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R030,settings/household/asset-types/new.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R030,settings/household/asset-types/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R030,settings/household/asset-types/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R030,settings/household/asset-types/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R030,settings/household/asset-types/new.tsx,targets,Touch target size and reachability,pending,,
-R030,settings/household/asset-types/new.tsx,gestures,Gestures and explicit alternatives,pending,,
-R030,settings/household/asset-types/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R030,settings/household/asset-types/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R030,settings/household/asset-types/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R030,settings/household/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R030,settings/household/asset-types/new.tsx,search,"Search, scope and filters",pending,,
-R030,settings/household/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R030,settings/household/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R030,settings/household/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
-R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,pending,,
-R030,settings/household/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
-R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R030,settings/household/asset-types/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R030,settings/household/asset-types/new.tsx,selection,Value selection and current value,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R030,settings/household/asset-types/new.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R030,settings/household/asset-types/new.tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R030,settings/household/asset-types/new.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R030,settings/household/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M166; shared editor command review only; native pending,M58;M59; M166
 R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R031,settings/household/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R031,settings/household/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
 R031,settings/household/fields/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R031,settings/household/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
+R031,settings/household/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",finding,; findings.md M166; shared editor command review only; native pending,M166
 R031,settings/household/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R031,settings/household/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R031,settings/household/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R031,settings/household/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R031,settings/household/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R031,settings/household/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R031,settings/household/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R031,settings/household/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R031,settings/household/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M165; shared editor command review only; native pending,M58;M59; M165
 R031,settings/household/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R031,settings/household/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R031,settings/household/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
@@ -768,25 +768,25 @@ R032,settings/household/fields/index.tsx,notifications,System notification entry
 R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M166; shared editor command review only; native pending,M58;M59; M166
 R033,settings/household/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R033,settings/household/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R033,settings/household/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R033,settings/household/fields/new.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R033,settings/household/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
+R033,settings/household/fields/new.tsx,appearance,"Light/dark, contrast and materials",finding,; findings.md M166; shared editor command review only; native pending,M166
 R033,settings/household/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R033,settings/household/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R033,settings/household/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R033,settings/household/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R033,settings/household/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R033,settings/household/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R033,settings/household/fields/new.tsx,search,"Search, scope and filters",pending,,
 R033,settings/household/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R033,settings/household/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R033,settings/household/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R033,settings/household/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M165; shared editor command review only; native pending,M58;M59; M165
 R033,settings/household/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R033,settings/household/fields/new.tsx,notifications,System notification entry and state,pending,,
 R033,settings/household/fields/new.tsx,media,"Camera, library, files and audio",pending,,
@@ -839,30 +839,30 @@ R035,settings/index.tsx,privacy,"Account scope, data use and permissions",source
 R035,settings/index.tsx,notifications,System notification entry and state,not-applicable,Root does not receive or configure notifications; inventory notification routes are separately enumerated.,
 R035,settings/index.tsx,media,"Camera, library, files and audio",not-applicable,Root does not request camera/library/files/audio access; category icons only.,
 R035,settings/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Scope query uses scoped server-state hook; SettingsRoute records settings.opened. Native return/background behavior still unverified.,
-R036,settings/inventory/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R036,settings/inventory/asset-types/[resourceId].tsx,selection,Value selection and current value,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,modality,Presentation and dismissal,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,targets,Touch target size and reachability,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,search,"Search, scope and filters",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R036,settings/inventory/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R036,settings/inventory/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,notifications,System notification entry and state,pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R036,settings/inventory/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R036,settings/inventory/asset-types/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R036,settings/inventory/asset-types/[resourceId].tsx,selection,Value selection and current value,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R036,settings/inventory/asset-types/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R036,settings/inventory/asset-types/[resourceId].tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R036,settings/inventory/asset-types/[resourceId].tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R036,settings/inventory/asset-types/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R036,settings/inventory/asset-types/[resourceId].tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R036,settings/inventory/asset-types/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R037,settings/inventory/asset-types/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R037,settings/inventory/asset-types/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
 R037,settings/inventory/asset-types/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
@@ -887,50 +887,50 @@ R037,settings/inventory/asset-types/index.tsx,privacy,"Account scope, data use a
 R037,settings/inventory/asset-types/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R037,settings/inventory/asset-types/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R037,settings/inventory/asset-types/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
-R038,settings/inventory/asset-types/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R038,settings/inventory/asset-types/new.tsx,selection,Value selection and current value,pending,,
-R038,settings/inventory/asset-types/new.tsx,modality,Presentation and dismissal,pending,,
-R038,settings/inventory/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R038,settings/inventory/asset-types/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R038,settings/inventory/asset-types/new.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R038,settings/inventory/asset-types/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R038,settings/inventory/asset-types/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R038,settings/inventory/asset-types/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R038,settings/inventory/asset-types/new.tsx,targets,Touch target size and reachability,pending,,
-R038,settings/inventory/asset-types/new.tsx,gestures,Gestures and explicit alternatives,pending,,
-R038,settings/inventory/asset-types/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R038,settings/inventory/asset-types/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R038,settings/inventory/asset-types/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R038,settings/inventory/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R038,settings/inventory/asset-types/new.tsx,search,"Search, scope and filters",pending,,
-R038,settings/inventory/asset-types/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R038,settings/inventory/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R038,settings/inventory/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and permissions",pending,,
-R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,pending,,
-R038,settings/inventory/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
-R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R038,settings/inventory/asset-types/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R038,settings/inventory/asset-types/new.tsx,selection,Value selection and current value,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R038,settings/inventory/asset-types/new.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R038,settings/inventory/asset-types/new.tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R038,settings/inventory/asset-types/new.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R038,settings/inventory/asset-types/new.tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M166; shared editor command review only; native pending,M58;M59; M166
 R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",finding,; findings.md M166; shared editor command review only; native pending,M166
 R039,settings/inventory/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R039,settings/inventory/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R039,settings/inventory/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R039,settings/inventory/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R039,settings/inventory/fields/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M165; shared editor command review only; native pending,M58;M59; M165
 R039,settings/inventory/fields/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,notifications,System notification entry and state,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
@@ -960,25 +960,25 @@ R040,settings/inventory/fields/index.tsx,notifications,System notification entry
 R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
 R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
-R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M166; shared editor command review only; native pending,M58;M59; M166
 R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R041,settings/inventory/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R041,settings/inventory/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R041,settings/inventory/fields/new.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R041,settings/inventory/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
+R041,settings/inventory/fields/new.tsx,appearance,"Light/dark, contrast and materials",finding,; findings.md M166; shared editor command review only; native pending,M166
 R041,settings/inventory/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R041,settings/inventory/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R041,settings/inventory/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
+R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.; findings.md M165; shared editor command review only; native pending,M52; M165
 R041,settings/inventory/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R041,settings/inventory/fields/new.tsx,search,"Search, scope and filters",pending,,
 R041,settings/inventory/fields/new.tsx,loading,"Loading, background refresh and progress",pending,,
 R041,settings/inventory/fields/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R041,settings/inventory/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R041,settings/inventory/fields/new.tsx,editing,"Draft, save, cancel, undo and interruption",finding,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.; findings.md M165; shared editor command review only; native pending,M58;M59; M165
 R041,settings/inventory/fields/new.tsx,privacy,"Account scope, data use and permissions",pending,,
 R041,settings/inventory/fields/new.tsx,notifications,System notification entry and state,pending,,
 R041,settings/inventory/fields/new.tsx,media,"Camera, library, files and audio",pending,,
@@ -1055,30 +1055,30 @@ R044,settings/inventory/notifications.tsx,privacy,"Account scope, data use and p
 R044,settings/inventory/notifications.tsx,notifications,System notification entry and state,pending,,
 R044,settings/inventory/notifications.tsx,media,"Camera, library, files and audio",pending,,
 R044,settings/inventory/notifications.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R045,settings/inventory/tags/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R045,settings/inventory/tags/[resourceId].tsx,selection,Value selection and current value,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,modality,Presentation and dismissal,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,targets,Touch target size and reachability,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,search,"Search, scope and filters",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,loading,"Loading, background refresh and progress",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R045,settings/inventory/tags/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R045,settings/inventory/tags/[resourceId].tsx,privacy,"Account scope, data use and permissions",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,notifications,System notification entry and state,pending,,
-R045,settings/inventory/tags/[resourceId].tsx,media,"Camera, library, files and audio",pending,,
-R045,settings/inventory/tags/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R045,settings/inventory/tags/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R045,settings/inventory/tags/[resourceId].tsx,selection,Value selection and current value,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M51 native color behavior remains open,M51
+R045,settings/inventory/tags/[resourceId].tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R045,settings/inventory/tags/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M51 native color behavior remains open,M165; M51
+R045,settings/inventory/tags/[resourceId].tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R045,settings/inventory/tags/[resourceId].tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R045,settings/inventory/tags/[resourceId].tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R045,settings/inventory/tags/[resourceId].tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R045,settings/inventory/tags/[resourceId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R046,settings/inventory/tags/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R046,settings/inventory/tags/index.tsx,navigation,"Navigation, hierarchy and return",finding,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M156
 R046,settings/inventory/tags/index.tsx,selection,Value selection and current value,source-reviewed,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
@@ -1103,30 +1103,30 @@ R046,settings/inventory/tags/index.tsx,privacy,"Account scope, data use and perm
 R046,settings/inventory/tags/index.tsx,notifications,System notification entry and state,not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R046,settings/inventory/tags/index.tsx,media,"Camera, library, files and audio",not-applicable,customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,
 R046,settings/inventory/tags/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; customization-collections-axis.md; d458d896 + M156/M157; native acceptance pending,M05
-R047,settings/inventory/tags/new.tsx,task,Task clarity and platform-pattern fit,pending,,
-R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R047,settings/inventory/tags/new.tsx,selection,Value selection and current value,pending,,
-R047,settings/inventory/tags/new.tsx,modality,Presentation and dismissal,pending,,
-R047,settings/inventory/tags/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R047,settings/inventory/tags/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R047,settings/inventory/tags/new.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R047,settings/inventory/tags/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R047,settings/inventory/tags/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R047,settings/inventory/tags/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R047,settings/inventory/tags/new.tsx,targets,Touch target size and reachability,pending,,
-R047,settings/inventory/tags/new.tsx,gestures,Gestures and explicit alternatives,pending,,
-R047,settings/inventory/tags/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R047,settings/inventory/tags/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-R047,settings/inventory/tags/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R047,settings/inventory/tags/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R047,settings/inventory/tags/new.tsx,search,"Search, scope and filters",pending,,
-R047,settings/inventory/tags/new.tsx,loading,"Loading, background refresh and progress",pending,,
-R047,settings/inventory/tags/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
-R047,settings/inventory/tags/new.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
-R047,settings/inventory/tags/new.tsx,privacy,"Account scope, data use and permissions",pending,,
-R047,settings/inventory/tags/new.tsx,notifications,System notification entry and state,pending,,
-R047,settings/inventory/tags/new.tsx,media,"Camera, library, files and audio",pending,,
-R047,settings/inventory/tags/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
+R047,settings/inventory/tags/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,navigation,"Navigation, hierarchy and return",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M166
+R047,settings/inventory/tags/new.tsx,selection,Value selection and current value,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M51 native color behavior remains open,M51
+R047,settings/inventory/tags/new.tsx,modality,Presentation and dismissal,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,appearance,"Light/dark, contrast and materials",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M166
+R047,settings/inventory/tags/new.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,imagery,"Icons, photos and missing media",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,targets,Touch target size and reachability,finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M51 native color behavior remains open,M165; M51
+R047,settings/inventory/tags/new.tsx,gestures,Gestures and explicit alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,M165
+R047,settings/inventory/tags/new.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,search,"Search, scope and filters",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,loading,"Loading, background refresh and progress",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,recovery,"Empty, error, denied and retry",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.,M32
+R047,settings/inventory/tags/new.tsx,editing,"Draft, save, cancel, undo and interruption",finding,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59; M165
+R047,settings/inventory/tags/new.tsx,privacy,"Account scope, data use and permissions",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,notifications,System notification entry and state,source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,media,"Camera, library, files and audio",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending,
+R047,settings/inventory/tags/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,type-tag-editors-axis.md; source9e61709c plus M165; native acceptance pending; ; M58/M59: shared editor focus/resource ownership and terminal completion; 45 remote screen/workflow checks. Native timing pending.,M58;M59
 R048,settings/sharing.tsx,task,Task clarity and platform-pattern fit,finding,"Sharing form presents email/access, then explicit invitation creation and one-time link actions; native access fix M27.; sharing-axis.md: source/controlled-render review; native pending; M101: native Create/Copy/Share candidate, link-operation lock with failure/replacement checks; normal-text native rendering pending.; M102: native cancellation menu with independent scoped pending locks and one-shot focused confirmation; native acceptance pending.; sharing-axis.md complete R048 pass at0041dfad; native pending",M27;M101;M102
 R048,settings/sharing.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; sharing-axis.md complete R048 pass at0041dfad; native pending,
 R048,settings/sharing.tsx,selection,Value selection and current value,source-reviewed,Viewer/Editor now shared in-place SettingsPickerRow; runtime pending (M27).; sharing-axis.md: source/controlled-render review; native pending; sharing-axis.md complete R048 pass at0041dfad; native pending,M27

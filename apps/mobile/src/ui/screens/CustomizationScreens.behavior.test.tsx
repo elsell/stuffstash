@@ -21,6 +21,19 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('exposes a named Save command and prevents another save while pending', async () => {
+    const pending = deferred<Record<string, never>>(); let calls = 0;
+    const screen = await renderEditor({ manageTags: managerFake({ create: async () => { calls++; return pending.promise; } }) });
+    expect(screen.byLabel('Save')?.props.disabled).toBe(true);
+    await screen.changeText(screen.byLabel('Name'), 'Tools');
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toBe(1);
+    expect(screen.byLabel('Saving…')?.props.disabled).toBe(true);
+    await screen.press(screen.byLabel('Saving…'));
+    expect(calls).toBe(1);
+    await screen.run(() => pending.resolve({})); await screen.settle();
+    expect(screen.byText('Saved')).toBeDefined();
+  });
   it.each([false, true])('does not navigate from an old save after leaving, returned=%s', async returned => {
     const pending = deferred<Record<string, never>>(); let done = 0;
     const screen = await renderEditor({ manageTags: managerFake({ create: async () => pending.promise }), onDone: () => { done++; } });
@@ -158,7 +171,8 @@ describe('rendered mobile customization production states', () => {
 
     const editor = await renderEditor();
     await editor.changeText(editor.byLabel('Name'), 'Tools');
-    expect(editor.byText('Save')?.parent?.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ marginHorizontal: 16 })]));
+    expect(editor.byLabel('Save')?.props.disabled).toBe(false);
+    expect(editor.allByType('View').some(node => hasStyle({ marginHorizontal: 16 })(node) && node.queryAll(child => child.props.accessibilityLabel === 'Save').length > 0)).toBe(true);
   });
 
   it('refreshes permissions and removes retained rows when a collection load is denied', async () => {

@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,588
-pending,1,298 source-reviewed,361 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,464
+pending,1,370 source-reviewed,413 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -92,6 +92,16 @@ for those routes remains open.
 axes reviewed. M164 reuses labeled settings progress for both initial loads.
 All59 mounted settings cases, TypeScript and structural checks pass on paul;
 native announcement/layout acceptance remains pending.
+
+[Type/tag editors](type-tag-editors-axis.md) now have all24 source axes reviewed
+across six create/edit routes. M165 moves shared Save to the native primary
+command; all54 customization cases, TypeScript and structural checks pass on paul.
+M166 tracks remaining custom Back/lifecycle commands; M51 color behavior remains
+open. Field editors receive shared Save but are not certified by this six-route review.
+
+[Run350298 follow-up](native-350298-followup.md) records both onboarding passes
+and iPad49/61 fixtures. Phone fixtures remain running; current editor changes are
+newer than this build. No screenshot acceptance is claimed from terminal logs.
 
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full

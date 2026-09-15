@@ -2331,3 +2331,22 @@ failed before reuse of SettingsLoadingRow with scope-specific copy. The shared
 control supplies progress semantics and visible text, then disappears when rows
 load. Native announcements/layout remain unverified. See scoped-settings-axis.md
 for the full source review and its remaining acceptance limits.
+
+### M165 — Customization Save bypasses the native command adapter
+
+P2 source/mounted at9e61709c. Tag/type/field editors painted a primary Pressable
+despite an existing native primary command adapter. They now use NativeCommandButton
+with explicit Save/Saving names, existing validation and pending lock, and a wrapper
+preserving content insets. The named-command regression failed before correction;
+all54 mounted customization cases and static checks pass remotely. Native sizing,
+keyboard and reachability remain pending; this does not close M51 color behavior.
+
+### M166 — Customization editor Back and lifecycle actions remain custom
+
+P2 source-confirmed pattern gap at9e61709c. CustomizationEditorScreen installs a
+Pressable/Chevron Back and CustomizationLifecycleSection uses custom action rows.
+These are commands, not category navigation. No concrete native limitation is
+documented for them. Replace with native adapters while preserving collection
+replacement, dirty-exit interception, destructive semantics and operation locks.
+Inherited Manage action also needs the command/navigation distinction reviewed.
+Not implemented in M165; remains open for the next editor pass and native acceptance.

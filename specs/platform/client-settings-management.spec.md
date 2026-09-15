@@ -424,6 +424,11 @@ operation workflow; old operations may settle without affecting its state.
 Normally a successful command returns to the collection. If navigation ownership
 changed while it ran, the retained editor instead shows a terminal inline result
 (Saved, Archived, Restored, or Deleted) and a native Return to collection command.
+
+Customization editors use the existing native primary command for Save, preserving
+the shared content inset, validation, pending lock and draft ownership. The command
+has an explicit accessible name and shows Saving while pending. Do not paint a
+separate custom button for tags, asset types or custom fields.
 Do not keep the submitted form editable or expose repeat save/lifecycle commands:
 that risks duplicate creation and edits hidden by the completed dirty-state flag.
 This is a state of the existing screen, not another modal or navigation step.
