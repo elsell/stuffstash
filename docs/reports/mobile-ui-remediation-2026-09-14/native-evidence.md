@@ -1622,3 +1622,5 @@ exact-value assertions are unchanged. Remote fixture preparation passes2 tests.
 Native rerun is required to compare entry behavior on the corrected fixture.
 
 Combined source checkpoint79412f8d:1,624 tests/265files, TypeScript and structural checks pass on paul; mobile/src checksum comparison was clean before execution. Log: /tmp/mobile-batch-79412f8d.log on paul. Later6cb092ef changes diagnostic layout only; it has separate2-test preparation evidence. No native acceptance is inferred.
+
+Combined checkpoint7a6a7bdd:1,629 mobile tests across267 files, TypeScript and structural checks pass remotely on paul, log /tmp/mobile-batch-7a6a7bdd.log. Mobile source checksum comparison was clean before execution. Native run34992079258 remains in progress and excludes the later Appearance/Home corrections. No new native acceptance is claimed.

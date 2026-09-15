@@ -33,7 +33,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,624 mobile tests (265 files), TypeScript and structural checks passed remotely against source 79412f8d; native geometry and lifecycle acceptance remain open.
+The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,629 mobile tests (267 files), TypeScript and structural checks passed remotely against source 7a6a7bdd; native geometry and lifecycle acceptance remain open.
 
 The audit remains incomplete. After the Expiration filter source review, the 3384 cells
 comprise 2170 pending, 935 source-reviewed, 238 finding,
