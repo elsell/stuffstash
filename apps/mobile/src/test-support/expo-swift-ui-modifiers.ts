@@ -10,3 +10,5 @@ export const pickerStyle=modifier('pickerStyle');
 export const tag=modifier('tag');
 
 export const labelStyle=modifier('labelStyle');
+
+export const labelsHidden=modifier('labelsHidden');

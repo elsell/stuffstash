@@ -98,7 +98,9 @@ export const Keyboard = {
 };
 export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 };
 export const findNodeHandle = () => 1;
-export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });
+let windowFontScale = 1;
+export function setWindowFontScaleForTest(value: number) { windowFontScale = value; }
+export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
 class AnimatedValue {
   private value: number;

@@ -473,3 +473,27 @@ value-prop assertions no longer pretend to establish visible text preservation.
 The unchanged native full-string typing and rejected-save retry assertions must
 pass on phone and iPad before closing this finding. Other controlled fields remain
 a broader text-entry audit concern.
+
+### M53 — Reflow after inspecting the enlarged phone screenshot
+
+Run34927007321's explicit accessibility-size screenshot shows the native label
+and selected value squeezed into two columns, with the value broken into short
+fragments (`evidence/phone-choice-narrow-columns-34927007321.png`). The AX issue
+description says the Availability node may clip at larger sizes; normal-size
+screenshot alone would not reveal the problem. Passing hit-testing did not prove
+readable layout.
+
+The shared iOS picker now uses native VStack label-over-menu at accessibility
+font scales, retaining LabeledContent otherwise. The native menu's own label is
+hidden in the vertical layout, preserving its explicit accessibility name. Expo
+55.0.17 does not expose ViewThatFits; the threshold uses pinned React Native0.83's
+default AccessibilityMedium multiplier. This limitation is documented in spec.
+All previous shared consumers remain in scope.
+
+One component case failed before the change; eight picker/filter cases, TypeScript
+and structural checks pass on paul (`/tmp/choice-reflow-green.log`). The native
+large-text scenario now also requires the menu below the label, while retaining
+its hit-testing/menu-open checks and the original accessibility audit. All native
+reflow, ordinary-size regression, and medium-category clipping outcomes remain
+pending; M53 is not cleared. Critic found no confirmed blocker and emphasized
+that vertical placement alone does not prove long-value fit.

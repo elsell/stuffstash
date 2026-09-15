@@ -372,3 +372,16 @@ already resized above the keyboard needs no extra movement. Floating keyboards
 that do not intersect the bottom boundary and off-window frames need no offset.
 Do not reintroduce a wrapping view around native scroll content. Existing phone
 and iPad keyboard/expansion tests are required acceptance of this candidate.
+
+### Accessible native choice layout
+
+At iOS accessibility text categories, put the native choice label above its menu
+value instead of forcing both into narrow columns. Keep menu selection, disabled
+state and accessibility naming. Use Expo's native VStack and hidden internal
+picker label; its pinned55.0.17 adapter does not expose SwiftUI ViewThatFits.
+The React Native0.83 default scale for AccessibilityMedium is1.786; use that named
+threshold for the iOS adapter, retaining LabeledContent below it. No text-size
+cap or custom menu is introduced. This applies to all NativeChoicePicker consumers
+(filters, appearance, customization, expiration month, invitations, move and voice
+settings). Recheck landscape/narrow layouts and all accessibility sizes on native.
+See [Apple Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/).

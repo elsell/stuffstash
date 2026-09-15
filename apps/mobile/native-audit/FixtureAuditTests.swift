@@ -166,6 +166,7 @@ final class FixtureAuditTests: XCTestCase {
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
     for _ in 0..<5 where !choice.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(choice.isHittable)
+    XCTAssertGreaterThanOrEqual(choice.frame.minY, label.frame.maxY, "Accessibility text places the menu below its label")
     choice.tap()
     XCTAssertTrue(app.buttons["Available"].waitForExistence(timeout: 5))
     capture("choice-menu-accessibility-size")
