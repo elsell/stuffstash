@@ -495,3 +495,8 @@ read while records remain visible, then retry the name without replacing the
 history. The controlled native fixture fails its first name read and succeeds on
 explicit retry; its existing pagination and dismissal journey also verifies the
 name error and retry control are fully reachable before recovery.
+
+Home and Browse native tab triggers must provide each platform's icon source:
+iOS SF symbols and Android Material symbols through the existing Expo adapter.
+Keep the two labels and destinations unchanged. Verify selected/unselected native
+rendering on Android; TypeScript/source checks do not establish runtime rendering.

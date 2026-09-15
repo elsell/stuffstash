@@ -1442,3 +1442,14 @@ fully contained action bounds, selection, Back and applied IDs. Its execution,
 search/keyboard, light/dark and supported-device acceptance remain pending; callback
 and style tests do not prove pixel separation. The footer extraction does not claim
 all other sheet-layout findings fixed.
+
+## M112 — Android tab icon sources are missing
+
+P2, source-confirmed at e3367204. `(tabs)/_layout.tsx` supplies only `sf` icons
+for Home/Browse. Installed Expo NativeTabTrigger selects Android sources from
+`drawable`, `md` or `src`; its Android icon converter cannot use SF symbols.
+The tab labels remain, but the Android icon configuration is absent. Add native
+Android equivalents while preserving the iOS symbols, then verify both tab states
+on Android. No Android screenshot or runtime pass is claimed. R003 imagery;
+see [tab-shell-axis.md](tab-shell-axis.md). The candidate now supplies Material
+`home` and `grid_view` through the existing adapter; native acceptance remains open.
