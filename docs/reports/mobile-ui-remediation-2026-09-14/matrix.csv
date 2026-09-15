@@ -432,7 +432,7 @@ R018,expiration.tsx,notifications,System notification entry and state,pending,,
 R018,expiration.tsx,media,"Camera, library, files and audio",pending,,
 R018,expiration.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 R019,invitations/accept.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Preview names inventory and access; explicit Join precedes Open; accepted state distinguishes access from opening.,
-R019,invitations/accept.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Open calls onAccepted only after acceptance. Failed open remains accepted with retry; onDismiss and account-switch callbacks explicit.,
+R019,invitations/accept.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Open calls onAccepted only after acceptance. Failed open remains accepted with retry; onDismiss and account-switch callbacks explicit.; sharing-axis.md M72 route completion ownership; native pending,M72
 R019,invitations/accept.tsx,selection,Value selection and current value,pending,,
 R019,invitations/accept.tsx,modality,Presentation and dismissal,pending,,
 R019,invitations/accept.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -454,7 +454,7 @@ R019,invitations/accept.tsx,editing,"Draft, save, cancel, undo and interruption"
 R019,invitations/accept.tsx,privacy,"Account scope, data use and permissions",pending,,
 R019,invitations/accept.tsx,notifications,System notification entry and state,pending,,
 R019,invitations/accept.tsx,media,"Camera, library, files and audio",pending,,
-R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
+R019,invitations/accept.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Request generation guards late preview/acceptance when invitation reference changes; existing behavior tests cover newer reference.; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M72 route completion ownership; native pending,M70;M72
 R020,locations/[locationId]/assets/[assetId]/index.tsx,task,Task clarity and platform-pattern fit,pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,selection,Value selection and current value,pending,,
@@ -3120,7 +3120,7 @@ S130,System / push cold warm tap,notifications,System notification entry and sta
 S130,System / push cold warm tap,media,"Camera, library, files and audio",pending,,
 S130,System / push cold warm tap,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S131,System / invitation link,task,Task clarity and platform-pattern fit,pending,,
-S131,System / invitation link,navigation,"Navigation, hierarchy and return",pending,,
+S131,System / invitation link,navigation,"Navigation, hierarchy and return",source-reviewed,; sharing-axis.md M72 route completion ownership; native pending,M72
 S131,System / invitation link,selection,Value selection and current value,pending,,
 S131,System / invitation link,modality,Presentation and dismissal,pending,,
 S131,System / invitation link,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -3142,7 +3142,7 @@ S131,System / invitation link,editing,"Draft, save, cancel, undo and interruptio
 S131,System / invitation link,privacy,"Account scope, data use and permissions",pending,,
 S131,System / invitation link,notifications,System notification entry and state,pending,,
 S131,System / invitation link,media,"Camera, library, files and audio",pending,,
-S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M70;M71
+S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending; sharing-axis.md M72 route completion ownership; native pending,M70;M71;M72
 S132,System / permission denied recovery,task,Task clarity and platform-pattern fit,pending,,
 S132,System / permission denied recovery,navigation,"Navigation, hierarchy and return",pending,,
 S132,System / permission denied recovery,selection,Value selection and current value,pending,,

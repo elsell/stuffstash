@@ -591,3 +591,10 @@ guards behind the existing native Linking adapter. A mounted fake-source baselin
 reproduced the stall and unhandled rejections. Ten remote hook/domain checks plus
 typecheck/structural checks pass. See [Sharing/invitation audit](sharing-axis.md).
 Native deep-link delivery remains pending; no claim of whole-entrypoint acceptance.
+
+### M72 — stale invitation route completion clears a replacement link (P2)
+
+Implemented focus/reference ownership for clear-and-return navigation after Open
+inventory and Start over. Mounted original-callback regressions failed before the
+fix. Seven route/progress/selection checks plus typecheck/structural checks pass
+remotely. See [invitation audit](sharing-axis.md); native delivery remains pending.

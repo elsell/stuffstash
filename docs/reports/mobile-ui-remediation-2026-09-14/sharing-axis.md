@@ -87,3 +87,19 @@ isolation. Native cold/warm link and account-transition scenarios remain pending
 Critic follow-through: clearing now invalidates a pending initial lookup, preventing
 a dismissed invitation from reappearing. The added regression failed before the
 generation guard and passes afterward; later foreground links still work.
+
+## M72 — route completion clears a replacement invitation
+
+The route-side completion gap from M70 is now addressed: successful selection or
+start-over callbacks previously cleared the link and navigated Home unconditionally.
+A newer invitation could therefore disappear even though screen-state errors were
+guarded. The extracted original callbacks failed both mounted replacement tests.
+
+The route now delegates to a focused invitation-session action hook. A late
+completion cannot clear/navigate after replacement, blur/refocus or unmount.
+Current-session success still clears and returns Home. Rejections propagate to the
+screen recovery state; authorized account/inventory side effects are not reversed.
+Critic found no blocker and requested unmount/rejection cases, which were added.
+Seven selected route/progress/selection checks, typecheck and structural checks
+pass remotely. Native link delivery during selection and navigation transitions
+still require verification; this is controlled lifecycle evidence for R019/S131.

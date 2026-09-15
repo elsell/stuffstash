@@ -345,3 +345,14 @@ opened; the user can reopen the invitation to retry delivery.
 Explicitly clearing an invitation also supersedes a still-pending initial lookup;
 a late initial result must not resurrect dismissed invitation state. A newly
 received foreground invitation remains eligible after clearing.
+
+### Invitation route completion ownership
+
+Opening an accepted inventory or starting over may finish after another invitation
+arrives. Clear-and-return navigation belongs to the initiating invitation and
+uninterrupted focused route session. A newer invitation, route departure, or
+blur/return must prevent that late navigation from clearing the newer link or
+redirecting its screen. The underlying authorized inventory/account operation
+still completes; this guard does not reverse its effect. Current-session success
+still clears the link and returns Home, and failures remain available to the
+screen's existing recovery handling.

@@ -1,3 +1,4 @@
+import { useInvitationRouteActions } from '../../ui/navigation/useInvitationRouteActions';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useAppConnectionActions, useAppServices } from '../../ui/navigation/AppServicesContext';
@@ -19,23 +20,22 @@ export default function InventoryInvitationRoute() {
       router.replace('/invitations/accept');
     }
   }, [link.initialized, routeParams, router]);
-  const dismiss = () => {
-    link.clear();
-    router.replace('/');
-  };
-  const openInventory = async (inventoryId: string) => {
-    await selectInventoryCommand.execute(inventoryId);
-    dismiss();
-  };
+  const actions = useInvitationRouteActions({
+    reference: link.reference,
+    clear: link.clear,
+    goHome: () => router.replace('/'),
+    selectInventory: id => selectInventoryCommand.execute(id),
+    startOver: changeServer
+  });
   return (
     <InventoryInvitationScreen
       acceptCommand={acceptInventoryInvitationCommand}
       initialized={link.initialized}
       invalidLink={link.invalid}
-      onAccepted={openInventory}
-      onDismiss={dismiss}
+      onAccepted={actions.openInventory}
+      onDismiss={actions.dismiss}
       onSwitchAccount={() => void signOut()}
-      onStartOver={async () => { await changeServer(); dismiss(); }}
+      onStartOver={actions.startOver}
       previewQuery={previewInventoryInvitationQuery}
       reference={link.reference}
     />
