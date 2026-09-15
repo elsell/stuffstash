@@ -942,11 +942,21 @@ final class FixtureAuditTests: XCTestCase {
     let tags = app.buttons["Choose tags"]
     XCTAssertTrue(tags.waitForExistence(timeout: 5))
     tags.tap()
+    let holiday = app.descendants(matching: .any).matching(identifier: "Holiday supplies").firstMatch
+    XCTAssertTrue(holiday.waitForExistence(timeout: 5))
+    let searchButton = app.buttons["Search"].firstMatch
+    XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
+    XCTAssertTrue(searchButton.isHittable)
+    capture("expiration-search-collapsed")
+    searchButton.tap()
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     search.tap()
     waitForKeyboard()
     search.typeText("Tools")
+    XCTAssertEqual(search.value as? String, "Tools")
+    XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("expiration-search-keyboard")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)

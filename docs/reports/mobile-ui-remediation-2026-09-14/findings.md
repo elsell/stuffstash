@@ -1546,3 +1546,9 @@ regression. Code review found no confirmed blockers. Native acceptance remains o
 verify compact initial presentation, open/search/clear/close, page changes, and
 retained selections on iPhone and iPad. This is a project consistency requirement,
 not a claim that Apple forbids stacked search in every context.
+
+M117 native follow-up updates the existing Expiration keyboard journey to open
+the Search button, capture the collapsed header, verify the full query, and
+observe a previously present nonmatching choice disappear while the matching
+choice remains. Footer reachability assertions remain. Two fixture-preparation
+checks pass remotely; this does not compile Swift or establish native acceptance.

@@ -112,4 +112,4 @@ Voice entry/status control: [all 24 accessory axes](voice-accessory-axis.md).
 
 Browse filter overview, tags and expiration handoff: [all 24 axes](browse-filters-axis.md).
 
-The [Expiration filter review](expiration-filters-axis.md) covers R017 and S075–S079 across all24 axes. M117 records the remaining persistent-search inconsistency.
+The [Expiration filter review](expiration-filters-axis.md) covers R017 and S075–S079 across all24 axes. M117 corrects the persistent-search inconsistency in source; native acceptance remains pending.

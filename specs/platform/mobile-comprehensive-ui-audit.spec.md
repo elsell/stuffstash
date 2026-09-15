@@ -1042,3 +1042,8 @@ Require the complete field inside the visible scroll area and hittable before
 focusing; keep keyboard readiness, typing speed and full-string assertions intact.
 Preserve this baseline as a test-procedure failure, distinct from actual malformed
 product text captured after typing.
+
+The Expiration native search journey must open the integrated Search button before
+typing, record its collapsed state, and assert the full entered query and filtered
+choices alongside existing keyboard/footer reachability. Do not retain the old
+assumption that the search field is permanently visible after M117.
