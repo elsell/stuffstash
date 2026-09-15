@@ -32,7 +32,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the provider completion review and M105 mapping, the 3384 cells
-comprise 2682 pending, 548 source-reviewed, 126 finding,
+comprise 2679 pending, 547 source-reviewed, 130 finding,
 20 runtime-partial and 8 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
 38-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include

@@ -381,3 +381,42 @@ it('keeps a replacement profile credential when the previous form finishes savin
     expect(harness.byText('Credential saved')).toBeUndefined();
   } finally { await harness.unmount(); client.clear(); }
 });
+
+it.each((['select', 'test', 'enable'] as const).flatMap(kind => (['success', 'failure'] as const).flatMap(outcome => [true, false].map(departed => [kind, outcome, departed] as const))))('scopes voice-stage %s completion (%s, departed=%s)', async (kind, outcome, departed) => {
+  const repository = new FakeProviderRepository(slot(kind === 'enable' ? 'enable_profile' : 'test_profile'));
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' })];
+  const action = deferred<ProviderProfileSummary | ProviderProfileTestResult>();
+  const selection = deferred<VoiceProviderConfiguration>();
+  repository.pendingAction = action.promise;
+  repository.pendingSelection = selection.promise;
+  const { harness, client } = await mount(<VoiceCapabilityScreen capability="language_inference" manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} testCommand={new TestProviderProfileCommand(repository)} onAddProfile={() => undefined} onEditCredential={() => undefined} onEditProfile={() => undefined} />);
+  try {
+    if (kind === 'select') {
+      await harness.press(harness.byLabel('Choose voice service'));
+      await harness.press(harness.byLabel('Other language'));
+      expect(repository.selectionInputs).toHaveLength(1);
+    } else {
+      await harness.press(textButton(harness, kind === 'test' ? 'Test Connection' : 'Enable Service'));
+      expect(kind === 'test' ? repository.testCalls : repository.lifecycleCalls).toHaveLength(1);
+    }
+    if (departed) {
+      await harness.run(() => setScreenFocused(false));
+      await harness.run(() => setScreenFocused(true));
+    }
+    await harness.run(() => {
+      if (kind === 'select') {
+        if (outcome === 'success') selection.resolve(repository.configuration);
+        else selection.reject(new Error('Late stage error'));
+      } else if (outcome === 'success') action.resolve(kind === 'test' ? testResult() : profile({ lifecycleState: 'enabled' }));
+      else action.reject(new Error('Late stage error'));
+    });
+    await settle(harness);
+    if (departed) {
+      for (const title of ['Voice service selected', 'Connection tested', 'Service enabled', 'Could not update voice', 'Late stage error']) expect(harness.byText(title)).toBeUndefined();
+    } else {
+      const title = outcome === 'failure' ? 'Could not update voice' : kind === 'select' ? 'Voice service selected' : kind === 'test' ? 'Connection tested' : 'Service enabled';
+      expect(harness.byText(title)).toBeDefined();
+    }
+    expect(harness.byLabel('Choose voice service')?.props.disabled).toBe(false);
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});

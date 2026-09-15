@@ -924,3 +924,10 @@ consumers; do not cancel an authorized mutation merely because navigation change
 Successful credential replacement must still clear the submitted secret in its
 own keyed form after blur. Focus controls presentation, not secret cleanup. A
 replacement profile/form must retain its independently owned input.
+
+The same visit boundary applies to voice-stage service selection, connection test
+and enable commands. Key it by the current provider query scope and capability,
+so replacing a tenant or stage invalidates earlier presentation callbacks.
+Preserve the in-place service picker, synchronous pending guard and scoped mutation
+observer. Do not show success/errors or explicitly reload a replacement stage
+from a departed operation; focused success and retry must continue to work.

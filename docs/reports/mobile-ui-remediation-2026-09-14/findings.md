@@ -1321,3 +1321,18 @@ M105 validation: 46 settings/query/mutation-observer tests, mobile TypeScript an
 structural checks passed remotely; the final replacement-profile regression also
 passed in the 32-test Settings suite with TypeScript. Critic re-review found no
 remaining blocker after the credential cleanup correction.
+
+M105 neighboring-stage follow-through: VoiceCapabilityScreen had the same late
+feedback/reload path in service selection, test and enable. Six departed
+success/failure regressions failed before reusing the visit guard, keyed by query
+scope and capability. Six matching focused cases preserve normal success/error
+feedback. The 53-test settings/query/observer set passed with TypeScript and
+structural checks; the final 44-test Settings suite and TypeScript also pass.
+Native return and notice placement remain pending. In-place picker semantics and
+mutation observers are unchanged.
+
+Combined PR150 checkpoint after stage ownership: all 1,565 mobile tests in 259
+files, TypeScript and the mobile structural check pass remotely. This includes the
+services gate, provider/editor lifecycle and earlier Sharing changes. Critic found
+no remaining source blocker for this pass. This is source/runtime-harness evidence,
+not native acceptance or complete audit coverage.

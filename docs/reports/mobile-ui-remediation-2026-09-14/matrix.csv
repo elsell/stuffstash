@@ -1152,7 +1152,7 @@ R048,settings/sharing.tsx,notifications,System notification entry and state,pend
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",pending,,
 R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; sharing-axis.md: source/controlled-render review; native pending; M102: native cancellation menu with independent scoped pending locks and one-shot focused confirmation; native acceptance pending.,M05;M69;M102
 R049,settings/voice/[capability].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Voice stage explains function, selected profile, readiness and recommended repair.",
-R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Profile detail remains separate from value selection; navigation guarded while pending.,M31
+R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",finding,Profile detail remains separate from value selection; navigation guarded while pending. M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M31;M105
 R049,settings/voice/[capability].tsx,selection,Value selection and current value,source-reviewed,"M31 shared native service picker preserves current value, excludes other archived choices, same-value no-op.",M31
 R049,settings/voice/[capability].tsx,modality,Presentation and dismissal,pending,,
 R049,settings/voice/[capability].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1174,7 +1174,7 @@ R049,settings/voice/[capability].tsx,editing,"Draft, save, cancel, undo and inte
 R049,settings/voice/[capability].tsx,privacy,"Account scope, data use and permissions",source-reviewed,Selection footer explains tenant-wide effect; server authorization unchanged.,
 R049,settings/voice/[capability].tsx,notifications,System notification entry and state,pending,,
 R049,settings/voice/[capability].tsx,media,"Camera, library, files and audio",pending,,
-R049,settings/voice/[capability].tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R049,settings/voice/[capability].tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
 R050,settings/voice/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Voice Setup reports readiness and explains listening/understanding/speaking stage purposes.,
 R050,settings/voice/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Stage rows open capability detail; advanced provider list has separate navigation.,
 R050,settings/voice/index.tsx,selection,Value selection and current value,pending,,
@@ -2952,7 +2952,7 @@ S123,Voice / plan progress recovery,notifications,System notification entry and 
 S123,Voice / plan progress recovery,media,"Camera, library, files and audio",pending,,
 S123,Voice / plan progress recovery,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S124,Voice / provider readiness,task,Task clarity and platform-pattern fit,pending,,
-S124,Voice / provider readiness,navigation,"Navigation, hierarchy and return",pending,,
+S124,Voice / provider readiness,navigation,"Navigation, hierarchy and return",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
 S124,Voice / provider readiness,selection,Value selection and current value,pending,,
 S124,Voice / provider readiness,modality,Presentation and dismissal,pending,,
 S124,Voice / provider readiness,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -2974,7 +2974,7 @@ S124,Voice / provider readiness,editing,"Draft, save, cancel, undo and interrupt
 S124,Voice / provider readiness,privacy,"Account scope, data use and permissions",pending,,
 S124,Voice / provider readiness,notifications,System notification entry and state,pending,,
 S124,Voice / provider readiness,media,"Camera, library, files and audio",pending,,
-S124,Voice / provider readiness,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S124,Voice / provider readiness,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
 S125,Voice / credential editor,task,Task clarity and platform-pattern fit,pending,,
 S125,Voice / credential editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
 S125,Voice / credential editor,selection,Value selection and current value,pending,,

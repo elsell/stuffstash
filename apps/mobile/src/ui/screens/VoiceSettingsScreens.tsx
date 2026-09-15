@@ -1,3 +1,4 @@
+import { useProviderTaskPresentation } from './useProviderTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
@@ -122,6 +123,7 @@ export function VoiceCapabilityScreen({
   const [operation, setOperation] = useState<'select' | 'test' | 'enable'>();
   const working = operation !== undefined;
   const workingRef = useRef(false);
+  const capturePresentation = useProviderTaskPresentation(manageCommand, `${providers.ownerKey}:${capability}`);
   if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
   if (!slot) return <ProviderStateView state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.retry} />;
@@ -137,14 +139,17 @@ export function VoiceCapabilityScreen({
   if (!slot.selectedProfileId) serviceOptions.unshift({ value: '', label: 'Not selected' });
 
   async function act(kind: 'select' | 'test' | 'enable', action: () => Promise<void>, success: string): Promise<void> {
-    if (workingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || workingRef.current) return;
     workingRef.current = true;
     setOperation(kind);
     try {
       await action();
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'success', title: success, message: `${stage.title} setup was updated.` });
       void providers.load().catch(() => undefined);
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'error', title: 'Could not update voice', message: readableError(error) });
     } finally {
       workingRef.current = false;
