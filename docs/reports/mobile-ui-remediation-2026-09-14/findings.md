@@ -679,3 +679,19 @@ disabled. Its regression failed, then passed after focus entry reconciled busy
 state with the actual pending request. Five remote switcher checks, TypeScript and
 structural checks pass (/tmp/switcher-focus-final.log). Native interruption
 acceptance remains pending.
+
+### M79 — cancellation skips accepted-selection reconciliation (P2)
+
+SelectInventoryCommand checked cancellation between repository success and its
+composition-scoped selection observer. If acceptance preceded cancellation, the
+chosen inventory could change without notifying the cache to reconcile. The
+observer now runs after repository success; a final cancellation check still
+rejects obsolete caller success. Initially canceled and rejected selections do
+not publish. No authorization rule or API boundary changes.
+
+A port-level regression failed before the correction and now verifies acceptance,
+observer notification and canceled caller outcome. Negative cases cover rejection
+and initial cancellation. Twenty-eight remote command, switcher and inventory
+adapter checks plus TypeScript/structural checks pass on paul
+(/tmp/selection-cache-green.log). Critic found no blockers. Native interrupted
+selection and cache-driven screen transition still require runtime evidence.

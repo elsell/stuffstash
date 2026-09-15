@@ -1342,7 +1342,7 @@ R056,tenant-switcher.tsx,editing,"Draft, save, cancel, undo and interruption",pe
 R056,tenant-switcher.tsx,privacy,"Account scope, data use and permissions",pending,,
 R056,tenant-switcher.tsx,notifications,System notification entry and state,pending,,
 R056,tenant-switcher.tsx,media,"Camera, library, files and audio",pending,,
-R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; M78 focus ownership and both completion/refocus orderings remote verified; native pending,M46;M78
+R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; M78 focus ownership and both completion/refocus orderings remote verified; native pending; M79 accepted selection observer ordering remote verified,M46;M78;M79
 R057,voice.tsx,task,Task clarity and platform-pattern fit,pending,,
 R057,voice.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R057,voice.tsx,selection,Value selection and current value,pending,,

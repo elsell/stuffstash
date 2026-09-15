@@ -193,3 +193,12 @@ wait for a selected inventory or a principal-label fetch. Show the principal lab
 when available, otherwise Current account; identity-read failure may offer retry
 without replacing Sign Out. Keep native confirmation and the existing authenticated
 session teardown unchanged. Connection recovery remains device-local.
+
+### Accepted inventory selection and cancellation
+
+Once the inventory repository accepts a selection, its selection observer must
+reconcile the composition-scoped cache even if the caller's signal was canceled
+before completion is delivered. Check cancellation before repository work and
+after observer completion to suppress obsolete caller success. Cancellation must
+not leave accepted selection state and cached inventory scope inconsistent.
+Rejected or initially canceled selections must not publish a selection event.
