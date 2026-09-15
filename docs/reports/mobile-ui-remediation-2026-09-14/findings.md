@@ -1532,3 +1532,15 @@ a native Cancel command wired to each route's existing dismissal handler. It doe
 not wait for choices or apply any filter. A controlled regression verifies the
 command is usable while the loading body remains mounted. Native sheet dismissal
 and query transport cancellation are not established by that component test.
+
+## M117 — Expiration filter search retains the persistent header field
+
+P2, source-confirmed at b15a38d5. ExpirationFiltersScreen requests stacked search
+with hideWhenScrolling false on types, tags and locations. Browse uses the shared
+NativeNavigationSearch integrated button. This preserves the vertical-space
+problem the user asked to remove and duplicates native search lifecycle wiring.
+Reuse the shared adapter while preserving local filtering, selected IDs and
+page-return clearing. Implementation and native acceptance remain outstanding;
+verify compact initial presentation, open/search/clear/close, page changes, and
+retained selections on iPhone and iPad. This is a project consistency requirement,
+not a claim that Apple forbids stacked search in every context.
