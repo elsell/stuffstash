@@ -2224,3 +2224,10 @@ Read-only tracking now displays Enabled or Disabled. Editable types retain their
 switch and pending-operation behavior. Both inherited values failed before the
 correction.49 related tests and static checks pass remotely; native presentation
 and assistive reading order remain pending. See inherited-definition-axis.md.
+
+### Native follow-up: M51 and text-entry isolation
+
+See [native-350129-followup.md](native-350129-followup.md) for final phone/iPad
+results at22a4a80d, the focused color-picker failures, and the next ordinary-input
+comparisons. These findings remain open; no production workaround or native
+acceptance is claimed by adding diagnostic fixtures.

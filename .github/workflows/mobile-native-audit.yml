@@ -11,6 +11,7 @@ on:
         options:
           - all
           - color-picker
+          - text-entry
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -33,14 +34,14 @@ env:
 
 jobs:
   ios:
-    name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case == 'color-picker' && ' [color-picker]' || '' }}
+    name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         device: ['iPhone 17', 'iPad mini (A17 Pro)']
-        suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case == 'color-picker' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
+        suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case != 'all' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
     env:
       NODE_ENV: production
       AUDIT_SUITE: ${{ matrix.suite }}
@@ -86,6 +87,16 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
+              )
+              ;;
+            text-entry)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinarySingleLineTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryMultilineTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryControlledTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAssistance'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAccessory'
               )
               ;;
             *) exit 1 ;;
