@@ -1061,3 +1061,8 @@ value. That journey must wait at most5 seconds for the exact value before failin
 without retyping, changing keyboard speed, or accepting a prefix. Keep subsequent
 failed-save/retry assertions unchanged. This evidence does not excuse Sharing's
 separately retained truncated email, nor establish Return acceptance before rerun.
+
+Native tag clearance verification must locate the tag by its accessible identifier
+without assuming checkbox rows have the Button element type. It must scroll the
+sheet containing that tag, not the background route's first scroll view. Preserve
+full-row/footer bounds, action reachability, selection and applied-ID assertions.

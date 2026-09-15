@@ -496,11 +496,12 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Audit Browse filters"].tap()
     let tags = app.buttons["Choose tags"]
     XCTAssertTrue(tags.waitForExistence(timeout: 5)); tags.tap()
-    let last = app.buttons["Filter by tag ZZ final tag"]
+    let last = app.descendants(matching: .any).matching(identifier: "Filter by tag ZZ final tag").firstMatch
     XCTAssertTrue(last.waitForExistence(timeout: 5))
     let footer = app.otherElements["browse-filter-footer"].firstMatch
     XCTAssertTrue(footer.waitForExistence(timeout: 5))
-    let scroll = app.scrollViews.firstMatch
+    let scroll = app.scrollViews.containing(.any, identifier: "Filter by tag ZZ final tag").firstMatch
+    XCTAssertTrue(scroll.exists)
     func fullyAboveActions() -> Bool {
       let bounds = scroll.frame.intersection(app.frame)
       let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)

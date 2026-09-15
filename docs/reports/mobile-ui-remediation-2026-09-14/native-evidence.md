@@ -1593,3 +1593,19 @@ screenshots before attributing differences. This run excludes the latest Map
 command/search corrections and is not current-batch acceptance. It includes
 known notice/provider selector failures that later source already corrects;
 Sharing text corruption and sheet geometry failures still need artifact review.
+
+Run34985387290 is now terminal failure; iPad also executed55 tests with20 failures.
+Both onboarding jobs succeeded. Phone artifact revision.txt confirms a3f3746897f92407e67c3d54d21e37be9a620feb.
+Phone tag test failed before geometry checks because it queried a Button. Its
+final hierarchy DAF66796-1482-41BE-88D7-7D8A9B9EB1CC.txt contains the exact final
+tag as Other, value checkbox/unchecked, at y1998.4. The background and sheet
+both expose ScrollView; the sheet begins at y310.4 while the background begins at116.
+The final screenshot11273A16-A8FC-4736-85AA-3FE6434B9B0D.png shows visible initial
+tags and an opaque action footer. Retained as evidence/phone-tags-footer-before-scroll-349853.png.
+It does not establish last-row clearance: the test never scrolled.
+
+The candidate uses the exact identifier across element types and the scroll view
+containing that tag. It preserves full row/action/footer bounds and applied-ID
+checks. Fixture preparation passes2 tests remotely; critic found no confirmed
+issue. Corrected native execution remains pending. This is a procedure correction,
+not evidence that the original user defect is accepted.
