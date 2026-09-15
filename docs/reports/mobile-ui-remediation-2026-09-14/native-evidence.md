@@ -320,3 +320,13 @@ Run34917318548 iPad onboarding job104219118994 also completed failure: expected
 `https://example.invalid`, actual `h://example.invalid`. Its landscape adaptation
 scenario passed. This preserves the distinction between layout and input behavior;
 M14 remains unresolved. Log `/tmp/native349173-onboarding-ipad.log`.
+
+### Second interim release delivered
+
+[Release34917914704](https://github.com/elsell/stuffstash/actions/runs/34917914704)
+completed successfully. Version0.24.12 build100.1 uploaded at01:55:59UTC and its
+exact-build TestFlight changelog was verified at01:58:20UTC after Apple processing.
+Release source is PR129 merge3cc21557. Logs are
+`/tmp/mobile-audit-02412-upload.log` and `/tmp/mobile-audit-02412-notes.log`.
+This delivery fulfills the interim release request; it does not close native audit
+findings. PR131's shared-header and Home follow-up changes are outside build100.1.
