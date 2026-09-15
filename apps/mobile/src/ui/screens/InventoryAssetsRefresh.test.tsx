@@ -5,6 +5,7 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { setScreenFocused } from '../../test-support/navigation';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { InventoryAssetsRouteScreen } from './InventoryAssetsRouteScreen';
+import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 it('reconciles inventory assets silently and shows refresh only for the current pull session', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
@@ -18,7 +19,7 @@ it('reconciles inventory assets silently and shows refresh only for the current 
   const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 10)));
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => scope}>
-      <InventoryAssetsRouteScreen inventoryAssetsQuery={query} />
+      <AppFeedbackProvider><InventoryAssetsRouteScreen inventoryAssetsQuery={query} /></AppFeedbackProvider>
     </MobileServerStateProvider>);
     await h.run(() => { void client.invalidateQueries({ queryKey: key }); });
     await settle();

@@ -2286,3 +2286,16 @@ when a pull starts. Return-command reconciliation keeps its existing predicate.
 All28 Home and2 pull-hook cases pass on paul. Native navigation/error presentation
 acceptance remains pending; this does not claim to solve every historical spinner
 or inset symptom. See home-dashboard-axis.md for the full route review.
+
+### M161 — Asset lists silently swallow explicit refresh failures
+
+P2 source/mounted atfc3bb7a3. Inventory assets, location contents and the retained
+LocationsScreen awaited non-throwing refetch results and rendered errors only
+without cached data. A failed pull therefore stopped spinning without explaining
+that visible results were unchanged. Three current-visit cases failed before the
+fix. The shared usePullRefreshFeedback hook now catches throwing reads, keeps
+notices scoped to visit/resource and preserves ordinary cached cards. Initial-load
+recovery and access suppression still belong to the query adapter. All18 focused
+cases pass remotely; native notice placement/reachability remains pending. The
+legacy LocationsScreen has no current route consumer and is not claimed as a
+third shipped route. See asset-lists-axis.md.

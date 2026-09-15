@@ -18,8 +18,18 @@ The next fixed diagnostic adds controlled-without-assistance and
 controlled-without-accessory while preserving every existing case and exact
 assertion. No production keyboard behavior is being changed as a workaround.
 
-Phone job104584271921 remains in progress at this checkpoint. Do not infer its
-outcome from the iPad results, or treat these fixtures as full native acceptance.
+Phone job104584271921 completed with3/5 passing. Controlled ordinary entry failed
+before typing because XCTest could not establish an interactive keyboard; that is
+not a controlled-field character-loss observation. Uncontrolled ordinary entry
+did lose characters: expected `Native draft name`, actual `Ndraft name` at
+FixtureAuditTests.swift:1082. Multiline, uncontrolled-without-accessory and
+uncontrolled-without-assistance passed. These are terminal XCTest log results;
+phone screenshots have not yet been inspected. The failures occurred at22:43–22:45
+UTC on September15. This supports keeping both ordinary baselines open, rather
+than attributing all loss to controlled React state.
+
+Expanded manual run35031744887 at81e91f74 is now running. It includes both new
+controlled comparisons; no outcome is inferred from its start.
 
 The expanded diagnostic passes remote TypeScript, structural and fixture-preparation
 checks. Critic found no confirmed issue. Disabling assistance is a bundle comparison

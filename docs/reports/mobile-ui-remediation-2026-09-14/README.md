@@ -58,9 +58,20 @@ The subsequent [Home dashboard review](home-dashboard-axis.md) adds M160,
 retiring delayed pull-refresh notices after navigation; focused validation is
 recorded separately and does not change that full-suite checkpoint.
 
+[Inventory/location asset lists](asset-lists-axis.md) now have all24 source axes
+reviewed. M161 provides feedback for explicit refresh failures while retaining
+ordinary cached cards; obsolete-visit failures stay silent. All18 focused cases,
+TypeScript and structural checks pass remotely. Code critic found no blockers.
+Native acceptance is still pending; the retained LocationsScreen is not counted
+as a current shipped route.
+
+Combined post-M161 validation passes **1,722 tests across271 files**, TypeScript
+and mobile structural checks on paul (captured `/tmp/mobile-list-batch.log`).
+This includes M160 and M161; no native result is promoted by the source suite.
+
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,688
-pending,1,215 source-reviewed,344 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,646
+pending,1,251 source-reviewed,350 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -69,9 +80,10 @@ Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155
 The [latest completed native follow-up](native-350129-followup.md) records full
 run35012949816 failures and focused color results. Text-entry isolation is running
 at0f378691 in run35029455242; iPad completed4/5, with reproduced character loss,
-and phone remains running. See [inspected text evidence](native-text-350294.md).
-Expanded manual diagnostic35031744887 and full PR run35031731981 were pending
-at81e91f74. No native fix is claimed from their dispatch.
+and phone completed3/5: uncontrolled ordinary text lost characters and controlled
+entry failed keyboard readiness. See [text evidence](native-text-350294.md).
+Expanded manual diagnostic35031744887 at81e91f74 is now running. No native fix
+is claimed from its dispatch; newer PR pushes may supersede pending full runs.
 
 Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
 TypeScript and the mobile structural check pass on paul

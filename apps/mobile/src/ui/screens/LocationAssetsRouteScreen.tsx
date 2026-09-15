@@ -1,5 +1,5 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { usePullRefresh } from '../serverState/usePullRefresh';
+import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
 import {
@@ -40,7 +40,7 @@ export function LocationAssetsRouteScreen({
     query: (signal) => locationAssetsQuery.execute(locationId, { signal })
   });
 
-  const pullRefresh = usePullRefresh(async () => { await locationAssets.refetch(); });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => locationAssets.refetch({ throwOnError: true }), resourceKey: locationAssets.resourceKey, failureTitle: 'Could not refresh location' });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
