@@ -668,3 +668,35 @@ stronger evidence of missing subscription/commit progress than the screenshot
 alone; it does not prove a repository/network fault. Keep the card comparison
 and original Add acceptance. Complete artifacts are in
 `/tmp/native349289-fixtures-phone` and `/tmp/native349289-fixtures-ipad`.
+
+### September15 — run34929746647 phone onboarding
+
+Job104259682122 completed successfully at05:36UTC. Actual checkoutbabf6765685ead9f93203f92e6bb4f5b5b0a5328,
+verified from checkout log and API parents50b598ae +904684a1. Includes PR136's
+choice-reflow/Add-card comparison code, excludes PR138/PR140 fixes.
+
+`testConnectionHelpAndKeyboardKeepActionsReachable` passed. Two iPad-only tests
+skipped as specified; report this as one applicable pass, not three device checks.
+The named scenario expands/collapses connection help, types the complete URL,
+dismisses the keyboard and checks action reachability. Inspected screenshot
+444921BE-AC43-44E4-ABE2-B05497E632AC.png shows intact https://example.invalid and
+visible Connect and sign in. This does not exercise real sign-in or backend access.
+
+Artifacts: /tmp/native349297-onboarding-phone; log:
+/tmp/native349297-onboarding-phone.log. Manifest contains screenshot/hierarchy pairs.
+Other jobs in this run remain active; no claims about their current outcome.
+
+Phone fixture job104259681981 then completed with22/31 passes and9 failures.
+The same actual sourcebabf6765 is identified by its artifact. New Add card comparison
+reaches the field/header, but typing Native draft name yields Nve draft name.
+The sheet case still fails waiting for Asset name. This separates presentation
+readiness from text-entry corruption; it does not justify replacing the production
+sheet or declaring the query boundary fixed.
+
+Other failures: history StaticText reachability, color row opening (well-target
+comparison remains separate), controlled address h.invalid instead of full URL,
+expiration accessibility clipping despite M53 reflow, keyboard Apply reachability,
+and two layout diagnostics. M19 ownership changes from PR138 are excluded.
+Log /tmp/native349297-fixtures-phone.log; full artifacts requested under
+/tmp/native349297-fixtures-phone. Inspect the clipping hierarchy/screenshot and
+Add comparison before selecting the next implementation. iPad jobs remain active.

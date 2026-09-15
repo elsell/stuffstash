@@ -24,31 +24,41 @@ A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
 coverage to pass. This effort includes fixing findings and TestFlight release.
 
-September 15 release checkpoint: the user requested an interim TestFlight build
-with the current fixes, followed by continued audit work. Native sheet expansion,
-Add launch diagnosis, keyboard scenarios, Android runtime coverage and remaining
-review cells stay open; this release is not full audit acceptance.
+## Current checkpoint — September 15
 
+The audit remains incomplete. At revision120f5e8e, the 3384 cells comprise 2900
+pending, 438 source-reviewed, 28 finding, 14 runtime-partial and 4 not-applicable.
+These are evidence states, not a compliance score. Finding cells can include
+implemented corrections whose native acceptance is still pending.
 
-Interim release delivered: **0.24.11 (99.1)**, processed with TestFlight changelog
-verified on September 15 at 00:53 UTC. [Release workflow](https://github.com/elsell/stuffstash/actions/runs/34913014534).
-The comprehensive audit remains active. Photo-removal and gallery follow-up fixes
-were merged in PR129 for a second interim release, v0.24.12. Build **100.1** uploaded at01:55:59UTC; Apple processing and the exact-build
-TestFlight changelog were verified at01:58:20UTC in
-[release34917914704](https://github.com/elsell/stuffstash/actions/runs/34917914704). Shared-header and Home
-return ownership/permission fixes continue separately in draft PR131.
+Latest delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
+Apple processing and the exact-build changelog were verified at05:10:25UTC in
+[release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
 
-Latest delivered checkpoint: **0.24.13 (101.1)**, verified at02:44:35 UTC
-September15 in release34920497945. The next current-fixes release from PR132
-(source30876406) is running in release34923402256; delivery is pending.
-Audit remediation continues on `codex/mobile-audit-after-132`.
+Current interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
+publishing succeeded in
+[release34932422663](https://github.com/elsell/stuffstash/actions/runs/34932422663).
+The signed iOS job is running; upload, Apple processing, build number and TestFlight
+changelog are not yet confirmed. This release contains filter badge contrast,
+history locale, month-calendar presentation and keyboard-ownership corrections.
+It does not certify the full audit or unresolved native footer behavior.
 
-Current release cut: PR136 merged at **5775da93** on September15 at04:47UTC.
-[Release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409)
-is in progress; upload and Apple processing are not yet confirmed. Continued
-audit changes on `codex/mobile-audit-after-136` are excluded from that build.
+Next remediation batch: [PR140](https://github.com/elsell/stuffstash/pull/140), branch
+`codex/mobile-audit-after-138`. M69–M73 cover Sharing feedback ownership, invitation
+replacement/startup/navigation recovery and account recovery without inventory data.
+See [Sharing/invitations](sharing-axis.md) and
+[Account/connection](account-connection-axis.md). These changes are excluded from0.24.17.
 
-Latest delivered release: **0.24.16 (104.1)** from5775da93.
-Apple processing and exact-build TestFlight changelog verified at05:10:25UTC
-September15 in [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
-Post-PR136 badge, history-locale and keyboard-ownership changes are excluded.
+Latest completed native slice: iPhone17 onboarding in
+[run34929746647](https://github.com/elsell/stuffstash/actions/runs/34929746647),
+actual sourcebabf6765 (parents50b598ae and904684a1). One applicable test passed;
+two iPad-only tests skipped. The phone fixture job then completed with22 passes
+and9 failures; iPad fixtures and onboarding remain active. The run predates PR138 and PR140; it cannot verify their changes.
+
+Priority open work: native Add loading diagnosis, filter keyboard hit targets,
+large-text choice reflow, history accessibility reachability, Android runtime
+coverage and the remaining surface/axis reviews. Preserve running native jobs;
+collect their screenshots and hierarchies before selecting further fixes.
+
+Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) and
+[findings.md](findings.md). No historical release is full audit acceptance.
