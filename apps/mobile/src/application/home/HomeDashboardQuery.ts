@@ -29,6 +29,7 @@ export type HomeDashboardViewModel = {
   readonly tenants: readonly HomeDashboardTenantViewModel[];
   readonly inventories: readonly HomeDashboardInventoryViewModel[];
   readonly canAdd: boolean;
+  readonly canReturn: boolean;
   readonly recentAssets: readonly AssetCardViewModel[];
   readonly checkedOutAssets: readonly HomeCheckedOutAssetViewModel[];
 };
@@ -74,6 +75,7 @@ export class HomeDashboardQuery {
         updatedAtLabel: item.updatedAtLabel
       })),
       canAdd: inventory.permissions.includes('create_asset'),
+      canReturn: inventory.permissions.includes('edit_asset'),
       recentAssets: inventory.assets
         .filter((asset) => asset.lifecycleState === 'active')
         .slice(0, 10)

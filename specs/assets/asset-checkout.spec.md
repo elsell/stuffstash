@@ -542,3 +542,13 @@ ownership. Completed-return guards compare that identity, so a later checkout of
 the same asset can be returned even when no empty snapshot was observed between
 the two checkouts. Reconciliation failures use the originating presentation gate,
 including failures that arrive after blur or scope teardown.
+
+### Home Return permission presentation
+
+Home projects `canReturn` from the selected inventory's `edit_asset` permission,
+independently of `create_asset` and role labels. Viewers and create-only inventories
+retain checkout cards, status and navigation but have no Return command. A stale
+Return callback must stop after the current permission projection is revoked.
+The API remains authoritative; rejection of unauthorized Return attempts must leave
+the open checkout intact. Existing editor return/undo and adversarial missing,
+malformed, viewer and cross-scope boundary cases remain part of validation.

@@ -171,7 +171,7 @@ function DashboardHeader({
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createHomeScreenStyles(colors);
-  const { returningAssetId, pendingReturn, returnAsset, isReturnDisabled, saveReturnDetails, cancelReturn, changeDetails } = useHomeReturnActions(assetCheckoutCommand, onDashboardChanged, dashboard.checkedOutAssets);
+  const { returningAssetId, pendingReturn, returnAsset, isReturnDisabled, saveReturnDetails, cancelReturn, changeDetails } = useHomeReturnActions(assetCheckoutCommand, onDashboardChanged, dashboard.checkedOutAssets, dashboard.canReturn);
 
   return (
     <View>
@@ -223,12 +223,12 @@ function DashboardHeader({
               <AssetCard
                 asset={asset}
                 density="row"
-                footerAction={{
+                footerAction={dashboard.canReturn ? {
                   accessibilityLabel: `Return ${asset.title}`,
                   disabled: isReturnDisabled(asset),
                   label: returningAssetId === asset.id ? 'Returning...' : 'Return',
                   onPress: () => void returnAsset(asset)
-                }}
+                } : undefined}
                 key={asset.id}
                 palette={colors}
                 onParentLocationPress={(location) => router.push(assetDetailHref(location.id))}

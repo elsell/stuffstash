@@ -33,7 +33,7 @@ function snapshot(checkedOutAssets: readonly AssetSummary[] = [checkedOut]): Hom
   return { checkedOutAssets, workspace: {
     tenants: [{ id: tenantId('tenant-home'), name: 'Home' }], defaultInventoryId: inventoryId('inventory-home'),
     inventories: [{ id: inventoryId('inventory-home'), tenantId: tenantId('tenant-home'), name: 'Home Inventory',
-      role: 'owner', permissions: ['view', 'create_asset'], description: '', updatedAtLabel: 'Updated today',
+      role: 'owner', permissions: ['view', 'create_asset', 'edit_asset'], description: '', updatedAtLabel: 'Updated today',
       locationCount: 1, locations: [], assets: [recent] }]
   } };
 }
@@ -225,6 +225,38 @@ describe('Home interactions through mounted components', () => {
     expect(h.byLabel('Return Cordless drill')?.props.disabled).toBe(false);
     await h.press(h.byLabel('Return Cordless drill')); await settle();
     expect(returns).toHaveLength(2);
+  });
+
+  it.each([['view'], ['view', 'create_asset']])('keeps checkout status but hides Return without edit permission: %j', async (...permissions) => {
+    repository.load = async () => {
+      const value = snapshot();
+      return { ...value, workspace: { ...value.workspace, inventories: value.workspace.inventories.map(inventory => ({ ...inventory, permissions })) } };
+    };
+    await render();
+    expect(h.byLabel('Open asset Cordless drill')).toBeDefined();
+    expect(h.byLabel('View all checked-out assets')).toBeDefined();
+    expect(h.byLabel('Return Cordless drill')).toBeUndefined(); expect(returns).toEqual([]);
+  });
+  it('rejects a stale Return callback after permission revocation', async () => {
+    await render(); const press = h.byLabel('Return Cordless drill')!.props.onPress;
+    repository.load = async () => {
+      const value = snapshot();
+      return { ...value, workspace: { ...value.workspace, inventories: value.workspace.inventories.map(inventory => ({ ...inventory, permissions: ['view'] })) } };
+    };
+    await h.run(() => client.invalidateQueries()); await settle();
+    expect(h.byLabel('Return Cordless drill')).toBeUndefined();
+    await h.run(press); expect(returns).toEqual([]);
+  });
+
+  it('offers Return with edit permission even without create permission', async () => {
+    repository.load = async () => {
+      const value = snapshot();
+      return { ...value, workspace: { ...value.workspace, inventories: value.workspace.inventories.map(inventory => ({ ...inventory, permissions: ['view', 'edit_asset'] })) } };
+    };
+    await render();
+    expect(h.byLabel('Add an asset')).toBeUndefined();
+    await h.press(h.byLabel('Return Cordless drill')); await settle();
+    expect(returns).toEqual(['asset-checked-out']);
   });
 
 });

@@ -119,7 +119,7 @@ successful operations, and prevent repeat returns from stale cards.
 
 ### M49 — Home exposes Return without a mutation-permission projection
 
-Source-confirmed, open. `HomeDashboardViewModel` carries only `canAdd` for toolbar
+Implemented; native permission presentation pending. `HomeDashboardViewModel` carries only `canAdd` for toolbar
 creation. Checked-out Home cards always create a Return footer whenever a
 checkout command is present, including viewer inventories. The API remains the
 authorization boundary, but this violates the mobile requirement that viewers
@@ -135,3 +135,14 @@ dashboard subtree is keyed by tenant/inventory. Twenty focused query/interaction
 tests, TypeScript and structural checks pass; full remote suite passes 1,394 tests
 in 246 files. Critic findings were fixed and re-reviewed with no further blockers.
 Native return/keyboard/dismissal acceptance is still pending, including open M47.
+
+M49 implementation: Home projects `canReturn` from selected-inventory
+`edit_asset`; create permission stays independent. Viewer and create-only cards
+hide the command while preserving checkout status/navigation. A committed
+permission ref rejects stale Return callbacks after revocation. Three regressions
+failed before the fix; all 22 Home cases pass, including edit-only permission.
+TypeScript and mobile/Go structural checks pass. The API checkout boundary suite
+passes with pinned Go1.25.8 and verifies rejected mutations leave the open checkout
+intact, alongside existing editor success and adversarial cases. Critic found no
+blocker; its edit-only coverage suggestion was added. Permission changes while
+the optional-details task is already open remain an acceptance case for M47.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { HomeCheckedOutAssetViewModel } from '../../application/home/HomeDashboardQuery';
 import type { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
@@ -14,8 +14,10 @@ export type PendingHomeReturn = {
 };
 
 /** Owned by a dashboard keyed to its tenant/inventory; presentation also owns focus. */
-export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (shouldNotify: () => boolean) => void | Promise<void>, checkedOutAssets: readonly HomeCheckedOutAssetViewModel[]) {
+export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (shouldNotify: () => boolean) => void | Promise<void>, checkedOutAssets: readonly HomeCheckedOutAssetViewModel[], canReturn: boolean) {
   const feedback = useAppFeedback();
+  const permission = useRef(canReturn);
+  useLayoutEffect(() => { permission.current = canReturn; }, [canReturn]);
   const mounted = useRef(true);
   const operationPending = useRef(false);
   const completedReturns = useRef(new Map<string, string>());
@@ -44,7 +46,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
   }
   async function returnAsset(asset: HomeCheckedOutAssetViewModel) {
     const session = focus.current;
-    if (!mounted.current || !session?.active || operationPending.current || editor.current || alreadyReturned(asset)) return;
+    if (!permission.current || !mounted.current || !session?.active || operationPending.current || editor.current || alreadyReturned(asset)) return;
     operationPending.current = true; setReturningAssetId(asset.id);
     try {
       const result = await command.execute({ action: 'return', assetId: asset.id });
