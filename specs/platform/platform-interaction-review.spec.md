@@ -43,3 +43,12 @@ Stuff Stash iOS, Android, web, and human-facing documentation surfaces.
 Validate skill metadata, linked references, and topic/surface inventory completeness.
 Exercise the revised skill on concrete contrasting interaction examples. Run the
 code critic on the policy/skill/report changes. Report any runtime coverage gaps.
+
+## Audit release batching
+
+During comprehensive remediation, accumulate substantial groups of related fixes
+before releasing. Individual fixes remain atomic commits, but are not individual
+release boundaries. Review shared consumers and run combined validation for each
+batch. An explicit user request may cut an interim release from the validated
+subset. An already-running release may finish while the next batch accumulates.
+Do not replace completeness or native acceptance with a quota of commits.
