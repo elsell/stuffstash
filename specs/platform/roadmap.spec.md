@@ -37,7 +37,10 @@ checks are not native acceptance. Native macOS runner fixtures have verified
 selected menu, date and feedback scenarios, but expiration sheet expansion and
 Add launch still fail. Keyboard readiness had a test-procedure error now corrected
 for a later run. Continue the source audit, native diagnosis, Android runtime
-coverage, and TestFlight release; none of those remaining gates is waived.
+coverage, and TestFlight release. On September 15 the user requested an interim
+TestFlight release of the current fixes while this audit continues. This milestone
+does not certify the full audit: retain the native failures and unreviewed cells,
+publish release notes, and continue remediation after delivery.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

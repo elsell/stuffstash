@@ -20,3 +20,8 @@ Android runtime remains unavailable. No local builds/tests, per session constrai
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
 coverage to pass. This effort includes fixing findings and TestFlight release.
+
+September 15 release checkpoint: the user requested an interim TestFlight build
+with the current fixes, followed by continued audit work. Native sheet expansion,
+Add launch diagnosis, keyboard scenarios, Android runtime coverage and remaining
+review cells stay open; this release is not full audit acceptance.
