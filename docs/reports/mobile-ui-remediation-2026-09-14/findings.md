@@ -284,3 +284,17 @@ as M53. No authorization behavior changed. Critic found no blocker and emphasize
 the evidence limit: these checks prove current callback-boundary behavior, not
 immediate native handler replacement in an already-open menu. Physical timing and
 Android runtime acceptance remain pending.
+
+### M55 — Inbox open completion outlives its navigation intent
+
+Three source tests reproduced opening an asset after blur, after blur/refocus, and
+starting a read through an unfocused callback. A focus-session token now gates
+open/navigation. Completed reads still reconcile mounted inbox/count state;
+unmount cancellation and scoped ownership remain intact. Normal focused opening
+retains resolve/read/reconcile/navigate order.
+
+Seventy-two notification tests/typecheck/structural pass remotely. Critic found no
+blocker and requested proof that a fresh open works after the old request settles;
+the final11 inbox tests include that passing case. Native navigation interruption
+remains pending. See `notifications-axis.md` for the broader140-surface ownership
+map and explicitly unverified paths.

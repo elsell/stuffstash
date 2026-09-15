@@ -406,3 +406,13 @@ Reminders, with Use defaults, Custom, and Off choices. Keep the current mode
 visible and preserve the existing inherited-policy explanation. Saving locks the
 picker; failure retains the attempted mode with explicit Retry/Discard actions.
 Discard restores the saved mode, and choosing the current mode does not resave.
+
+## Inbox open completion and navigation ownership
+
+Opening an inbox row may finish marking the notification read after the user
+leaves the inbox. A successful read must still reconcile the mounted inbox and
+its scoped unread count, but may navigate to the asset only in the focused inbox
+session that initiated the open. Leaving and returning creates a new focus
+session; an older completion must not push another asset screen over it. An open
+callback invoked while the inbox is unfocused must not start a new read. Normal
+focused opening remains resolve, mark read, reconcile count, then navigate.
