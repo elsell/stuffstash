@@ -174,3 +174,79 @@ hit-region, description, traits, Dynamic Type and clipping checks without suppre
 Unsupported pre-iOS17 audit runtimes explicitly skip. Critic found no source blocker.
 This is a new candidate, not a declaration that expansion or keyboard behavior is
 fixed; those native results remain required.
+
+### M14 system address-field candidate
+
+The iOS onboarding address now uses the pinned SwiftUI TextField path that preserved
+both native and callback values on phone and tablet in run34917318548. Other form
+fields and Android retain their existing input implementation. The shared iOS
+keyboard accessory now asks the native keyboard controller to resign the current
+responder; React Native's focused-input registry does not include the SwiftUI field.
+This follows a confirmed critic finding before native acceptance.
+
+The existing full-address typing, explicit accessory dismissal and command
+submission assertions remain intact. Added native scenarios cover Go submission
+and draft preservation when help opens/closes. These changes are candidates,
+not a verified resolution of M14; native keyboard/layout/adaptation remain pending.
+They are excluded from the interim release built from merged PR131.
+
+Remote validation: 12 existing onboarding/accessory/invitation behavior tests,
+TypeScript, mobile structural checks and two fixture-installer safety tests passed
+(`/tmp/native-address-final.log` on paul). The accessory test first failed against
+the old RN dismissal path. Critic re-review found no remaining confirmed blocker.
+These tests cover source behavior and wiring; the SwiftUI adapter still needs its
+native run and must not inherit the generic renderer's test coverage claim.
+
+### M47 native-route implementation candidate
+
+The inline editor has been replaced with the existing native-stack form-sheet
+presentation. An app-tree UI context carries the editor into its route while the
+inventory-keyed Home hook retains command ownership. A direct React Native Modal
+candidate was rejected by the structural check and removed before finalization.
+The native route includes its title, persistent input label, platform command
+buttons, local failure feedback and permission-loss recovery. It retains the
+native keyboard dismissal path and scrollable content.
+
+Critic findings corrected before native testing: explicitly show the native header;
+defer dismissal while another route is above this sheet; bind callbacks to their
+originating editor session. Tests exercise Back/undo, failed-save retry, permission
+revocation, a second return editor, focused/background completion and missing-task
+entry. The navigation fake now cleans up removed guards. Obsolete inline styles
+were removed. Native full-Home fixtures cover cancel restoration and failed-save
+recovery with keyboard entry; actual native acceptance is still pending.
+
+Final remote source validation passed 1,404 tests across 247 files, TypeScript and
+mobile structural checks (`/tmp/home-return-full-final.log` on paul), plus both
+fixture-installer safety tests. Native fixture source is not native execution;
+large text, long details, modal focus and dismissal remain acceptance work.
+
+### M51 — Native color-row activation is not reliable in the audit
+
+Run34919776387 failed opening the system color picker on phone and iPad, after an
+earlier pass. The inspected iPad screenshot shows no presented picker. This is an
+observed acceptance failure, not yet a proven implementation defect: the native
+accessible row spans its label and trailing well, so a separate well-target probe
+is pending. Preserve both results and do not certify row activation from a well tap.
+
+### M45 initial native header configuration
+
+The same run loaded iPad checkout records but left the native header absent. The
+shared sheet initially hid that header while the mounted screen requested it.
+The candidate now shows the title/header from the initial sheet configuration,
+matching the screen. Existing Close and expansion assertions remain the native
+acceptance gate; M45 is not closed by this source change.
+
+### M52 — Field-editor commands retain radio/custom-button presentation
+
+Source-confirmed task/pattern mismatch in `CustomizationEditorFields.tsx`:
+`Expand to all assets` was an always-unchecked radio although it changes the draft
+through a command. `Add option` used a custom inline button despite the shared
+native command adapter. Both now use that adapter, with Add below its input to
+avoid squeezing input beside a full-width native host. Type and initial Applies
+to remain pickers, and saved options/targets retain their existing protection.
+
+Two new tests reproduce the missing command semantics and verify expansion,
+normalized option addition, duplicate handling and draft clearing. Eight shared
+control and37 consumer behavior tests, TypeScript and mobile structural checks
+pass remotely. Household/inventory create/edit share this consumer. Native layout,
+keyboard, large text and assistive-technology acceptance remain pending.

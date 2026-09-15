@@ -6,6 +6,9 @@ import type { AssetCardViewModel } from '../../application/assets/AssetViewModel
 import { useAppFeedback } from '../feedback/AppFeedback';
 
 export type PendingHomeReturn = {
+  readonly sessionId: number;
+  readonly error?: { readonly title: string; readonly message: string };
+  readonly operation?: 'save' | 'undo';
   readonly asset: AssetCardViewModel;
   readonly checkoutId: string;
   readonly undoableOperationId: string | undefined;
@@ -20,8 +23,10 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
   useLayoutEffect(() => { permission.current = canReturn; }, [canReturn]);
   const mounted = useRef(true);
   const operationPending = useRef(false);
+  const editorSequence = useRef(0);
   const completedReturns = useRef(new Map<string, string>());
   const editor = useRef<PendingHomeReturn | undefined>(undefined);
+  const editorFocus = useRef<{ active: boolean } | undefined>(undefined);
   const focus = useRef<{ active: boolean } | undefined>(undefined);
   const [returningAssetId, setReturningAssetId] = useState<string | undefined>();
   const [pendingReturn, setPendingReturn] = useState<PendingHomeReturn | undefined>();
@@ -52,7 +57,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       const result = await command.execute({ action: 'return', assetId: asset.id });
       completedReturns.current.set(asset.id, result.id);
       if (mounted.current && session.active) {
-        updateEditor({ asset, checkoutId: result.id, undoableOperationId: result.undoableOperationId, details: '', isSaving: false });
+        updateEditor({ sessionId: ++editorSequence.current, asset, checkoutId: result.id, undoableOperationId: result.undoableOperationId, details: '', isSaving: false });
         if (!result.undoableOperationId) feedback.showNotice({ tone: 'warning', title: 'Return completed without undo', message: 'The asset was returned, but this return cannot be canceled.' });
       }
       void reconcile(() => mounted.current && session.active);
@@ -63,12 +68,12 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       if (mounted.current) setReturningAssetId(undefined);
     }
   }
-  async function finishReturn(undo: boolean) {
-    const session = focus.current;
+  async function finishReturn(undo: boolean, sessionId: number | undefined) {
+    const session = editorFocus.current?.active ? editorFocus.current : focus.current;
     const draft = editor.current;
-    if (!mounted.current || !session?.active || operationPending.current || !draft) return;
+    if (!permission.current || !mounted.current || !session?.active || operationPending.current || !draft || draft.sessionId !== sessionId) return;
     if (undo && !draft.undoableOperationId) { updateEditor(undefined); return; }
-    operationPending.current = true; updateEditor({ ...draft, isSaving: true });
+    operationPending.current = true; updateEditor({ ...draft, isSaving: true, error: undefined, operation: undo ? 'undo' : 'save' });
     try {
       if (undo) {
         await command.undoOperation({ operationId: draft.undoableOperationId! });
@@ -79,15 +84,16 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       updateEditor(undefined);
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      updateEditor({ ...draft, isSaving: false });
-      notice(session, undo ? 'Could not cancel return' : 'Could not save return details', error, undo ? 'The asset is still returned.' : 'Return details were not saved.');
+      updateEditor({ ...draft, isSaving: false, error: { title: undo ? 'Could not cancel return' : 'Could not save return details', message: error instanceof Error ? error.message : undo ? 'The asset is still returned.' : 'Return details were not saved.' } });
     } finally { operationPending.current = false; }
   }
   return {
     returningAssetId, pendingReturn, returnAsset,
+    setEditorFocused: (active: boolean) => { if (active) editorFocus.current = { active }; else if (editorFocus.current) editorFocus.current.active = false; },
     isReturnDisabled: (asset: HomeCheckedOutAssetViewModel) => operationPending.current || editor.current !== undefined || alreadyReturned(asset),
-    saveReturnDetails: () => finishReturn(false),
-    cancelReturn: () => finishReturn(true),
-    changeDetails: (details: string) => { if (!operationPending.current && editor.current) updateEditor({ ...editor.current, details }); }
+    saveReturnDetails: () => finishReturn(false, pendingReturn?.sessionId),
+    cancelReturn: () => finishReturn(true, pendingReturn?.sessionId),
+    closeReturn: () => { if (!permission.current && !operationPending.current && editor.current?.sessionId === pendingReturn?.sessionId) updateEditor(undefined); },
+    changeDetails: (details: string) => { if (permission.current && !operationPending.current && editor.current && editor.current.sessionId === pendingReturn?.sessionId) updateEditor({ ...editor.current, details }); }
   };
 }

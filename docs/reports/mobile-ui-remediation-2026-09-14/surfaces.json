@@ -1001,5 +1001,10 @@
       "apps/mobile/src/ui/screens/HomeScreen.tsx",
       "apps/mobile/src/ui/screens/useHomeReturnActions.ts"
     ]
+  },
+  {
+    "id": "R140",
+    "surface": "home-return-details.tsx",
+    "source": "apps/mobile/src/app/home-return-details.tsx"
   }
 ]

@@ -1,3 +1,6 @@
+import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
+export { HomeReturnFixture } from './HomeReturnFixture';
+export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
 import { Host, TextField } from '@expo/ui/swift-ui';
 import { accessibilityLabel, autocorrectionDisabled, keyboardType, textFieldStyle, textInputAutocapitalization } from '@expo/ui/swift-ui/modifiers';
 import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts';
@@ -49,8 +52,10 @@ function FixtureNavigation() {
   const [result, setResult] = useState('');
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider>
+  return <ResultContext.Provider value={{ result, setResult }}><AppFeedbackProvider><HomeReturnTaskProvider>
     <Stack screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+      <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
+      <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
@@ -60,7 +65,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     <AppKeyboardAccessory />
-  </AppFeedbackProvider></ResultContext.Provider>;
+  </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 export function FixtureMenu() {
@@ -76,6 +81,7 @@ export function FixtureMenu() {
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
+    <Button title="Audit Home Return" onPress={() => router.push('/audit-home-return' as Href)} />
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
     <Button title="Audit Expiration filters" onPress={() => router.push('/audit-expiration' as Href)} />
     <Button title="Audit medium expiration filters" onPress={() => router.push('/audit-expiration-medium' as Href)} />

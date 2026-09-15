@@ -168,9 +168,9 @@ R007,add.tsx,notifications,System notification entry and state,pending,,
 R007,add.tsx,media,"Camera, library, files and audio",pending,,
 R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,M46: native349150 iPad launch shows Maximum update depth exceeded in Screen/StackScreen/ScopedAddAssetScreen. Header options update feedback reproduction required. Earlier source checks cannot establish working launch.,M46
 R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
-R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
+R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,selection,Value selection and current value,pending,,
-R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
+R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R008,assets/[assetId]/checkouts.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R008,assets/[assetId]/checkouts.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -184,7 +184,7 @@ R008,assets/[assetId]/checkouts.tsx,accessibility,"VoiceOver/TalkBack names, rol
 R008,assets/[assetId]/checkouts.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R008,assets/[assetId]/checkouts.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Checkout history renders timeline records with checkout/return details and explicit cursor load. Existing mounted test preserves rows through continuation failure then loads next page. Full loaded history uses ScrollView: large-data performance remains unverified.,
 R008,assets/[assetId]/checkouts.tsx,search,"Search, scope and filters",pending,,
-R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",finding,"Native34917318548 fails readiness; inspected iPad Add shows Loading inventory without prior render error, History shows Loading checkout history. M50 query-state investigation; no native entry success claimed.",M50
+R008,assets/[assetId]/checkouts.tsx,loading,"Loading, background refresh and progress",runtime-partial,"Native349197 iPad screenshot shows loaded records but no native header. Initial sheet header/title now matches mounted screen; source checks pass, native Close/expansion acceptance pending. Add readiness remains M50; History is not purely a loading diagnosis.",M45
 R008,assets/[assetId]/checkouts.tsx,recovery,"Empty, error, denied and retry",pending,,
 R008,assets/[assetId]/checkouts.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R008,assets/[assetId]/checkouts.tsx,privacy,"Account scope, data use and permissions",pending,,
@@ -719,9 +719,9 @@ R030,settings/household/asset-types/new.tsx,privacy,"Account scope, data use and
 R030,settings/household/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R030,settings/household/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
 R030,settings/household/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
+R031,settings/household/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
-R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,pending,,
+R031,settings/household/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R031,settings/household/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R031,settings/household/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -729,10 +729,10 @@ R031,settings/household/fields/[resourceId].tsx,typography,"Dynamic Type, wrappi
 R031,settings/household/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
 R031,settings/household/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R031,settings/household/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,pending,,
+R031,settings/household/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R031,settings/household/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R031,settings/household/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R031,settings/household/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R031,settings/household/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
@@ -767,9 +767,9 @@ R032,settings/household/fields/index.tsx,privacy,"Account scope, data use and pe
 R032,settings/household/fields/index.tsx,notifications,System notification entry and state,pending,,
 R032,settings/household/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R032,settings/household/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
+R033,settings/household/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R033,settings/household/fields/new.tsx,selection,Value selection and current value,pending,,
+R033,settings/household/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R033,settings/household/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R033,settings/household/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -777,10 +777,10 @@ R033,settings/household/fields/new.tsx,typography,"Dynamic Type, wrapping and le
 R033,settings/household/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R033,settings/household/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R033,settings/household/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,pending,,
+R033,settings/household/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R033,settings/household/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R033,settings/household/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R033,settings/household/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R033,settings/household/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R033,settings/household/fields/new.tsx,search,"Search, scope and filters",pending,,
@@ -911,9 +911,9 @@ R038,settings/inventory/asset-types/new.tsx,privacy,"Account scope, data use and
 R038,settings/inventory/asset-types/new.tsx,notifications,System notification entry and state,pending,,
 R038,settings/inventory/asset-types/new.tsx,media,"Camera, library, files and audio",pending,,
 R038,settings/inventory/asset-types/new.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,navigation,"Navigation, hierarchy and return",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,modality,Presentation and dismissal,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -921,10 +921,10 @@ R039,settings/inventory/fields/[resourceId].tsx,typography,"Dynamic Type, wrappi
 R039,settings/inventory/fields/[resourceId].tsx,appearance,"Light/dark, contrast and materials",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,imagery,"Icons, photos and missing media",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,pending,,
+R039,settings/inventory/fields/[resourceId].tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R039,settings/inventory/fields/[resourceId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R039,settings/inventory/fields/[resourceId].tsx,motion,Reduced motion and feedback alternatives,pending,,
 R039,settings/inventory/fields/[resourceId].tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R039,settings/inventory/fields/[resourceId].tsx,search,"Search, scope and filters",pending,,
@@ -959,9 +959,9 @@ R040,settings/inventory/fields/index.tsx,privacy,"Account scope, data use and pe
 R040,settings/inventory/fields/index.tsx,notifications,System notification entry and state,pending,,
 R040,settings/inventory/fields/index.tsx,media,"Camera, library, files and audio",pending,,
 R040,settings/inventory/fields/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,pending,,
+R041,settings/inventory/fields/new.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,navigation,"Navigation, hierarchy and return",pending,,
-R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,pending,,
+R041,settings/inventory/fields/new.tsx,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,modality,Presentation and dismissal,pending,,
 R041,settings/inventory/fields/new.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R041,settings/inventory/fields/new.tsx,adaptation,Phone/tablet/window reflow,pending,,
@@ -969,10 +969,10 @@ R041,settings/inventory/fields/new.tsx,typography,"Dynamic Type, wrapping and le
 R041,settings/inventory/fields/new.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R041,settings/inventory/fields/new.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R041,settings/inventory/fields/new.tsx,imagery,"Icons, photos and missing media",pending,,
-R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,pending,,
+R041,settings/inventory/fields/new.tsx,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,gestures,Gestures and explicit alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R041,settings/inventory/fields/new.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 R041,settings/inventory/fields/new.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R041,settings/inventory/fields/new.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R041,settings/inventory/fields/new.tsx,search,"Search, scope and filters",pending,,
@@ -1379,14 +1379,14 @@ S058,onboarding / server entry,localization,"Locale, timezone, RTL and long stri
 S058,onboarding / server entry,imagery,"Icons, photos and missing media",pending,,
 S058,onboarding / server entry,targets,Touch target size and reachability,pending,,
 S058,onboarding / server entry,gestures,Gestures and explicit alternatives,pending,,
-S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
+S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,Native349208 candidate890cf904 iPhone production help/full URL/native keyboard dismissal passed. iPad launch/background-assertion failures prevented UI assertions. Submission fixtures and remaining configurations pending; not full M14 closure.,M14
 S058,onboarding / server entry,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S058,onboarding / server entry,motion,Reduced motion and feedback alternatives,pending,,
 S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination",pending,,
 S058,onboarding / server entry,search,"Search, scope and filters",pending,,
 S058,onboarding / server entry,loading,"Loading, background refresh and progress",pending,,
 S058,onboarding / server entry,recovery,"Empty, error, denied and retry",pending,,
-S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
+S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending",M14
 S058,onboarding / server entry,privacy,"Account scope, data use and permissions",pending,,
 S058,onboarding / server entry,notifications,System notification entry and state,pending,,
 S058,onboarding / server entry,media,"Camera, library, files and audio",pending,,
@@ -2519,9 +2519,9 @@ S105,Settings / field type choice,privacy,"Account scope, data use and permissio
 S105,Settings / field type choice,notifications,System notification entry and state,pending,,
 S105,Settings / field type choice,media,"Camera, library, files and audio",pending,,
 S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,navigation,"Navigation, hierarchy and return",pending,,
-S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,modality,Presentation and dismissal,pending,,
 S106,Settings / field applicability,layout,"Safe areas, scroll edges and overlays",pending,,
 S106,Settings / field applicability,adaptation,Phone/tablet/window reflow,pending,,
@@ -2529,10 +2529,10 @@ S106,Settings / field applicability,typography,"Dynamic Type, wrapping and legib
 S106,Settings / field applicability,appearance,"Light/dark, contrast and materials",pending,,
 S106,Settings / field applicability,localization,"Locale, timezone, RTL and long strings",pending,,
 S106,Settings / field applicability,imagery,"Icons, photos and missing media",pending,,
-S106,Settings / field applicability,targets,Touch target size and reachability,pending,,
+S106,Settings / field applicability,targets,Touch target size and reachability,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,gestures,Gestures and explicit alternatives,pending,,
 S106,Settings / field applicability,keyboard,"Keyboard, text entry and focus",pending,,
-S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,motion,Reduced motion and feedback alternatives,pending,,
 S106,Settings / field applicability,content,"Lists, hierarchy, density and pagination",pending,,
 S106,Settings / field applicability,search,"Search, scope and filters",pending,,
@@ -2543,9 +2543,9 @@ S106,Settings / field applicability,privacy,"Account scope, data use and permiss
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,
 S106,Settings / field applicability,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M15; saved options immutable, draft removal in place; 43 focused tests/check/structural; native fixture pending",M15
+S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,navigation,"Navigation, hierarchy and return",pending,,
-S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M15; saved options immutable, draft removal in place; 43 focused tests/check/structural; native fixture pending",M15
+S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,modality,Presentation and dismissal,pending,,
 S107,Settings / enum options,layout,"Safe areas, scroll edges and overlays",pending,,
 S107,Settings / enum options,adaptation,Phone/tablet/window reflow,pending,,
@@ -2553,10 +2553,10 @@ S107,Settings / enum options,typography,"Dynamic Type, wrapping and legibility",
 S107,Settings / enum options,appearance,"Light/dark, contrast and materials",pending,,
 S107,Settings / enum options,localization,"Locale, timezone, RTL and long strings",pending,,
 S107,Settings / enum options,imagery,"Icons, photos and missing media",pending,,
-S107,Settings / enum options,targets,Touch target size and reachability,pending,,
+S107,Settings / enum options,targets,Touch target size and reachability,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,gestures,Gestures and explicit alternatives,pending,,
 S107,Settings / enum options,keyboard,"Keyboard, text entry and focus",pending,,
-S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
 S107,Settings / enum options,motion,Reduced motion and feedback alternatives,pending,,
 S107,Settings / enum options,content,"Lists, hierarchy, density and pagination",pending,,
 S107,Settings / enum options,search,"Search, scope and filters",pending,,
@@ -2569,7 +2569,7 @@ S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
 S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S108,Settings / tag color,task,Task clarity and platform-pattern fit,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,navigation,"Navigation, hierarchy and return",pending,,
-S108,Settings / tag color,selection,Value selection and current value,runtime-partial,"34912595714 phone native color open/close/Green/Clear passed. iPad opens popover; outside-dismissal procedure corrected, runtime pending. Other cases unverified.",M23
+S108,Settings / tag color,selection,Value selection and current value,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
 S108,Settings / tag color,modality,Presentation and dismissal,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,layout,"Safe areas, scroll edges and overlays",pending,,
 S108,Settings / tag color,adaptation,Phone/tablet/window reflow,pending,,
@@ -2577,8 +2577,8 @@ S108,Settings / tag color,typography,"Dynamic Type, wrapping and legibility",pen
 S108,Settings / tag color,appearance,"Light/dark, contrast and materials",pending,,
 S108,Settings / tag color,localization,"Locale, timezone, RTL and long strings",pending,,
 S108,Settings / tag color,imagery,"Icons, photos and missing media",pending,,
-S108,Settings / tag color,targets,Touch target size and reachability,pending,,
-S108,Settings / tag color,gestures,Gestures and explicit alternatives,pending,,
+S108,Settings / tag color,targets,Touch target size and reachability,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
+S108,Settings / tag color,gestures,Gestures and explicit alternatives,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
 S108,Settings / tag color,keyboard,"Keyboard, text entry and focus",pending,,
 S108,Settings / tag color,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S108,Settings / tag color,motion,Reduced motion and feedback alternatives,pending,,
@@ -3266,7 +3266,7 @@ S136,Asset Move here / asset search and selection,lifecycle,"Cold/warm start, bl
 S137,Home return / optional details,task,Task clarity and platform-pattern fit,pending,,
 S137,Home return / optional details,navigation,"Navigation, hierarchy and return",pending,,
 S137,Home return / optional details,selection,Value selection and current value,pending,,
-S137,Home return / optional details,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S137,Home return / optional details,modality,Presentation and dismissal,finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S137,Home return / optional details,layout,"Safe areas, scroll edges and overlays",pending,,
 S137,Home return / optional details,adaptation,Phone/tablet/window reflow,pending,,
 S137,Home return / optional details,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -3275,22 +3275,22 @@ S137,Home return / optional details,localization,"Locale, timezone, RTL and long
 S137,Home return / optional details,imagery,"Icons, photos and missing media",pending,,
 S137,Home return / optional details,targets,Touch target size and reachability,pending,,
 S137,Home return / optional details,gestures,Gestures and explicit alternatives,pending,,
-S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S137,Home return / optional details,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
+S137,Home return / optional details,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S137,Home return / optional details,motion,Reduced motion and feedback alternatives,pending,,
 S137,Home return / optional details,content,"Lists, hierarchy, density and pagination",pending,,
 S137,Home return / optional details,search,"Search, scope and filters",pending,,
 S137,Home return / optional details,loading,"Loading, background refresh and progress",pending,,
-S137,Home return / optional details,recovery,"Empty, error, denied and retry",pending,,
-S137,Home return / optional details,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
-S137,Home return / optional details,privacy,"Account scope, data use and permissions",pending,,
+S137,Home return / optional details,recovery,"Empty, error, denied and retry",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
+S137,Home return / optional details,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
+S137,Home return / optional details,privacy,"Account scope, data use and permissions",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
 S137,Home return / optional details,notifications,System notification entry and state,pending,,
 S137,Home return / optional details,media,"Camera, library, files and audio",pending,,
-S137,Home return / optional details,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S137,Home return / optional details,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
 S138,Home return / save pending and recovery,task,Task clarity and platform-pattern fit,pending,,
 S138,Home return / save pending and recovery,navigation,"Navigation, hierarchy and return",pending,,
 S138,Home return / save pending and recovery,selection,Value selection and current value,pending,,
-S138,Home return / save pending and recovery,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S138,Home return / save pending and recovery,modality,Presentation and dismissal,finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S138,Home return / save pending and recovery,layout,"Safe areas, scroll edges and overlays",pending,,
 S138,Home return / save pending and recovery,adaptation,Phone/tablet/window reflow,pending,,
 S138,Home return / save pending and recovery,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -3299,22 +3299,22 @@ S138,Home return / save pending and recovery,localization,"Locale, timezone, RTL
 S138,Home return / save pending and recovery,imagery,"Icons, photos and missing media",pending,,
 S138,Home return / save pending and recovery,targets,Touch target size and reachability,pending,,
 S138,Home return / save pending and recovery,gestures,Gestures and explicit alternatives,pending,,
-S138,Home return / save pending and recovery,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S138,Home return / save pending and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S138,Home return / save pending and recovery,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
+S138,Home return / save pending and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S138,Home return / save pending and recovery,motion,Reduced motion and feedback alternatives,pending,,
 S138,Home return / save pending and recovery,content,"Lists, hierarchy, density and pagination",pending,,
 S138,Home return / save pending and recovery,search,"Search, scope and filters",pending,,
 S138,Home return / save pending and recovery,loading,"Loading, background refresh and progress",pending,,
-S138,Home return / save pending and recovery,recovery,"Empty, error, denied and retry",pending,,
-S138,Home return / save pending and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
-S138,Home return / save pending and recovery,privacy,"Account scope, data use and permissions",pending,,
+S138,Home return / save pending and recovery,recovery,"Empty, error, denied and retry",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
+S138,Home return / save pending and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
+S138,Home return / save pending and recovery,privacy,"Account scope, data use and permissions",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
 S138,Home return / save pending and recovery,notifications,System notification entry and state,pending,,
 S138,Home return / save pending and recovery,media,"Camera, library, files and audio",pending,,
-S138,Home return / save pending and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S138,Home return / save pending and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
 S139,Home return / cancellation and recovery,task,Task clarity and platform-pattern fit,pending,,
 S139,Home return / cancellation and recovery,navigation,"Navigation, hierarchy and return",pending,,
 S139,Home return / cancellation and recovery,selection,Value selection and current value,pending,,
-S139,Home return / cancellation and recovery,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S139,Home return / cancellation and recovery,modality,Presentation and dismissal,finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S139,Home return / cancellation and recovery,layout,"Safe areas, scroll edges and overlays",pending,,
 S139,Home return / cancellation and recovery,adaptation,Phone/tablet/window reflow,pending,,
 S139,Home return / cancellation and recovery,typography,"Dynamic Type, wrapping and legibility",pending,,
@@ -3323,15 +3323,39 @@ S139,Home return / cancellation and recovery,localization,"Locale, timezone, RTL
 S139,Home return / cancellation and recovery,imagery,"Icons, photos and missing media",pending,,
 S139,Home return / cancellation and recovery,targets,Touch target size and reachability,pending,,
 S139,Home return / cancellation and recovery,gestures,Gestures and explicit alternatives,pending,,
-S139,Home return / cancellation and recovery,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S139,Home return / cancellation and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
+S139,Home return / cancellation and recovery,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
+S139,Home return / cancellation and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S139,Home return / cancellation and recovery,motion,Reduced motion and feedback alternatives,pending,,
 S139,Home return / cancellation and recovery,content,"Lists, hierarchy, density and pagination",pending,,
 S139,Home return / cancellation and recovery,search,"Search, scope and filters",pending,,
 S139,Home return / cancellation and recovery,loading,"Loading, background refresh and progress",pending,,
-S139,Home return / cancellation and recovery,recovery,"Empty, error, denied and retry",pending,,
-S139,Home return / cancellation and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
-S139,Home return / cancellation and recovery,privacy,"Account scope, data use and permissions",pending,,
+S139,Home return / cancellation and recovery,recovery,"Empty, error, denied and retry",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
+S139,Home return / cancellation and recovery,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
+S139,Home return / cancellation and recovery,privacy,"Account scope, data use and permissions",source-reviewed,Source tests verify permission loss retains readonly draft and offers non-mutating Close; stale Save/Cancel rejected. Failed Save retains editable draft and local error for retry. Native acceptance pending.,M47
 S139,Home return / cancellation and recovery,notifications,System notification entry and state,pending,,
 S139,Home return / cancellation and recovery,media,"Camera, library, files and audio",pending,,
-S139,Home return / cancellation and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S139,Home return / cancellation and recovery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; M47 unique editor session rejects earlier callbacks; route self-dismissal waits for focus and returns Home without back destination; route-level source tests pass.",M48
+R140,home-return-details.tsx,task,Task clarity and platform-pattern fit,pending,,
+R140,home-return-details.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R140,home-return-details.tsx,selection,Value selection and current value,pending,,
+R140,home-return-details.tsx,modality,Presentation and dismissal,pending,,
+R140,home-return-details.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
+R140,home-return-details.tsx,adaptation,Phone/tablet/window reflow,pending,,
+R140,home-return-details.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
+R140,home-return-details.tsx,appearance,"Light/dark, contrast and materials",pending,,
+R140,home-return-details.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
+R140,home-return-details.tsx,imagery,"Icons, photos and missing media",pending,,
+R140,home-return-details.tsx,targets,Touch target size and reachability,pending,,
+R140,home-return-details.tsx,gestures,Gestures and explicit alternatives,pending,,
+R140,home-return-details.tsx,keyboard,"Keyboard, text entry and focus",pending,,
+R140,home-return-details.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
+R140,home-return-details.tsx,motion,Reduced motion and feedback alternatives,pending,,
+R140,home-return-details.tsx,content,"Lists, hierarchy, density and pagination",pending,,
+R140,home-return-details.tsx,search,"Search, scope and filters",pending,,
+R140,home-return-details.tsx,loading,"Loading, background refresh and progress",pending,,
+R140,home-return-details.tsx,recovery,"Empty, error, denied and retry",pending,,
+R140,home-return-details.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R140,home-return-details.tsx,privacy,"Account scope, data use and permissions",pending,,
+R140,home-return-details.tsx,notifications,System notification entry and state,pending,,
+R140,home-return-details.tsx,media,"Camera, library, files and audio",pending,,
+R140,home-return-details.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,

@@ -30,6 +30,15 @@ final class FixtureAuditTests: XCTestCase {
     hierarchy.name = "\(name)-hierarchy"
     hierarchy.lifetime = .keepAlways
     add(hierarchy)
+    // debugDescription truncates AX values; retain the safe fixture diagnostic verbatim.
+    let diagnostics = app.staticTexts.matching(NSPredicate(format: "label == %@", "Audit query readiness"))
+    for (index, element) in diagnostics.allElementsBoundByIndex.enumerated() {
+      guard let value = element.value as? String, value.hasPrefix("{") else { continue }
+      let readiness = XCTAttachment(string: value)
+      readiness.name = "\(name)-query-readiness-\(index)"
+      readiness.lifetime = .keepAlways
+      add(readiness)
+    }
   }
   private func verifyFullSheetLayout(_ variant: String) {
     let open = app.buttons["Audit \(variant) sheet"]
@@ -266,6 +275,73 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-complete-address-submission")
   }
 
+  func testOnboardingKeyboardGoSubmitsCompleteAddress() {
+    let open = app.buttons["Audit onboarding submission"]
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let address = app.textFields["Server address"]
+    XCTAssertTrue(address.waitForExistence(timeout: 5))
+    address.tap()
+    waitForKeyboard()
+    address.typeText("https://example.invalid")
+    XCTAssertEqual(address.value as? String, "https://example.invalid")
+    let go = app.keyboards.buttons["Go"]
+    XCTAssertTrue(go.isHittable)
+    go.tap()
+    XCTAssertTrue(app.staticTexts["Submitted address: https://example.invalid"].waitForExistence(timeout: 5))
+    capture("onboarding-keyboard-go-submission")
+  }
+
+  private func openHomeReturn() {
+    let open = app.buttons["Audit Home Return"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    open.tap()
+    let action = app.buttons["Return Audit drill"]
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    for _ in 0..<3 where !action.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(action.isHittable)
+    action.tap()
+    XCTAssertTrue(app.navigationBars["Return details"].waitForExistence(timeout: 5))
+  }
+
+  func testHomeReturnCancelRestoresCheckout() {
+    openHomeReturn()
+    let cancel = app.buttons["Cancel return"]
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+    XCTAssertTrue(cancel.isHittable)
+    capture("home-return-native-sheet")
+    cancel.tap()
+    XCTAssertTrue(app.buttons["Return Audit drill"].waitForExistence(timeout: 5))
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Return details"])], timeout: 5), .completed)
+    capture("home-return-undo-restored")
+  }
+
+  func testHomeReturnDetailsRecoverInsideSheet() {
+    openHomeReturn()
+    let details = app.textViews["Optional return details"]
+    XCTAssertTrue(details.waitForExistence(timeout: 5))
+    details.tap()
+    waitForKeyboard()
+    details.typeText("Returned clean")
+    XCTAssertEqual(details.value as? String, "Returned clean")
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.isHittable)
+    dismiss.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
+    let save = app.buttons["Save"]
+    for _ in 0..<3 where !save.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(save.isHittable)
+    save.tap()
+    XCTAssertTrue(app.staticTexts["Return details error"].waitForExistence(timeout: 5))
+    XCTAssertEqual(details.value as? String, "Returned clean")
+    capture("home-return-save-error-retained")
+    XCTAssertTrue(save.isHittable)
+    save.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Return details"])], timeout: 5), .completed)
+    capture("home-return-save-complete")
+  }
+
   private func openDraftPhotos() {
     let open = app.buttons["Audit draft photos"]
     for _ in 0..<6 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -373,6 +449,20 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
     app.buttons["No tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+  }
+
+  func testColorWellTargetOpensSystemPicker() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertTrue(picker.isHittable)
+    XCTAssertGreaterThan(picker.frame.width, picker.frame.height)
+    // The captured LTR system control places its circular well at the row's trailing edge.
+    let well = picker.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+      .withOffset(CGVector(dx: -picker.frame.height / 2, dy: 0))
+    well.tap()
+    XCTAssertTrue(app.buttons["Sliders"].waitForExistence(timeout: 5))
+    capture("color-visible-well-target")
   }
 
   func testExactExpirationUsesCompactNativePicker() {

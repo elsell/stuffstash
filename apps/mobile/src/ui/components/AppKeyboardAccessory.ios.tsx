@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react-native';
 import { Keyboard, PlatformColor, Pressable, StyleSheet, View } from 'react-native';
-import { KeyboardExtender } from 'react-native-keyboard-controller';
+import { KeyboardController, KeyboardExtender } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function AppKeyboardAccessory() {
@@ -38,7 +38,7 @@ export function AppKeyboardAccessory() {
             accessibilityLabel="Dismiss keyboard"
             accessibilityRole="button"
             hitSlop={4}
-            onPress={Keyboard.dismiss}
+            onPress={() => { void KeyboardController.dismiss(); }}
             style={styles.action}
           >
             <ChevronDown color={PlatformColor('link')} size={24} strokeWidth={2.2} />

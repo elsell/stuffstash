@@ -367,3 +367,18 @@ PostgreSQL tests must cover:
 ## Expiration Capability
 
 `../expiration/expiration-tracking.spec.md` extends type create/update metadata with `expirationEnabled` (default false), independently configurable for any custom type. This capability does not change kind, scope or tags.
+
+### Mobile field-editor commands
+
+Expanding an existing field from selected asset types to all assets is a draft
+command, not a radio choice. Present `Expand to all assets` with the shared native
+command adapter; the editor's Save/Discard behavior still governs persistence.
+Likewise, `Add option` uses the native command adapter and preserves normalization,
+duplicate handling and draft clearing. Place it below its input so the native
+full-width button does not compete with a text field in a horizontal row.
+
+Both commands honor the editor's permission and busy state. Persisted enum options
+and persisted applicability targets retain their existing protection. Flat Type
+and initial Applies to values remain native pickers; this change must not restore
+custom radios or introduce navigation. Verify both household and inventory field
+editor consumers and retain explicit native large-text/keyboard acceptance gaps.

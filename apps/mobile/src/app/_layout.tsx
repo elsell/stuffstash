@@ -1,3 +1,4 @@
+import { HomeReturnTaskProvider } from '../ui/navigation/HomeReturnTaskPresentation';
 import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
 import { StatusBar } from 'expo-status-bar';
@@ -37,7 +38,7 @@ function ThemedApp() {
 
   return (
     <InventoryInvitationLinkProvider>
-    <AppServicesProvider>
+    <AppServicesProvider><HomeReturnTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -130,6 +131,7 @@ function ThemedApp() {
         />
         <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
         <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
+        <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}
@@ -149,7 +151,7 @@ function ThemedApp() {
       <PushNotificationNavigation />
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
-    </AppServicesProvider>
+    </HomeReturnTaskProvider></AppServicesProvider>
     </InventoryInvitationLinkProvider>
   );
 }

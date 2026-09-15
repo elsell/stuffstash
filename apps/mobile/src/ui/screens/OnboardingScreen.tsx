@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ConnectionProfile } from '../../application/onboarding/ConnectionProfile';
 import { OnboardingCommand, OnboardingSupersededError, type OnboardingStartState } from '../../application/onboarding/OnboardingCommand';
 import { MobileAuthenticationRequiredError } from '../../application/auth/MobileAuthSession';
+import { OnboardingAddressInput } from './OnboardingAddressInput';
 import { BrandMark } from '../components/BrandMark';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -101,10 +102,11 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   function input(label: string, value: string, onChangeText: (value: string) => void, placeholder: string, url = false) {
     return <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <OnboardingTextInput key={label} accessibilityLabel={label} initialValue={value} onChangeText={onChangeText}
+      {url ? <OnboardingAddressInput initialValue={value} onChangeText={onChangeText}
+        disabled={submitting} onSubmit={() => void proceed()} /> : <OnboardingTextInput key={label} accessibilityLabel={label} initialValue={value} onChangeText={onChangeText}
         placeholder={placeholder} placeholderTextColor={colors.textMuted} autoCorrect={false}
-        autoCapitalize={url ? 'none' : 'sentences'} keyboardType={url ? 'url' : 'default'}
-        editable={!submitting} returnKeyType="go" onSubmitEditing={() => void proceed()} style={styles.input} />
+        autoCapitalize="sentences" keyboardType="default"
+        editable={!submitting} returnKeyType="go" onSubmitEditing={() => void proceed()} style={styles.input} />}
     </View>;
   }
 
