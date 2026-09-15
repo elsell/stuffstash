@@ -2403,3 +2403,14 @@ Review identified pinned React Native's scroll-offset clamping: iOS also needs
 scrollToOverflowEnabled, as already used by Add. This was added after a failing
 regression assertion. The final full remote suite passes1,736 tests/271 files,
 TypeScript and structural checks. This does not replace the pending native rerun.
+
+### M170 — Conversation response and decision commands bypass native adapters
+
+P2 source-confirmed at6edc7e85. VoiceConversationExchange paints Previous/Next and
+Retry photos as text Pressables; VoiceSessionSheetScreen paints Approve/Cancel
+decision buttons. They issue commands rather than select values or navigate to
+settings. The composer already uses native controls, so the surrounding command
+styling is inconsistent. Migrate through existing native command adapters while
+preserving disabled boundaries, plan IDs, pending locks and reduced-motion rail
+navigation. Keep card/link navigation separate. Source finding only; correction
+and native layout acceptance remain open.

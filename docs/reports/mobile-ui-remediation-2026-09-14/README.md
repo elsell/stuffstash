@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,381
-pending,1,437 source-reviewed,427 finding,24 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,354
+pending,1,458 source-reviewed,433 finding,24 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -124,6 +124,10 @@ native geometry assertion is added, with native rerun pending.
 The combined M169 checkpoint passes1,736 tests across271 files, TypeScript and
 mobile structural checks on paul, including the review correction for iOS offset
 clamping. This remains source validation; native acceptance is not claimed.
+
+The [typed composer](conversation-composer-axis.md) has all24 source axes reviewed;
+its native controls and pending request behavior are distinct from recording and
+plan approval acceptance. M170 tracks remaining custom response/decision commands.
 The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
 nested diagnostic layout from the direct-scroll structure used by production filters.
 
