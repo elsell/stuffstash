@@ -82,6 +82,11 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]
     XCTAssertTrue(connect.isHittable, "Connection action must remain reachable after dismissing the keyboard by scrolling")
+    help.tap()
+    XCTAssertTrue(helpText.waitForExistence(timeout: 5))
+    XCTAssertEqual(address.value as? String, "https://example.invalid", "Opening help must preserve the native draft")
+    help.tap()
+    XCTAssertEqual(address.value as? String, "https://example.invalid", "Closing help must preserve the native draft")
     // Do not contact an external instance or open an identity-provider session.
     capture("onboarding-action-reachable")
   }

@@ -174,3 +174,25 @@ hit-region, description, traits, Dynamic Type and clipping checks without suppre
 Unsupported pre-iOS17 audit runtimes explicitly skip. Critic found no source blocker.
 This is a new candidate, not a declaration that expansion or keyboard behavior is
 fixed; those native results remain required.
+
+### M14 system address-field candidate
+
+The iOS onboarding address now uses the pinned SwiftUI TextField path that preserved
+both native and callback values on phone and tablet in run34917318548. Other form
+fields and Android retain their existing input implementation. The shared iOS
+keyboard accessory now asks the native keyboard controller to resign the current
+responder; React Native's focused-input registry does not include the SwiftUI field.
+This follows a confirmed critic finding before native acceptance.
+
+The existing full-address typing, explicit accessory dismissal and command
+submission assertions remain intact. Added native scenarios cover Go submission
+and draft preservation when help opens/closes. These changes are candidates,
+not a verified resolution of M14; native keyboard/layout/adaptation remain pending.
+They are excluded from the interim release built from merged PR131.
+
+Remote validation: 12 existing onboarding/accessory/invitation behavior tests,
+TypeScript, mobile structural checks and two fixture-installer safety tests passed
+(`/tmp/native-address-final.log` on paul). The accessory test first failed against
+the old RN dismissal path. Critic re-review found no remaining confirmed blocker.
+These tests cover source behavior and wiring; the SwiftUI adapter still needs its
+native run and must not inherit the generic renderer's test coverage claim.

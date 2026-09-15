@@ -156,8 +156,8 @@ describe('AppKeyboardAccessory', () => {
     expect(harness.byTestId('app-keyboard-accessory-host')?.props.accessibilityElementsHidden).toBe(false);
 
     await harness.press(action);
-    expect(keyboardDismissCount()).toBe(1);
-    expect(keyboardControllerDismissCount()).toBe(0);
+    expect(keyboardDismissCount()).toBe(0);
+    expect(keyboardControllerDismissCount()).toBe(1);
     expect(changes).toBe(0);
     expect(submissions).toBe(0);
     expect(harness.byLabel('Description')?.props.value).toBe('Still editing');

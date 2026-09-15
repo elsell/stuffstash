@@ -292,3 +292,29 @@ authentication values or production configuration. Keep diagnostics runner-only;
 retain existing readiness and interaction assertions. The diagnostic component
 must not alter connectivity, pre-seed the cache, bypass the scoped query path or
 turn a loading screen into a passing acceptance result.
+
+### Onboarding address input candidate
+
+After run34917318548 preserved the entire URL through the SwiftUI comparison on
+both phone and tablet while production onboarding still lost characters, use the
+already-pinned Expo SwiftUI TextField for the iOS server-address field. This is a
+single-line URL entry task, not a search or navigation task. Keep the visible field
+label, URL keyboard, disabled autocorrection/capitalization, native Go submission,
+and pending disabled state. Native text owns its editing value; React receives
+changes for validation and submission without replacing text on each keystroke.
+Help/error renders must preserve the draft; leaving and restarting setup remounts
+an empty field. Android retains its existing platform text-input path. Other
+onboarding fields are outside this candidate until evidence requires changing them.
+
+The production full-address typing and submission assertions remain unchanged.
+Source tests do not establish that native typing, keyboard avoidance, focus or
+large text works; require the complete production onboarding and submission
+scenarios on phone and tablet before closing M14.
+
+The shared iOS keyboard accessory must dismiss the actual native first responder,
+including both React Native and SwiftUI text fields. Use the already-pinned keyboard
+controller's native responder dismissal, which does not depend on React Native's
+focused-input registry. Preserve the explicit accessory command and its no-submit,
+no-edit semantics for every consuming form. Retain the fixture assertion that taps
+Dismiss keyboard and waits for keyboard disappearance, in addition to scroll and
+Go submission scenarios.

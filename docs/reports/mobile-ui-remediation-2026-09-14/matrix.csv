@@ -1379,14 +1379,14 @@ S058,onboarding / server entry,localization,"Locale, timezone, RTL and long stri
 S058,onboarding / server entry,imagery,"Icons, photos and missing media",pending,,
 S058,onboarding / server entry,targets,Touch target size and reachability,pending,,
 S058,onboarding / server entry,gestures,Gestures and explicit alternatives,pending,,
-S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
+S058,onboarding / server entry,keyboard,"Keyboard, text entry and focus",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending",M14
 S058,onboarding / server entry,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S058,onboarding / server entry,motion,Reduced motion and feedback alternatives,pending,,
 S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination",pending,,
 S058,onboarding / server entry,search,"Search, scope and filters",pending,,
 S058,onboarding / server entry,loading,"Loading, background refresh and progress",pending,,
 S058,onboarding / server entry,recovery,"Empty, error, denied and retry",pending,,
-S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending",M14
+S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending",M14
 S058,onboarding / server entry,privacy,"Account scope, data use and permissions",pending,,
 S058,onboarding / server entry,notifications,System notification entry and state,pending,,
 S058,onboarding / server entry,media,"Camera, library, files and audio",pending,,

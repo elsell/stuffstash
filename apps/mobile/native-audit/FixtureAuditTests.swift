@@ -266,6 +266,24 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-complete-address-submission")
   }
 
+  func testOnboardingKeyboardGoSubmitsCompleteAddress() {
+    let open = app.buttons["Audit onboarding submission"]
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let address = app.textFields["Server address"]
+    XCTAssertTrue(address.waitForExistence(timeout: 5))
+    address.tap()
+    waitForKeyboard()
+    address.typeText("https://example.invalid")
+    XCTAssertEqual(address.value as? String, "https://example.invalid")
+    let go = app.keyboards.buttons["Go"]
+    XCTAssertTrue(go.isHittable)
+    go.tap()
+    XCTAssertTrue(app.staticTexts["Submitted address: https://example.invalid"].waitForExistence(timeout: 5))
+    capture("onboarding-keyboard-go-submission")
+  }
+
   private func openDraftPhotos() {
     let open = app.buttons["Audit draft photos"]
     for _ in 0..<6 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
