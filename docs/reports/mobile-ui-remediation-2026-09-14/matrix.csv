@@ -1488,7 +1488,7 @@ S062,onboarding / partial setup recovery,notifications,System notification entry
 S062,onboarding / partial setup recovery,media,"Camera, library, files and audio",pending,,
 S062,onboarding / partial setup recovery,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S063,Home / expiration summary,task,Task clarity and platform-pattern fit,pending,,
-S063,Home / expiration summary,navigation,"Navigation, hierarchy and return",pending,,
+S063,Home / expiration summary,navigation,"Navigation, hierarchy and return",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only,M128
 S063,Home / expiration summary,selection,Value selection and current value,pending,,
 S063,Home / expiration summary,modality,Presentation and dismissal,pending,,
 S063,Home / expiration summary,layout,"Safe areas, scroll edges and overlays",pending,,
@@ -1504,10 +1504,10 @@ S063,Home / expiration summary,accessibility,"VoiceOver/TalkBack names, roles, s
 S063,Home / expiration summary,motion,Reduced motion and feedback alternatives,pending,,
 S063,Home / expiration summary,content,"Lists, hierarchy, density and pagination",pending,,
 S063,Home / expiration summary,search,"Search, scope and filters",pending,,
-S063,Home / expiration summary,loading,"Loading, background refresh and progress",pending,,
-S063,Home / expiration summary,recovery,"Empty, error, denied and retry",pending,,
+S063,Home / expiration summary,loading,"Loading, background refresh and progress",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only,M128
+S063,Home / expiration summary,recovery,"Empty, error, denied and retry",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only,M128
 S063,Home / expiration summary,editing,"Draft, save, cancel, undo and interruption",pending,,
-S063,Home / expiration summary,privacy,"Account scope, data use and permissions",pending,,
+S063,Home / expiration summary,privacy,"Account scope, data use and permissions",finding,findings.md M128; ExpirationHomeEntry and ExpirationHomeSection at8b0dfc7b; source only,M128
 S063,Home / expiration summary,notifications,System notification entry and state,pending,,
 S063,Home / expiration summary,media,"Camera, library, files and audio",pending,,
 S063,Home / expiration summary,lifecycle,"Cold/warm start, blur, background and deep link",pending,,

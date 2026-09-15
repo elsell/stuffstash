@@ -1714,3 +1714,16 @@ Seven focused picker/controller tests plus TypeScript/structural checks passed;
 an additional blur/refocus-before-rejection case also passes. Critic found no
 confirmed blocker. Native menu, navigation, error placement and theme-transition
 acceptance remain pending.
+
+## M128 — Home expiration entry lacks an inventory-scope gate
+
+P2, S063, source-confirmed at8b0dfc7b. ExpirationHomeEntry defaults unresolved
+tenant/inventory IDs to empty strings but still supplies active onOpen navigation.
+ExpirationHomeSection renders See all while data is loading or errored. A tap can
+therefore push /expiration with empty scope. Separately, the entry hides resource
+access failures but not inventory-scope errors; cached rows can remain visible
+when inventory scope has failed. Gate navigation on usable scope and hide data
+while scope is unavailable/errored, preserving explicit retry. Verify unresolved
+scope, cached-data scope failure, retry and recovered navigation at the mounted
+entry boundary. No server authorization bypass is claimed; this is client
+presentation/navigation correctness. Not yet corrected.
