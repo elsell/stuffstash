@@ -1661,3 +1661,26 @@ For the Back-label fixture correction, both fixture-preparation tests, mobile
 TypeScript and structural checks pass on paul. Read-only critic found no confirmed
 issue; existing native navigation selectors use BackButton and remain valid.
 Native execution of this correction is pending.
+
+
+### Run34998354801 onboarding results (actual54714ab4)
+
+The iPhone onboarding job104481672371 passed. iPad job104481672540 completed
+three tests with one failure. `testConnectionHelpAndKeyboardKeepActionsReachable`
+fails the tappable-key prerequisite before typing; retained image and hierarchy
+are `evidence/ipad-onboarding-keyboard-unreachable-349983.png` and `.txt`.
+The inspected image shows the centered form, focused empty address and visible
+keyboard. The hierarchy exposes alphabetic keys but the test's per-index hit
+queries fail; keyboard presence alone cannot establish touch operability.
+
+`testIPadKeyboardDismissalFromInsideFormColumn` passes the same help-open/close,
+address focus, tappable-key prerequisite and complete-address typing sequence.
+Its gesture variation occurs only afterward. `testOnboardingAdaptsToLandscape`
+also passes. This contrast is evidence of intermittent failure, not proof of a
+root cause or grounds to bypass keyboard readiness. The failed ordinary journey
+still needs acceptance. Both fixture jobs remain running at this checkpoint.
+
+Downloaded artifact revision.txt verifies54714ab4ec7a700316a81baabbd5d01048b15e50.
+Full downloaded evidence is `/tmp/native349983-ipad-onboarding`; job log is
+`/tmp/native349983-ipad-onboarding.log`. This run predates subsequent corrections;
+no current-batch native pass is claimed.
