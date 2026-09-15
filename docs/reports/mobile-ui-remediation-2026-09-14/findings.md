@@ -1074,3 +1074,10 @@ scroll with metadata and fields, retaining separate completion actions. Its
 containment regression failed before the change. Actual enlarged-text scrolling,
 button measurement and footer reachability remain pending on the corrected build.
 See native-evidence.md for the old119-point viewport and search-selector findings.
+
+M93 shared-consumer follow-up: Add had the same unexplained overlong-name
+rejection as Edit. It now resolves once per render for both eligibility and
+staging and displays Use a shorter tag name beside the field. The regression
+failed before the change, then18 Add/resolver checks, TypeScript and structural
+checks passed remotely. Critic found no confirmed issue. Native feedback and
+announcement remain pending; existing color validation is separate.

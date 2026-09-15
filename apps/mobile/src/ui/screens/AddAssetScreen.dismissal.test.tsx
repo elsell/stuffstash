@@ -228,7 +228,13 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await render(h); await settle();
     await h.changeText(h.byLabel('Asset name'), 'Tent');
     await h.press(h.byText('More details')?.parent ?? undefined);
+    const overlongName = 'Camping'.repeat(20);
+    await h.changeText(h.byLabel('New tag name'), overlongName);
+    expect(h.byText('Use a shorter tag name.')).toBeDefined();
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe(overlongName);
     await h.changeText(h.byLabel('New tag name'), 'Camping');
+    expect(h.byText('Use a shorter tag name.')).toBeUndefined();
     await h.press(h.byText('More details')?.parent ?? undefined);
     expect(h.byText('Open More details to add or clear the unfinished tag before saving.')).toBeDefined();
     await h.press(h.byText('More details')?.parent ?? undefined);

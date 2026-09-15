@@ -43,3 +43,7 @@ M96 now has a correction candidate with route-owned, scoped entry persistence,
 collapse/reopen guidance and guarded Save. Nineteen remote Add tests plus type and
 structural checks passed. This supersedes the local-entry observations above;
 native acceptance and the separate discovery/overlong-name review remain open.
+
+M93 now also has an Add correction candidate: resolver-driven overlong-name
+feedback retains the entered value and clears after correction. Eighteen remote
+Add/resolver tests plus type/structural checks passed; native feedback is pending.

@@ -265,3 +265,8 @@ entry; staging a tag clears it atomically with selection/definition updates.
 
 When Add details is collapsed with unfinished entry, show an adjacent instruction
 to reopen More details and add or clear it, so disabled Save remains explained.
+
+Add and Edit must explain inline tag-name validation consistently: an overlong
+name shows Use a shorter tag name beside its entry, derived from the same resolver
+that controls Add tag. Correction removes the message without clearing unrelated
+draft fields. Keep existing color feedback separate.

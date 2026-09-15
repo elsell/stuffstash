@@ -37,7 +37,7 @@ import {
 import type { AssetTagSummary } from '../../domain/assets/AssetSummary';
 import {
   applyInlineAssetTagResolution,
-  canResolveInlineAssetTag,
+  canApplyInlineAssetTagResolution,
   type CreateAssetTagDraft,
   reconcileCreatedAssetTags,
   resolveInlineAssetTag
@@ -1137,12 +1137,6 @@ function AssetTagPicker({
     if (displayName.length === 0) {
       return;
     }
-    const resolution = resolveInlineAssetTag({
-      displayName,
-      color: newTagColor,
-      activeTags: tags,
-      pendingTags: newTags
-    });
     const transition = applyInlineAssetTagResolution({
       resolution,
       selectedTagIds,
@@ -1151,12 +1145,13 @@ function AssetTagPicker({
     onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
   }
 
-  const canAddNewTag = canResolveInlineAssetTag({
+  const resolution = resolveInlineAssetTag({
     displayName: newTagName,
     color: newTagColor,
     activeTags: tags,
     pendingTags: newTags
   });
+  const canAddNewTag = canApplyInlineAssetTagResolution(resolution);
 
   return (
     <View style={styles.tagPicker}>
@@ -1218,6 +1213,7 @@ function AssetTagPicker({
           value={newTagName}
         />
       </View>
+      {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.parentPromotionText}>Use a shorter tag name.</Text> : null}
       <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
       {newTagName.trim() || newTagColor.trim() ? <Text style={styles.parentPromotionText}>Add this tag or clear its name and color before saving.</Text> : null}
