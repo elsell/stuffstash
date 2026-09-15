@@ -636,3 +636,14 @@ permission denial or authoritative disappearance from either read must still hid
 records until the failed access read succeeds; do not treat these as title-only
 failures. Verify contrasting transient and 401/403/404 cases through the mounted
 screen and shared server-state layer, then native reachability separately.
+
+### Detail command visit ownership
+
+Checkout, return and asset lifecycle task feedback belongs to the detail-screen
+visit that initiated the command. Returning to a still-mounted detail screen must
+not revive an earlier command's success message, failure notice or deletion
+navigation. Authorized commands still finish and their mutation observers reconcile
+the originating scope. Keep the existing synchronous pending lock until settlement;
+fresh commands work afterward. Lifecycle confirmation callbacks are single-use and
+must not submit after their originating visit ends. Native confirmation/Back and
+blur/refocus must be checked separately from mounted behavior tests.

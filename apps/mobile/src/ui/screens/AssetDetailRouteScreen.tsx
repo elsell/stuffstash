@@ -1,3 +1,4 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
 import { AssetRegionRecovery } from '../components/AssetRegionRecovery';
@@ -111,6 +112,7 @@ export function AssetDetailRouteScreen({
   const feedback = useAppFeedback();
   const progressive = useProgressiveAssetDetail(assetId, { assetCoreQuery, assetContentsQuery, assetPhotosQuery });
   const { coreAsset, assetContents, assetPhotos } = progressive;
+  const captureCommandVisit = useTaskPresentation(undefined, JSON.stringify(coreAsset.resourceKey));
   const screenState: ScreenState = coreAsset.data
     ? {
         status: 'ready',
@@ -348,27 +350,35 @@ export function AssetDetailRouteScreen({
   }
 
   function confirmLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
+    const canPresent = captureCommandVisit();
+    if (!canPresent()) return;
+    let confirmed = false;
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: confirmation.confirmLabel,
         style: confirmation.isDestructive ? 'destructive' : 'default',
-        onPress: () => void runLifecycleAction(action, asset)
+        onPress: () => {
+          if (confirmed || !canPresent()) return;
+          confirmed = true;
+          void runLifecycleAction(action, asset);
+        }
       }
     ]);
   }
 
   async function runLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): Promise<void> {
+    const canPresent = captureCommandVisit();
     const scope = assetOperation.current;
-    if (!scope.active || scope.assetId !== assetId || scope.pending) return;
+    if (!canPresent() || !scope.active || scope.assetId !== assetId || scope.pending) return;
     scope.pending = true;
     setPendingAction(action);
     setWorkspaceStatus(undefined);
 
     try {
       await assetLifecycleCommand.execute({ action, assetId });
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
 
       if (action === 'delete') {
         navigateAfterDeletedAsset(router);
@@ -379,7 +389,7 @@ export function AssetDetailRouteScreen({
       try {
         await coreAsset.reconcile();
       } catch {
-        if (!scope.active) return;
+        if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
           title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
@@ -387,7 +397,7 @@ export function AssetDetailRouteScreen({
         });
       }
     } catch (error) {
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
       const failure = assetLifecycleFailurePresentation(
         action,
         asset,
@@ -405,20 +415,21 @@ export function AssetDetailRouteScreen({
   }
 
   async function runCheckoutAction(action: 'checkout' | 'return', asset: AssetDetailViewModel): Promise<void> {
+    const canPresent = captureCommandVisit();
     const scope = assetOperation.current;
-    if (!scope.active || scope.assetId !== assetId || scope.pending) return;
+    if (!canPresent() || !scope.active || scope.assetId !== assetId || scope.pending) return;
     scope.pending = true;
     setPendingAction(action);
     setWorkspaceStatus(undefined);
 
     try {
       await assetCheckoutCommand.execute({ action, assetId });
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
       setWorkspaceStatus(assetWorkspaceSuccessStatus(action, asset));
       try {
         await coreAsset.reconcile();
       } catch {
-        if (!scope.active) return;
+        if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
           title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
@@ -426,7 +437,7 @@ export function AssetDetailRouteScreen({
         });
       }
     } catch (error) {
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: action === 'checkout' ? 'Could not checkout asset' : 'Could not return asset',

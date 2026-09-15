@@ -26,3 +26,14 @@ Validation for M86:63 remote asset-route checks pass, along with TypeScript and
 mobile structural validation. The new callbacks were tested through the rendered
 commands and confirmations, not by invoking private functions. This does not
 prove mounted-but-blurred behavior or native menu state semantics.
+
+## M110 — retained visit completion
+
+The previously excluded blur/refocus path is now covered for checkout, return,
+archive, restore and deletion. Ten success/failure cases plus three retained
+confirmation cases failed first; focused visit/resource ownership now suppresses
+old presentation and navigation. Three additional cases retain normal focused
+success while preventing reuse of a completed confirmation. Pending ownership and
+mutation-observer reconciliation remain intact. All91 focused tests, TypeScript and
+structural checks pass remotely. Native alert, gesture, background and remount
+behavior remain unverified; photo/undo completion is outside this change.

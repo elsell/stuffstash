@@ -1398,3 +1398,25 @@ pending/repeated failure until a successful core read. Name retry does not reloa
 history pages. Sixteen remote history/query tests, TypeScript and structural
 checks pass. Native recovery reachability and remount-during-retry remain pending;
 see checkout-history-axis.md for the complete24-axis source review and limits.
+
+### M110 — Asset command completion revives after leaving and returning
+
+P1, S096/S097/S098. Checkout/return/archive/restore/delete used the mounted asset
+owner from M86, so blur/refocus retained permission to show status or errors and
+delete could navigate the later visit. A retained lifecycle confirmation could
+also start after its originating visit ended. Thirteen controlled cases reproduced
+these failures before correction.
+
+The commands now capture the focused visit and scoped core-resource identity.
+Late outcomes cannot publish status/notices, start explicit screen refresh or
+navigate a later visit. The synchronous operation lock remains until settlement;
+a fresh command works afterward. Lifecycle confirmation is single-use and rejects
+callbacks from an earlier visit. Authorized requests and mutation observers still
+finish. Ninety-one focused detail/query-observer tests plus TypeScript/structural
+checks pass remotely; three additional confirmation cases verify repeat callbacks
+after successful completion are ignored. This does not cover photos, edit undo,
+backgrounding without blur or every mutation path. Native menu/alert/Back and
+blur/refocus acceptance remain open.
+
+M110 combined checkpoint: all1,600 mobile tests in261 files, TypeScript and
+structural checks pass on paul. Critic found no remaining source blocker.
