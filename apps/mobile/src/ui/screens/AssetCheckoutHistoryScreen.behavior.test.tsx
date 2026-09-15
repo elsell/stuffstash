@@ -1,4 +1,5 @@
 import React from 'react';
+import { dispatchedActions, resetNavigation } from '../../test-support/navigation';
 import { describe, expect, it } from 'vitest';
 import { AssetCheckoutHistorySheetRouteScreen } from './AssetCheckoutHistoryScreen';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -33,7 +34,7 @@ describe('checkout History server state', () => {
       expect(harness.allText().join(' ')).toContain('Principal first');
       expect(harness.allText().join(' ')).toContain('Older checkouts could not be loaded.');
       fail = false;
-      await harness.press(harness.byLabel('Load older checkouts')); await settle(harness);
+      await harness.press(harness.byLabel('Try older checkouts again')); await settle(harness);
       expect(harness.allText().join(' ')).toContain('Principal two');
       expect(cursors).toEqual([undefined, 'two', 'two']);
       denied = true;
@@ -46,4 +47,18 @@ describe('checkout History server state', () => {
       expect(harness.allText().join(' ')).not.toContain('Principal two');
     } finally { await harness.unmount(); }
   });
+});
+
+
+it('offers native Close while checkout history is loading', async () => {
+  resetNavigation();
+  const harness = new MobileRenderHarness();
+  try {
+    await harness.render(<MobileServerStateProvider client={createMobileQueryClient()} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetCheckoutHistorySheetRouteScreen assetId="asset" assetCheckoutHistoryQuery={{ execute: () => new Promise(() => undefined) }} assetCoreQuery={{ execute: () => new Promise(() => undefined) }} />
+    </MobileServerStateProvider>);
+    expect(harness.byLabel('Close')).toBeDefined();
+    await harness.press(harness.byLabel('Close'));
+    expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+  } finally { await harness.unmount(); resetNavigation(); }
 });

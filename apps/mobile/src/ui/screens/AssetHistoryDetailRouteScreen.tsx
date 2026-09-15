@@ -1,10 +1,11 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import type { AssetActivityViewModel } from '../../application/assets/AssetActivityQuery';
-import { useRef, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AssetActivityQuery } from '../../application/assets/AssetActivityQuery';
 import { RevertAssetChangeCommand } from '../../application/assets/RevertAssetChangeCommand';
@@ -55,8 +56,21 @@ export function AssetHistoryDetailRouteScreen({
   const feedback = useAppFeedback();
   const [showsTechnical, setShowsTechnical] = useState(false);
   const [isReverting, setIsReverting] = useState(false);
-  const isRevertingRef = useRef(false);
-  const [isRevertUnavailable, setIsRevertUnavailable] = useState(false);
+  const [revertOutcome, setRevertOutcome] = useState<'available' | 'applied' | 'unavailable'>('available');
+  const operationScope = useMemo(() => ({ active: true, pending: false, unavailable: false }), [scopeId, tenantId, inventoryId, assetId, activityId]);
+  const presentation = useRef<{ active: boolean } | undefined>(undefined);
+  useEffect(() => {
+    operationScope.active = true;
+    setIsReverting(false);
+    setRevertOutcome('available');
+    setShowsTechnical(false);
+    return () => { operationScope.active = false; };
+  }, [operationScope]);
+  useFocusEffect(useCallback(() => {
+    const session = { active: true };
+    presentation.current = session;
+    return () => { session.active = false; };
+  }, [operationScope]));
 
   if (isLoading) {
     return <View style={styles.centerState}><Stack.Screen options={{ title: 'History detail' }} /><Text style={styles.muted}>Loading activity…</Text></View>;
@@ -68,9 +82,7 @@ export function AssetHistoryDetailRouteScreen({
         <Stack.Screen options={{ title: 'History detail' }} />
         <Text accessibilityRole="header" style={styles.title}>{loadFailure.title}</Text>
         <Text style={styles.muted}>{loadFailure.message}</Text>
-        {loadFailure.canRetry ? <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}>
-          <Text style={styles.buttonText}>Try again</Text>
-        </Pressable> : null}
+        {loadFailure.canRetry ? <NativeCommandButton label="Try again" onPress={() => void detail.refetch()} /> : null}
       </View>
     );
   }
@@ -81,45 +93,48 @@ export function AssetHistoryDetailRouteScreen({
         <Stack.Screen options={{ title: 'History detail' }} />
         <Text accessibilityRole="header" style={styles.title}>Activity is no longer available</Text>
         <Text style={styles.muted}>Return to History and open it again.</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.button}>
-          <Text style={styles.buttonText}>Back to History</Text>
-        </Pressable>
+        <NativeCommandButton label="Back to History" onPress={() => router.back()} />
       </View>
     );
   }
 
   function confirmRevert(): void {
-    if (!entry?.undo || entry.undo.status !== 'available') return;
+    const session = presentation.current;
+    if (!entry?.undo || entry.undo.status !== 'available' || !operationScope.active || operationScope.pending || operationScope.unavailable || !session?.active) return;
     requestHistoryRevertConfirmation(
       entry,
       (confirmation, confirm) => Alert.alert(confirmation.title, confirmation.message, [
         { text: 'Cancel', style: 'cancel' },
         { text: confirmation.confirmLabel, onPress: confirm }
       ]),
-      () => void revertChange()
+      () => void revertChange(session)
     );
   }
 
-  async function revertChange(): Promise<void> {
-    if (!entry?.undo || entry.undo.status !== 'available' || isRevertingRef.current) return;
-    isRevertingRef.current = true;
+  async function revertChange(session: { active: boolean }): Promise<void> {
+    if (!entry?.undo || entry.undo.status !== 'available' || !operationScope.active || !session.active || operationScope.pending || operationScope.unavailable) return;
+    operationScope.pending = true;
     setIsReverting(true);
     const result = await applyHistoryRevert(
       revertAssetChangeCommand,
       { tenantId, inventoryId, operationId: entry.undo.operationId },
       {
         invalidateActivity: () => { void queryClient.invalidateQueries({ queryKey, exact: true, refetchType: 'none' }); },
-        showSuccess: () => feedback.showNotice({ tone: 'success', title: 'Change reverted', message: `“${assetTitle}” was updated. The reversal is now in History.` }),
-        navigateBack: () => router.back()
+        showSuccess: () => { if (operationScope.active && session.active) feedback.showNotice({ tone: 'success', title: 'Change reverted', message: `“${assetTitle}” was updated. The reversal is now in History.` }); },
+        navigateBack: () => { if (operationScope.active && session.active) router.back(); }
       }
     );
-    if (result.status === 'failed') {
-      const failure = result.failure;
-      if (failure.isTerminal) setIsRevertUnavailable(true);
-      feedback.showNotice({ tone: 'error', title: failure.title, message: failure.message });
+    if (result.status === 'applied') {
+      operationScope.unavailable = true;
+      if (operationScope.active) setRevertOutcome('applied');
     }
-    isRevertingRef.current = false;
-    setIsReverting(false);
+    if (result.status === 'failed' && operationScope.active) {
+      const failure = result.failure;
+      if (failure.isTerminal) { operationScope.unavailable = true; setRevertOutcome('unavailable'); }
+      if (session.active) feedback.showNotice({ tone: 'error', title: failure.title, message: failure.message });
+    }
+    operationScope.pending = false;
+    if (operationScope.active) setIsReverting(false);
   }
 
   return (
@@ -127,7 +142,7 @@ export function AssetHistoryDetailRouteScreen({
       <Stack.Screen options={{ title: 'History detail' }} />
       {detail.isRefetchError ? <View style={styles.section}>
         <Text accessibilityRole="alert" style={styles.muted}>Activity could not be refreshed. Previously loaded details are shown.</Text>
-        <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}><Text style={styles.buttonText}>Try refreshing again</Text></Pressable>
+        <NativeCommandButton label="Try refreshing again" onPress={() => void detail.refetch()} />
       </View> : null}
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
@@ -147,12 +162,11 @@ export function AssetHistoryDetailRouteScreen({
         </View>
       ) : null}
 
-      {entry.undo?.status === 'available' && !isRevertUnavailable && !detail.isRefetchError ? (
-        <Pressable accessibilityRole="button" accessibilityState={{ disabled: isReverting }} disabled={isReverting} onPress={confirmRevert} style={styles.button}>
-          <Text style={styles.buttonText}>{isReverting ? 'Reverting…' : 'Revert change'}</Text>
-        </Pressable>
+      {entry.undo?.status === 'available' && revertOutcome === 'available' && !detail.isRefetchError ? (
+        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : 'Revert change'} />
       ) : null}
-      {isRevertUnavailable ? <Text accessibilityRole="alert" style={styles.muted}>This change can no longer be safely reverted.</Text> : null}
+      {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>This change can no longer be safely reverted.</Text> : null}
+      {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>This change has been reverted.</Text> : null}
 
       <View style={styles.section}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: showsTechnical }} onPress={() => setShowsTechnical((value) => !value)} style={styles.disclosureButton}>
@@ -229,8 +243,6 @@ function createStyles(colors: MobileColorPalette) {
     technicalValue: { color: colors.text, fontFamily: 'Courier', fontSize: 13, lineHeight: 19 },
     disclosureButton: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 44 },
     disclosureText: { color: colors.action, fontSize: 22 },
-    button: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md },
-    buttonText: { color: colors.onAction, fontSize: 16, fontWeight: '800' },
     centerState: { alignItems: 'center', backgroundColor: colors.background, flex: 1, gap: spacing.md, justifyContent: 'center', padding: spacing.xl }
   });
 }

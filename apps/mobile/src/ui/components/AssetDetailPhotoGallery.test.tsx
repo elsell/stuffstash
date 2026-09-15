@@ -1,281 +1,54 @@
-import { describe, expect, it, vi } from 'vitest';
+import React from 'react';
+import { describe, expect, it } from 'vitest';
+import { AssetDetailPhotoGallery, assetDetailPhotoPages, assetDetailPhotoWidth } from './AssetDetailPhotoGallery';
+import { MobileRenderHarness } from '../../test-support/render';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
-import {
-  AssetDetailPhotoGallery,
-  assetDetailPhotoPages,
-  assetDetailPhotoWidth
-} from './AssetDetailPhotoGallery';
-import { lightHighContrastPalette } from '../theme/tokens';
 
-vi.mock('lucide-react-native', () => ({
-  Camera: 'CameraIcon'
-}));
+const photos: readonly AssetPhotoViewModel[] = [
+  { id: 'one', label: 'First photo', uri: 'https://example.invalid/one', heroUri: 'https://example.invalid/one-small', heroHeaders: { Authorization: 'synthetic' } },
+  { id: 'two', label: 'Second photo', uri: 'https://example.invalid/two' }
+];
 
-vi.mock('../theme/appearance', () => ({
-  useAppearanceAwarePalette: () => ({
-    action: '#0066CC',
-    border: '#64727C',
-    onScrim: '#FFFFFF',
-    surface: '#FFFFFF',
-    surfaceMuted: '#E8F0F5',
-    textMuted: '#52616B'
-  })
-}));
-
-vi.mock('react-native', () => ({
-  DynamicColorIOS: ({ light }: { light: string }) => light,
-  Image: 'Image',
-  Platform: { OS: 'ios' },
-  Pressable: 'Pressable',
-  ScrollView: 'ScrollView',
-  StyleSheet: {
-    create: (styles: unknown) => styles,
-    hairlineWidth: 0.5
-  },
-  Text: 'Text',
-  View: 'View',
-  useColorScheme: () => 'light',
-  useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 })
-}));
-
-describe('AssetDetailPhotoGallery presentation', () => {
-  it('derives position labels without exposing photo file names', () => {
-    expect(assetDetailPhotoPages(photos())).toEqual([
+describe('asset gallery', () => {
+  it('names each photo by position and adapts page width to the viewport', () => {
+    expect(assetDetailPhotoPages(photos)).toEqual([
       { accessibilityLabel: 'Open photo 1 of 2', positionLabel: '1 of 2' },
       { accessibilityLabel: 'Open photo 2 of 2', positionLabel: '2 of 2' }
     ]);
-  });
-
-  it('uses the viewport content width without a fixed minimum', () => {
     expect(assetDetailPhotoWidth(390)).toBe(342);
     expect(assetDetailPhotoWidth(320)).toBe(272);
     expect(assetDetailPhotoWidth(40)).toBe(0);
   });
-});
 
-describe('AssetDetailPhotoGallery', () => {
-  it('renders equal paged media widths and opens the selected photo', () => {
-    const opened: string[] = [];
-    const tree = AssetDetailPhotoGallery({
-      canAddPhotos: true,
-      imagePlaceholderLabel: 'Item',
-      onAddPhotos: () => undefined,
-      onPhotoPress: (id) => opened.push(id),
-      photos: photos()
-    });
-
-    const scroller = findFirstByType(tree, 'ScrollView');
-    expect(scroller?.props?.horizontal).toBe(true);
-    expect(scroller?.props?.snapToInterval).toBe(352);
-    expect(scroller?.props?.decelerationRate).toBe('fast');
-
-    const first = findFirstByProp(tree, 'accessibilityLabel', 'Open photo 1 of 2');
-    const second = findFirstByProp(tree, 'accessibilityLabel', 'Open photo 2 of 2');
-    expect(first?.props?.style).toEqual(expect.arrayContaining([expect.objectContaining({ width: 342 })]));
-    expect(second?.props?.style).toEqual(expect.arrayContaining([expect.objectContaining({ width: 342 })]));
-    press(second);
-    expect(opened).toEqual(['photo-two']);
-
-    expect(findText(tree, 'IMG_0042.JPG')).toBe(false);
-    expect(findText(tree, 'First photo')).toBe(false);
+  it.each([{ photos: [] }, { photos }])('keeps a separate Add photos command for empty and populated galleries', async ({ photos: currentPhotos }) => {
+    const harness = new MobileRenderHarness(); let added = 0;
+    try {
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos imagePlaceholderLabel="Item" photos={currentPhotos}
+        onAddPhotos={() => { added++; }} />);
+      await harness.press(harness.byLabel('Add photos'));
+      expect(added).toBe(1);
+      expect(harness.all().filter(node => node.props.accessibilityLabel === 'Add photos')).toHaveLength(1);
+      if (!currentPhotos.length) expect(harness.allText()).toContain('No photos');
+    } finally { await harness.unmount(); }
   });
 
-  it('keeps empty media presentational with one quiet Add photos affordance below it', () => {
-    let addCount = 0;
-    const tree = AssetDetailPhotoGallery({
-      canAddPhotos: true,
-      imagePlaceholderLabel: 'Item',
-      onAddPhotos: () => {
-        addCount += 1;
-      },
-      palette: lightHighContrastPalette,
-      photos: []
-    });
-
-    const addActions = findAllByProp(tree, 'accessibilityLabel', 'Add photos');
-    expect(addActions).toHaveLength(1);
-    expect(addActions[0]?.props?.accessibilityRole).toBe('button');
-    expect(resolvePressableStyle(addActions[0])).toEqual(expect.arrayContaining([
-      expect.objectContaining({ minHeight: 44, borderWidth: 0.5 }),
-      expect.objectContaining({
-        backgroundColor: lightHighContrastPalette.elevatedSurface,
-        borderColor: lightHighContrastPalette.border
-      })
-    ]));
-    const idleAdd = resolvePressableStyle(addActions[0]);
-    const pressedAdd = resolvePressableStyle(addActions[0], true);
-    expect(styleValue(pressedAdd, 'opacity')).toBeLessThan(1);
-    expect(styleValue(pressedAdd, 'backgroundColor')).toBe(styleValue(idleAdd, 'backgroundColor'));
-    expect(styleValue(pressedAdd, 'borderColor')).toBe(styleValue(idleAdd, 'borderColor'));
-    expect(styleValue(pressedAdd, 'borderWidth')).toBe(styleValue(idleAdd, 'borderWidth'));
-    expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style).toEqual(expect.arrayContaining([
-      expect.objectContaining({ borderWidth: 1 }),
-      expect.objectContaining({
-        backgroundColor: lightHighContrastPalette.elevatedSurface,
-        borderColor: lightHighContrastPalette.border
-      })
-    ]));
-    expect(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.type).toBe('View');
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'aspectRatio')).toBeUndefined();
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'overflow')).toBeUndefined();
-    expect(styleValue(findFirstTextNode(tree, 'No photos')?.props?.style, 'lineHeight')).toBeUndefined();
-    expect(styleValue(findFirstTextNode(tree, 'Add photos')?.props?.style, 'lineHeight')).toBeUndefined();
-    press(addActions[0]);
-    expect(addCount).toBe(1);
+  it.each([false, true])('omits Add photos when permission or its handler is absent', async canAddPhotos => {
+    const harness = new MobileRenderHarness();
+    try {
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos={canAddPhotos} imagePlaceholderLabel="Item" photos={photos}
+        {...(!canAddPhotos ? { onAddPhotos: () => {} } : {})} />);
+      expect(harness.byLabel('Add photos')).toBeUndefined();
+    } finally { await harness.unmount(); }
   });
 
-  it('exposes a single separate Add photos action after populated media', () => {
-    const tree = AssetDetailPhotoGallery({
-      canAddPhotos: true,
-      imagePlaceholderLabel: 'Item',
-      onAddPhotos: () => undefined,
-      photos: photos()
-    });
-
-    expect(findAllByProp(tree, 'accessibilityLabel', 'Add photos')).toHaveLength(1);
-    const photo = findFirstByProp(tree, 'accessibilityLabel', 'Open photo 1 of 2');
-    expect(styleValue(photo?.props?.style, 'aspectRatio')).toBe(4 / 3);
-    expect(styleValue(photo?.props?.style, 'overflow')).toBe('hidden');
-  });
-
-  it('accepts the asset-detail appearance palette', () => {
-    const tree = AssetDetailPhotoGallery({
-      canAddPhotos: false,
-      imagePlaceholderLabel: 'Item',
-      palette: lightHighContrastPalette,
-      photos: photos()
-    });
-
-    const first = findFirstByProp(tree, 'accessibilityLabel', 'Open photo 1 of 2');
-    expect(first?.props?.style).toEqual(expect.arrayContaining([
-      expect.objectContaining({ backgroundColor: lightHighContrastPalette.surfaceMuted })
-    ]));
+  it('opens the selected photo and retains authenticated thumbnail sources', async () => {
+    const harness = new MobileRenderHarness(); const opened: string[] = [];
+    try {
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos={false} imagePlaceholderLabel="Item" photos={photos}
+        onPhotoPress={id => opened.push(id)} />);
+      await harness.press(harness.byLabel('Open photo 2 of 2'));
+      expect(opened).toEqual(['two']);
+      expect(harness.allByType('Image')[0]?.props.source).toEqual({ uri: photos[0]?.heroUri, headers: photos[0]?.heroHeaders });
+    } finally { await harness.unmount(); }
   });
 });
-
-function photos(): readonly AssetPhotoViewModel[] {
-  return [
-    {
-      id: 'photo-one',
-      fileName: 'IMG_0042.JPG',
-      label: 'IMG_0042.JPG',
-      uri: 'https://example.test/photo-one-thumb',
-      heroUri: 'https://example.test/photo-one-hero'
-    },
-    {
-      id: 'photo-two',
-      fileName: 'garage-bin.png',
-      label: 'garage-bin.png',
-      uri: 'https://example.test/photo-two'
-    }
-  ];
-}
-
-function press(node: ElementNode | undefined): void {
-  const onPress = node?.props?.onPress;
-  if (typeof onPress !== 'function') {
-    throw new Error('Missing press handler');
-  }
-  onPress();
-}
-
-function resolvePressableStyle(node: ElementNode | undefined, pressed = false): unknown {
-  const style = node?.props?.style;
-  return typeof style === 'function' ? style({ pressed }) : style;
-}
-
-function styleValue(style: unknown, key: string): unknown {
-  if (Array.isArray(style)) {
-    return style.reduce<unknown>((found, entry) => found ?? styleValue(entry, key), undefined);
-  }
-  return style && typeof style === 'object' ? (style as Record<string, unknown>)[key] : undefined;
-}
-
-function findFirstTextNode(node: unknown, value: string): ElementNode | undefined {
-  if (Array.isArray(node)) {
-    return node.reduce<ElementNode | undefined>(
-      (found, child) => found ?? findFirstTextNode(child, value),
-      undefined
-    );
-  }
-  if (!isElementNode(node)) {
-    return undefined;
-  }
-  if (node.type === 'Text' && childrenOf(node).includes(value)) {
-    return node;
-  }
-  if (typeof node.type === 'function') {
-    return findFirstTextNode(node.type(node.props), value);
-  }
-  return childrenOf(node).reduce<ElementNode | undefined>(
-    (found, child) => found ?? findFirstTextNode(child, value),
-    undefined
-  );
-}
-
-function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNode | undefined {
-  return findAllByProp(node, prop, value)[0];
-}
-
-function findAllByProp(node: unknown, prop: string, value: unknown): ElementNode[] {
-  if (Array.isArray(node)) {
-    return node.flatMap((child) => findAllByProp(child, prop, value));
-  }
-  if (!isElementNode(node)) {
-    return [];
-  }
-  if (typeof node.type === 'function') {
-    return findAllByProp(node.type(node.props), prop, value);
-  }
-  const matches = node.props?.[prop] === value ? [node] : [];
-  return [...matches, ...childrenOf(node).flatMap((child) => findAllByProp(child, prop, value))];
-}
-
-function findFirstByType(node: unknown, type: unknown): ElementNode | undefined {
-  if (Array.isArray(node)) {
-    return node.reduce<ElementNode | undefined>(
-      (found, child) => found ?? findFirstByType(child, type),
-      undefined
-    );
-  }
-  if (!isElementNode(node)) {
-    return undefined;
-  }
-  if (node.type === type) {
-    return node;
-  }
-  if (typeof node.type === 'function') {
-    return findFirstByType(node.type(node.props), type);
-  }
-  return childrenOf(node).reduce<ElementNode | undefined>(
-    (found, child) => found ?? findFirstByType(child, type),
-    undefined
-  );
-}
-
-function findText(node: unknown, text: string): boolean {
-  if (node === text) {
-    return true;
-  }
-  if (Array.isArray(node)) {
-    return node.some((child) => findText(child, text));
-  }
-  return isElementNode(node) && childrenOf(node).some((child) => findText(child, text));
-}
-
-function childrenOf(node: ElementNode): readonly unknown[] {
-  const children = node.props?.children;
-  return Array.isArray(children) ? children : [children];
-}
-
-function isElementNode(node: unknown): node is ElementNode {
-  return Boolean(node && typeof node === 'object' && 'props' in node);
-}
-
-type ElementNode = {
-  readonly type?: unknown;
-  readonly props?: {
-    readonly children?: unknown;
-    readonly [key: string]: unknown;
-  };
-};

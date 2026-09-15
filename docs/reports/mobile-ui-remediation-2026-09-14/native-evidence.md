@@ -179,3 +179,128 @@ Run34909419413 (4020f012) started before the next push, preserving the isolated
 sheet-layout diagnostic. Run34911480135 (6d79ad49) is pending with the corrected
 keyboard/color procedures, crash diagnostics, and later source fixes. Neither
 pending/run-start status is acceptance evidence. No TestFlight release yet.
+
+
+## Sheet structure comparison — run 34909419413
+
+Source `4020f012`; tested merge `214adece86a450b4c028a0b5d0855b9dab164f24`.
+Both devices completed the fixture suite. The direct-scroll-view diagnostic passed
+on iPhone and iPad. On iPhone, both nested-wrapper variants failed because the
+Tags row was absent; the retained screenshots show a blank body, with only bottom
+commands in the footer variant. On iPad, all three isolated layouts passed.
+The production expiration sheet still failed after expansion on both devices.
+This narrows the phone layout failure to container integration; it does not yet
+establish a production fix or explain the iPad expansion failure.
+
+- [Direct scroll view, visible rows](evidence/sheet-direct-phone-34909419413.png)
+- [Wrapper plus footer, blank body](evidence/sheet-footer-phone-34909419413.png)
+- [Wrapper only, blank body](evidence/sheet-nested-phone-34909419413.png)
+
+Appearance, Browse availability, draft option removal, compact expiration dates,
+date-page actions and persistent feedback passed on both devices again. Add
+failed before the name field appeared. Color-picker and keyboard tests still used
+the older selectors/readiness procedure; their replacements are in the next run.
+iPad production onboarding landscape passed. These are sampled runtime results,
+not whole-surface or whole-app acceptance.
+
+## Interim release checkpoint
+
+The user requested delivery of the current fixes before continuing the audit.
+PR 127 merged as `34ae627f3caedd41a22e8b52456e79c8e5154035` after CI
+34912595716 passed. Remote source validation passed 1,374 mobile tests, TypeScript
+and structural checks. Release [34913014534](https://github.com/elsell/stuffstash/actions/runs/34913014534) completed successfully.
+Signed **0.24.11 (99.1)** uploaded at 2026-09-15 00:50:40 UTC; Apple processing
+and the exact-build TestFlight changelog were verified at 00:53:08 UTC. The audit and unresolved native findings
+remain active. Subsequent changes belong to the continuation branch.
+
+
+## Follow-up native evidence — run 34912595714, iPad fixture
+
+Source `231afec0`, tested merge `c4b3f395443e6819679367fcb33a42e11a7769e5`.
+iPad controlled/uncontrolled address entry, complete onboarding submission,
+expiration search with keyboard and reminder-mode menu scenarios passed with the
+corrected procedures. Production onboarding after help expansion/collapse still
+retained only `h`, so M14 remains open. The actual filter expansion failure remains.
+
+The named draft-photo state passed XCTest accessibility checks for hit regions,
+sufficient descriptions, traits, contrast, Dynamic Type and clipping. The inspected
+[screenshot](evidence/draft-photo-ipad-34912595714.png) shows the four photos and
+48-point Remove commands. This is partial evidence for this state only. The
+interaction case stopped at its rail selector: the native hierarchy attaches the
+testID to an Other wrapper containing a ScrollView, not directly to the ScrollView.
+The next procedure targets that observed container; removal/read-only behavior
+has not yet passed natively.
+
+Add still fails before the name field. Its retained crash includes
+RCTExceptionsManager/reportFatal and a native segmentation fault during cleanup,
+without a useful JS message. A runner-only React error boundary is added to expose
+render failures in the next run; it does not catch native or asynchronous crashes.
+The color picker now opens, but its close button was not hittable in the test.
+These unresolved states remain in the audit, independently of interim delivery.
+
+
+### Same run, completed phone fixtures
+
+Phone color-picker open/close and Clear, full onboarding address submission,
+reminder-mode selection, and the uncontrolled input comparison passed. Controlled
+input retained `h://example.invalid`, and expiration search could not reach its
+post-keyboard action. The direct full-sheet diagnostic passed; wrapped variants
+and actual sheet expansion still failed. Draft-photo accessibility checks passed,
+but the old rail selector stopped interaction testing as on iPad. These results
+narrow the failure conditions rather than proving all text entry or sheets work.
+
+The inspected iPad color screenshot shows a system popover without a visible Close
+button. Its hierarchy supplies `PopoverDismissRegion`; the next procedure uses an
+outside tap there and waits for the picker to disappear. The phone retains its
+Close action. Two additional isolated sheet layouts compare direct-scroll sibling
+and in-content footers. Their geometry is recorded for inspection against the
+sheet bounds; a screen-relative bottom assertion was rejected in code review.
+Remote type and structural checks pass. Production filters remain unchanged until
+native evidence supports the replacement structure.
+
+### Run34915099794: completed onboarding jobs, fixtures still running
+
+Source527287c8. The completed phone job104210917195 and iPad job104210916927
+both fail the production onboarding complete-address assertion at line72:
+`h://example.invalid` instead of `https://example.invalid`. The iPad landscape
+scenario passes. M14 remains unresolved; neither native control availability nor
+source checks prove typing is reliable. Fixture jobs were still running when
+these completed job logs were inspected; their outcomes are not inferred here.
+
+The continuation History fixes (9a7c086f,7e84dc8d) are not in this run or interim
+TestFlight0.24.11. Their new checkout-history fixture uses the production screen,
+queries and sheet options with synthetic repositories. It checks phone detent
+expansion, body and older-page reachability, and native Close. iPad presentation
+is exercised but its expansion is observational because iPad detents differ.
+No native result is claimed for this scenario yet.
+
+### Run34915099794: completed iPad fixtures
+
+The iPad fixture job104210917159 finishes with 13 of19 scenarios passing.
+Source527287c8, test merge4567b6075856a79fe1fa9bcc2037c57c3e142604.
+Its artifacts establish two useful distinctions:
+
+- **Add render failure (M46):** the new error boundary reports `Maximum update
+  depth exceeded`, with `Screen`, `StackScreen` and `ScopedAddAssetScreen` in the
+  component stack. This is a render/update loop, not merely an undiscovered text
+  field. The [retained screenshot](evidence/add-render-error-ipad-34915099794.png)
+  and hierarchy32D5AC17-DE1F-4E29-AA3E-532D6DF97537.txt expose the message.
+  Source inspection finds Add creating new header-option callbacks each render;
+  pinned Expo Router Screen calls navigation.setOptions whenever options identity
+  changes. This is the next reproduction target, not yet proof that stabilizing
+  options alone fixes the native crash.
+- **Photo read-only timing:** both intended removals and Add callback succeed.
+  The immediate Add-absence assertion fails, but the [retained final screenshot](evidence/draft-photo-readonly-ipad-34915099794.png)
+  and hierarchy93AE14BB-27CF-4DE9-A3E9-E4B6BF00ADE5.txt show exactly two retained
+  images and neither Add nor Remove. The test now waits for this asynchronous
+  transition, retaining all final assertions. The complete scenario still needs
+  a passing native rerun.
+
+Controlled input and full onboarding submission lose characters in this run;
+uncontrolled input passes. Their differences from the preceding run do not
+establish reliable input. Appearance, Browse choice, compact expiration, date
+page, expiration keyboard actions, reminder menu, draft-option removal, photo
+accessibility and isolated direct/nested/footer layouts pass. Actual expiration
+sheet expansion still fails. The old iPad color Close procedure still fails;
+its popover correction is in the next queued candidate, not this source.
+The phone fixture job was still live when this iPad evidence was recorded.

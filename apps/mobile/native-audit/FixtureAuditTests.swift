@@ -41,12 +41,56 @@ final class FixtureAuditTests: XCTestCase {
     let row = app.buttons["Diagnostic Tags"]
     XCTAssertTrue(row.waitForExistence(timeout: 5))
     XCTAssertTrue(row.isHittable)
-    if variant == "footer" { XCTAssertTrue(app.buttons["Finish diagnostic"].isHittable) }
+    if variant.contains("footer") {
+      let finish = app.buttons["Finish diagnostic"]
+      XCTAssertTrue(finish.isHittable)
+      let geometry = XCTAttachment(string: "Finish frame: \(finish.frame); app frame: \(app.frame). Inspect against the sheet bounds in the retained screenshot/hierarchy.")
+      geometry.name = "footer-placement-\(variant)"
+      geometry.lifetime = .keepAlways
+      add(geometry)
+    }
   }
 
   func testDirectFullSheetLayout() { verifyFullSheetLayout("direct") }
   func testNestedFullSheetLayout() { verifyFullSheetLayout("nested") }
   func testFooterFullSheetLayout() { verifyFullSheetLayout("footer") }
+  func testDirectFooterFullSheetLayout() { verifyFullSheetLayout("direct-footer") }
+  func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
+
+  func testCheckoutHistoryRemainsReadableAndDismissibleAfterExpansion() {
+    let open = app.buttons["Audit Checkout history"]
+    for _ in 0..<7 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let bar = app.navigationBars["Checkout history"]
+    XCTAssertTrue(bar.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    XCTAssertTrue(app.buttons["Close"].isHittable)
+    capture("checkout-history-medium")
+    let initialTop = bar.frame.minY
+    bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)))
+    if UIDevice.current.userInterfaceIdiom == .phone {
+      let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in bar.frame.minY < initialTop - 40 }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed)
+    }
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    capture("checkout-history-expanded")
+    let older = app.buttons["Load older checkouts"]
+    for _ in 0..<6 where !older.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(older.isHittable)
+    older.tap()
+    let loaded = app.staticTexts["Older audit checkout"]
+    XCTAssertTrue(loaded.waitForExistence(timeout: 5))
+    for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(loaded.isHittable)
+    capture("checkout-history-older-page")
+    app.buttons["Close"].tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertFalse(bar.exists)
+  }
 
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
@@ -151,10 +195,12 @@ final class FixtureAuditTests: XCTestCase {
     input.typeText("https://example.invalid")
     capture("\(mode)-address-entry")
     XCTAssertEqual(input.value as? String, "https://example.invalid")
+    XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
 
   func testControlledAddressEntry() { verifyAddressEntry("controlled") }
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
+  func testSystemAddressEntry() { verifyAddressEntry("system") }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
     let open = app.buttons["Audit Add draft"]
@@ -218,7 +264,7 @@ final class FixtureAuditTests: XCTestCase {
 
   func testDraftPhotosRemoveTheChosenAttachmentAndRetainReadOnlyPreviews() {
     openDraftPhotos()
-    let rail = app.scrollViews["voice-plan-photo-previews"]
+    let rail = app.otherElements["voice-plan-photo-previews"].scrollViews.firstMatch
     XCTAssertTrue(rail.exists)
     rail.swipeLeft()
     let last = app.buttons["Remove photo 4"]
@@ -233,6 +279,10 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Add photos"].tap()
     XCTAssertTrue(app.staticTexts["Photo add requests: 1"].waitForExistence(timeout: 5))
     app.buttons["Make photos read only"].tap()
+    let readOnly = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !self.app.buttons["Add photos"].exists && !self.app.buttons["Remove photo 1"].exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [readOnly], timeout: 5), .completed)
     XCTAssertFalse(app.buttons["Add photos"].exists)
     XCTAssertFalse(app.buttons["Remove photo 1"].exists)
     XCTAssertTrue(rail.exists)
@@ -293,9 +343,19 @@ final class FixtureAuditTests: XCTestCase {
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     picker.tap()
-    XCTAssertTrue(app.buttons["close"].waitForExistence(timeout: 5), "The system color picker should open directly")
+    let sliders = app.buttons["Sliders"]
+    XCTAssertTrue(sliders.waitForExistence(timeout: 5), "The system color picker should open directly")
     capture("native-color-picker")
-    app.buttons["close"].tap()
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // The retained iPad hierarchy exposes the system popover dismiss region;
+      // its Close element exists but is not a visible, hittable button.
+      let dismiss = app.otherElements["PopoverDismissRegion"]
+      XCTAssertTrue(dismiss.exists)
+      dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+    } else {
+      app.buttons["close"].tap()
+    }
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: sliders)], timeout: 5), .completed)
     XCTAssertTrue(app.staticTexts["Color value: none"].exists, "Opening and closing must not invent a color")
     app.buttons["Choose Green tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)

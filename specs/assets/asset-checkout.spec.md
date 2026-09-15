@@ -506,3 +506,14 @@ Conversational and MCP tests must cover:
 - Should checkout support quantities once consumables or multi-count assets are specified?
 - Should an external borrower/contact model ever exist, or should checkout details remain the long-term holder mechanism?
 - Should checkout history be included in export formats by default?
+
+## Mobile checkout history presentation
+
+The read-only checkout-history sheet uses its native navigation title and Close
+bar action. Its content begins with the asset name, without a second sheet title
+or custom dismissal button. Close remains available during loading and failures;
+swipe dismissal remains supported. Retry and pagination use shared native command
+buttons with operation-specific progress and disabled states. Existing permission,
+continuation-failure and cached-data behavior must remain intact. Verify actual
+sheet detents, long records and enlarged text on iPhone and iPad before claiming
+native layout acceptance.

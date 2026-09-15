@@ -1,6 +1,6 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
-import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
 import type { AssetExpiration } from '../../domain/assets/AssetSummary';
@@ -493,13 +493,16 @@ function ScopedAddAssetScreen({
     setLastParent(draft.lastParent);
   }
 
+  const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
+    disabled: draftBusy || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
+    onPress: () => void saveAsset() }]);
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: 'Add item',
+    ...closeOptions, ...saveOptions }), [draftBusy, closeOptions, saveOptions]);
+
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <Stack.Screen options={{ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: 'Add item',
-        ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left'),
-        ...nativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
-          disabled: draftBusy || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
-          onPress: () => void saveAsset() }]) }} />
+      <Stack.Screen options={headerOptions} />
       <ScrollView
         ref={formScrollRef}
         style={{ flex: 1 }}

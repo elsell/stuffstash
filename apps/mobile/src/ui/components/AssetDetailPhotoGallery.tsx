@@ -1,3 +1,4 @@
+import { NativeCommandButton } from './NativeCommandButton';
 import {
   Image,
   Pressable,
@@ -89,7 +90,7 @@ export function AssetDetailPhotoGallery({
           <Text style={[styles.emptySupporting, { color: palette.textMuted }]}>No photos</Text>
         </View>
         {canUseAddPhotos ? (
-          <AddPhotosButton onAddPhotos={onAddPhotos} palette={palette} />
+          <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
         ) : null}
       </View>
     );
@@ -143,36 +144,9 @@ export function AssetDetailPhotoGallery({
       </ScrollView>
 
       {canUseAddPhotos ? (
-        <AddPhotosButton onAddPhotos={onAddPhotos} palette={palette} />
+        <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
       ) : null}
     </View>
-  );
-}
-
-function AddPhotosButton({
-  onAddPhotos,
-  palette
-}: {
-  readonly onAddPhotos: () => void;
-  readonly palette: MobileColorPalette;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel="Add photos"
-      accessibilityRole="button"
-      onPress={onAddPhotos}
-      style={({ pressed }) => [
-        styles.addPhotoButton,
-        {
-          backgroundColor: palette.elevatedSurface,
-          borderColor: palette.border
-        },
-        pressed ? styles.addPhotoButtonPressed : null
-      ]}
-    >
-      <Camera color={palette.action} size={18} />
-      <Text style={[styles.addPhotoText, { color: palette.action }]}>Add photos</Text>
-    </Pressable>
   );
 }
 
@@ -227,23 +201,5 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     textAlign: 'center'
   },
-  addPhotoButton: {
-    alignItems: 'center',
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 44,
-    maxWidth: '100%',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  addPhotoButtonPressed: { opacity: 0.82 },
-  addPhotoText: {
-    flexShrink: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center'
-  }
+
 });

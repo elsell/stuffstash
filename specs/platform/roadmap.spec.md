@@ -32,8 +32,8 @@ close the effort after only fixing the original ten audit examples.
 
 The UI design skill now chooses platform patterns before components. Remediation
 is underway in PR 127, with 136 surfaces and 24 axes tracked individually. The
-remote mobile suite passes 1,372 tests at the pending asset-operation fix; source
-checks are not native acceptance. Native macOS runner fixtures have verified
+interim release validation passed 1,374 mobile tests; source checks are not native
+acceptance. Native macOS runner fixtures have verified
 selected menu, date and feedback scenarios, but expiration sheet expansion and
 Add launch still fail. Keyboard readiness had a test-procedure error now corrected
 for a later run. Continue the source audit, native diagnosis, Android runtime
@@ -41,6 +41,9 @@ coverage, and TestFlight release. On September 15 the user requested an interim
 TestFlight release of the current fixes while this audit continues. This milestone
 does not certify the full audit: retain the native failures and unreviewed cells,
 publish release notes, and continue remediation after delivery.
+TestFlight **0.24.11 (99.1)** uploaded successfully and its exact-build changelog
+was verified on September 15 at 00:53 UTC in release34913014534. Continue the audit
+in draft PR129; its photo-removal and gallery fixes are outside that interim build.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

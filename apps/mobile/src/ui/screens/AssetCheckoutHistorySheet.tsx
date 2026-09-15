@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,28 +17,18 @@ export type AssetCheckoutHistorySheetState =
   | { readonly status: 'error'; readonly assetTitle: string; readonly message: string };
 
 export function AssetCheckoutHistorySheet({
-  onClose,
   footer,
   state
 }: {
   readonly footer?: ReactNode;
-  readonly onClose: () => void;
   readonly state: AssetCheckoutHistorySheetState;
 }) {
   const styles = useStyles();
   return (
     <View style={styles.sheet}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerText}>
-          <Text style={styles.sheetTitle}>Checkout history</Text>
-          <Text numberOfLines={1} style={styles.sheetSubtitle}>
-            {state.status === 'closed' ? 'Asset checkout history' : state.assetTitle}
-          </Text>
-        </View>
-        <Pressable accessibilityRole="button" onPress={onClose} style={styles.closeButton}>
-          <Text style={styles.closeButtonText}>Close</Text>
-        </Pressable>
-      </View>
+      <Text accessibilityRole="header" style={styles.sheetSubtitle}>
+        {state.status === 'closed' ? 'Asset checkout history' : state.assetTitle}
+      </Text>
       {state.status === 'loading' ? <LoadingHistory /> : null}
       {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
       {state.status !== 'ready' ? footer : null}
@@ -129,21 +118,7 @@ function createStyles(colors: MobileColorPalette) {
     flex: 1,
     gap: spacing.md,
     padding: spacing.lg,
-    paddingTop: spacing.xl
-  },
-  headerRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: spacing.md
-  },
-  headerText: {
-    flex: 1
-  },
-  sheetTitle: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: '900',
-    letterSpacing: 0
+    paddingTop: spacing.md
   },
   sheetSubtitle: {
     color: colors.textMuted,
@@ -152,19 +127,6 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0,
     lineHeight: 20,
     marginTop: spacing.xs
-  },
-  closeButton: {
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  closeButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   centerState: {
     alignItems: 'center',

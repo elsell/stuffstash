@@ -58,6 +58,16 @@
 
 | M41 | Edit tag resolution overwrites selected IDs with a second draft update | Implemented; native pending | One atomic tag callback updates selected IDs and pending definitions together. Regression reproduced normalized existing-tag selection disappearing; fix preserves selection through Save and unrelated description. Focused remote tests/check/structural pass; critic no blockers |
 
+| M42 | Photo viewer permits another removal while deletion is pending | Implemented on continuation branch; native pending | Scoped synchronous deletion guard, disabled Remove/progress and selected-ID preservation. Duplicate-confirmation regression reproduced; full1377 remote tests/check/structural pass before final asset-switch case, then six focused route cases/check/structural pass. Covers changed photo index after reconciliation, retry, teardown, stale confirmation and old completion during new asset operation. Critic gaps addressed. Excluded from interim0.24.11 |
+
+| M43 | Gallery Add photos uses a custom styled command despite an available native adapter | Implemented on continuation branch; native pending | Shared native command preserves permission/callback gating and separate placement below imagery. Eight remote gallery/route tests, typecheck and structural check pass; critic no blockers. Legacy mocked style snapshots replaced with mounted behavior checks; paging and appearance runtime remain pending. Not included in interim0.24.11 |
+
+| M44 | History reversal completion can navigate after leaving its detail | Implemented on continuation branch; native pending | Deferred repository tests reproduced extra Back after blur/refocus, stale confirmation execution, and inherited activity busy state. Activity/focus ownership now gates presentation; completion still invalidates cache. Applied outcome prevents resubmission. Ten focused History tests/check/structural pass; critic finding addressed. Native Back/gesture acceptance pending; excluded from0.24.11 |
+
+| M45 | History commands retain custom controls despite available native adapters | Implemented on continuation branch; native pending | Shared native Retry/pagination/reversal buttons and checkout-history native title/Close replace custom controls. Twelve remote History tests/check/structural pass; critic no product blocker. Runner-only production checkout-history fixture adds medium/expanded/older-page/Close acceptance; fixture typecheck/structural and two installer tests pass. Actual native layout and enlarged text still pending; excluded from0.24.11 |
+
+| M46 | Add crashes in a screen-options update loop on native launch | Implemented on continuation branch; native pending | Bounded navigation-feedback fake reproduces nonsettling header updates. Shared stable-presentation hook retains committed handlers and current disabled/removal guards; Add composes memoized options. Seven focused tests/check/structural pass, including latest draft, rejected-save recovery, stale actions and teardown. Critic no blocker; native Add launch/type/save-failure scenario must still pass |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.

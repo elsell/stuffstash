@@ -257,3 +257,27 @@ all reported issues; any future suppression needs a specific documented false
 positive. Record viewport/device/build scope and do not interpret a visible-state
 audit as coverage of offscreen controls or the complete platform.
 See https://developer.apple.com/documentation/accessibility/performing-accessibility-audits-for-your-app.
+
+The runner-only Add fixture may catch React render errors and display their
+message and component stack as diagnostic UI, so a fixture composition failure
+can be distinguished from an application/native crash. This must remain outside
+production routes and must not replace a failing assertion with success.
+
+After the phone direct-scroll diagnostic passed and both wrapped variants lost
+the body, compare two bottom-action structures before changing production filters:
+a direct scroll view with a sibling overlaid footer, and a direct scroll view with
+an in-content footer. Both must retain visible rows and reachable bottom actions
+on phone and tablet. A successful isolated layout still requires production
+expansion, keyboard and long-list verification.
+
+For repeated character loss, compare the existing controlled/uncontrolled React
+Native input fixtures with a SwiftUI TextField from the already-pinned Expo UI
+adapter. Keep the same URL keyboard, disabled correction/capitalization and XCTest
+whole-string typing. Assert both displayed native value and observed callback
+value. Preserve the production onboarding assertion; a diagnostic comparison
+cannot establish a production fix or justify silently slowing/shortening input.
+
+Native assertions following a React state transition wait for the expected
+accessible state within a bounded timeout. For read-only photo previews, wait for
+Add/Remove disappearance before asserting retained images; do not infer failure
+from an immediate stale snapshot or skip the final-state assertions.
