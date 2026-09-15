@@ -208,6 +208,49 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-complete-address-submission")
   }
 
+  private func openDraftPhotos() {
+    let open = app.buttons["Audit draft photos"]
+    for _ in 0..<6 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.buttons["Add photos"].waitForExistence(timeout: 5))
+  }
+
+  func testDraftPhotosRemoveTheChosenAttachmentAndRetainReadOnlyPreviews() {
+    openDraftPhotos()
+    let rail = app.scrollViews["voice-plan-photo-previews"]
+    XCTAssertTrue(rail.exists)
+    rail.swipeLeft()
+    let last = app.buttons["Remove photo 4"]
+    XCTAssertTrue(last.isHittable)
+    XCTAssertGreaterThanOrEqual(last.frame.height, 44)
+    last.tap()
+    XCTAssertTrue(app.staticTexts["Removed photo: photo-4"].waitForExistence(timeout: 5))
+    rail.swipeRight()
+    app.buttons["Remove photo 2"].tap()
+    XCTAssertTrue(app.staticTexts["Removed photo: photo-2"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Photos remaining: 2"].exists)
+    app.buttons["Add photos"].tap()
+    XCTAssertTrue(app.staticTexts["Photo add requests: 1"].waitForExistence(timeout: 5))
+    app.buttons["Make photos read only"].tap()
+    XCTAssertFalse(app.buttons["Add photos"].exists)
+    XCTAssertFalse(app.buttons["Remove photo 1"].exists)
+    XCTAssertTrue(rail.exists)
+    XCTAssertEqual(rail.images.count, 2)
+    XCTAssertTrue(app.staticTexts["Photos remaining: 2"].exists)
+    capture("draft-photo-native-commands")
+  }
+
+  func testDraftPhotoControlsAccessibility() throws {
+    openDraftPhotos()
+    capture("draft-photo-accessibility-before-audit")
+    if #available(iOS 17.0, *) {
+      try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait, .contrast, .dynamicType, .textClipped])
+    } else {
+      throw XCTSkip("XCTest accessibility audit requires iOS 17")
+    }
+  }
+
   private func openSettingsControls() {
     let button = app.buttons["Audit settings controls"]
     for _ in 0..<4 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }

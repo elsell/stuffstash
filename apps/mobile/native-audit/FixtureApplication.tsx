@@ -1,5 +1,6 @@
+import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Button, ScrollView, Text, View } from 'react-native';
+import { Button, Image, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearance } from '../src/ui/theme/AppearanceContext';
@@ -65,8 +66,10 @@ export function FixtureMenu() {
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState(false);
+  const [draftPhotos, setDraftPhotos] = useState(false);
   const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled'>();
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
+  if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
     <Button title="Audit Browse filters" onPress={() => router.push('/audit-browse' as Href)} />
@@ -86,6 +89,7 @@ export function FixtureMenu() {
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
     {['direct', 'nested', 'footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
+    <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Text>{result}</Text>
   </FixturePage>;
 }
@@ -161,4 +165,24 @@ function OnboardingSubmissionFixture() {
     <OnboardingScreen command={command} initialState={state} onStateChange={setState} onComplete={() => {}} />
     <Text>{`Submitted address: ${fakes.auth.signIns.at(-1) ?? 'none'}`}</Text>
   </View>;
+}
+
+function DraftPhotosFixture({ onBack }: { readonly onBack: () => void }) {
+  const [photos, setPhotos] = useState(() => [1, 2, 3, 4].map(index => ({
+    id: `photo-${index}`, uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri,
+    fileName: `photo-${index}.png`, contentType: 'image/png' as const, sizeBytes: 1
+  })));
+  const [removed, setRemoved] = useState('none');
+  const [added, setAdded] = useState(0);
+  const [readOnly, setReadOnly] = useState(false);
+  return <FixturePage>
+    <Button title="Back to audit menu" onPress={onBack} />
+    <VoicePlanPhotoDraftStrip commandKey="audit-command" photos={photos} readOnly={readOnly}
+      onAddPhotos={() => setAdded(value => value + 1)}
+      onRemovePhoto={(_, id) => { setRemoved(id); setPhotos(value => value.filter(photo => photo.id !== id)); }} />
+    <Text>{`Removed photo: ${removed}`}</Text>
+    <Text>{`Photos remaining: ${photos.length}`}</Text>
+    <Text>{`Photo add requests: ${added}`}</Text>
+    <Button title={readOnly ? 'Enable photo editing' : 'Make photos read only'} onPress={() => setReadOnly(value => !value)} />
+  </FixturePage>;
 }

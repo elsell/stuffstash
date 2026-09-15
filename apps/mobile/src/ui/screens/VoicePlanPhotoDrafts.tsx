@@ -51,6 +51,7 @@ export function VoicePlanPhotoDraftStrip({
       {!readOnly ? <NativeCommandButton label="Add photos" onPress={() => onAddPhotos(commandKey)} /> : null}
       {photos.length > 0 ? (
         <ScrollView
+          testID="voice-plan-photo-previews"
           horizontal
           contentContainerStyle={styles.planPhotoPreviewList}
           showsHorizontalScrollIndicator={false}

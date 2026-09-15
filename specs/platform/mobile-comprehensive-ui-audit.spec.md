@@ -245,3 +245,15 @@ and observe inherited mode without a navigation transition.
 Keyboard readiness must find an actual hittable key, not assume the first
 accessibility key is interactive: UIKit also exposes zero-size padding keys.
 Keep full displayed/submitted text assertions after this readiness condition.
+
+Native draft-photo fixtures use bundled synthetic imagery and the production photo
+strip. Verify numbered removal sends the intended photo identity, independent
+horizontal scrolling, Add callback, and read-only preview retention. These fixtures
+must not invoke a camera, library, upload, or real conversation service.
+
+Use Apple's XCTest accessibility audit on named visible states to check hit
+regions, labels, traits, contrast, Dynamic Type support and clipping. Preserve
+all reported issues; any future suppression needs a specific documented false
+positive. Record viewport/device/build scope and do not interpret a visible-state
+audit as coverage of offscreen controls or the complete platform.
+See https://developer.apple.com/documentation/accessibility/performing-accessibility-audits-for-your-app.
