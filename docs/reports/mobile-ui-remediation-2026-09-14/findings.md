@@ -2072,3 +2072,12 @@ M147 critic found no confirmed blocker. It noted that dedicated returned-visit
 success tests for Move/Move Here/destination creation are not yet present; current
 success tests and Edit return-success cover the shared helper, but do not replace
 those per-branch scenarios. That coverage gap and native timing remain open.
+
+
+M147 coverage follow-up: dedicated Move and Move Here tests now compare current
+and returned-visit success, asserting both navigation and completion records.
+Destination creation returned-success asserts the original query remains and the
+created destination is not inserted. All31 Edit/Move cases, TypeScript and structural
+checks pass on paul. Critic confirmed the added assertions cover those branches.
+This closes the per-branch mounted success coverage gap above; native lifecycle
+acceptance remains open.

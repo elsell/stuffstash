@@ -92,10 +92,12 @@ it('creates the move destination with the kind selected in the native menu', asy
   } finally { await h.unmount(); }
 });
 
-it.each([['move', false], ['move-here', false], ['move', true], ['move-here', true]] as const)('freezes %s submission and restores after failure (returned=%s)', async (mode, returned) => {
+it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', true, 'failure'], ['move-here', true, 'failure'], ['move', true, 'success'], ['move-here', true, 'success'], ['move', false, 'success'], ['move-here', false, 'success']] as const)('owns %s submission (returned=%s, outcome=%s)', async (mode, returned, outcome) => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const submitted: unknown[] = [];
   let rejectSave: (error: Error) => void = () => {};
-  const waiting = new Promise<never>((_, reject) => { rejectSave = reject; });
+  let resolveSave!: (value: { id: string; title: string; message: string }) => void;
+  const waiting = new Promise<{ id: string; title: string; message: string }>((resolve, reject) => { resolveSave = resolve; rejectSave = reject; });
+  resetNavigation(); consumeAssetActionCompletion('asset');
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'container' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   const candidate = { id: 'box', title: 'Camping box', kind: 'container' as const, subtitle: '', pathLabel: 'Camping box', selectionHint: 'Container', willPromoteToContainer: false };
@@ -127,17 +129,22 @@ it.each([['move', false], ['move-here', false], ['move', true], ['move-here', tr
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
     const alertBefore = latestAlert();
     if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
-    await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
+    await h.run(() => outcome === 'failure' ? rejectSave(new Error('Failed')) : resolveSave({ id: 'asset', title: 'Tent', message: 'Moved' })); await settle(h);
     if (returned) expect(latestAlert()).toBe(alertBefore);
+    expect(dispatchedActions()).toEqual(outcome === 'success' && !returned ? [{ type: 'back' }] : []);
+    const completion = consumeAssetActionCompletion('asset');
+    if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
+    else expect(completion).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
-  } finally { await h.unmount(); setScreenFocused(true); }
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 
-it.each([false, true])('shares the Move creation lock and retains query after failure (returned=%s)', async returned => {
+it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('shares Move creation lock (returned=%s, outcome=%s)', async (returned, outcome) => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creates = 0; let moves = 0;
   let rejectCreate: (error: Error) => void = () => {};
-  const waiting = new Promise<never>((_, reject) => { rejectCreate = reject; });
+  let resolveCreate!: (value: { id: string; title: string; message: string }) => void;
+  const waiting = new Promise<{ id: string; title: string; message: string }>((resolve, reject) => { resolveCreate = resolve; rejectCreate = reject; });
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, parentAssetId: assetId('old'), locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   try {
@@ -158,9 +165,10 @@ it.each([false, true])('shares the Move creation lock and retains query after fa
     await h.changeText(h.allByType('TextInput')[0], 'Changed');
     const alertBefore = latestAlert();
     if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
-    await h.run(() => rejectCreate(new Error('Failed'))); await settle(h);
+    await h.run(() => outcome === 'failure' ? rejectCreate(new Error('Failed')) : resolveCreate({ id: 'new', title: 'Created destination', message: 'Created' })); await settle(h);
     if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
+    expect(h.byText('Created destination')).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
