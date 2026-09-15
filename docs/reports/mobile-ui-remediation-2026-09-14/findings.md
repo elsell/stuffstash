@@ -52,6 +52,10 @@
 
 | M38 | Move destination kind uses custom tab semantics for a form value | Implemented; native pending | Shared native Kind picker replaces tab semantics; create command receives selected kind. 52 remote tests/check/structural pass; critic no blockers. Native menu rendering remains pending |
 
+| M39 | Asset Edit and Move text fields lack explicit accessible names | Open; source-confirmed | Name/Description/Put in/Find item fields in AssetDetailSheets use separate visual labels without accessibilityLabel; AppTextInput is a plain native TextInput adapter. Add stable names and verify assistive output |
+
+| M40 | Tag and voice photo actions have undersized touch targets | Open; source-confirmed | Add/Edit tag chips use minHeight34 without hitSlop; tag creation controls use40; voice Retry photos uses34 and draft-photo Remove uses18×18 with no hitSlop. Rework visible target spacing rather than overlapping invisible targets; verify native enlarged text and independent photo removal |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
