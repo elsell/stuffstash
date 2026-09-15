@@ -839,3 +839,40 @@ Route-isolation tests failed before adding the route and now pass; remote typech
 and structural checks pass. Critic found no blockers; its cleanup and dismissal
 wait recommendations were applied. Swift compilation and phone/iPad execution
 remain pending. Fixture scenario count increases to34 including earlier additions.
+
+
+### PR140 release checkpoint — run34937278231
+
+Actual checkout 6076e824a767a647f6fc95558380eca4b4ba8212 has verified parents
+177c08b6 and b8d18f5b. The later 765aa6cd commit is documentation only. Final remote
+regression at 765aa6cd passes 1482 tests in253 files, TypeScript and structural
+checks; all 34 changed mobile/script/spec files match by SHA256. Required CI
+34937529734 passes. PR140 merged as eca1ad7e; release34939488611 is running.
+
+- Phone onboarding104277847337: one applicable pass, two iPad-only skips.
+  Entry025E4C25, keyboard7F370B55 and post-dragA52604E6 screenshots show the
+  required-field explanation, full URL, and reachable Connect. No sign-in occurs.
+- iPad onboarding104277847444: three passes. Margin and inside-column drags
+  dismiss the keyboard. Post-drag7E98A79C shows the full address and Connect.
+  Landscape interaction passes; screenshot8B0399D5 has a black/offset region
+  inconsistent with its1133×744 hierarchy and centered552-point form. Keep visual
+  landscape acceptance open; a passing hit test does not resolve the discrepancy.
+- Phone fixtures104277847107:25/34 pass. iPad fixtures104277847300:28/34 pass.
+  Switcher household navigation, failed selection, retry and Close pass on both.
+  Entry images006B9F4E(phone) and548D03B7(iPad) show the long heading wrapping and
+  native command/Close visible. Phone error780341C7 displays recovery feedback.
+- Add remains unresolved: both card runs receive `Nve draft name`; initial-header
+  comparisons receive `N` on phone and `Ne draft name` on iPad. Original sheets
+  fail field readiness. M74 is not a verified fix, and Save/retry is not reached.
+- Original History hit-testing still fails; the added comparison fails because
+  multiple elements match. This is a diagnostic defect, not evidence of pagination
+  or dismissal success. Controlled-address comparison also fails on both.
+- Phone expiration clipping and nested/footer comparison failures persist. The
+  accessibility issue attachment explicitly says XCTest did not identify an
+  element; do not attribute it to the choice label. Both dedicated large-text
+  choice scenarios pass. Expiration keyboard actions pass on both devices.
+
+Artifacts are under /tmp/native349372-{onboarding,fixtures}-{phone,ipad}; job logs
+use the same prefixes. Cumulative critic found no confirmed new production
+regression relative to the pre-PR140 evidence. This is an authorized interim
+release with unresolved findings, not native audit completion.

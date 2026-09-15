@@ -45,23 +45,22 @@ TestFlight changelog were verified at05:52:22UTC: **0.24.17(105.1) is delivered*
 history locale, month-calendar presentation and keyboard-ownership corrections.
 It does not certify the full audit or unresolved native footer behavior.
 
-Next remediation batch: [PR140](https://github.com/elsell/stuffstash/pull/140), branch
-`codex/mobile-audit-after-138`. M69–M73 cover Sharing feedback ownership, invitation
-replacement/startup/navigation recovery and account recovery without inventory data.
-See [Sharing/invitations](sharing-axis.md) and
-[Account/connection](account-connection-axis.md). These changes are excluded from0.24.17.
+PR140 merged as `eca1ad7e`. Its interim release is running in
+[release34939488611](https://github.com/elsell/stuffstash/actions/runs/34939488611).
+This checkpoint improves onboarding, inventory switching and account/invitation
+recovery. Upload and Apple processing are not yet verified.
 
-Latest completed native slice: iPhone17 onboarding in
-[run34929746647](https://github.com/elsell/stuffstash/actions/runs/34929746647),
-actual sourcebabf6765 (parents50b598ae and904684a1). One applicable test passed;
-two iPad-only tests skipped. The phone fixture job then completed with22 passes
-and9 failures; iPad fixtures completed27 passes and4 failures. iPad onboarding
-remains active. The run predates PR138 and PR140; it cannot verify their changes.
+Native run 34937278231 tested merge `6076e824`, whose parents are177c08b6 and
+b8d18f5b. The remaining PR140 commit765aa6cd changes only audit documentation.
+iPhone onboarding passes one applicable scenario (two iPad-only skips); iPad
+onboarding passes all three, including previously failing margin dismissal.
+iPhone fixtures pass25/34 and iPad fixtures 28/34. The new switcher recovery
+scenario passes on both. These results do not establish a fully passing native
+audit. See the evidence log for unresolved failures and screenshot limitations.
 
-Priority open work: native Add loading diagnosis, filter keyboard hit targets,
-large-text choice reflow, history accessibility reachability, Android runtime
-coverage and the remaining surface/axis reviews. Preserve running native jobs;
-collect their screenshots and hierarchies before selecting further fixes.
+Priority open work: Add typing/loading, History query diagnostics and interaction
+acceptance, phone clipping and nested-sheet findings, iPad landscape screenshot
+validation, Android runtime coverage, and remaining surface/axis reviews.
 
 Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) and
 [findings.md](findings.md). No historical release is full audit acceptance.
