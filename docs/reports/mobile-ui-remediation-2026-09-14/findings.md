@@ -977,3 +977,14 @@ large-text form space and Cancel reachability remain unverified. M91 stays open.
 
 The full mobile suite also passed:1507 tests across258 files on paul. This is
 behavioral coverage, not native geometry evidence.
+
+### M92 — Move offers creation while suggestions are unknown
+
+Source-confirmed P2, S134/S135 loading and recovery. Current-query suggestions
+were converted to an empty array, so the existing same-kind/title/parent check
+offered Create during debounce or failed lookup. The candidate now requires known
+results before offering creation and locates retry/loading in the results scroll.
+Cached results still support the existing check; this is not global uniqueness.
+The regression failed before the change;14 action-sheet tests, TypeScript and
+structural checks pass remotely. Native layout and creation recovery remain
+unverified. Query and selected destination are not reset by retry.

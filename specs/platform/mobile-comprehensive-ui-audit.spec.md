@@ -804,3 +804,13 @@ state completely inside the visible detail scroll region, below navigation.
 Existence or a partly hittable control does not establish readable layout. Capture
 photo and contents recovery separately; preserve positive settled-state waits and
 independent-query assertions. Screenshot evidence must not certify offscreen text.
+
+### Destination creation requires known suggestions
+
+The Move form must not infer that a destination is new from an unavailable
+suggestions collection. Hide inline creation until current-query results exist;
+keep retry/loading status within the results region. Preserve the query, selected
+destination and existing move action during lookup failure. Cached results may
+still support the existing same-kind/title/parent duplicate check; this is not a
+global uniqueness guarantee. Explicit retry can restore creation after a known
+empty result. Native layout acceptance remains required.

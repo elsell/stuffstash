@@ -280,6 +280,8 @@ function EditTagPicker({
 export function MoveAssetSheet({
   isCreatingDestination = false, asset,
   draft,
+  candidatesAvailable = true,
+  candidateStatus,
   isSaving,
   onChangeQuery,
   onChangeCreateKind,
@@ -291,6 +293,8 @@ export function MoveAssetSheet({
 }: {
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
+  readonly candidatesAvailable?: boolean;
+  readonly candidateStatus?: ReactNode;
   readonly isSaving: boolean;
   readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
@@ -308,7 +312,7 @@ export function MoveAssetSheet({
   const createPlacement = moveDestinationCreatePlacement(asset);
   const createTitle = draft?.query.trim() ?? '';
   const createKind = draft?.createKind ?? 'location';
-  const canCreate = draft
+  const canCreate = draft && candidatesAvailable
     ? canCreateMoveDestination({
         kind: createKind,
         matches: draft.matches,
@@ -333,6 +337,7 @@ export function MoveAssetSheet({
         value={draft?.query ?? ''}
       />
       <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        {candidateStatus}
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
             <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"

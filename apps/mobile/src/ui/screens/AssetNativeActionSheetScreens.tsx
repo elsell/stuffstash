@@ -245,9 +245,10 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
 
   return (
     <NativeSheetFrame title="Move asset" busy={isSaving}>
-      <CandidateStatus candidates={candidates} />
       {(
         <MoveAssetSheet
+          candidatesAvailable={candidates.data !== undefined}
+          candidateStatus={<CandidateStatus candidates={candidates} />}
           asset={asset}
           draft={shownDraft}
           isSaving={isSaving}
