@@ -179,3 +179,35 @@ Run34909419413 (4020f012) started before the next push, preserving the isolated
 sheet-layout diagnostic. Run34911480135 (6d79ad49) is pending with the corrected
 keyboard/color procedures, crash diagnostics, and later source fixes. Neither
 pending/run-start status is acceptance evidence. No TestFlight release yet.
+
+
+## Sheet structure comparison — run 34909419413
+
+Source `4020f012`; tested merge `214adece86a450b4c028a0b5d0855b9dab164f24`.
+Both devices completed the fixture suite. The direct-scroll-view diagnostic passed
+on iPhone and iPad. On iPhone, both nested-wrapper variants failed because the
+Tags row was absent; the retained screenshots show a blank body, with only bottom
+commands in the footer variant. On iPad, all three isolated layouts passed.
+The production expiration sheet still failed after expansion on both devices.
+This narrows the phone layout failure to container integration; it does not yet
+establish a production fix or explain the iPad expansion failure.
+
+- [Direct scroll view, visible rows](evidence/sheet-direct-phone-34909419413.png)
+- [Wrapper plus footer, blank body](evidence/sheet-footer-phone-34909419413.png)
+- [Wrapper only, blank body](evidence/sheet-nested-phone-34909419413.png)
+
+Appearance, Browse availability, draft option removal, compact expiration dates,
+date-page actions and persistent feedback passed on both devices again. Add
+failed before the name field appeared. Color-picker and keyboard tests still used
+the older selectors/readiness procedure; their replacements are in the next run.
+iPad production onboarding landscape passed. These are sampled runtime results,
+not whole-surface or whole-app acceptance.
+
+## Interim release checkpoint
+
+The user requested delivery of the current fixes before continuing the audit.
+PR 127 merged as `34ae627f3caedd41a22e8b52456e79c8e5154035` after CI
+34912595716 passed. Remote source validation passed 1,374 mobile tests, TypeScript
+and structural checks. Release 34913014534 is in progress; upload and exact-build
+changelog verification remain pending. The audit and unresolved native findings
+remain active. Subsequent changes belong to the continuation branch.
