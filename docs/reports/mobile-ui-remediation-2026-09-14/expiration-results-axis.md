@@ -24,14 +24,14 @@ are separate requirements.
 | Accessibility | Headings and error alerts are labeled; loading states have labels. Result changes and pagination announcements need VoiceOver acceptance. |
 | Motion | No screen-specific custom animation. Native refresh/search transitions under Reduce Motion remain pending. |
 | Content | Infinite query fetches30 items, deduplicates IDs, groups consecutive month/status records. Load more is explicit. Stable grouping depends on repository ordering; no ordering proof is claimed here. |
-| Search | Search debounce is300ms, clear immediate, filters flush pending text. External route changes update native text. Focus loss while debounce is pending needs additional ownership review. |
+| Search | Search debounce is300ms, clear immediate, filters flush pending text. External route changes update native text. M120 pauses pending debounce on blur and resumes retained text on return. |
 | Loading | Initial and pagination spinners are separate. Pull refresh uses the shared focused-gesture owner, and M119 gives Retry a separate direct-query command. |
 | Recovery | Error copy has Retry, while inventory mismatch asks the user to return Home. M119 replaces the ineffective mismatch Retry with Return to Home. Native return remains pending. Pagination errors currently appear at the top; local footer recovery remains review work. |
 | Editing | No persisted edits occur here; route state holds filters. Filter clear semantics are reviewed separately. |
 | Privacy | Scope mismatch and access failure hide items. Query keys include scope/tenant/inventory. Retried access failure behavior and real API authorization require boundary verification. |
 | Notifications | Screen owns no notification registration. Notification-driven departure needs actual native return/focus checks. |
 | Media | Images are read through AssetCard; no recording/upload occurs here. Global voice interruption remains runtime work. |
-| Lifecycle | Query interval uses expiration context and pauses background intervals. Shared pull owner clears on blur; search debounce only cancels on unmount/external query changes. Cold/deep-linked entry and retained-screen blur require verification. |
+| Lifecycle | Query interval uses expiration context and pauses background intervals. Shared pull owner clears on blur; M120 also cancels debounce on blur and ignores hidden callbacks. Cold/deep-linked entry and retained-screen blur require verification. |
 
 Source review is not runtime acceptance. M118's three focused tests cover compact
 configuration, pending-query handoff and clearing, not native layout. The earlier

@@ -560,3 +560,9 @@ query directly; its native command indicates loading and is disabled during a
 read. Only an explicit pull starts the native refresh indicator. A successful
 inventory-scope mismatch offers Return to Home instead of Retry. Loaded records
 remain visible during transient retry; access-failure hiding remains unchanged.
+
+Expiration search debounce belongs to the focused screen. Blur cancels pending
+route updates and ignores hidden native search callbacks. Retain unsubmitted text
+for return; when focus resumes, restart its debounce unless an external route
+query replaced it. Explicit filter/item navigation still flushes while focused.
+Unmount cancels pending work. Do not update a departed route from late input.

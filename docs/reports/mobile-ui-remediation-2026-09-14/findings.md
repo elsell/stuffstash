@@ -1583,3 +1583,15 @@ are in flight. Eight focused component/refresh tests, TypeScript and structural
 checks pass remotely after a failing recovery regression. These checks prove the
 component action separation, not full route navigation or native spinner geometry.
 Native acceptance remains outstanding. R018/S074 loading/recovery.
+
+## M120 — Pending Expiration search can update a departed screen
+
+P2, source-confirmed at4eb45d62. Search debounce was cancelled on unmount but not
+blur, and hidden callbacks could still apply route queries. A controlled regression
+reproduced the hidden update. The candidate cancels pending timers on blur, ignores
+hidden input, and restores retained text with a fresh debounce on return. External
+query changes while blurred supersede retained input. Explicit focused flush is
+unchanged. Eight focused checks, TypeScript and structural checks passed remotely;
+the strengthened focus test also covers the timer alone and external replacement.
+Code review found no confirmed blockers. Native focus/text restoration and actual
+route transitions remain pending. R018/S074 search/lifecycle.
