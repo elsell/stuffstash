@@ -12,7 +12,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AddAssetPhotosCommand,
-  AddAssetPhotoProgressEvent,
   AddAssetPhotosCommandResult
 } from '../../application/assets/AddAssetPhotosCommand';
 import { AssetCheckoutCommand } from '../../application/assets/AssetCheckoutCommand';
@@ -124,11 +123,11 @@ export function AssetDetailRouteScreen({
   const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
   const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
-  const photoRemoval = useRef({ assetId, active: true, pending: false });
+  const photoOperation = useRef({ assetId, active: true, pending: false });
   useEffect(() => {
-    if (photoRemoval.current.pending) setPendingAction(undefined);
+    if (photoOperation.current.pending) setPendingAction(undefined);
     const scope = { assetId, active: true, pending: false };
-    photoRemoval.current = scope;
+    photoOperation.current = scope;
     setIsRemovingPhoto(false);
     return () => { scope.active = false; };
   }, [assetId]);
@@ -136,6 +135,7 @@ export function AssetDetailRouteScreen({
 
   useEffect(() => {
     setPhotoUploads([]);
+    setFailedPhotoDrafts([]);
     setPhotoStatus(undefined);
     setWorkspaceStatus(undefined);
     setSelectedPhotoId(undefined);
@@ -235,82 +235,71 @@ export function AssetDetailRouteScreen({
   }
 
   function choosePhotos(currentPhotoCount: number): void {
+    const scope = photoOperation.current;
     showPhotoSourceChooser({
       onCamera: () => {
-        void addPhotos('camera', currentPhotoCount);
+        if (scope.active) void addPhotos('camera', currentPhotoCount);
       },
       onLibrary: () => {
-        void addPhotos('library', currentPhotoCount);
+        if (scope.active) void addPhotos('library', currentPhotoCount);
       }
     });
   }
 
   async function addPhotos(source: 'camera' | 'library', currentPhotoCount: number): Promise<void> {
-    setPendingAction('photos');
-    try {
-      const photos = source === 'camera'
-        ? await photoSelectionQuery.captureFromCamera(currentPhotoCount)
-        : await photoSelectionQuery.selectFromLibrary(currentPhotoCount);
-      if (photos.length === 0) {
-        return;
-      }
-      setPhotoStatus(undefined);
-      setPhotoUploads(photoUploadRows(photos));
-      const result = await addAssetPhotosCommand.execute({
-        assetId,
-        photos,
-        onPhotoProgress: updatePhotoUploadProgress
-      });
-      setPhotoStatus(result);
-      setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
-      await assetPhotos.reconcile();
-      if (result.failedCount === 0) {
-        setPhotoUploads([]);
-      }
-    } catch (error) {
-      feedback.showNotice({
-        tone: 'error',
-        title: 'Could not add photos',
-        message: readableError(error, 'Photo upload failed.')
-      });
-    } finally {
-      setPendingAction(undefined);
-    }
+    await uploadPhotos(
+      () => source === 'camera'
+        ? photoSelectionQuery.captureFromCamera(currentPhotoCount)
+        : photoSelectionQuery.selectFromLibrary(currentPhotoCount),
+      'Could not add photos'
+    );
   }
 
   async function retryPhotos(): Promise<void> {
-    const photos = failedPhotoDrafts;
-    if (photos.length === 0) {
-      return;
-    }
+    if (failedPhotoDrafts.length === 0) return;
+    await uploadPhotos(async () => failedPhotoDrafts, 'Could not retry photos');
+  }
+
+  async function uploadPhotos(
+    selectPhotos: () => Promise<readonly SelectedAssetPhoto[]>,
+    failureTitle: string
+  ): Promise<void> {
+    const scope = photoOperation.current;
+    if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
+    scope.pending = true;
     setPendingAction('photos');
     try {
+      const photos = await selectPhotos();
+      if (!scope.active || photos.length === 0) return;
       setPhotoStatus(undefined);
       setPhotoUploads(photoUploadRows(photos));
       const result = await addAssetPhotosCommand.execute({
         assetId,
         photos,
-        onPhotoProgress: updatePhotoUploadProgress
+        onPhotoProgress: event => {
+          if (scope.active) setPhotoUploads(current => applyPhotoUploadProgress(current, event));
+        }
       });
+      if (!scope.active) return;
       setPhotoStatus(result);
       setFailedPhotoDrafts(result.failedPhotos as readonly SelectedAssetPhoto[]);
       await assetPhotos.reconcile();
-      if (result.failedCount === 0) {
-        setPhotoUploads([]);
-      }
+      if (scope.active && result.failedCount === 0) setPhotoUploads([]);
     } catch (error) {
+      if (!scope.active) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Could not retry photos',
-        message: readableError(error, 'Photo retry failed.')
+        title: failureTitle,
+        message: readableError(error, 'Photo upload failed.')
       });
     } finally {
-      setPendingAction(undefined);
+      scope.pending = false;
+      if (scope.active) setPendingAction(undefined);
     }
   }
 
   async function removePhoto(photoId: string): Promise<void> {
-    const scope = photoRemoval.current;
+    const scope = photoOperation.current;
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setIsRemovingPhoto(true);
@@ -343,10 +332,6 @@ export function AssetDetailRouteScreen({
         setPendingAction(undefined);
       }
     }
-  }
-
-  function updatePhotoUploadProgress(event: AddAssetPhotoProgressEvent): void {
-    setPhotoUploads((current) => applyPhotoUploadProgress(current, event));
   }
 
   function selectAssetPhoto(asset: AssetDetailViewModel, photoId: string): void {

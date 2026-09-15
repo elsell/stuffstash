@@ -5,6 +5,8 @@ import { StuffStashClient } from '@stuff-stash/api-client';
 import { ApiNotificationRepository } from '../../adapters/notifications/ApiNotificationRepository';
 import { NotificationPreferencesSession } from '../../application/notifications/NotificationPreferencesSession';
 import { NotificationSettingsScreen } from './NotificationSettingsScreen';
+import { setScreenFocused } from '../../test-support/navigation';
+import { setAppStateForTest } from '../../test-support/react-native';
 it('loads personal timing and saves a changed threshold without changing timezone', async () => {
   let preferences = { revision: 1, defaults: { enabled: true, upcoming: true, expired: true, advanceDays: 30 }, timezone: 'America/New_York', pushEnabled: false, overrides: [] };
   const repository = new ApiNotificationRepository(new StuffStashClient({ baseUrl: 'https://api.test', tokenProvider: () => 'token', fetch: async (input, init) => {
@@ -61,5 +63,45 @@ it('handles denied permission, successful enablement and disabling without chang
     await harness.run(()=>harness.byLabel('Push notifications')!.props.onValueChange(true));
     await harness.settle();
     expect(preferences.pushEnabled).toBe(true);
-  } finally {await harness.unmount();}
+    expect(harness.allText()).toContain('Open device settings');
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.settle();
+    expect(harness.allText()).toContain('Enable on this device');
+    await harness.press(harness.byLabel('Set up alerts on this device'));
+    await harness.settle();
+    expect(harness.allText()).toContain('Open device settings');
+    await harness.run(() => setAppStateForTest('background'));
+    allowed = false;
+    await harness.run(() => setAppStateForTest('active'));
+    expect(harness.allText()).not.toContain('Notifications allowed on this device.');
+    expect(harness.allText()).toContain('Enable on this device');
+    expect(preferences.pushEnabled).toBe(true);
+    await harness.press(harness.byLabel('Set up alerts on this device'));
+    await harness.settle();
+    expect(harness.allText()).toContain('Allow notifications for Stuff Stash in your device settings, then try again.');
+  } finally {await harness.unmount(); setAppStateForTest('active'); setScreenFocused(true);}
+});
+
+it.each([['background', 'enabled'], ['inactive', 'enabled'], ['background', 'denied'], ['inactive', 'denied']] as const)('scopes delayed setup feedback across %s transitions with %s result', async (state, outcome) => {
+  const preferences = { revision: 1, defaults: { enabled: true, upcoming: true, expired: true, advanceDays: 30 }, timezone: 'UTC', pushEnabled: true, overrides: [] };
+  const repository = new ApiNotificationRepository(new StuffStashClient({ baseUrl: 'https://api.test', tokenProvider: () => 'token', fetch: async () => Response.json({ data: preferences, meta: {} }) }));
+  const session = new NotificationPreferencesSession(repository, { record() {} }, 'tenant', 'inventory');
+  let finish!: () => void;
+  const pushSession = { async enable() { await new Promise<void>(resolve => { finish = resolve; }); return outcome; } };
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<NotificationSettingsScreen onBack={() => {}} onNavigate={() => {}} tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{ async execute() { return []; } }} pushSession={pushSession} />);
+    await h.settle();
+    await h.press(h.byLabel('Set up alerts on this device'));
+    await h.run(() => setAppStateForTest(state));
+    await h.run(() => setAppStateForTest('active'));
+    await h.run(() => finish());
+    await h.settle();
+    expect(h.allText().includes('Device setup completed.')).toBe(state === 'inactive' && outcome === 'enabled');
+    expect(h.allText().includes('Allow notifications for Stuff Stash in your device settings, then try again.')).toBe(state === 'inactive' && outcome === 'denied');
+    expect(h.allText()).toContain(state === 'inactive' && outcome === 'enabled' ? 'Open device settings' : 'Enable on this device');
+    expect(Boolean(h.byLabel('Open notification system settings'))).toBe(state === 'inactive' && outcome === 'denied');
+    expect(h.byLabel('Push notifications')?.props.value).toBe(true);
+  } finally { await h.unmount(); setAppStateForTest('active'); }
 });

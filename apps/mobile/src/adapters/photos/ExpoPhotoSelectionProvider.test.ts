@@ -1,7 +1,40 @@
-import { describe, expect, it } from 'vitest';
-import { __expoPhotoSelectionProviderTestHooks } from './ExpoPhotoSelectionProvider';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ExpoPhotoSelectionProvider, __expoPhotoSelectionProviderTestHooks } from './ExpoPhotoSelectionProvider';
+
+import { photoPickerFake } from '../../test-support/expo-image-picker';
 
 describe('ExpoPhotoSelectionProvider', () => {
+  beforeEach(() => photoPickerFake.reset());
+
+  it('returns selected photos without requiring broad library permission', async () => {
+    photoPickerFake.result = { canceled: false, assets: [{
+      uri: 'file:///selected.png', width: 10, height: 10,
+      mimeType: 'image/png', fileName: 'selected.png', base64: 'ZmFrZQ=='
+    }] };
+    const photos = await new ExpoPhotoSelectionProvider().selectFromLibrary(0);
+    expect(photos).toHaveLength(1);
+    expect(photos[0]).toMatchObject({ uri: 'file:///selected.png', contentBase64: 'ZmFrZQ==' });
+    expect(photoPickerFake.libraryLaunches).toBe(1);
+    expect(photoPickerFake.libraryPermissionRequests).toBe(0);
+    expect(photoPickerFake.libraryOptions?.mediaTypes).toEqual(['images']);
+  });
+
+  it('treats system picker cancellation as no selection', async () => {
+    await expect(new ExpoPhotoSelectionProvider().selectFromLibrary(2)).resolves.toEqual([]);
+    expect(photoPickerFake.libraryLaunches).toBe(1);
+  });
+
+  it('does not launch the camera without permission', async () => {
+    await expect(new ExpoPhotoSelectionProvider().captureFromCamera(0)).rejects.toThrow('Camera access');
+    expect(photoPickerFake.cameraLaunches).toBe(0);
+  });
+
+  it('opens the camera after permission and preserves cancellation', async () => {
+    photoPickerFake.cameraGranted = true;
+    await expect(new ExpoPhotoSelectionProvider().captureFromCamera(0)).resolves.toEqual([]);
+    expect(photoPickerFake.cameraLaunches).toBe(1);
+  });
+
   it('preserves original selected image metadata for attachment upload', async () => {
     const photos = await __expoPhotoSelectionProviderTestHooks.mapImagePickerResult({
       canceled: false,

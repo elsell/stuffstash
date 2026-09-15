@@ -1,3 +1,4 @@
+import { animationStartCount, holdReduceMotionSnapshotForTest, resetNativeTestState, setReduceMotionEnabledForTest } from '../../test-support/react-native';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { InventoryMapScreen } from './InventoryMapScreen';
@@ -44,4 +45,27 @@ describe('Map server state', () => {
     } finally { await harness.unmount(); }
   });
 
+});
+
+it.each(['pending', 'late-read', 'failed-read'] as const)('keeps Map still with a %s Reduce Motion preference', async mode => {
+  resetNativeTestState();
+  const snapshot = holdReduceMotionSnapshotForTest();
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => mapSnapshot });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+    </MobileServerStateProvider>);
+    if (mode === 'late-read') {
+      await h.run(() => setReduceMotionEnabledForTest(true));
+      await h.run(() => snapshot.resolve(false));
+    }
+    if (mode === 'failed-read') await h.run(() => snapshot.reject(new Error('Preference unavailable')));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 80)));
+    expect(h.allText()).toContain('Tent');
+    expect(animationStartCount()).toBe(0);
+    await h.run(() => setReduceMotionEnabledForTest(false));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 80)));
+    expect(animationStartCount()).toBeGreaterThan(0);
+  } finally { await h.unmount(); snapshot.resolve(false); resetNativeTestState(); }
 });

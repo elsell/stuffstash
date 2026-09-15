@@ -1,0 +1,37 @@
+source,line,component,label,ownership,runtime_review
+apps/mobile/src/ui/components/AppTextInput.tsx,13,TextInput,dynamic/forwarded,forwarded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/AssetContainedWorkspace.tsx,139,AppTextInput,Search contents,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/AssetExpirationEditor.tsx,37,AppTextInput,Search item types,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/CustomizationEditorFields.tsx,24,AppTextInput,New enum option,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/CustomizationEditorFields.tsx,56,AppTextInput,dynamic/forwarded,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/ExpirationField.tsx,85,AppTextInput,Expiration year,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/ReminderTimingEditor.tsx,46,AppTextInput,Days before expiration,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/components/TagColorPicker.tsx,116,AppTextInput,Custom tag color hex value,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AddAssetScreen.tsx,570,AppTextInput,Asset name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AddAssetScreen.tsx,633,AppTextInput,Asset description,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AddAssetScreen.tsx,1000,AppTextInput,Search parent,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AddAssetScreen.tsx,1143,AppTextInput,Search tags,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AddAssetScreen.tsx,1191,AppTextInput,New tag name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,101,AppTextInput,Asset name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,110,AppTextInput,Description,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,250,AppTextInput,New tag name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,259,AppTextInput,New tag color,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,321,AppTextInput,Put in,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/AssetDetailSheets.tsx,409,AppTextInput,"Find item, box, or place",controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/CustomizationCollectionScreen.tsx,120,AppTextInput,dynamic/forwarded,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx,262,CustomizationLabeledInput,Name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx,265,CustomizationLabeledInput,Description,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx,268,CustomizationLabeledInput,Stable key,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx,31,ReturnNoteInput,Optional return details,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx,52,AppTextInput,dynamic/forwarded,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/InventorySharingScreen.tsx,163,AppTextInput,Invitee email,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/OnboardingAddressInput.ios.tsx,12,TextField,dynamic/forwarded,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/OnboardingAddressInput.tsx,10,AppTextInput,Server address,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/OnboardingScreen.tsx,105,OnboardingAddressInput,Server address,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/OnboardingScreen.tsx,106,OnboardingTextInput,dynamic/forwarded,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/OnboardingScreen.tsx,155,AppTextInput,dynamic/forwarded,native-seeded,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx,108,AppTextInput,dynamic/forwarded,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx,167,AppTextInput,New prompt guidance,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/VoiceConversationComposer.tsx,18,AppTextInput,Message Stuff Stash,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx,586,AppTextInput,Proposed item name,controlled,pending unless specifically cited in text-entry-axis.md
+apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx,700,AppTextInput,Search containing locations,controlled,pending unless specifically cited in text-entry-axis.md

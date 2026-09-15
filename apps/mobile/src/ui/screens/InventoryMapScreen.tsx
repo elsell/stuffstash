@@ -1,3 +1,4 @@
+import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { BrowseAddHeader } from './BrowseAddHeader';
 import { useInventoryMapSearch } from './useInventoryMapSearch';
@@ -10,7 +11,6 @@ import type { MutableRefObject } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
-  AccessibilityInfo,
   Animated,
   FlatList,
   Image,
@@ -130,7 +130,7 @@ export function InventoryMapScreen({
   const [localQuery, setLocalQuery] = useState('');
   const query = searchQuery ?? localQuery;
   const setQuery = onChangeSearchQuery ?? setLocalQuery;
-  const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
+  const reduceMotionEnabled = useReducedMotionPreference();
   const [pendingScrollLevel, setPendingScrollLevel] = useState<number | undefined>();
   const [highlightedAssetId, setHighlightedAssetId] = useState<string | undefined>();
   const [branchSwipeVisual, setBranchSwipeVisual] = useState<BranchSwipeVisualState | undefined>();
@@ -144,20 +144,6 @@ export function InventoryMapScreen({
   } | undefined>(undefined);
   const activeBranchSwipeDragX = useRef(0);
 
-  useEffect(() => {
-    let isCurrent = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (isCurrent) {
-        setReduceMotionEnabled(enabled);
-      }
-    });
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotionEnabled);
-
-    return () => {
-      isCurrent = false;
-      subscription.remove();
-    };
-  }, []);
 
   useEffect(() => () => {
     if (branchSwipeVisualClearTimer.current !== undefined) {

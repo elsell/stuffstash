@@ -390,3 +390,31 @@ The same scrollable recovery requirement applies to customization collection and
 editor failures, notification route loading failures, stale or invalid reminder
 links, and filter loading failures. Retry and dismissal actions remain in their
 existing context; route validation and authorization behavior must not change.
+
+## Customization completion navigation ownership
+
+A submitted save or lifecycle operation may finish after the editor loses focus.
+Its success must not navigate over the user's newer task or announce success in
+that task. Navigation and global success feedback belong to the uninterrupted
+focus session that initiated the operation, including the same resource/scope.
+Returning to the editor starts a new focus session; an older completion may
+reconcile the retained editor but must not dismiss it. A later explicit operation
+can navigate normally. A lifecycle confirmation accepted after its initiating
+focus session ends must not start a mutation. Persistence still runs through the
+existing managers and authorization boundaries.
+
+Local draft, error, permission-refresh, completion and busy state belong to the
+mounted resource/scope lifetime. A late result from a different resource must not
+overwrite, deny or unlock the current editor. A new resource receives an independent
+operation workflow; old operations may settle without affecting its state.
+
+## Retained customization completion state
+
+Normally a successful command returns to the collection. If navigation ownership
+changed while it ran, the retained editor instead shows a terminal inline result
+(Saved, Archived, Restored, or Deleted) and a native Return to collection command.
+Do not keep the submitted form editable or expose repeat save/lifecycle commands:
+that risks duplicate creation and edits hidden by the completed dirty-state flag.
+This is a state of the existing screen, not another modal or navigation step.
+The user can deliberately return when ready. Failed operations keep the existing
+draft and retry behavior; changing resource starts a fresh editor lifecycle.

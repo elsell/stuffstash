@@ -306,3 +306,194 @@ adapter. This matches their command task without extra navigation. Query scoping
 loading guards, recovery and pagination behavior are unchanged. Eleven existing
 inbox behavior tests, TypeScript and structural checks pass remotely. Critic found
 no issue. Native control sizing/appearance and paging acceptance remain pending.
+
+### M57 — Device setup feedback outlives the attempt's context
+
+Reminder settings retained a successful permission claim after returning from
+OS Settings, and compared display text to choose button behavior. Feedback now
+uses a typed outcome, describes a completed setup attempt, and clears on focus
+entry or backgrounding. A generation token rejects delayed enabled/denied feedback
+after backgrounding or navigation departure without canceling background setup
+persistence. Transient inactive permission prompts retain their feedback ownership.
+
+The delayed-background regression failed before the generation guard. Fifteen
+remote settings/setup/session tests pass, including background/inactive × granted/
+denied results, unchanged inventory preferences, and return/retry behavior.
+TypeScript and the mobile structural check pass. Critic's race finding is resolved.
+Physical permission prompts, external Settings changes and native lifecycle timing
+still need verification. This change follows the PR135 release cut.
+
+### M58 — Customization completions outlive navigation and record ownership
+
+Delayed save and archive completions previously dismissed a newer task. Focus
+identity now gates success announcements and navigation; an old confirmation
+cannot start a mutation. A separate resource lifetime scopes local completion,
+permission failure, refresh and busy state. Each resource gets its own workflow;
+old loads retain their original workflow so replacement cannot revive stale loads.
+
+Three deferred focus tests failed baseline. Two resource-replacement tests also
+failed before the lifetime guard because the new editor remained locked. The
+final45 screen/workflow tests, TypeScript and structural checks pass remotely.
+Tests cover delayed granted/denied completion, late confirmation, and fresh save
+recovery; critic's resource-lifetime issue is addressed. Native navigation and
+accessibility timing remain pending.
+
+Follow-up: the retained editor's pre-existing completed flag suppresses dirty
+tracking after subsequent edits; completed create/lifecycle presentation also
+needs review before the entire customization lifecycle is considered resolved.
+M58 fixes ownership, not that separate completion-state design.
+
+### M59 — Retained completed forms permit misleading repeat editing
+
+After a background completion, the existing completed flag suppressed dirty
+tracking but left form controls visible. The retained screen now shows its typed
+Saved/Archived/Restored/Deleted result and one native Return to collection command.
+Submitted draft and lifecycle controls are removed. Normal focused success still
+returns automatically; failures retain editing/recovery. Resource replacement
+clears the terminal state. This closes the completion-state follow-up under M58.
+
+Three revised regression cases failed baseline. All45 screen/workflow tests,
+TypeScript and structural checks pass remotely; critic found no blocker. This
+protects rendered interactions, not arbitrary externally retained callback closures.
+Surface S141 adds explicit completion-state coverage. Native result adaptation,
+focus and accessibility acceptance remain pending.
+
+### M60 — iPad Return cancellation falls below the visible sheet
+
+Run34923022927 shows Save at y839–887 and Cancel at y903–951 below the
+visible sheet. The existing native cancellation test fails hit-testing. The
+candidate pairs the native commands in a flexible wrapping row, cancellation
+first, inside the directly rooted scrolling form. Each native host receives its
+own width-constrained wrapper. It reduces separate-row height without imposing
+a fixed form height or removing enlarged-text scrolling.
+
+Twenty-five Home behavior tests, TypeScript and structural checks pass remotely;
+critic found no blocker. Existing iPhone/iPad native cancellation and optional
+details tests remain unchanged and required. Candidate reachability is unverified
+until those tests run; keyboard and enlarged-text acceptance remain open.
+
+### M61 — Checkout history subtitle overlaps native navigation
+
+The iPad screenshot places the asset subtitle in the navigation bar's vertical
+space. The sheet previously wrapped a subtitle and nested record ScrollView in
+a non-scrolling parent, with no automatic content inset for the subtitle. The
+candidate uses one directly rooted ScrollView for subtitle, all states, records
+and native retry/paging commands. Content padding remains inside the scroll
+container; automatic native insets own navigation/bottom clearance.
+
+Six history behavior/application tests, TypeScript and structural checks pass
+remotely. Critic found no blocker. The unchanged native note-hit-testing failure
+is not yet proven resolved: iPhone/iPad detents, Close, paging and enlarged text
+remain required. This change does not alter query permissions or pagination.
+
+### M62 — Initial Reduce Motion reads override newer preferences
+
+Map started with motion enabled and could overwrite a newer live event with an
+older async snapshot; read rejection was unhandled. Voice rails had the same
+overwrite race. The shared UI motion-preference hook now starts conservatively,
+subscribes before reading, gives live changes precedence, and catches failed reads.
+Notices reuse it while preserving independent screen-reader behavior.
+
+Two rendered Map animation-request tests failed baseline. Ten focused checks pass
+including pending/late/failure preference reads and later live reenablement, plus
+notice behavior and existing voice entity-link coverage. TypeScript and structural
+checks pass; critic found no blocker. Device animation, voice rail timing and
+system-component adaptation remain unverified. See motion-axis.md for scope.
+
+### M63 — Photo selection unnecessarily requires broad library access
+
+Source-confirmed, P2. The shared Expo photo adapter requested full library access
+before opening the system picker and rejected a denied response. Add, asset-detail
+attachments, and voice-plan photos all inherit the gate. Their task is choosing
+specific photos, for which the platform picker provides scoped access. Pinned
+expo-image-picker55.0.20 documents the library prerequisite only for iOS10.
+
+The adapter now opens the image-only library picker directly. Cancellation stays
+an empty result; camera capture retains its permission gate. Two denied-library
+selection/cancellation cases failed before the change; all seven adapter cases,
+TypeScript, and mobile structural checks pass on paul. Evidence:
+`/tmp/photo-picker-red.log`, `/tmp/photo-picker-green.log` (remote host).
+Critic found no blocker; its requested image-only launch assertion was added
+and the checks rerun successfully.
+
+Native acceptance remains open: select images with library authorization denied,
+cancel without error, and deny/allow camera from Add, attachments and voice on
+supported iOS/Android; confirm no unexpected permission prompt and that selected
+image content reaches the intended draft. Adapter tests do not prove native prompts.
+This finding covers selection permission only, not all photo lifecycle behavior.
+
+### M64 — Asset photo operations outlive their asset context
+
+Source/behavior-confirmed, P2. Asset-detail selection started uploads even after
+asset change or route teardown. Duplicate source callbacks could launch duplicate
+uploads; upload progress, failure, retry drafts and cleanup lacked the ownership
+guard already used by removal. Three rendered regression cases failed before
+implementation. Selection, upload, retry and removal now share one asset-owned
+pending scope. A stale picker cannot start an upload; already-started commands
+finish for their original asset without writing to the replacement view. Failed
+photo drafts reset on asset change.
+
+A fourth case exercises an old upload finishing while a new asset upload remains
+pending, including progress and final status. Remote test/type/structural evidence
+is in `/tmp/photo-ownership-red.log` and `/tmp/photo-ownership-green.log` on paul.
+All 65 selected checks, TypeScript and structural checks pass; critic found no
+confirmed blockers.
+Native chooser interruption/dismissal remains unverified. Route focus without
+unmount and other mutation flows are separate lifecycle review work, not cleared
+by these checks.
+
+### M19 — Measured keyboard-clearance candidate
+
+The footer now measures an unmoved bottom boundary in the sheet's window and
+offsets only the overlap with the native keyboard frame. The direct-root scroll
+view remains intact. Pinned React Native0.83 RCTKeyboardObserver converts iOS
+keyboard frames from screen to key-window coordinates; no full-screen height or
+fixed keyboard offset is assumed. Superseded measurement callbacks and callbacks
+after hide/unmount are ignored. Already-resized sheets do not get a second offset.
+
+Seven geometry/hook/filter checks, TypeScript and structural checks pass on paul
+(`/tmp/footer-boundary-green.log`). Critic found no confirmed blockers. Existing
+native expansion, phone/iPad search-keyboard, rotation and enlarged-text scenarios
+remain the acceptance gate. This candidate does not clear M19 until those pass;
+keyboard animation and exact native coordinate alignment remain unverified.
+
+### M65 — Return note loses/reorders native text
+
+Runtime-observed, P1. iPad mini native run34927007321 typed `Returned clean` but
+the native text view contained `leanR`. Screenshot:
+`evidence/ipad-return-note-corruption-34927007321.png`. The same run's controlled
+address comparison lost text, while native and uncontrolled comparisons passed.
+This supports removing draft-value replay as a candidate, not proof of its cause.
+
+The Return note now has a stable native initial value keyed by return session.
+Change events still update the application draft for Save/retry. Twenty-five Home
+behavior checks, TypeScript and structural checks pass on paul
+(`/tmp/return-native-text-green.log`); critic found no blocker. Removed controlled
+value-prop assertions no longer pretend to establish visible text preservation.
+The unchanged native full-string typing and rejected-save retry assertions must
+pass on phone and iPad before closing this finding. Other controlled fields remain
+a broader text-entry audit concern.
+
+### M53 — Reflow after inspecting the enlarged phone screenshot
+
+Run34927007321's explicit accessibility-size screenshot shows the native label
+and selected value squeezed into two columns, with the value broken into short
+fragments (`evidence/phone-choice-narrow-columns-34927007321.png`). The AX issue
+description says the Availability node may clip at larger sizes; normal-size
+screenshot alone would not reveal the problem. Passing hit-testing did not prove
+readable layout.
+
+The shared iOS picker now uses native VStack label-over-menu at accessibility
+font scales, retaining LabeledContent otherwise. The native menu's own label is
+hidden in the vertical layout, preserving its explicit accessibility name. Expo
+55.0.17 does not expose ViewThatFits; the threshold uses pinned React Native0.83's
+default AccessibilityMedium multiplier. This limitation is documented in spec.
+All previous shared consumers remain in scope.
+
+One component case failed before the change; eight picker/filter cases, TypeScript
+and structural checks pass on paul (`/tmp/choice-reflow-green.log`). The native
+large-text scenario now also requires the menu below the label, while retaining
+its hit-testing/menu-open checks and the original accessibility audit. All native
+reflow, ordinary-size regression, and medium-category clipping outcomes remain
+pending; M53 is not cleared. Critic found no confirmed blocker and emphasized
+that vertical placement alone does not prove long-value fit.

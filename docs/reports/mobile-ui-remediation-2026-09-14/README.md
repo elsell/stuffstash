@@ -2,8 +2,8 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Inventory: **140 route/layout and nested-task surfaces × 24 axes = 3360 review cells**
-(initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
+Inventory: **141 route/layout and nested-task surfaces × 24 axes = 3384 review cells**
+(retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
 are intentional: route coverage and interaction coverage are independent.
 
@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `text-input-sites.csv` and `text-entry-axis.md`: input ownership, external reset paths, and native acceptance work.
 
 Runtime availability: macOS GitHub runners build and launch the genuine application
 on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`

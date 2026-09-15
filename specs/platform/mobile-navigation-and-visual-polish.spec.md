@@ -349,3 +349,39 @@ medium-to-expanded, long choice list, keyboard search and date-page scenarios mu
 verify that content and Apply/Back stay reachable on phone and iPad. If the native
 sheet does not keep the footer above the keyboard, resolve its actual coordinate
 behavior rather than adding a guessed fixed keyboard offset.
+
+## Shared Reduce Motion preference ownership
+
+Custom map, voice-result and notice motion must remain disabled while the native
+preference is pending or unavailable. Subscribe before reading the initial value.
+A live preference event supersedes that initial snapshot, including when the
+snapshot resolves late. Remove subscriptions on unmount and ignore late reads.
+Reuse one UI-level preference hook; keep screen-reader notice timing independent.
+Native runtime tests must verify map navigation, voice rail movement and notice
+entry/dismissal with Reduce Motion, including live preference changes.
+
+### Measured expiration footer keyboard clearance
+
+Keep the direct-root ScrollView and bottom sibling footer. Measure an unshifted
+zero-height boundary at the sheet bottom in window coordinates; move the footer
+only by the overlap between that boundary and the reported keyboard frame. React
+Native0.83 converts iOS keyboard notification frames into the key window before
+emitting them, matching measureInWindow. Re-measure on sheet layout/frame changes;
+ignore superseded asynchronous measurements and clear on hide/unmount. A sheet
+already resized above the keyboard needs no extra movement. Floating keyboards
+that do not intersect the bottom boundary and off-window frames need no offset.
+Do not reintroduce a wrapping view around native scroll content. Existing phone
+and iPad keyboard/expansion tests are required acceptance of this candidate.
+
+### Accessible native choice layout
+
+At iOS accessibility text categories, put the native choice label above its menu
+value instead of forcing both into narrow columns. Keep menu selection, disabled
+state and accessibility naming. Use Expo's native VStack and hidden internal
+picker label; its pinned55.0.17 adapter does not expose SwiftUI ViewThatFits.
+The React Native0.83 default scale for AccessibilityMedium is1.786; use that named
+threshold for the iOS adapter, retaining LabeledContent below it. No text-size
+cap or custom menu is introduced. This applies to all NativeChoicePicker consumers
+(filters, appearance, customization, expiration month, invitations, move and voice
+settings). Recheck landscape/narrow layouts and all accessibility sizes on native.
+See [Apple Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/).

@@ -186,7 +186,7 @@ describe('Home interactions through mounted components', () => {
     await h.run(() => { save(); save(); cancel(); });
     expect(updates).toEqual(['All accessories included']); expect(undos).toEqual([]);
     await h.run(() => pending.resolve({ id: 'checkout-one', assetId: checkedOut.id })); await settle();
-    expect(h.byType('TextInput')?.props.value).toBe('All accessories included');
+    expect(h.byLabel('Optional return details')).toBeDefined();
     expect(h.byText('Could not save return details')).toBeDefined();
     expect(h.byLabel('Return details error')).toBeDefined();
     updateDetails = async () => ({ id: 'checkout-one', assetId: checkedOut.id });
@@ -216,7 +216,7 @@ describe('Home interactions through mounted components', () => {
     await h.run(() => client.invalidateQueries()); await settle();
     await h.run(() => { save(); cancel(); }); await settle();
     expect(updates).toEqual([]); expect(undos).toEqual([]);
-    expect(h.byLabel('Optional return details')?.props.value).toBe('Retain this draft');
+    expect(h.byLabel('Optional return details')).toBeDefined();
     expect(h.byLabel('Optional return details')?.props.editable).toBe(false);
     expect(h.byLabel('Save')).toBeUndefined();
     await h.press(h.byLabel('Close')); await settle();

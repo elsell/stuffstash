@@ -1,9 +1,10 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useCustomizationReads } from '../serverState/useCustomizationReads';
-import { useEffect, useRef, useState } from 'react';
-import { useNavigation } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
 import { AccessibilityInfo, Alert, findNodeHandle, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View, type TextInput } from 'react-native';
 import { ChevronDown, ChevronLeft } from 'lucide-react-native';
@@ -52,7 +53,8 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   const [deniedMessage, setDeniedMessage] = useState("You don’t have permission to change this setting.");
   const [initialSnapshot, setInitialSnapshot] = useState('');
   const [draftDenied, setDraftDenied] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [completion, setCompletion] = useState<'Saved' | 'Archived' | 'Restored' | 'Deleted'>();
+  const completed = completion !== undefined;
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [keyManuallyEdited, setKeyManuallyEdited] = useState(false);
@@ -60,6 +62,12 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
 
   const reads = useCustomizationReads(sourceContext, sourceQuery, kind, scope, lifecycle, accessPolicy, mode === 'edit', true);
   const { contextQuery, query } = reads;
+  const focusOwner = useRef<object | undefined>(undefined);
+  const resourceOwner = useRef<object | undefined>(undefined);
+  useFocusEffect(useCallback(() => {
+    focusOwner.current = {};
+    return () => { focusOwner.current = undefined; };
+  }, [resourceId, lifecycle, scope, kind, reads.ownerKey]));
 
   useEffect(() => {
     if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) {
@@ -77,13 +85,14 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   }, [reads.types.data, scope]);
 
   async function load() {
-    const request = workflowRef.current.beginLoad();
+    const workflow = workflowRef.current;
+    const request = workflow.beginLoad();
     setStatus('loading');
     clearLoadedRecord();
     setKeyManuallyEdited(false);
     try {
       const nextContext = await contextQuery.execute();
-      if (!workflowRef.current.isCurrentLoad(request)) return;
+      if (!workflow.isCurrentLoad(request)) return;
       setContext(nextContext);
       const canRead = accessPolicy.readOrRecord(nextContext, kind, scope);
       const mutationRoute = mode === 'create';
@@ -92,11 +101,11 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
         return;
       }
       const typeResult = kind === 'field' ? await query.assetTypes(nextContext, scope, 'active') : undefined;
-      if (!workflowRef.current.isCurrentLoad(request)) return;
+      if (!workflow.isCurrentLoad(request)) return;
       if (typeResult) setEligibleTypes(typeResult.items.filter((item) => scope === 'inventory' || item.scope === 'tenant'));
       if (mode === 'edit') {
         const result = kind === 'tag' ? await query.tags(nextContext) : kind === 'field' ? await query.fields(nextContext, scope, lifecycle) : await query.assetTypes(nextContext, scope, lifecycle);
-        if (!workflowRef.current.isCurrentLoad(request)) return;
+        if (!workflow.isCurrentLoad(request)) return;
         const found = result.items.find((item) => item.id === resourceId);
         if (!found) { setStatus('error'); return; }
         setRecord(found); setName(found.displayName); setKey(found.key); setKeyManuallyEdited(false);
@@ -107,11 +116,11 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
       }
       setStatus('ready');
     } catch (cause) {
-      if (!workflowRef.current.isCurrentLoad(request)) return;
+      if (!workflow.isCurrentLoad(request)) return;
       if (cause instanceof CustomizationFailure && cause.kind === 'permission-denied') {
         let refreshedContext: Awaited<ReturnType<CustomizationContextQuery['execute']>> | undefined;
         try { refreshedContext = await reads.refreshContext(); } catch { /* The API denial remains authoritative. */ }
-        if (!workflowRef.current.isCurrentLoad(request)) return;
+        if (!workflow.isCurrentLoad(request)) return;
         if (refreshedContext) {
           setContext(refreshedContext);
           accessPolicy.readOrRecord(refreshedContext, kind, scope);
@@ -124,7 +133,12 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
       setStatus('error');
     }
   }
-  useEffect(() => { void load(); return () => { workflowRef.current.invalidateLoads(); }; }, [resourceId, lifecycle, scope, reads.ownerKey]);
+  useEffect(() => {
+    const workflow = new CustomizationEditorWorkflow();
+    workflowRef.current = workflow; resourceOwner.current = {};
+    setSaving(false); setLifecycleBusy(false); void load();
+    return () => { resourceOwner.current = undefined; workflow.invalidateLoads(); };
+  }, [resourceId, lifecycle, scope, kind, reads.ownerKey]);
 
   const effectiveInherited = effectiveInheritedOwnership({ routeHint: inherited, recordScope: record && 'scope' in record ? record.scope : undefined, screenScope: scope });
   const canMutate = Boolean(context && !draftDenied && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error) && accessPolicy.canMutate(context, kind, scope, effectiveInherited));
@@ -197,29 +211,49 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   if (!context) return null;
   if (mode === 'create' && !canMutate && !draftDenied) return <DeniedSettingsState message="You don’t have permission to add this setting." />;
 
+  if (completion) return <ScrollView style={settings.styles.shell} contentContainerStyle={settings.styles.content} contentInsetAdjustmentBehavior="automatic">
+    <SettingsSection title={completion} footer="This change is complete. Return to the collection to continue.">
+      <NativeCommandButton label="Return to collection" onPress={onDone} />
+    </SettingsSection>
+  </ScrollView>;
+
   async function save() {
-    if (!context || !valid || (mode === 'edit' && !dirty) || !workflowRef.current.beginSave()) return;
+    const owner = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
+    if (completed || !resource || !owner || !context || !valid || (mode === 'edit' && !dirty) || !workflow.beginSave()) return;
     setSaving(true); setError(undefined); setErrorTitle('Could not save');
     try {
       await saveCustomizationEditor({ context, draft: editorDraft, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, mode, record: record?.kind === 'field' ? record : undefined, resourceId, scope });
-      feedback.showNotice({ tone: 'success', title: `${label(kind)} saved` }); setInitialSnapshot(current); setCompleted(true); onDone();
-    } catch (cause) { await handleFailure(cause, `${label(kind)} was not saved.`); }
-    finally { workflowRef.current.finishSave(); setSaving(false); }
+      if (resourceOwner.current !== resource) return;
+      setInitialSnapshot(current); setCompletion('Saved');
+      if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} saved` }); onDone(); }
+    } catch (cause) { if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not saved.`); }
+    finally { workflow.finishSave(); if (resourceOwner.current === resource) setSaving(false); }
   }
 
   function lifecycleAction(action: 'archive' | 'restore' | 'delete') {
-    if (!context || !resourceId || !workflowRef.current.beginLifecycleConfirmation()) return;
+    const owner = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
+    if (completed || !resource || !owner || !context || !resourceId || !workflow.beginLifecycleConfirmation()) return;
     setLifecycleBusy(true);
     const destructive = action !== 'restore';
     const title = action === 'delete' ? `Delete ${name} permanently?` : `${capitalize(action)} ${name}?`;
     const message = lifecycleMessage(kind, action);
-    Alert.alert(title, message, [{ text: 'Cancel', style: 'cancel', onPress: () => { if (workflowRef.current.cancelLifecycleConfirmation()) setLifecycleBusy(false); } }, { text: action === 'delete' ? 'Delete Permanently' : capitalize(action), style: destructive ? 'destructive' : 'default', onPress: async () => {
-      if (!workflowRef.current.beginLifecycleMutation()) return;
+    Alert.alert(title, message, [{ text: 'Cancel', style: 'cancel', onPress: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } }, { text: action === 'delete' ? 'Delete Permanently' : capitalize(action), style: destructive ? 'destructive' : 'default', onPress: async () => {
+      if (focusOwner.current !== owner || resourceOwner.current !== resource) {
+        if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false);
+        return;
+      }
+      if (!workflow.beginLifecycleMutation()) return;
       try {
         await runCustomizationLifecycleIntent({ action, context, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, resourceId, scope });
-        feedback.showNotice({ tone: 'success', title: `${label(kind)} ${action === 'archive' ? 'archived' : action === 'restore' ? 'restored' : 'deleted'}` }); workflowRef.current.finishLifecycle(); setLifecycleBusy(false); setCompleted(true); onDone();
-      } catch (cause) { await handleFailure(cause, `${label(kind)} was not changed.`, `Could not ${action}`); workflowRef.current.finishLifecycle(); setLifecycleBusy(false); }
-    }}], { onDismiss: () => { if (workflowRef.current.cancelLifecycleConfirmation()) setLifecycleBusy(false); } });
+        workflow.finishLifecycle();
+        if (resourceOwner.current !== resource) return;
+        setLifecycleBusy(false); setCompletion(action === 'archive' ? 'Archived' : action === 'restore' ? 'Restored' : 'Deleted');
+        if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} ${action === 'archive' ? 'archived' : action === 'restore' ? 'restored' : 'deleted'}` }); onDone(); }
+      } catch (cause) {
+        if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not changed.`, `Could not ${action}`);
+        workflow.finishLifecycle(); if (resourceOwner.current === resource) setLifecycleBusy(false);
+      }
+    }}], { onDismiss: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } });
   }
 
   return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={settings.styles.shell}><ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
@@ -241,6 +275,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   </ScrollView></KeyboardAvoidingView>;
 
   async function handleFailure(cause: unknown, fallback: string, title = 'Could not save'): Promise<void> {
+    const resource = resourceOwner.current;
     setErrorTitle(title);
     setError(safeCustomizationMessage(cause, fallback));
     if (!(cause instanceof CustomizationFailure) || cause.kind !== 'permission-denied') return;
@@ -248,22 +283,27 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     setError(undefined);
     try {
       const refreshed = await reads.refreshContext();
+      if (resourceOwner.current !== resource) return;
       setContext(refreshed);
       accessPolicy.mutationOrRecord(refreshed, kind, scope, effectiveInherited);
     } catch { /* Keep the populated draft fail-closed until access can be refreshed. */ }
   }
 
   async function refreshDraftAccess(): Promise<void> {
+    const resource = resourceOwner.current; const focus = focusOwner.current;
     try {
       const refreshed = await reads.refreshContext();
+      if (resourceOwner.current !== resource) return;
       setContext(refreshed);
       if (accessPolicy.mutationOrRecord(refreshed, kind, scope, effectiveInherited)) {
         setDraftDenied(false);
         setError(undefined);
         return;
       }
+      if (focusOwner.current !== focus) return;
       feedback.showNotice({ tone: 'warning', title: 'Access is still unavailable', message: 'Your draft remains read-only.' });
     } catch {
+      if (resourceOwner.current !== resource || focusOwner.current !== focus) return;
       feedback.showNotice({ tone: 'error', title: 'Could not refresh access', message: 'Your draft remains read-only. Try again.' });
     }
   }
@@ -271,7 +311,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   function clearLoadedRecord(): void {
     setExpirationEnabled(false); setRecord(undefined); setEligibleTypes([]); setName(''); setKey(''); setDescription(''); setColor('');
     setFieldType('text'); setApplicability('all_assets'); setEnumOptions([]); setNewOption(''); setTargetIds([]); setInitialSnapshot(''); setKeyManuallyEdited(false);
-    setAdvanced(false); setNameTouched(false); setDraftDenied(false); setCompleted(false); setError(undefined);
+    setAdvanced(false); setNameTouched(false); setDraftDenied(false); setCompletion(undefined); setError(undefined);
     keyFocusRequestedRef.current = false; workflowRef.current.resetExit(); setExitAuthorized(false);
   }
 }

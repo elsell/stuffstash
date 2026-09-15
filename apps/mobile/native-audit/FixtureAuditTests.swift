@@ -12,6 +12,15 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testColdInventoryQueriesEnableDependentResource() {
+    let open = app.buttons["Audit inventory query"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    open.tap()
+    XCTAssertTrue(app.staticTexts["First query ready"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Dependent query ready"].waitForExistence(timeout: 10))
+    capture("cold-inventory-dependent-queries")
+  }
+
   private func waitForKeyboard() {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
@@ -157,6 +166,7 @@ final class FixtureAuditTests: XCTestCase {
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
     for _ in 0..<5 where !choice.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(choice.isHittable)
+    XCTAssertGreaterThanOrEqual(choice.frame.minY, label.frame.maxY, "Accessibility text places the menu below its label")
     choice.tap()
     XCTAssertTrue(app.buttons["Available"].waitForExistence(timeout: 5))
     capture("choice-menu-accessibility-size")
@@ -247,7 +257,15 @@ final class FixtureAuditTests: XCTestCase {
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
-    let open = app.buttons["Audit Add draft"]
+    verifyAddDraft(entry: "Audit Add draft")
+  }
+
+  func testAddDraftInNavigationStack() {
+    verifyAddDraft(entry: "Audit Add navigation draft")
+  }
+
+  private func verifyAddDraft(entry: String) {
+    let open = app.buttons[entry]
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()

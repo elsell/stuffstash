@@ -423,3 +423,17 @@ Inbox loading recovery and older-page loading are commands. Use the existing
 platform-native command adapter for Retry and Load more, including the route's
 inventory-load failure. Preserve the existing loading guard, error recovery,
 pagination merge and scoped query behavior; do not substitute an extra screen.
+
+## Device setup feedback lifetime
+
+Permission/registration feedback describes the last explicit setup attempt, not a
+live operating-system permission value. Clear that feedback when reminder settings
+regains focus or the app enters the background, because device permission can
+change outside the app. A successful attempt says setup completed, without claiming
+current permission or delivered alerts. Use typed outcome state for commands;
+button behavior must not depend on matching user-facing text. Returning from device
+settings leaves the inventory preference unchanged and permits a new setup attempt.
+Invalidate feedback ownership on navigation departure and backgrounding so a delayed
+setup result cannot restore stale feedback. Allow setup persistence to complete.
+Transient inactive states, including the native permission prompt, retain the
+attempt's feedback ownership so granting or denying permission can show its result.

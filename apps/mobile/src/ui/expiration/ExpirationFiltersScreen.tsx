@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import type { ExpirationFilter } from '../../application/expiration/ExpirationRepository';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
+import { useSheetKeyboardInset } from './useSheetKeyboardInset';
 import { ExpirationDateRange } from './ExpirationDateRange';
 export type ExpirationChoices = { readonly types: readonly Choice[]; readonly tags: readonly Choice[]; readonly locations: readonly Choice[] };
 type Choice = { readonly id: string; readonly label: string };
@@ -14,6 +15,8 @@ type Page = 'overview' | 'types' | 'tags' | 'locations' | 'dates';
 export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }: { readonly initial: ExpirationFilter; readonly choices: ExpirationChoices; readonly onApply: (filter: ExpirationFilter) => void; readonly onCancel: () => void }) {
  const [draft, setDraft] = useState(initial); const [page, setPage] = useState<Page>('overview'); const [search, setSearch] = useState('');
  const [footerHeight, setFooterHeight] = useState(0);
+ const boundaryRef = useRef<View>(null);
+ const keyboard = useSheetKeyboardInset(boundaryRef);
  const { palette } = useSettingsListStyles();
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
  const searchRef = useRef<SearchBarCommands | null>(null);
@@ -45,7 +48,8 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
    </>}
    {rangeError ? <Text accessibilityRole="alert" style={{ color: palette.text }}>The end date must be on or after the start date.</Text> : null}
   </ScrollView>
-  <SafeAreaView edges={['bottom']} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footerOverlay, { backgroundColor: palette.background }]}>
+  <View ref={boundaryRef} collapsable={false} pointerEvents="none" onLayout={keyboard.measure} style={styles.bottomBoundary} />
+  <SafeAreaView edges={keyboard.bottomInset > 0 ? [] : ['bottom']} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footerOverlay, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
    <View testID="expiration-filter-footer" style={styles.footer}>
     <NativeSheetActions primaryLabel="Apply filters" primaryAccessibilityLabel="Apply expiration filters" secondaryAccessibilityLabel="Cancel or return to filters" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
       onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
@@ -53,4 +57,4 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
   </SafeAreaView>
  </>;
 }
-const styles = StyleSheet.create({ shell: { flex: 1 }, footerOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });
+const styles = StyleSheet.create({ shell: { flex: 1 }, bottomBoundary: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 0 }, footerOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });

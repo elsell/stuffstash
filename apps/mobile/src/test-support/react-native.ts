@@ -6,9 +6,10 @@ const focusedInputs: string[] = [];
 let animationStarts = 0;
 let keyboardDismissals = 0;
 let keyboardVisible = false;
-const keyboardListeners = new Map<string, Set<() => void>>();
+const keyboardListeners = new Map<string, Set<(event?: unknown) => void>>();
 const accessibilityListeners = new Map<string, Set<(enabled: boolean) => void>>();
 let reduceMotionEnabled = false;
+let reducedMotionSnapshot: Promise<boolean> | undefined;
 let screenReaderEnabled = false;
 const announcements: string[] = [];
 let darkerSystemColorsEnabled = false;
@@ -47,7 +48,13 @@ export function setAppStateForTest(state: string) {
   AppState.currentState = state;
   for (const listener of appStateListeners) listener(state);
 }
-export const ActionSheetIOS = { showActionSheetWithOptions() {} };
+let actionSheetCallback: ((index: number) => void) | undefined;
+export function latestActionSheetCallback() { return actionSheetCallback; }
+export const ActionSheetIOS = {
+  showActionSheetWithOptions(_options: unknown, callback: (index: number) => void) {
+    actionSheetCallback = callback;
+  }
+};
 export const Text = 'Text';
 export const Pressable = 'Pressable';
 export const ScrollView = 'ScrollView';
@@ -61,7 +68,7 @@ export const TextInput = forwardRef<{ focus(): void }, Record<string, unknown>>(
 });
 export const Alert = { alert(title: string, message?: string, buttons: readonly AlertButton[] = [], options?: AlertRecord['options']) { alerts.push({ title, message, buttons, options }); } };
 export const AccessibilityInfo = {
-  isReduceMotionEnabled: async () => reduceMotionEnabled,
+  isReduceMotionEnabled: async () => reducedMotionSnapshot ?? reduceMotionEnabled,
   isScreenReaderEnabled: async () => screenReaderEnabled,
   announceForAccessibility(message: string) { announcements.push(message); },
   addEventListener(event: string, listener: (enabled: boolean) => void) {
@@ -78,8 +85,10 @@ export const Appearance = { setColorScheme() {} };
 export const Platform = { OS: 'ios', select: <T>(values: { ios?: T; default?: T }) => values.ios ?? values.default };
 export const PlatformColor = (name: string) => `platform:${name}`;
 export const Keyboard = {
-  addListener(event: string, listener: () => void) {
-    const listeners = keyboardListeners.get(event) ?? new Set<() => void>();
+  metrics() { return undefined; },
+  scheduleLayoutAnimation() {},
+  addListener(event: string, listener: (event?: unknown) => void) {
+    const listeners = keyboardListeners.get(event) ?? new Set<(event?: unknown) => void>();
     listeners.add(listener);
     keyboardListeners.set(event, listeners);
     return { remove() { listeners.delete(listener); } };
@@ -89,7 +98,9 @@ export const Keyboard = {
 };
 export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 };
 export const findNodeHandle = () => 1;
-export const useWindowDimensions = () => ({ fontScale: 1, height: 844, width: 390 });
+let windowFontScale = 1;
+export function setWindowFontScaleForTest(value: number) { windowFontScale = value; }
+export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
 class AnimatedValue {
   private value: number;
@@ -109,6 +120,7 @@ export const Animated = { Value: AnimatedValue, View: 'AnimatedView', multiply: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  reducedMotionSnapshot = undefined;
   reduceMotionEnabled = false;
   screenReaderEnabled = false;
   announcements.length = 0;
@@ -159,3 +171,14 @@ export function setReduceMotionEnabledForTest(enabled: boolean) {
 export function accessibilityAnnouncements() { return [...announcements]; }
 
 export function animationStartCount() { return animationStarts; }
+
+export function holdReduceMotionSnapshotForTest() {
+  let resolve!: (value: boolean) => void;
+  let reject!: (cause: Error) => void;
+  reducedMotionSnapshot = new Promise<boolean>((accept, fail) => { resolve = accept; reject = fail; });
+  return { resolve, reject };
+}
+
+export function emitKeyboardEventForTest(name: string, event?: unknown) {
+  for (const listener of keyboardListeners.get(name) ?? []) listener(event);
+}

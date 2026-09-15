@@ -11,6 +11,7 @@ export default defineConfig({
       { find: /^@expo\/ui\/swift-ui$/, replacement: support('expo-swift-ui.ts') },
       { find: /^@expo\/ui\/swift-ui\/modifiers$/, replacement: support('expo-swift-ui-modifiers.ts') },
       { find: /^expo-notifications$/, replacement: support('expo-notifications.ts') },
+      { find: /^expo-image-picker$/, replacement: support('expo-image-picker.ts') },
       { find: /^expo-crypto$/, replacement: support('expo-crypto.ts') },
       { find: /^@react-native-community\/datetimepicker$/, replacement: support('native-date-picker.ts') },
       { find: /^expo-network$/, replacement: support('expo-network.ts') },

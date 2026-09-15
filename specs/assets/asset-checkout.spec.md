@@ -595,3 +595,32 @@ matching the mounted route's Close action and title configuration. Do not begin
 with a hidden-header contract and rely on a later child option update to reveal
 essential navigation. Run34919776387 loaded iPad records without a visible header;
 that failure cannot be classified as query loading alone.
+
+### Home return command reachability
+
+Optional return details use the existing native command adapter for Cancel return
+and Save in one compact row, with cancellation first and save last. Each command
+gets available width; narrow layouts may wrap instead of clipping labels. Keep
+the row within the directly rooted scrolling form so enlarged text and keyboard
+entry retain a scroll path. Both commands must be reachable in the initial iPad
+sheet, not hidden below its viewport by separate full-width button rows.
+The existing iPhone/iPad cancellation acceptance remains required.
+
+### Checkout history scroll and navigation insets
+
+The asset subtitle, loading/empty/error state, records and paging commands share
+one directly rooted ScrollView with automatic native content-inset adjustment.
+Do not place the subtitle above an independently scrolling nested record view:
+that leaves it under the native form-sheet navigation bar. Keep content padding
+in the scroll content container and background on the scroll view. Native medium/
+expanded sheet hit-testing, Close, paging and enlarged text remain acceptance gates.
+
+### Return-note native text ownership
+
+The Return details text view is seeded once per return editor session. Native
+editing owns its text/caret while change events update the application draft used
+by Save. Do not replay the draft into the native value on each event: the iPad
+audit observed dropped/reordered text with that feedback loop. A new session
+seeds a fresh field; permission, error, loading and reconciliation updates preserve
+the existing native field. Keep the full-string native typing assertion and verify
+Save/retry receives the complete draft before claiming the issue resolved.

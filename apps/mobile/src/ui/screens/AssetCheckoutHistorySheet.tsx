@@ -25,7 +25,7 @@ export function AssetCheckoutHistorySheet({
 }) {
   const styles = useStyles();
   return (
-    <View style={styles.sheet}>
+    <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} contentInsetAdjustmentBehavior="automatic">
       <Text accessibilityRole="header" style={styles.sheetSubtitle}>
         {state.status === 'closed' ? 'Asset checkout history' : state.assetTitle}
       </Text>
@@ -33,7 +33,7 @@ export function AssetCheckoutHistorySheet({
       {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
       {state.status !== 'ready' ? footer : null}
       {state.status === 'ready' ? <ReadyHistory history={state.history} footer={footer} /> : null}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -71,7 +71,7 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.recordList}>
+    <View style={styles.recordList}>
       {history.records.map((record) => (
         <View key={record.id} style={styles.recordRow}>
           <View style={styles.timelineRail}>
@@ -103,7 +103,7 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
         </View>
       ))}
       {footer}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -115,7 +115,9 @@ function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
-    flex: 1,
+    flex: 1
+  },
+  sheetContent: {
     gap: spacing.md,
     padding: spacing.lg,
     paddingTop: spacing.md

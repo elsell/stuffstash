@@ -1,8 +1,9 @@
+import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { VoicePlanHistorySummary } from './VoicePlanHistorySummary';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { voiceConversationReferences } from './VoiceConversationReferences';
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { VoiceRealtimeState, VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import { AssetCard } from '../components/AssetCard';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -38,13 +39,7 @@ export function VoiceResultRail({ references, railKey, onOpen }: { readonly refe
 }
 function VoiceResultRailContent({ references: bounded, identity, onOpen }: { readonly references: readonly VoiceResponseArtifact[]; readonly identity: string; readonly onOpen: OpenReference }) {
   const { railOffsets } = useVoiceInteractionState();
-  const [reduceMotion, setReduceMotion] = useState(true);
-  useEffect(() => {
-    let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (active) setReduceMotion(value); }).catch(() => { /* Keep motion disabled when preference is unavailable. */ });
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => { active = false; subscription.remove(); };
-  }, []);
+  const reduceMotion = useReducedMotionPreference();
   const initialOffset = useRef({ x: (railOffsets.current[identity] ?? 0) * cardWidth, y: 0 });
   const [viewportWidth, setViewportWidth] = useState(cardWidth);
   const [position, setPosition] = useState(() => railOffsets.current[identity] ?? 0);

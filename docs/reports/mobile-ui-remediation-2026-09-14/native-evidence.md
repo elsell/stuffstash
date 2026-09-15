@@ -467,3 +467,139 @@ installer checks pass; critic found no issue. Swift compile/runtime is pending.
 
 Release0.24.14 signed upload job104237609495 has now started. Delivery, Apple
 processing and exact-build changelog remain unverified.
+
+## September 15 — PR135 release cut and next audit pass
+
+At the user's request, PR135 was merged as50b598ae on September15 at03:35:58UTC.
+Release34925606393 is queued behind release34923402256 (0.24.14, still archiving
+at this checkpoint). PR135 includes M53 native label growth, M54 disabled-choice
+event guards, M55 inbox focus-owned navigation, M56 native recovery/paging commands,
+and the independent iPad drag diagnostic. Required CI checks passed. Native
+acceptance34925100363 remains pending; no runtime certification is implied.
+The existing release workflow publishes and reads back exact-build TestFlight
+notes after Apple processing. Neither this queued release nor0.24.14 is certified
+as delivered at this checkpoint.
+
+The new branch starts at50b598ae. M57 feedback lifetime follows this release cut.
+
+Phone fixture job104235814455 from run34923022927 has completed: Home return
+optional-details recovery and cancellation both pass. Full native address entry
+via button and keyboard Go pass. Remaining failures include History sheet
+reachability, controlled-address comparison, expiration accessibility label, phone
+keyboard footer, and nested/footer comparison layouts. Existing findings remain
+open; comparison failures are distinct from production acceptance. The iPad fixture
+job is still running.
+
+## Release0.24.14 delivered
+
+Run34923402256 completed successfully. Apple processing and exact-build TestFlight
+changelog readback for **0.24.14 (102.1)** were verified at03:42:54UTC in job
+104243759949. Tagged source remains30876406. This is delivery evidence, not a
+claim that open native audit failures are fixed.
+
+The user-requested PR135 cut, source50b598ae, is now running as34925606393. It
+contains the later M53–M56 fixes; its upload and changelog are not yet verified.
+
+## Run34923022927 — completed iPad fixtures
+
+Job104235814539 completed with24/28 passing. Source703682bb/runner6051bc06.
+Expiration expansion, keyboard actions and accessibility pass on iPad; full native
+address button/Go and Home optional-details recovery also pass. Four failures:
+
+- Add: missing Asset name while the screen remains at Loading inventory. Readiness
+  evidence reports online/focused true and inventory-scope query success, but
+  add-context remains under inventory-pending with zero observers. This narrows
+  the query subscription/ownership investigation; it does not establish a cause.
+- History: note content is visibly present, but its isHittable assertion fails.
+  The asset title also overlaps the navigation bar. Do not replace this with a pass
+  or remove the assertion without investigating native accessibility/geometry.
+- Home Cancel: control exists at y903–951 while the visible sheet ends above it.
+  Screenshot shows Save but not Cancel. This is actual action reachability, not
+  missing return persistence. Optional-details recovery passed separately.
+- Controlled-address comparison still produces h://example.invalid. Production
+  native full-address button/Go scenarios pass; keep comparison evidence separate.
+
+![iPad Return with Cancel below the visible sheet](evidence/ipad-return-cancel-clipped-34923022927.png)
+![iPad History content visible despite hit-testing failure](evidence/ipad-history-visible-34923022927.png)
+![iPad Add waiting for inventory](evidence/ipad-add-loading-34923022927.png)
+
+Run34925606393 published tag0.24.15 at03:51:13UTC. Signed iOS delivery and
+exact-build notes remain pending. No second release was dispatched.
+
+## Cold dependent-query comparison queued
+
+The Add loading failure is not yet attributed to a cause. A runner-only
+InventoryQueryFixture now uses a fresh production QueryClient/provider and the
+production scoped-query hook for a first resource and a second resource enabled
+by its result. Both must become visible without interaction. The original Add
+scenario is unchanged, and no cache is seeded or connection state overridden.
+Installer isolation red1/2 then green2/2; critic found no blocker. Native Swift
+build and runtime remain pending. A comparison pass does not clear Add.
+
+The Home Return M60 candidate pairs existing native commands in a wrapping row.
+Twenty-five Home checks, TypeScript and structural checks pass; existing native
+cancellation assertions remain unchanged and must verify initial iPad reachability.
+
+Release0.24.15 run34925606393 is archiving. Upload/Apple processing and exact-build
+notes remain pending. These newer candidates are outside that release source.
+
+### Release 0.24.15 (103.1) delivered
+
+Release [34925606393](https://github.com/elsell/stuffstash/actions/runs/34925606393)
+completed successfully. Signed upload and Apple processing/changelog publication
+succeeded; the release log confirms the exact-build TestFlight changelog at
+2026-09-15 04:06:55 UTC. Source is
+`50b598ae46398cceb38759c44c012d61b8f33728` (PR135, M53–M56).
+PR136 fixes M57–M62 are subsequent work and are not included in this build.
+Delivery establishes availability, not native acceptance of open audit findings.
+
+### Native run 34927007321 partial outcome
+
+The iPhone onboarding job104247073503 completed successfully. iPad onboarding
+and both fixture jobs remain running. Sourceb275b0c5 includes the Home return
+command candidate and isolated query comparison, but predates M61–M64. This
+partial job outcome does not establish acceptance for those later changes.
+
+### Run34927007321 — iPad results inspected
+
+Artifact revision88e2fdb5d370ad9952f7d11117d83290926810c8 is the merge of
+sourceb275b0c556a4620d696c698488c8d7ea745a8ebc into50b598ae. iPad fixtures
+executed30 tests:26passed,4failed. Logs `/tmp/native349270-fixtures-ipad.log`;
+artifacts `/tmp/native349270-fixtures-ipad`.
+
+- Home Cancel reachability passes with M60's paired commands. Details typing now
+  fails (`Returned clean` → `leanR`); tracked M65 with screenshot. This is not a
+  full Return-flow pass. The subtitle also appears under the navigation material.
+- Add still shows Loading inventory. The isolated cold/dependent inventory query
+  comparison passes with populated scoped add-context and locations. This narrows
+  investigation to Add integration; it does not clear Add or prove a cause.
+- History still fails its native assertion; this build predates M61.
+- Controlled address comparison still loses text; native and uncontrolled address
+  comparisons and production button/Go address submissions pass.
+- Expiration expansion, keyboard actions and enlarged-text choice checks pass on
+  this iPad. The later M19 measured-footer candidate is not in this source.
+
+iPad onboarding executed3tests,2passed. Dragging inside the form column dismisses
+the keyboard; the original outside-column drag still fails. Landscape passes.
+Evidence `/tmp/native349270-onboarding-ipad.log`. Preserve both scenarios while
+assessing whether outside-content dismissal should be supported. iPhone onboarding
+passed; iPhone fixtures remain running at this checkpoint.
+
+### Run34927007321 completed — phone and next Add comparison
+
+The run is terminal failure. Phone fixtures executed30tests,23passed,7failed.
+`/tmp/native349270-fixtures-phone.log` records Add loading, History reachability,
+controlled-address text loss, expiration accessibility clipping and keyboard
+footer reachability, and nested/footer diagnostic layouts. Home Cancel and the
+entire existing Home return-details recovery scenario pass on phone. The cold
+inventory/dependent query comparison also passes on phone. This does not negate
+the iPad Return note failure or clear the failing phone surfaces.
+
+A new runner-only `audit-add-push` navigation-card route exports the identical Add
+fixture and shares its full draft/rejected-save/Close scenario with the original
+form-sheet test. It distinguishes presentation effects from Add data dependencies
+without preloading cache or bypassing queries. The original failing test remains.
+Route-isolation tests failed for the absent route then passed after installation;
+both tests, TypeScript and structural checks pass on paul
+(`/tmp/add-presentation-green.log`); critic found no blocker. Native comparison
+outcome is pending. This changes the diagnostic suite, not production Add behavior.

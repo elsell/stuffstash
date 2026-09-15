@@ -1,3 +1,4 @@
+import { setWindowFontScaleForTest } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { NativeChoicePicker } from './NativeChoicePicker.ios';
@@ -31,4 +32,22 @@ it('rejects native selection events while editing is locked and resumes after un
     await h.run(() => h.byType('SwiftUIPicker')?.props.onSelectionChange('2'));
     expect(selected).toEqual(['2']);
   } finally { await h.unmount(); }
+});
+
+it('stacks label and native menu at accessibility text sizes while preserving selection', async () => {
+  const h = new MobileRenderHarness(); const changes: string[] = [];
+  const element = <NativeChoicePicker label="Availability" value="" includeEmptyOption={false}
+    options={[{ value: '', label: 'Any availability' }, { value: 'available', label: 'Available' }]}
+    onChange={value => changes.push(value)} />;
+  try {
+    setWindowFontScaleForTest(1.786);
+    await h.render(element);
+    expect(h.byType('SwiftUIVStack')).toBeDefined();
+    expect(h.byType('SwiftUILabeledContent')).toBeUndefined();
+    await h.run(() => h.byType('SwiftUIPicker')?.props.onSelectionChange('available'));
+    expect(changes).toEqual(['available']);
+    setWindowFontScaleForTest(1.353);
+    await h.render(<NativeChoicePicker label="Availability" value="available" options={[{ value: 'available', label: 'Available' }]} onChange={() => {}} />);
+    expect(h.byType('SwiftUIVStack')).toBeUndefined();
+  } finally { setWindowFontScaleForTest(1); await h.unmount(); }
 });
