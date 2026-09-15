@@ -36,10 +36,11 @@ export function SettingsScreen({
 
   if (state.status === 'loading') {
     return (
-      <View style={[styles.shell, styles.errorContainer]}>
+      <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}>
         <ActivityIndicator color={palette.action} />
         <Text style={styles.errorMessage}>Loading settings</Text>
-      </View>
+        <SettingsRecoveryLinks onNavigate={onNavigate} />
+      </ScrollView>
     );
   }
   if (state.status === 'error') {
@@ -50,6 +51,7 @@ export function SettingsScreen({
         <Pressable accessibilityRole="button" onPress={() => void load()} style={styles.retryButton}>
           <Text style={styles.retryText}>Retry</Text>
         </Pressable>
+        <SettingsRecoveryLinks onNavigate={onNavigate} />
       </ScrollView>
     );
   }
@@ -89,4 +91,12 @@ function iconForRow(id: string, color: string) {
     case 'about': return <Info {...props} />;
     default: return <Activity {...props} />;
   }
+}
+
+function SettingsRecoveryLinks({ onNavigate }: { readonly onNavigate: (destination: SettingsDestination) => void }) {
+  return <View style={{ alignSelf: 'stretch' }}><SettingsSection>
+    <SettingsNavigationRow accessibilityLabel="Open Account settings" label="Account" onPress={() => onNavigate('account')} />
+    <SettingsSeparator />
+    <SettingsNavigationRow accessibilityLabel="Open Stuff Stash server settings" label="Stuff Stash server" onPress={() => onNavigate('connection')} />
+  </SettingsSection></View>;
 }

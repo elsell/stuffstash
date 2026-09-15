@@ -598,3 +598,12 @@ Implemented focus/reference ownership for clear-and-return navigation after Open
 inventory and Start over. Mounted original-callback regressions failed before the
 fix. Seven route/progress/selection checks plus typecheck/structural checks pass
 remotely. See [invitation audit](sharing-axis.md); native delivery remains pending.
+
+### M73 — unavailable inventory blocks sign-out recovery (P1)
+
+Root Settings loading/error states now keep Account and Connection reachable.
+Account reads only identity and permits confirmed sign-out with a fallback label
+when identity is pending/failed. Two original regressions failed; 27 remote
+settings/cache checks plus typecheck/structural checks pass. Critic requested
+identity cases were added. See [Account/connection audit](account-connection-axis.md)
+for remaining native layout/lifecycle acceptance and unchanged scope boundaries.

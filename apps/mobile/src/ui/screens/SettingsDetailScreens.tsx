@@ -1,3 +1,5 @@
+import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
+import { useMobileServerQuery } from '../serverState/useMobileServerQuery';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
@@ -22,6 +24,9 @@ export function AccountSettingsScreen({
   readonly settingsQuery: SettingsQuery;
 }) {
   const feedback = useAppFeedback();
+  const { styles } = useSettingsListStyles();
+  const principal = useMobileServerQuery({ key: mobileQueryKeys.principal, query: signal => settingsQuery.getPrincipal({ signal }) });
+  const principalLabel = principal.data?.email ?? 'Current account';
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
 
@@ -43,23 +48,20 @@ export function AccountSettingsScreen({
   }
 
   return (
-    <SettingsModelScreen query={settingsQuery}>
-      {(settings) => (
-        <>
+    <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsRefreshNotice visible={principal.isError} onRetry={async () => { await principal.refetch(); }} />
           <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
-            <SettingsValueRow label="Signed in as" value={settings.principal.primaryLabel} />
+            <SettingsValueRow label="Signed in as" value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
             <SettingsActionRow
-              accessibilityLabel={`Sign out ${settings.principal.primaryLabel}`}
+              accessibilityLabel={`Sign out ${principalLabel}`}
               disabled={working}
               label={working ? 'Signing Out…' : 'Sign Out'}
-              onPress={() => confirmSignOut(settings.principal.primaryLabel, signOut)}
+              onPress={() => confirmSignOut(principalLabel, signOut)}
             />
           </SettingsSection>
-        </>
-      )}
-    </SettingsModelScreen>
+    </ScrollView>
   );
 }
 
