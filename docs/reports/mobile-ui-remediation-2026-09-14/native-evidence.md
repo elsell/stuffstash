@@ -1098,3 +1098,24 @@ aecaeedc (PR144). This fulfills the interim delivery request; PR146 changes are
 excluded and the comprehensive audit remains open. The first attempt failed on
 GitHub's tag-push server error before upload; verified tag absence made the
 failed-job retry safe. No duplicate TestFlight upload was dispatched.
+
+## iPad fixture run34954814675 — first Edit scroll candidate
+
+Actual checkout82fa68e9e0ac54b5a659df6ab4ecffcc92109779, run for PR146
+f9330750, includes the first Edit recovery scroll change. It excludes the later
+native asset footer/reflow and all PR148 tag changes. iPad fixture job104334201965
+completed with33/43 tests passing. Both onboarding jobs passed; phone fixtures
+were still running at inspection.
+
+Failures: three Add input/readiness paths, original Checkout History hit test,
+controlled and uncontrolled address entry, Edit metadata recovery visibility,
+Home-return text fidelity, place contents search, and the no-accessory keyboard
+comparison. Edit fails the reveal helper's fully-visible assertion, so the first
+scroll change is not accepted. Place search fails waiting for Tool19 after entering
+19; inspect the screenshot/hierarchy before deciding whether this is route
+filtering, data or native search behavior. Region recovery passed its older
+interaction scenario; later stronger visibility captures were not in this build.
+
+Evidence: completed job log `/tmp/native349548-ipad.log`; screenshot artifact
+downloaded to `/tmp/native349548-ipad`, not yet visually inspected at this checkpoint. No new visual claim or root cause is inferred
+from these assertions. The button-height comparison is in a later revision.
