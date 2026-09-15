@@ -8,6 +8,11 @@ This spec defines the shared user mental model, navigation, interaction states, 
 
 ## Scope
 
+Unsubmitted custom-field option text belongs to the editor draft. It participates
+in dirty-exit protection, survives Keep Editing, and must be added or cleared
+before saving an enum field. Explain this beside the option entry. Do not silently
+omit visible option text from a successful save.
+
 For an existing custom field or asset type, the Details scope label must describe
 the loaded definition's owner. A household definition viewed from inventory
 settings still names the household; an inventory-owned definition names its

@@ -21,6 +21,28 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('protects an unsubmitted field option and requires adding it before Save', async () => {
+    const record = { ...field('priority', 'Priority', 'inventory'), type: 'enum' as const, enumOptions: ['high'] };
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', resourceId: record.id,
+      query: collectionQuery({ fields: [record] }), manageFields: managerFake({ update: async (...args: unknown[]) => { calls.push(args); return record; } }) });
+    await screen.changeText(screen.byLabel('New enum option'), 'low');
+    attemptNavigation({ type: 'BACK' });
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await pressAlertButton('Keep Editing'); await settleQueries(screen);
+    expect(screen.byLabel('New enum option')?.props.value).toBe('low');
+    await screen.changeText(screen.byLabel('Name'), 'Priority level');
+    expect(screen.byLabel('Save')?.props.disabled).toBe(true);
+    expect(screen.allText()).toContain('Add or clear this option before saving.');
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toEqual([]);
+    await screen.press(screen.byLabel('Add option'));
+    expect(screen.byLabel('New enum option')?.props.value).toBe('');
+    expect(screen.byLabel('Save')?.props.disabled).toBe(false);
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0][2]).toMatchObject({ enumOptions: ['high', 'low'] });
+  });
   it('exposes a named Save command and prevents another save while pending', async () => {
     const pending = deferred<Record<string, never>>(); let calls = 0;
     const screen = await renderEditor({ manageTags: managerFake({ create: async () => { calls++; return pending.promise; } }) });

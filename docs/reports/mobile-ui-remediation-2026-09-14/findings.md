@@ -2358,3 +2358,25 @@ mounted Back test renders the installed navigation header and verifies Keep
 Editing and exactly-once Discard. Remote full suite: 1,734 tests/271 files, type
 check and mobile structural checks passed. Code critic found no blockers.
 Native geometry, appearance and interaction acceptance remain open.
+
+### M167 — Unsubmitted custom-field option can be lost on exit or Save
+
+P1 source/mounted confirmed at0065b1f7. The New enum option input was excluded
+from editor snapshots and validation. Typing only an option then leaving skipped
+the discard prompt; Save could silently omit it after another edit.
+
+Candidate fix includes pending option text in dirty detection, keeps it through
+Keep Editing, and blocks enum Save with inline add-or-clear guidance. Adding the
+option clears the pending input and saves the complete options list. The mounted
+regression failed before implementation; all76 customization tests, TypeScript
+and structural checks pass on paul. Code critic found no blockers. Native input,
+announcement and exit acceptance remain pending.
+
+### M168 — Switching away from Enum leaves hidden options in the create payload
+
+P2 source-confirmed in the field editor audit at0065b1f7. Changing field Type from
+Enum to Text hides the option editor but retains enumOptions. The create command
+passes those to ManageCustomFields, whose validation rejects options on non-enum
+fields. The user sees an enabled Save followed by an avoidable validation failure.
+Preserve dormant option draft for switching back, but submit only values applicable
+to the selected type. Reproduction and fix remain next work; not a native pass.

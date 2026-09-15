@@ -144,7 +144,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
 
   const effectiveInherited = effectiveInheritedOwnership({ routeHint: inherited, recordScope: record && 'scope' in record ? record.scope : undefined, screenScope: scope });
   const canMutate = Boolean(context && !draftDenied && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error) && accessPolicy.canMutate(context, kind, scope, effectiveInherited));
-  const editorDraft: CustomizationEditorDraft = { expirationEnabled, name, key, keyManuallyEdited, description, color, fieldType, applicability, enumOptions, targetIds };
+  const editorDraft: CustomizationEditorDraft = { expirationEnabled, name, key, keyManuallyEdited, description, color, fieldType, applicability, enumOptions, pendingEnumOption: newOption, targetIds };
   const current = customizationEditorSnapshot(editorDraft);
   const dirty = customizationEditorIsDirty(editorDraft, initialSnapshot, mode, completed);
   const validation = customizationEditorValidation(editorDraft, kind, mode);
