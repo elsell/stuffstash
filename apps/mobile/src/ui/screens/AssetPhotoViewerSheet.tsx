@@ -13,6 +13,7 @@ import {
 
 export function AssetPhotoViewerSheet({
   canRemove,
+  isRemoving = false,
   model,
   onClose,
   onRemove,
@@ -20,6 +21,7 @@ export function AssetPhotoViewerSheet({
   photos
 }: {
   readonly canRemove: boolean;
+  readonly isRemoving?: boolean;
   readonly model: AssetPhotoViewerModel | undefined;
   readonly onClose: () => void;
   readonly onRemove: (photoId: string) => void;
@@ -50,6 +52,7 @@ export function AssetPhotoViewerSheet({
   return (
     <FullScreenPhotoViewer
       canRemove={canRemove}
+      isRemoving={isRemoving}
       currentIndex={selectedIndex}
       onClose={onClose}
       onSelectIndex={(index) => {

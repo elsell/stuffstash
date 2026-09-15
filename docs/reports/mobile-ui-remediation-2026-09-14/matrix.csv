@@ -2392,9 +2392,9 @@ S100,Asset / full screen viewer,accessibility,"VoiceOver/TalkBack names, roles, 
 S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,pending,,
 S100,Asset / full screen viewer,content,"Lists, hierarchy, density and pagination",pending,,
 S100,Asset / full screen viewer,search,"Search, scope and filters",pending,,
-S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",finding,Pending removal remains callable and completion clears newer selected photo; AssetDetailRouteScreen.tsx:302 and viewer props.,M42
+S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
 S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",pending,,
-S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",finding,Pending removal remains callable and completion clears newer selected photo; AssetDetailRouteScreen.tsx:302 and viewer props.,M42
+S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.,M42
 S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.,
 S100,Asset / full screen viewer,notifications,System notification entry and state,pending,,
 S100,Asset / full screen viewer,media,"Camera, library, files and audio",pending,,

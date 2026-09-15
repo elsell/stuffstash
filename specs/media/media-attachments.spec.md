@@ -299,3 +299,13 @@ workload before claiming any effect on storage tail latency.
 
 An invalid nonempty public TLS setting must fail S3 startup with a safe configuration
 error; it must never silently fall back to HTTP. An unset value inherits internal TLS.
+
+### Mobile photo-removal interaction
+
+Photo removal remains an explicit destructive confirmation in the full-screen
+viewer. While it is pending, retain a visible disabled Remove action and announce
+removal progress; reject repeated confirmation callbacks. Viewing other photos or
+closing the viewer remains available. Completion may close the removed photo, but
+must not dismiss a different photo selected since the operation began. Failure
+retains the viewing context and permits retry. After route teardown or an asset
+change, late completion must not update the new view or present stale feedback.

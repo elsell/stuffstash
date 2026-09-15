@@ -1,5 +1,5 @@
 import { usePullRefresh } from '../serverState/usePullRefresh';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -123,6 +123,16 @@ export function AssetDetailRouteScreen({
   const [photoStatus, setPhotoStatus] = useState<AddAssetPhotosCommandResult | undefined>();
   const [workspaceStatus, setWorkspaceStatus] = useState<AssetWorkspaceStatus | undefined>();
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>();
+  const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
+  const photoRemoval = useRef({ assetId, active: true, pending: false });
+  useEffect(() => {
+    if (photoRemoval.current.pending) setPendingAction(undefined);
+    const scope = { assetId, active: true, pending: false };
+    photoRemoval.current = scope;
+    setIsRemovingPhoto(false);
+    return () => { scope.active = false; };
+  }, [assetId]);
+
 
   useEffect(() => {
     setPhotoUploads([]);
@@ -300,9 +310,14 @@ export function AssetDetailRouteScreen({
   }
 
   async function removePhoto(photoId: string): Promise<void> {
+    const scope = photoRemoval.current;
+    if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
+    scope.pending = true;
+    setIsRemovingPhoto(true);
     setPendingAction('photos');
     try {
       const result = await deleteAssetPhotoCommand.execute({ assetId, photoId });
+      if (!scope.active) return;
       setPhotoStatus({
         attachedCount: 0,
         failedCount: 0,
@@ -311,17 +326,22 @@ export function AssetDetailRouteScreen({
         canRetry: false
       });
       setFailedPhotoDrafts([]);
-      setSelectedPhotoId(undefined);
+      setSelectedPhotoId(current => current === photoId ? undefined : current);
       setPhotoUploads([]);
       await assetPhotos.reconcile();
     } catch (error) {
+      if (!scope.active) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not remove photo',
         message: readableError(error, 'Photo removal failed.')
       });
     } finally {
-      setPendingAction(undefined);
+      scope.pending = false;
+      if (scope.active) {
+        setIsRemovingPhoto(false);
+        setPendingAction(undefined);
+      }
     }
   }
 
@@ -454,6 +474,7 @@ export function AssetDetailRouteScreen({
             return (
               <AssetPhotoViewerSheet
                 canRemove={screenState.asset.canAddPhotos}
+                isRemoving={isRemovingPhoto}
                 model={photoViewer}
                 onClose={() => setSelectedPhotoId(undefined)}
                 onRemove={(photoId) => void removePhoto(photoId)}

@@ -1,5 +1,5 @@
-import type React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import ImageViewing from 'react-native-image-viewing';
 import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +21,7 @@ const viewerColors = {
 
 export function FullScreenPhotoViewer({
   canRemove,
+  isRemoving = false,
   currentIndex,
   onClose,
   onRemove,
@@ -28,6 +29,7 @@ export function FullScreenPhotoViewer({
   photos
 }: {
   readonly canRemove: boolean;
+  readonly isRemoving?: boolean;
   readonly currentIndex: number | undefined;
   readonly onClose: () => void;
   readonly onRemove?: (photo: FullScreenPhotoViewerPhoto, index: number) => void;
@@ -46,6 +48,7 @@ export function FullScreenPhotoViewer({
       FooterComponent={({ imageIndex }) => (
         <PhotoViewerToolbar
           canRemove={canRemove}
+          isRemoving={isRemoving}
           imageIndex={imageIndex}
           onClose={onClose}
           onRemove={onRemove}
@@ -68,6 +71,7 @@ export function FullScreenPhotoViewer({
 
 function PhotoViewerToolbar({
   canRemove,
+  isRemoving,
   imageIndex,
   onClose,
   onRemove,
@@ -76,6 +80,7 @@ function PhotoViewerToolbar({
   safeBottomInset
 }: {
   readonly canRemove: boolean;
+  readonly isRemoving: boolean;
   readonly imageIndex: number;
   readonly onClose: () => void;
   readonly onRemove?: (photo: FullScreenPhotoViewerPhoto, index: number) => void;
@@ -86,11 +91,15 @@ function PhotoViewerToolbar({
   const canShowRemoveAction = canRemove && onRemove !== undefined;
   const state = fullScreenPhotoViewerActionState(photos, imageIndex, canShowRemoveAction);
   const currentPhoto = photos[imageIndex];
+  useEffect(() => {
+    if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Removing photo…');
+  }, [isRemoving]);
 
   return (
     <View style={[styles.toolbarOuter, { paddingBottom: Math.max(spacing.md, safeBottomInset) }]}>
       <View style={styles.infoBlock}>
         <Text style={styles.positionText}>{state.positionLabel}</Text>
+        {isRemoving ? <Text accessibilityLiveRegion="polite" style={styles.positionText}>Removing photo…</Text> : null}
         <Text numberOfLines={1} style={styles.fileText}>{state.fileLabel}</Text>
         {state.metadataLabel ? (
           <Text numberOfLines={1} style={styles.metadataText}>{state.metadataLabel}</Text>
@@ -122,9 +131,9 @@ function PhotoViewerToolbar({
           <ViewerIconButton
             accessibilityLabel="Remove photo"
             destructive
-            disabled={!state.canRemove || !currentPhoto}
+            disabled={isRemoving || !state.canRemove || !currentPhoto}
             onPress={() => {
-              if (currentPhoto) {
+              if (currentPhoto && !isRemoving) {
                 onRemove?.(currentPhoto, imageIndex);
               }
             }}
