@@ -415,3 +415,34 @@ portrait and acquiring a background assertion for landscape. These failures did
 not reach the UI assertions and provide no verdict on address preservation. Keep
 iPad verification pending and use the already queued newer candidate rather than
 restarting running fixture jobs. Full fixture results remain pending at this entry.
+
+## Run34920888328 — complete checkpoint
+
+Source890cf904, runner merge4b934a69: phone fixtures18/25 pass, iPad22/25 pass.
+The production address-submission fixture and keyboard Go submission pass on
+both devices. Production phone onboarding also passes; the separate production
+iPad launch failed before UI assertions. These results establish the named
+address-entry scenarios, not all onboarding states.
+
+Expiration sheet expansion passes on both devices with the direct-root candidate.
+Phone search keyboard reachability still fails: the retained screenshot shows
+Tags with Tools entered and the keyboard visible, with no bottom commit/cancel
+controls visible. The same scenario passes on iPad. The phone overview accessibility
+audit reports potential clipping at larger Dynamic Type; its element attachment
+identifies Availability. Default-size screenshots cannot establish large-text fit.
+iPad overview accessibility passes. Phone nested/footer diagnostic variants fail;
+direct/direct-footer/scroll-footer variants pass.
+
+Add readiness, History header and the old controlled-input comparison fail on both
+devices. This source predates the initial History header fix and Home return-sheet
+implementation. Color-row activation passes on both devices in this run; prior
+intermittent failure remains open. Logs are retained at
+`/tmp/native349208-fixtures-phone.log` and `/tmp/native349208-fixtures-ipad.log`.
+
+## Next interim release requested
+
+PR132 merged as308764060802bcfa5c9b34f99aa2c0b80c381c86 after required checks passed.
+[Release34923402256](https://github.com/elsell/stuffstash/actions/runs/34923402256)
+is running. It includes the onboarding address, Home return details, initial History
+header and field-editor command fixes. Upload, Apple processing and exact-build
+changelog are not yet verified. The audit continues on a separate branch.
