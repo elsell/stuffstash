@@ -1420,3 +1420,25 @@ blur/refocus acceptance remain open.
 
 M110 combined checkpoint: all1,600 mobile tests in261 files, TypeScript and
 structural checks pass on paul. Critic found no remaining source blocker.
+
+### M111 — Browse tag rows paint behind persistent actions
+
+P2, R016/S071–S073. The user's normal-size Tags screenshot shows rows continuing
+behind Show results and Back; its build number is not established. Current Browse
+source uses a transparent sibling footer without measuring its height or reserving
+scroll clearance. Expiration already has an opaque measured footer and direct
+scroll body; that existing pattern is now shared as NativeFilterSheet.
+
+Browse and Expiration pages retain native actions/search and draft semantics. The
+footer uses an opaque theme surface, reserves its measured height in content and
+scroll indicators, and shares the existing sheet-boundary keyboard handling. The
+native body remains direct to avoid the separately observed nested-sheet failure.
+Two mounted consumer tests cover resizing and last-tag selection through Back and
+Apply: Browse failed before correction while Expiration passed. Thirteen focused
+checks plus TypeScript/structural checks pass remotely.
+
+A native long-tag journey now checks the last row above the entire visible footer,
+fully contained action bounds, selection, Back and applied IDs. Its execution,
+search/keyboard, light/dark and supported-device acceptance remain pending; callback
+and style tests do not prove pixel separation. The footer extraction does not claim
+all other sheet-layout findings fixed.

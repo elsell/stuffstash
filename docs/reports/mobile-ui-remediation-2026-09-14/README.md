@@ -33,10 +33,10 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest batch includes focused-screen notices, reminder and asset-command visit ownership, and independent checkout-history name recovery. All 1,600 mobile tests (261 files), TypeScript and structural checks passed remotely; native geometry and lifecycle acceptance remain open.
+The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,602 mobile tests (262 files), TypeScript and structural checks passed remotely; native geometry and lifecycle acceptance remain open.
 
-The audit remains incomplete. After M110 asset-command visit ownership, the 3384 cells
-comprise 2641 pending, 541 source-reviewed, 161 finding,
+The audit remains incomplete. After M111 filter-footer consumer mapping, the 3384 cells
+comprise 2629 pending, 541 source-reviewed, 173 finding,
 19 runtime-partial and 22 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
 36-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include

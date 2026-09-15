@@ -475,6 +475,43 @@ final class FixtureAuditTests: XCTestCase {
       && viewport.contains(frame) && frame.minY >= bar.frame.maxY
   }
 
+  func testBrowseLastTagClearsActionFooterAndApplies() {
+    app.buttons["Audit Browse filters"].tap()
+    let tags = app.buttons["Choose tags"]
+    XCTAssertTrue(tags.waitForExistence(timeout: 5)); tags.tap()
+    let last = app.buttons["Filter by tag ZZ final tag"]
+    XCTAssertTrue(last.waitForExistence(timeout: 5))
+    let footer = app.otherElements["browse-filter-footer"].firstMatch
+    XCTAssertTrue(footer.waitForExistence(timeout: 5))
+    let scroll = app.scrollViews.firstMatch
+    func fullyAboveActions() -> Bool {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+      return last.isHittable && last.frame.height > 0 && last.frame.minY >= top && last.frame.maxY <= min(bounds.maxY, footer.frame.minY)
+    }
+    for _ in 0..<24 where !fullyAboveActions() {
+      scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35)))
+    }
+    capture("browse-last-tag-above-actions")
+    XCTAssertTrue(fullyAboveActions(), "The final tag must scroll completely above both fixed actions")
+    let bounds = scroll.frame.intersection(app.frame)
+    XCTAssertFalse(footer.frame.isEmpty)
+    XCTAssertTrue(bounds.contains(footer.frame), "The footer must be fully inside the visible sheet")
+    XCTAssertGreaterThanOrEqual(footer.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+    for label in ["Show results", "Back to filters"] {
+      let action = app.buttons[label]
+      XCTAssertTrue(action.isHittable)
+      XCTAssertFalse(action.frame.isEmpty)
+      XCTAssertTrue(footer.frame.intersection(bounds).contains(action.frame), "Every action must be fully visible")
+    }
+    last.tap()
+    app.buttons["Back to filters"].tap()
+    XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
+    app.buttons["Show results"].tap()
+    XCTAssertTrue(app.staticTexts["Browse selected tags: audit-last"].waitForExistence(timeout: 5))
+  }
+
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
     let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch

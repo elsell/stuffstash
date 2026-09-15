@@ -167,8 +167,8 @@ export function BrowseFilterFixture() {
   const router = useRouter();
   const { setResult } = useContext(ResultContext);
   return <BrowseFiltersScreen initial={{ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' }}
-    query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }]}
-    onApply={draft => { setResult(`Browse availability: ${draft.checkoutState}`); router.back(); }}
+    query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }, ...Array.from({ length: 30 }, (_, index) => ({ id: `audit-tag-${index}`, key: `audit-tag-${index}`, label: `Long list tag ${String(index + 1).padStart(2, '0')}` })), { id: 'audit-last', key: 'audit-last', label: 'ZZ final tag' }]}
+    onApply={draft => { setResult(draft.tagIds.length ? `Browse selected tags: ${draft.tagIds.join(',')}` : `Browse availability: ${draft.checkoutState}`); router.back(); }}
     onCancel={() => router.back()}
     onExpiration={mode => { setResult(`Expiration mode: ${mode}`); router.back(); }} />;
 }

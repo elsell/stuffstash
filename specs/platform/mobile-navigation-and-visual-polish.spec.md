@@ -471,3 +471,21 @@ inspection evidence, not an automatic contrast pass. The diagnostic must not
 load production sessions or perform inventory mutations, and must restore its
 starting appearance on explicit cancellation. This investigates M100 without
 speculatively replacing native disabled styling.
+
+### Filter list and persistent action separation
+
+Browse and Expiration filter pages must share the measured native-action footer
+layout. Long tag lists must not remain visible through the footer or leave their
+last choices underneath Show results/Back. Give the fixed footer an opaque theme
+surface and reserve its measured height, including its safe-area padding, at the
+end of scroll content and in the scroll indicator. Re-measure when button height,
+keyboard state or sheet size changes; do not reserve a guessed button height.
+
+Reuse the existing Expiration direct-scroll/native-footer arrangement because
+nested sheet bodies have produced missing native content in the audit. The body
+must remain a direct native screen child. Share its measured keyboard boundary
+handling rather than letting the native action host and container both move it.
+Keep native search, staged selections, Back, Cancel and Apply semantics unchanged.
+Verify long lists at normal text size: scroll the final tag fully above the footer,
+select it, return to the overview, search with the keyboard, dismiss the keyboard
+and apply the retained draft. Include iPhone and iPad light/dark native checks.

@@ -1,22 +1,17 @@
 import type { SearchBarCommands, SearchBarProps } from 'react-native-screens';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeSheetActions } from '../components/NativeSheetActions';
+import { NativeFilterSheet } from '../components/NativeFilterSheet';
 import type { ExpirationFilter } from '../../application/expiration/ExpirationRepository';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
-import { useSheetKeyboardInset } from './useSheetKeyboardInset';
 import { ExpirationDateRange } from './ExpirationDateRange';
 export type ExpirationChoices = { readonly types: readonly Choice[]; readonly tags: readonly Choice[]; readonly locations: readonly Choice[] };
 type Choice = { readonly id: string; readonly label: string };
 type Page = 'overview' | 'types' | 'tags' | 'locations' | 'dates';
 export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }: { readonly initial: ExpirationFilter; readonly choices: ExpirationChoices; readonly onApply: (filter: ExpirationFilter) => void; readonly onCancel: () => void }) {
  const [draft, setDraft] = useState(initial); const [page, setPage] = useState<Page>('overview'); const [search, setSearch] = useState('');
- const [footerHeight, setFooterHeight] = useState(0);
- const boundaryRef = useRef<View>(null);
- const keyboard = useSheetKeyboardInset(boundaryRef);
  const { palette } = useSettingsListStyles();
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
  const searchRef = useRef<SearchBarCommands | null>(null);
@@ -28,7 +23,11 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
   }), [page, searchable]);
  return <>
   <Stack.Screen options={headerOptions} />
-  <ScrollView automaticallyAdjustKeyboardInsets style={[styles.shell, { backgroundColor: palette.background }]} contentContainerStyle={{ paddingBottom: footerHeight + 20 }} scrollIndicatorInsets={{ bottom: footerHeight }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
+  <NativeFilterSheet footerTestID="expiration-filter-footer" actions={{
+   primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
+   secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,
+   onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)
+  }}>
    {page === 'overview' ? <>
     <SettingsSection>
      <SettingsPickerRow label="Kind" accessibilityLabel="Choose item kind" value={draft.kind ?? ''} options={[{value:'',label:'Any kind'},{value:'item',label:'Items'},{value:'container',label:'Containers'},{value:'location',label:'Places'}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
@@ -47,14 +46,6 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
     {!choices[page].some(item => item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())) ? <Text style={{ color: palette.textMuted }}>No matches</Text> : null}
    </>}
    {rangeError ? <Text accessibilityRole="alert" style={{ color: palette.text }}>The end date must be on or after the start date.</Text> : null}
-  </ScrollView>
-  <View ref={boundaryRef} collapsable={false} pointerEvents="none" onLayout={keyboard.measure} style={styles.bottomBoundary} />
-  <SafeAreaView edges={keyboard.bottomInset > 0 ? [] : ['bottom']} onLayout={event => setFooterHeight(event.nativeEvent.layout.height)} style={[styles.footerOverlay, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
-   <View testID="expiration-filter-footer" style={styles.footer}>
-    <NativeSheetActions keyboardAvoidance="container" primaryLabel="Apply filters" primaryAccessibilityLabel="Apply expiration filters" secondaryAccessibilityLabel="Cancel or return to filters" secondaryLabel={page === 'overview' ? 'Cancel' : 'Back'} disabled={rangeError}
-      onBack={() => page === 'overview' ? onCancel() : open('overview')} onApply={() => onApply(draft)} />
-   </View>
-  </SafeAreaView>
+  </NativeFilterSheet>
  </>;
 }
-const styles = StyleSheet.create({ shell: { flex: 1 }, bottomBoundary: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 0 }, footerOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0 }, footer: { paddingHorizontal: 20, paddingVertical: 12 } });
