@@ -419,11 +419,11 @@ R018,expiration.tsx,localization,"Locale, timezone, RTL and long strings",source
 R018,expiration.tsx,imagery,"Icons, photos and missing media",pending,,
 R018,expiration.tsx,targets,Touch target size and reachability,pending,,
 R018,expiration.tsx,gestures,Gestures and explicit alternatives,pending,,
-R018,expiration.tsx,keyboard,"Keyboard, text entry and focus",pending,,
+R018,expiration.tsx,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
 R018,expiration.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 R018,expiration.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R018,expiration.tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R018,expiration.tsx,search,"Search, scope and filters",pending,,
+R018,expiration.tsx,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
 R018,expiration.tsx,loading,"Loading, background refresh and progress",pending,,
 R018,expiration.tsx,recovery,"Empty, error, denied and retry",pending,,
 R018,expiration.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
@@ -1763,11 +1763,11 @@ S074,Expiration / soon expired all dates,localization,"Locale, timezone, RTL and
 S074,Expiration / soon expired all dates,imagery,"Icons, photos and missing media",pending,,
 S074,Expiration / soon expired all dates,targets,Touch target size and reachability,pending,,
 S074,Expiration / soon expired all dates,gestures,Gestures and explicit alternatives,pending,,
-S074,Expiration / soon expired all dates,keyboard,"Keyboard, text entry and focus",pending,,
+S074,Expiration / soon expired all dates,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
 S074,Expiration / soon expired all dates,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S074,Expiration / soon expired all dates,motion,Reduced motion and feedback alternatives,pending,,
 S074,Expiration / soon expired all dates,content,"Lists, hierarchy, density and pagination",pending,,
-S074,Expiration / soon expired all dates,search,"Search, scope and filters",pending,,
+S074,Expiration / soon expired all dates,search,"Search, scope and filters",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending,M118
 S074,Expiration / soon expired all dates,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
 S074,Expiration / soon expired all dates,recovery,"Empty, error, denied and retry",pending,,
 S074,Expiration / soon expired all dates,editing,"Draft, save, cancel, undo and interruption",pending,,

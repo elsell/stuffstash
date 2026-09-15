@@ -29,7 +29,7 @@ export function ExpirationWorkspaceScreen({ mode, items, query = '', filtered = 
  return <View style={[styles.shell, { backgroundColor: colors.background }]}>
   <Stack.Screen options={{ ...expirationFilterHeaderOptions({active: refinementsActive, onPress: () => { const value = search.flush(); search.ref.current?.blur(); onFilters(value); }}),
    headerSearchBarOptions: {
-    ref: search.ref, placeholder: 'Search items', placement: 'stacked', hideWhenScrolling: false,
+    ref: search.ref, placeholder: 'Search items', placement: 'integratedButton', allowToolbarIntegration: false, hideWhenScrolling: false,
     hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none',
     onChangeText: event => search.change(event.nativeEvent.text),
     onSearchButtonPress: event => { search.submit(event.nativeEvent.text); search.ref.current?.blur(); },

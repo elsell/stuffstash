@@ -1552,3 +1552,18 @@ the Search button, capture the collapsed header, verify the full query, and
 observe a previously present nonmatching choice disappear while the matching
 choice remains. Footer reachability assertions remain. Two fixture-preparation
 checks pass remotely; this does not compile Swift or establish native acceptance.
+
+## M118 — Expiration results retain permanently expanded search
+
+P2, source-confirmed at4548bac1. ExpirationWorkspaceScreen still configured stacked
+search after Browse and filter selections adopted integrated-button search. The
+candidate changes native placement and disables toolbar integration, preserving
+the existing debounced route-query hook and its flush-before-navigation behavior.
+Unlike the immediate-query selection adapter, this screen needs pending text
+available to its filter action without waiting for debounce.
+
+A failing regression reproduced the stacked placement. Three focused tests,
+TypeScript and structural checks now pass remotely, including pending text passed
+to Filters and immediate clear with no later debounce. Native compact header,
+search focus, keyboard, filter return and scrolling acceptance remain pending.
+R018/S074 search and keyboard; this is not a full results-surface audit.

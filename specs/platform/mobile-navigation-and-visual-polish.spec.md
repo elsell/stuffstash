@@ -549,3 +549,8 @@ a selection page clears its search, and the overview has no search control. Keep
 selection staged until Apply. Reuse NativeNavigationSearch rather than maintaining
 a second set of native search callbacks. Verify open, type, clear, close, Back and
 retained selections on iPhone and iPad; component checks do not prove geometry.
+
+Expiration results also use integrated-button native search without toolbar
+integration, matching Browse. Preserve the existing debounced route query and
+flush pending text when opening filters or an item. Clearing/closing search applies
+an empty query immediately. Compact presentation must not discard pending input.
