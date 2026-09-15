@@ -371,3 +371,17 @@ Twenty-five Home behavior tests, TypeScript and structural checks pass remotely;
 critic found no blocker. Existing iPhone/iPad native cancellation and optional
 details tests remain unchanged and required. Candidate reachability is unverified
 until those tests run; keyboard and enlarged-text acceptance remain open.
+
+### M61 — Checkout history subtitle overlaps native navigation
+
+The iPad screenshot places the asset subtitle in the navigation bar's vertical
+space. The sheet previously wrapped a subtitle and nested record ScrollView in
+a non-scrolling parent, with no automatic content inset for the subtitle. The
+candidate uses one directly rooted ScrollView for subtitle, all states, records
+and native retry/paging commands. Content padding remains inside the scroll
+container; automatic native insets own navigation/bottom clearance.
+
+Six history behavior/application tests, TypeScript and structural checks pass
+remotely. Critic found no blocker. The unchanged native note-hit-testing failure
+is not yet proven resolved: iPhone/iPad detents, Close, paging and enlarged text
+remain required. This change does not alter query permissions or pagination.

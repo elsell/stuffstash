@@ -605,3 +605,12 @@ the row within the directly rooted scrolling form so enlarged text and keyboard
 entry retain a scroll path. Both commands must be reachable in the initial iPad
 sheet, not hidden below its viewport by separate full-width button rows.
 The existing iPhone/iPad cancellation acceptance remains required.
+
+### Checkout history scroll and navigation insets
+
+The asset subtitle, loading/empty/error state, records and paging commands share
+one directly rooted ScrollView with automatic native content-inset adjustment.
+Do not place the subtitle above an independently scrolling nested record view:
+that leaves it under the native form-sheet navigation bar. Keep content padding
+in the scroll content container and background on the scroll view. Native medium/
+expanded sheet hit-testing, Close, paging and enlarged text remain acceptance gates.

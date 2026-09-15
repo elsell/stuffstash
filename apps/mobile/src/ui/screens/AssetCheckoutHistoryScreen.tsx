@@ -5,7 +5,6 @@ import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 import { Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import type { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -44,7 +43,7 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
   const retry = () => { void (inventory.isError ? inventory.refetch() : (core.isError && !core.data) ? core.refetch() : history.refetch()); };
   const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]);
   const headerOptions = useMemo(() => ({ title: 'Checkout history', headerShown: true, ...actionOptions }), [actionOptions]);
-  return <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['left', 'right', 'bottom']}>
+  return <>
     <Stack.Screen options={headerOptions} />
     <AssetCheckoutHistorySheet state={state} footer={<>
       {state.status === 'error' ? <NativeCommandButton label="Try again" onPress={retry} /> : null}
@@ -56,5 +55,5 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
       {state.status === 'ready' && history.hasNextPage ? <NativeCommandButton disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.fetchNextPage(); }}
         label={history.isFetchingNextPage ? 'Loading older checkouts…' : history.isFetchNextPageError ? 'Try older checkouts again' : 'Load older checkouts'} /> : null}
     </>} />
-  </SafeAreaView>;
+  </>;
 }
