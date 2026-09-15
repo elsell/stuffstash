@@ -490,3 +490,22 @@ it.each(['credential', 'prompt'] as const)('limits %s discard confirmation to th
     expect(dispatchedActions()).toEqual([{ type: 'current-back' }]);
   } finally { await harness.unmount(); client.clear(); resetNavigation(); }
 });
+
+it('allows server credentials without a secret and blocks immediate Back while saving', async () => {
+  resetNavigation();
+  const repository = new FakeProviderRepository();
+  repository.extraProfiles = [profile({ id: 'server', credentialPurpose: 'server_adc' })];
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  const { harness, client } = await mount(<ProviderCredentialScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="server" onSaved={() => attemptNavigation({ type: 'saved-back' })} />);
+  try {
+    const save = harness.byLabel('Save Credential');
+    expect(save).toBeDefined();
+    expect(save?.props.disabled).toBe(false);
+    await harness.run(() => { save?.props.onPress(); attemptNavigation({ type: 'immediate-back' }); });
+    expect(dispatchedActions()).toEqual([]);
+    expect(repository.credentialInputs).toEqual([{ providerProfileId: 'server', purpose: 'server_adc', credential: undefined }]);
+    await harness.run(() => pending.resolve(profile({ id: 'server', credentialPurpose: 'server_adc', credentialStatus: 'configured' })));
+    expect(dispatchedActions()).toEqual([{ type: 'saved-back' }]);
+  } finally { await harness.unmount(); client.clear(); resetNavigation(); }
+});

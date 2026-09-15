@@ -36,7 +36,7 @@ The audit remains incomplete. After the all-axis provider-editor review and M106
 comprise 2653 pending, 553 source-reviewed, 140 finding,
 20 runtime-partial and 18 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
-38-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
+36-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.

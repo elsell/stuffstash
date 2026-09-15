@@ -74,8 +74,10 @@ a native Keep Editing/Discard decision; pending saves block removal. Successful
 submission clears its keyed form even after blur and authorizes exit only for the
 original focused visit. Retained discard callbacks cannot exit a new visit.
 
-Remote validation on paul passed 48 settings behavior tests, TypeScript and the
+Remote validation on paul passed 49 settings behavior tests, TypeScript and the
 mobile structural check. The successful-prompt-after-return regression failed
 before correction. Critic re-review found no remaining confirmed source blocker.
 These are source/mounted results, not native keyboard, toolbar or gesture proof.
 Normal-size native acceptance above remains open.
+
+The additional server-ADC journey confirms Save is enabled without a secret, the repository receives no credential value, and synchronous Save/Back cannot leave before settlement.

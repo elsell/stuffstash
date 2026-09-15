@@ -1344,3 +1344,17 @@ sheet. The screen continues to supply its dynamic command states. This small M50
 readiness candidate follows the native comparison; it does not resolve the
 separate typing failure or establish complete Add acceptance. No production query
 behavior was changed, and both diagnostic configurations remain available.
+
+## Completed older batch: run 34965113594
+
+Both onboarding jobs passed. The fixture suite finished with 36/47 phone journeys
+and 35/47 iPad journeys passing. The tested merge is
+`969c77370a8253051f484816e9c4169799d494df`, incorporating the early PR150 native
+command geometry change, not the later provider, sharing or root Add changes.
+It cannot certify those changes. The run is terminal and needs no further polling.
+
+Phone normal-size failures include Add draft recovery, checkout expansion, direct
+color-picker opening, footer/nested full-sheet assertions and seeded address
+keyboard behavior. Classify from screenshots and hierarchy before changing product
+code or assertions. Enlarged-text failures remain recorded but are deferred until
+normal-size findings are addressed. Phone artifact review is pending.
