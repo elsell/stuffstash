@@ -158,6 +158,15 @@ this to production connectivity without query-state evidence. Runner-only query
 metadata diagnostics are the next discrimination step; no cache pre-seeding or
 connectivity override is an acceptable substitute for the acceptance scenario.
 
+M50 Add readiness candidate after run34965113594: the hidden-header sheet remains
+loading with zero observers, while the otherwise identical preconfigured-header
+sheet reaches the focused form. Production Add now declares its native header and
+known title before presentation, retaining the same sheet and screen-owned
+commands. No query preloading or connectivity override was introduced. The
+configured-header comparison still fails exact typing; current phone/iPad loading,
+text retention and rejected-save recovery remain required. This does not close M50.
+
+
 ### M19 direct-root candidate after native comparisons
 
 ExpirationFiltersScreen now exposes its ScrollView directly to the native sheet;

@@ -460,9 +460,17 @@ fixture in a full-height sheet whose native header is declared visible with its
 known title before presentation. This isolates changing header visibility during
 presentation from the existing card-versus-sheet comparison. Preserve the original
 routes and complete draft/typing/rejected-save assertions. The comparison uses cold
-query state and the same application component; it must not preload resources or
-change production Add presentation. Fixture preparation must remain isolated from
-production routes.
+query state and the same application component; it must not preload resources.
+Fixture preparation must remain isolated from production routes.
+
+Run34965113594 on iPad reaches the focused form in the preconfigured-header sheet,
+while the hidden-header sheet remains loading with zero query observers. Apply the
+preconfigured native header and known Add item title to production Add before
+presentation. Keep the same full-height form sheet and the screen-owned Close,
+Save and busy/dismissal rules. Preserve the hidden-header diagnostic for comparison.
+This is a readiness candidate based on native evidence, not proof that typing or
+rejected-save recovery passes: the configured-header case separately fails exact
+text retention. Current phone/iPad acceptance remains required.
 
 ### M20 — full-width onboarding scroll content
 

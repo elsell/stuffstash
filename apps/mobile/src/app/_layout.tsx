@@ -109,7 +109,8 @@ function ThemedApp() {
           name="add"
           options={{
             contentStyle: { backgroundColor: palette.background },
-            headerShown: false,
+            headerShown: true,
+            title: 'Add item',
             presentation: 'formSheet',
             sheetAllowedDetents: [1],
             sheetCornerRadius: 24,

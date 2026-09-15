@@ -1336,3 +1336,11 @@ works nor that the app loses focus. The [cold Add sheet](evidence/ipad-add-cold-
 remains at Loading inventory: its recorded query snapshot has online/focused true
 but pending/idle queries with zero observers. Keep that cold-start acceptance
 failure open; preloading synthetic data would conceal it rather than fix it.
+
+The configured-header comparison in this run reaches the form, then fails exact
+text (`Nft name` rather than `Native draft name`). Production Add now declares
+`headerShown: true` and its known title before presenting the same full-height
+sheet. The screen continues to supply its dynamic command states. This small M50
+readiness candidate follows the native comparison; it does not resolve the
+separate typing failure or establish complete Add acceptance. No production query
+behavior was changed, and both diagnostic configurations remain available.
