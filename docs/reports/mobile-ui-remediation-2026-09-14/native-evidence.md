@@ -895,3 +895,28 @@ Job104294718233 verified the exact v0.24.18 (106.1) TestFlight changelog at
 07:39:56 UTC on September15. Logs: /tmp/release349394-ios.log and
 /tmp/release349394-notes.log. This completes the requested interim release;
 the full audit, unresolved native findings, and PR142 work remain active.
+
+## Run 34939793483 phone onboarding observation
+
+Actual checkout 17c9a1c94fa38092ac965c9eccfb9b33051c0c1f (b931354e into
+eca1ad7e). Job104285609146 failed the help-collapse predicate waiter, before
+keyboard entry. Final screenshot06D98ECA-CD26-4813-8691-8CD345A04C97.png
+and hierarchyBBB0D047-3005-4F0E-9D09-20B13B87E605.txt show help closed, address
+entry and Connect visible. This does not establish closure within five seconds
+and does not verify keyboard behavior. No production help regression is confirmed.
+
+The observation now uses [XCTest waitForNonExistence](https://developer.apple.com/documentation/xcuiautomation/xcuielement/waitfornonexistence(timeout:))
+with the same timeout; native validation is pending. The iPad onboarding job
+104285608935 succeeded, with artifacts not yet inspected for this run.
+
+Run34939793483 is now terminal. iPad fixtures104285609035 completed29/34;
+phone fixtures104285609027 completed26/34. Both checked out17c9a1c. History
+bounds/pagination/dismissal passes on both; original static-text hit assertion
+still fails. iPad failures also include Add navigation typing (Ne draft name),
+original Add field readiness, configured-header rejection visibility, and Return
+details typing (Returned instead of Returned clean). The latter broadens native
+text-entry investigation beyond Add; no new root cause is established.
+The run predates M82 error fixes. Logs are /tmp/native349397-fixtures-phone.log
+and /tmp/native349397-fixtures-ipad.log. Native screenshots for iPad fixtures
+still need inspection. The onboarding waiter change passed remote structural
+checks; critic found no blockers, macOS compilation/execution pending.

@@ -536,3 +536,12 @@ background refresh separate from this recovery. Native acceptance must inspect
 the visible error, retained text and reachable retry/close, not only AX existence.
 
 The same form-owned error rule applies to Add parent creation, camera and photo-library failures. Use the operation-specific heading; cancellation without an error stays silent. Beginning another operation clears stale failure feedback.
+
+### Onboarding disappearance observation
+
+For onboarding help collapse, use XCTest's dedicated waitForNonExistence
+with the existing five-second deadline instead of wrapping an element existence
+query in a generic predicate waiter. Record screenshot/hierarchy evidence when
+the assertion times out; a later closed snapshot does not prove timely collapse.
+Do not count unreached keyboard steps as passed. This is a test observation
+change, not a production repair.

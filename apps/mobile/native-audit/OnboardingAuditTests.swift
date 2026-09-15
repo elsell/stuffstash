@@ -77,7 +77,7 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertTrue(helpText.waitForExistence(timeout: 5))
     capture("onboarding-help")
     help.tap()
-    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: helpText)], timeout: 5), .completed)
+    XCTAssertTrue(helpText.waitForNonExistence(timeout: 5), "Connection help must close")
 
     address.tap()
     waitForKeyboard()
