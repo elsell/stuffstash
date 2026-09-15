@@ -594,3 +594,14 @@ preference changes remain required. The independent image-load recovery gap M85
 is not resolved by this patch.
 
 All workspace installation contexts, including the web container build, must include the pinned patch file before pnpm install. The lockfile must change only the patch declaration and affected dependency identity; retain existing package versions.
+
+### Failed photo loading acceptance
+
+A failed image decode or dimension request must replace loading with a readable
+Photo unavailable state and explicit Retry, while keeping Close reachable.
+Retry starts a fresh image/dimension attempt, preserves request headers and ignores
+late events from older attempts; failure must not auto-loop network requests.
+Runner diagnostics use a deliberately missing bundled-file sibling, not external
+URLs or user media. Verify error/Retry/Close native reachability; separate controlled
+loading tests must prove a new request and successful recovery. A native click
+on a still-failing fixture alone does not prove retry semantics.

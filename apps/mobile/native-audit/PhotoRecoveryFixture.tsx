@@ -5,13 +5,13 @@ import { assetPhotoViewerModel } from '../src/ui/components/AssetPhotoWorkspaceP
 import { useAppFeedback } from '../src/ui/feedback/AppFeedback';
 
 /** Runner-only modal composition; no service, credentials or real photo deletion. */
-export function PhotoRecoveryFixture({ onBack }: { readonly onBack: () => void }) {
+export function PhotoRecoveryFixture({ onBack, missingImage = false }: { readonly onBack: () => void; readonly missingImage?: boolean }) {
   const feedback = useAppFeedback();
   const [selected, setSelected] = useState<string | undefined>('audit-photo');
   const [pending, setPending] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [photos] = useState(() => [{ id: 'audit-photo', label: 'Audit photo', fileName: 'audit-photo.png',
-    uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri }]);
+    uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri + (missingImage ? '.missing' : '') }]);
   useEffect(() => {
     if (!pending) return;
     const timer = setTimeout(() => {
@@ -24,7 +24,7 @@ export function PhotoRecoveryFixture({ onBack }: { readonly onBack: () => void }
     <Button title="Back to audit menu" onPress={onBack} />
     <Text>{`Removal attempts: ${attempts}`}</Text>
     <Text>{`Photos remaining: ${photos.length}`}</Text>
-    <AssetPhotoViewerSheet canRemove isRemoving={pending} photos={photos}
+    <AssetPhotoViewerSheet canRemove={!missingImage} isRemoving={pending} photos={photos}
       model={assetPhotoViewerModel(photos, selected)} onSelectPhoto={setSelected}
       onClose={() => setSelected(undefined)} onRemove={() => { if (!pending) { setAttempts(value => value + 1); setPending(true); } }} />
   </View>;

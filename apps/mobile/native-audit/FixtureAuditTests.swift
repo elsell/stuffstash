@@ -317,6 +317,24 @@ final class FixtureAuditTests: XCTestCase {
     capture("enum-draft-option-removed")
   }
 
+  func testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable() {
+    let open = app.buttons["Audit unavailable photo"]
+    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.staticTexts["Photo unavailable"].firstMatch.waitForExistence(timeout: 15))
+    let retry = app.buttons["Retry photo"]
+    XCTAssertTrue(retry.isHittable)
+    XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    capture("photo-unavailable-recovery")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Photo unavailable"].firstMatch.waitForExistence(timeout: 15))
+    XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Back to audit menu"].isHittable)
+  }
+
   func testPhotoRemovalFailureAppearsAboveViewer() {
     let open = app.buttons["Audit photo removal recovery"]
     for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

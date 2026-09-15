@@ -29,3 +29,10 @@ Repair must address the dependency behavior, not merely change wrapper props tha
 the dependency ignores. Choose a reviewed pinned patch or replacement through the
 spec; preserve image headers, explicit controls, zoom and platform behavior. Add
 failed-image and Reduce Motion native scenarios before claiming acceptance.
+
+The unavailable-photo runner scenario now uses a missing bundled-file sibling and
+asserts a readable failure, reachable Retry, and reachable Close. It is an
+acceptance test awaiting the M85 repair and native execution, not a passing result.
+The scenario deliberately keeps failing after Retry; separate controlled tests
+must establish fresh requests and successful recovery. Structural validation and
+the two fixture-preparation tests passed on the remote Linux validation host.
