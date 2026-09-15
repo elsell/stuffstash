@@ -90,7 +90,7 @@ export function EditAssetSheet({
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <Text style={styles.sheetTitle}>Edit asset</Text>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.editScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
@@ -322,21 +322,21 @@ export function MoveAssetSheet({
     : false;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
-      <Text style={styles.sheetTitle}>Move {asset.title}</Text>
-      <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
-      {placement ? <PlacementPanel preview={placement} /> : null}
-      <Text style={styles.inputLabel}>Put in</Text>
-      <AppTextInput
-        accessibilityLabel="Put in"
-        autoCapitalize="sentences"
-        editable={!isSaving}
-        onChangeText={onChangeQuery}
-        placeholder="Search places, boxes, shelves"
-        placeholderTextColor={palette.textMuted}
-        style={styles.input}
-        value={draft?.query ?? ''}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <Text style={styles.sheetTitle}>Move {asset.title}</Text>
+        <Text style={styles.sheetSubtitle}>Choose the place, box, shelf, or top level where this belongs.</Text>
+        {placement ? <PlacementPanel preview={placement} /> : null}
+        <Text style={styles.inputLabel}>Put in</Text>
+        <AppTextInput
+          accessibilityLabel="Put in"
+          autoCapitalize="sentences"
+          editable={!isSaving}
+          onChangeText={onChangeQuery}
+          placeholder="Search places, boxes, shelves"
+          placeholderTextColor={palette.textMuted}
+          style={styles.input}
+          value={draft?.query ?? ''}
+        />
         {candidateStatus}
         {canCreate ? (
           <View style={styles.createDestinationPanel}>
@@ -416,20 +416,20 @@ export function MoveThingsHereSheet({
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
-      <Text style={styles.sheetTitle}>Move something here</Text>
-      <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
-      <Text style={styles.inputLabel}>Find item, box, or place</Text>
-      <AppTextInput
-        accessibilityLabel="Find item, box, or place"
-        autoCapitalize="sentences"
-        editable={!isSaving}
-        onChangeText={onChangeQuery}
-        placeholder="Search your inventory"
-        placeholderTextColor={palette.textMuted}
-        style={styles.input}
-        value={draft?.query ?? ''}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets style={styles.parentList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+        <Text style={styles.sheetTitle}>Move something here</Text>
+        <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
+        <Text style={styles.inputLabel}>Find item, box, or place</Text>
+        <AppTextInput
+          accessibilityLabel="Find item, box, or place"
+          autoCapitalize="sentences"
+          editable={!isSaving}
+          onChangeText={onChangeQuery}
+          placeholder="Search your inventory"
+          placeholderTextColor={palette.textMuted}
+          style={styles.input}
+          value={draft?.query ?? ''}
+        />
         {candidateStatus}
         {candidatesAvailable && draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
@@ -446,11 +446,11 @@ export function MoveThingsHereSheet({
             onPress={() => onSelectAsset(match)}
           />
         ))}
+        <MovePreview
+          left={draft?.selectedAsset?.title ?? 'Choose something'}
+          right={draft?.target.title ?? 'Here'}
+        />
       </ScrollView>
-      <MovePreview
-        left={draft?.selectedAsset?.title ?? 'Choose something'}
-        right={draft?.target.title ?? 'Here'}
-      />
       <SheetActions
         busy={isSaving}
         disabled={!canSave}
@@ -461,6 +461,7 @@ export function MoveThingsHereSheet({
     </KeyboardAvoidingView>
   );
 }
+
 
 function ParentRow({
   disabled, isSelected,
@@ -566,7 +567,7 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 14,
     lineHeight: 20
   },
-  editScrollContent: {
+  formScrollContent: {
     gap: spacing.sm,
     paddingBottom: spacing.sm
   },
@@ -667,9 +668,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  parentList: {
-    maxHeight: 280
-  },
   createDestinationPanel: {
     backgroundColor: colors.brandDustyBlueSoft,
     borderRadius: radius.md,

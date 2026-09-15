@@ -23,7 +23,18 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     let query = app.textFields["Find item, box, or place"]
     XCTAssertTrue(query.waitForExistence(timeout: 10))
-    XCTAssertTrue(query.isHittable)
+    let form = app.scrollViews.containing(.textField, identifier: "Find item, box, or place").firstMatch
+    XCTAssertTrue(form.exists)
+    func queryVisible() -> Bool {
+      let bounds = form.frame.intersection(app.frame)
+      return query.isHittable && query.frame.minY >= bounds.minY && query.frame.maxY <= bounds.maxY
+    }
+    for _ in 0..<12 where !queryVisible() {
+      let above = query.frame.minY < form.frame.minY
+      form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        .press(forDuration: 0.05, thenDragTo: form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
+    }
+    XCTAssertTrue(queryVisible())
     query.tap()
     waitForKeyboard()
     query.typeText("Tent")

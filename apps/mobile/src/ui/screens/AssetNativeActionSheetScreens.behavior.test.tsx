@@ -259,6 +259,9 @@ it('does not call failed move-here suggestions empty and recovers inside results
     await h.changeText(h.byLabel('Find item, box, or place'), 'Tent');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
+    const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Find item, box, or place').length).toBeGreaterThan(0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
     expect(h.byText('No movable matches')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false;
@@ -286,6 +289,9 @@ it('waits for known Move suggestions before offering destination creation', asyn
     expect(h.byText('Create location "New room"')).toBeUndefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
+    const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Put in').length).toBeGreaterThan(0);
+    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
     expect(h.byText('Create location "New room"')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);

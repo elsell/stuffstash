@@ -814,3 +814,12 @@ destination and existing move action during lookup failure. Cached results may
 still support the existing same-kind/title/parent duplicate check; this is not a
 global uniqueness guarantee. Explicit retry can restore creation after a known
 empty result. Native layout acceptance remains required.
+
+### Move form reflow
+
+Move and Move here must place title, help, placement preview, query, status and
+selection content in one scrolling form. Keep only the native completion actions
+outside this scroll region. Do not cap the results to280points while surrounding
+text remains fixed; available space must adapt to sheet height, keyboard and text
+size. Keep one keyboard-avoidance owner and preserve search/selection behavior.
+Source containment tests verify ownership; native checks verify actual reachability.

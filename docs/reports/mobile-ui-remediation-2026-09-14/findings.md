@@ -988,3 +988,11 @@ Cached results still support the existing check; this is not global uniqueness.
 The regression failed before the change;14 action-sheet tests, TypeScript and
 structural checks pass remotely. Native layout and creation recovery remain
 unverified. Query and selected destination are not reset by retry.
+
+Move layout follow-up to M91/M92: both forms now scroll their title, help,
+query, previews and results together, with only completion controls fixed. The
+280-point result cap is removed. Two regression assertions failed before the
+change because query entry was outside the scrolling region;14 action-sheet
+tests, TypeScript and structural checks passed remotely. Critic review requires
+full query visibility before native typing, now reflected in the journey. Native
+footer/keyboard reachability remains pending; no visual closure is claimed.
