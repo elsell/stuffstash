@@ -1418,11 +1418,11 @@ final class FixtureAuditTests: XCTestCase {
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     XCTAssertTrue(picker.isHittable)
-    XCTAssertGreaterThan(picker.frame.width, picker.frame.height)
-    // The captured LTR system control places its circular well at the row's trailing edge.
-    let well = picker.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
-      .withOffset(CGVector(dx: -picker.frame.height / 2, dy: 0))
-    well.tap()
+    XCTAssertGreaterThanOrEqual(picker.frame.width, 44)
+    XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+    XCTAssertLessThanOrEqual(picker.frame.width, picker.frame.height + 1,
+      "The accessible target must be the well, not a wide inactive label row")
+    picker.tap()
     XCTAssertTrue(app.buttons["Sliders"].waitForExistence(timeout: 5))
     capture("color-visible-well-target")
   }

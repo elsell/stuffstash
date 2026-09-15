@@ -1854,3 +1854,16 @@ placement retain their branches. The mounted regression failed at10 versus74;
 Critic found no production blocker; the hidden-header test now asserts the exact
 zero-inset offset and its4-test suite passes again. Native full-bounds and action/
 Close hit tests are unchanged and must verify the correction in a newer build.
+
+M51 follow-up at062fd211: run34992079258 iPad actual514032e0 again failed center
+activation but passed the trailing-well probe. Inspected captures are retained as
+ipad-color-row-inactive-349920.png and ipad-color-well-open-349920.png. The native
+row exposed704×36 bounds while the actionable well was at its trailing edge.
+The candidate keeps SwiftUI ColorPicker but separates its visible label and hides
+the picker's own visual label, constraining its named target to44×44. Selection and
+disabled behavior remain unchanged. The original failing center/open/close/clear
+journey is unchanged; the diagnostic now requires44-point compact bounds and center
+activation instead of a trailing-coordinate workaround. All15 color tests,
+TypeScript, structural checks and2 fixture-preparation tests pass remotely. Critic
+found no blocker. Actual native target bounds, label layout and VoiceOver activation
+remain unverified; M51 is not closed by source geometry.

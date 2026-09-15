@@ -671,3 +671,10 @@ content extends beneath that header. Ordinary opaque pushed screens retain their
 content-relative placement. Header-hidden screens retain safe-area placement, and
 Android does not inherit this iOS-specific adjustment. Native acceptance must keep
 the full notice and its actions below the header, including after height changes.
+
+The iOS native color picker exposes an interactive well with a44-point target,
+separate from its visible label. Do not expose a full-width button whose center
+fails to activate the well. Retain SwiftUI ColorPicker, direct system presentation,
+optional empty selection, disabled guards and parent draft updates. Native center
+activation and open/close/clear acceptance remain required; a trailing-coordinate
+probe alone does not establish accessible activation.
