@@ -1,3 +1,4 @@
+import { useProviderTaskPresentation } from './useProviderTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -74,9 +75,11 @@ function CredentialForm({
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const capturePresentation = useProviderTaskPresentation(manageCommand, profile.id);
 
   async function save(): Promise<void> {
-    if (savingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
     try {
@@ -85,10 +88,13 @@ function CredentialForm({
         purpose: profile.credentialPurpose,
         credential: value
       });
+      // This keyed form owns the submitted secret even after navigation blur.
       setValue('');
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'success', title: 'Credential saved', message: `${profile.displayName} is ready to test.` });
       onSaved();
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'error', title: 'Credential not saved', message: readableError(error) });
     } finally {
       savingRef.current = false;
@@ -142,16 +148,20 @@ function PromptForm({
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const capturePresentation = useProviderTaskPresentation(manageCommand, profile.id);
 
   async function save(): Promise<void> {
-    if (savingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
     try {
       await manageCommand.replacePromptTemplate({ providerProfileId: profile.id, promptTemplate: value });
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'success', title: 'Prompt guidance saved', message: `${profile.displayName} was updated.` });
       onSaved();
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({ tone: 'error', title: 'Prompt not saved', message: readableError(error) });
     } finally {
       savingRef.current = false;

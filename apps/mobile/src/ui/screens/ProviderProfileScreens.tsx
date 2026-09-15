@@ -1,3 +1,4 @@
+import { useProviderTaskPresentation } from './useProviderTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -80,15 +81,18 @@ export function AddProviderProfileScreen({
   const feedback = useAppFeedback();
   const [workingKey, setWorkingKey] = useState<string>();
   const workingRef = useRef(false);
+  const capturePresentation = useProviderTaskPresentation(manageCommand);
 
   async function create(key: string): Promise<void> {
-    if (workingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || workingRef.current) return;
     const template = recommendedProviderProfiles.find((item) => item.key === key);
     if (!template) return;
     workingRef.current = true;
     setWorkingKey(key);
     try {
       const profile = await manageCommand.createRecommended(template);
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'success',
         title: 'Draft profile created',
@@ -96,6 +100,7 @@ export function AddProviderProfileScreen({
       });
       onCreated(profile.id);
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not create profile',
@@ -155,6 +160,7 @@ export function ProviderProfileDetailScreen({
   const [operation, setOperation] = useState<'test' | 'lifecycle' | 'archive'>();
   const working = operation !== undefined;
   const workingRef = useRef(false);
+  const capturePresentation = useProviderTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
   if (providers.state.status !== 'ready') {
     return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }
@@ -170,11 +176,13 @@ export function ProviderProfileDetailScreen({
   const profileDisplayName = profile.displayName;
 
   async function act(kind: 'test' | 'lifecycle' | 'archive', action: () => Promise<unknown>, title: string): Promise<void> {
-    if (workingRef.current) return;
+    const canPresent = capturePresentation();
+    if (!canPresent() || workingRef.current) return;
     workingRef.current = true;
     setOperation(kind);
     try {
       await action();
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'success',
         title,
@@ -182,6 +190,7 @@ export function ProviderProfileDetailScreen({
       });
       void providers.load().catch(() => undefined);
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Profile action failed',
@@ -218,7 +227,13 @@ export function ProviderProfileDetailScreen({
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
         <SettingsSection footer="Archived profiles remain in history but can’t be selected for voice.">
-          <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => confirmArchive(profile, () => act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived'))} />
+          <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => {
+            const canPresent = capturePresentation();
+            if (!canPresent() || workingRef.current) return;
+            confirmArchive(profile, async () => {
+              if (canPresent()) await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived');
+            });
+          }} />
         </SettingsSection>
       ) : null}
     </ScrollView>

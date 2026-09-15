@@ -1294,3 +1294,30 @@ failed cleanup preserves the current session. The targeted 18 tests, TypeScript
 and structural checks pass remotely. Critic found no extraction regression. Native
 transition visibility remains pending; M104 stays open. See the global-notice
 appendix for evidence limits.
+
+### M105 — Departed provider tasks still navigate or present completion
+
+P1, provider creation/detail and credential/prompt editors; navigation/lifecycle.
+Source inspection and five initially failing mounted regressions show that saves
+and profile actions can publish notices or navigate after leaving and returning.
+A retained archive confirmation can also start its command from the earlier visit.
+The service-wide notice boundary does not invalidate same-session navigation tasks.
+
+Creation, credential, prompt and detail actions now capture a provider task focus
+session keyed by command/resource identity. Late outcomes cannot publish notices,
+navigate or explicitly refresh the new screen. Existing mutation observers still
+invalidate the original tenant's cache; authorized requests finish and synchronous
+pending guards remain held until settlement. Archive confirmation uses the visit
+that opened it. This changes presentation ownership, not API authorization.
+
+Tests cover success/failure after blur/return, retained confirmation, successful
+credential cleanup and replacement-profile input. Review caught the first patch
+skipping secret cleanup after blur; a failing regression was added and the keyed
+form now clears its own submitted secret even when navigation has changed. Failed
+credential replacement retains its draft. Native leave/return, keyboard, notice
+placement and current-profile interaction remain pending; M105 stays open.
+
+M105 validation: 46 settings/query/mutation-observer tests, mobile TypeScript and
+structural checks passed remotely; the final replacement-profile regression also
+passed in the 32-test Settings suite with TypeScript. Critic re-review found no
+remaining blocker after the credential cleanup correction.

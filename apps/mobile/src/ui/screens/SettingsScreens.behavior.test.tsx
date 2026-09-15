@@ -1,4 +1,5 @@
-import { ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
+import { setScreenFocused } from '../../test-support/navigation';
+import { AddProviderProfileScreen, ProviderProfileDetailScreen, ProviderProfileListScreen } from './ProviderProfileScreens';
 import React from 'react';
 import { AppearanceProvider } from '../theme/AppearanceContext';
 import { AppearancePreferenceController, type AppearancePreference } from '../../application/settings/AppearancePreference';
@@ -167,6 +168,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   pendingAction?: Promise<ProviderProfileSummary | ProviderProfileTestResult>;
   pendingCredential?: Promise<ProviderProfileSummary>;
   pendingPrompt?: Promise<ProviderProfileSummary>;
+  pendingCreation?: Promise<ProviderProfileSummary>;
 
   constructor(voiceSlot = slot('none')) {
     this.configuration = {
@@ -177,7 +179,7 @@ class FakeProviderRepository implements ProviderProfileRepository {
   async listProviderProfiles() { return [this.profile, ...this.extraProfiles]; }
   async getVoiceProviderConfiguration() { return this.configuration; }
   async updateVoiceProviderConfiguration(input: UpdateVoiceProviderConfigurationInput) { this.selectionInputs.push(input); return this.pendingSelection ?? this.configuration; }
-  async createProviderProfile(_input: CreateProviderProfileInput) { return this.profile; }
+  async createProviderProfile(_input: CreateProviderProfileInput) { return this.pendingCreation ?? this.profile; }
   async updateProviderProfile(_input: UpdateProviderProfileInput) { return this.pendingPrompt ?? this.profile; }
   async replaceProviderProfileCredential(input: ReplaceProviderProfileCredentialInput) {
     this.credentialInputs.push(input);
@@ -203,7 +205,7 @@ function slot(recommendedAction: VoiceProviderRecommendedAction) {
 }
 function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'success', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
 
-function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((done) => { resolve = done; }); return { promise, resolve }; }
+function deferred<T>() { let resolve!: (value: T) => void; let reject!: (error: Error) => void; const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; }
 
  it.each(['test', 'enable', 'archive'] as const)('shows only the pending %s profile operation and restores actions after failure', async operation => {
   const repository = new FakeProviderRepository();
@@ -303,4 +305,79 @@ it.each(['pending', 'failed'] as const)('keeps sign out available while identity
     await harness.run(() => pressAlertButton('Sign Out'));
     expect(signedOut).toBe(1);
   } finally { await harness.unmount(); }
+});
+
+
+it.each((['credential', 'prompt', 'create', 'detail'] as const).flatMap(kind => (['success', 'failure'] as const).map(outcome => [kind, outcome] as const)))('does not publish or navigate from a departed %s task after returning: %s', async (kind, outcome) => {
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  repository.pendingPrompt = pending.promise;
+  repository.pendingAction = pending.promise;
+  repository.pendingCreation = pending.promise;
+  let navigations = 0;
+  const command = new ManageProviderProfileCommand(repository);
+  const query = new ProviderProfileSettingsQuery(repository);
+  const editorProps = { manageCommand: command, query, profileId: 'profile-language', onCancel: () => undefined, onSaved: () => { navigations++; } };
+  const element = kind === 'credential' ? <ProviderCredentialScreen {...editorProps} />
+    : kind === 'prompt' ? <ProviderPromptScreen {...editorProps} />
+    : kind === 'create' ? <AddProviderProfileScreen manageCommand={command} onCreated={() => { navigations++; }} />
+    : <ProviderProfileDetailScreen manageCommand={command} query={query} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />;
+  const { harness, client } = await mount(element);
+  try {
+    if (kind === 'credential' || kind === 'prompt') await harness.changeText(harness.byLabel(kind === 'credential' ? 'API key' : 'New prompt guidance'), 'private draft');
+    const button = kind === 'credential' || kind === 'prompt' ? textButton(harness, kind === 'credential' ? 'Save Credential' : 'Save Guidance')
+      : kind === 'create' ? harness.all().find(node => String(node.props.accessibilityLabel ?? '').startsWith('Create draft '))
+      : harness.byLabel('enable Gemini language');
+    await harness.press(button);
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => outcome === 'success' ? pending.resolve(profile({ credentialStatus: 'configured' })) : pending.reject(new Error('Late private error')));
+    await settle(harness);
+    expect(navigations).toBe(0);
+    if (kind === 'credential') expect(harness.byLabel('API key')?.props.value).toBe(outcome === 'success' ? '' : 'private draft');
+    for (const title of ['Credential saved', 'Prompt guidance saved', 'Draft profile created', 'Profile enabled', 'Credential not saved', 'Prompt not saved', 'Could not create profile', 'Profile action failed', 'Late private error']) expect(harness.byText(title)).toBeUndefined();
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it('rejects an archive confirmation retained from a previous focus session', async () => {
+  const repository = new FakeProviderRepository();
+  const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
+  try {
+    await harness.press(harness.byLabel('Archive Gemini language'));
+    const confirm = latestAlert()?.buttons?.find(button => button.text === 'Archive')?.onPress;
+    expect(confirm).toBeDefined();
+    await harness.run(() => setScreenFocused(false));
+    await harness.run(() => setScreenFocused(true));
+    await harness.run(() => confirm?.());
+    expect(repository.lifecycleCalls).toEqual([]);
+  } finally { await harness.unmount(); client.clear(); setScreenFocused(true); }
+});
+
+it('keeps a replacement profile credential when the previous form finishes saving', async () => {
+  const repository = new FakeProviderRepository();
+  repository.extraProfiles = [profile({ id: 'other', displayName: 'Other language' })];
+  const pending = deferred<ProviderProfileSummary>();
+  repository.pendingCredential = pending.promise;
+  const command = new ManageProviderProfileCommand(repository);
+  const query = new ProviderProfileSettingsQuery(repository);
+  let replace!: (id: string) => void;
+  let navigations = 0;
+  function Editor() {
+    const [id, setId] = React.useState('profile-language');
+    replace = setId;
+    return <ProviderCredentialScreen manageCommand={command} query={query} profileId={id} onCancel={() => undefined} onSaved={() => { navigations++; }} />;
+  }
+  const { harness, client } = await mount(<Editor />);
+  try {
+    await harness.changeText(harness.byLabel('API key'), 'old secret');
+    await harness.press(textButton(harness, 'Save Credential'));
+    await harness.run(() => replace('other'));
+    await harness.changeText(harness.byLabel('API key'), 'replacement secret');
+    await harness.run(() => pending.resolve(profile({ credentialStatus: 'configured' })));
+    expect(harness.byLabel('API key')?.props.value).toBe('replacement secret');
+    expect(harness.byLabel('API key')?.props.editable).toBe(true);
+    expect(navigations).toBe(0);
+    expect(harness.byText('Credential saved')).toBeUndefined();
+  } finally { await harness.unmount(); client.clear(); }
 });

@@ -907,3 +907,20 @@ without exposing byte-count implementation details. Keep the typed value, color,
 selected tags and asset draft; clear the message when the name is valid. Use the
 existing application resolver as the validation authority. Empty untouched input
 does not need an error. Existing color validation remains with the color picker.
+
+### Provider task completion ownership
+
+Provider creation, credential replacement, prompt guidance, connection tests and
+lifecycle commands belong to the focused profile task that initiated them. Leaving
+and returning creates a new presentation session. Authorized mutations may finish,
+but their old completions must not navigate, publish notices or refresh the new
+screen. Keep synchronous duplicate guards and busy input protection until the
+pending command settles. A captured archive confirmation must not start a command
+after the initiating task loses focus or changes identity. Preserve domain/cache
+mutation observers, credential secrecy, draft retention on failure, and existing
+focused success behavior. Reuse one provider presentation-session hook across these
+consumers; do not cancel an authorized mutation merely because navigation changed.
+
+Successful credential replacement must still clear the submitted secret in its
+own keyed form after blur. Focus controls presentation, not secret cleanup. A
+replacement profile/form must retain its independently owned input.
