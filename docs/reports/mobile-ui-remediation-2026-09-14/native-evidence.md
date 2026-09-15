@@ -1624,3 +1624,18 @@ Native rerun is required to compare entry behavior on the corrected fixture.
 Combined source checkpoint79412f8d:1,624 tests/265files, TypeScript and structural checks pass on paul; mobile/src checksum comparison was clean before execution. Log: /tmp/mobile-batch-79412f8d.log on paul. Later6cb092ef changes diagnostic layout only; it has separate2-test preparation evidence. No native acceptance is inferred.
 
 Combined checkpoint7a6a7bdd:1,629 mobile tests across267 files, TypeScript and structural checks pass remotely on paul, log /tmp/mobile-batch-7a6a7bdd.log. Mobile source checksum comparison was clean before execution. Native run34992079258 remains in progress and excludes the later Appearance/Home corrections. No new native acceptance is claimed.
+
+## Run34992079258 — iPad terminal evidence
+
+Artifact downloaded and revision.txt verified as514032e0e290a7970262458ae4970c6d6d1edba4;
+workflow headf109567c. iPad executed55 tests with14 failures. Both onboarding jobs
+passed; iPhone fixture was still running at this checkpoint. Full iPad artifact is
+in /tmp/native349920-ipad and job log in /tmp/native349920-ipad-terminal.log.
+SharingRecoveryKeepsHeaderAndCommandsReachable passed, including its complete
+`audit@example.invalid` invitation interaction. This is named-journey evidence,
+not full Sharing acceptance. M136 records visually confirmed form-sheet notice
+header overlap. The tag test failed before geometry; this build predates71183cc6's
+checkbox/scroll-target correction. Ordinary multiline failed its input visibility
+precondition; the build also predates6cb092ef's isolated diagnostic page. Other
+normal-text failures (including Add text, color picker, and place-content keyboard
+dismissal) require artifact-specific triage. Enlarged-text failures remain deferred.

@@ -1833,3 +1833,16 @@ native camera/library permission timing or full VoiceSession screen acceptance.
 Critic found no implementation blocker; caller-inventory line references were
 refreshed after its documentation correction. Full VoiceSession integration and
 native permission timing remain pending.
+
+## M136 — Form-sheet notice overlaps its visible native header
+
+P1, runtime-observed on iPad mini in run34992079258, actual artifact revision
+514032e0e290a7970262458ae4970c6d6d1edba4 (headf109567c). Inspected screenshot
+`evidence/ipad-notice-header-overlap-349920.png` shows the notice behind the title
+and Close control. Hierarchy27B6DF21 places the content at y236.5, header at
+246.5–300.5 and notice at246.5–316.5. AppNoticeScreenLayout uses zero header
+clearance for a nontransparent header; this formSheet's content extends underneath
+that header. The fixture declares presentation=formSheet and headerShown=true.
+Correction must account for this presentation while retaining ordinary pushed
+screen positioning and header-hidden behavior. Keep the native full-notice bounds
+and action/Close reachability checks; do not weaken the assertion. Not yet fixed.
