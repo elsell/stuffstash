@@ -1273,3 +1273,25 @@ defect. Inspect the capture and compare current-build input paths before changin
 production behavior. Normal-text failures take priority over enlarged-text-only
 ones. No current Sharing, Move context, or footer appearance fix is validated by
 this older run.
+
+## Sharing normal-text native acceptance candidate
+
+The runner-only `audit-sharing` route composes the actual Sharing screen and
+query mutation observer with controlled invitation/link-action ports. The first
+creation stores safe metadata but returns an unusable-link outcome; cancellation
+and copy fail once and then succeed. Share produces an inline recovery case
+without opening a destination. No real invitation, clipboard write, or external
+share occurs.
+
+The normal-text XCTest enters an exact email, checks retained input after the
+unavailable link, cancels that invitation through failure/retry, creates a usable
+replacement, and exercises copy failure/retry and share failure. It reveals
+controls and feedback below the native header with bounded gestures, retains
+captures/hierarchies, and returns using native Back. This addresses M98/M99/M101
+acceptance coverage; it does not validate the REST contract, actual clipboard,
+real share sheet, other appearances, or the entire Sharing surface.
+
+The route-isolation regression failed before the fixture export was installed.
+Both preparation checks, mobile TypeScript (including native-audit TSX), and the
+mobile structural check passed remotely. Swift compilation, runtime behavior and
+capture inspection remain pending. No native pass is claimed from these checks.

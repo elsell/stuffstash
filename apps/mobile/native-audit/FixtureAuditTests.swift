@@ -12,6 +12,79 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testSharingRecoveryKeepsHeaderAndCommandsReachable() {
+    let open = app.buttons["Audit Sharing"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Sharing"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let form = app.scrollViews.firstMatch
+    func inContent(_ element: XCUIElement) -> Bool {
+      let bounds = form.frame.intersection(app.frame)
+      let rect = element.frame
+      return rect.height > 0 && rect.minY >= max(bounds.minY, header.frame.maxY) &&
+        rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
+    }
+    func reveal(_ element: XCUIElement, interactive: Bool = true) {
+      XCTAssertTrue(element.waitForExistence(timeout: 5))
+      for _ in 0..<18 {
+        let bounds = form.frame.intersection(app.frame)
+        let top = max(bounds.minY, header.frame.maxY)
+        let rect = element.frame
+        if inContent(element) && (!interactive || element.isHittable) { return }
+        let above = rect.minY < top
+        form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+          .press(forDuration: 0.05, thenDragTo: form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
+      }
+      XCTFail("Sharing element must be fully within the content viewport below navigation")
+    }
+    func feedback(_ title: String, message: String? = nil, captureName: String) {
+      let heading = app.staticTexts[title].firstMatch
+      reveal(heading, interactive: false)
+      if let message {
+        let body = app.staticTexts[message].firstMatch
+        reveal(body, interactive: false)
+        XCTAssertTrue(inContent(heading) && inContent(body), "Normal-text feedback title and recovery must share the visible content viewport")
+      }
+      XCTAssertTrue(header.buttons["BackButton"].firstMatch.isHittable)
+      capture(captureName)
+    }
+    let email = app.textFields["Invitee email"]
+    reveal(email); email.tap(); waitForKeyboard()
+    email.typeText("audit@example.invalid")
+    XCTAssertEqual(email.value as? String, "audit@example.invalid")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
+    let create = app.buttons["Create Invitation"].firstMatch
+    reveal(create); create.tap()
+    feedback("Invitation created, link unavailable", message: "Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.", captureName: "sharing-unavailable-link")
+    XCTAssertEqual(email.value as? String, "audit@example.invalid")
+    XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
+
+    let cancel = app.buttons["Cancel invitation for audit@example.invalid"].firstMatch
+    reveal(cancel); cancel.tap()
+    let confirm = app.alerts.buttons["Cancel Invitation"]
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
+    feedback("Could not cancel invitation", message: "Audit cancellation unavailable. Try again.", captureName: "sharing-cancel-recovery")
+    reveal(cancel); cancel.tap()
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)], timeout: 5), .completed)
+
+    reveal(create); create.tap()
+    let link = app.staticTexts["Complete invitation link"].firstMatch
+    reveal(link, interactive: false)
+    let copy = app.buttons["Copy link"].firstMatch
+    reveal(copy); copy.tap()
+    feedback("Could not copy invitation", message: "Audit copy unavailable. Try again.", captureName: "sharing-copy-recovery")
+    reveal(copy); copy.tap()
+    feedback("Invitation link copied", captureName: "sharing-copy-complete")
+    let share = app.buttons["Share invitation"].firstMatch
+    reveal(share); share.tap()
+    feedback("Could not share invitation", message: "Audit sharing does not open external destinations.", captureName: "sharing-share-recovery")
+    header.buttons["BackButton"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+  }
+
   func testFooterAppearanceAndDisabledActions() {
     auditFooterAppearance(largeText: false)
   }

@@ -140,6 +140,14 @@ old timer on replacement.
 
 ## Accessible feedback
 
+The isolated native audit must exercise the actual Sharing screen at normal text
+size with controlled invitation and link-action ports. Cover unavailable creation
+link recovery, retained email, retry to a usable link, copy failure/retry, and
+cancellation failure/retry. Assert feedback stays below the native header and
+fully within the scroll viewport, commands can be reached, and Back remains usable.
+Retain screenshots and accessibility hierarchies. Fixture actions must not send
+invitations, copy secrets to the system clipboard, or open a real share destination.
+
 Sharing creation and one-time-link commands use the shared native command adapter:
 primary emphasis for Create Invitation, ordinary text commands for Copy link and
 Share invitation. Keep the system share sheet as the destination. While a link
