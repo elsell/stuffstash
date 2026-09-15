@@ -248,3 +248,10 @@ as unsaved work for Cancel/discard. Save must not silently omit that input: keep
 Save unavailable and explain beside the entry that the tag must be added or the
 entry cleared. Add tag remains the explicit staging action and atomically clears
 its entry while retaining unrelated edits. Whitespace-only entry is not dirty.
+
+Native unfinished-entry acceptance starts with an otherwise unchanged Edit draft:
+type an inline tag name, dismiss the keyboard, Cancel and Keep editing, then
+verify the name remains. Save stays disabled with the Add/clear explanation
+visible. Add tag clears the entry and enables saving the staged change. The
+runner must verify keyboard readiness and exact input, and discard rather than
+write to any real inventory.

@@ -433,10 +433,10 @@ final class FixtureAuditTests: XCTestCase {
     let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
     XCTAssertTrue(scroll.waitForExistence(timeout: 10))
     let cancel = app.buttons["Cancel"].firstMatch
-    func reveal(_ element: XCUIElement) {
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
       func visible() -> Bool {
         let bounds = scroll.frame.intersection(app.frame)
-        return element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+        return (!requiresHit || element.isHittable) && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
       }
       for _ in 0..<18 where !visible() {
         let above = element.frame.minY < scroll.frame.minY
@@ -454,6 +454,31 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Tag 13"].exists)
     reveal(retained)
     XCTAssertTrue(retained.isSelected)
+    let entry = app.textFields["New tag name"].firstMatch
+    reveal(entry)
+    entry.tap()
+    waitForKeyboard()
+    entry.typeText("Camping")
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismissKeyboard.isHittable)
+    dismissKeyboard.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Save"].firstMatch.isEnabled)
+    cancel.tap()
+    let keep = app.alerts.buttons["Keep editing"]
+    XCTAssertTrue(keep.waitForExistence(timeout: 5))
+    keep.tap()
+    XCTAssertEqual(entry.value as? String, "Camping")
+    let explanation = app.staticTexts["Add this tag or clear its name and color before saving."].firstMatch
+    XCTAssertTrue(explanation.exists)
+    reveal(explanation, requiresHit: false)
+    capture("edit-unstaged-tag-retained-accessibility-size")
+    let add = app.buttons["Add tag"].firstMatch
+    reveal(add)
+    add.tap()
+    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
     let expand = app.buttons["Show all tags"].firstMatch
     reveal(expand)
     expand.tap()

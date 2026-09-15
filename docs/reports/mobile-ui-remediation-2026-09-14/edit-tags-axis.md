@@ -63,3 +63,10 @@ M95 follow-up supersedes the local unstaged-input observation: name and color no
 belong to the route draft and participate in discard protection. Save cannot omit
 them silently; the form explains Add/clear completion. Remote regression evidence
 does not establish native input or message acceptance.
+
+The native scenario also starts with an unchanged draft, types an exact new tag
+name after keyboard readiness, dismisses the keyboard, verifies Save is disabled,
+and uses Cancel / Keep editing. It checks retained input and the explanation's
+visible bounds before Add tag clears the entry and enables Save. Completion still
+discards the synthetic draft. Remote structural checks and critic review passed;
+the Swift journey has not yet executed on a native runtime.
