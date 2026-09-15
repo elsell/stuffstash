@@ -1683,3 +1683,12 @@ explicit pull indicator, and its text-only Pressable has no minimum hit area.
 Empty-column Add is a custom Pressable with minHeight40. Reuse native command
 adapters and separate Retry from the pull gesture. Verify loading/duplicate retry,
 empty-column navigation and native target geometry. Not yet corrected.
+
+M126 candidate now uses NativeCommandButton for Retry and empty-column Add,
+retaining the existing view-model permission gate. Retry owns separate pending
+state, stays visible/disabled during retry, rejects duplicate and hidden callbacks,
+and never starts the pull indicator. The regression failed before correction;
+21 Map behavior/presentation tests, TypeScript and structural checks pass on paul.
+Critic caught the initially omitted focused-start guard; it is now restored and
+tested. No remaining confirmed source blocker. Native recovery/command geometry
+remains pending.

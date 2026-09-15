@@ -259,24 +259,6 @@ export function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0,
     textAlign: 'center'
   },
-  emptyColumnAction: {
-    alignItems: 'center',
-    backgroundColor: colors.elevatedSurface,
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-    minHeight: 40,
-    paddingHorizontal: spacing.md
-  },
-  emptyColumnActionText: {
-    color: colors.action,
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   centerState: {
     alignItems: 'center',
     flex: 1,
@@ -327,11 +309,6 @@ export function createStyles(colors: MobileColorPalette) {
     minHeight: 44,
     paddingHorizontal: spacing.xs
   },
-  sheetCloseText: {
-    color: colors.action,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0
-  }
+
   });
 }

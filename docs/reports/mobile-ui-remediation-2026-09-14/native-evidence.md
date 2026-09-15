@@ -1582,3 +1582,14 @@ Native run34985387290 still reported both fixture jobs in progress at this
 checkpoint, with both onboarding jobs successful. The existing change-only
 sleep30 poller remains active; no replacement run was dispatched or live run
 cancelled for this review.
+
+## Run34985387290 partial terminal evidence
+
+Phone fixture job104436550809 is terminal failure:55 tests executed with20 failures.
+The iPad fixture job remains in progress; both onboarding jobs succeeded. The
+phone log is /tmp/native349853-phone-terminal.log. Artifact name identifies merge
+revision a3f3746897f92407e67c3d54d21e37be9a620feb; inspect its revision file and
+screenshots before attributing differences. This run excludes the latest Map
+command/search corrections and is not current-batch acceptance. It includes
+known notice/provider selector failures that later source already corrects;
+Sharing text corruption and sheet geometry failures still need artifact review.

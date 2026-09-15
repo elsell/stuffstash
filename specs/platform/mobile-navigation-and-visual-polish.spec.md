@@ -595,3 +595,10 @@ Map path search pauses its debounce when the route loses focus and rejects hidde
 submissions. Resume an unfinished query when focus/data are ready. Preserve the
 existing deliberate-navigation cancellation: returning must not reopen a search
 path that the user already superseded by navigating the map.
+
+### Map recovery commands
+
+- Map Retry uses the shared native command adapter and disables itself while its
+  resource retry is pending. It must not start the pull-to-refresh indicator.
+- Empty-container Add uses the shared native command adapter, preserving the
+  view model's existing create/edit permission gate and destination context.

@@ -2,7 +2,7 @@ import { animationStartCount, holdReduceMotionSnapshotForTest, resetNativeTestSt
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { InventoryMapScreen } from './InventoryMapScreen';
-import { dispatchedActions } from '../../test-support/navigation';
+import { dispatchedActions, setScreenFocused } from '../../test-support/navigation';
 import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
@@ -68,4 +68,32 @@ it.each(['pending', 'late-read', 'failed-read'] as const)('keeps Map still with 
     await h.run(() => new Promise(resolve => setTimeout(resolve, 80)));
     expect(animationStartCount()).toBeGreaterThan(0);
   } finally { await h.unmount(); snapshot.resolve(false); resetNativeTestState(); }
+});
+
+it('disables Map retry while pending and restores results without a pull indicator', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let calls = 0; let finish!: (value: typeof mapSnapshot) => void;
+  const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => {
+    calls++;
+    if (calls === 1) throw new Error('Unavailable');
+    return new Promise<typeof mapSnapshot>(resolve => { finish = resolve; });
+  } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    const retry = h.byLabel('Retry map');
+    await h.run(() => setScreenFocused(false));
+    await h.press(retry); expect(calls).toBe(1);
+    await h.run(() => setScreenFocused(true));
+    await h.press(h.byLabel('Retry map'));
+    await settle(h);
+    expect(h.byLabel('Retry map')?.props.disabled).toBe(true);
+    await h.press(h.byLabel('Retry map'));
+    expect(calls).toBe(2);
+    await h.run(() => finish(mapSnapshot)); await settle(h);
+    expect(h.allText()).toContain('Tent');
+    expect(h.allByType('RefreshControl').every(node => node.props.refreshing === false)).toBe(true);
+  } finally { await h.unmount(); }
 });

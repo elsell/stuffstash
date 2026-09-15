@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { BrowseAddHeader } from './BrowseAddHeader';
@@ -8,7 +9,7 @@ import { useMobileInventoryServerQuery } from '../serverState/useMobileInventory
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Animated,
@@ -22,7 +23,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import { ChevronRight, Info, Package, Plus } from 'lucide-react-native';
+import { ChevronRight, Info, Package } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
   InventoryMapAssetViewModel,
@@ -121,9 +122,16 @@ export function InventoryMapScreen({
     key: mobileQueryKeys.inventoryMap,
     query: (signal) => inventoryMapQuery.execute({ signal })
   });
+  const [retrying, setRetrying] = useState(false);
+  const retryPending = useRef(false);
+  const focused = useRef(false);
+  useFocusEffect(useCallback(() => {
+    focused.current = true;
+    return () => { focused.current = false; };
+  }, []));
   const state: InventoryMapState = mapQuery.data
     ? { status: 'ready', map: mapQuery.data }
-    : mapQuery.isError
+    : mapQuery.isError || retrying
       ? { status: 'error', message: 'Inventory map could not load.' }
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
@@ -309,6 +317,14 @@ export function InventoryMapScreen({
     mapOffset.setValue(clampedOffset);
     mapOffsetValue.current = clampedOffset;
   }, [mapOffset, maxMapOffset]);
+
+  async function retryMap(): Promise<void> {
+    if (!focused.current || retryPending.current) return;
+    retryPending.current = true;
+    setRetrying(true);
+    try { await mapQuery.refetch({ cancelRefetch: false }); }
+    finally { retryPending.current = false; setRetrying(false); }
+  }
 
   const { refreshing: isRefreshing, refresh: refreshMap } = usePullRefresh(async () => {
     await mapQuery.refetch({ cancelRefetch: false });
@@ -579,9 +595,7 @@ export function InventoryMapScreen({
         <View style={styles.centerState}>
           <Text style={styles.errorTitle}>Map unavailable</Text>
           <Text style={styles.centerText}>{state.message}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="Retry map" onPress={() => void refreshMap()}>
-            <Text style={styles.sheetCloseText}>Retry</Text>
-          </Pressable>
+          <NativeCommandButton label="Retry map" disabled={retrying} onPress={() => { void retryMap(); }} />
         </View>
       ) : null}
       {state.status === 'ready' ? (
@@ -837,14 +851,7 @@ function InventoryMapColumn({
             <Package color={colors.accent} size={22} strokeWidth={2.4} />
             <Text style={styles.emptyColumnText}>{displayedColumn.emptyLabel}</Text>
             {emptyAction && displayedParentAsset ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onAddHere(displayedParentAsset)}
-                style={styles.emptyColumnAction}
-              >
-                <Plus color={colors.action} size={16} strokeWidth={2.6} />
-                <Text style={styles.emptyColumnActionText}>{emptyAction.label}</Text>
-              </Pressable>
+              <NativeCommandButton label={emptyAction.label} onPress={() => onAddHere(displayedParentAsset)} />
             ) : null}
           </View>
         }
