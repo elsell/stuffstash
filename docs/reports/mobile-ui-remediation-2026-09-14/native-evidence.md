@@ -808,3 +808,11 @@ named attachments against the logged test outcomes:
 
 ![iPad expiration actions with keyboard](evidence/ipad-expiration-keyboard-349320.png)
 ![iPad Add sheet still loading](evidence/ipad-add-loading-349320.png)
+
+### Run349320 phone onboarding completed
+
+Job104266735987 succeeds at actualf4bc4f28 (checkout merge05a9aeba into5775da93).
+One applicable scenario passes: connection help, complete address, keyboard drag
+and action reachability. Two iPad-only scenarios skip. Log
+/tmp/native349320-onboarding-phone.log. This is not three passing phone scenarios
+or verification of the newer onboarding changes in PR140.

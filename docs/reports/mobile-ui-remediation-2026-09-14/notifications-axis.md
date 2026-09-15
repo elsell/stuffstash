@@ -55,3 +55,45 @@ inactive permission prompts retain feedback. Fifteen settings/setup/session test
 TypeScript and structural checks pass remotely, with the critic's race resolved.
 This is transient attempt feedback, not live OS permission or delivery status.
 Native Settings-return and physical permission verification remain open.
+
+## September15 — reminder settings interaction follow-through
+
+Source50642b60. Reviewed R043/R044 and S111–S116 through
+NotificationSettingsScreen, both notification routes, ExpirationReminderEditor,
+ReminderTimingEditor and TimeZonePicker. These are source decisions and lifecycle
+checks; no additional native/physical permission success is claimed.
+
+Defaults and expired reminders are booleans, appropriately expressed as switches.
+Type mode is a short exclusive choice (defaults/custom/off) using the native menu
+adapter. Keep these in place. Timing combines Off, seven meaningful day presets,
+and numeric custom entry; a separate bounded editor is justified by its custom
+field and save/cancel semantics. Time zones are a large searchable list, not a
+three-value preference; its dedicated native search avoids an unwieldy menu.
+These are task-fit judgments under the platform-interaction standard.
+
+Preset timing saves on selection; custom timing validates integer0–3650 and uses
+a native Save action. Back cancels the unsaved custom draft. Failed saves retain
+the choice and allow retry. Type-policy failures retain a draft with explicit
+Retry/Discard rather than silently reverting. Source pending guards lock competing
+changes, and screen-level abort ownership suppresses late save completion after
+focus departure. Native Back/swipe/keyboard timing remains to verify; component
+mounted checks alone do not certify focus behavior.
+
+Counterevidence matters: NotificationSettingsRoute keys ScopedNotifications by
+server-state scope, tenant and inventory, and memoizes its session within that
+owner. Its editor checks expected inventory scope before showing settings. A
+hypothesis that screen-local preferences automatically leak into a new selected
+inventory is therefore not established; no redundant screen reset was added.
+Invalid links and mismatched inventories expose scrollable recovery text with
+native navigation available. Actual denied API boundary tests remain separate.
+
+Push preference and device enablement are separate tasks. Enabling can require
+system permission; denial offers system Settings, and transient attempt feedback
+is invalidated on background/focus change (M57). This is not a live OS-permission
+indicator. The query/session remains authoritative for the saved preference.
+Long type labels, timezone strings, custom numeric editing, reduced motion,
+VoiceOver/TalkBack order and physical Settings-return still need runtime evidence.
+
+Critic found no overclaims. Late-completion suppression above specifically refers
+to successful save/navigation; retained child error presentation after focus
+changes is not independently certified by this review.
