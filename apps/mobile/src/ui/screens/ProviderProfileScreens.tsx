@@ -1,4 +1,4 @@
-import { useProviderTaskPresentation } from './useProviderTaskPresentation';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -81,7 +81,7 @@ export function AddProviderProfileScreen({
   const feedback = useAppFeedback();
   const [workingKey, setWorkingKey] = useState<string>();
   const workingRef = useRef(false);
-  const capturePresentation = useProviderTaskPresentation(manageCommand);
+  const capturePresentation = useTaskPresentation(manageCommand);
 
   async function create(key: string): Promise<void> {
     const canPresent = capturePresentation();
@@ -160,7 +160,7 @@ export function ProviderProfileDetailScreen({
   const [operation, setOperation] = useState<'test' | 'lifecycle' | 'archive'>();
   const working = operation !== undefined;
   const workingRef = useRef(false);
-  const capturePresentation = useProviderTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
+  const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
   if (providers.state.status !== 'ready') {
     return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
   }

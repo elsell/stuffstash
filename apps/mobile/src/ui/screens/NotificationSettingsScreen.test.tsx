@@ -105,3 +105,34 @@ it.each([['background', 'enabled'], ['inactive', 'enabled'], ['background', 'den
     expect(h.byLabel('Push notifications')?.props.value).toBe(true);
   } finally { await h.unmount(); setAppStateForTest('active'); }
 });
+
+it('restores saved reminder values after a departed failure and an unchanged refresh', async () => {
+  const preferences = { revision: 1, defaults: { enabled: true, upcoming: true, expired: true, advanceDays: 30 }, timezone: 'UTC', pushEnabled: false, overrides: [] };
+  let failWrite: ((error: Error) => void) | undefined;
+  let delayWrites = false;
+  const repository = new ApiNotificationRepository(new StuffStashClient({ baseUrl: 'https://api.test', tokenProvider: () => 'token', fetch: async (input, init) => {
+    const request = new Request(input, init);
+    if (request.method === 'PUT' && delayWrites) await new Promise<void>((_resolve, reject) => { failWrite = reject; });
+    return Response.json({ data: preferences, meta: {} });
+  } }));
+  const session = new NotificationPreferencesSession(repository, { record() {} }, 'tenant', 'inventory');
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<NotificationSettingsScreen onBack={() => {}} onNavigate={() => {}} tenantId="tenant" inventoryId="inventory" session={session} assetTypesQuery={{ async execute() { return []; } }} />);
+    await h.settle();
+    delayWrites = true;
+    await h.run(() => h.byLabel('When expired')?.props.onValueChange(false));
+    expect(failWrite).toBeDefined();
+    expect(h.byLabel('When expired')?.props.value).toBe(false);
+    await h.run(() => setScreenFocused(false));
+    await h.run(() => setScreenFocused(true));
+    await h.run(() => failWrite?.(new Error('Departed failure')));
+    delayWrites = false;
+    await h.run(() => setScreenFocused(false));
+    await h.run(() => setScreenFocused(true));
+    await h.settle();
+    expect(h.byLabel('When expired')?.props.value).toBe(true);
+    expect(h.byLabel('Retry saving reminders')).toBeUndefined();
+    expect(h.byLabel('When expired')?.props.disabled).toBe(false);
+  } finally { await h.unmount(); setScreenFocused(true); }
+});

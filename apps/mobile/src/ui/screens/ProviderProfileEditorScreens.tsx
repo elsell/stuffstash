@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { useProviderEditorExit } from './useProviderEditorExit';
-import { useProviderTaskPresentation } from './useProviderTaskPresentation';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -74,7 +74,7 @@ function CredentialForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   const savingRef = useRef(false);
-  const capturePresentation = useProviderTaskPresentation(manageCommand, profile.id);
+  const capturePresentation = useTaskPresentation(manageCommand, profile.id);
   const authorizeExit = useProviderEditorExit({ dirty: value.length > 0, isSaving: () => savingRef.current, capturePresentation });
 
   const valid = profile.credentialPurpose === 'server_adc' || Boolean(value.trim());
@@ -150,7 +150,7 @@ function PromptForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   const savingRef = useRef(false);
-  const capturePresentation = useProviderTaskPresentation(manageCommand, profile.id);
+  const capturePresentation = useTaskPresentation(manageCommand, profile.id);
   const authorizeExit = useProviderEditorExit({ dirty: value.length > 0, isSaving: () => savingRef.current, capturePresentation });
 
   const valid = Boolean(value.trim());

@@ -993,3 +993,20 @@ Notice lifetime and accessibility announcement are shared with its data: changin
 focused presenters must not restart expiry or reannounce the same notice. Entry
 animation occurs on its first presentation only. Actionable/warning/error notices
 and screen-reader feedback retain their existing persistence policy.
+
+## Reminder completion belongs to the initiating visit
+
+Reminder mode, timing and time-zone controls must suppress result feedback and
+completion navigation from a save initiated in an earlier focused visit, including
+blur followed by return before settlement. Keep the save lock until that operation
+settles; a late completion must not unlock another operation. Preserve draft and
+retry behavior for a failure in the current visit and allow a fresh action after
+return. Reuse the focused-task presentation primitive across provider and reminder
+controls; component-only owners reset on unmount, and command/resource owners also
+reset when their identity changes. This is presentation ownership, not cancellation
+or reversal of an authorized server mutation.
+A departed save must not leave an optimistic value appearing saved without recovery.
+When it settles, mode/timing controls reconcile to the latest known saved policy,
+even if a parent refresh returns unchanged values. Current-visit failures keep the
+attempted selection and explicit retry/discard. Do not discard edits made after an
+operation unlocks or use a stale callback's captured policy for reconciliation.

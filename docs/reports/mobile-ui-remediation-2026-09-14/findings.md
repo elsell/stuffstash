@@ -1357,3 +1357,30 @@ covered by the local buttons' saving state. Add a task-owned dirty/pending remov
 policy with a native discard decision and single authorized successful exit.
 Do not persist secrets to solve accidental navigation. M105 fixes departed
 completion ownership, not draft protection. A focused-visit removal guard, native discard decision and authorized successful exit are now implemented. Native gesture/removal acceptance remains open; see the editor review.
+
+### M108 — Reminder edits retain outcomes from a departed visit
+
+P2, defaults/type mode, timing and timezone selection. Deferred saves can publish
+child errors after blur/refocus; the timing component can also call its completion
+callback after departure. The production parent already invalidates successful
+save/navigation on blur, but did not prevent the retained child error. Initial
+controlled component tests reproduced four failures before the fix.
+
+The shared focused-visit presentation helper now serves reminder and provider
+tasks. Pending guards stay locked until the actual request settles. Departed
+outcomes cannot publish local errors or navigate; fresh actions work afterward.
+Mode and timing drafts reconcile with the latest saved policy on departed
+settlement, including an unchanged-policy refresh. This closes an optimistic-state
+regression caught by review: suppressing an error alone could leave an unsaved
+value looking saved. Current-visit failures still retain the draft for retry.
+
+Six deferred component cases cover success/failure across mode, timing and timezone;
+a seventh uses the real settings screen, preference session and HTTP repository
+with a controlled failed PUT and unchanged refresh. The strengthened reconciliation
+checks failed before correction. All 73 focused tests, TypeScript and structural
+checks pass remotely; critic re-review found no remaining blocker. Native
+Back/swipe/refocus and keyboard acceptance remain pending. M108 is a source-tested
+candidate, not a native completion claim.
+
+Combined M108 checkpoint: all 1,580 mobile tests in 261 files, TypeScript and
+structural checks passed on paul. This is controlled-source evidence only.

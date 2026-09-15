@@ -32,10 +32,10 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The latest candidate moves shared notice presentation into focused native screens while preserving service ownership and lifetime. All 1,573 mobile tests (260 files), TypeScript and structural checks passed remotely; native geometry acceptance remains open.
+The latest batch includes focused-screen notice placement and reminder completion/draft reconciliation after navigation. All 1,580 mobile tests (261 files), TypeScript and structural checks passed remotely; native geometry and lifecycle acceptance remain open.
 
-The audit remains incomplete. After the all-axis provider-editor review and M106/M107 mapping, the 3384 cells
-comprise 2653 pending, 553 source-reviewed, 140 finding,
+The audit remains incomplete. After the provider-editor review and M108 reminder follow-through, the 3384 cells
+comprise 2651 pending, 540 source-reviewed, 155 finding,
 20 runtime-partial and 18 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
 36-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
