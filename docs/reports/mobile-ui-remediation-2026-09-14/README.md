@@ -11,6 +11,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `findings.md`: confirmed findings and remediation evidence.
+- `contained-items-axis.md`: scoped search, shared detail controls, unknown-data states and all24 review axes.
 - `inventory-switcher-axis.md`: hierarchy, context changes, completion ownership and remaining controls.
 - `onboarding-axis.md`: prerequisite task fit, editing/recovery and remaining native gates.
 - `localization-axis.md`: date conventions, month-calendar semantics and directional-layout work.
@@ -29,7 +30,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2748 pending, 541 source-reviewed, 71 finding,
+comprise 2741 pending, 544 source-reviewed, 75 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.

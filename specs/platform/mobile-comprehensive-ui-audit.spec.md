@@ -681,3 +681,20 @@ accessory is absent. This isolates the extender's presence, not the entire keybo
 controller; its pinned native implementation reloads input views when attaching
 an accessory, which is a hypothesis to test, not an established cause of lost text.
 Do not remove production keyboard controls based only on this source observation.
+
+
+### Contained-workspace recovery and native-pattern follow-up
+
+The contained-items audit includes the normal detail route and the shared Map
+detail sheet. Unknown contents must not be described as an empty collection.
+Initial loading and failed loads without data must suppress empty-result claims;
+a failed refresh must preserve any available contents. Contents and photo query
+errors must have persistent region-level status and independent native retry
+commands, rather than requiring a pull gesture or relying on a root notice behind
+a sheet. This does not change repository authorization or query scope.
+
+The older inline contained-search contract requires a separate spec revision
+before adopting native navigation search. That revision must preserve title/path
+matching, section counts and no-match recovery, address search ownership on both
+entry points, and include native focus/close checks. See M88/M89 and the24-axis
+contained-items report; neither finding is considered fixed by this source review.

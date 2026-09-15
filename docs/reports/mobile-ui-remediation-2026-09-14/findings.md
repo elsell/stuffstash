@@ -860,3 +860,24 @@ verifies independent type/tag retries retain a dirty name;12 asset-sheet behavio
 checks, TypeScript and structural checks pass remotely. The new isolated native
 Edit scenario checks simultaneous failures at largest text size, including Cancel.
 That scenario has not run; combined-height and native reachability remain open.
+
+
+### M88 — contained workspace retains custom search and commands (P2)
+
+AssetContainedWorkspace uses an AppTextInput and separate Clear control, plus
+custom spatial and maintenance buttons. The inline search follows an older spec,
+so this is design-contract drift rather than failure to follow that contract.
+Update the contract to scoped native search on demand, and use native command
+controls while preserving Add prominence. Inspect both regular detail and map
+sheet consumers. Source-confirmed; implementation and native acceptance pending.
+See contained-items-axis.md for the complete24-axis review and acceptance.
+
+### M89 — unknown contents are presented alongside empty-state claims (P2)
+
+AssetDetailView builds empty section rows while contents are loading or unavailable.
+AssetDetailRouteScreen reports query failure through a root notice suggesting a
+pull gesture, without persistent region-level retry. In a map detail sheet the
+root notice may be obscured; that occlusion is a source risk, not a new screenshot
+observation. Retain available content and provide explicit independent native
+contents/photo retries; do not claim an unknown collection is empty. Source
+confirmed; reproduction tests, implementation and runtime acceptance are pending.
