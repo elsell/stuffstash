@@ -58,6 +58,10 @@
 
 | M41 | Edit tag resolution overwrites selected IDs with a second draft update | Implemented; native pending | One atomic tag callback updates selected IDs and pending definitions together. Regression reproduced normalized existing-tag selection disappearing; fix preserves selection through Save and unrelated description. Focused remote tests/check/structural pass; critic no blockers |
 
+| M42 | Photo viewer permits another removal while deletion is pending | Open; source-confirmed | AssetDetailRouteScreen passes only permission to canRemove, while removePhoto sets pendingAction without a duplicate guard. It also clears whichever photo is selected on completion. Verify duplicate confirmation and switching photos during a delayed removal; guard the command and retain unrelated viewing context. This is continuation work after the interim release candidate |
+
+| M43 | Gallery Add photos uses a custom styled command despite an available native adapter | Open; source-confirmed pattern mismatch | AssetDetailPhotoGallery builds a separate Pressable/Camera/Text control. The already reviewed NativeCommandButton can express this simple action; no gallery-specific platform limitation is documented. Preserve the separate action below imagery and migrate its command without changing the photo viewer modal exception |
+
 The prior web draft finding is outside this mobile-only task. This list is a seed;
 the full surface/axis review must discover and track further findings.
 Run34887652455 also passed the iPhone persistent actionable-feedback scenario.
