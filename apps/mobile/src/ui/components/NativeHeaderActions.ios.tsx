@@ -1,5 +1,5 @@
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
-const symbols = { notifications: 'bell', add: 'plus', account: 'person.crop.circle', close: 'xmark', save: 'checkmark', settings: 'gearshape', 'mark-read': 'checkmark.message' } as const;
+const symbols = { notifications: 'bell', add: 'plus', account: 'person.crop.circle', close: 'xmark', back: 'chevron.backward', save: 'checkmark', settings: 'gearshape', 'mark-read': 'checkmark.message' } as const;
 export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[], position: 'left' | 'right' = 'right'): HeaderOptions {
   const items: NonNullable<HeaderOptions['unstable_headerRightItems']> = () => actions.map(action => ({
     type: 'button', width: 44, label: action.label, accessibilityLabel: action.label,

@@ -429,6 +429,13 @@ Customization editors use the existing native primary command for Save, preservi
 the shared content inset, validation, pending lock and draft ownership. The command
 has an explicit accessible name and shows Saving while pending. Do not paint a
 separate custom button for tags, asset types or custom fields.
+
+Editor Back uses a native leading bar action while retaining collection replacement
+and dirty-draft interception. Lifecycle and inherited-management commands use native
+command buttons; archive/delete retain destructive presentation and confirmation,
+and restore remains a standard action. Shared native command adapters expose an
+optional destructive role: SwiftUI uses its native role and Android uses the
+semantic danger palette with its native button. Existing callers remain standard.
 Do not keep the submitted form editable or expose repeat save/lifecycle commands:
 that risks duplicate creation and edits hidden by the completed dirty-state flag.
 This is a state of the existing screen, not another modal or navigation step.

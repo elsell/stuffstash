@@ -8,13 +8,13 @@ type/tag review, although their shared Save consumer receives M165 too.
 | Axis | Source evidence and remaining acceptance |
 | --- | --- |
 | Task | Create/edit named tags or asset types; types optionally track expiration and have a description. Read-only/inherited values use static text. |
-| Navigation | Route completion replaces with its collection; inherited management replaces with household editor. Back currently uses a custom leading control rather than native bar item: M166 remains open. |
+| Navigation | Route completion replaces with its collection; inherited management replaces with household editor. M166 migrates Back to the shared native leading item while preserving dirty-exit interception. Native acceptance remains open. |
 | Selection | Type expiration uses shared native switch; tag color uses system color adapter. These are local draft choices, not separate stack tasks. Color activation/target failures remain M51. |
 | Modality | Dirty exit uses system confirmation, owned by focused resource. Lifecycle mutation also confirms before acting. Native dismissal and confirmation interaction remain acceptance work. |
 | Layout | Scroll content uses automatic insets and keyboard adjustment inside KeyboardAvoidingView. M165 keeps Save in the shared content column. Actual keyboard inset interaction, safe areas and bottom reachability remain unverified. |
 | Adaptation | Single-column grouped form. Normal-size long names/descriptions and tablet windows need native captures; enlarged-text work stays queued. |
 | Typography | Labels, required-name error, scope and read-only values share settings styles. Description is multiline; key details are progressively disclosed. Native wrapping/legibility remains pending. |
-| Appearance | Semantic palette and native primary Save after M165. Remaining custom Back/lifecycle command controls are tracked under M166, not treated as native merely because they resemble settings. |
+| Appearance | Semantic palette and native primary Save after M165. M166 migrates Back/lifecycle/inherited Manage commands to native adapters, with explicit destructive roles. Native appearance remains unverified. |
 | Localization | User names/descriptions remain verbatim; labels are English. Auto-generated stable keys can require manual correction, revealed/focused on invalid key. Non-Latin input and RTL runtime acceptance remain open. |
 | Imagery | No photos. Color is optional tag metadata with a named read-only fallback; it is not the only identifier. Disclosure icons supplement text. |
 | Targets | Native Save inherits shared adapter sizing; custom Back/disclosure/actions declare minimum dimensions. Actual hit regions remain runtime evidence, especially color well M51. |
@@ -34,5 +34,7 @@ type/tag review, although their shared Save consumer receives M165 too.
 
 M165's named Save/pending test failed before migration; all54 customization mounted
 tests, TypeScript and structural checks pass remotely. Existing inset assertion
-now checks the containing column rather than custom button styling. M166 and M51
+now checks the containing column rather than custom button styling. M166's native
+command migration passes the full remote suite (1,734 tests/271 files), TypeScript
+and structural checks; code critic found no blockers. Native acceptance and M51
 remain open; this is not a native editor acceptance pass.

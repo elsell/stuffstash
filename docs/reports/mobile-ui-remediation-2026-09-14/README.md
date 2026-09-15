@@ -96,8 +96,10 @@ native announcement/layout acceptance remains pending.
 [Type/tag editors](type-tag-editors-axis.md) now have all24 source axes reviewed
 across six create/edit routes. M165 moves shared Save to the native primary
 command; all54 customization cases, TypeScript and structural checks pass on paul.
-M166 tracks remaining custom Back/lifecycle commands; M51 color behavior remains
-open. Field editors receive shared Save but are not certified by this six-route review.
+M166 migrates Back/lifecycle/inherited Manage to native adapters. The full remote
+suite passes (1,734 tests/271 files), with TypeScript and structural checks.
+Native acceptance and M51 color behavior remain open. Field editors receive the
+shared controls but are not certified by this six-route review.
 
 [Run350298 follow-up](native-350298-followup.md) records both onboarding passes
 and iPad49/61 fixtures. Phone fixtures remain running; current editor changes are

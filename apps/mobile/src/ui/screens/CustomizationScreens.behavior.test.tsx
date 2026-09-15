@@ -460,18 +460,23 @@ describe('rendered mobile customization production states', () => {
   });
 
   it('keeps dirty navigation in place, disables gestures, and dispatches discard exactly once', async () => {
-    const screen = await renderEditor();
+    const action = { type: 'RETURN_COLLECTION' };
+    const screen = await renderEditor({ onDone: () => attemptNavigation(action) });
     await screen.changeText(screen.byLabel('Name'), 'Populated draft');
     expect(navigationOptions().at(-1)).toMatchObject({ gestureEnabled: false, headerBackVisible: false });
-    const action = { type: 'GESTURE_BACK' };
-    attemptNavigation(action);
-    expect(latestAlert()).toMatchObject({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.' });
-    await pressAlertButton('Keep Editing'); await settleQueries(screen);
-    expect(dispatchedActions()).toEqual([]);
-    expect(screen.byLabel('Name')?.props.value).toBe('Populated draft');
-    attemptNavigation(action);
-    await pressAlertButton('Discard'); await pressAlertButton('Discard'); await settleQueries(screen);
-    expect(dispatchedActions()).toEqual([action]);
+    const header = new MobileRenderHarness();
+    const options = navigationOptions().at(-1) as { headerLeft: () => React.ReactElement };
+    await header.render(options.headerLeft());
+    try {
+      await header.press(header.byLabel('Back to settings collection'));
+      expect(latestAlert()).toMatchObject({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.' });
+      await pressAlertButton('Keep Editing'); await settleQueries(screen);
+      expect(dispatchedActions()).toEqual([]);
+      expect(screen.byLabel('Name')?.props.value).toBe('Populated draft');
+      await header.press(header.byLabel('Back to settings collection'));
+      await pressAlertButton('Discard'); await pressAlertButton('Discard'); await settleQueries(screen);
+      expect(dispatchedActions()).toEqual([action]);
+    } finally { await header.unmount(); }
   });
 
   it.each([false, true])('ignores a discard confirmation after leaving, returned=%s', async returned => {

@@ -2349,4 +2349,12 @@ These are commands, not category navigation. No concrete native limitation is
 documented for them. Replace with native adapters while preserving collection
 replacement, dirty-exit interception, destructive semantics and operation locks.
 Inherited Manage action also needs the command/navigation distinction reviewed.
-Not implemented in M165; remains open for the next editor pass and native acceptance.
+Implemented candidate after M165: native leading Back uses the existing stable
+header adapter; lifecycle and inherited Manage commands use NativeCommandButton.
+Destructive role is native SwiftUI on iOS and semantic native-button colors on
+Android. Collection replacement, Keep Editing/Discard, confirmation and pending
+locks remain intact. New adapter assertions failed before implementation. The
+mounted Back test renders the installed navigation header and verifies Keep
+Editing and exactly-once Discard. Remote full suite: 1,734 tests/271 files, type
+check and mobile structural checks passed. Code critic found no blockers.
+Native geometry, appearance and interaction acceptance remain open.
