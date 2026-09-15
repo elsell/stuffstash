@@ -1649,3 +1649,9 @@ TypeScript and structural checks pass remotely after the reproduced failure.
 This does not cancel previously started query reads or certify native navigation;
 actual focus delivery, returned field text and external route transitions remain
 native acceptance work.
+
+M123 follow-up covers external route replacement while blurred: the repository
+receives the replacement query, never the abandoned draft, and no deferred
+setParams overwrites the replacement on return. All10 mounted Browse cases,
+TypeScript and structural checks pass remotely; critic found no confirmed issue.
+This is controlled route-prop evidence, not native navigation acceptance.
