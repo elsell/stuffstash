@@ -93,6 +93,7 @@ Lifecycle view and selected-record subroutes or query state must be canonical an
 - The collapsed mobile tag color control must keep `Custom…` visible without horizontal scrolling. Preset colors may wrap or use a bounded grid, but arbitrary-color discovery cannot depend on a horizontally clipped trailing control.
 - The custom-color modal uses the same horizontal inset, bottom safe-area clearance, fixed non-scrolling picker area, and aligned full-width actions. Its Cancel, Done, and Clear controls remain at least 44 points and usable with the keyboard visible.
 - Read-only, inherited, and archived mobile detail uses static labeled values rather than disabled text inputs, color pickers, or other controls that imply mutation.
+- Dirty-editor discard confirmation belongs to the focused resource that opened it. A retained confirmation accepted after blur, return, or resource replacement must not dispatch navigation or discard another draft; a newly opened confirmation may still leave normally.
 - Read-only asset types show expiration tracking as a labeled Enabled or Disabled
   value. The switch is reserved for editable definitions, including temporarily
   disabled controls while their save is pending.

@@ -168,10 +168,13 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   }, [error]);
 
   usePreventRemove(dirty && !saving && !exitAuthorized, ({ data }: { data: { action: unknown } }) => {
+    const focus = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
+    if (!focus || !resource) return;
     Alert.alert('Discard changes?', 'Your unsaved changes will be lost.', [
       { text: 'Keep Editing', style: 'cancel' },
       { text: 'Discard', style: 'destructive', onPress: () => {
-        if (!workflowRef.current.authorizeExit(data.action)) return;
+        if (focusOwner.current !== focus || resourceOwner.current !== resource) return;
+        if (!workflow.authorizeExit(data.action)) return;
         setExitAuthorized(true);
       } }
     ]);

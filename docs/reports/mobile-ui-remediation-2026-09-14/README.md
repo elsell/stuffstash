@@ -46,11 +46,16 @@ The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,837
-pending,1,114 source-reviewed,310 finding,22 runtime-partial and101 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,816
+pending,1,126 source-reviewed,315 finding,22 runtime-partial and105 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
+
+Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
+The [latest completed native follow-up](native-350129-followup.md) records full
+run35012949816 failures and focused color results. Text-entry isolation is running
+at0f378691 in run35029455242; no native fix is claimed from its dispatch.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in

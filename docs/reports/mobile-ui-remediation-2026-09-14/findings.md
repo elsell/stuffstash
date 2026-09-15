@@ -2231,3 +2231,13 @@ See [native-350129-followup.md](native-350129-followup.md) for final phone/iPad
 results at22a4a80d, the focused color-picker failures, and the next ordinary-input
 comparisons. These findings remain open; no production workaround or native
 acceptance is claimed by adding diagnostic fixtures.
+
+### M155 — Stale settings Discard can navigate after return
+
+P2 mounted recovery finding at0f378691. The customization Discard callback used
+the current workflow without capturing the focused resource that opened the alert.
+Both blur and blur/return regressions dispatched OLD_BACK before correction.
+The callback now checks captured focus/resource identity and authorizes only its
+original workflow. Current confirmations still dispatch once. A replacement-resource
+case verifies the new draft remains. Native alert/focus acceptance is pending;
+see [settings-exit-axis.md](settings-exit-axis.md).

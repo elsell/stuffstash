@@ -437,6 +437,37 @@ describe('rendered mobile customization production states', () => {
     expect(dispatchedActions()).toEqual([action]);
   });
 
+  it.each([false, true])('ignores a discard confirmation after leaving, returned=%s', async returned => {
+    const screen = await renderEditor();
+    await screen.changeText(screen.byLabel('Name'), 'Keep this draft');
+    attemptNavigation({ type: 'OLD_BACK' });
+    await screen.run(() => setScreenFocused(false));
+    if (returned) await screen.run(() => setScreenFocused(true));
+    await pressAlertButton('Discard'); await settleQueries(screen);
+    expect(dispatchedActions()).toEqual([]);
+    expect(screen.byLabel('Name')?.props.value).toBe('Keep this draft');
+    if (!returned) await screen.run(() => setScreenFocused(true));
+    const action = { type: 'FRESH_BACK' };
+    attemptNavigation(action);
+    await pressAlertButton('Discard'); await settleQueries(screen);
+    expect(dispatchedActions()).toEqual([action]);
+  });
+
+  it('ignores discard from a replaced definition and preserves its new draft', async () => {
+    const first = field('first', 'First', 'inventory');
+    const second = field('second', 'Second', 'inventory');
+    const query = collectionQuery({ fields: [first, second] });
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', query, resourceId: first.id });
+    await screen.changeText(screen.byLabel('Name'), 'First draft');
+    attemptNavigation({ type: 'OLD_BACK' });
+    await screen.render(editorElement({ kind: 'field', mode: 'edit', query, resourceId: second.id }));
+    await settleQueries(screen);
+    await screen.changeText(screen.byLabel('Name'), 'Second draft');
+    await pressAlertButton('Discard'); await settleQueries(screen);
+    expect(dispatchedActions()).toEqual([]);
+    expect(screen.byLabel('Name')?.props.value).toBe('Second draft');
+  });
+
   it.each(['tag', 'field', 'asset-type'] as const)('disables %s draft controls while saving without removing the fields', async kind => {
     const pending = deferred<Record<string, unknown>>();
     const manager = managerFake({ create: async () => { await pending.promise; throw new Error('Offline'); } });
