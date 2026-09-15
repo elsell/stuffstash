@@ -350,6 +350,26 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(field.value as? String, "19")
     XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
+    let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismissKeyboard.isHittable)
+    dismissKeyboard.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    let result = app.buttons["Open asset Tool 19. Item"].firstMatch
+    let scroll = app.scrollViews.containing(.button, identifier: "Open asset Tool 19. Item").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func resultVisible() -> Bool {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+      return result.isHittable && result.frame.minY >= top && result.frame.maxY <= bounds.maxY
+    }
+    for _ in 0..<12 where !resultVisible() {
+      let above = result.frame.minY < app.navigationBars.firstMatch.frame.maxY
+      let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+      let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
+      start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    XCTAssertTrue(resultVisible())
+    XCTAssertEqual(field.value as? String, "19")
     capture("place-search-filtered")
     let clear = field.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable)

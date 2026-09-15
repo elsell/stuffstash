@@ -1132,3 +1132,27 @@ not a separate StaticText. The native test is corrected to use result buttons fo
 matching, excluded and restored rows. This is a confirmed selector mismatch, not
 evidence that filtering failed. Search clear/return still awaits a completed
 corrected journey. Both screenshots are from the older82fa68e9 build.
+
+## Phone fixture run34954814675 — completed
+
+Phone job104334202040 finished31/43 at the same82fa68e9 checkout; the run is now
+terminal, with iPad33/43 and both onboarding jobs passing. Failures: three Add
+input/readiness cases, original History hit check, controlled/uncontrolled address
+entry, Edit metadata visibility, Expiration accessibility, full/nested footer
+layout, place search and the no-accessory keyboard comparison.
+
+Inspected [Edit](evidence/phone-edit-small-scroll-349548.png): the huge fixed title
+and old footer leave a15.4-point inner scroll viewport, per hierarchyCE354EEE.
+Retry asset types lies below it. This reinforces the later title-scroll candidate;
+it does not verify the later native footer or corrected form geometry.
+
+Inspected [search](evidence/phone-place-search-keyboard-349548.png): query19 is
+retained, but the keyboard covers the item section. HierarchyDE848B00 contains
+`Open asset Tool 19. Item` as a Button at y627–715, confirming the old StaticText
+selector mismatch on phone too. It does not establish that the result is visible
+or usable. The corrected test now dismisses the keyboard, reveals that button
+and checks its full bounds before capture, then retains clear/cancel/return.
+
+Evidence lives in `/tmp/native349548-phone.log` and the completed screenshot
+artifact `/tmp/native349548-phone`. No cause is inferred for the other failures
+from this limited inspection. Updated XCTest execution remains pending.

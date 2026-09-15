@@ -416,3 +416,9 @@ completion actions available separately, and verify actual large-text sheet
 geometry on phone and iPad. Native search acceptance must address accessible
 asset-result buttons, rather than requiring their text children to be separate
 accessibility nodes; retain positive matching and negative nonmatching assertions.
+
+Native place-search acceptance must demonstrate the matched result is reachable
+and fully visible, not merely present in the accessibility tree behind the
+keyboard. Dismiss the keyboard through the provided control, reveal the matching
+row in the detail scroll, and check its bounds before capture. Retain exact query,
+nonmatch exclusion, clear, cancel and navigation return checks.
