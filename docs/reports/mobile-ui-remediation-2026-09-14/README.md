@@ -36,7 +36,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 The latest batch includes focused-screen notices, reminder and asset-command visit ownership, independent checkout-history name recovery, and measured filter action clearance. All 1,618 mobile tests (265 files), TypeScript and structural checks passed remotely against source cd245a20; native geometry and lifecycle acceptance remain open.
 
 The audit remains incomplete. After the Expiration filter source review, the 3384 cells
-comprise 2263 pending, 855 source-reviewed, 225 finding,
+comprise 2222 pending, 890 source-reviewed, 231 finding,
 19 runtime-partial and 22 not-applicable.
 The [global-notice review](global-notice-axis.md) covers all 24 axes and links the
 36-call-site consumer inventory. These are evidence states, not a compliance score. Finding cells can include
@@ -115,3 +115,5 @@ Browse filter overview, tags and expiration handoff: [all 24 axes](browse-filter
 The [Expiration filter review](expiration-filters-axis.md) covers R017 and S075–S079 across all24 axes. M117 corrects the persistent-search inconsistency in source; native acceptance remains pending.
 
 [Expiration results](expiration-results-axis.md) now has source review across all24 axes, with M119 recovery findings still open.
+
+[Containment Map and path search](map-axis.md) now have all24 source review axes; M125–M126 remain open normal-size findings.

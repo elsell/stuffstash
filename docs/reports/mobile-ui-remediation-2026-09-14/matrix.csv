@@ -1607,54 +1607,54 @@ S067,Browse / list grid,privacy,"Account scope, data use and permissions",pendin
 S067,Browse / list grid,notifications,System notification entry and state,pending,,
 S067,Browse / list grid,media,"Camera, library, files and audio",pending,,
 S067,Browse / list grid,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-S068,Browse / containment map columns,task,Task clarity and platform-pattern fit,pending,,
-S068,Browse / containment map columns,navigation,"Navigation, hierarchy and return",pending,,
-S068,Browse / containment map columns,selection,Value selection and current value,pending,,
-S068,Browse / containment map columns,modality,Presentation and dismissal,pending,,
-S068,Browse / containment map columns,layout,"Safe areas, scroll edges and overlays",pending,,
-S068,Browse / containment map columns,adaptation,Phone/tablet/window reflow,pending,,
-S068,Browse / containment map columns,typography,"Dynamic Type, wrapping and legibility",pending,,
-S068,Browse / containment map columns,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending,M66
-S068,Browse / containment map columns,localization,"Locale, timezone, RTL and long strings",pending,,
-S068,Browse / containment map columns,imagery,"Icons, photos and missing media",pending,,
-S068,Browse / containment map columns,targets,Touch target size and reachability,pending,,
-S068,Browse / containment map columns,gestures,Gestures and explicit alternatives,pending,,
-S068,Browse / containment map columns,keyboard,"Keyboard, text entry and focus",pending,,
-S068,Browse / containment map columns,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S068,Browse / containment map columns,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
-S068,Browse / containment map columns,content,"Lists, hierarchy, density and pagination",pending,,
-S068,Browse / containment map columns,search,"Search, scope and filters",pending,,
-S068,Browse / containment map columns,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-S068,Browse / containment map columns,recovery,"Empty, error, denied and retry",pending,,
-S068,Browse / containment map columns,editing,"Draft, save, cancel, undo and interruption",pending,,
-S068,Browse / containment map columns,privacy,"Account scope, data use and permissions",pending,,
-S068,Browse / containment map columns,notifications,System notification entry and state,pending,,
-S068,Browse / containment map columns,media,"Camera, library, files and audio",pending,,
-S068,Browse / containment map columns,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-S069,Browse / map search path,task,Task clarity and platform-pattern fit,pending,,
-S069,Browse / map search path,navigation,"Navigation, hierarchy and return",pending,,
-S069,Browse / map search path,selection,Value selection and current value,pending,,
-S069,Browse / map search path,modality,Presentation and dismissal,pending,,
-S069,Browse / map search path,layout,"Safe areas, scroll edges and overlays",pending,,
-S069,Browse / map search path,adaptation,Phone/tablet/window reflow,pending,,
-S069,Browse / map search path,typography,"Dynamic Type, wrapping and legibility",pending,,
-S069,Browse / map search path,appearance,"Light/dark, contrast and materials",pending,,
-S069,Browse / map search path,localization,"Locale, timezone, RTL and long strings",pending,,
-S069,Browse / map search path,imagery,"Icons, photos and missing media",pending,,
-S069,Browse / map search path,targets,Touch target size and reachability,pending,,
-S069,Browse / map search path,gestures,Gestures and explicit alternatives,pending,,
-S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
-S069,Browse / map search path,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S069,Browse / map search path,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending,M62
-S069,Browse / map search path,content,"Lists, hierarchy, density and pagination",pending,,
-S069,Browse / map search path,search,"Search, scope and filters",pending,,
-S069,Browse / map search path,loading,"Loading, background refresh and progress",pending,,
-S069,Browse / map search path,recovery,"Empty, error, denied and retry",pending,,
-S069,Browse / map search path,editing,"Draft, save, cancel, undo and interruption",pending,,
-S069,Browse / map search path,privacy,"Account scope, data use and permissions",pending,,
-S069,Browse / map search path,notifications,System notification entry and state,pending,,
-S069,Browse / map search path,media,"Camera, library, files and audio",pending,,
-S069,Browse / map search path,lifecycle,"Cold/warm start, blur, background and deep link",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
+S068,Browse / containment map columns,task,Task clarity and platform-pattern fit,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,navigation,"Navigation, hierarchy and return",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,selection,Value selection and current value,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,modality,Presentation and dismissal,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,layout,"Safe areas, scroll edges and overlays",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,adaptation,Phone/tablet/window reflow,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending; map-axis.md; source 608b1e54; native acceptance pending,M66
+S068,Browse / containment map columns,localization,"Locale, timezone, RTL and long strings",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,imagery,"Icons, photos and missing media",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,targets,Touch target size and reachability,finding,; map-axis.md; source 608b1e54; native acceptance pending,M126
+S068,Browse / containment map columns,gestures,Gestures and explicit alternatives,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,keyboard,"Keyboard, text entry and focus",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending; map-axis.md; source 608b1e54; native acceptance pending,M62
+S068,Browse / containment map columns,content,"Lists, hierarchy, density and pagination",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,search,"Search, scope and filters",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,loading,"Loading, background refresh and progress",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; map-axis.md; source 608b1e54; native acceptance pending,M05;M126
+S068,Browse / containment map columns,recovery,"Empty, error, denied and retry",finding,; map-axis.md; source 608b1e54; native acceptance pending,M126
+S068,Browse / containment map columns,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,privacy,"Account scope, data use and permissions",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,notifications,System notification entry and state,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,media,"Camera, library, files and audio",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S068,Browse / containment map columns,lifecycle,"Cold/warm start, blur, background and deep link",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; map-axis.md; source 608b1e54; native acceptance pending,M05;M124
+S069,Browse / map search path,task,Task clarity and platform-pattern fit,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,navigation,"Navigation, hierarchy and return",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,selection,Value selection and current value,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,modality,Presentation and dismissal,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,layout,"Safe areas, scroll edges and overlays",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,adaptation,Phone/tablet/window reflow,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,appearance,"Light/dark, contrast and materials",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,localization,"Locale, timezone, RTL and long strings",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,imagery,"Icons, photos and missing media",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,targets,Touch target size and reachability,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,gestures,Gestures and explicit alternatives,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending; map-axis.md; source 608b1e54; native acceptance pending,M122
+S069,Browse / map search path,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending; map-axis.md; source 608b1e54; native acceptance pending,M62
+S069,Browse / map search path,content,"Lists, hierarchy, density and pagination",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,search,"Search, scope and filters",finding,; map-axis.md; source 608b1e54; native acceptance pending,M125
+S069,Browse / map search path,loading,"Loading, background refresh and progress",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,recovery,"Empty, error, denied and retry",finding,; map-axis.md; source 608b1e54; native acceptance pending,M125
+S069,Browse / map search path,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,privacy,"Account scope, data use and permissions",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,notifications,System notification entry and state,source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,media,"Camera, library, files and audio",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
+S069,Browse / map search path,lifecycle,"Cold/warm start, blur, background and deep link",finding,; findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending; map-axis.md; source 608b1e54; native acceptance pending,M122;M124
 S070,Browse / list search,task,Task clarity and platform-pattern fit,pending,,
 S070,Browse / list search,navigation,"Navigation, hierarchy and return",pending,,
 S070,Browse / list search,selection,Value selection and current value,pending,,

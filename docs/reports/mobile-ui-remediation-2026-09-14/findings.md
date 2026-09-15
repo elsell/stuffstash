@@ -1666,3 +1666,20 @@ failed before correction; all13 focused Map/Browse cases, TypeScript and mobile
 structural checks pass on paul. Code critic found no confirmed blocker. Native
 focus delivery, returned search text and map scroll/highlight behavior remain
 pending acceptance.
+
+## M125 — Map search has no no-match feedback
+
+P2, S069, source-confirmed at608b1e54. submitSearch clears highlightedAssetId when
+findInventoryMapSearchMatch returns undefined, then returns without any status.
+The previous branch remains visible, so a completed unsuccessful search is
+indistinguishable from an unchanged map. Provide scoped no-match feedback while
+preserving navigation context; clear that feedback on query clear or deliberate
+navigation. No correction or runtime acceptance is claimed yet. See map-axis.md.
+
+## M126 — Map recovery and empty-column commands bypass native actions
+
+P2, S068, source-confirmed at608b1e54. Retry map invokes refreshMap, which owns the
+explicit pull indicator, and its text-only Pressable has no minimum hit area.
+Empty-column Add is a custom Pressable with minHeight40. Reuse native command
+adapters and separate Retry from the pull gesture. Verify loading/duplicate retry,
+empty-column navigation and native target geometry. Not yet corrected.
