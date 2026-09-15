@@ -364,8 +364,8 @@ describe('AssetDetailView', () => {
     }
     expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset maintenance')?.props?.style, 'flexWrap'))
       .toBe('wrap');
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'paddingVertical'))
-      .toBeGreaterThanOrEqual(10);
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'minHeight'))
+      .toBeGreaterThanOrEqual(44);
     expect(findFirstTextNode(tree, 'Container')?.props?.allowFontScaling).toBe(false);
   });
 

@@ -911,3 +911,17 @@ remain open under M88; search header/keyboard behavior is not native-verified ye
 M88 validation:41 final remote adapter/consumer/route checks passed, plus18
 detail-presentation checks before the ownership follow-up, TypeScript and
 structural checks. Critic confirmed the stale-event fix; native acceptance pending.
+
+
+M88 command candidate: spatial, availability and maintenance actions now use the
+shared native command adapter. Add item here and direct item availability retain
+primary prominence; contained availability and maintenance use standard commands.
+Authorization-derived visibility, missing-handler/pending guards and ordering are
+preserved. Removed custom icon/button styling. The native adapter regression
+reproduced missing primary emphasis, then passed with37 detail/native checks,
+TypeScript and structural validation. Native width, multiline labels and wrapped
+maintenance rows at large text remain unverified; M88 remains open for acceptance.
+
+The broader shared-adapter run passed all1505 mobile tests across258 files on
+paul. Code critic found no confirmed blocker. This does not establish native
+button geometry or Android runtime behavior.

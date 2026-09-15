@@ -1,7 +1,7 @@
 import { AssetExpirationStatus } from './AssetExpirationStatus';
 import { formatAssetExpiration, expirationStatusLabel } from '../presentation/ExpirationPresentation';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Camera, CheckCircle2, MoveRight, Pencil } from 'lucide-react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { NativeCommandButton } from './NativeCommandButton';
 import type {
   AssetDetailViewModel,
   AssetParentLocationCrumbViewModel,
@@ -144,24 +144,9 @@ export function AssetDetailMaintenanceBar({
         const disabled = isActionPending || !handler;
         const label = action.id === 'move' && asset.kind === 'location' ? 'Move place' : action.label;
         return (
-          <Pressable
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled }}
-            disabled={disabled}
-            key={action.id}
-            onPress={handler}
-            style={({ pressed }) => [
-              styles.maintenanceAction,
-              pressed ? styles.maintenanceActionPressed : null,
-              disabled ? styles.disabledAction : null
-            ]}
-          >
-            {action.id === 'edit' ? <Pencil color={palette.action} size={18} /> : null}
-            {action.id === 'move' ? <MoveRight color={palette.action} size={18} /> : null}
-            {action.id === 'add_photos' ? <Camera color={palette.action} size={18} /> : null}
-            <Text style={styles.maintenanceActionText}>{label}</Text>
-          </Pressable>
+          <View key={action.id} style={styles.maintenanceCommand}>
+            <NativeCommandButton label={label} disabled={disabled} onPress={() => handler?.()} />
+          </View>
         );
       })}
     </View>
@@ -181,36 +166,14 @@ export function AssetDetailAvailabilityButton({
   readonly onReturn?: () => void;
   readonly quiet?: boolean;
 }) {
-  const palette = useAppearanceAwarePalette();
-  const styles = createStyles(palette);
   const action = assetDetailAvailabilityAction(asset);
   if (!action) {
     return null;
   }
   const handler = action.id === 'return' ? onReturn : onCheckout;
   const disabled = isActionPending || !handler;
-  return (
-    <Pressable
-      accessibilityLabel={action.label}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={handler}
-      style={({ pressed }) => [
-        styles.availabilityAction,
-        quiet ? styles.quietAvailabilityAction : null,
-        pressed ? (quiet ? styles.quietActionPressed : styles.actionPressed) : null,
-        disabled ? styles.disabledAction : null
-      ]}
-    >
-      {action.id === 'return'
-        ? <CheckCircle2 color={quiet ? palette.action : palette.onAction} size={20} />
-        : <MoveRight color={quiet ? palette.action : palette.onAction} size={20} />}
-      <Text style={[styles.availabilityActionText, quiet ? styles.quietAvailabilityActionText : null]}>
-        {action.label}
-      </Text>
-    </Pressable>
-  );
+  return <NativeCommandButton label={action.label} disabled={disabled}
+    prominence={quiet ? 'standard' : 'primary'} onPress={() => handler?.()} />;
 }
 
 function createStyles(palette: MobileColorPalette) {
@@ -245,37 +208,6 @@ function createStyles(palette: MobileColorPalette) {
     fontSize: 17,
     fontWeight: '500'
   },
-  availabilityAction: {
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: palette.action,
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    justifyContent: 'center',
-    minHeight: 50,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  availabilityActionText: {
-    color: palette.onAction,
-    flexShrink: 1,
-    fontSize: 17,
-    fontWeight: '600',
-    textAlign: 'center'
-  },
-  quietAvailabilityAction: {
-    backgroundColor: palette.surfaceMuted
-  },
-  quietActionPressed: {
-    opacity: 0.82
-  },
-  quietAvailabilityActionText: {
-    color: palette.action
-  },
-  actionPressed: {
-    backgroundColor: palette.actionPressed
-  },
   exceptionList: {
     backgroundColor: palette.surfaceMuted,
     borderRadius: radius.md,
@@ -305,33 +237,7 @@ function createStyles(palette: MobileColorPalette) {
     flexWrap: 'wrap',
     gap: spacing.sm
   },
-  maintenanceAction: {
-    alignItems: 'center',
-    backgroundColor: palette.elevatedSurface,
-    borderColor: palette.border,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexBasis: 140,
-    flexGrow: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 46,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm
-  },
-  maintenanceActionPressed: {
-    opacity: 0.82
-  },
-  maintenanceActionText: {
-    color: palette.action,
-    flexShrink: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center'
-  },
-  disabledAction: {
-    opacity: 0.55
-  }
+  maintenanceCommand: { flexBasis: 140, flexGrow: 1 }
+
   });
 }

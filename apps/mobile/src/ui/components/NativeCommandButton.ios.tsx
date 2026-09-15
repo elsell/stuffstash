@@ -1,13 +1,15 @@
-import { Button, Host, Text } from '@expo/ui/swift-ui';
+import { Button, Host, HStack, Spacer, Text } from '@expo/ui/swift-ui';
 import { accessibilityLabel, buttonStyle, disabled as nativeDisabled, fixedSize, frame } from '@expo/ui/swift-ui/modifiers';
 import type { NativeCommandButtonProps } from './NativeCommandButton.types';
 
-export function NativeCommandButton({ label, disabled = false, onPress }: NativeCommandButtonProps) {
+export function NativeCommandButton({ label, disabled = false, onPress, prominence = 'standard' }: NativeCommandButtonProps) {
   return <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 48 }}>
     <Button onPress={() => { if (!disabled) onPress(); }} modifiers={[
-      buttonStyle('borderless'), nativeDisabled(disabled), accessibilityLabel(label)
+      buttonStyle(prominence === 'primary' ? 'borderedProminent' : 'borderless'), nativeDisabled(disabled), accessibilityLabel(label)
     ]}>
-      <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 48 })]}>{label}</Text>
+      {prominence === 'primary' ? <HStack><Spacer />
+        <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 32 })]}>{label}</Text>
+        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 48 })]}>{label}</Text>}
     </Button>
   </Host>;
 }

@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ChevronRight, MoveRight, Plus } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import type {
   AssetCardViewModel,
   AssetDetailViewModel
@@ -205,31 +205,9 @@ function ContainedAssetActionButton({
   readonly isActionPending: boolean;
   readonly onPress?: () => void;
 }) {
-  const palette = useAppearanceAwarePalette();
-  const styles = createStyles(palette);
   const enabled = canUseContainedAssetAction({ isActionPending, onPress });
-  return (
-    <Pressable
-      accessibilityLabel={action.label}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !enabled }}
-      disabled={!enabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.spatialAction,
-        action.isPrimary ? styles.primarySpatialAction : styles.secondarySpatialAction,
-        pressed ? styles.spatialActionPressed : null,
-        !enabled ? styles.disabledAction : null
-      ]}
-    >
-      {action.kind === 'add_here'
-        ? <Plus color={action.isPrimary ? palette.onAction : palette.action} size={19} />
-        : <MoveRight color={palette.action} size={19} />}
-      <Text style={action.isPrimary ? styles.primarySpatialText : styles.secondarySpatialText}>
-        {action.label}
-      </Text>
-    </Pressable>
-  );
+  return <NativeCommandButton label={action.label} disabled={!enabled}
+    prominence={action.isPrimary ? 'primary' : 'standard'} onPress={() => onPress?.()} />;
 }
 
 export function ContainedWorkspaceListItemView({
@@ -341,37 +319,6 @@ function createStyles(palette: MobileColorPalette) {
     sectionHeading: { gap: 3, paddingBottom: spacing.sm, paddingTop: spacing.lg },
     sectionTitle: { color: palette.text, fontSize: 22, fontWeight: '700' },
     sectionSummary: { color: palette.textMuted, fontSize: 14, fontWeight: '500' },
-    spatialAction: {
-      alignItems: 'center',
-      borderRadius: radius.md,
-      flexDirection: 'row',
-      gap: spacing.sm,
-      justifyContent: 'center',
-      minHeight: 50,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm
-    },
-    primarySpatialAction: { backgroundColor: palette.action },
-    secondarySpatialAction: {
-      backgroundColor: palette.elevatedSurface,
-      borderColor: palette.border,
-      borderWidth: StyleSheet.hairlineWidth
-    },
-    spatialActionPressed: { opacity: 0.82 },
-    primarySpatialText: {
-      color: palette.onAction,
-      flexShrink: 1,
-      fontSize: 17,
-      fontWeight: '600',
-      textAlign: 'center'
-    },
-    secondarySpatialText: {
-      color: palette.action,
-      flexShrink: 1,
-      fontSize: 17,
-      fontWeight: '600',
-      textAlign: 'center'
-    },
     childRow: {
       alignItems: 'center',
       backgroundColor: palette.surface,
@@ -406,6 +353,5 @@ function createStyles(palette: MobileColorPalette) {
     emptyContainer: { gap: spacing.xs, paddingBottom: spacing.md, paddingTop: spacing.sm },
     emptyContainerTitle: { color: palette.text, fontSize: 17, fontWeight: '600' },
     emptyContainerText: { color: palette.textMuted, fontSize: 15 },
-    disabledAction: { opacity: 0.55 }
   });
 }

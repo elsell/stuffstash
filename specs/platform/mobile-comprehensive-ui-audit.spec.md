@@ -722,3 +722,13 @@ rows and successful independent queries. Verify the integrated search button,
 scoped field, filtering, native clear, settled full results, keyboard dismissal
 and Back. Check the More actions control before and after search. This fixture
 does not certify Map-path return, all text sizes, or spatial command styling.
+
+M88 detail commands reuse NativeCommandButton with optional primary prominence.
+Default commands retain their existing native text-button appearance. Add item here
+uses native primary styling; Move items here and maintenance remain quiet. Direct
+item Check out/Return retains primary prominence, while contained-workspace
+availability remains quiet. Authorization-derived visibility, missing-handler and
+pending disabling, action ordering and route destinations must be preserved.
+SwiftUI and Compose own button appearance and label measurement; preview styling
+is not evidence of native rendering. Shared adapter consumers need regression
+checks, and native large-text/permission-state verification remains required.

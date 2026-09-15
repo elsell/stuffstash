@@ -87,3 +87,11 @@ checks scoped native search, Tool19 filtering, native clear, full results, keybo
 dismissal and retained More actions/Back. This uses default text size; the separate
 region-recovery scenario uses largest text. Both require actual runner execution,
 and neither alone establishes Map return preservation or whole-surface acceptance.
+
+
+Command follow-up replaces custom spatial/maintenance/availability controls with
+NativeCommandButton. Its optional primary emphasis uses SwiftUI/Compose styling;
+existing consumers default to standard text commands. This completes the current
+M88 source candidate, not native acceptance. Check full-width primary labels and
+wrapped maintenance at narrow/large-text sizes on iPhone and iPad, and Android
+when runtime access is available.
