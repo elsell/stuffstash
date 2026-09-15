@@ -1384,3 +1384,17 @@ candidate, not a native completion claim.
 
 Combined M108 checkpoint: all 1,580 mobile tests in 261 files, TypeScript and
 structural checks passed on paul. This is controlled-source evidence only.
+
+### M109 — Name-read failure hides successfully loaded checkout history
+
+P2, R008. AssetCheckoutHistoryScreen treated every failed core/name read as access
+denial, including a transient500. A mounted regression reproduced ready history
+being replaced by “Could not load checkout history.” The candidate preserves
+independently loaded records with a separate native name retry and local error.
+Actual401/403/404 still hide records. Review additionally found retry clears the
+query error before success; three deferred regressions reproduced premature
+redisplay. The candidate retains denial in the current scoped asset owner through
+pending/repeated failure until a successful core read. Name retry does not reload
+history pages. Sixteen remote history/query tests, TypeScript and structural
+checks pass. Native recovery reachability and remount-during-retry remain pending;
+see checkout-history-axis.md for the complete24-axis source review and limits.

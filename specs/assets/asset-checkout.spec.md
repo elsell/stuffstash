@@ -624,3 +624,15 @@ audit observed dropped/reordered text with that feedback loop. A new session
 seeds a fresh field; permission, error, loading and reconciliation updates preserve
 the existing native field. Keep the full-string native typing assertion and verify
 Save/retry receives the complete draft before claiming the issue resolved.
+
+### Independent checkout-history title recovery
+
+A transient failure loading the asset name must not hide independently authorized
+checkout records. Use the fallback asset label and a local name-load error with a
+native retry command. Retrying that secondary read must not reload history pages.
+Keep a previously loaded name through transient refresh failure. Initial and
+continuation history failures retain their own recovery behavior. Authentication,
+permission denial or authoritative disappearance from either read must still hide
+records until the failed access read succeeds; do not treat these as title-only
+failures. Verify contrasting transient and 401/403/404 cases through the mounted
+screen and shared server-state layer, then native reachability separately.
