@@ -2040,3 +2040,14 @@ All21 Edit/Move behavior cases, TypeScript and structural checks pass on paul.
 Native alert timing remains pending.
 
 M145 critic found no confirmed issue; native acceptance remains open.
+
+
+### M146 — Failed provider Archive confirmation can be reused
+
+P2 mounted behavior, R052. Existing focus/pending guards reject earlier visits and
+simultaneous commands, but a retained Archive acceptance could submit again after
+a failed request settled. The new mounted case reproduced that second call.
+Acceptance now consumes its confirmation before starting the request. The same
+test verifies a freshly confirmed retry remains available. All57 settings behavior
+tests, TypeScript and structural checks pass on paul; critic found no confirmed
+issue. Native alert interaction remains pending.

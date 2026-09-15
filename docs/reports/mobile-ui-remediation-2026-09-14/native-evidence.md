@@ -1796,3 +1796,12 @@ Normal-size light-mode iPhone evidence only; no universal typing fix or iPad
 acceptance is inferred. Both fixture jobs and iPad onboarding were still running
 when this record was written. The run predates M143–M145 and the disabled-accessory
 comparison candidate.
+
+
+Run350037 iPad onboarding job104498363866 also completed successfully at
+818c3f38791e3d1535588f8d2015b2682f39aa1a: all3 tests passed, none skipped.
+Connection help/keyboard/action reachability, inside-form keyboard dismissal and
+landscape acceptance each passed. Log: /tmp/native350037-ipad-onboarding.log.
+Screenshots from this iPad run have not yet been inspected; prior intermittent
+keyboard hit-test failures remain evidence and their cause is not declared fixed.
+Both fixture jobs remain in progress.

@@ -585,3 +585,24 @@ it('describes missing account details honestly and recovers with retry', async (
     expect(harness.allText()).not.toContain('Could not load account details. You can retry or sign out.');
   } finally { await harness.unmount(); }
 });
+
+
+it('consumes failed provider archive confirmation while permitting a freshly confirmed retry', async () => {
+  const repository = new FakeProviderRepository();
+  const pending = deferred<ProviderProfileSummary>(); repository.pendingAction = pending.promise;
+  const { harness, client } = await mount(<ProviderProfileDetailScreen manageCommand={new ManageProviderProfileCommand(repository)} query={new ProviderProfileSettingsQuery(repository)} profileId="profile-language" testCommand={new TestProviderProfileCommand(repository)} onEditCredential={() => undefined} onEditPrompt={() => undefined} />);
+  try {
+    await harness.press(harness.byLabel('Archive Gemini language'));
+    const confirm = latestAlert()?.buttons.find(button => button.text === 'Archive')?.onPress;
+    expect(confirm).toBeTypeOf('function');
+    await harness.run(() => confirm?.());
+    expect(repository.lifecycleCalls).toHaveLength(1);
+    await harness.run(() => pending.reject(new Error('Retry archive'))); await settle(harness);
+    repository.pendingAction = undefined;
+    await harness.run(() => confirm?.()); await settle(harness);
+    expect(repository.lifecycleCalls).toHaveLength(1);
+    await harness.press(harness.byLabel('Archive Gemini language'));
+    await harness.run(() => pressAlertButton('Archive')); await settle(harness);
+    expect(repository.lifecycleCalls).toHaveLength(2);
+  } finally { await harness.unmount(); client.clear(); }
+});

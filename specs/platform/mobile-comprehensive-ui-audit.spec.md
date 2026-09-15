@@ -1163,3 +1163,11 @@ The native Edit discard alert belongs to the current asset, draft and focused vi
 A retained acceptance after a draft change, blur/refocus or unmount must not navigate
 away. A valid acceptance leaves once; pending saves remain protected by the existing
 operation lock. Preserve Keep editing and the current draft.
+
+
+### Provider archive confirmation consumption
+
+Each native provider Archive confirmation permits one attempt. Failure retains
+retry through a fresh confirmation; replaying the old acceptance after the request
+settles must not issue another archive request. Preserve current-visit checks and
+pending-operation exclusion.

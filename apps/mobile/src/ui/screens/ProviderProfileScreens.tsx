@@ -230,8 +230,11 @@ export function ProviderProfileDetailScreen({
           <SettingsActionRow accessibilityLabel={`Archive ${profile.displayName}`} destructive disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => {
             const canPresent = capturePresentation();
             if (!canPresent() || workingRef.current) return;
+            let confirmed = false;
             confirmArchive(profile, async () => {
-              if (canPresent()) await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived');
+              if (confirmed || !canPresent() || workingRef.current) return;
+              confirmed = true;
+              await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived');
             });
           }} />
         </SettingsSection>
