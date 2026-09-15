@@ -399,3 +399,25 @@ including pending/late/failure preference reads and later live reenablement, plu
 notice behavior and existing voice entity-link coverage. TypeScript and structural
 checks pass; critic found no blocker. Device animation, voice rail timing and
 system-component adaptation remain unverified. See motion-axis.md for scope.
+
+### M63 — Photo selection unnecessarily requires broad library access
+
+Source-confirmed, P2. The shared Expo photo adapter requested full library access
+before opening the system picker and rejected a denied response. Add, asset-detail
+attachments, and voice-plan photos all inherit the gate. Their task is choosing
+specific photos, for which the platform picker provides scoped access. Pinned
+expo-image-picker55.0.20 documents the library prerequisite only for iOS10.
+
+The adapter now opens the image-only library picker directly. Cancellation stays
+an empty result; camera capture retains its permission gate. Two denied-library
+selection/cancellation cases failed before the change; all seven adapter cases,
+TypeScript, and mobile structural checks pass on paul. Evidence:
+`/tmp/photo-picker-red.log`, `/tmp/photo-picker-green.log` (remote host).
+Critic found no blocker; its requested image-only launch assertion was added
+and the checks rerun successfully.
+
+Native acceptance remains open: select images with library authorization denied,
+cancel without error, and deny/allow camera from Add, attachments and voice on
+supported iOS/Android; confirm no unexpected permission prompt and that selected
+image content reaches the intended draft. Adapter tests do not prove native prompts.
+This finding covers selection permission only, not all photo lifecycle behavior.

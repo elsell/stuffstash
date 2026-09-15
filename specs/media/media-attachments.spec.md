@@ -309,3 +309,17 @@ closing the viewer remains available. Completion may close the removed photo, bu
 must not dismiss a different photo selected since the operation began. Failure
 retains the viewing context and permits retry. After route teardown or an asset
 change, late completion must not update the new view or present stale feedback.
+
+### Mobile selection uses scoped system access
+
+Choosing existing photos opens the platform image picker directly. Do not request
+broad photo-library access as a prerequisite: this task needs only the photos the
+user selects, including when full library permission is denied. The shared Expo
+adapter applies this interaction to Add, asset-detail attachments, and voice photos.
+Selection remains image-only and cancellation returns no photos without an error.
+Camera capture still requests camera permission and must not launch when denied.
+Test these boundaries through a controlled native-module fake; verify denied-library
+selection and camera denial separately on native devices before claiming runtime
+acceptance. Expo image-picker55.0.20 documents library permission only for iOS10;
+our supported OS versions use the system picker. See
+[Expo ImagePicker](https://docs.expo.dev/versions/latest/sdk/imagepicker/).

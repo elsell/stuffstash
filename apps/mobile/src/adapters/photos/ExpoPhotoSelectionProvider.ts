@@ -6,11 +6,6 @@ import type {
 export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
   async selectFromLibrary(existingCount: number): Promise<readonly SelectedAssetPhoto[]> {
     const ImagePicker = await import('expo-image-picker');
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      throw new Error('Photo library access is required to add photos.');
-    }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
       base64: true,

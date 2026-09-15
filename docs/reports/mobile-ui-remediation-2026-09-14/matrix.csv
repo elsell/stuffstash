@@ -2155,9 +2155,9 @@ S090,Add / photo selection,search,"Search, scope and filters",pending,,
 S090,Add / photo selection,loading,"Loading, background refresh and progress",pending,,
 S090,Add / photo selection,recovery,"Empty, error, denied and retry",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S090,Add / photo selection,privacy,"Account scope, data use and permissions",pending,,
+S090,Add / photo selection,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S090,Add / photo selection,notifications,System notification entry and state,pending,,
-S090,Add / photo selection,media,"Camera, library, files and audio",pending,,
+S090,Add / photo selection,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S091,Add / custom fields,task,Task clarity and platform-pattern fit,pending,,
 S091,Add / custom fields,navigation,"Navigation, hierarchy and return",pending,,
@@ -2371,9 +2371,9 @@ S099,Asset / photo gallery,search,"Search, scope and filters",pending,,
 S099,Asset / photo gallery,loading,"Loading, background refresh and progress",pending,,
 S099,Asset / photo gallery,recovery,"Empty, error, denied and retry",pending,,
 S099,Asset / photo gallery,editing,"Draft, save, cancel, undo and interruption",pending,,
-S099,Asset / photo gallery,privacy,"Account scope, data use and permissions",pending,,
+S099,Asset / photo gallery,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S099,Asset / photo gallery,notifications,System notification entry and state,pending,,
-S099,Asset / photo gallery,media,"Camera, library, files and audio",pending,,
+S099,Asset / photo gallery,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S099,Asset / photo gallery,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,source-reviewed,Full-screen image inspection supports zoom and paging; modal exception is recorded in mobile-navigation-and-visual-polish.spec.md.,
 S100,Asset / full screen viewer,navigation,"Navigation, hierarchy and return",source-reviewed,Explicit Close/Previous/Next plus swipe-to-close; boundary controls disabled. Native gesture/focus restoration pending.,
@@ -2923,9 +2923,9 @@ S122,Voice / plan approval edits,search,"Search, scope and filters",pending,,
 S122,Voice / plan approval edits,loading,"Loading, background refresh and progress",pending,,
 S122,Voice / plan approval edits,recovery,"Empty, error, denied and retry",pending,,
 S122,Voice / plan approval edits,editing,"Draft, save, cancel, undo and interruption",pending,,
-S122,Voice / plan approval edits,privacy,"Account scope, data use and permissions",pending,,
+S122,Voice / plan approval edits,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S122,Voice / plan approval edits,notifications,System notification entry and state,pending,,
-S122,Voice / plan approval edits,media,"Camera, library, files and audio",pending,,
+S122,Voice / plan approval edits,media,"Camera, library, files and audio",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
 S122,Voice / plan approval edits,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S123,Voice / plan progress recovery,task,Task clarity and platform-pattern fit,pending,,
 S123,Voice / plan progress recovery,navigation,"Navigation, hierarchy and return",pending,,
