@@ -57,6 +57,41 @@ final class FixtureAuditTests: XCTestCase {
   func testDirectFooterFullSheetLayout() { verifyFullSheetLayout("direct-footer") }
   func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
 
+  func testCheckoutHistoryRemainsReadableAndDismissibleAfterExpansion() {
+    let open = app.buttons["Audit Checkout history"]
+    for _ in 0..<7 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let bar = app.navigationBars["Checkout history"]
+    XCTAssertTrue(bar.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    XCTAssertTrue(app.buttons["Close"].isHittable)
+    capture("checkout-history-medium")
+    let initialTop = bar.frame.minY
+    bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)))
+    if UIDevice.current.userInterfaceIdiom == .phone {
+      let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in bar.frame.minY < initialTop - 40 }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed)
+    }
+    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    capture("checkout-history-expanded")
+    let older = app.buttons["Load older checkouts"]
+    for _ in 0..<6 where !older.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(older.isHittable)
+    older.tap()
+    let loaded = app.staticTexts["Older audit checkout"]
+    XCTAssertTrue(loaded.waitForExistence(timeout: 5))
+    for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(loaded.isHittable)
+    capture("checkout-history-older-page")
+    app.buttons["Close"].tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertFalse(bar.exists)
+  }
+
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
     let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch

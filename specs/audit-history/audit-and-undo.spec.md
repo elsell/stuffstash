@@ -349,3 +349,11 @@ The full audited action set should eventually include:
 - Verify success, retry, blur/refocus, teardown, changed activity and stale callbacks
   with a deferred repository fake; native back/gesture behavior remains a separate
   acceptance check.
+
+## Mobile History command controls
+
+History uses shared native command buttons for Retry, Load older activity, Back to
+History and Revert change. Read-only history rows still navigate to substantial
+details; the two-value Show menu remains an in-place native choice. Reversal keeps
+its native confirmation and explicit pending label with disabled submission.
+Technical details remain an inline disclosure, not another navigation destination.

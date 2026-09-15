@@ -167,17 +167,17 @@ R007,add.tsx,privacy,"Account scope, data use and permissions",pending,,
 R007,add.tsx,notifications,System notification entry and state,pending,,
 R007,add.tsx,media,"Camera, library, files and audio",pending,,
 R007,add.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,pending,,
-R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",pending,,
+R008,assets/[assetId]/checkouts.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
+R008,assets/[assetId]/checkouts.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
 R008,assets/[assetId]/checkouts.tsx,selection,Value selection and current value,pending,,
-R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,source-reviewed,Read-only checkout history uses formSheet with two detents and explicit Close. AssetNativeSheetOptions hides native header; source rules out duplicate title. Shared-native dismissal adaptation M45 and real expansion/dismissal need verification.,M45
+R008,assets/[assetId]/checkouts.tsx,modality,Presentation and dismissal,source-reviewed,"M45: read-only checkout history retains sheet presentation; shared native title/Close replaces bespoke heading/dismissal, available during loading/error/ready. Two mounted behavior tests, check/structural pass. Native medium/expanded/pagination/Close fixture prepared; native result pending.",M45
 R008,assets/[assetId]/checkouts.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R008,assets/[assetId]/checkouts.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R008,assets/[assetId]/checkouts.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
 R008,assets/[assetId]/checkouts.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R008,assets/[assetId]/checkouts.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R008,assets/[assetId]/checkouts.tsx,imagery,"Icons, photos and missing media",pending,,
-R008,assets/[assetId]/checkouts.tsx,targets,Touch target size and reachability,pending,,
+R008,assets/[assetId]/checkouts.tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R008,assets/[assetId]/checkouts.tsx,gestures,Gestures and explicit alternatives,pending,,
 R008,assets/[assetId]/checkouts.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R008,assets/[assetId]/checkouts.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -225,7 +225,7 @@ R010,assets/[assetId]/history/[activityId].tsx,typography,"Dynamic Type, wrappin
 R010,assets/[assetId]/history/[activityId].tsx,appearance,"Light/dark, contrast and materials",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,imagery,"Icons, photos and missing media",pending,,
-R010,assets/[assetId]/history/[activityId].tsx,targets,Touch target size and reachability,pending,,
+R010,assets/[assetId]/history/[activityId].tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R010,assets/[assetId]/history/[activityId].tsx,gestures,Gestures and explicit alternatives,pending,,
 R010,assets/[assetId]/history/[activityId].tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R010,assets/[assetId]/history/[activityId].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -249,7 +249,7 @@ R011,assets/[assetId]/history/index.tsx,typography,"Dynamic Type, wrapping and l
 R011,assets/[assetId]/history/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
 R011,assets/[assetId]/history/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R011,assets/[assetId]/history/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R011,assets/[assetId]/history/index.tsx,targets,Touch target size and reachability,pending,,
+R011,assets/[assetId]/history/index.tsx,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 R011,assets/[assetId]/history/index.tsx,gestures,Gestures and explicit alternatives,pending,,
 R011,assets/[assetId]/history/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R011,assets/[assetId]/history/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -2457,7 +2457,7 @@ S103,Asset / history revert,typography,"Dynamic Type, wrapping and legibility",p
 S103,Asset / history revert,appearance,"Light/dark, contrast and materials",pending,,
 S103,Asset / history revert,localization,"Locale, timezone, RTL and long strings",pending,,
 S103,Asset / history revert,imagery,"Icons, photos and missing media",pending,,
-S103,Asset / history revert,targets,Touch target size and reachability,pending,,
+S103,Asset / history revert,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
 S103,Asset / history revert,gestures,Gestures and explicit alternatives,pending,,
 S103,Asset / history revert,keyboard,"Keyboard, text entry and focus",pending,,
 S103,Asset / history revert,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,

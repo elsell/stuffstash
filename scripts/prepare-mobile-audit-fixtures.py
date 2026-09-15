@@ -22,6 +22,7 @@ exports = {
     "index": "FixtureMenu",
     "audit-sheet-diagnostic": "SheetLayoutFixture",
     "audit-add": "AddAssetFixture",
+    "audit-checkout-history": "CheckoutHistoryFixture",
     "audit-browse": "BrowseFilterFixture",
     "audit-expiration": "ExpirationFilterFixture",
     "audit-expiration-medium": "ExpirationFilterFixture",

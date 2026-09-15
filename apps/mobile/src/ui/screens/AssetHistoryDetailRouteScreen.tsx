@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -71,7 +72,6 @@ export function AssetHistoryDetailRouteScreen({
     return () => { session.active = false; };
   }, [operationScope]));
 
-
   if (isLoading) {
     return <View style={styles.centerState}><Stack.Screen options={{ title: 'History detail' }} /><Text style={styles.muted}>Loading activity…</Text></View>;
   }
@@ -82,9 +82,7 @@ export function AssetHistoryDetailRouteScreen({
         <Stack.Screen options={{ title: 'History detail' }} />
         <Text accessibilityRole="header" style={styles.title}>{loadFailure.title}</Text>
         <Text style={styles.muted}>{loadFailure.message}</Text>
-        {loadFailure.canRetry ? <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}>
-          <Text style={styles.buttonText}>Try again</Text>
-        </Pressable> : null}
+        {loadFailure.canRetry ? <NativeCommandButton label="Try again" onPress={() => void detail.refetch()} /> : null}
       </View>
     );
   }
@@ -95,9 +93,7 @@ export function AssetHistoryDetailRouteScreen({
         <Stack.Screen options={{ title: 'History detail' }} />
         <Text accessibilityRole="header" style={styles.title}>Activity is no longer available</Text>
         <Text style={styles.muted}>Return to History and open it again.</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.button}>
-          <Text style={styles.buttonText}>Back to History</Text>
-        </Pressable>
+        <NativeCommandButton label="Back to History" onPress={() => router.back()} />
       </View>
     );
   }
@@ -146,7 +142,7 @@ export function AssetHistoryDetailRouteScreen({
       <Stack.Screen options={{ title: 'History detail' }} />
       {detail.isRefetchError ? <View style={styles.section}>
         <Text accessibilityRole="alert" style={styles.muted}>Activity could not be refreshed. Previously loaded details are shown.</Text>
-        <Pressable accessibilityRole="button" onPress={() => void detail.refetch()} style={styles.button}><Text style={styles.buttonText}>Try refreshing again</Text></Pressable>
+        <NativeCommandButton label="Try refreshing again" onPress={() => void detail.refetch()} />
       </View> : null}
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
@@ -167,9 +163,7 @@ export function AssetHistoryDetailRouteScreen({
       ) : null}
 
       {entry.undo?.status === 'available' && revertOutcome === 'available' && !detail.isRefetchError ? (
-        <Pressable accessibilityRole="button" accessibilityState={{ disabled: isReverting }} disabled={isReverting} onPress={confirmRevert} style={styles.button}>
-          <Text style={styles.buttonText}>{isReverting ? 'Reverting…' : 'Revert change'}</Text>
-        </Pressable>
+        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : 'Revert change'} />
       ) : null}
       {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>This change can no longer be safely reverted.</Text> : null}
       {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>This change has been reverted.</Text> : null}
@@ -249,8 +243,6 @@ function createStyles(colors: MobileColorPalette) {
     technicalValue: { color: colors.text, fontFamily: 'Courier', fontSize: 13, lineHeight: 19 },
     disclosureButton: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 44 },
     disclosureText: { color: colors.action, fontSize: 22 },
-    button: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md },
-    buttonText: { color: colors.onAction, fontSize: 16, fontWeight: '800' },
     centerState: { alignItems: 'center', backgroundColor: colors.background, flex: 1, gap: spacing.md, justifyContent: 'center', padding: spacing.xl }
   });
 }

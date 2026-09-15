@@ -1,7 +1,9 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { nativeHeaderActionOptions } from '../components/NativeHeaderActions';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import type { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
@@ -40,17 +42,16 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
       : { status: 'loading', assetTitle };
   const retry = () => { void (inventory.isError ? inventory.refetch() : (core.isError && !core.data) ? core.refetch() : history.refetch()); };
   return <SafeAreaView style={{ flex: 1, backgroundColor: palette.surface }} edges={['left', 'right', 'bottom']}>
-    <Stack.Screen options={{ title: 'Checkout history' }} />
-    <AssetCheckoutHistorySheet state={state} onClose={() => router.back()} footer={<>
-      {state.status === 'error' ? <Pressable accessibilityRole="button" onPress={retry}><Text style={{ color: palette.action, padding: 16 }}>Try again</Text></Pressable> : null}
+    <Stack.Screen options={{ title: 'Checkout history', headerShown: true, ...nativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]) }} />
+    <AssetCheckoutHistorySheet state={state} footer={<>
+      {state.status === 'error' ? <NativeCommandButton label="Try again" onPress={retry} /> : null}
       {history.isRefetchError && state.status === 'ready' ? <>
         <Text accessibilityRole="alert" style={{ color: palette.danger }}>Checkout history could not be refreshed. Previously loaded checkouts are shown.</Text>
-        <Pressable accessibilityRole="button" onPress={retry}><Text style={{ color: palette.action, padding: 16 }}>Try refreshing again</Text></Pressable>
+        <NativeCommandButton label="Try refreshing again" onPress={retry} />
       </> : null}
       {history.isFetchNextPageError ? <Text accessibilityRole="alert" style={{ color: palette.danger }}>Older checkouts could not be loaded.</Text> : null}
-      {state.status === 'ready' && history.hasNextPage ? <Pressable accessibilityLabel="Load older checkouts" accessibilityRole="button" disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.fetchNextPage(); }}>
-        <Text style={{ color: palette.action, padding: 16 }}>{history.isFetchingNextPage ? 'Loading older checkouts…' : history.isFetchNextPageError ? 'Try older checkouts again' : 'Load older checkouts'}</Text>
-      </Pressable> : null}
+      {state.status === 'ready' && history.hasNextPage ? <NativeCommandButton disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.fetchNextPage(); }}
+        label={history.isFetchingNextPage ? 'Loading older checkouts…' : history.isFetchNextPageError ? 'Try older checkouts again' : 'Load older checkouts'} /> : null}
     </>} />
   </SafeAreaView>;
 }

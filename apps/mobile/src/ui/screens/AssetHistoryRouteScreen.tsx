@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -22,7 +23,7 @@ import {
 import { groupHistoryRecords, historyFilterMenuGroups, historyLoadError } from './AssetHistoryPresentation';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { spacing, type MobileColorPalette } from '../theme/tokens';
 import { NativeActionMenu } from '../components/NativeActionMenu';
 
 type HistoryState =
@@ -99,14 +100,12 @@ export function AssetHistoryRouteScreen({
         <View style={styles.centerState}>
           <Text accessibilityRole="header" style={styles.stateTitle}>{state.title}</Text>
           <Text style={styles.stateMessage}>{state.message}</Text>
-          {state.canRetry ? <Pressable accessibilityRole="button" onPress={() => void history.refetch()} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Try again</Text>
-          </Pressable> : null}
+          {state.canRetry ? <NativeCommandButton label="Try again" onPress={() => void history.refetch()} /> : null}
         </View>
       ) : null}
       {state.status === 'ready' && history.isRefetchError ? <View style={styles.heading}>
         <Text accessibilityRole="alert" style={styles.pageError}>History could not be refreshed. Previously loaded activity is shown.</Text>
-        <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>Try refreshing again</Text></Pressable>
+        <NativeCommandButton label="Try refreshing again" onPress={() => void refresh()} />
       </View> : null}
       {state.status === 'ready' ? (
         <SectionList
@@ -127,9 +126,8 @@ export function AssetHistoryRouteScreen({
           ListFooterComponent={state.hasMore || pageError ? (
             <View style={styles.footer}>
               {pageError ? <Text accessibilityRole="alert" style={styles.pageError}>{pageError}</Text> : null}
-              <Pressable accessibilityLabel="Load older activity" accessibilityRole="button" disabled={history.isFetching} onPress={() => void loadMore()} style={styles.secondaryButton}>
-                {isLoadingMore ? <ActivityIndicator color={palette.action} /> : <Text style={styles.secondaryButtonText}>{pageError ? 'Try older activity again' : 'Load older activity'}</Text>}
-              </Pressable>
+              <NativeCommandButton disabled={history.isFetching} onPress={() => void loadMore()}
+                label={isLoadingMore ? 'Loading older activity…' : pageError ? 'Try older activity again' : 'Load older activity'} />
             </View>
           ) : null}
         />
@@ -185,11 +183,7 @@ function createStyles(colors: MobileColorPalette) {
     centerState: { alignItems: 'center', flex: 1, gap: spacing.sm, justifyContent: 'center', padding: spacing.xl },
     stateTitle: { color: colors.text, fontSize: 20, fontWeight: '800', textAlign: 'center' },
     stateMessage: { color: colors.textMuted, fontSize: 15, lineHeight: 22, textAlign: 'center' },
-    primaryButton: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, justifyContent: 'center', marginTop: spacing.sm, minHeight: 44, paddingHorizontal: spacing.lg },
-    primaryButtonText: { color: colors.onAction, fontSize: 15, fontWeight: '800' },
     footer: { alignItems: 'center', gap: spacing.sm, padding: spacing.md },
-    pageError: { color: colors.danger, fontSize: 14, textAlign: 'center' },
-    secondaryButton: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', minHeight: 44, minWidth: 200, paddingHorizontal: spacing.md },
-    secondaryButtonText: { color: colors.action, fontSize: 15, fontWeight: '700' }
+    pageError: { color: colors.danger, fontSize: 14, textAlign: 'center' }
   });
 }
