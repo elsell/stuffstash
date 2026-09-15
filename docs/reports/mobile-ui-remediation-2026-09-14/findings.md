@@ -2149,3 +2149,33 @@ and system-picker behavior remain pending; M51 is not closed.
 M51 critic found no confirmed source blocker in the native large-size candidate.
 The existing target-size/activation gate remains open pending an actual native
 run containing this change.
+
+
+### M151 — Unsupported photo selection silently disappears
+
+P2 source/test-confirmed at fc8f7cd2. ExpoPhotoSelectionProvider skipped known
+unsupported MIME types. A selection containing only those images returned an empty
+array (indistinguishable from cancellation); mixed selection silently returned a
+subset. All three new public-provider cases failed before correction.
+
+The provider now rejects that new selection with a supported-format explanation.
+This is an explicit atomic-selection policy, not a claim that Apple requires
+rejecting mixed selections. It avoids silently accepting a different set and adds
+no format conversion or mislabeled bytes. User cost: a mixed selection must be
+chosen again with supported photos; the error names JPEG, PNG and WebP.
+
+Shared consumers inspected: Add catches selection failure before appending to its
+photo draft; existing-asset detail catches before invoking upload; voice plan
+source chooser catches the rejection and only appends after a successful return.
+Existing photos/drafts are therefore untouched by rejection. Native notice/alert
+visibility and actual formats returned by each OS picker still require acceptance.
+
+55 related provider, Add-dismissal and asset-workspace tests pass remotely after
+correction. Native picker cancellation and mixed-format device journeys are not
+claimed verified. Verify supported selections still attach, unsupported selection
+shows the explanation, existing photos remain, and choosing again succeeds.
+
+M151 verification: the4 voice photo behavior cases also pass; TypeScript and
+structural validation passed remotely. Critic found no confirmed blocker. The
+existing absent-MIME JPEG fallback is unchanged: this finding covers reported
+unsupported types, not byte-sniffing or full media-format validation.

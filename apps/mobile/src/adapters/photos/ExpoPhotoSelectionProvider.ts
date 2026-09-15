@@ -47,7 +47,7 @@ async function mapImagePickerResult(
   for (const [index, asset] of (result.assets ?? []).entries()) {
     const contentType = normalizeImageContentType(asset.mimeType);
     if (!contentType) {
-      continue;
+      throw new Error('Choose JPEG, PNG, or WebP photos. This selection includes an unsupported image format.');
     }
     selectedPhotos.push({
       id: `${asset.assetId ?? asset.uri}-${selectedAt}-${index.toString()}`,
