@@ -647,3 +647,10 @@ for viewers; clear actions retain their specific target. Pagination recovery sta
 beside loaded results with standard prominence, while initial recovery and empty
 state actions retain primary prominence. Explanations and commands stack without
 horizontal compression; labels and callback semantics remain unchanged.
+
+Invitation review commands use NativeCommandButton. Join and Open keep stable
+command names, disable during their operation, and show adjacent named progress
+with busy semantics. Opening failure keeps the accepted-access explanation and
+re-enables Open without accepting again. Start-over also shows named pending
+feedback. Secondary dismissal and account-switch commands remain native; preserve
+existing invitation reference generation guards and command eligibility.

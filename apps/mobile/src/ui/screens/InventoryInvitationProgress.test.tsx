@@ -20,15 +20,17 @@ it('keeps joining and opening named during progress and permits opening recovery
       previewQuery={new PreviewInventoryInvitationQuery(repository)} acceptCommand={new AcceptInventoryInvitationCommand(repository)}
       onAccepted={async () => new Promise((_resolve, reject) => { failOpen = reject; })} onDismiss={() => {}} onSwitchAccount={() => {}} />);
     await h.press(h.byLabel('Join inventory'));
-    expect(h.byLabel('Join inventory')?.props.accessibilityState).toEqual({ busy: true, disabled: true });
+    expect(h.byLabel('Join inventory')?.props.accessibilityState).toEqual({ disabled: true });
     expect(h.allText()).toContain('Joining…');
+    expect(h.byLabel('Joining…')?.props.accessibilityState).toEqual({ busy: true });
     await h.run(() => finishJoin?.({ ...reference, principalId: 'principal', relationship: 'viewer', status: 'accepted' }));
     await h.press(h.byLabel('Open inventory'));
-    expect(h.byLabel('Open inventory')?.props.accessibilityState).toEqual({ busy: true, disabled: true });
+    expect(h.byLabel('Open inventory')?.props.accessibilityState).toEqual({ disabled: true });
     expect(h.allText()).toContain('Opening…');
+    expect(h.byLabel('Opening…')?.props.accessibilityState).toEqual({ busy: true });
     await h.run(() => failOpen?.(new Error('offline')));
-    expect(h.byLabel('Open inventory')?.props.accessibilityState).toEqual({ busy: false, disabled: false });
-    expect(h.allText()).toContain('Try opening again');
+    expect(h.byLabel('Open inventory')?.props.accessibilityState).toEqual({ disabled: false });
+    expect(h.allText()).toContain('The inventory could not be opened. Your access was still added.');
     expect(h.allText()).toContain('You now have access to ');
   } finally { await h.unmount(); }
 });
@@ -48,6 +50,10 @@ it.each(['opening', 'start-over'] as const)('keeps a new invitation visible afte
   try {
     await h.render(view(reference));
     await h.press(h.byLabel(operation === 'opening' ? 'Open inventory' : 'Sign out and start over'));
+    if (operation === 'start-over') {
+      expect(h.byLabel('Starting over…')?.props.accessibilityState).toEqual({ busy: true });
+      expect(h.byLabel('Sign out and start over')?.props.disabled).toBe(true);
+    }
     await h.render(view({ ...reference, inventoryId: 'new', invitationId: 'new' }));
     expect(h.allText()).toContain('new');
     expect(h.byLabel('Join inventory')?.props.disabled).toBe(false);

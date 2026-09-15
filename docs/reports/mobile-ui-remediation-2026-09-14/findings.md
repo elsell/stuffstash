@@ -1794,3 +1794,13 @@ review route itself fits the task; no extra selection menu is recommended. See
 invitation-acceptance-axis.md for all24 axes and evidence limits. Implementation
 and normal-text native acceptance are pending. This is not a claim that source
 inspection established a particular rendering defect.
+
+M133 implementation now uses NativeCommandButton for all invitation commands.
+Join/Open retain stable names and disabled state, with adjacent named busy progress;
+start-over also has pending feedback. Opening failure preserves accepted access
+and re-enables Open. The legacy mocked-hook suite is replaced by mounted tests
+covering the same9 behavioral/adaptation cases. Retry/Done recovery is newly covered;
+its initial missing-label RED is wiring evidence, not a runtime accessibility
+finding. All17 focused invitation/route tests, TypeScript and structural checks
+pass on paul; the3 progress cases also verify start-over status. Critic found no
+confirmed blockers. Native spacing, announcements and reachability remain pending.
