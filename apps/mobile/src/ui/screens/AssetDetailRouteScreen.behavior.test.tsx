@@ -69,6 +69,29 @@ function setup(overrides: Partial<React.ComponentProps<typeof AssetDetailRouteSc
 }
 
 describe('progressive asset detail route', () => {
+  it.each(['current', 'departed', 'returned'])('scopes pull failure feedback to its %s visit', async visit => {
+    let fail = false;
+    const pending = deferred<void>();
+    const test = setup({ assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => {
+      if (fail) { await pending.promise; throw new Error('Refresh unavailable'); }
+      return snapshot();
+    } }) });
+    try {
+      setScreenFocused(true);
+      test.contents.resolve({ asset: snapshot().asset, allAssets: [] }); test.photos.resolve([]);
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      fail = true;
+      let finished!: Promise<void>;
+      await test.harness.run(() => { finished = test.harness.byType('RefreshControl')!.props.onRefresh(); });
+      await settle(test.harness);
+      if (visit !== 'current') await test.harness.run(() => setScreenFocused(false));
+      if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
+      await test.harness.run(async () => { pending.resolve(); await finished; }); await settle(test.harness);
+      expect(Boolean(test.harness.byText('Could not refresh asset'))).toBe(visit === 'current');
+      expect(test.harness.allText()).toContain('Family tent');
+      expect(test.harness.byType('RefreshControl')!.props.refreshing).toBe(false);
+    } finally { await test.harness.unmount(); test.client.clear(); setScreenFocused(true); }
+  });
   it('renders core and independent photo actions before delayed contents', async () => {
     const test = setup();
     try {

@@ -76,11 +76,17 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,630
-pending,1,264 source-reviewed,353 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,628
+pending,1,262 source-reviewed,357 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
+
+M163 also retires item-detail pull-error notices after navigation, using the
+existing visit/resource guard in the shared detail screen. Both asset and
+location-context detail routes consume it. All92 focused detail cases, TypeScript
+and structural checks pass on paul; full source-axis and native acceptance work
+for those routes remains open.
 
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full

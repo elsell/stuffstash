@@ -209,11 +209,13 @@ export function AssetDetailRouteScreen({
   }
 
   const { refreshing: isRefreshing, refresh: refreshAsset } = usePullRefresh(async () => {
+    const canPresent = captureCommandVisit();
     setWorkspaceStatus(undefined);
 
     try {
       await reloadAsset();
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not refresh asset',

@@ -280,13 +280,13 @@ R012,assets/[assetId]/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, 
 R012,assets/[assetId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R012,assets/[assetId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R012,assets/[assetId]/index.tsx,search,"Search, scope and filters",pending,,
-R012,assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
-R012,assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M129;M131
+R012,assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M05; M163
+R012,assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M129;M131; M163
 R012,assets/[assetId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R012,assets/[assetId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R012,assets/[assetId]/index.tsx,notifications,System notification entry and state,pending,,
 R012,assets/[assetId]/index.tsx,media,"Camera, library, files and audio",pending,,
-R012,assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.,M05
+R012,assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M05; M163
 R013,assets/[assetId]/move-here.tsx,task,Task clarity and platform-pattern fit,pending,,
 R013,assets/[assetId]/move-here.tsx,navigation,"Navigation, hierarchy and return",pending,,
 R013,assets/[assetId]/move-here.tsx,selection,Value selection and current value,pending,,
@@ -472,13 +472,13 @@ R020,locations/[locationId]/assets/[assetId]/index.tsx,accessibility,"VoiceOver/
 R020,locations/[locationId]/assets/[assetId]/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,search,"Search, scope and filters",pending,,
-R020,locations/[locationId]/assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R020,locations/[locationId]/assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified,M129;M131
+R020,locations/[locationId]/assets/[assetId]/index.tsx,loading,"Loading, background refresh and progress",finding,; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M163
+R020,locations/[locationId]/assets/[assetId]/index.tsx,recovery,"Empty, error, denied and retry",finding,findings.md M129;M131; native command recovery at86f8b183; focused remote tests; native acceptance pending; other recovery cases not certified; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M129;M131; M163
 R020,locations/[locationId]/assets/[assetId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,privacy,"Account scope, data use and permissions",pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,notifications,System notification entry and state,pending,,
 R020,locations/[locationId]/assets/[assetId]/index.tsx,media,"Camera, library, files and audio",pending,,
-R020,locations/[locationId]/assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R020,locations/[locationId]/assets/[assetId]/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,; findings.md M163; sourcea7180e13 plus focused detail tests; native acceptance pending,M163
 R021,locations/[locationId]/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,asset-lists-axis.md; sourcefc3bb7a3 plus M161; native acceptance pending,
 R021,locations/[locationId]/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,asset-lists-axis.md; sourcefc3bb7a3 plus M161; native acceptance pending,
 R021,locations/[locationId]/index.tsx,selection,Value selection and current value,source-reviewed,asset-lists-axis.md; sourcefc3bb7a3 plus M161; native acceptance pending,

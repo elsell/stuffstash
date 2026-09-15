@@ -2309,3 +2309,16 @@ pull feedback, including history-view identity, and Retry refetches directly wit
 pending controls disabled. Existing inline failure context, cached pages and
 access suppression remain. All12 focused History cases pass remotely; native
 acceptance remains pending. See history-list-axis.md.
+
+### M163 — Item-detail pull failure reports after navigation
+
+P2 mounted ata7180e13. AssetDetailRouteScreen's progressive refresh caught an
+error and displayed a global notice without checking its original visit. Both
+departed and returned cases failed before adding the existing captureCommandVisit
+guard. Current-visit feedback keeps the original useful error detail; cached core
+content remains visible. The two production imports are asset detail (R012) and
+location-context asset detail (R020); both use this component unchanged. All92
+focused detail cases, TypeScript and structural checks pass on paul. This is a
+targeted loading/recovery/lifecycle review, not a full24-axis detail pass or native
+navigation acceptance. Progressive section-specific errors remain independently
+owned by their query state.
