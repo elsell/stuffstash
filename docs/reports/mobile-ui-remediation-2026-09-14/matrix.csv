@@ -1698,7 +1698,7 @@ S071,Browse / filter overview,content,"Lists, hierarchy, density and pagination"
 S071,Browse / filter overview,search,"Search, scope and filters",pending,,
 S071,Browse / filter overview,loading,"Loading, background refresh and progress",pending,,
 S071,Browse / filter overview,recovery,"Empty, error, denied and retry",pending,,
-S071,Browse / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S071,Browse / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M01;M54
 S071,Browse / filter overview,privacy,"Account scope, data use and permissions",pending,,
 S071,Browse / filter overview,notifications,System notification entry and state,pending,,
 S071,Browse / filter overview,media,"Camera, library, files and audio",pending,,
@@ -1794,7 +1794,7 @@ S075,Expiration / filter overview,content,"Lists, hierarchy, density and paginat
 S075,Expiration / filter overview,search,"Search, scope and filters",pending,,
 S075,Expiration / filter overview,loading,"Loading, background refresh and progress",pending,,
 S075,Expiration / filter overview,recovery,"Empty, error, denied and retry",pending,,
-S075,Expiration / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending.,M01
+S075,Expiration / filter overview,editing,"Draft, save, cancel, undo and interruption",source-reviewed,BrowseFiltersScreen and ExpirationFiltersScreen: short choices stay in draft; complex choices retain selection pages; remote behavior and native adapter contracts. Native runtime pending. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M01;M54
 S075,Expiration / filter overview,privacy,"Account scope, data use and permissions",pending,,
 S075,Expiration / filter overview,notifications,System notification entry and state,pending,,
 S075,Expiration / filter overview,media,"Camera, library, files and audio",pending,,
@@ -2226,7 +2226,7 @@ S093,Add / expiration month year,content,"Lists, hierarchy, density and paginati
 S093,Add / expiration month year,search,"Search, scope and filters",pending,,
 S093,Add / expiration month year,loading,"Loading, background refresh and progress",pending,,
 S093,Add / expiration month year,recovery,"Empty, error, denied and retry",pending,,
-S093,Add / expiration month year,editing,"Draft, save, cancel, undo and interruption",pending,,
+S093,Add / expiration month year,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M54
 S093,Add / expiration month year,privacy,"Account scope, data use and permissions",pending,,
 S093,Add / expiration month year,notifications,System notification entry and state,pending,,
 S093,Add / expiration month year,media,"Camera, library, files and audio",pending,,
@@ -2490,7 +2490,7 @@ S104,Settings / appearance selection,content,"Lists, hierarchy, density and pagi
 S104,Settings / appearance selection,search,"Search, scope and filters",pending,,
 S104,Settings / appearance selection,loading,"Loading, background refresh and progress",pending,,
 S104,Settings / appearance selection,recovery,"Empty, error, denied and retry",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
-S104,Settings / appearance selection,editing,"Draft, save, cancel, undo and interruption",pending,,
+S104,Settings / appearance selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M54
 S104,Settings / appearance selection,privacy,"Account scope, data use and permissions",pending,,
 S104,Settings / appearance selection,notifications,System notification entry and state,pending,,
 S104,Settings / appearance selection,media,"Camera, library, files and audio",pending,,
@@ -2514,7 +2514,7 @@ S105,Settings / field type choice,content,"Lists, hierarchy, density and paginat
 S105,Settings / field type choice,search,"Search, scope and filters",pending,,
 S105,Settings / field type choice,loading,"Loading, background refresh and progress",pending,,
 S105,Settings / field type choice,recovery,"Empty, error, denied and retry",pending,,
-S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
+S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.",M02;M54
 S105,Settings / field type choice,privacy,"Account scope, data use and permissions",pending,,
 S105,Settings / field type choice,notifications,System notification entry and state,pending,,
 S105,Settings / field type choice,media,"Camera, library, files and audio",pending,,
@@ -2538,7 +2538,7 @@ S106,Settings / field applicability,content,"Lists, hierarchy, density and pagin
 S106,Settings / field applicability,search,"Search, scope and filters",pending,,
 S106,Settings / field applicability,loading,"Loading, background refresh and progress",pending,,
 S106,Settings / field applicability,recovery,"Empty, error, denied and retry",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
-S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending",M11
+S106,Settings / field applicability,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"03fb6967; saved/draft target distinction, unavailable draft recovery;37 focused tests/check/structural;runtime pending M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.",M11;M54
 S106,Settings / field applicability,privacy,"Account scope, data use and permissions",pending,,
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,
@@ -2682,7 +2682,7 @@ S112,Reminders / type override,content,"Lists, hierarchy, density and pagination
 S112,Reminders / type override,search,"Search, scope and filters",pending,,
 S112,Reminders / type override,loading,"Loading, background refresh and progress",source-reviewed,Editor locks selection and timing while saving; parent busy state disables competitors. Native runtime pending.,M36
 S112,Reminders / type override,recovery,"Empty, error, denied and retry",source-reviewed,Failed mode remains visible with Retry/Discard; remote test proves saved inheritance restored on Discard. Native runtime pending.,M36
-S112,Reminders / type override,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Submitted mode retained on failure; explicit discard restores original; pending ref prevents duplicate save. Native runtime pending.,M36
+S112,Reminders / type override,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Submitted mode retained on failure; explicit discard restores original; pending ref prevents duplicate save. Native runtime pending. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M36;M54
 S112,Reminders / type override,privacy,"Account scope, data use and permissions",pending,,
 S112,Reminders / type override,notifications,System notification entry and state,pending,,
 S112,Reminders / type override,media,"Camera, library, files and audio",pending,,
@@ -2970,7 +2970,7 @@ S124,Voice / provider readiness,content,"Lists, hierarchy, density and paginatio
 S124,Voice / provider readiness,search,"Search, scope and filters",pending,,
 S124,Voice / provider readiness,loading,"Loading, background refresh and progress",pending,,
 S124,Voice / provider readiness,recovery,"Empty, error, denied and retry",pending,,
-S124,Voice / provider readiness,editing,"Draft, save, cancel, undo and interruption",pending,,
+S124,Voice / provider readiness,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M54
 S124,Voice / provider readiness,privacy,"Account scope, data use and permissions",pending,,
 S124,Voice / provider readiness,notifications,System notification entry and state,pending,,
 S124,Voice / provider readiness,media,"Camera, library, files and audio",pending,,
@@ -3234,7 +3234,7 @@ S135,Asset Move / destination creation,content,"Lists, hierarchy, density and pa
 S135,Asset Move / destination creation,search,"Search, scope and filters",pending,,
 S135,Asset Move / destination creation,loading,"Loading, background refresh and progress",pending,,
 S135,Asset Move / destination creation,recovery,"Empty, error, denied and retry",pending,,
-S135,Asset Move / destination creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
+S135,Asset Move / destination creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.",M37;M54
 S135,Asset Move / destination creation,privacy,"Account scope, data use and permissions",pending,,
 S135,Asset Move / destination creation,notifications,System notification entry and state,pending,,
 S135,Asset Move / destination creation,media,"Camera, library, files and audio",pending,,

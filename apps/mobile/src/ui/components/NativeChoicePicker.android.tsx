@@ -7,6 +7,6 @@ export function NativeChoicePicker({ label, accessibilityLabel, includeEmptyOpti
   return <NativeActionMenu accessibilityLabel={`${accessibilityLabel ?? label}, ${selected}`} disabled={disabled}
     trigger={{ kind: 'label', label: `${label}: ${selected}` }} groups={[{
       id: 'choices', items: nativeChoiceOptions(options, includeEmptyOption).map(option => ({ id: option.value, label: option.label,
-        isSelected: value === option.value, onPress: () => onChange(option.value) }))
+        isSelected: value === option.value, disabled, onPress: () => { if (!disabled) onChange(option.value); } }))
     }]} />;
 }

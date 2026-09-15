@@ -9,6 +9,6 @@ export function NativeChoicePicker({ label, accessibilityLabel, includeEmptyOpti
   const colors = useAppearancePalette();
   const [open, setOpen] = useState(false);
   return <SelectionRow label={label} accessibilityLabel={accessibilityLabel} value={options.find(option => option.value === value)?.label ?? 'Choose'} disabled={disabled} expanded={open} onPress={() => setOpen(current => !current)}>
-    {nativeChoiceOptions(options, includeEmptyOption).map(option => <Pressable key={option.value} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: value === option.value }} disabled={disabled} onPress={() => { onChange(option.value); setOpen(false); }} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center' }}><Text style={{ color: colors.text, flex: 1 }}>{option.label}</Text>{option.value === value ? <Check color={colors.action} size={20} /> : null}</Pressable>)}
+    {nativeChoiceOptions(options, includeEmptyOption).map(option => <Pressable key={option.value} accessibilityRole="radio" accessibilityLabel={option.label} accessibilityState={{ checked: value === option.value }} disabled={disabled} onPress={() => { if (disabled) return; onChange(option.value); setOpen(false); }} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center' }}><Text style={{ color: colors.text, flex: 1 }}>{option.label}</Text>{option.value === value ? <Check color={colors.action} size={20} /> : null}</Pressable>)}
   </SelectionRow>;
 }

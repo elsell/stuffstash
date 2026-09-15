@@ -269,3 +269,18 @@ and a separate largest-accessibility-text scenario opens the native menu after
 locating the visible label. Critic found no blocker but correctly notes that its
 height check is only a coarse enlarged-text check: screenshots and the AX audit
 remain required to establish no clipping. Native outcome remains pending.
+
+### M54 — Choice adapters forward events while disabled
+
+Source regression tests reproduced disabled callback delivery on iOS, Android
+and the generic renderer. Each adapter now rejects events from a disabled render
+and resumes valid changes after re-enabling. Android also marks each menu item
+disabled, so its open-menu presentation receives the current lock state.
+
+Three failing cases were observed before the fix;22 focused adapter/expiration/
+custom-field/reminder tests plus TypeScript and structural checks now pass remotely
+(`/tmp/native-choice-lock-green.log`). The shared consumer inventory is the same
+as M53. No authorization behavior changed. Critic found no blocker and emphasized
+the evidence limit: these checks prove current callback-boundary behavior, not
+immediate native handler replacement in an already-open menu. Physical timing and
+Android runtime acceptance remain pending.

@@ -345,3 +345,11 @@ stacking where needed: https://developer.apple.com/design/human-interface-guidel
 Run34920888328's phone accessibility audit identifies Availability as potentially
 clipped at larger sizes. Preserve that failing native audit and add an explicit
 accessibility-size label/menu scenario; source tests cannot verify text layout.
+
+## Native choice events during locked editing
+
+The shared choice adapters must reject selection events while disabled, even
+if the native menu was already open when the parent locked editing. Native visual
+disabling is not a substitute for guarding the callback boundary. When editing
+resumes, valid selection events must be delivered normally. This preserves the
+parent's draft during pending saves; it does not change application authorization.

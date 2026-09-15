@@ -5,7 +5,7 @@ import { nativeChoiceOptions } from './NativeChoiceOptions';
 export function NativeChoicePicker({ label, accessibilityLabel, includeEmptyOption = true, value, options, disabled, onChange }: NativeChoicePickerProps) {
   return <Host style={{ minHeight: 48, width: '100%' }} matchContents={{ vertical: true }}>
     <LabeledContent label={<Text modifiers={[fixedSize({ horizontal: false, vertical: true })]}>{label}</Text>}>
-      <Picker label={label} selection={value} onSelectionChange={onChange} modifiers={[pickerStyle('menu'), disabledModifier(!!disabled), nativeAccessibilityLabel(accessibilityLabel ?? label)]}>
+      <Picker label={label} selection={value} onSelectionChange={next => { if (!disabled) onChange(next); }} modifiers={[pickerStyle('menu'), disabledModifier(!!disabled), nativeAccessibilityLabel(accessibilityLabel ?? label)]}>
         {nativeChoiceOptions(options, includeEmptyOption).map(option => <Text key={option.value} modifiers={[tag(option.value)]}>{option.label}</Text>)}
       </Picker>
     </LabeledContent>
