@@ -13,6 +13,10 @@ import { CreateInventoryInvitationCommand, CancelInventoryInvitationCommand, Lis
 
 const scope: InventorySharingScope = { tenantId: 'tenant', inventoryId: 'inventory', inventoryName: 'Garage', permissions: ['share'] };
 const item: InventoryInvitationSummary = { id: 'one', email: 'old@example.test', relationship: 'viewer', status: 'pending', isExpired: false, expiresAt: '2027-01-01' };
+async function openCancellation(h: MobileRenderHarness, email: string) {
+  await h.press(h.byLabel(`Invitation actions for ${email}`));
+  await h.press(h.byText('Cancel invitation')?.parent ?? undefined);
+}
 const settle = async (h: MobileRenderHarness) => { await h.run(() => new Promise(r => setTimeout(r, 10))); };
 it('reuses safe invitation pages and keeps a created secret out of cache', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const calls: (string | undefined)[] = []; let rows = [item]; let failRefresh = false;
@@ -33,9 +37,9 @@ it('reuses safe invitation pages and keeps a created secret out of cache', async
     expect(h.allText()).toContain('https://example.test/#token=secret');
     expect(JSON.stringify(client.getQueryCache().getAll().map(q => q.state.data))).not.toContain('secret');
     failRefresh = true;
-    await h.press(h.byLabel('Cancel invitation for new@example.test'));
+    await openCancellation(h, 'new@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation')); await settle(h);
-    expect(h.byLabel('Cancel invitation for new@example.test')).toBeUndefined();
+    expect(h.byLabel('Invitation actions for new@example.test')).toBeUndefined();
     failRefresh = false;
     await h.render(view(true, 'replacement')); await settle(h);
     expect(h.allText()).not.toContain('https://example.test/#token=secret');
@@ -125,7 +129,7 @@ it.each(['copy', 'share', 'cancel'] as const)('suppresses late %s feedback after
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: delayed, share: delayed }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(h);
     if (action === 'cancel') {
-      await h.press(h.byLabel('Cancel invitation for old@example.test'));
+      await openCancellation(h, 'old@example.test');
       await h.run(() => pressAlertButton('Cancel Invitation'));
     } else {
       await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
@@ -185,7 +189,7 @@ it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task
     }
     const perform = async () => {
       if (action === 'cancel') {
-        await h.press(h.byLabel('Cancel invitation for old@example.test'));
+        await openCancellation(h, 'old@example.test');
         await h.run(() => pressAlertButton('Cancel Invitation'));
       } else {
         const label = action === 'copy' ? 'Copy link' : 'Share invitation';
@@ -200,7 +204,7 @@ it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
     expect(parent?.type, 'task feedback must scroll with the form, outside the navigation overlay').toBe('ScrollView');
     if (action !== 'cancel') expect(h.byLabel('Complete invitation link')).toBeDefined();
-    else expect(h.byLabel('Cancel invitation for old@example.test')).toBeDefined();
+    else expect(h.byLabel('Invitation actions for old@example.test')).toBeDefined();
     fail = false; await perform();
     expect(h.byText(`Could not ${action} invitation`)).toBeUndefined();
     if (action === 'copy') {
@@ -269,4 +273,49 @@ it.each(['copy', 'share'] as const)('locks both link commands during %s and reco
     expect(h.byLabel('Complete invitation link')).toBeDefined();
     expect(h.byText(`Could not ${action} invitation`)).toBeDefined();
   } finally { await h.unmount(); client.clear(); }
+});
+
+it('keeps each invitation locked independently and rejects duplicate confirmations', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const calls: string[] = [];
+  const finish = new Map<string, (error: Error) => void>();
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [item, { ...item, id: 'two', email: 'second@example.test' }] }),
+    create: async () => ({ ...item, inviteUrl: 'unused' }),
+    cancel: (_scope, id) => { calls.push(id); return new Promise((_resolve, reject) => { finish.set(id, reject); }); }
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h);
+    await openCancellation(h, 'old@example.test');
+    await h.run(() => pressAlertButton('Cancel Invitation'));
+    await h.run(() => pressAlertButton('Cancel Invitation'));
+    expect(calls).toEqual(['one']);
+    await openCancellation(h, 'second@example.test');
+    await h.run(() => pressAlertButton('Cancel Invitation'));
+    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(true);
+    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    await h.run(() => finish.get('one')?.(new Error('First cancellation failed')));
+    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(false);
+    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    await h.run(() => finish.get('two')?.(new Error('Second cancellation failed')));
+    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(false);
+    await h.run(() => pressAlertButton('Cancel Invitation'));
+    expect(calls).toEqual(['one', 'two']);
+  } finally { await h.unmount(); client.clear(); }
+});
+
+it.each(['leave', 'return'] as const)('does not start a cancellation from an old confirmation after %s', async departure => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let cancellations = 0;
+  const repository: InventoryInvitationManagementRepository = {
+    list: async () => ({ items: [item] }), create: async () => ({ ...item, inviteUrl: 'unused' }),
+    cancel: async () => { cancellations++; }
+  };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await settle(h); await openCancellation(h, 'old@example.test');
+    await h.run(() => setScreenFocused(false));
+    if (departure === 'return') await h.run(() => setScreenFocused(true));
+    await h.run(() => pressAlertButton('Cancel Invitation'));
+    expect(cancellations).toBe(0);
+  } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
 });

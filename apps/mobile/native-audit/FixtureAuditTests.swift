@@ -61,12 +61,15 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(email.value as? String, "audit@example.invalid")
     XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
 
-    let cancel = app.buttons["Cancel invitation for audit@example.invalid"].firstMatch
+    let cancel = app.buttons["Invitation actions for audit@example.invalid"].firstMatch
     reveal(cancel); cancel.tap()
+    let cancelAction = app.buttons["Cancel invitation"].firstMatch
+    XCTAssertTrue(cancelAction.waitForExistence(timeout: 5)); cancelAction.tap()
     let confirm = app.alerts.buttons["Cancel Invitation"]
     XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
     feedback("Could not cancel invitation", message: "Audit cancellation unavailable. Try again.", captureName: "sharing-cancel-recovery")
     reveal(cancel); cancel.tap()
+    XCTAssertTrue(cancelAction.waitForExistence(timeout: 5)); cancelAction.tap()
     XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)], timeout: 5), .completed)
 

@@ -140,6 +140,16 @@ old timer on replacement.
 
 ## Accessible feedback
 
+Each pending invitation exposes a native contextual actions menu, with a named
+destructive Cancel invitation command instead of an ambiguous X. Cancellation is
+infrequent and irreversible; retain the confirmation naming the recipient before
+submitting. Each scope/invitation has an independent pending lock and visible
+Cancelling… status. Duplicate confirmations must not submit twice. One completion
+must not re-enable a different pending invitation, and failed rows retain retry.
+Confirmations captured before leaving the focused scope must
+not start a new cancellation after departure. Already-authorized operations may
+finish and update their scoped cache.
+
 The isolated native audit must exercise the actual Sharing screen at normal text
 size with controlled invitation and link-action ports. Cover unavailable creation
 link recovery, retained email, retry to a usable link, copy failure/retry, and

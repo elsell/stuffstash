@@ -1212,8 +1212,8 @@ commands. Their shared lock prevents overlapping activation, pending text names
 the operation, and failure restores both commands while retaining the link.
 Replacement/focus generation protects newer work from older completion; regression
 cases cover old success and failure while the replacement operation stays locked.
-No shared adapter behavior changed. Cancellation's custom row control remains a
-separate follow-up; its native confirmation remains appropriate.
+No shared adapter behavior changed. Cancellation's custom row control was
+addressed in the subsequent M102 candidate; its native confirmation remains appropriate.
 
 This choice follows the project's native-control preference and Apple's
 [button guidance](https://developer.apple.com/design/human-interface-guidelines/buttons),
@@ -1222,3 +1222,32 @@ The specific adapter and lock are engineering choices. Eighteen selected route
 and native-adapter tests, TypeScript and structural checks passed remotely.
 Current-build normal-text light/dark appearance, keyboard reachability and system
 share return remain pending; this is not native visual certification.
+
+
+### M102 — Invitation cancellation loses pending ownership and uses an ambiguous X
+
+P2, R048 task/loading/lifecycle, source and controlled-render findings. One
+`cancellingId` represented all rows, and the confirmation callback had no duplicate
+or focused-session guard. A second cancellation made the first row appear idle;
+replayed confirmations submitted again, including after leaving the route.
+Three failing regressions established these defects.
+
+The native contextual menu now names Cancel invitation as a destructive action.
+This adds discovery before an infrequent irreversible operation; retaining the
+recipient-naming confirmation is a deliberate project choice. Each scope and
+invitation has its own pending key and Cancelling… status. Confirmation callbacks
+are single-use and bound to their focused session; authorized in-flight commands
+still finish and update scoped cache. A follow-up regression also reproduced an
+old confirmation submitting again after its failed operation finished; a one-shot
+confirmation guard fixes that case.
+
+The normal-text native Sharing walkthrough now opens the menu, confirms, observes
+failure, and retries. Current-build menu presentation, progress visibility and
+return behavior remain pending. No shared native adapter or API permission rule
+changed.
+
+Combined validation after M102: all 1,535 mobile tests in 258 files passed remotely,
+followed by mobile TypeScript and structural checks. Critic review found no
+remaining blocker after the one-shot confirmation regression was added. These
+checks include the current branch's Sharing, parent-command, Move context and
+native-command changes; they do not establish native runtime appearance.

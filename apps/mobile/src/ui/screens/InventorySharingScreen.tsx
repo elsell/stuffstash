@@ -1,4 +1,5 @@
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
+import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -12,14 +13,12 @@ import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View
 } from 'react-native';
-import { X } from 'lucide-react-native';
 import type {
   CancelInventoryInvitationCommand,
   CreatedInventoryInvitation,
@@ -64,7 +63,8 @@ export function InventorySharingScreen({
   const [created, setCreated] = useState<CreatedInventoryInvitation>();
   const [createdScopeKey, setCreatedScopeKey] = useState<string>();
   const [working, setWorking] = useState(false);
-  const [cancellingId, setCancellingId] = useState<string>();
+  const pendingCancellations = useRef(new Set<string>());
+  const [cancellingKeys, setCancellingKeys] = useState<ReadonlySet<string>>(new Set());
   const workingRef = useRef(false);
   const currentScopeKeyRef = useRef(scopeKey);
   currentScopeKeyRef.current = scopeKey;
@@ -159,7 +159,10 @@ export function InventorySharingScreen({
   }
 
   async function cancel(invitation: InventoryInvitationSummary): Promise<void> {
-    setCancellingId(invitation.id);
+    const operationKey = cancellationKey(invitation.id);
+    if (pendingCancellations.current.has(operationKey)) return;
+    pendingCancellations.current.add(operationKey);
+    setCancellingKeys(new Set(pendingCancellations.current));
     setCancellationErrors(current => {
       const next = { ...current }; delete next[invitation.id]; return next;
     });
@@ -172,8 +175,21 @@ export function InventorySharingScreen({
     } catch (error) {
       if (ownsFeedback()) setCancellationErrors(current => ({ ...current, [invitation.id]: readableError(error) }));
     } finally {
-      setCancellingId(undefined);
+      pendingCancellations.current.delete(operationKey);
+      setCancellingKeys(new Set(pendingCancellations.current));
     }
+  }
+
+  function cancellationKey(id: string): string { return JSON.stringify([scopeKey, id]); }
+  function requestCancellation(invitation: InventoryInvitationSummary): void {
+    const ownsConfirmation = captureFeedbackOwner();
+    if (!ownsConfirmation() || pendingCancellations.current.has(cancellationKey(invitation.id))) return;
+    let confirmed = false;
+    confirmCancel(invitation, async value => {
+      if (confirmed || !ownsConfirmation()) return;
+      confirmed = true;
+      await cancel(value);
+    });
   }
 
   if (list.isPending && !denied) {
@@ -267,23 +283,17 @@ export function InventorySharingScreen({
                 <Text style={styles.invitationMetadata}>
                   {titleCase(invitation.relationship)} · {statusLabel(invitation)} · Expires {formatDate(invitation.expiresAt)}
                 </Text>
+                {cancellingKeys.has(cancellationKey(invitation.id)) ? <Text accessibilityLiveRegion="polite" style={styles.invitationMetadata}>Cancelling…</Text> : null}
                 {cancellationErrors[invitation.id] ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
                   <Text style={styles.successTitle}>Could not cancel invitation</Text>
                   <Text style={settingsStyles.errorMessage}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
               </View>
               {invitation.status === 'pending' && !invitation.isExpired ? (
-                <Pressable
-                  accessibilityLabel={`Cancel invitation for ${invitation.email}`}
-                  accessibilityRole="button"
-                  disabled={cancellingId === invitation.id}
-                  onPress={() => confirmCancel(invitation, cancel)}
-                  style={styles.cancelButton}
-                >
-                  {cancellingId === invitation.id
-                    ? <ActivityIndicator color={palette.danger} />
-                    : <X color={palette.danger} size={19} />}
-                </Pressable>
+                <NativeActionMenu accessibilityLabel={`Invitation actions for ${invitation.email}`}
+                  disabled={cancellingKeys.has(cancellationKey(invitation.id))}
+                  groups={[{ id: 'invitation', items: [{ id: 'cancel', label: 'Cancel invitation',
+                    isDestructive: true, systemImage: 'xmark.circle', onPress: () => requestCancellation(invitation) }] }]} />
               ) : null}
             </View>
           </View>
@@ -338,7 +348,6 @@ function createStyles(colors: MobileColorPalette) {
     invitationRow: { alignItems: 'center', flexDirection: 'row', minHeight: 68, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     invitationText: { flex: 1, minWidth: 0 },
     invitationEmail: { color: colors.text, fontSize: 16, fontWeight: '600' },
-    invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 },
-    cancelButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 }
+    invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 }
   });
 }
