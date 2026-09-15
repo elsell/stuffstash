@@ -87,7 +87,7 @@ export function FixtureMenu() {
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
-    {['direct', 'nested', 'footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
+    {['direct', 'nested', 'footer', 'direct-footer', 'scroll-footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Text>{result}</Text>

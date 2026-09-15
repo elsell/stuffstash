@@ -262,3 +262,10 @@ The runner-only Add fixture may catch React render errors and display their
 message and component stack as diagnostic UI, so a fixture composition failure
 can be distinguished from an application/native crash. This must remain outside
 production routes and must not replace a failing assertion with success.
+
+After the phone direct-scroll diagnostic passed and both wrapped variants lost
+the body, compare two bottom-action structures before changing production filters:
+a direct scroll view with a sibling overlaid footer, and a direct scroll view with
+an in-content footer. Both must retain visible rows and reachable bottom actions
+on phone and tablet. A successful isolated layout still requires production
+expansion, keyboard and long-list verification.

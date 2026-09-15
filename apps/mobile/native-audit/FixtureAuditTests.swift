@@ -41,12 +41,21 @@ final class FixtureAuditTests: XCTestCase {
     let row = app.buttons["Diagnostic Tags"]
     XCTAssertTrue(row.waitForExistence(timeout: 5))
     XCTAssertTrue(row.isHittable)
-    if variant == "footer" { XCTAssertTrue(app.buttons["Finish diagnostic"].isHittable) }
+    if variant.contains("footer") {
+      let finish = app.buttons["Finish diagnostic"]
+      XCTAssertTrue(finish.isHittable)
+      let geometry = XCTAttachment(string: "Finish frame: \(finish.frame); app frame: \(app.frame). Inspect against the sheet bounds in the retained screenshot/hierarchy.")
+      geometry.name = "footer-placement-\(variant)"
+      geometry.lifetime = .keepAlways
+      add(geometry)
+    }
   }
 
   func testDirectFullSheetLayout() { verifyFullSheetLayout("direct") }
   func testNestedFullSheetLayout() { verifyFullSheetLayout("nested") }
   func testFooterFullSheetLayout() { verifyFullSheetLayout("footer") }
+  func testDirectFooterFullSheetLayout() { verifyFullSheetLayout("direct-footer") }
+  func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
 
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
@@ -293,9 +302,19 @@ final class FixtureAuditTests: XCTestCase {
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     picker.tap()
-    XCTAssertTrue(app.buttons["close"].waitForExistence(timeout: 5), "The system color picker should open directly")
+    let sliders = app.buttons["Sliders"]
+    XCTAssertTrue(sliders.waitForExistence(timeout: 5), "The system color picker should open directly")
     capture("native-color-picker")
-    app.buttons["close"].tap()
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // The retained iPad hierarchy exposes the system popover dismiss region;
+      // its Close element exists but is not a visible, hittable button.
+      let dismiss = app.otherElements["PopoverDismissRegion"]
+      XCTAssertTrue(dismiss.exists)
+      dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+    } else {
+      app.buttons["close"].tap()
+    }
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: sliders)], timeout: 5), .completed)
     XCTAssertTrue(app.staticTexts["Color value: none"].exists, "Opening and closing must not invent a color")
     app.buttons["Choose Green tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
