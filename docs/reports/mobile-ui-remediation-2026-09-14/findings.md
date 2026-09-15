@@ -322,3 +322,23 @@ denied results, unchanged inventory preferences, and return/retry behavior.
 TypeScript and the mobile structural check pass. Critic's race finding is resolved.
 Physical permission prompts, external Settings changes and native lifecycle timing
 still need verification. This change follows the PR135 release cut.
+
+### M58 — Customization completions outlive navigation and record ownership
+
+Delayed save and archive completions previously dismissed a newer task. Focus
+identity now gates success announcements and navigation; an old confirmation
+cannot start a mutation. A separate resource lifetime scopes local completion,
+permission failure, refresh and busy state. Each resource gets its own workflow;
+old loads retain their original workflow so replacement cannot revive stale loads.
+
+Three deferred focus tests failed baseline. Two resource-replacement tests also
+failed before the lifetime guard because the new editor remained locked. The
+final45 screen/workflow tests, TypeScript and structural checks pass remotely.
+Tests cover delayed granted/denied completion, late confirmation, and fresh save
+recovery; critic's resource-lifetime issue is addressed. Native navigation and
+accessibility timing remain pending.
+
+Follow-up: the retained editor's pre-existing completed flag suppresses dirty
+tracking after subsequent edits; completed create/lifecycle presentation also
+needs review before the entire customization lifecycle is considered resolved.
+M58 fixes ownership, not that separate completion-state design.

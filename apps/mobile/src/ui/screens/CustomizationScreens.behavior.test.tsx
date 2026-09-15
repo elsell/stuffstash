@@ -8,7 +8,7 @@ import { CustomizationFailure } from '../../application/customization/Customizat
 import { runCustomizationLifecycle } from '../../application/customization/CustomizationEditorCommands';
 import { MobileRenderHarness } from '../../test-support/render';
 import { alertCount, focusedAccessibilityHandles, focusedInputLabels, latestAlert, pressAlertButton, resetNativeTestState } from '../../test-support/react-native';
-import { attemptNavigation, dispatchedActions, navigationOptions, resetNavigation } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { SettingsSegmentedControl } from '../components/SettingsSegmentedControl';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { CustomizationCollectionScreen } from './CustomizationCollectionScreen';
@@ -21,6 +21,73 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it.each([false, true])('does not navigate from an old save after leaving, returned=%s', async returned => {
+    const pending = deferred<Record<string, never>>(); let done = 0;
+    const screen = await renderEditor({ manageTags: managerFake({ create: async () => pending.promise }), onDone: () => { done++; } });
+    await screen.changeText(screen.byLabel('Name'), 'Tools');
+    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    expect(screen.allText()).toContain('Saving…');
+    await screen.run(() => setScreenFocused(false));
+    if (returned) await screen.run(() => setScreenFocused(true));
+    await screen.run(() => pending.resolve({}));
+    await screen.settle();
+    expect(done).toBe(0);
+    expect(screen.allText()).not.toContain('Tag saved');
+    expect(screen.allText()).not.toContain('Unsaved changes');
+    await screen.run(() => setScreenFocused(true));
+    await screen.changeText(screen.byLabel('Name'), 'Garden tools');
+    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    await screen.settle();
+    expect(done).toBe(1);
+  });
+
+  it('does not navigate from an archive completed after focus returns', async () => {
+    const pending = deferred<Record<string, never>>(); let done = 0;
+    const record = tag('tools', 'Tools');
+    const screen = await renderEditor({ mode: 'edit', resourceId: record.id, query: collectionQuery({ tags: [record] }), manageTags: managerFake({ archive: async () => pending.promise }), onDone: () => { done++; } });
+    await screen.press(screen.byText('Archive')?.parent ?? undefined);
+    const mutation = pressAlertButton('Archive');
+    await screen.run(() => setScreenFocused(false));
+    await screen.run(() => setScreenFocused(true));
+    await screen.run(() => pending.resolve({}));
+    await mutation; await screen.settle();
+    expect(done).toBe(0);
+    expect(screen.allText()).not.toContain('Tag archived');
+  });
+
+  it('rejects an archive confirmation accepted after leaving and permits a fresh confirmation', async () => {
+    let archives = 0;
+    const record = tag('tools', 'Tools');
+    const screen = await renderEditor({ mode: 'edit', resourceId: record.id, query: collectionQuery({ tags: [record] }), manageTags: managerFake({ archive: async () => { archives++; return record; } }) });
+    await screen.press(screen.byText('Archive')?.parent ?? undefined);
+    await screen.run(() => setScreenFocused(false));
+    await screen.run(() => setScreenFocused(true));
+    await screen.run(() => pressAlertButton('Archive'));
+    expect(archives).toBe(0);
+    await screen.press(screen.byText('Archive')?.parent ?? undefined);
+    await screen.run(() => pressAlertButton('Archive'));
+    expect(archives).toBe(1);
+  });
+
+  it.each(['success', 'denied'] as const)('isolates old-resource %s from a new editor draft', async outcome => {
+    const pending = deferred<Record<string, never>>();
+    const records = [tag('a', 'First'), tag('b', 'Second')];
+    const common = { mode: 'edit', query: collectionQuery({ tags: records }), manageTags: managerFake({ update: async () => { await pending.promise; if (outcome === 'denied') throw new CustomizationFailure('permission-denied'); return {}; } }) };
+    const screen = await renderEditor({ ...common, resourceId: 'a' });
+    await screen.changeText(screen.byLabel('Name'), 'First edited');
+    await screen.press(screen.byText('Save')?.parent ?? undefined);
+    await screen.render(editorElement({ ...common, resourceId: 'b' }));
+    await settleQueries(screen);
+    expect(screen.byLabel('Name')?.props.editable).toBe(true);
+    await screen.changeText(screen.byLabel('Name'), 'Second draft');
+    await screen.run(() => pending.resolve({}));
+    await settleQueries(screen);
+    expect(screen.byLabel('Name')?.props.value).toBe('Second draft');
+    expect(screen.byLabel('Name')?.props.editable).toBe(true);
+    expect(screen.allText()).toContain('Unsaved changes');
+    expect(screen.allText()).not.toContain('Access changed');
+  });
+
   it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
     let rows = [tag('one', 'Tools')]; let reads = 0;
     const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });

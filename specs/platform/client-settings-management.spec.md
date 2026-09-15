@@ -390,3 +390,20 @@ The same scrollable recovery requirement applies to customization collection and
 editor failures, notification route loading failures, stale or invalid reminder
 links, and filter loading failures. Retry and dismissal actions remain in their
 existing context; route validation and authorization behavior must not change.
+
+## Customization completion navigation ownership
+
+A submitted save or lifecycle operation may finish after the editor loses focus.
+Its success must not navigate over the user's newer task or announce success in
+that task. Navigation and global success feedback belong to the uninterrupted
+focus session that initiated the operation, including the same resource/scope.
+Returning to the editor starts a new focus session; an older completion may
+reconcile the retained editor but must not dismiss it. A later explicit operation
+can navigate normally. A lifecycle confirmation accepted after its initiating
+focus session ends must not start a mutation. Persistence still runs through the
+existing managers and authorization boundaries.
+
+Local draft, error, permission-refresh, completion and busy state belong to the
+mounted resource/scope lifetime. A late result from a different resource must not
+overwrite, deny or unlock the current editor. A new resource receives an independent
+operation workflow; old operations may settle without affecting its state.
