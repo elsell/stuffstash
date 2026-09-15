@@ -237,3 +237,23 @@ without a useful JS message. A runner-only React error boundary is added to expo
 render failures in the next run; it does not catch native or asynchronous crashes.
 The color picker now opens, but its close button was not hittable in the test.
 These unresolved states remain in the audit, independently of interim delivery.
+
+
+### Same run, completed phone fixtures
+
+Phone color-picker open/close and Clear, full onboarding address submission,
+reminder-mode selection, and the uncontrolled input comparison passed. Controlled
+input retained `h://example.invalid`, and expiration search could not reach its
+post-keyboard action. The direct full-sheet diagnostic passed; wrapped variants
+and actual sheet expansion still failed. Draft-photo accessibility checks passed,
+but the old rail selector stopped interaction testing as on iPad. These results
+narrow the failure conditions rather than proving all text entry or sheets work.
+
+The inspected iPad color screenshot shows a system popover without a visible Close
+button. Its hierarchy supplies `PopoverDismissRegion`; the next procedure uses an
+outside tap there and waits for the picker to disappear. The phone retains its
+Close action. Two additional isolated sheet layouts compare direct-scroll sibling
+and in-content footers. Their geometry is recorded for inspection against the
+sheet bounds; a screen-relative bottom assertion was rejected in code review.
+Remote type and structural checks pass. Production filters remain unchanged until
+native evidence supports the replacement structure.

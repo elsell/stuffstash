@@ -2569,7 +2569,7 @@ S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
 S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
 S108,Settings / tag color,task,Task clarity and platform-pattern fit,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,navigation,"Navigation, hierarchy and return",pending,,
-S108,Settings / tag color,selection,Value selection and current value,pending,,
+S108,Settings / tag color,selection,Value selection and current value,runtime-partial,"34912595714 phone native color open/close/Green/Clear passed. iPad opens popover; outside-dismissal procedure corrected, runtime pending. Other cases unverified.",M23
 S108,Settings / tag color,modality,Presentation and dismissal,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,layout,"Safe areas, scroll edges and overlays",pending,,
 S108,Settings / tag color,adaptation,Phone/tablet/window reflow,pending,,
