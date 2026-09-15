@@ -1639,3 +1639,25 @@ checkbox/scroll-target correction. Ordinary multiline failed its input visibilit
 precondition; the build also predates6cb092ef's isolated diagnostic page. Other
 normal-text failures (including Add text, color picker, and place-content keyboard
 dismissal) require artifact-specific triage. Enlarged-text failures remain deferred.
+
+
+### Run349920 place-search failures: distinguish phone and tablet
+
+Both fixtures ran actual514032e0. iPad reaches successful `19` filtering and then
+fails Dismiss keyboard hit testing (M137; retained image/hierarchy). Phone fails
+earlier waiting for the integrated Search button. Inspected image
+`evidence/phone-place-search-bottom-349920.png` shows an inactive bottom search
+field and the long inherited `Native UI audit` Back title. Production explicitly
+sets `headerBackTitle: Back`; the fixture did not. Fixture navigation now mirrors
+that setting; the original search-button/field/filter/dismiss/return assertions
+remain unchanged. This does not establish causality or production acceptance.
+
+Pinned keyboard-controller1.20.7 source also shows that its accessory container
+initializes at screen width and updates content geometry only when height changes.
+The iPad hierarchy's half-width ancestor merits targeted native investigation;
+no dependency patch or production keyboard removal is justified by source alone.
+
+For the Back-label fixture correction, both fixture-preparation tests, mobile
+TypeScript and structural checks pass on paul. Read-only critic found no confirmed
+issue; existing native navigation selectors use BackButton and remain valid.
+Native execution of this correction is pending.

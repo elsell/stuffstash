@@ -1072,3 +1072,12 @@ scroll page when opened. Inserting them earlier in the long menu can leave their
 native field offscreen and confound text-entry evidence with menu scroll position.
 Keep actual controls, ownership modes, keyboard options and exact full-speed
 entry assertions unchanged; preserve an explicit return action.
+
+Native fixture navigation must preserve production's explicit `Back` label. The
+fixture menu title is diagnostic content and must not become a long inherited
+Back label that competes with search and detail actions. Run34992079258 phone
+place search shows a bottom field instead of the expected integrated button;
+its fixture uses `Native UI audit` as Back text while production uses `Back`.
+Correct that configuration drift without relaxing the integrated-button assertion.
+This is a controlled fixture correction, not proof that Back width caused the
+placement or that production search has passed native acceptance.

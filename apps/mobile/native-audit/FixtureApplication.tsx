@@ -66,7 +66,7 @@ function FixtureNavigation() {
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
   return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
-    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerBackTitle: 'Back', headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
