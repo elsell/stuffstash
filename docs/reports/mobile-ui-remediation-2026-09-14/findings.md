@@ -2274,3 +2274,15 @@ acceptance remains pending, and already-started pickers are outside this correct
 P2 source/mounted finding at39a846d6. The icon-only tile exposed a hint but no
 action label. The semantic-label regression failed before adding Add photos.
 Selection/geometry is unchanged. VoiceOver naming/order remains a native check.
+
+### M160 — Home pull failure outlives its focused visit
+
+P2 mounted finding at81e91f74. The pull hook retired its spinner on blur, but Home
+passed a default always-true predicate to error feedback. A late failure displayed
+Could not refresh Home after leaving or returning. Both navigation cases failed
+before correction; the current-visit failure case passed and remains supported.
+Home now captures focused visit/resource ownership through useTaskPresentation
+when a pull starts. Return-command reconciliation keeps its existing predicate.
+All28 Home and2 pull-hook cases pass on paul. Native navigation/error presentation
+acceptance remains pending; this does not claim to solve every historical spinner
+or inset symptom. See home-dashboard-axis.md for the full route review.

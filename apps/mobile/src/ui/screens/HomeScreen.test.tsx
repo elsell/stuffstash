@@ -157,6 +157,29 @@ describe('Home interactions through mounted components', () => {
     repository.load = async () => snapshot(); await h.press(h.byLabel('Retry loading Home')); await settle();
     expect(h.byLabel('Open asset Recent bowl')).toBeDefined(); expect(h.byLabel('Retry loading Home')).toBeUndefined();
   });
+  it.each([false, true])('keeps a departed pull failure silent after navigation (returned: %s)', async returned => {
+    await render();
+    const pending = deferred<HomeDashboardSnapshot>();
+    repository.load = async () => { await pending.promise; throw new Error('Connection failed'); };
+    let finished!: Promise<void>;
+    await h.run(() => { finished = refresh().onRefresh(); });
+    expect(refresh().refreshing).toBe(true);
+    await h.run(() => setScreenFocused(false));
+    if (returned) await h.run(() => setScreenFocused(true));
+    await h.run(async () => { pending.resolve(snapshot()); await finished; });
+    await settle();
+    expect(h.byText('Could not refresh Home')).toBeUndefined();
+    expect(refresh().refreshing).toBe(false);
+    expect(h.byLabel('Open asset Recent bowl')).toBeDefined();
+  });
+  it('reports a failed pull in the current visit and ends its indicator', async () => {
+    await render();
+    repository.load = async () => { throw new Error('Connection failed'); };
+    await h.run(async () => { await refresh().onRefresh(); }); await settle();
+    expect(h.byText('Could not refresh Home')).toBeDefined();
+    expect(refresh().refreshing).toBe(false);
+    expect(h.byLabel('Open asset Recent bowl')).toBeDefined();
+  });
   it('rejects repeated Return callbacks before rendering disabled state and while details are open', async () => {
     const pending = deferred<AssetCheckoutResult>(); returnResult = () => pending.promise;
     await render(); const press = h.byLabel('Return Cordless drill')!.props.onPress;

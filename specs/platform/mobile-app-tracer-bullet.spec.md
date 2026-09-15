@@ -467,6 +467,7 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Search, location asset lists, and asset detail views must be backed by application view models rather than UI-local DTO mapping.
 - Read-only and browsing mobile surfaces must support native pull-to-refresh when they show API-backed state, including Home, Search results after a query, Locations, selected-inventory asset lists, location asset lists, asset detail, and Settings.
 - Pull-to-refresh must re-run the relevant application query through existing ports and adapters. It must not bypass application queries or call generated API DTOs directly from UI code.
+- Home pull-refresh error notices belong to the focused visit and inventory resource that started the pull. Reads may finish after navigation, but a failed old pull must not display a notice on another screen or a later Home visit. A failure during the current visit still provides feedback; return-command reconciliation retains its own presentation owner.
 - State-changing forms such as Add must not add pull-to-refresh until a future form reset or draft-recovery behavior is specified.
 - Add and search behavior must be covered by focused tests using fakes rather than mocks.
 - Application behavior must be covered by focused tests using fakes rather than mocks.

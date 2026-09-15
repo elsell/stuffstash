@@ -51,12 +51,16 @@ feedback, retired session callbacks and the earlier interaction fixes.
 Native acceptance remains incomplete: full run35012949816 passed43/58 phone
 fixtures and47/58 iPad fixtures; both onboarding jobs passed. See
 [latest native follow-up](native-350129-followup.md) for actual revisions and limits.
-The resumed audit continues in draft PR153. Checkpointfcc2f9b8 passes all1,704 mobile
-tests and static/fixture checks remotely; its new native collection journey is pending.
+The resumed audit continues in draft PR153. Checkpoint81e91f74 passes all1,710 mobile
+tests across270 files, TypeScript and structural checks remotely on paul
+(`/tmp/mobile-batch-81e91f74.log`). Its new native collection journey is pending.
+The subsequent [Home dashboard review](home-dashboard-axis.md) adds M160,
+retiring delayed pull-refresh notices after navigation; focused validation is
+recorded separately and does not change that full-suite checkpoint.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,710
-pending,1,195 source-reviewed,342 finding,22 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,688
+pending,1,215 source-reviewed,344 finding,22 runtime-partial and115 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
@@ -64,7 +68,10 @@ are not native passes or claims of product feature parity.
 Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
 The [latest completed native follow-up](native-350129-followup.md) records full
 run35012949816 failures and focused color results. Text-entry isolation is running
-at0f378691 in run35029455242; no native fix is claimed from its dispatch.
+at0f378691 in run35029455242; iPad completed4/5, with reproduced character loss,
+and phone remains running. See [inspected text evidence](native-text-350294.md).
+Expanded manual diagnostic35031744887 and full PR run35031731981 were pending
+at81e91f74. No native fix is claimed from their dispatch.
 
 Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
 TypeScript and the mobile structural check pass on paul
