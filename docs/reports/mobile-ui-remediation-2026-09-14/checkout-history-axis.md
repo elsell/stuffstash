@@ -46,4 +46,8 @@ M109 evidence: transient500 failure reproduced hidden records before correction;
 deferred401/403/404 retries reproduced premature redisplay before the denial latch.
 The final16 history/query tests plus TypeScript and structural checks pass on paul.
 These prove controlled data/recovery behavior, not native layout or full lifecycle
-coverage. Existing native fixtures do not yet exercise the new name-error state.
+coverage. The native fixture now starts with a controlled name-read failure; the journey
+checks retained records, retry reachability and name recovery before the existing
+pagination and dismissal checks. Fixture preparation, TypeScript and structural
+checks pass remotely. Execution on iPhone/iPad remains pending; this addition is
+not new runtime acceptance evidence.

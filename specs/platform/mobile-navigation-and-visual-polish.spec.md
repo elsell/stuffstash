@@ -489,3 +489,9 @@ Keep native search, staged selections, Back, Cancel and Apply semantics unchange
 Verify long lists at normal text size: scroll the final tag fully above the footer,
 select it, return to the overview, search with the keyboard, dismiss the keyboard
 and apply the retained draft. Include iPhone and iPad light/dark native checks.
+
+Checkout-history native acceptance must exercise a failed independent asset-name
+read while records remain visible, then retry the name without replacing the
+history. The controlled native fixture fails its first name read and succeeds on
+explicit retry; its existing pagination and dismissal journey also verifies the
+name error and retry control are fully reachable before recovery.

@@ -434,8 +434,8 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     let bar = app.navigationBars["Checkout history"]
     XCTAssertTrue(bar.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Asset name could not be loaded."].waitForExistence(timeout: 5))
     let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
     XCTAssertTrue(historyScroll.exists)
     let note = historyScroll.staticTexts.matching(identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
@@ -451,6 +451,15 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar))
     capture("checkout-history-expanded")
+    let retryName = app.buttons["Try loading asset name again"]
+    for _ in 0..<6 where !retryName.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(retryName.isHittable)
+    XCTAssertTrue(app.frame.contains(retryName.frame))
+    capture("checkout-history-name-recovery")
+    retryName.tap()
+    let recoveredName = app.staticTexts["Audit ladder"]
+    XCTAssertTrue(recoveredName.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.staticTexts["Asset name could not be loaded."].exists)
     let older = app.buttons["Load older checkouts"]
     for _ in 0..<6 where !older.isHittable {
       historyScroll.swipeUp()
