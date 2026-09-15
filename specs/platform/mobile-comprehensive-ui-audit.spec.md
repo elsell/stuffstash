@@ -1030,3 +1030,15 @@ upload completed, leaving a cancelled job conclusion despite retained results.
 Keep individual XCTest interaction waits bounded and retain failures. This changes
 job capacity, not acceptance criteria; do not cancel or restart existing live runs
 when changing the workflow budget.
+
+### Input-comparison fixture reachability
+
+Native input comparisons must scroll toward the actual field position, whether
+it is above or below the viewport. Run349725's phone system-address fixture shows
+the input below the viewport while the test repeatedly scrolls toward the top;
+its pre-typing failure cannot diagnose SwiftUI or React Native text fidelity.
+Use one bounded geometry-aware reveal for ordinary and address comparisons.
+Require the complete field inside the visible scroll area and hittable before
+focusing; keep keyboard readiness, typing speed and full-string assertions intact.
+Preserve this baseline as a test-procedure failure, distinct from actual malformed
+product text captured after typing.

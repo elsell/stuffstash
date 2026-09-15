@@ -976,7 +976,7 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     let input = app.textFields["Audit \(mode) address"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
-    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    revealComparisonInput(input)
     XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()
@@ -987,6 +987,19 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
   }
 
+  private func revealComparisonInput(_ input: XCUIElement) {
+    let scroll = app.scrollViews.firstMatch
+    for _ in 0..<8 {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, app.navigationBars.firstMatch.frame.maxY)
+      if input.isHittable && input.frame.minY >= top && input.frame.maxY <= bounds.maxY { return }
+      let above = input.frame.minY < top
+      scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+        .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
+    }
+    XCTFail("Comparison input must be fully visible before typing")
+  }
+
   private func verifyOrdinaryTextEntry(_ mode: String) {
     let open = app.buttons["Audit \(mode) input"]
     for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -994,7 +1007,7 @@ final class FixtureAuditTests: XCTestCase {
     open.tap()
     let input = mode == "multiline" ? app.textViews["Audit \(mode) text"] : app.textFields["Audit \(mode) text"]
     XCTAssertTrue(input.waitForExistence(timeout: 5))
-    for _ in 0..<8 where !input.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    revealComparisonInput(input)
     XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()

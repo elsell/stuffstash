@@ -1470,3 +1470,10 @@ The workflow now allows90 minutes to preserve room for the full native suite and
 artifact export. Individual test waits/assertions are unchanged. Current live
 run34978984248, sourceafb81694, is left running under its original budget. Future runs containing this workflow revision use the new budget; already queued
 runs retain their original revision. No existing run was manually cancelled or restarted.
+
+Phone address-comparison follow-up: the inspected system-field capture shows the
+field below the visible menu viewport. All four address comparisons stop at the
+pre-focus hittable assertion, not a typed-value check. The old helper scrolled only
+toward the top. See text-entry-axis.md for the preserved capture, geometry and
+bounded bidirectional reveal correction shared with ordinary input comparisons.
+This does not resolve the separately observed malformed product text.
