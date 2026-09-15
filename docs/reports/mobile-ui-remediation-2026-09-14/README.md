@@ -9,6 +9,7 @@ are intentional: route coverage and interaction coverage are independent.
 
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
+- `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.

@@ -909,7 +909,23 @@
     "surface": "System / confirmation alert",
     "source": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
     "sources": [
-      "apps/mobile/src/ui/feedback/AppFeedback.tsx"
+      "apps/mobile/src/ui/components/AssetExpirationEditor.tsx",
+      "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+      "apps/mobile/src/ui/navigation/AppServicesFeedbackGate.tsx",
+      "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
+      "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
+      "apps/mobile/src/ui/screens/AssetPhotoViewerSheet.tsx",
+      "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "apps/mobile/src/ui/screens/InventorySharingScreen.tsx",
+      "apps/mobile/src/ui/screens/PhotoSourceChooser.ts",
+      "apps/mobile/src/ui/screens/ProviderProfileScreens.tsx",
+      "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
+      "apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx",
+      "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "apps/mobile/src/ui/screens/useProviderEditorExit.ts"
     ]
   },
   {
