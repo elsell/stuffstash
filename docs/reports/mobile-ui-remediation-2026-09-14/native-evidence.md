@@ -1027,3 +1027,12 @@ measurement a hypothesis worth native comparison, not a proven root cause or fix
 Current Expo documentation refers to a newer Host implementation and must not be
 assumed to describe the pinned dependency. Reference:
 https://developer.apple.com/documentation/swiftui/view/fixedsize(horizontal:vertical:)
+
+A runner-only CommandHeightFixture now compares the shipping standard command
+with the same SwiftUI composition plus ideal vertical sizing on its outer Button.
+Both use Retry asset types and a240-point bordered region with following text.
+The XCTest captures each at the largest accessibility size and exercises the
+comparison control and retry. Preparation tests (2), TypeScript and structural
+checks pass on paul. Native execution and visual comparison remain pending;
+production NativeCommandButton is unchanged. Diagnostic completion alone must not
+be reported as label-layout acceptance.

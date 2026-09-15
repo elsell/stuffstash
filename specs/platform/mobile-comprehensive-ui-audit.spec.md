@@ -759,3 +759,14 @@ Edit native acceptance may scroll each retry into full view before tapping; it
 must not require all metadata to fit simultaneously at accessibility text sizes.
 Require the complete retry frame inside the visible form, and Cancel hittable
 before and after scrolling/retry. Capture each region for label-overlap review.
+
+### Native command height comparison
+
+A runner-only diagnostic compares the shipping standard native command with an
+otherwise equivalent SwiftUI button that requests ideal vertical size on the
+outer button as well as its label. Hold label, width, font category and host
+configuration constant; use a narrow240-point region and largest accessibility
+text. Capture both variants with a following text boundary. This isolates the
+outer sizing hypothesis without changing production controls. Completion of the
+diagnostic is not acceptance: inspect label bounds and adjacent text before
+choosing a repair. Neither variant invokes domain mutations.

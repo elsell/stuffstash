@@ -12,6 +12,30 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testCommandHeightComparisonAtAccessibilityTextSize() {
+    app.terminate()
+    app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+    app.launch()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let open = app.buttons["Audit command height"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let retry = app.buttons["Retry asset types"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Shipping size"].exists)
+    capture("command-height-shipping")
+    let compare = app.buttons["Compare outer sizing"].firstMatch
+    XCTAssertTrue(compare.isHittable)
+    compare.tap()
+    XCTAssertTrue(app.staticTexts["Outer ideal size"].waitForExistence(timeout: 5))
+    XCTAssertTrue(retry.isHittable)
+    capture("command-height-outer-ideal")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Retry received"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars.buttons["Back"].firstMatch.isHittable)
+  }
+
   func testColdInventoryQueriesEnableDependentResource() {
     let open = app.buttons["Audit inventory query"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))
