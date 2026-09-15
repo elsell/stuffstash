@@ -3275,7 +3275,7 @@ S137,Home return / optional details,localization,"Locale, timezone, RTL and long
 S137,Home return / optional details,imagery,"Icons, photos and missing media",pending,,
 S137,Home return / optional details,targets,Touch target size and reachability,pending,,
 S137,Home return / optional details,gestures,Gestures and explicit alternatives,pending,,
-S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
+S137,Home return / optional details,keyboard,"Keyboard, text entry and focus",finding,M65 native iPad typed Returned clean but showed leanR; seeded field candidate awaiting native rerun,M65
 S137,Home return / optional details,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S137,Home return / optional details,motion,Reduced motion and feedback alternatives,pending,,
 S137,Home return / optional details,content,"Lists, hierarchy, density and pagination",pending,,
@@ -3299,7 +3299,7 @@ S138,Home return / save pending and recovery,localization,"Locale, timezone, RTL
 S138,Home return / save pending and recovery,imagery,"Icons, photos and missing media",pending,,
 S138,Home return / save pending and recovery,targets,Touch target size and reachability,pending,,
 S138,Home return / save pending and recovery,gestures,Gestures and explicit alternatives,pending,,
-S138,Home return / save pending and recovery,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
+S138,Home return / save pending and recovery,keyboard,"Keyboard, text entry and focus",finding,M65 native iPad typed Returned clean but showed leanR; seeded field candidate awaiting native rerun,M65
 S138,Home return / save pending and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S138,Home return / save pending and recovery,motion,Reduced motion and feedback alternatives,pending,,
 S138,Home return / save pending and recovery,content,"Lists, hierarchy, density and pagination",pending,,
@@ -3321,7 +3321,7 @@ S139,Home return / cancellation and recovery,typography,"Dynamic Type, wrapping 
 S139,Home return / cancellation and recovery,appearance,"Light/dark, contrast and materials",pending,,
 S139,Home return / cancellation and recovery,localization,"Locale, timezone, RTL and long strings",pending,,
 S139,Home return / cancellation and recovery,imagery,"Icons, photos and missing media",pending,,
-S139,Home return / cancellation and recovery,targets,Touch target size and reachability,pending,,
+S139,Home return / cancellation and recovery,targets,Touch target size and reachability,runtime-partial,34927007321 iPad Home Cancel reachability passes M60 candidate; entire return flow not cleared,
 S139,Home return / cancellation and recovery,gestures,Gestures and explicit alternatives,pending,,
 S139,Home return / cancellation and recovery,keyboard,"Keyboard, text entry and focus",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47
 S139,Home return / cancellation and recovery,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"Native-stack return sheet candidate replaces inline panel; labeled input, platform commands and in-sheet errors. Remote behavior checks and critic pass; phone/iPad presentation/keyboard/undo native acceptance pending.",M47

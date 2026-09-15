@@ -614,3 +614,13 @@ Do not place the subtitle above an independently scrolling nested record view:
 that leaves it under the native form-sheet navigation bar. Keep content padding
 in the scroll content container and background on the scroll view. Native medium/
 expanded sheet hit-testing, Close, paging and enlarged text remain acceptance gates.
+
+### Return-note native text ownership
+
+The Return details text view is seeded once per return editor session. Native
+editing owns its text/caret while change events update the application draft used
+by Save. Do not replay the draft into the native value on each event: the iPad
+audit observed dropped/reordered text with that feedback loop. A new session
+seeds a fresh field; permission, error, loading and reconciliation updates preserve
+the existing native field. Keep the full-string native typing assertion and verify
+Save/retry receives the complete draft before claiming the issue resolved.

@@ -456,3 +456,20 @@ Seven geometry/hook/filter checks, TypeScript and structural checks pass on paul
 native expansion, phone/iPad search-keyboard, rotation and enlarged-text scenarios
 remain the acceptance gate. This candidate does not clear M19 until those pass;
 keyboard animation and exact native coordinate alignment remain unverified.
+
+### M65 — Return note loses/reorders native text
+
+Runtime-observed, P1. iPad mini native run34927007321 typed `Returned clean` but
+the native text view contained `leanR`. Screenshot:
+`evidence/ipad-return-note-corruption-34927007321.png`. The same run's controlled
+address comparison lost text, while native and uncontrolled comparisons passed.
+This supports removing draft-value replay as a candidate, not proof of its cause.
+
+The Return note now has a stable native initial value keyed by return session.
+Change events still update the application draft for Save/retry. Twenty-five Home
+behavior checks, TypeScript and structural checks pass on paul
+(`/tmp/return-native-text-green.log`); critic found no blocker. Removed controlled
+value-prop assertions no longer pretend to establish visible text preservation.
+The unchanged native full-string typing and rejected-save retry assertions must
+pass on phone and iPad before closing this finding. Other controlled fields remain
+a broader text-entry audit concern.

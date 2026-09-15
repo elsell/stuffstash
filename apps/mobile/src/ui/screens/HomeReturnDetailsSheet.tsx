@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { ScrollView, StyleSheet, Text, View, type TextInputProps } from 'react-native';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -27,8 +28,8 @@ export function HomeReturnDetailsSheet({ pendingReturn, canReturn, onCancel, onC
         </Text> : null}
         {!pendingReturn.undoableOperationId ? <Text style={{ color: colors.textMuted }}>This return cannot be canceled.</Text> : null}
         <Text style={{ color: colors.text }}>Optional return details</Text>
-        <AppTextInput accessibilityLabel="Optional return details" multiline editable={canReturn && !busy}
-          value={pendingReturn.details} onChangeText={onChangeDetails} textAlignVertical="top"
+        <ReturnNoteInput key={pendingReturn.sessionId} accessibilityLabel="Optional return details" multiline editable={canReturn && !busy}
+          initialValue={pendingReturn.details} onChangeText={onChangeDetails} textAlignVertical="top"
           style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.controlBorder }]} />
         <View style={styles.actions}>
           <View style={styles.action}><NativeCommandButton label={canReturn && pendingReturn.undoableOperationId ? 'Cancel return' : 'Close'}
@@ -45,3 +46,8 @@ const styles = StyleSheet.create({
   asset: { fontSize: 17 },
   input: { minHeight: 160, borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 17 }
 });
+
+function ReturnNoteInput({ initialValue, ...props }: TextInputProps & { readonly initialValue: string }) {
+  const seed = useRef(initialValue);
+  return <AppTextInput {...props} defaultValue={seed.current} />;
+}
