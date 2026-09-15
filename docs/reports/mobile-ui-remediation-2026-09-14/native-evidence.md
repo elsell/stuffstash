@@ -1620,3 +1620,5 @@ was tapped. Comparison modes now replace the menu with a keyed dedicated scroll
 page and explicit Back; actual fields, keyboard options, ownership and full-speed
 exact-value assertions are unchanged. Remote fixture preparation passes2 tests.
 Native rerun is required to compare entry behavior on the corrected fixture.
+
+Combined source checkpoint79412f8d:1,624 tests/265files, TypeScript and structural checks pass on paul; mobile/src checksum comparison was clean before execution. Log: /tmp/mobile-batch-79412f8d.log on paul. Later6cb092ef changes diagnostic layout only; it has separate2-test preparation evidence. No native acceptance is inferred.
