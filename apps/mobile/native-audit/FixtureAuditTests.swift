@@ -80,6 +80,14 @@ final class FixtureAuditTests: XCTestCase {
   func testScrollFooterFullSheetLayout() { verifyFullSheetLayout("scroll-footer") }
 
   func testCheckoutHistoryRemainsReadableAndDismissibleAfterExpansion() {
+    verifyCheckoutHistory(requireTextHit: true)
+  }
+
+  func testCheckoutHistoryTextBoundsPaginationAndDismissal() {
+    verifyCheckoutHistory(requireTextHit: false)
+  }
+
+  private func verifyCheckoutHistory(requireTextHit: Bool) {
     let open = app.buttons["Audit Checkout history"]
     for _ in 0..<7 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -88,7 +96,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(bar.waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit ladder"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    let note = app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."]
+    let historyScroll = app.scrollViews.containing(.staticText, identifier: "Audit checkout 1: borrowed for cleaning the gutters.").firstMatch
+    XCTAssertTrue(historyScroll.exists)
+    if requireTextHit { XCTAssertTrue(note.isHittable) }
+    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     XCTAssertTrue(app.buttons["Close"].isHittable)
     capture("checkout-history-medium")
     let initialTop = bar.frame.minY
@@ -98,20 +110,36 @@ final class FixtureAuditTests: XCTestCase {
       let expanded = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in bar.frame.minY < initialTop - 40 }, object: nil)
       XCTAssertEqual(XCTWaiter.wait(for: [expanded], timeout: 5), .completed)
     }
-    XCTAssertTrue(app.staticTexts["Audit checkout 1: borrowed for cleaning the gutters."].isHittable)
+    if requireTextHit { XCTAssertTrue(note.isHittable) }
+    else { XCTAssertTrue(textFitsHistoryViewport(note, scroll: historyScroll, bar: bar)) }
     capture("checkout-history-expanded")
     let older = app.buttons["Load older checkouts"]
-    for _ in 0..<6 where !older.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    for _ in 0..<6 where !older.isHittable {
+      (requireTextHit ? app.scrollViews.firstMatch : historyScroll).swipeUp()
+    }
     XCTAssertTrue(older.isHittable)
     older.tap()
     let loaded = app.staticTexts["Older audit checkout"]
     XCTAssertTrue(loaded.waitForExistence(timeout: 5))
-    for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(loaded.isHittable)
+    if requireTextHit {
+      for _ in 0..<4 where !loaded.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(loaded.isHittable)
+    } else {
+      for _ in 0..<4 where !textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar) { historyScroll.swipeUp() }
+      XCTAssertTrue(textFitsHistoryViewport(loaded, scroll: historyScroll, bar: bar))
+    }
     capture("checkout-history-older-page")
     app.buttons["Close"].tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
     XCTAssertFalse(bar.exists)
+  }
+
+  private func textFitsHistoryViewport(_ text: XCUIElement, scroll: XCUIElement, bar: XCUIElement) -> Bool {
+    guard text.exists else { return false }
+    let frame = text.frame
+    let viewport = scroll.frame.intersection(app.frame)
+    return !frame.isEmpty && !frame.isInfinite && !viewport.isNull
+      && viewport.contains(frame) && frame.minY >= bar.frame.maxY
   }
 
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {

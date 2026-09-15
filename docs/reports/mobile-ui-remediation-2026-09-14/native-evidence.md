@@ -766,3 +766,21 @@ This narrows M20 to the gesture region in this configuration; it does not establ
 all-device success or blame XCTest. A candidate moves the width constraint to an
 inner form while making scroll content fill the viewport. Both native cases remain
 unchanged and required; runtime verification of the candidate is pending.
+
+### Run34932076384 iPad fixtures completed
+
+Job104266735811:27/31 pass,4 fail. Checkout log identifies
+f4bc4f28fc51de06d5ff3b4db8174b530c0c6c43, merging05a9aeba into5775da93.
+Log /tmp/native349320-fixtures-ipad.log. Add card receives `N draft name` instead
+of `Native draft name`; sheet misses Name readiness; History StaticText hit check
+fails; controlled-address comparison loses characters. These predate PR140.
+Expiration keyboard actions, overview accessibility, large-text choice, both native
+address submissions (button and Go), Return recovery and sheet diagnostics pass.
+Screenshots for this fixture job remain to inspect; logs do not certify rendering.
+
+History comparison instrumentation now preserves the original failing hit test and
+adds a separate complete-text-bounds/expansion/pagination/Close scenario scoped to
+the sheet scroll view. The inspected349289 iPad screenshot shows visible checkout
+text despite failed hit-testing. The comparison is not a claim that M61 is solved.
+Remote structural check passes; critic found no blockers. Native compilation and
+comparison execution remain pending. No production layout changed in this pass.

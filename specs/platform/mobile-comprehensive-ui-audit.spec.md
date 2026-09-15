@@ -441,3 +441,15 @@ still receives a specific error. Apply readiness to both the primary button and
 keyboard submission; pending operations retain their existing duplicate guard.
 Start over remains available independently of missing names. This uses native
 text entry and an ordinary command state; it does not introduce another screen.
+
+### Checkout-history readability comparison
+
+Keep the existing StaticText hit-testing scenario as a diagnostic. Run349289 iPad
+shows the first checkout note visibly inside the sheet while its StaticText
+isHittable fails; tappability alone is not a readability oracle. Add a comparison
+that checks the complete note bounds inside the sheet scroll viewport below its
+navigation bar, captures screenshots for occlusion/readability review, expands,
+loads older content using that sheet's scroll view, and closes. Continue requiring
+actual hit targets for commands. Geometry is not proof of VoiceOver access,
+contrast or unclipped text rendering. Do not clear M61 merely from the comparison
+passing or remove the old failing scenario without resolving its evidence.
