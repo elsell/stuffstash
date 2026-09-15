@@ -3167,7 +3167,7 @@ S132,System / permission denied recovery,privacy,"Account scope, data use and pe
 S132,System / permission denied recovery,notifications,System notification entry and state,pending,,
 S132,System / permission denied recovery,media,"Camera, library, files and audio",pending,,
 S132,System / permission denied recovery,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S133,Asset Edit / tag selection and creation,task,Task clarity and platform-pattern fit,pending,,
+S133,Asset Edit / tag selection and creation,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md.,M91
 S133,Asset Edit / tag selection and creation,navigation,"Navigation, hierarchy and return",pending,,
 S133,Asset Edit / tag selection and creation,selection,Value selection and current value,pending,,
 S133,Asset Edit / tag selection and creation,modality,Presentation and dismissal,pending,,
@@ -3191,9 +3191,9 @@ S133,Asset Edit / tag selection and creation,privacy,"Account scope, data use an
 S133,Asset Edit / tag selection and creation,notifications,System notification entry and state,pending,,
 S133,Asset Edit / tag selection and creation,media,"Camera, library, files and audio",pending,,
 S133,Asset Edit / tag selection and creation,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S134,Asset Move / destination search and selection,task,Task clarity and platform-pattern fit,pending,,
+S134,Asset Move / destination search and selection,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md.,M91
 S134,Asset Move / destination search and selection,navigation,"Navigation, hierarchy and return",pending,,
-S134,Asset Move / destination search and selection,selection,Value selection and current value,pending,,
+S134,Asset Move / destination search and selection,selection,Value selection and current value,source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S134,Asset Move / destination search and selection,modality,Presentation and dismissal,pending,,
 S134,Asset Move / destination search and selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S134,Asset Move / destination search and selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -3206,8 +3206,8 @@ S134,Asset Move / destination search and selection,gestures,Gestures and explici
 S134,Asset Move / destination search and selection,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
 S134,Asset Move / destination search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 S134,Asset Move / destination search and selection,motion,Reduced motion and feedback alternatives,pending,,
-S134,Asset Move / destination search and selection,content,"Lists, hierarchy, density and pagination",pending,,
-S134,Asset Move / destination search and selection,search,"Search, scope and filters",pending,,
+S134,Asset Move / destination search and selection,content,"Lists, hierarchy, density and pagination",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
+S134,Asset Move / destination search and selection,search,"Search, scope and filters",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S134,Asset Move / destination search and selection,loading,"Loading, background refresh and progress",pending,,
 S134,Asset Move / destination search and selection,recovery,"Empty, error, denied and retry",pending,,
 S134,Asset Move / destination search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37
@@ -3215,7 +3215,7 @@ S134,Asset Move / destination search and selection,privacy,"Account scope, data 
 S134,Asset Move / destination search and selection,notifications,System notification entry and state,pending,,
 S134,Asset Move / destination search and selection,media,"Camera, library, files and audio",pending,,
 S134,Asset Move / destination search and selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S135,Asset Move / destination creation,task,Task clarity and platform-pattern fit,source-reviewed,"Native kind menu selects Location/Container in place; selected kind feeds destination creation. 52 remote tests, check/structural pass; critic no blocker. Native runtime pending.",M38
+S135,Asset Move / destination creation,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md.,M91
 S135,Asset Move / destination creation,navigation,"Navigation, hierarchy and return",source-reviewed,"Native kind menu selects Location/Container in place; selected kind feeds destination creation. 52 remote tests, check/structural pass; critic no blocker. Native runtime pending.",M38
 S135,Asset Move / destination creation,selection,Value selection and current value,source-reviewed,"Native kind menu selects Location/Container in place; selected kind feeds destination creation. 52 remote tests, check/structural pass; critic no blocker. Native runtime pending.",M38
 S135,Asset Move / destination creation,modality,Presentation and dismissal,pending,,
@@ -3230,8 +3230,8 @@ S135,Asset Move / destination creation,gestures,Gestures and explicit alternativ
 S135,Asset Move / destination creation,keyboard,"Keyboard, text entry and focus",pending,,
 S135,Asset Move / destination creation,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
 S135,Asset Move / destination creation,motion,Reduced motion and feedback alternatives,pending,,
-S135,Asset Move / destination creation,content,"Lists, hierarchy, density and pagination",pending,,
-S135,Asset Move / destination creation,search,"Search, scope and filters",pending,,
+S135,Asset Move / destination creation,content,"Lists, hierarchy, density and pagination",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
+S135,Asset Move / destination creation,search,"Search, scope and filters",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S135,Asset Move / destination creation,loading,"Loading, background refresh and progress",pending,,
 S135,Asset Move / destination creation,recovery,"Empty, error, denied and retry",pending,,
 S135,Asset Move / destination creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.",M37;M54
@@ -3239,9 +3239,9 @@ S135,Asset Move / destination creation,privacy,"Account scope, data use and perm
 S135,Asset Move / destination creation,notifications,System notification entry and state,pending,,
 S135,Asset Move / destination creation,media,"Camera, library, files and audio",pending,,
 S135,Asset Move / destination creation,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S136,Asset Move here / asset search and selection,task,Task clarity and platform-pattern fit,pending,,
+S136,Asset Move here / asset search and selection,task,Task clarity and platform-pattern fit,finding,M91: shared asset-form completion commands use custom Pressable styling despite native adapters. Pattern choice and native replacement verification pending; see move-axis.md.,M91
 S136,Asset Move here / asset search and selection,navigation,"Navigation, hierarchy and return",pending,,
-S136,Asset Move here / asset search and selection,selection,Value selection and current value,pending,,
+S136,Asset Move here / asset search and selection,selection,Value selection and current value,source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S136,Asset Move here / asset search and selection,modality,Presentation and dismissal,pending,,
 S136,Asset Move here / asset search and selection,layout,"Safe areas, scroll edges and overlays",pending,,
 S136,Asset Move here / asset search and selection,adaptation,Phone/tablet/window reflow,pending,,
@@ -3254,8 +3254,8 @@ S136,Asset Move here / asset search and selection,gestures,Gestures and explicit
 S136,Asset Move here / asset search and selection,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
 S136,Asset Move here / asset search and selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Native text fields now have stable accessible names; functional editing tests locate by label. Native assistive output remains pending.,M39
 S136,Asset Move here / asset search and selection,motion,Reduced motion and feedback alternatives,pending,,
-S136,Asset Move here / asset search and selection,content,"Lists, hierarchy, density and pagination",pending,,
-S136,Asset Move here / asset search and selection,search,"Search, scope and filters",pending,,
+S136,Asset Move here / asset search and selection,content,"Lists, hierarchy, density and pagination",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
+S136,Asset Move here / asset search and selection,search,"Search, scope and filters",source-reviewed,"Source review in move-axis.md identifies selection states, contextual previews, scoped query debounce and operation ownership. Native behavior and stated gaps remain unverified.",
 S136,Asset Move here / asset search and selection,loading,"Loading, background refresh and progress",finding,M90: failed suggestions rendered false empty state. Current-query availability and scroll-local recovery candidate passes remote behavior regression; native acceptance pending.,M90
 S136,Asset Move here / asset search and selection,recovery,"Empty, error, denied and retry",finding,M90: failed suggestions rendered false empty state. Current-query availability and scroll-local recovery candidate passes remote behavior regression; native acceptance pending.,M90
 S136,Asset Move here / asset search and selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"Shared pending operation guard freezes draft changes, rejects duplicate saves/creation and blocks system removal; failure preserves draft; successful return allowed, late navigation suppressed. Ten focused remote tests/check/structural pass and critic rereview. Native verification pending.",M37

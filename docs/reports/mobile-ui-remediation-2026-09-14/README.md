@@ -30,7 +30,7 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 ## Current checkpoint — September 15
 
 The audit remains incomplete. After the asset-command source review and M86 mapping, the 3384 cells
-comprise 2739 pending, 544 source-reviewed, 77 finding,
+comprise 2728 pending, 551 source-reviewed, 81 finding,
 20 runtime-partial and 4 not-applicable.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance is still pending.
@@ -39,7 +39,7 @@ Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in
 [release34930161409](https://github.com/elsell/stuffstash/actions/runs/34930161409).
 
-Current interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
+Historical interim release: **0.24.17**, source177c08b6 (PR138). Validation and release
 publishing succeeded in
 [release34932422663](https://github.com/elsell/stuffstash/actions/runs/34932422663).
 Build105.1 uploaded successfully at05:49:31UTC. Apple processing and the exact-build
@@ -70,3 +70,11 @@ Earlier delivery evidence remains in [native-evidence.md](native-evidence.md) an
 [findings.md](findings.md). No historical release is full audit acceptance.
 
 Asset command review: [overflow, checkout/return and lifecycle actions](asset-actions-axis.md).
+
+Latest delivered checkpoint: **0.24.19 (107.1)**, PR142 at2db6080c. Upload and
+exact TestFlight changelog were verified in release34950874885. PR144's next
+release34954415338 failed its first tag push with a GitHub server error; attempt2
+published v0.24.20 at09:59:26UTC after verifying no tag existed before retry.
+The signed iOS build is running; TestFlight delivery is not yet verified.
+
+Move source review: [destination selection, creation and Move here](move-axis.md).

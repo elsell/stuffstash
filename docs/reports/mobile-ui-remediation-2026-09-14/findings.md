@@ -956,3 +956,12 @@ failed before the change and all13 asset action-sheet checks, TypeScript and
 structural checks passed on paul. Critic found no confirmed issue. Native large
 text, keyboard and selection-retention acceptance remain pending. This does not
 resolve the other fixed-content layout risks in Move or Move here.
+
+### M91 — asset form completion commands remain custom
+
+Source-confirmed platform-pattern gap, P2. Shared SheetActions in
+AssetDetailSheets.tsx renders custom Pressable Cancel/Save/Move commands for Edit,
+Move and Move here. Native command adapters already exist; no concrete platform
+limitation is documented for this substitute. Choose the adapter while preserving
+busy semantics and one keyboard owner, then verify narrow/large-text sheet
+geometry and dismissal. Implementation remains pending. See move-axis.md.
