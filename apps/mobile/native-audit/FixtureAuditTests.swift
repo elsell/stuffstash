@@ -30,6 +30,15 @@ final class FixtureAuditTests: XCTestCase {
     hierarchy.name = "\(name)-hierarchy"
     hierarchy.lifetime = .keepAlways
     add(hierarchy)
+    // debugDescription truncates AX values; retain the safe fixture diagnostic verbatim.
+    let diagnostics = app.staticTexts.matching(NSPredicate(format: "label == %@", "Audit query readiness"))
+    for (index, element) in diagnostics.allElementsBoundByIndex.enumerated() {
+      guard let value = element.value as? String, value.hasPrefix("{") else { continue }
+      let readiness = XCTAttachment(string: value)
+      readiness.name = "\(name)-query-readiness-\(index)"
+      readiness.lifetime = .keepAlways
+      add(readiness)
+    }
   }
   private func verifyFullSheetLayout(_ variant: String) {
     let open = app.buttons["Audit \(variant) sheet"]
@@ -440,6 +449,20 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
     app.buttons["No tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+  }
+
+  func testColorWellTargetOpensSystemPicker() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertTrue(picker.isHittable)
+    XCTAssertGreaterThan(picker.frame.width, picker.frame.height)
+    // The captured LTR system control places its circular well at the row's trailing edge.
+    let well = picker.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+      .withOffset(CGVector(dx: -picker.frame.height / 2, dy: 0))
+    well.tap()
+    XCTAssertTrue(app.buttons["Sliders"].waitForExistence(timeout: 5))
+    capture("color-visible-well-target")
   }
 
   func testExactExpirationUsesCompactNativePicker() {

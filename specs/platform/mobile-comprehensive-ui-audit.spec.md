@@ -318,3 +318,15 @@ focused-input registry. Preserve the explicit accessory command and its no-submi
 no-edit semantics for every consuming form. Retain the fixture assertion that taps
 Dismiss keyboard and waits for keyboard disappearance, in addition to scroll and
 Go submission scenarios.
+
+When XCTest's debug hierarchy truncates the query-readiness accessibility value,
+attach that diagnostic element's explicit value as a separate text attachment.
+Do not widen the UI or render raw query data to compensate. Keep the existing
+safe diagnostic schema, screen layout and failing acceptance assertions intact.
+
+If tapping the accessible color-picker row fails to open the system picker, retain
+that assertion and add an independent comparison targeting the visible trailing
+color well using the captured native element bounds. The iPad run34919776387
+hierarchy exposes one 704-by-36-point button spanning label and well, while its
+screenshot shows the well at the trailing edge. Do not infer a successful picker
+from a tap or replace the failed row-activation result with the comparison's result.
