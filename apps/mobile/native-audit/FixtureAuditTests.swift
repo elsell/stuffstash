@@ -12,6 +12,75 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testFooterAppearanceAndDisabledActions() {
+    auditFooterAppearance(largeText: false)
+  }
+
+  func testFooterAppearanceAtAccessibilityTextSize() {
+    auditFooterAppearance(largeText: true)
+  }
+
+  private func auditFooterAppearance(largeText: Bool) {
+    if largeText {
+      app.terminate()
+      app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+      app.launch()
+      XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    }
+    let open = app.buttons["Audit footer appearance"]
+    for _ in 0..<16 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.staticTexts["Footer appearance"].waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.staticText, identifier: "Footer appearance").firstMatch
+    func reveal(_ element: XCUIElement) {
+      for _ in 0..<18 {
+        let bounds = form.frame.intersection(app.frame)
+        if element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY { return }
+        let above = element.frame.minY < bounds.minY
+        form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
+          .press(forDuration: 0.05, thenDragTo: form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
+      }
+      XCTFail("Footer diagnostic control must be fully visible")
+    }
+    let root = app.otherElements["footer-appearance-root"].firstMatch
+    XCTAssertTrue(root.exists)
+    func footerVisible() {
+      let bounds = root.frame.intersection(app.frame)
+      XCTAssertFalse(bounds.isEmpty)
+      for label in ["Move", "Cancel"] {
+        let button = app.buttons[label].firstMatch
+        XCTAssertTrue(button.exists)
+        XCTAssertGreaterThanOrEqual(button.frame.minY, bounds.minY)
+        XCTAssertLessThanOrEqual(button.frame.maxY, bounds.maxY)
+        XCTAssertGreaterThanOrEqual(button.frame.minX, bounds.minX)
+        XCTAssertLessThanOrEqual(button.frame.maxX, bounds.maxX)
+        XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+      }
+      XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
+    }
+    for appearance in ["light", "dark"] {
+      let choose = app.buttons["Use \(appearance) appearance"]
+      reveal(choose); choose.tap()
+      XCTAssertTrue(app.staticTexts["Appearance: \(appearance)"].waitForExistence(timeout: 5))
+      let move = app.buttons["Move"].firstMatch
+      XCTAssertFalse(move.isEnabled)
+      footerVisible()
+      capture("footer-\(appearance)-disabled-\(largeText ? "accessibility" : "default")")
+      let select = app.buttons["Select destination"]
+      reveal(select); select.tap()
+      XCTAssertTrue(move.isEnabled)
+      footerVisible()
+      capture("footer-\(appearance)-enabled-\(largeText ? "accessibility" : "default")")
+      XCTAssertTrue(move.isHittable); move.tap()
+      XCTAssertTrue(app.staticTexts["Move received"].waitForExistence(timeout: 5))
+      let clear = app.buttons["Clear destination"]
+      reveal(clear); clear.tap()
+    }
+    app.buttons["Cancel"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Footer appearance"].waitForNonExistence(timeout: 5))
+  }
+
   func testMoveHereRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

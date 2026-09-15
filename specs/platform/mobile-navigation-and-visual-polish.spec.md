@@ -461,3 +461,13 @@ acceptance.
 The diagnostic sizing fixture retains the old inner-only measurement as a named
 baseline and compares it against the shipping adapter, so future runs exercise
 production sizing rather than a copied candidate implementation.
+
+A runner-only footer appearance diagnostic must use the shipping NativeSheetActions
+inside the Move form-sheet container, with the app's real AppearanceProvider.
+Capture light and dark resolved appearance with Move disabled and enabled; assert
+Cancel remains reachable and an enabled Move invokes its callback. Use default
+text and the largest accessibility text size on phone and tablet. A capture is
+inspection evidence, not an automatic contrast pass. The diagnostic must not
+load production sessions or perform inventory mutations, and must restore its
+starting appearance on explicit cancellation. This investigates M100 without
+speculatively replacing native disabled styling.

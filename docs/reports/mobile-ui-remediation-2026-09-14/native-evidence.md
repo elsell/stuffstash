@@ -1226,3 +1226,18 @@ The diagnostic fixture was then changed to keep the old inner-only sizing as a
 labeled baseline and exercise the actual shipping adapter in the second state.
 Its matching test retains callback and return assertions. TypeScript and structural
 checks passed again; native compilation and execution of this revision are pending.
+
+## M100 footer appearance diagnostic
+
+A runner-only route now hosts the shipping NativeSheetActions with the app's real
+AppearanceProvider in a Move form sheet. It changes light/dark preference through
+the real controller and toggles destination selection. Default and largest-text
+journeys capture both disabled and enabled states, check button containment within
+the identified sheet root (including iPad horizontal bounds), verify Move's callback,
+and cancel after restoring the starting appearance. No inventory mutation occurs.
+
+The preparation regression failed before registration, then both preparation tests,
+the project TypeScript check and mobile structural check passed remotely. Critic
+review caught an initial app-window-only geometry assertion; it now compares
+against the sheet root. Native compilation/execution and manual contrast inspection
+remain pending. No production colors or footer behavior changed in this pass.

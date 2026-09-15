@@ -1,3 +1,4 @@
+export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
@@ -74,6 +75,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
+      <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
@@ -132,6 +134,7 @@ export function FixtureMenu() {
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
+    <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />
