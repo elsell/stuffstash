@@ -610,3 +610,11 @@ path that the user already superseded by navigating the map.
 - No match preserves the current branch. Clear, changed query, refreshed data or
   deliberate map navigation removes the previous outcome. Search status must not
   display for data that is loading or unavailable.
+
+### Appearance selection completion
+
+Appearance remains an immediate in-place preference with queued persistence and
+provider rollback. Picker error feedback belongs to the latest selection in the
+initiating focused visit. Departed, superseded or hidden callbacks must not show
+an obsolete error or begin another preference save; persistence already started
+may finish and reconcile the application appearance.

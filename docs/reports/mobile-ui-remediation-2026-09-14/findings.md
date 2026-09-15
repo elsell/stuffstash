@@ -1702,3 +1702,15 @@ recording an older query. Stable cancellation now reads the current query; a
 regression reproduced the old blur/refocus rerun and passes after correction.
 Critic reports no remaining confirmed blocker. Native outcome layout, announcements
 and gesture/return behavior remain pending.
+
+## M127 — Appearance save failures outlive their selection
+
+P2, source/mounted confirmed atbb3fc720. AppearancePicker showed a save error after
+leaving its screen or choosing a newer preference. Both cases failed before the
+correction. Focus and selection ownership now suppress obsolete feedback and
+hidden starts, preserving global provider rollback and queued persistence.
+Both consumers were inspected: inline Settings and the Appearance detail route.
+Seven focused picker/controller tests plus TypeScript/structural checks passed;
+an additional blur/refocus-before-rejection case also passes. Critic found no
+confirmed blocker. Native menu, navigation, error placement and theme-transition
+acceptance remain pending.
