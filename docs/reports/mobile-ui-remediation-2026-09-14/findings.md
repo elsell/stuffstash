@@ -1816,3 +1816,20 @@ TypeScript and structural checks pass on paul. Critic found no confirmed issue.
 This covers callbacks delivered to the disabled render, not arbitrary retained
 closures or proof of native event timing. Native keyboard and pending-save behavior
 remain unverified. See expiration-entry-axis.md for the full field review.
+
+## M135 — Voice photo-source callbacks outlive the review
+
+P2, source/mounted-confirmed ate295fc6f. VoicePlanPhotoDrafts reported selection
+errors without checking the active visit/plan, and a retained source choice could
+start camera/library selection after leaving. VoiceSessionSheetScreen now captures
+the shared visit owner keyed by photo service and plan ID/status; only proposed
+plans can open the chooser. The chooser rejects obsolete starts/errors, and photo
+results update the draft only while that owner remains current. Add and asset-detail
+chooser consumers retain their existing separate guards. The initial inactive-start
+regression failed; tests now cover suppression versus current-error feedback and
+mounted blur/refocus or plan replacement. All11 focused photo-draft/presentation
+tests, TypeScript and structural checks pass on paul. These checks do not establish
+native camera/library permission timing or full VoiceSession screen acceptance.
+Critic found no implementation blocker; caller-inventory line references were
+refreshed after its documentation correction. Full VoiceSession integration and
+native permission timing remain pending.

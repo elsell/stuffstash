@@ -1,3 +1,4 @@
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { shouldConfirmNewConversation } from '../navigation/VoiceConversationHistory';
@@ -73,6 +74,7 @@ export function VoiceSessionSheetScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
   const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
+  const beginPhotoPresentation = useTaskPresentation(photoSelectionQuery, JSON.stringify([activePlanId, activePlanStatus]));
   const activePlanIdRef = useRef(activePlanId);
   const activePlanStatusRef = useRef(activePlanStatus);
   const parentPickerCommandIdRef = useRef<string | null>(null);
@@ -139,15 +141,15 @@ export function VoiceSessionSheetScreen() {
       }}
       onAddPhotos={(commandKey) => {
         const existingCount = photoDrafts[commandKey]?.length ?? 0;
-        const planIdAtOpen = activePlanId;
-        const planStatusAtOpen = activePlanStatus;
+        if (!activePlanId || activePlanStatus !== 'proposed') return;
+        const isCurrent = beginPhotoPresentation();
+        if (!isCurrent()) return;
         showVoicePlanPhotoSourceChooser({
+          isCurrent,
           onCamera: async () => {
             const photos = await photoSelectionQuery.captureFromCamera(existingCount);
             setPhotoDrafts((current) => (
-              activePlanIdRef.current === planIdAtOpen &&
-              activePlanStatusRef.current === planStatusAtOpen &&
-              activePlanStatusRef.current === 'proposed'
+              isCurrent()
                 ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
                 : current
             ));
@@ -155,9 +157,7 @@ export function VoiceSessionSheetScreen() {
           onLibrary: async () => {
             const photos = await photoSelectionQuery.selectFromLibrary(existingCount);
             setPhotoDrafts((current) => (
-              activePlanIdRef.current === planIdAtOpen &&
-              activePlanStatusRef.current === planStatusAtOpen &&
-              activePlanStatusRef.current === 'proposed'
+              isCurrent()
                 ? appendVoicePlanPhotoDrafts(current, commandKey, photos)
                 : current
             ));

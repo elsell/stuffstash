@@ -20,6 +20,6 @@ apps/mobile/src/ui/screens/PhotoSourceChooser.ts,28,native alert,"Alert.alert('A
 apps/mobile/src/ui/screens/ProviderProfileScreens.tsx,247,native alert,Alert.alert(,pending call-site interaction and ownership review
 apps/mobile/src/ui/screens/SettingsDetailScreens.tsx,195,native alert,"Alert.alert('Sign out?', `You’ll need to sign in again as ${label}. This Stuff Stash server will stay saved on your device.`, [",pending call-site interaction and ownership review
 apps/mobile/src/ui/screens/SettingsDetailScreens.tsx,202,native alert,Alert.alert(,pending call-site interaction and ownership review
-apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx,24,native alert,"Alert.alert('Could not add photos', error instanceof Error ? error.message : 'Photo selection failed.');",pending call-site interaction and ownership review
+apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx,29,native alert,"Alert.alert('Could not add photos', error instanceof Error ? error.message : 'Photo selection failed.');",M135 source/mounted correction; native selection/error acceptance pending
 apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx,311,native alert,"Alert.alert('Start a new conversation?', 'This clears the conversation and staged photos. It does not undo changes already submitted.', [",pending call-site interaction and ownership review
 apps/mobile/src/ui/screens/useProviderEditorExit.ts,26,native alert,"Alert.alert('Discard changes?', 'Your unsaved replacement will be lost.', [",pending call-site interaction and ownership review

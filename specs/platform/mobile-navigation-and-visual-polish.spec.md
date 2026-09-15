@@ -658,3 +658,9 @@ existing invitation reference generation guards and command eligibility.
 Expiration entry rejects input callbacks while disabled, including year text events
 that arrive after a save begins. The displayed draft and published expiration must
 remain unchanged through the pending interval; re-enabling permits normal editing.
+
+Voice plan photo selection belongs to the initiating focused visit and proposed
+plan. A retained source choice cannot start after that owner changes. Late selection
+results and errors must not alter a replacement plan or present an obsolete alert.
+Current-owner failures retain the existing retry explanation; selection remains
+behind the injected photo query and native source chooser.

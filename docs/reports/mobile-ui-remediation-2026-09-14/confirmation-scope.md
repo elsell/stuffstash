@@ -1,11 +1,11 @@
 # Native dialog and confirmation scope
 
-At a91953a1, `confirmation-call-sites.csv` records24 static alert/dialog occurrences
+Initially inventoried at a91953a1 and line references refreshed with M135, `confirmation-call-sites.csv` records24 static alert/dialog occurrences
 across production mobile TypeScript:23 callers plus the shared Alert implementation.
 This includes informational errors, destructive confirmations, draft discard and
 photo-source selection. They are not24 equivalent destructive workflows and are
 not24 newly certified surfaces. The inventory nominates sites for review; its
-individual rows remain pending.
+individual rows remain pending unless the review column links subsequent findings. Native acceptance is tracked separately.
 
 S129 was anchored only to AppFeedback.tsx. Source inspection shows that
 `showDialog` supplies ordinary/cancel native alert buttons and is used by session
