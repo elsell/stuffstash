@@ -36,10 +36,11 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The larger PR150 batch remains unreleased. Source `eaf61bcf` passes all **1,689
+The larger PR150 batch remains unreleased. Source `a2ed8342` passes all **1,694
 mobile tests across270 files**, TypeScript and structural checks remotely on paul
-(`/tmp/mobile-batch-eaf61bcf.log`), with a clean source checksum comparison. This
-includes item-type failure/search recovery and the earlier interaction fixes.
+(`/tmp/mobile-batch-a2ed8342.log`), with a clean source checksum comparison. This
+includes item-type failure/search recovery, failed-photo retry, unsupported-format
+feedback, retired session callbacks and the earlier interaction fixes.
 Native acceptance is incomplete: run350037 iPad fixtures passed45/57 and iPhone fixtures38/57.
 The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs passed.
 See [native evidence](native-evidence.md) for actual revisions and test limitations.
