@@ -428,3 +428,16 @@ the same mounted-generation ownership as Connect/Create completion. While the
 initiating screen remains mounted, successful reset still returns to connection;
 failed reset preserves the current form and reports a retryable error. This is a
 UI completion guard, not cancellation of sign-out or profile cleanup.
+
+### Onboarding required-field readiness
+
+Connect/Create is unavailable while a required value is blank or whitespace-only.
+Connection requires a server address; household setup requires both names; first
+inventory requires its name. Show a concise visible explanation of the missing
+value rather than an unexplained disabled action. Keep entered values and enable
+the action as soon as required text is present. URL syntax and server validation
+remain at the application boundary on submission, so malformed nonempty input
+still receives a specific error. Apply readiness to both the primary button and
+keyboard submission; pending operations retain their existing duplicate guard.
+Start over remains available independently of missing names. This uses native
+text entry and an ordinary command state; it does not introduce another screen.

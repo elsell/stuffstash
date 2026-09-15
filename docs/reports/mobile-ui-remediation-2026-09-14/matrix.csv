@@ -1386,7 +1386,7 @@ S058,onboarding / server entry,content,"Lists, hierarchy, density and pagination
 S058,onboarding / server entry,search,"Search, scope and filters",pending,,
 S058,onboarding / server entry,loading,"Loading, background refresh and progress",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S058,onboarding / server entry,recovery,"Empty, error, denied and retry",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
-S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending; onboarding-axis.md; source task/state review, native and boundary verification remain partial; later run34929746647 phone onboarding passes full-address/help preservation; run34932076384 iPad inside-form comparison passes; earlier failures retained as history, Go submission and current candidate acceptance remain pending",M14
+S058,onboarding / server entry,editing,"Draft, save, cancel, undo and interruption",runtime-partial,"native-evidence.md; default light iPhone screenshots inspected; help opens/closes; keyboard procedure failed, text value suspect; other configurations pending; M14 SwiftUI address and native responder dismissal candidate; remote source checks pass, native full-address/Go/dismiss/help acceptance pending; onboarding-axis.md; source task/state review, native and boundary verification remain partial; later run34929746647 phone onboarding passes full-address/help preservation; run34932076384 iPad inside-form comparison passes; earlier failures retained as history, Go submission and current candidate acceptance remain pending; M76 required-field readiness remote verified; native explanation/keyboard timing pending",M14;M76
 S058,onboarding / server entry,privacy,"Account scope, data use and permissions",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S058,onboarding / server entry,notifications,System notification entry and state,pending,,
 S058,onboarding / server entry,media,"Camera, library, files and audio",pending,,
@@ -1434,7 +1434,7 @@ S060,onboarding / household setup,content,"Lists, hierarchy, density and paginat
 S060,onboarding / household setup,search,"Search, scope and filters",pending,,
 S060,onboarding / household setup,loading,"Loading, background refresh and progress",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S060,onboarding / household setup,recovery,"Empty, error, denied and retry",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
-S060,onboarding / household setup,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
+S060,onboarding / household setup,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial; M76 required-field readiness remote verified; native explanation/keyboard timing pending",M76
 S060,onboarding / household setup,privacy,"Account scope, data use and permissions",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S060,onboarding / household setup,notifications,System notification entry and state,pending,,
 S060,onboarding / household setup,media,"Camera, library, files and audio",pending,,
@@ -1458,7 +1458,7 @@ S061,onboarding / first inventory,content,"Lists, hierarchy, density and paginat
 S061,onboarding / first inventory,search,"Search, scope and filters",pending,,
 S061,onboarding / first inventory,loading,"Loading, background refresh and progress",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S061,onboarding / first inventory,recovery,"Empty, error, denied and retry",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
-S061,onboarding / first inventory,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
+S061,onboarding / first inventory,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial; M76 required-field readiness remote verified; native explanation/keyboard timing pending",M76
 S061,onboarding / first inventory,privacy,"Account scope, data use and permissions",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S061,onboarding / first inventory,notifications,System notification entry and state,pending,,
 S061,onboarding / first inventory,media,"Camera, library, files and audio",pending,,
@@ -1482,7 +1482,7 @@ S062,onboarding / partial setup recovery,content,"Lists, hierarchy, density and 
 S062,onboarding / partial setup recovery,search,"Search, scope and filters",pending,,
 S062,onboarding / partial setup recovery,loading,"Loading, background refresh and progress",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S062,onboarding / partial setup recovery,recovery,"Empty, error, denied and retry",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
-S062,onboarding / partial setup recovery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
+S062,onboarding / partial setup recovery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial; M76 required-field readiness remote verified; native explanation/keyboard timing pending",M76
 S062,onboarding / partial setup recovery,privacy,"Account scope, data use and permissions",source-reviewed,"onboarding-axis.md; source task/state review, native and boundary verification remain partial",
 S062,onboarding / partial setup recovery,notifications,System notification entry and state,pending,,
 S062,onboarding / partial setup recovery,media,"Camera, library, files and audio",pending,,

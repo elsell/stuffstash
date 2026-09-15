@@ -45,13 +45,12 @@ lookup rejection and clear ownership.
 
 ## Open decisions and native gates
 
-Required names and URL are currently validated on submission, with field-specific
-messages, rather than disabling an incomplete primary action. Apple's entering-data
-guidance favors clear labels/defaults, timely validation and enabling progress once
-required data is present. Review consistent required-field behavior across setup
-before changing it; avoid silently disabling an action without an understandable
-reason. This is a documented design gap requiring follow-through, not proof of
-native breakage. [Apple entering-data guidance](https://developer.apple.com/design/human-interface-guidelines/entering-data).
+M76 implements the required-value readiness decision: blank values disable progress
+with a visible missing-value explanation; nonempty URLs keep submission validation.
+Apple's entering-data guidance favors clear labels/defaults, timely validation and
+enabling progress once required data is present. Native keyboard timing and compact
+layout need acceptance; remote checks establish the readiness behavior only.
+[Apple entering-data guidance](https://developer.apple.com/design/human-interface-guidelines/entering-data).
 
 M20 remains open: pre-candidate iPad runs34929746647 and34932076384 pass inside-form
 dragging and landscape but fail margin keyboard dismissal. The full-width content

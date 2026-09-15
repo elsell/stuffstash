@@ -41,6 +41,12 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   const household = initialState.step === 'tenant';
   const title = connection ? 'Connect to Stuff Stash' : household ? 'Set up your household' : 'Create your first inventory';
   const actionLabel = connection ? 'Connect and sign in' : household ? 'Create household' : 'Create inventory';
+  const requiredMessage = connection
+    ? (!apiBaseUrl.trim() ? 'Enter a server address to continue.' : undefined)
+    : household && !householdName.trim()
+      ? 'Enter a household name to continue.'
+      : !inventoryName.trim() ? 'Enter an inventory name to continue.' : undefined;
+  const actionDisabled = submitting || Boolean(requiredMessage);
 
   useEffect(() => {
     const handle = findNodeHandle(heading.current);
@@ -72,6 +78,7 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   }
 
   async function proceed() {
+    if (actionDisabled) return;
     const current = generation.current;
     await submit(async () => {
       let next: OnboardingStartState;
@@ -135,9 +142,10 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
           </>}
           {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
           <View style={styles.footer}>
+            {requiredMessage ? <Text style={styles.note}>{requiredMessage}</Text> : null}
             {connection ? <Text style={styles.note}>Your browser will open for sign-in, then bring you back here.</Text> : null}
-            <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} accessibilityState={{ disabled: submitting, busy: submitting }}
-              disabled={submitting} onPress={proceed} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, submitting && styles.buttonDisabled]}>
+            <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} accessibilityState={{ disabled: actionDisabled, busy: submitting }}
+              disabled={actionDisabled} onPress={proceed} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, actionDisabled && styles.buttonDisabled]}>
               {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.onAction} /> : <Text style={styles.buttonText}>{actionLabel}</Text>}
             </Pressable>
             {!connection ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over" disabled={submitting}

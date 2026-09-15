@@ -641,3 +641,17 @@ and structural checks pass (/tmp/onboarding-reset-green.log). Critic found no
 blockers. This proves unmount ownership, not native transition rendering or every
 in-place state replacement. Native acceptance and failure recovery remain tracked
 separately; no new authentication or teardown behavior is introduced.
+
+### M76 — setup permits progress with missing required values (P2)
+
+Source interaction gap against the entering-data criterion in onboarding-axis.md:
+Connect/Create was available with blank required values. Primary actions now reflect
+readiness, with a visible explanation naming the missing value. Whitespace stays
+incomplete; nonempty invalid URLs still receive application validation. Keyboard
+submission uses the same guard, and Start over is independent of incomplete names.
+
+Two mounted regressions failed before the change. Eight remote onboarding/invitation
+checks now pass, including both inventory form variants, keyboard bypass prevention,
+URL validation and existing recovery. TypeScript/structural checks pass on paul
+(/tmp/onboarding-readiness-green.log); critic found no blockers. Native explanation
+layout and keyboard timing remain unverified, including M35 compact-phone reachability.
