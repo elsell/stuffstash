@@ -69,3 +69,14 @@ but injection alone did not reproduce that keyboard path here. No application bu
 is inferred from the inconclusive harness behavior. Enabled accessibility services
 were restored to the prior empty setting and accessibility disabled after the probe.
 A usable screen-reader input/audio path remains necessary for this acceptance axis.
+
+
+Hardware-event follow-up: the AVD had `hw.keyboard = no`. Its idle emulator was
+restarted with hardware-keyboard support enabled and the software keyboard kept
+available (`show_ime_with_hard_keyboard=1`). The original AVD configuration is
+retained on paul at `/tmp/android-audit-before-keyboard.ini`. The same installed
+APK and data remain. Console EV_KEY/EV_SYN commands, including spaced modifier
+press/release, still did not demonstrate reliable TalkBack next-item/activation.
+A visible initial focus outline is not proof that those commands worked. TalkBack
+was disabled again after inspection. Keyboard support remains enabled for future
+input checks; audio remains disabled. No acceptance cell is promoted by this probe.
