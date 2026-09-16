@@ -716,6 +716,16 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(footer.frame.intersection(bounds).contains(action.frame), "Every action must be fully visible")
     }
     last.tap()
+    let selected = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      (last.value as? String) == "checkbox, checked"
+    }, object: nil)
+    let selectionResult = XCTWaiter.wait(for: [selected], timeout: 5)
+    let selectionValue = XCTAttachment(string: "Last tag after tap: \(String(describing: last.value))")
+    selectionValue.name = "browse-last-tag-selection"
+    selectionValue.lifetime = .keepAlways
+    add(selectionValue)
+    capture("browse-last-tag-after-selection")
+    XCTAssertEqual(selectionResult, .completed, "The last tag must be selected before returning to filters")
     app.buttons["Back to filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
     app.buttons["Show results"].tap()

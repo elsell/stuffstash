@@ -66,3 +66,12 @@ audit routes do not mount this diagnostic. The fixture lifecycle test and eight
 route-isolation checks pass on paul, together with TypeScript and structural checks.
 Critic review found no blocker; pending-callback-after-unmount is guarded in source
 but is not independently demonstrated by the mounted test.
+
+The retained [synthesized touch summary](evidence/ipad-last-tag-touch-351546.json)
+places the last-row tap at372,700.5, inside its exposed98,674.5,548,52 frame.
+Back follows at372,847.5. This rules out an obviously outside synthesized target,
+not a dropped native press or lost state. The next acceptance observes the checked
+AX value before Back and retains a screenshot/value attachment, while keeping the
+final applied-tag check. The English pinned RN implementation emits
+`checkbox, checked`; native execution is pending. Fixture preparation and structural
+checks pass on paul; critic found no blocker. This is not a production selection fix.

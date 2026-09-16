@@ -677,3 +677,9 @@ Security, data loss and failures of required changed workflows remain blockers.
 Record the reason and evidence for every failed check's inclusion or exclusion.
 Preserve native evidence limits and publish the batch's own TestFlight changelog;
 Apple processing and notes readback complete the release.
+
+The frozen batch's last-tag acceptance must observe the row's checked value after
+its delivered tap and before Back/Apply. Run351546 iPad delivers touch down/up at
+372,700.5, inside the row98,674.5,548,52, yet applies no tag. Retain the selected
+state and hierarchy at that boundary to distinguish selection delivery from
+navigation/draft loss. Do not infer a clipping defect from the final result alone.
