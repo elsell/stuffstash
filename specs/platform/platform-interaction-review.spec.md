@@ -235,3 +235,7 @@ a quoted HIG rule. Acceptance covers both asset and Add previews: zoom, reveal
 commands, close without changing draft/media, double-tap without an extra toggle,
 and image-change/unmount without delayed effects. Native verification must cover
 iOS and Android separately.
+
+Zoom gestures change image scale only; a single tap controls toolbar visibility.
+Newly selected images and loading failures restore commands. Keep visibility in
+a stable controller so showing commands does not remount or reset the image.

@@ -157,3 +157,27 @@ does not establish pinch/pan behavior, access to commands while still zoomed,
 TalkBack, iOS gestures, or the unavailable-image transition during zoom. The
 single-tap observation is retained as an interaction limitation, not dismissed
 because zoom reset provides another path.
+
+### M234 candidate: commands independent of zoom
+
+The pinned viewer patch now leaves zoom responsible only for image scale/scroll
+behavior. A distinct single-tap callback toggles the footer without React state
+remounting the image; opening the viewer, selecting another index and image-load
+failure restore commands. The iOS recognizer owns its delayed tap per image scope
+and retires stale callbacks. Android filters double taps, drags, long presses,
+multitouch and canceled gestures before dispatching a single tap; its responder
+cleanup cancels pending work. Review caught effect-replay activity and same-index
+reopening gaps; both were corrected.
+
+Single-tap regressions failed against the prior installed hooks on paul. Five
+focused checks now pass, including iOS scope/unmount ownership and independent
+viewers, and Android StrictMode, drag, double-tap and termination behavior. The
+full mobile suite passes1,893 tests across295 files; TypeScript and mobile
+structural checks pass. These are source checks, not native acceptance.
+
+The patch applies cleanly to pristine0.2.2 whose tarball matches the committed
+SHA-512 integrity. The lock's three patch identities were updated to the patch's
+SHA-256. Existing paul pnpm installs left the old package symlink in place, so
+validation explicitly applied the patch to pristine source and copied that result
+into the validation dependency. A fresh CI install remains necessary to verify
+package-manager materialization; native Android rebuild is in progress.

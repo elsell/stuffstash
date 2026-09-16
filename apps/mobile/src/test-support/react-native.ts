@@ -133,6 +133,7 @@ export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 }
 export const findNodeHandle = () => 1;
 let windowFontScale = 1;
 export function setWindowFontScaleForTest(value: number) { windowFontScale = value; }
+export const Dimensions = { get: () => ({ fontScale: windowFontScale, height: 844, width: 390, scale: 1 }) };
 export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
 class AnimatedValue {
@@ -142,6 +143,7 @@ class AnimatedValue {
   setValue(value: number) { this.value = value; for (const listener of this.listeners.values()) listener({ value }); }
   addListener(listener: (event: { value: number }) => void) { const id = String(this.listeners.size); this.listeners.set(id, listener); return id; }
   removeListener(id: string) { this.listeners.delete(id); }
+  removeAllListeners() { this.listeners.clear(); }
   __getValue() { return this.value; }
   stopAnimation() {}
   interpolate() { return this.value; }

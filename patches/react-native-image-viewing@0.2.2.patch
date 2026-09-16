@@ -11,10 +11,9 @@ index b27950495a8a92f3f6dd41b07b7907703d80e8ae..aaae4872dec6f6dd74bbd43ed81930e4
          imageIndex: number;
      }>;
 diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
-index 3d7641a9a94864415d207c678b71f8c592c90aa1..a3d9957d9d93a473e25f36a34fcac5cf2ba8a5f3 100644
 --- a/dist/ImageViewing.js
 +++ b/dist/ImageViewing.js
-@@ -18,7 +18,7 @@ const DEFAULT_BG_COLOR = "#000";
+@@ -18,11 +18,21 @@
  const DEFAULT_DELAY_LONG_PRESS = 800;
  const SCREEN = Dimensions.get("screen");
  const SCREEN_WIDTH = SCREEN.width;
@@ -23,12 +22,34 @@ index 3d7641a9a94864415d207c678b71f8c592c90aa1..a3d9957d9d93a473e25f36a34fcac5cf
      const imageList = useRef(null);
      const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
      const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
-@@ -49,7 +49,7 @@ function ImageViewing({ images, keyExtractor, imageIndex, visible, onRequestClos
+     const [headerTransform, footerTransform, toggleBarsVisible] = useAnimatedComponents();
++    const controlsVisible = useRef(true);
++    const showControls = useCallback(() => {
++        controlsVisible.current = true;
++        toggleBarsVisible(true);
++    }, [toggleBarsVisible]);
++    const onSingleTap = useCallback(() => {
++        controlsVisible.current = !controlsVisible.current;
++        toggleBarsVisible(controlsVisible.current);
++    }, [toggleBarsVisible]);
++    useEffect(showControls, [currentImageIndex, visible, showControls]);
+     useEffect(() => {
+         if (onImageIndexChange) {
+             onImageIndexChange(currentImageIndex);
+@@ -32,7 +42,6 @@
+         var _a, _b;
+         // @ts-ignore
+         (_b = (_a = imageList) === null || _a === void 0 ? void 0 : _a.current) === null || _b === void 0 ? void 0 : _b.setNativeProps({ scrollEnabled: !isScaled });
+-        toggleBarsVisible(!isScaled);
+     }, [imageList]);
+     if (!visible) {
+         return null;
+@@ -49,7 +58,7 @@
          length: SCREEN_WIDTH,
          offset: SCREEN_WIDTH * index,
          index,
 -    })} renderItem={({ item: imageSrc }) => (<ImageItem onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll} 
-+    })} renderItem={({ item: imageSrc, index }) => (<ImageItem ErrorComponent={ErrorComponent} isActive={index === currentImageIndex} onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll} 
++    })} renderItem={({ item: imageSrc, index }) => (<ImageItem onSingleTap={onSingleTap} onShowControls={showControls} ErrorComponent={ErrorComponent} isActive={index === currentImageIndex} onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll}
      //@ts-ignore
      keyExtractor={(imageSrc, index) => keyExtractor
          ? keyExtractor(imageSrc, index)
@@ -52,7 +73,6 @@ index 0000000000000000000000000000000000000000..e187ee6edbb36da063c855db41489a7d
 +    message: { color: "white", fontSize: 20, textAlign: "center", flexShrink: 1 },
 +});
 diff --git a/dist/components/ImageItem/ImageItem.android.js b/dist/components/ImageItem/ImageItem.android.js
-index 5fcaa9f9a7d893817fee89b85186ee3936118e69..f014ae7471780cd0b439d377ed3a7cf7112da6df 100644
 --- a/dist/components/ImageItem/ImageItem.android.js
 +++ b/dist/components/ImageItem/ImageItem.android.js
 @@ -5,9 +5,10 @@
@@ -69,17 +89,17 @@ index 5fcaa9f9a7d893817fee89b85186ee3936118e69..f014ae7471780cd0b439d377ed3a7cf7
  import usePanResponder from "../../hooks/usePanResponder";
  import { getImageStyles, getImageTransform } from "../../utils";
  import { ImageLoading } from "./ImageLoading";
-@@ -16,13 +17,13 @@ const SWIPE_CLOSE_VELOCITY = 1.75;
+@@ -16,13 +17,13 @@
  const SCREEN = Dimensions.get("window");
  const SCREEN_WIDTH = SCREEN.width;
  const SCREEN_HEIGHT = SCREEN.height;
 -const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, }) => {
-+const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
++const ImageItem = ({ imageSrc, onSingleTap, onShowControls, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
      const imageContainer = useRef(null);
 -    const imageDimensions = useImageDimensions(imageSrc);
 +    const loading = useImageLoad(imageSrc);
 +    const imageDimensions = loading.dimensions;
-+    useEffect(() => { if (loading.failed && isActive) onZoom(false); }, [loading.failed, isActive, onZoom]);
++    useEffect(() => { if (loading.failed && isActive) { onZoom(false); onShowControls?.(); } }, [loading.failed, isActive, onZoom, onShowControls]);
      const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
      const scrollValueY = new Animated.Value(0);
 -    const [isLoaded, setLoadEnd] = useState(false);
@@ -87,7 +107,15 @@ index 5fcaa9f9a7d893817fee89b85186ee3936118e69..f014ae7471780cd0b439d377ed3a7cf7
      const onZoomPerformed = useCallback((isZoomed) => {
          var _a;
          onZoom(isZoomed);
-@@ -64,12 +65,13 @@ const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPre
+@@ -39,6 +40,7 @@
+         initialScale: scale || 1,
+         initialTranslate: translate || { x: 0, y: 0 },
+         onZoom: onZoomPerformed,
++        onSingleTap: isActive ? onSingleTap : undefined,
+         doubleTapToZoomEnabled,
+         onLongPress: onLongPressHandler,
+         delayLongPress,
+@@ -64,12 +66,13 @@
          const offsetY = (_c = (_b = (_a = nativeEvent) === null || _a === void 0 ? void 0 : _a.contentOffset) === null || _b === void 0 ? void 0 : _b.y, (_c !== null && _c !== void 0 ? _c : 0));
          scrollValueY.setValue(offsetY);
      };
@@ -104,7 +132,6 @@ index 5fcaa9f9a7d893817fee89b85186ee3936118e69..f014ae7471780cd0b439d377ed3a7cf7
  };
  const styles = StyleSheet.create({
 diff --git a/dist/components/ImageItem/ImageItem.ios.js b/dist/components/ImageItem/ImageItem.ios.js
-index 0708505081e1d3da5bfc09d7b599975088969ea6..ffaff30fb3b7e053e1911f41733cb1fe5f22681a 100644
 --- a/dist/components/ImageItem/ImageItem.ios.js
 +++ b/dist/components/ImageItem/ImageItem.ios.js
 @@ -5,10 +5,11 @@
@@ -121,23 +148,25 @@ index 0708505081e1d3da5bfc09d7b599975088969ea6..ffaff30fb3b7e053e1911f41733cb1fe
  import { getImageStyles, getImageTransform } from "../../utils";
  import { ImageLoading } from "./ImageLoading";
  const SWIPE_CLOSE_OFFSET = 75;
-@@ -16,11 +17,12 @@ const SWIPE_CLOSE_VELOCITY = 1.55;
+@@ -16,12 +17,13 @@
  const SCREEN = Dimensions.get("screen");
  const SCREEN_WIDTH = SCREEN.width;
  const SCREEN_HEIGHT = SCREEN.height;
 -const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, }) => {
-+const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
++const ImageItem = ({ imageSrc, onSingleTap, onShowControls, onZoom, onRequestClose, onLongPress, delayLongPress, swipeToCloseEnabled = true, doubleTapToZoomEnabled = true, ErrorComponent = ImageError, isActive = true, }) => {
      const scrollViewRef = useRef(null);
 -    const [loaded, setLoaded] = useState(false);
      const [scaled, setScaled] = useState(false);
 -    const imageDimensions = useImageDimensions(imageSrc);
+-    const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
 +    const loading = useImageLoad(imageSrc);
 +    const imageDimensions = loading.dimensions;
-+    useEffect(() => { if (loading.failed && isActive) onZoom(false); }, [loading.failed, isActive, onZoom]);
-     const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
++    useEffect(() => { if (loading.failed && isActive) { onZoom(false); onShowControls?.(); } }, [loading.failed, isActive, onZoom, onShowControls]);
++    const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN, isActive ? onSingleTap : undefined, doubleTapToZoomEnabled, JSON.stringify([imageSrc, isActive, loading.failed]));
      const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
      const scrollValueY = new Animated.Value(0);
-@@ -56,13 +58,14 @@ const ImageItem = ({ imageSrc, onZoom, onRequestClose, onLongPress, delayLongPre
+     const scaleValue = new Animated.Value(scale || 1);
+@@ -56,13 +58,14 @@
      const onLongPressHandler = useCallback((event) => {
          onLongPress(imageSrc);
      }, [imageSrc, onLongPress]);
@@ -147,9 +176,10 @@ index 0708505081e1d3da5bfc09d7b599975088969ea6..ffaff30fb3b7e053e1911f41733cb1fe
          onScroll,
      })}>
 -        {(!loaded || !imageDimensions) && <ImageLoading />}
-+        {!loading.loaded && <ImageLoading />}
-         <TouchableWithoutFeedback onPress={doubleTapToZoomEnabled ? handleDoubleTap : undefined} onLongPress={onLongPressHandler} delayLongPress={delayLongPress}>
+-        <TouchableWithoutFeedback onPress={doubleTapToZoomEnabled ? handleDoubleTap : undefined} onLongPress={onLongPressHandler} delayLongPress={delayLongPress}>
 -          <Animated.Image source={imageSrc} style={imageStylesWithOpacity} onLoad={() => setLoaded(true)}/>
++        {!loading.loaded && <ImageLoading />}
++        <TouchableWithoutFeedback onPress={handleDoubleTap} onLongPress={onLongPressHandler} delayLongPress={delayLongPress}>
 +          <Animated.Image key={loading.attempt} source={imageSrc} style={imageStylesWithOpacity} onLoad={loading.onLoad} onError={loading.onError}/>
          </TouchableWithoutFeedback>
        </ScrollView>
@@ -392,3 +422,212 @@ index 0000000000000000000000000000000000000000..e1585b776970dc13507761d4b9e4c36e
 +    };
 +};
 +export default useImageLoad;
+diff --git a/dist/hooks/useDoubleTapToZoom.js b/dist/hooks/useDoubleTapToZoom.js
+--- a/dist/hooks/useDoubleTapToZoom.js
++++ b/dist/hooks/useDoubleTapToZoom.js
+@@ -5,45 +5,45 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { useCallback } from "react";
++import { useCallback, useEffect, useMemo, useRef } from "react";
+ const DOUBLE_TAP_DELAY = 300;
+-let lastTapTS = null;
+-/**
+- * This is iOS only.
+- * Same functionality for Android implemented inside usePanResponder hook.
+- */
+-function useDoubleTapToZoom(scrollViewRef, scaled, screen) {
+-    const handleDoubleTap = useCallback((event) => {
+-        var _a, _b, _c;
+-        const nowTS = new Date().getTime();
+-        const scrollResponderRef = (_b = (_a = scrollViewRef) === null || _a === void 0 ? void 0 : _a.current) === null || _b === void 0 ? void 0 : _b.getScrollResponder();
+-        if (lastTapTS && nowTS - lastTapTS < DOUBLE_TAP_DELAY) {
++/** iOS tap recognition; Android uses its pan responder. */
++function useDoubleTapToZoom(scrollViewRef, scaled, screen, onSingleTap, enabled = true, scope) {
++    const pending = useRef(null);
++    const owner = useMemo(() => ({ active: false }), [scope, enabled]);
++    const latest = useRef({ onSingleTap, scaled, screen });
++    useEffect(() => { latest.current = { onSingleTap, scaled, screen }; });
++    const cancel = useCallback(() => {
++        if (pending.current !== null) clearTimeout(pending.current);
++        pending.current = null;
++    }, []);
++    useEffect(() => {
++        owner.active = true;
++        return () => { owner.active = false; cancel(); };
++    }, [cancel, owner]);
++    return useCallback((event) => {
++        if (!owner.active) return;
++        if (!enabled) {
++            latest.current.onSingleTap?.();
++            return;
++        }
++        if (pending.current !== null) {
++            cancel();
+             const { pageX, pageY } = event.nativeEvent;
+-            let targetX = 0;
+-            let targetY = 0;
+-            let targetWidth = screen.width;
+-            let targetHeight = screen.height;
+-            // Zooming in
+-            // TODO: Add more precise calculation of targetX, targetY based on touch
+-            if (!scaled) {
+-                targetX = pageX / 2;
+-                targetY = pageY / 2;
+-                targetWidth = screen.width / 2;
+-                targetHeight = screen.height / 2;
+-            }
+-            // @ts-ignore
+-            (_c = scrollResponderRef) === null || _c === void 0 ? void 0 : _c.scrollResponderZoomTo({
+-                x: targetX,
+-                y: targetY,
+-                width: targetWidth,
+-                height: targetHeight,
++            const { scaled: isScaled, screen: dimensions } = latest.current;
++            scrollViewRef.current?.getScrollResponder()?.scrollResponderZoomTo({
++                x: isScaled ? 0 : pageX / 2,
++                y: isScaled ? 0 : pageY / 2,
++                width: isScaled ? dimensions.width : dimensions.width / 2,
++                height: isScaled ? dimensions.height : dimensions.height / 2,
+                 animated: true,
+             });
++            return;
+         }
+-        else {
+-            lastTapTS = nowTS;
+-        }
+-    }, [scaled]);
+-    return handleDoubleTap;
++        pending.current = setTimeout(() => {
++            pending.current = null;
++            if (owner.active) latest.current.onSingleTap?.();
++        }, DOUBLE_TAP_DELAY);
++    }, [cancel, enabled, scrollViewRef, owner]);
+ }
+ export default useDoubleTapToZoom;
+diff --git a/dist/hooks/useDoubleTapToZoom.d.ts b/dist/hooks/useDoubleTapToZoom.d.ts
+--- a/dist/hooks/useDoubleTapToZoom.d.ts
++++ b/dist/hooks/useDoubleTapToZoom.d.ts
+@@ -12,5 +12,5 @@
+  * This is iOS only.
+  * Same functionality for Android implemented inside usePanResponder hook.
+  */
+-declare function useDoubleTapToZoom(scrollViewRef: React.RefObject<ScrollView>, scaled: boolean, screen: Dimensions): (event: NativeSyntheticEvent<NativeTouchEvent>) => void;
++declare function useDoubleTapToZoom(scrollViewRef: React.RefObject<ScrollView>, scaled: boolean, screen: Dimensions, onSingleTap?: () => void, enabled?: boolean, scope?: string): (event: NativeSyntheticEvent<NativeTouchEvent>) => void;
+ export default useDoubleTapToZoom;
+diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
+--- a/dist/hooks/usePanResponder.js
++++ b/dist/hooks/usePanResponder.js
+@@ -15,7 +15,7 @@
+ const SCALE_MAX = 2;
+ const DOUBLE_TAP_DELAY = 300;
+ const OUT_BOUND_MULTIPLIER = 0.75;
+-const usePanResponder = ({ initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, }) => {
++const usePanResponder = ({ onSingleTap, initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, }) => {
+     let numberInitialTouches = 1;
+     let initialTouches = [];
+     let currentScale = initialScale;
+@@ -25,6 +25,21 @@
+     let isDoubleTapPerformed = false;
+     let lastTapTS = null;
+     let longPressHandlerRef = null;
++    let singleTapHandlerRef = null;
++    let tapCandidate = false;
++    let active = true;
++    const cancelSingleTap = () => {
++        if (singleTapHandlerRef !== null) clearTimeout(singleTapHandlerRef);
++        singleTapHandlerRef = null;
++    };
++    useEffect(() => {
++        active = true;
++        return () => {
++        active = false;
++        cancelSingleTap();
++        if (longPressHandlerRef !== null) clearTimeout(longPressHandlerRef);
++        };
++    });
+     const meaningfulShift = MIN_DIMENSION * 0.01;
+     const scaleValue = new Animated.Value(initialScale);
+     const translateValue = new Animated.ValueXY(initialTranslate);
+@@ -73,12 +88,19 @@
+     };
+     const handlers = {
+         onGrant: (_, gestureState) => {
++            if (!active) return;
++            tapCandidate = gestureState.numberActiveTouches === 1;
+             numberInitialTouches = gestureState.numberActiveTouches;
+             if (gestureState.numberActiveTouches > 1)
+                 return;
+-            longPressHandlerRef = setTimeout(onLongPress, delayLongPress);
++            longPressHandlerRef = setTimeout(() => {
++                tapCandidate = false; cancelSingleTap();
++                if (active) onLongPress();
++            }, delayLongPress);
+         },
+         onStart: (event, gestureState) => {
++            if (!active) return;
++            if (gestureState.numberActiveTouches > 1) { tapCandidate = false; cancelSingleTap(); }
+             initialTouches = event.nativeEvent.touches;
+             numberInitialTouches = gestureState.numberActiveTouches;
+             if (gestureState.numberActiveTouches > 1)
+@@ -87,6 +109,8 @@
+             // Handle double tap event by calculating diff between first and second taps timestamps
+             isDoubleTapPerformed = Boolean(lastTapTS && tapTS - lastTapTS < DOUBLE_TAP_DELAY);
+             if (doubleTapToZoomEnabled && isDoubleTapPerformed) {
++                cancelSingleTap();
++                tapCandidate = false;
+                 const isScaled = currentTranslate.x !== initialTranslate.x; // currentScale !== initialScale;
+                 const { pageX: touchX, pageY: touchY } = event.nativeEvent.touches[0];
+                 const targetScale = SCALE_MAX;
+@@ -127,8 +151,10 @@
+             }
+         },
+         onMove: (event, gestureState) => {
++            if (!active) return;
+             const { dx, dy } = gestureState;
+             if (Math.abs(dx) >= meaningfulShift || Math.abs(dy) >= meaningfulShift) {
++                tapCandidate = false; cancelSingleTap();
+                 cancelLongPressHandle();
+             }
+             // Don't need to handle move because double tap in progress (was handled in onStart)
+@@ -144,6 +170,7 @@
+             const isTapGesture = numberInitialTouches == 1 && gestureState.numberActiveTouches === 1;
+             const isPinchGesture = numberInitialTouches === 2 && gestureState.numberActiveTouches === 2;
+             if (isPinchGesture) {
++                tapCandidate = false; cancelSingleTap();
+                 cancelLongPressHandle();
+                 const initialDistance = getDistanceBetweenTouches(initialTouches);
+                 const currentDistance = getDistanceBetweenTouches(event.nativeEvent.touches);
+@@ -212,8 +239,20 @@
+                 tmpTranslate = { x: nextTranslateX, y: nextTranslateY };
+             }
+         },
++        onTerminate: () => {
++            tapCandidate = false; cancelSingleTap(); cancelLongPressHandle(); lastTapTS = null;
++        },
+         onRelease: () => {
++            if (!active) return;
+             cancelLongPressHandle();
++            if (tapCandidate && !(doubleTapToZoomEnabled && isDoubleTapPerformed)) {
++                cancelSingleTap();
++                singleTapHandlerRef = setTimeout(() => {
++                    singleTapHandlerRef = null; lastTapTS = null;
++                    if (active) onSingleTap?.();
++                }, doubleTapToZoomEnabled ? DOUBLE_TAP_DELAY : 0);
++            }
++            tapCandidate = false;
+             if (isDoubleTapPerformed) {
+                 isDoubleTapPerformed = false;
+             }
+diff --git a/dist/hooks/usePanResponder.d.ts b/dist/hooks/usePanResponder.d.ts
+--- a/dist/hooks/usePanResponder.d.ts
++++ b/dist/hooks/usePanResponder.d.ts
+@@ -8,6 +8,7 @@
+ import { Animated, GestureResponderHandlers } from "react-native";
+ import { Position } from "../@types";
+ declare type Props = {
++    onSingleTap?: () => void;
+     initialScale: number;
+     initialTranslate: Position;
+     onZoom: (isZoomed: boolean) => void;
