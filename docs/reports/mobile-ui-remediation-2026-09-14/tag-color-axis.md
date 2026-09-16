@@ -195,3 +195,20 @@ Native script `/tmp/verify-color-targets.py` and XML
 The initial failure is `/tmp/android-color-target-before.xml` on paul. This closes
 the normal-size Android sizing/label finding in this shared control, not iOS M51,
 TalkBack or enlarged-text acceptance.
+
+### Ordinary iOS tap coordinates — retained run351121
+
+Further inspection of the failed phone case narrows M51 without attributing a
+cause. Attachment `F70DA3E8-A322-45FA-8F28-5B0EDA43A9BB.txt` records a hittable
+well at(346,360.6667),28×28. The synthesized tap record
+`A82F5A1A-886B-4DD1-B853-E3BABDE39D0D` contains down/up coordinates
+(360,374.6667), precisely its center, with a0.05-second interval. Before/after
+hierarchies retain the same frame and unset parent value. The pre-tap screenshot
+`87ADFE19-B9AD-474C-B25F-73A54F005048.png` shows an unobscured color well.
+
+These small selected attachments are retained on paul under
+`/tmp/phone351121-selected`; the screenshot is also local. This rules out an
+incorrect synthesized tap coordinate in this sample. It does not explain why the
+separate target-opening and delivered-region cases passed, prove a framework bug,
+or justify suppressing the failing production interaction. Current run351214
+must complete before choosing the next controlled comparison.
