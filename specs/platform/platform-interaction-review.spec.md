@@ -561,3 +561,13 @@ Capture the input value and expected React-observed state before publishing so t
 trace button cannot turn blur-induced correction into a passing entry result.
 Tracing can affect timing; a trace is diagnostic evidence, not proof of a root cause
 or a substitute for the unchanged production entry workflows.
+
+The input-comparison scroll container must deliver handled taps while the keyboard
+is visible, so its explicit trace command can publish without a preliminary blur.
+Other fixture containers retain their existing behavior. A delivered capture command
+must produce its trace within the bounded observation window; missing output must
+fail the diagnostic rather than silently skip it. Run35140471580 supplies the
+pre-correction evidence: capture taps dismissed the keyboard and no trace was exported.
+The focused text-entry selection includes controlled, seeded and system address
+comparisons as well as ordinary-name comparisons. It remains diagnostic-only;
+the full suite is still required for broader native acceptance.

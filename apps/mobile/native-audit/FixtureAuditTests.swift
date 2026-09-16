@@ -1367,7 +1367,10 @@ final class FixtureAuditTests: XCTestCase {
     }
     captureEvents.tap()
     let trace = app.staticTexts["audit-input-event-trace"]
-    guard trace.waitForExistence(timeout: 5) else { return }
+    guard trace.waitForExistence(timeout: 5) else {
+      XCTFail("The input trace command must publish its recorded events")
+      return
+    }
     let attachment = XCTAttachment(string: trace.label)
     attachment.name = "input-events-\(mode)"
     attachment.lifetime = .keepAlways

@@ -156,7 +156,7 @@ export function FixtureMenu() {
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
   const [inputMode, setInputMode] = useState<InputFixtureMode>();
-  if (inputMode) return <FixturePage key={`input-${inputMode}`}>
+  if (inputMode) return <FixturePage key={`input-${inputMode}`} persistHandledTaps>
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
   </FixturePage>;
@@ -228,8 +228,8 @@ export function FixtureMenu() {
   </FixturePage>;
 }
 
-function FixturePage({ children }: { readonly children: ReactNode }) {
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>{children}</ScrollView>;
+function FixturePage({ children, persistHandledTaps = false }: { readonly children: ReactNode; readonly persistHandledTaps?: boolean }) {
+  return <ScrollView keyboardShouldPersistTaps={persistHandledTaps ? 'handled' : 'never'} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>{children}</ScrollView>;
 }
 
 export function BrowseFilterFixture() {

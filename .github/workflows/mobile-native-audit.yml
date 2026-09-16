@@ -115,6 +115,10 @@ jobs:
             text-entry)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledAddressEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testUncontrolledAddressEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSeededAddressWithoutKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSystemAddressEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinarySingleLineTextEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeDefaultAssistedTextEntryDiagnostic'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryMultilineTextEntry'
