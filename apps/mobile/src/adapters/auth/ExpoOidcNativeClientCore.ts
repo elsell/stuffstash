@@ -80,7 +80,9 @@ export class ExpoOidcNativeClientCore implements NativeOidcClient {
 
     const result = await request.promptAsync(discovery);
     if (result.type !== 'success') {
-      throw new Error('Sign-in was cancelled.');
+      throw new Error(result.type === 'cancel' || result.type === 'dismiss'
+        ? 'Sign-in was cancelled.'
+        : 'Sign-in could not be completed. Try again.');
     }
     const params = result.params ?? {};
     if (!request.state || !params.state || params.state !== request.state) {

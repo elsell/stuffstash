@@ -63,9 +63,9 @@ describe('ExpoOidcNativeClient', () => {
     expect(facade.exchangeConfig).toBeUndefined();
   });
 
-  it('rejects cancelled sign-in without exchanging a code', async () => {
+  it.each(['cancel', 'dismiss'])('rejects %s sign-in without exchanging a code', async type => {
     const facade = new FakeExpoOidcFacade();
-    facade.promptResult = { type: 'cancel', params: {} };
+    facade.promptResult = { type, params: {} };
     const client = new ExpoOidcNativeClientCore(facade);
 
     await expect(client.signIn(metadata)).rejects.toThrow('Sign-in was cancelled.');

@@ -2806,3 +2806,12 @@ tag {name} and exposes disabled state. The draft workflow verifies that invoking
 the command removes only that staged definition, preserving another staged tag
 and unfinished name before saving. This does not delete persisted inventory tags.
 Actual screen-reader output and visual target acceptance remain native work.
+
+### M202 — Browser sign-in errors are reported as user cancellation
+
+P2 source/boundary confirmed atc7b64036. All non-success native auth results threw
+Sign-in was cancelled, including error, locked and unknown results. Only explicit
+cancel/dismiss now get cancellation feedback; other outcomes get safe retry
+guidance without provider parameters. Three composed onboarding/OIDC cases failed
+first and now verify rejection without session/tenant discovery and a valid fresh
+retry. Cancel/dismiss checks remain. Live OS browser-return acceptance is pending.

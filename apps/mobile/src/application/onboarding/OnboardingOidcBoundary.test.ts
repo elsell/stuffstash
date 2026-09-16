@@ -5,6 +5,17 @@ import { OnboardingCommand } from './OnboardingCommand';
 import { OnboardingProfileFake, onboardingServer } from './OnboardingTestSupport';
 
 describe('combined onboarding through native OIDC boundary', () => {
+  it.each(['error', 'locked', 'unexpected'])('rejects browser %s without misreporting cancellation and permits a fresh retry', async type => {
+    const f = fixture({ type, params: { error_description: 'Private provider detail' } });
+    await expect(f.command.connectAndSignIn({ apiBaseUrl: onboardingServer })).rejects.toThrow('Sign-in could not be completed. Try again.');
+    expect(await f.store.load()).toBeUndefined();
+    expect(f.discoveryCalls()).toBe(0);
+    expect(f.exchangeCalls()).toBe(0);
+    f.setPromptResult({ type: 'success', params: { state: 'expected', code: 'code' } });
+    await expect(f.command.connectAndSignIn({ apiBaseUrl: onboardingServer })).resolves.toMatchObject({ step: 'tenant' });
+    expect(f.discoveryCalls()).toBe(1);
+    expect(f.exchangeCalls()).toBe(1);
+  });
   it.each([
     ['cancel', { type: 'cancel' }],
     ['forged state', { type: 'success', params: { state: 'forged', code: 'code' } }],
@@ -25,6 +36,7 @@ describe('combined onboarding through native OIDC boundary', () => {
 
 function fixture(result: NativeAuthPromptResult) {
   let session: MobileAuthSession | undefined;
+  let exchanges = 0;
   const store: MobileAuthSessionStore = {
     async load() { return session; }, async save(value) { session = value; }, async clear() { session = undefined; }
   };
@@ -35,6 +47,7 @@ function fixture(result: NativeAuthPromptResult) {
       return { state: 'expected', codeVerifier: 'verifier', async promptAsync() { return result; } };
     },
     async exchangeCode(config) {
+      exchanges++;
       expect(config.extraParams.code_verifier).toBe('verifier');
       return { idToken: `test.${btoa(JSON.stringify({ iss: 'https://issuer.example.test', aud: 'mobile', exp: 4600 }))}.test`, refreshToken: 'test-refresh-token', expiresIn: 3600, issuedAt: 1_000 };
     },
@@ -50,5 +63,5 @@ function fixture(result: NativeAuthPromptResult) {
     async createTenant() { throw new Error('Not expected'); },
     async createInventory() { throw new Error('Not expected'); }
   }), auth);
-  return { command, store, discoveryCalls: () => discoveries };
+  return { command, store, discoveryCalls: () => discoveries, exchangeCalls: () => exchanges, setPromptResult: (next: NativeAuthPromptResult) => { result = next; } };
 }
