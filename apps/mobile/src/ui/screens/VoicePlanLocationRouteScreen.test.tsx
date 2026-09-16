@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
+import { dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
 import { inventoryId, tenantId } from '../../domain/inventories/InventorySummary';
 import { VoiceInteractionPreviewQuery } from '../../application/voice/VoiceInteractionPreviewQuery';
@@ -9,7 +9,7 @@ import { MobileServerStateProvider } from '../navigation/MobileServerStateProvid
 import { VoiceInteractionStateProvider, useVoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { VoicePlanLocationRouteScreen } from './VoicePlanLocationRouteScreen';
 
-it.each(['current', 'scope', 'plan', 'left', 'back'] as const)('owns proposal destination choices: %s', async scenario => {
+it.each(['current', 'scope', 'plan', 'left', 'back', 'back-direct', 'back-unavailable'] as const)('owns proposal destination choices: %s', async scenario => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
   const context = { getVoiceInventoryContext: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), tenantName: 'Home', inventoryName: 'Inventory' }), addInventoryAssetPhoto: async () => { throw new Error('Unused'); } };
   const controller = new RealtimeVoiceSessionController(context,
@@ -37,16 +37,22 @@ it.each(['current', 'scope', 'plan', 'left', 'back'] as const)('owns proposal de
     await h.run(() => interaction.setTitleEditor({ commandId: 'item', value: 'Pending name' }));
     const retained = h.byLabel('Select Inventory root');
     expect(retained).toBeDefined();
-    if (scenario === 'scope') { routeScope = 'other-inventory'; await h.render(tree()); }
+    if (scenario === 'scope' || scenario === 'back-unavailable') { routeScope = 'other-inventory'; await h.render(tree()); }
     if (scenario === 'plan') { routePlan = 'other-plan'; await h.render(tree()); }
     if (scenario === 'left') await h.run(() => setScreenFocused(false));
-    if (scenario === 'back') await h.run(() => { attemptNavigation({ type: 'back' }); setScreenFocused(false); });
+    if (scenario === 'back-direct') setCanGoBack(false);
+    if (scenario === 'back' || scenario === 'back-direct' || scenario === 'back-unavailable') {
+      expect(h.byLabel('Back to conversation')).toBeDefined();
+      await h.press(h.byLabel('Back to conversation'));
+      await h.run(() => setScreenFocused(false));
+    }
     await h.press(retained);
     expect(interaction.commandDraftState.drafts.item).toEqual(scenario === 'current'
       ? { title: 'My drill', parent: { kind: 'root', label: 'Inventory root' } } : { title: 'My drill' });
     expect(interaction.titleEditor?.value).toBe('Pending name');
-    expect(dispatchedActions()).toEqual(scenario === 'current' || scenario === 'back' ? [{ type: 'back' }] : []);
+    expect(dispatchedActions()).toEqual(scenario === 'back-direct' ? [{ type: 'replace', href: '/voice' }]
+      : scenario === 'current' || scenario === 'back' || scenario === 'back-unavailable' ? [{ type: 'back' }] : []);
     if (scenario === 'scope' || scenario === 'plan') expect(h.allText()).toContain('This proposal is no longer available for editing.');
     expect(reads).toBeGreaterThan(0);
-  } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
+  } finally { await h.unmount(); client.clear(); setScreenFocused(true); setCanGoBack(true); }
 });

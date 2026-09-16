@@ -54,3 +54,15 @@ This establishes fixture wiring, not a reproduced native defect. Code critic
 review found no production blocker; Clear now reacquires the search field and
 explicitly fails if search disappears. Swift compilation and both native journeys
 remain pending on macOS runners.
+## Native return follow-up: M192
+
+Phone run35042066124 reached selection and reopened the chooser, then failed Back.
+Its screenshot/hierarchy confirms no explicit Back in the sheet header. The route
+now owns native title/Back options through useNativeHeaderActionOptions, with no
+duplicate child Stack configuration. Back preserves pending proposal/title drafts;
+direct entry falls back to Voice. Ten route/control checks plus TypeScript and
+structural validation pass remotely (`/tmp/voice-location-back-reviewed.log`).
+Code critic found no production blocker; the unavailable branch's label-based
+case cannot distinguish its body Back from its header Back. Native verification
+remains pending. The native test targets the named command and still requires
+hittability, tapping, and unchanged selected location on return.

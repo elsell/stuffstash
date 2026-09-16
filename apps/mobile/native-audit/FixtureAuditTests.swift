@@ -1556,7 +1556,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("voice-proposal-selected-location"); changed.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
-    let back = header.buttons["BackButton"].firstMatch
+    let back = header.buttons["Back to conversation"].firstMatch
     XCTAssertTrue(back.isHittable); back.tap()
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     XCTAssertFalse(original.exists)

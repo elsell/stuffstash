@@ -847,3 +847,11 @@ microphone access for Stuff Stash in device settings and that typed conversation
 remains available. A later explicit recording attempt rechecks permission.
 Permission denial must not prepare or start a recorder or discard conversation
 content. This guidance does not imply permission was granted on Settings return.
+## Proposal location return command
+
+The containing-location chooser must expose an explicit native header Back action
+even when presented above a conversation sheet, where automatic stack Back may
+be absent. Back returns to the conversation without changing the current location,
+other proposal edits or the pending title draft. Keep it available when the
+proposal has become unavailable; use the conversation route as a direct-entry
+fallback. Native acceptance must tap this command after reopening a selection.

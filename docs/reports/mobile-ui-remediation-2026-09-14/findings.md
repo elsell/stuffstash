@@ -2702,3 +2702,15 @@ unlocking a newer attempt. Ten focused checks plus TypeScript/structural validat
 pass remotely; critic found no blocker. The RED run reproduced unhandled rejection;
 physical Settings launch/return and visual feedback remain pending. See
 permission-recovery-axis.md.
+### M192 — Proposal location chooser has no explicit Back control
+
+P2 runtime-observed on iPhone 17, run35042066124/source d39e4233. After selecting
+and reopening a proposal location, the sheet navigation bar has title/Search but
+no Back. Screenshot and hierarchy are retained in native-phone-350420.md. The
+candidate installs an explicit native left Back using the existing stable header
+adapter; Back preserves proposal/title drafts and direct entry falls back to Voice.
+Ten related checks plus static validation pass; critic found no production blocker.
+The unavailable-route mounted case also has a body Back button, so its label check
+does not uniquely certify the header. The valid-route test does, and native
+hittability/return assertions remain required on the next build. No Swift/runtime
+pass is inferred from Linux validation.

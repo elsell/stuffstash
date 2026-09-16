@@ -1,4 +1,3 @@
-import { Stack } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -17,7 +16,6 @@ export function VoicePlanLocationScreen({ current, proposed, matches, query, loa
   const selected = (parent: VoicePlanParentDraft) => current.kind === parent.kind &&
     (current.kind === 'root' || (parent.kind !== 'root' && current.id === parent.id));
   return <>
-    <Stack.Screen options={{ title: 'Containing location' }} />
     <NativeNavigationSearch query={query} placeholder="Search locations" onChange={onQuery} onSubmit={onQuery} onClear={() => onQuery('')} />
     <ScrollView style={{ flex: 1, backgroundColor: palette.background }} contentInsetAdjustmentBehavior="automatic"
       automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">

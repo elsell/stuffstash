@@ -82,7 +82,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise865
-pending,1,843 source-reviewed,487 finding,23 runtime-partial and190 not-applicable.
+pending,1,842 source-reviewed,488 finding,23 runtime-partial and190 not-applicable.
 
 [Permission recovery](permission-recovery-axis.md) now has all 24 source axes
 reviewed. M190 adds camera/microphone recovery guidance; 109 related checks/static
@@ -102,8 +102,9 @@ Native alert activation, interruption and focus return remain open.
 
 [Phone run350420 follow-up](native-phone-350420.md): the completed phone job
 passed46/69 cases. Text/target/footer failures remain; the voice location journey
-now reaches its final Back selector and needs artifact inspection to diagnose
-that failure. The iPad fixture job remains active at this checkpoint. This older
+now reaches its final Back command. Artifact inspection confirms the sheet has
+no Back; M192 adds an explicit native header action, with retest pending.
+The iPad fixture job remains active at this checkpoint. This older
 source revision does not verify current-head candidates.
 
 Combined checkpoint at a2ad3163: all 1,808 mobile tests across 283 files,

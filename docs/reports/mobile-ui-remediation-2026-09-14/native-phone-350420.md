@@ -23,9 +23,11 @@ do not weaken the original full-value assertions or certify typing from unit tes
 The new voice proposal location journey successfully reached its retry/search/
 selection steps and reopened the selected location. It then failed at source
 line1552, `header.buttons["BackButton"].firstMatch.isHittable`, before Back was
-tapped. Next inspect its final hierarchy/screenshot to distinguish a missing or
-misnamed selector from a genuine unavailable control. This log alone cannot make
-that distinction; do not label the entire location selection broken or fixed.
+tapped. Artifact inspection subsequently confirms a real missing Back control:
+the visible chooser is presented as a sheet and its navigation bar contains only
+the title and Search. See [captured screenshot](voice-location-missing-back-350420.png)
+and [hierarchy](voice-location-missing-back-350420.txt). M192 adds an explicit native
+Back; this is a product correction, not a selector-only relaxation.
 
 Additional failures explicitly target enlarged text: asset region, command height,
 detail commands, Edit metadata/tag and Move Here. Keep those recorded while
