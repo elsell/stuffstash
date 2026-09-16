@@ -1406,8 +1406,27 @@ final class FixtureAuditTests: XCTestCase {
     let voice = app.buttons["Start voice interaction"].firstMatch
     XCTAssertTrue(add.waitForExistence(timeout: 10))
     XCTAssertTrue(voice.waitForExistence(timeout: 10))
-    let tabs = app.tabBars.firstMatch
+    let tabs: XCUIElement
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // iPad's top strip is an Other containing nested Home/Browse buttons.
+      let containers = app.otherElements.containing(.button, identifier: "Home")
+        .containing(.button, identifier: "Browse").allElementsBoundByIndex
+      guard let strip = containers.filter({ $0.frame.height > 0 })
+        .min(by: { $0.frame.height < $1.frame.height }) else {
+        XCTFail("Native Home/Browse tab strip is missing")
+        return
+      }
+      tabs = strip
+    } else {
+      tabs = app.tabBars.firstMatch
+    }
     XCTAssertTrue(tabs.exists)
+    for label in ["Home", "Browse"] {
+      let tab = tabs.buttons[label].firstMatch
+      XCTAssertTrue(tab.isHittable)
+      XCTAssertTrue(app.frame.contains(tab.frame))
+      XCTAssertTrue(tabs.frame.contains(tab.frame))
+    }
     func verifyActions() {
       for action in [add, notifications, profile, voice] {
         XCTAssertTrue(action.isHittable)

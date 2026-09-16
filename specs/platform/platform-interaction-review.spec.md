@@ -94,6 +94,13 @@ ambiguous selector pass. Record the failed run and require a native rerun.
 Run350633 exposes nested duplicate `Recently changed` text nodes in the Home
 scroll journey. Select the first text container for that heading while retaining
 the measured scroll displacement and stationary, ordered header assertions.
+Its iPad capture also exposes the top Home/Browse tab strip as an `Other` container,
+not `TabBar`. Scope iPad navigation to the smallest common container containing
+both named tab buttons; retain phone TabBar lookup. Verify both buttons are
+onscreen/hittable and preserve strip/accessory exclusion, actual tab transitions
+and return-state checks. This follows the observed hierarchy, not a requirement
+that iPad use phone bottom tabs. Apple documents adaptive tab placement:
+https://developer.apple.com/documentation/uikit/elevating-your-ipad-app-with-a-tab-bar-and-sidebar
 
 When a system bar item's accessibility frame is smaller than the recommended
 44-point hit region, record the frame failure and separately test delivered

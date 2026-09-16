@@ -2,7 +2,7 @@
 
 Source65acfd8641151620efee8a1b09a19b09aae8fbe3, tested merge
 bd089623f61c94f1e9f9c0e7f15d398717cc1673. Phone finishes57/79; the job fails.
-iPad fixtures remain running at this checkpoint. Both onboarding jobs pass;
+iPad finishes67/79; that job also fails. Both onboarding jobs pass;
 their separately inspected evidence is recorded in `native-onboarding-350592.md`.
 These counts describe journeys, not product compliance.
 
@@ -56,4 +56,29 @@ priority; this run does not supersede their open ledger entries.
 Phone job104689596696; log `/tmp/native350633-phone.log`.
 Artifact10435281653 retains screenshots, hierarchy and xcresult at
 `paul:/tmp/native350633-phone.zip`. Account final-state capture is inspected;
-other capture inspection and tablet results remain follow-up work.
+other capture inspection remains follow-up work.
+
+## Terminal iPad result
+
+Job104689596716 finishes67/79. All three Home touch probes, invitation acceptance,
+Account recovery, direct color opening and Place/settings search pass. The Add
+tag disclosure journey also passes. Native phone/tablet disagreement remains
+explicit; these passes do not erase the other device's failures.
+
+The standalone Home heading has the same duplicate-node failure as phone. The
+new Home tab-shell journey reaches Add and voice entry, then fails on the existence
+of a `TabBar` accessibility element. The inspected
+[capture](evidence/ipad-home-tab-strip-350633.png) shows Home/Browse in the native
+top strip. Its hierarchy exposes an `Other` container at(0,32),744×44, with both
+buttons present and Home selected. This is a selector mismatch, not missing
+navigation. The follow-up selects the smallest common iPad container holding both
+buttons, retaining phone TabBar lookup and all geometry, scrolling and tab-return
+checks. Remote structural validation passes; native rerun is required.
+Voice location still fails before opening; the tested revision predates the
+scoped-scroll and larger-sheet candidate.
+
+Other failures: hidden-header Add readiness,36-point color AX frame, controlled
+address, controlled text without accessory, ordinary controlled text, Sharing
+email entry, enlarged Edit metadata, enlarged Edit tags and enlarged Move Here.
+Phone has22 failures and iPad12; the audit remains incomplete.
+Log `/tmp/native350633-ipad.log`; artifact10435721994 retains tablet evidence.
