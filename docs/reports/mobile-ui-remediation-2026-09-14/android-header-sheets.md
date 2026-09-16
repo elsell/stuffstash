@@ -91,3 +91,18 @@ context refresh: the fixture's scope provider deliberately stays synthetic.
 Evidence: `/tmp/switcher-root-selection-{entry,households,workshop,error,return}.xml`
 and `/tmp/switcher-root-selection-error.png`. The household count also displays
 “1 inventories”; that minor copy defect remains for correction.
+
+## Household count wording correction
+
+The observed “1 inventories” copy defect is corrected. Mounted tests first failed
+against the original wording, then passed for zero, one and two inventories; all12
+switcher tests, TypeScript and mobile structural checks pass on paul. Code critic
+found no confirmed issue. Android16 Pixel6, normal text/light, rebuilt APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`
+shows [1 inventory for each household](evidence/android-household-inventory-count.png).
+Both long-name wrapping and counts are visible. This is a copy correction with no
+navigation change; it does not replace the broader runtime gaps above.
+
+Evidence: `/tmp/inventory-count-{red,green,check,structural}.log` on paul;
+`/tmp/inventory-count-households.xml` and `.png`; remote build log
+`/tmp/android-inventory-count-build.log`. This APK remains a synthetic audit build.

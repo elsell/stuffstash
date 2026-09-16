@@ -167,6 +167,7 @@ function TenantSwitcher({
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
+            const inventoryCount = dashboard.inventories.filter((inventory) => inventory.tenantId === tenant.id).length;
 
             return (
               <Pressable
@@ -187,7 +188,7 @@ function TenantSwitcher({
                 <View style={styles.optionText}>
                   <Text style={styles.optionName}>{tenant.name}</Text>
                   <Text style={styles.optionMeta}>
-                    {dashboard.inventories.filter((inventory) => inventory.tenantId === tenant.id).length.toString()} inventories
+                    {`${inventoryCount} ${inventoryCount === 1 ? 'inventory' : 'inventories'}`}
                   </Text>
                 </View>
               </Pressable>

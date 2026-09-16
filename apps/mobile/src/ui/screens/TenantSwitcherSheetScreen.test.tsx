@@ -69,11 +69,11 @@ it('retains the switcher with safe retry feedback when selecting an inventory fa
   } finally { await h.unmount(); }
 });
 
-function fixture(command: SelectInventoryCommand) {
+function fixture(command: SelectInventoryCommand, snapshot = dashboard) {
   const client = createMobileQueryClient();
   const scope = { tenantId: 'second', inventoryId: 'selected' };
   client.setQueryData(mobileQueryKeys.inventoryScope('session'), scope);
-  client.setQueryData(mobileQueryKeys.home('session', 'second', 'selected'), dashboard);
+  client.setQueryData(mobileQueryKeys.home('session', 'second', 'selected'), snapshot);
   return <MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => scope}>
     <TenantSwitcherSheetScreen dashboardQuery={new HomeDashboardQuery({ async getHomeDashboardSnapshot() { throw new Error('Fresh cache must be used'); } })} selectInventoryCommand={command} />
   </MobileServerStateProvider>;
@@ -126,4 +126,19 @@ it.each(['close', 'select'])('returns Home after %s from a root inventory switch
     await h.press(h.byLabel(action === 'close' ? 'Close inventory switcher' : 'Switch to inventory Main'));
     expect(dispatchedActions()).toEqual([{ type: 'replace', href: '/' }]);
   } finally { await h.unmount(); setCanGoBack(true); resetNavigation(); }
+});
+
+
+it.each([0, 1, 2])('shows the household inventory count with correct wording: %s', async count => {
+  const h = new MobileRenderHarness();
+  const snapshot = { ...dashboard, inventories: [
+    dashboard.inventories[1]!,
+    ...Array.from({ length: count }, (_, index) => ({ ...dashboard.inventories[0]!, id: `other-${index}` }))
+  ] };
+  try {
+    await h.render(fixture(new SelectInventoryCommand({ async selectInventory() {} }), snapshot));
+    await h.press(h.byLabel('Switch household'));
+    expect(h.allText().join('')).toContain(`${count} ${count === 1 ? 'inventory' : 'inventories'}`);
+    expect(h.allText().join('')).not.toContain('1 inventories');
+  } finally { await h.unmount(); }
 });

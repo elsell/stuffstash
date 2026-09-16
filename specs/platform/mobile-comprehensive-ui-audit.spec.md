@@ -210,7 +210,9 @@ current household by tenant identity, never its display name. Preserve the
 household/inventory hierarchy and current selection. Empty households explain that
 no inventories are available. Prevent duplicate selection requests, report a failed
 switch in place, and retain the sheet for retry. Dismiss only after a successful
-selection; suppress late navigation after the sheet has unmounted.
+selection; suppress late navigation after the sheet has unmounted. Household rows
+show the count of inventories belonging to that household, using “1 inventory”
+and “0 inventories” or plural counts as appropriate.
 
 ## Multiple tag selection
 
