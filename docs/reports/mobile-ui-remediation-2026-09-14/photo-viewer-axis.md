@@ -208,3 +208,21 @@ The immediate repeat above preserves scale, but zoom persistence across unrelate
 rerenders/elapsed time is still unverified and needs a targeted check. iOS, asset
 viewer regression, pinch/pan and assistive operation remain open. This is partial
 Android acceptance, not closure of M234.
+
+### M234 zoom persistence follow-up
+
+The installed Android responder reproduced scale2→1 on an unrelated mounted
+rerender. Its local mutable gesture state and Animated values were recreated on
+every render. The candidate now memoizes a gesture controller for image scope
+and initial geometry while committed callback refs remain current. New scopes
+retire timers/listeners/animations and stale handlers. Review found that a new
+fit-scale controller also needed to publish its zoom state so the parent could
+reenable horizontal paging; the new replacement assertions failed before that
+correction and pass after it. Activation publishes actual retained state during
+effect replay rather than always declaring unzoomed.
+
+All1,896 mobile tests across295 files, TypeScript and structural checks pass on
+paul. The final patch applies to pristine pinned0.2.2. Native rebuild is in
+progress; elapsed-time zoom retention, image replacement/paging and iOS remain
+open. This source reproduction does not prove which event caused the earlier
+interrupted native capture to reset.

@@ -244,3 +244,10 @@ Photo viewer footer labels and commands must remain readable over any image,
 including a zoomed white region. Use the viewer's opaque neutral canvas behind
 the complete footer, not only behind its command row; do not rely on image
 brightness or a black letterbox for text contrast.
+
+Photo scale, pan position and gesture ownership must survive unrelated React
+rerenders for the same image and viewport. Reset them only for an actual image
+or geometry change, explicit zoom reset or viewer dismissal. Pending gestures
+retire with their owning image; updated callbacks must still reach the current
+consumer. Verify retained scale through the installed Android responder as well
+as a delayed native capture.

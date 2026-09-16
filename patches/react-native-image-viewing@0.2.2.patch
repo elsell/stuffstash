@@ -107,7 +107,11 @@ diff --git a/dist/components/ImageItem/ImageItem.android.js b/dist/components/Im
      const onZoomPerformed = useCallback((isZoomed) => {
          var _a;
          onZoom(isZoomed);
-@@ -39,6 +40,7 @@
+@@ -36,9 +37,11 @@
+         onLongPress(imageSrc);
+     }, [imageSrc, onLongPress]);
+     const [panHandlers, scaleValue, translateValue] = usePanResponder({
++        scope: JSON.stringify([imageSrc, isActive, loading.failed]),
          initialScale: scale || 1,
          initialTranslate: translate || { x: 0, y: 0 },
          onZoom: onZoomPerformed,
@@ -115,7 +119,7 @@ diff --git a/dist/components/ImageItem/ImageItem.android.js b/dist/components/Im
          doubleTapToZoomEnabled,
          onLongPress: onLongPressHandler,
          delayLongPress,
-@@ -64,12 +66,13 @@
+@@ -64,12 +67,13 @@
          const offsetY = (_c = (_b = (_a = nativeEvent) === null || _a === void 0 ? void 0 : _a.contentOffset) === null || _b === void 0 ? void 0 : _b.y, (_c !== null && _c !== void 0 ? _c : 0));
          scrollValueY.setValue(offsetY);
      };
@@ -519,38 +523,64 @@ diff --git a/dist/hooks/useDoubleTapToZoom.d.ts b/dist/hooks/useDoubleTapToZoom.
 diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
 --- a/dist/hooks/usePanResponder.js
 +++ b/dist/hooks/usePanResponder.js
-@@ -15,7 +15,7 @@
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { useMemo, useEffect } from "react";
++import { useMemo, useEffect, useRef } from "react";
+ import { Animated, Dimensions, } from "react-native";
+ import { createPanResponder, getDistanceBetweenTouches, getImageTranslate, getImageDimensionsByTranslate, } from "../utils";
+ const SCREEN = Dimensions.get("window");
+@@ -15,7 +15,19 @@
  const SCALE_MAX = 2;
  const DOUBLE_TAP_DELAY = 300;
  const OUT_BOUND_MULTIPLIER = 0.75;
 -const usePanResponder = ({ initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, }) => {
-+const usePanResponder = ({ onSingleTap, initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, }) => {
++const usePanResponder = ({ onSingleTap, initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, scope, }) => {
++    const callbacks = useRef({ onSingleTap, onZoom, onLongPress });
++    useEffect(() => { callbacks.current = { onSingleTap, onZoom, onLongPress }; });
++    const controller = useMemo(() => createGestureController({
++        initialScale, initialTranslate, doubleTapToZoomEnabled, delayLongPress,
++        onSingleTap: () => callbacks.current.onSingleTap?.(),
++        onZoom: value => callbacks.current.onZoom(value),
++        onLongPress: () => callbacks.current.onLongPress(),
++    }), [initialScale, initialTranslate.x, initialTranslate.y, doubleTapToZoomEnabled, delayLongPress, scope]);
++    useEffect(() => controller.activate(), [controller]);
++    return controller.values;
++};
++const createGestureController = ({ onSingleTap, initialScale, initialTranslate, onZoom, doubleTapToZoomEnabled, onLongPress, delayLongPress, }) => {
      let numberInitialTouches = 1;
      let initialTouches = [];
      let currentScale = initialScale;
-@@ -25,6 +25,21 @@
+@@ -25,6 +37,13 @@
      let isDoubleTapPerformed = false;
      let lastTapTS = null;
      let longPressHandlerRef = null;
 +    let singleTapHandlerRef = null;
 +    let tapCandidate = false;
-+    let active = true;
++    let active = false;
 +    const cancelSingleTap = () => {
 +        if (singleTapHandlerRef !== null) clearTimeout(singleTapHandlerRef);
 +        singleTapHandlerRef = null;
 +    };
-+    useEffect(() => {
-+        active = true;
-+        return () => {
-+        active = false;
-+        cancelSingleTap();
-+        if (longPressHandlerRef !== null) clearTimeout(longPressHandlerRef);
-+        };
-+    });
      const meaningfulShift = MIN_DIMENSION * 0.01;
      const scaleValue = new Animated.Value(initialScale);
      const translateValue = new Animated.ValueXY(initialTranslate);
-@@ -73,12 +88,19 @@
+@@ -60,25 +79,24 @@
+     };
+     const fitsScreenByWidth = () => imageDimensions.width * currentScale < SCREEN_WIDTH;
+     const fitsScreenByHeight = () => imageDimensions.height * currentScale < SCREEN_HEIGHT;
+-    useEffect(() => {
+-        scaleValue.addListener(({ value }) => {
+-            if (typeof onZoom === "function") {
+-                onZoom(value !== initialScale);
+-            }
+-        });
+-        return () => scaleValue.removeAllListeners();
+-    });
+     const cancelLongPressHandle = () => {
+         longPressHandlerRef && clearTimeout(longPressHandlerRef);
      };
      const handlers = {
          onGrant: (_, gestureState) => {
@@ -571,7 +601,7 @@ diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
              initialTouches = event.nativeEvent.touches;
              numberInitialTouches = gestureState.numberActiveTouches;
              if (gestureState.numberActiveTouches > 1)
-@@ -87,6 +109,8 @@
+@@ -87,6 +105,8 @@
              // Handle double tap event by calculating diff between first and second taps timestamps
              isDoubleTapPerformed = Boolean(lastTapTS && tapTS - lastTapTS < DOUBLE_TAP_DELAY);
              if (doubleTapToZoomEnabled && isDoubleTapPerformed) {
@@ -580,7 +610,15 @@ diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
                  const isScaled = currentTranslate.x !== initialTranslate.x; // currentScale !== initialScale;
                  const { pageX: touchX, pageY: touchY } = event.nativeEvent.touches[0];
                  const targetScale = SCALE_MAX;
-@@ -127,8 +151,10 @@
+@@ -117,6 +137,7 @@
+                         useNativeDriver: true,
+                     }),
+                 ], { stopTogether: false }).start(() => {
++                    if (!active) return;
+                     currentScale = nextScale;
+                     currentTranslate = nextTranslate;
+                 });
+@@ -127,8 +148,10 @@
              }
          },
          onMove: (event, gestureState) => {
@@ -591,7 +629,7 @@ diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
                  cancelLongPressHandle();
              }
              // Don't need to handle move because double tap in progress (was handled in onStart)
-@@ -144,6 +170,7 @@
+@@ -144,6 +167,7 @@
              const isTapGesture = numberInitialTouches == 1 && gestureState.numberActiveTouches === 1;
              const isPinchGesture = numberInitialTouches === 2 && gestureState.numberActiveTouches === 2;
              if (isPinchGesture) {
@@ -599,7 +637,7 @@ diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
                  cancelLongPressHandle();
                  const initialDistance = getDistanceBetweenTouches(initialTouches);
                  const currentDistance = getDistanceBetweenTouches(event.nativeEvent.touches);
-@@ -212,8 +239,20 @@
+@@ -212,8 +236,20 @@
                  tmpTranslate = { x: nextTranslateX, y: nextTranslateY };
              }
          },
@@ -620,14 +658,45 @@ diff --git a/dist/hooks/usePanResponder.js b/dist/hooks/usePanResponder.js
              if (isDoubleTapPerformed) {
                  isDoubleTapPerformed = false;
              }
+@@ -267,7 +303,27 @@
+             }
+         },
+     };
+-    const panResponder = useMemo(() => createPanResponder(handlers), [handlers]);
+-    return [panResponder.panHandlers, scaleValue, translateValue];
++    const panResponder = createPanResponder(handlers);
++    return {
++        values: [panResponder.panHandlers, scaleValue, translateValue],
++        activate() {
++            active = true;
++            onZoom(currentScale !== initialScale);
++            const listener = scaleValue.addListener(({ value }) => {
++                if (active) onZoom(value !== initialScale);
++            });
++            return () => {
++                active = false;
++                tapCandidate = false;
++                lastTapTS = null;
++                cancelSingleTap();
++                cancelLongPressHandle();
++                scaleValue.removeListener(listener);
++                scaleValue.stopAnimation();
++                translateValue.x.stopAnimation();
++                translateValue.y.stopAnimation();
++            };
++        },
++    };
+ };
+ export default usePanResponder;
 diff --git a/dist/hooks/usePanResponder.d.ts b/dist/hooks/usePanResponder.d.ts
 --- a/dist/hooks/usePanResponder.d.ts
 +++ b/dist/hooks/usePanResponder.d.ts
-@@ -8,6 +8,7 @@
+@@ -8,6 +8,8 @@
  import { Animated, GestureResponderHandlers } from "react-native";
  import { Position } from "../@types";
  declare type Props = {
 +    onSingleTap?: () => void;
++    scope?: string;
      initialScale: number;
      initialTranslate: Position;
      onZoom: (isZoomed: boolean) => void;

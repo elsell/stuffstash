@@ -39,7 +39,7 @@ overrides:
   yargs: 17.7.2
 
 patchedDependencies:
-  react-native-image-viewing@0.2.2: 8b6de6bcae0ef9441d0a9d389fde1067b3be1d4e189a60d75919b5b957926500
+  react-native-image-viewing@0.2.2: 3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428
 
 importers:
 
@@ -130,7 +130,7 @@ importers:
         version: 0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)
       react-native-image-viewing:
         specifier: 0.2.2
-        version: 0.2.2(patch_hash=8b6de6bcae0ef9441d0a9d389fde1067b3be1d4e189a60d75919b5b957926500)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
+        version: 0.2.2(patch_hash=3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       react-native-keyboard-controller:
         specifier: 1.20.7
         version: 1.20.7(react-native-reanimated@4.2.1(react-native-worklets@0.7.4(@babel/core@7.29.7)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
@@ -8128,7 +8128,7 @@ snapshots:
 
   react-is@19.2.7: {}
 
-  react-native-image-viewing@0.2.2(patch_hash=8b6de6bcae0ef9441d0a9d389fde1067b3be1d4e189a60d75919b5b957926500)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0):
+  react-native-image-viewing@0.2.2(patch_hash=3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0):
     dependencies:
       react: 19.2.0
       react-native: 0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)
