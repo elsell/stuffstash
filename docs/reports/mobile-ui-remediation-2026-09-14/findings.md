@@ -2658,10 +2658,11 @@ validation pass remotely; critic found no blocker. Native presentation remains o
 
 ### M187 — Inbox read-state accessory still uses a custom command
 
-P3 source-confirmed at17f9e2b7; not yet implemented. Per-row read/unread uses a
+P3 source-confirmed at17f9e2b7. Per-row read/unread used a
 Pressable plus Lucide envelope while surrounding inbox commands use platform
-controls. No concrete native limitation is documented. Add a suitable native icon
-command adapter for iOS/Android, preserving independent row-open behavior, spoken
-action, disabled state and read-state reversal. Do not reuse the refinement adapter:
-its Android icon is specifically a filter. Native hit bounds and row fit need
-verification after the replacement.
+controls. No concrete native limitation was documented. The candidate adds a
+SwiftUI borderless icon button and Compose IconButton, preserving independent
+row-open behavior, spoken action, disabled state and read-state reversal. It
+reserves 48 points for the accessory. Twenty focused tests plus TypeScript and
+structural checks pass remotely. Native hit bounds, row fit and assistive grouping
+still require verification; the preview Pressable is only the non-native fallback.

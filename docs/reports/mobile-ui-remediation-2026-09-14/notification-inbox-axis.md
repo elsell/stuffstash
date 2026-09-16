@@ -10,13 +10,13 @@ push delivery and reminder setup remain in [notification ownership](notification
 | Navigation | Native Notifications header, settings destination, item and breadcrumb navigation. M55 owns delayed-open navigation; native return/interruption remains open. |
 | Selection | All/Unread is a native segmented choice. Read state is a separate per-row action, not card selection. |
 | Modality | Standard pushed inbox and destination routes. No extra confirmation for reversible read-state changes. |
-| Layout | Automatically inset ScrollView, padded rows and trailing read action reserve44 points. Long title/date/path overlap requires actual captures. |
+| Layout | Automatically inset ScrollView, padded rows and trailing read action reserve 48 points. Long title/date/path overlap requires actual captures. |
 | Adaptation | Wrapping title and vertical sections, no fixed screen height. Tablet density and narrow-window row fit remain open. |
 | Typography | Read/unread weights differ with an additional marker and spoken state. Date follows calendar precision. Large-text work follows normal-size fixes. |
-| Appearance | Semantic palette and native header/segment/recovery controls. M187 tracks the remaining custom read-state accessory. Contrast and disabled rendering remain unverified. |
+| Appearance | Semantic palette and native header/segment/recovery controls. M187 replaces the custom read-state accessory with SwiftUI/Compose buttons. Contrast and disabled rendering remain unverified. |
 | Localization | Shared expiration formatter preserves month/day precision. English labels and date sentences still need locale/RTL review. |
 | Imagery | Envelope/open-envelope signal the read command; breadcrumb text names locations. No asset photos. Native symbol consistency remains M187. |
-| Targets | Read action declares44-point minimum bounds; these do not prove hit geometry. M187 will replace its custom implementation with an actual native accessory. |
+| Targets | Read action reserves 48-point bounds and uses an actual native accessory in M187; declarations do not prove hit geometry. |
 | Gestures | Native scroll and explicit pull; no swipe-only operation. Read state, paging and settings remain explicit commands. |
 | Keyboard | N/A: no text entry in the inbox. |
 | Accessibility | Item labels include expiration and read state; independent named read command, error alert and native filter are declared. Native traversal/focus/announcements remain open. |
@@ -34,4 +34,15 @@ push delivery and reminder setup remain in [notification ownership](notification
 Eight M186 RED cases reproduced stale private titles after401/403 during refresh,
 open, read-state or mark-all. All31 focused checks and static validation pass on
 paul (`/tmp/inbox-access-reviewed.log`); critic found no blocker. Native geometry,
-assistive behavior and physical push acceptance remain open. M187 is not fixed yet.
+assistive behavior and physical push acceptance remain open.
+
+M187 candidate uses a borderless SwiftUI icon button and Compose IconButton with
+separate item-open behavior, a full spoken action and disabled callback guard.
+Twenty focused checks plus TypeScript and structural validation pass on paul
+(`/tmp/native-read-button-green.log`). The adapter check exercises iOS symbol
+reversal and disabled activation; it does not verify native rendering or Android
+assistive grouping. Current-build native geometry and traversal remain pending.
+Code review caught an Android wrapper whose accessibility activation was iOS-only.
+The candidate now places the content description on the Compose icon inside its
+native button, matching the existing conversation adapter. Follow-up review found
+no blocker; TypeScript and structural checks pass after the correction.

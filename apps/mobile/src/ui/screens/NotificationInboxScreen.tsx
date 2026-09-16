@@ -2,7 +2,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack, useFocusEffect } from 'expo-router';
-import { Mail, MailOpen } from 'lucide-react-native';
+import { NativeReadStateButton } from '../components/NativeReadStateButton';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -120,9 +120,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? 'Expired' : 'Expires'} {formatAssetExpiration(row.expiration)}</Text>
 
     </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} style={styles.readAction}>
-        {row.readAt || locallyRead.has(row.id) ? <Mail size={20} color={colors.action} /> : <MailOpen size={20} color={colors.action} />}
-      </Pressable>
+      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} /></View>
       {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? 'Partial location path' : 'Location unavailable'}</Text> : null}
       <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(!busy)onOpenAsset(entry.id);}} />
     </View>)}
@@ -132,6 +130,6 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 }
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md }, heading: { fontSize: 24, fontWeight: '700' }, title: { fontSize: 18, fontWeight: '600' },
-  actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 44, gap: spacing.sm },
-  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }
+  actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 48, gap: spacing.sm },
+  readAction: { position: 'absolute', right: 0, top: spacing.md, width: 48, height: 48 }
 });

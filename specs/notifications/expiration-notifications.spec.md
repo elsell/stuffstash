@@ -424,6 +424,14 @@ platform-native command adapter for Retry and Load more, including the route's
 inventory-load failure. Preserve the existing loading guard, error recovery,
 pagination merge and scoped query behavior; do not substitute an extra screen.
 
+## Inbox read-state accessory
+
+The per-row read/unread action uses an actual native icon button: a borderless
+SwiftUI button on iOS and a Compose IconButton on Android. Keep it separate from
+opening the item, use the appropriate envelope symbol, expose the full action name,
+and prevent callbacks when disabled. Reserve at least 48 points for the accessory;
+the preview renderer is not evidence of native geometry.
+
 ## Inbox access-loss recovery
 
 An authentication-required or permission-denied result from any inbox read or
