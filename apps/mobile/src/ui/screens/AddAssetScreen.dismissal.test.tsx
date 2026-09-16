@@ -327,7 +327,11 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
     await h.press(h.byLabel('Choose Blue tag color'));
     expect(store.load(draftContext)?.inlineTag?.color).toBe('#2F80ED');
-    await h.press(h.byText('Clear draft')?.parent ?? undefined);
+    await h.changeText(h.byLabel('Asset name'), 'Draft to clear');
+    expect(store.load(draftContext)?.title).toBe('Draft to clear');
+    expect(h.byLabel('Clear draft')).toBeDefined();
+    await h.press(h.byLabel('Clear draft'));
+    expect(store.load(draftContext)?.title).toBe('');
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
     expect(store.load(draftContext)?.inlineTag?.color ?? '').toBe('');
     await h.changeText(h.byLabel('Asset name'), 'Tent');

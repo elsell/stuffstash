@@ -680,14 +680,8 @@ function ScopedAddAssetScreen({
                       entry={inlineTag}
                       onChange={(ids, tags, entry) => editDraft(() => { setSelectedTagIds(ids); setNewTags(tags); setInlineTag(entry); })}
                     />
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={draftBusy}
-                      onPress={clearDraft}
-                      style={styles.clearDraftButton}
-                    >
-                      <Text style={styles.clearDraftText}>Clear draft</Text>
-                    </Pressable>
+                    <NativeCommandButton label="Clear draft" role="destructive"
+                      disabled={draftBusy} onPress={clearDraft} />
                   </View>
                 ) : null}
 
@@ -1628,19 +1622,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  clearDraftButton: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    minHeight: minimumTouchTargetSize,
-    paddingHorizontal: spacing.md
-  },
-  clearDraftText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
   savedText: {
     color: colors.accentStrong,
     fontSize: 14,

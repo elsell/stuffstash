@@ -2753,3 +2753,12 @@ Three named-command cases failed before implementation; all82 related checks,
 TypeScript and structural validation pass remotely. Critic found no blocker.
 Native long-label wrapping, disabled appearance and keyboard reachability remain
 pending. This does not migrate parent selection rows or change creation semantics.
+
+### M197 — Add Clear draft remains a custom command
+
+P2 source-confirmed at eac9c3ac. A custom muted text Pressable bypassed the shared
+native command adapter for explicit draft removal. The candidate uses the native
+destructive command inside More details, retaining the pending guard and scoped
+reset. The named-command test failed first; recovery checks now clear a stored
+title and unfinished tag/color before creating a new draft. Native appearance,
+target bounds and focus remain pending. No confirmation or Close semantics changed.

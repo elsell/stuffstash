@@ -81,8 +81,12 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise724
-pending,1,974 source-reviewed,489 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise667
+pending,2,030 source-reviewed,490 finding,23 runtime-partial and198 not-applicable.
+
+[Add and draft recovery](add-draft-axis.md) now cover three surfaces across24
+axes. M197 migrates Clear draft to a native destructive command;23 Add checks
+and static validation pass. Native text entry and recovery remain open.
 
 The [Move route review](move-route-axis.md) covers both routes, selection and
 creation across24 axes. M196 makes creation a native command;82 related checks
