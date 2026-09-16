@@ -75,9 +75,9 @@ indicator. Its12 focused tests, TypeScript and structural checks pass remotely;
 code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
-The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise1,314
-pending,1,510 source-reviewed,445 finding,24 runtime-partial and115 not-applicable.
+The audit ledger retains142 surface IDs ×24 axes, including two absent Add
+controls documented as inventory corrections. Its3,408 cells comprise1,290
+pending,1,532 source-reviewed,445 finding,24 runtime-partial and117 not-applicable.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
 includes the visible pending name on approval and blocks blank names;52 focused
@@ -87,8 +87,11 @@ M174 tracks the custom destination panel and missing lookup recovery; M175 track
 the narrow custom inline name commands. M175 now uses native commands below a
 full-width field;46 focused tests and static checks pass, with critic review.
 M174 now replaces the panel with a native stack selection route, search, checked
-choices and lookup recovery. The new R142 route adds24 pending axis cells; its
-full axis review and native presentation acceptance remain open.
+choices and lookup recovery. The new R142 route now has a full
+[24-axis source review](voice-location-axis.md). Its runner-only native journey
+uses the real proposal and destination screens to exercise retry, search, selection
+and Back. Fixture isolation,20 focused cases and static checks pass remotely;
+Swift compilation and native presentation acceptance remain open.
 
 Combined M174 checkpoint: all1,766 tests across278 files, TypeScript and mobile
 structural checks pass on paul. Code critic reviewed the route and added selection/

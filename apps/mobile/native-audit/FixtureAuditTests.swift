@@ -1507,6 +1507,54 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(app.textFields["Name"].value as? String, "Tools")
   }
 
+  func testVoiceProposalLocationSearchRetryAndReturn() {
+    let open = app.buttons["Audit voice proposal"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let original = app.buttons["Change containing location, currently Inventory root"]
+    XCTAssertTrue(original.waitForExistence(timeout: 15))
+    for _ in 0..<6 where !original.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(original.isHittable); original.tap()
+    let header = app.navigationBars["Containing location"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let retry = app.buttons["Retry locations"]
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Could not load locations."].exists)
+    XCTAssertTrue(retry.isHittable)
+    capture("voice-location-retry"); retry.tap()
+    let bin = app.descendants(matching: .any).matching(identifier: "Select Garage bin, Garage / Garage bin").firstMatch
+    XCTAssertTrue(bin.waitForExistence(timeout: 10))
+    let search = app.buttons["Search"].firstMatch
+    XCTAssertTrue(search.isHittable); search.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap(); waitForKeyboard(); field.typeText("missing")
+    XCTAssertEqual(field.value as? String, "missing")
+    XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
+    XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
+    capture("voice-location-empty-search")
+    let clear = field.buttons["Clear text"]
+    XCTAssertTrue(clear.isHittable); clear.tap()
+    let clearedField = app.searchFields.firstMatch
+    XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Clearing a query must keep native search available")
+    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); clearedField.typeText("Garage")
+    XCTAssertEqual(clearedField.value as? String, "Garage")
+    XCTAssertTrue(bin.waitForExistence(timeout: 10))
+    XCTAssertTrue(bin.isHittable); bin.tap()
+    let changed = app.buttons["Change containing location, currently Garage / Garage bin"]
+    XCTAssertTrue(changed.waitForExistence(timeout: 10))
+    for _ in 0..<6 where !changed.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(changed.isHittable)
+    capture("voice-proposal-selected-location"); changed.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
+    let back = header.buttons["BackButton"].firstMatch
+    XCTAssertTrue(back.isHittable); back.tap()
+    XCTAssertTrue(changed.waitForExistence(timeout: 10))
+    XCTAssertFalse(original.exists)
+    capture("voice-proposal-location-back")
+  }
+
   func testSettingsEditorNativeBackProtectsDirtyDraft() {
     openCustomizationEditor()
     let name = app.textFields["Name"]

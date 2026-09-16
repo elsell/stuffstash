@@ -1,4 +1,5 @@
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
+import type { PhotoSelectionProvider } from '../../application/add/PhotoSelectionQuery';
 import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeSheetActions } from '../components/NativeSheetActions';
@@ -52,6 +53,10 @@ import {
 
 export function VoiceSessionSheetScreen() {
   const { photoSelectionQuery } = useAppServices();
+  return <VoiceSessionWorkspace photoSelectionQuery={photoSelectionQuery} />;
+}
+
+export function VoiceSessionWorkspace({ photoSelectionQuery }: { readonly photoSelectionQuery: PhotoSelectionProvider }) {
   const {
     photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia, scopeIdentity,
     approveRealtimeActionPlan,

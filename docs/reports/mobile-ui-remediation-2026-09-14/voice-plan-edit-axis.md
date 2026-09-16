@@ -18,8 +18,8 @@ native keyboard, selection and approval geometry remain unverified.
 | Localization | Labels are English; name normalization preserves Unicode characters while collapsing whitespace. Long translations/RTL remain open. |
 | Imagery | Local photo previews retain original URIs; numbered remove commands. Symbols distinguish editing and destination selection. |
 | Targets | M175 replaces36×44 custom name icons with shared native commands below the field; actual native geometry remains unverified. |
-| Gestures | Explicit edit, save, cancel and approve commands. No drag-only requirement. Parent rows currently use navigation chevrons for value selection (M174). |
-| Keyboard | Name autofocus/Done commits; keyboard avoidance wraps conversation. M173 includes the visible pending name on Approve. Parent search uses a custom text input (M174). |
+| Gestures | Explicit edit, save, cancel and approve commands. No drag-only requirement. M174 replaces parent navigation chevrons with checked selection rows. |
+| Keyboard | Name autofocus/Done commits; keyboard avoidance wraps conversation. M173 includes the visible pending name on Approve. M174 moves parent search into native navigation search. |
 | Accessibility | Named edit/location/photo commands and disabled parent semantics. Parent state indication and inline name command geometry require corrections/acceptance. |
 | Motion | No explicit proposal animation; parent appearance and keyboard transitions need native acceptance. |
 | Content | Summary, ordered commands, placement, expiration and risks are shown before approval. Proposed IDs are not treated as saved asset links. |
@@ -40,4 +40,6 @@ M175 adds four mounted name editor cases (Save, Done, Cancel, blank). All46 focu
 editor/approval/presentation tests and static checks pass on paul; code critic
 review is complete. Name ownership remains above the sheet. Native acceptance
 remains open. M174 now has a route candidate with eight choice/recovery/ownership
-checks; the new R142 route's complete axis review is pending.
+checks; the new R142 route has a separate [24-axis source review](voice-location-axis.md).
+The native fixture now exercises the production proposal, destination route and
+returned draft; simulator execution remains pending.

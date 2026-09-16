@@ -1,4 +1,7 @@
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
+import { VoiceProposalFixtureProvider } from './VoiceProposalFixture';
+import { voiceNativeSheetOptions } from '../src/ui/screens/VoiceNativeSheetOptions';
+export { VoiceProposalFixture, VoicePlanLocationFixture } from './VoiceProposalFixture';
 export { NoticePlacementFixture } from './NoticePlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { AccountConnectionFixture } from './AccountConnectionFixture';
@@ -57,7 +60,7 @@ export function FixtureLayout() {
     });
   });
   return <AppKeyboardProvider><AppearanceProvider controller={controller}>
-    <FixtureNavigation />
+    <VoiceProposalFixtureProvider><FixtureNavigation /></VoiceProposalFixtureProvider>
   </AppearanceProvider></AppKeyboardProvider>;
 }
 
@@ -69,6 +72,8 @@ function FixtureNavigation() {
   if (!isHydrated) return <View />;
   return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerBackTitle: 'Back', headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+      <Stack.Screen name="voice" options={voiceNativeSheetOptions(palette)} />
+      <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
@@ -128,6 +133,7 @@ export function FixtureMenu() {
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
   return <FixturePage>
+    <Button title="Audit voice proposal" onPress={() => router.push('/voice' as Href)} />
     <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
     <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
     <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />

@@ -61,3 +61,11 @@ release boundaries. Review shared consumers and run combined validation for each
 batch. An explicit user request may cut an interim release from the validated
 subset. An already-running release may finish while the next batch accumulates.
 Do not replace completeness or native acceptance with a quota of commits.
+
+Native proposal-selection acceptance uses the production conversation workspace
+and destination route screen under synthetic voice/query ports. Share the real
+voice sheet options with the fixture; keep its provider above both native routes
+so Back exercises retained drafts. Test lookup failure/retry, native search,
+immediate destination selection, Back and visible proposal state. Fixture routes
+must remain runner-only and must not load production services or credentials.
+Simulator results do not establish physical capture or server authorization.

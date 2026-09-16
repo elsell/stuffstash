@@ -41,6 +41,8 @@ exports = {
     "audit-sharing": "InventorySharingFixture",
     "audit-customization": "CustomizationCollectionFixture",
     "audit-customization-editor": "CustomizationEditorFixture",
+    "voice": "VoiceProposalFixture",
+    "voice-plan-location": "VoicePlanLocationFixture",
     "audit-footer-appearance": "FooterAppearanceFixture",
     "audit-move-here-recovery": "MoveHereRecoveryFixture",
     "audit-edit-tags": "AssetEditTagsFixture",

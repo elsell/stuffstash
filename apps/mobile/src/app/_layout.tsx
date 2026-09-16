@@ -1,4 +1,5 @@
 import { AppNoticeScreenLayout } from '../ui/feedback/AppNoticeScreenLayout';
+import { voiceNativeSheetOptions } from '../ui/screens/VoiceNativeSheetOptions';
 import { HomeReturnTaskProvider } from '../ui/navigation/HomeReturnTaskPresentation';
 import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
@@ -61,17 +62,7 @@ function ThemedApp() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="voice"
-          options={{
-            contentStyle: { backgroundColor: palette.surface },
-            headerShown: false,
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.42, 0.88],
-            sheetCornerRadius: 24,
-            sheetExpandsWhenScrolledToEdge: true,
-            sheetGrabberVisible: true,
-            sheetInitialDetentIndex: 0,
-            sheetLargestUndimmedDetentIndex: 'none'
-          }}
+          options={voiceNativeSheetOptions(palette)}
         />
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
         <Stack.Screen name="settings/account" options={{ title: 'Account' }} />
