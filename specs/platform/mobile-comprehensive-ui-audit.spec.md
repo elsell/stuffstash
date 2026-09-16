@@ -1669,3 +1669,12 @@ Use a full-screen native-stack card rather than an Android form sheet, which omi
 that header. Preserve iOS detents, retained conversation state, media pause on Close,
 and confirmation before discarding an unfinished proposal through New conversation.
 Verify context placement and proposal actions after the presentation change.
+
+## Full-screen photo viewer command visibility
+
+The fixed black photo canvas requires a self-contained native filled Retry command
+so the app's light appearance cannot put dark text directly on black. Retain the
+same retry callback and unavailable-photo state. Use the existing safe-area-aware
+viewer toolbar as the single explicit Close affordance; suppress the image library's
+redundant default header, which overlaps Android status icons. Preserve swipe/system
+Back dismissal and removal/paging controls. Verify both asset and draft-photo consumers.

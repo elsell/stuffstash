@@ -61,3 +61,26 @@ stays disabled while pending. Filename truncation, VoiceOver focus, zoom and
 background interruptions remain runtime acceptance. This completes the remaining
 source cells for S100 without closing native findings. Gallery preview failures
 are separately tracked as M211; the full-viewer repair did not cover that surface.
+
+## M233 Android recovery command visibility
+
+On Android16 Pixel6, normal text/light, APKd3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32,
+the [unavailable-photo capture](evidence/android-photo-commands-before.png) exposes
+dark Retry text on the black canvas and a duplicate top Close overlapping status
+icons. Retrying the deliberately missing resource remains unavailable; the footer
+Close returns to the fixture with Photos remaining:1 and Removal attempts:0.
+The shared candidate uses native filled Retry and omits the library header, keeping
+the existing safe-area footer Close and system/swipe dismissal. Both asset and draft
+consumers pass31 remote behavior/presentation tests; TypeScript and structural
+checks pass. Critic found no source blocker. Rebuilt native verification is pending.
+
+Baseline: `/tmp/android-photo-{unavailable,retry,closed}.xml` and
+`/tmp/android-photo-retry.png`. The fixture has no live media or deletion service.
+
+Rebuilt APK426c83b838cb99e80835aa10309c10514c7165d76c09554e814dca7b186c9fa9
+shows [filled Retry and no overlapping header Close](evidence/android-photo-commands-after.png).
+Retry leaves the deliberate missing-image error recoverable; the remaining Close
+positively returns with Photos remaining:1, Removal attempts:0 and Back to audit
+menu. Evidence: `/tmp/android-photo-fixed{,-retry,-closed}.xml` and
+`/tmp/android-photo-fixed.png`. This confirms the Android unavailable-asset sample;
+iOS, draft-photo native acceptance, zoom chrome restoration and TalkBack remain open.

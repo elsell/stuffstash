@@ -3126,3 +3126,13 @@ and keyboard disappear. The original fresh-query acceptance stops there. The
 unfocused-collapse exception does not establish this focused behavior is correct.
 Static native focused-clear comparison is queued without weakening production
 acceptance. See native-ipad-350806.md for event/frame evidence and context limits.
+
+### M233 — Photo viewer recovery command and duplicate Close conflict with its canvas
+
+P2 Android runtime-confirmed at normal text/light appearance: the fixed-black
+photo viewer renders Retry using dark Material text, and the library's duplicate
+upper Close overlaps status icons. The shared candidate uses a filled native Retry
+and suppresses the default header in favor of the existing safe-area footer Close.
+Both asset and draft-photo consumers retain their removal, paging and dismissal
+behavior. Android rebuilt unavailable-photo Retry/Close passes; iOS/zoom/assistive coverage remains
+open. Evidence: photo-viewer-axis.md.
