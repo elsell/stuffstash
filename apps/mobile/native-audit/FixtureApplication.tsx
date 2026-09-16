@@ -1,6 +1,6 @@
 export { ManagedSearchPlacementFixture } from './ManagedSearchPlacementFixture';
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
-import { returnFromFilterScreen } from '../src/ui/navigation/returnFromFilterScreen';
+import { returnToPreviousOrHome } from '../src/ui/navigation/returnToPreviousOrHome';
 import { VoiceProposalFixtureProvider } from './VoiceProposalFixture';
 import { voiceNativeSheetOptions } from '../src/ui/screens/VoiceNativeSheetOptions';
 export { VoiceProposalFixture, VoicePlanLocationFixture } from './VoiceProposalFixture';
@@ -220,7 +220,7 @@ export function BrowseFilterFixture() {
   return <BrowseFiltersScreen initial={{ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' }}
     query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }, ...Array.from({ length: 30 }, (_, index) => ({ id: `audit-tag-${index}`, key: `audit-tag-${index}`, label: `Long list tag ${String(index + 1).padStart(2, '0')}` })), { id: 'audit-last', key: 'audit-last', label: 'ZZ final tag' }]}
     onApply={draft => { setResult(draft.tagIds.length ? `Browse selected tags: ${draft.tagIds.join(',')}` : `Browse availability: ${draft.checkoutState}`); router.back(); }}
-    onCancel={() => returnFromFilterScreen(router)}
+    onCancel={() => returnToPreviousOrHome(router)}
     onExpiration={mode => { setResult(`Expiration mode: ${mode}`); router.back(); }} />;
 }
 
@@ -231,7 +231,7 @@ export function ExpirationFilterFixture() {
     types: [{ id: 'audit-food', label: 'Food' }],
     tags: [{ id: 'audit-tools', label: 'Tools' }, { id: 'audit-holiday', label: 'Holiday supplies' }],
     locations: [{ id: 'audit-kitchen', label: 'Kitchen / Cabinet' }, { id: 'audit-garage', label: 'Garage / Cabinet' }]
-  }} onApply={filter => { setResult(`Expiration mode: ${filter.mode}`); router.back(); }} onCancel={() => returnFromFilterScreen(router)} />;
+  }} onApply={filter => { setResult(`Expiration mode: ${filter.mode}`); router.back(); }} onCancel={() => returnToPreviousOrHome(router)} />;
 }
 
 function DraftOptionsFixture() {

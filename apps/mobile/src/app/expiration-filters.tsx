@@ -1,5 +1,5 @@
 import { FilterLoadingScreen } from '../ui/components/FilterLoadingScreen';
-import { returnFromFilterScreen } from '../ui/navigation/returnFromFilterScreen';
+import { returnToPreviousOrHome } from '../ui/navigation/returnToPreviousOrHome';
 import { NativeCommandButton } from '../ui/components/NativeCommandButton';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -12,7 +12,7 @@ import { mobileQueryKeys } from '../adapters/serverState/MobileQueryClient';
 import { useSettingsListStyles } from '../ui/screens/SettingsList';
 export default function ExpirationFiltersRoute() {
  const services = useAppServices(); const router = useRouter(); const scope = useMobileServerStateScope(); const { styles } = useSettingsListStyles();
- const cancel = () => returnFromFilterScreen(router);
+ const cancel = () => returnToPreviousOrHome(router);
  const { tenantId = '', inventoryId = '', filter } = parseExpirationRoute(useLocalSearchParams<ExpirationRouteParams>());
  const state = useQuery({ queryKey: [...mobileQueryKeys.inventory(scope.scopeId, tenantId, inventoryId), 'expiration', 'choices'], queryFn: async ({ signal }) => {
   const selected = await scope.loadInventoryScope({ signal });

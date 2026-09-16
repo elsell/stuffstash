@@ -34,3 +34,21 @@ Retained evidence: `/tmp/android-add-{header,after,rejected,closed}.xml`,
 `/tmp/android-add-{red,green,structural,build}.log`. Build provenance is the isolated
 db8d2bb8 fixture tree plus the previously recorded patches and this Add option
 change, not a distribution build of the full current branch.
+
+## M227 root Close follow-up
+
+Cold launching the pre-fix3a8ed4fb APK directly into Add and tapping Close reproduces
+the gap: the Add item heading remains. The existing filter return helper is now
+named `returnToPreviousOrHome` and shared with production Add and its fixture.
+It goes back when available and otherwise replaces `/`; Add's retained-draft and
+busy guards remain outside that navigation-only helper.
+
+Rebuilt APKb533f15c9b6c92bedc66349d3af52253b1ec831ae89c13213036871c5a4ef493
+passes the same cold-entry Close check, reaching the fixture root index, and also
+passes warm-entry Close to the previous index. The fixture index substitutes for
+production Home; no claim of a signed-in Home data-load check is made.
+16 focused return-policy/Add dismissal tests, TypeScript and structural checks pass
+on paul; code critic found no blocker. No draft-clear behavior was introduced.
+Native cross-route draft persistence and iOS root-entry acceptance remain separate
+coverage gaps. Evidence: `/tmp/android-add-root-close-{before,after}.xml`,
+`/tmp/android-add-warm-close-after.xml`, `/tmp/add-root-return-{check,structural,build}.log`.

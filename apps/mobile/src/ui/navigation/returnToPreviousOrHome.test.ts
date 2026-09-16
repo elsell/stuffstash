@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest';
-import { returnFromFilterScreen } from './returnFromFilterScreen';
+import { returnToPreviousOrHome } from './returnToPreviousOrHome';
 
-it.each([true, false])('leaves unapplied filters with history=%s', hasHistory => {
+it.each([true, false])('returns to the previous screen or Home with history=%s', hasHistory => {
   const actions: string[] = [];
-  returnFromFilterScreen({ canGoBack: () => hasHistory,
+  returnToPreviousOrHome({ canGoBack: () => hasHistory,
     back: () => { actions.push('back'); }, replace: path => { actions.push(`replace ${path}`); }
   });
   expect(actions).toEqual([hasHistory ? 'back' : 'replace /']);

@@ -1,3 +1,4 @@
+import { returnToPreviousOrHome } from '../ui/navigation/returnToPreviousOrHome';
 import { useMemo } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAppServices } from '../ui/navigation/AppServicesContext';
@@ -33,7 +34,7 @@ export default function AddRoute() {
       addDraftScopeQuery={addDraftScopeQuery}
       createAssetCommand={createAssetCommand}
       initialParent={initialParent}
-      onDismiss={() => router.back()}
+      onDismiss={() => returnToPreviousOrHome(router)}
       parentLookupQuery={parentLookupQuery}
       photoSelectionQuery={photoSelectionQuery}
     />

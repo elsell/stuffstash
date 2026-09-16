@@ -3073,4 +3073,6 @@ entry remain outside that sample.
 P2 source-confirmed during M226 review: `src/app/add.tsx` dismisses only through
 `router.back()`. With no back destination, Close cannot ensure an escape. Reuse a
 bounded return policy that goes back when possible and otherwise returns Home,
-while preserving retained drafts and pending-operation guards. Not fixed by M226.
+while preserving retained drafts and pending-operation guards. Follow-up now shares
+that policy with filters and passes Android cold/warm Close checks; source tests
+retain draft/busy guards. See android-add-header.md for evidence and remaining gaps.

@@ -1,5 +1,5 @@
 import { FilterLoadingScreen } from '../ui/components/FilterLoadingScreen';
-import { returnFromFilterScreen } from '../ui/navigation/returnFromFilterScreen';
+import { returnToPreviousOrHome } from '../ui/navigation/returnToPreviousOrHome';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
@@ -27,7 +27,7 @@ export default function BrowseFiltersRoute() {
     JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId, target.sessionScope]),
     async signal => { verifyBrowseFilterScope(target, scope.scopeId, await scope.loadInventoryScope({ signal })); }
   );
-  const dismiss = () => { cancel(); returnFromFilterScreen(router); };
+  const dismiss = () => { cancel(); returnToPreviousOrHome(router); };
   const identity = useQuery({ queryKey: mobileQueryKeys.inventoryScope(scope.scopeId), queryFn: ({ signal }) => scope.loadInventoryScope({ signal }), staleTime: Infinity });
   const choices = useQuery({
     queryKey: [...mobileQueryKeys.inventory(scope.scopeId, target.tenantId, target.inventoryId), 'browse-filter-tags', target.sessionScope],

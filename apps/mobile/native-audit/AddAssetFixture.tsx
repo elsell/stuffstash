@@ -1,3 +1,4 @@
+import { returnToPreviousOrHome } from '../src/ui/navigation/returnToPreviousOrHome';
 import { QueryReadinessDiagnostics } from './QueryReadinessDiagnostics';
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
 import { ScrollView, Text } from 'react-native';
@@ -32,7 +33,7 @@ export function AddAssetFixture() {
       createAssetCommand={{ execute: async input => {
         await new Promise(resolve => setTimeout(resolve, 5000));
         throw new Error(`Rejected draft: ${input.title}`);
-      } }} onDismiss={() => router.back()} /></AddFixtureErrorBoundary>
+      } }} onDismiss={() => returnToPreviousOrHome(router)} /></AddFixtureErrorBoundary>
     <QueryReadinessDiagnostics client={fixture.client} />
   </MobileServerStateProvider>;
 }

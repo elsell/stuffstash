@@ -1637,3 +1637,9 @@ commands remain visible. Android form sheets do not render the requested header.
 Keep the existing retained-draft and busy-operation guards, save eligibility and
 return behavior; iOS keeps the full-height native Add sheet. Production route and
 the production-equivalent native audit fixture must share these options.
+
+Closing Add must return to the previous route when history exists and replace the
+root with Home otherwise. Reuse the same navigation-only return policy as filter
+cancellation; callers retain their own draft, cancellation and pending-work guards.
+The isolated Add native fixture must exercise the same policy. A retained Add draft
+must not be cleared merely because Close chooses the Home fallback.
