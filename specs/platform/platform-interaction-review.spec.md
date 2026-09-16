@@ -81,3 +81,11 @@ from distinct controls. When a recorded hierarchy exposes the same nested text
 twice, select its first matching text container explicitly; retain the complete
 visibility assertion. Do not weaken geometry or interaction checks to make an
 ambiguous selector pass. Record the failed run and require a native rerun.
+
+When a system bar item's accessibility frame is smaller than the recommended
+44-point hit region, record the frame failure and separately test delivered
+actions near the edges of a centered 44-point square. A frame is not direct
+evidence of touch delivery. The Home fixture may count its synthetic notification
+callback to observe center and edge taps without navigating away. Keep the
+original geometry gate intact until evidence justifies any change to acceptance;
+the diagnostic does not certify other actions, devices, or full Home composition.

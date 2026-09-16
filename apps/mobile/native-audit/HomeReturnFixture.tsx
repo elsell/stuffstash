@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Text } from 'react-native';
 import { AssetCheckoutCommand } from '../src/application/assets/AssetCheckoutCommand';
 import { HomeDashboardQuery } from '../src/application/home/HomeDashboardQuery';
 import type { HomeDashboardSnapshot } from '../src/application/home/InventorySummaryRepository';
@@ -24,6 +25,7 @@ const headerAssets: readonly AssetSummary[] = [drill, ...['Audit camping equipme
 export function HomeHeaderFixture() { return <HomeReturnFixture headerAudit />; }
 
 export function HomeReturnFixture({ headerAudit = false }: { readonly headerAudit?: boolean }) {
+  const [notificationActivations, setNotificationActivations] = useState(0);
   const [fixture] = useState(() => {
     let returned = false;
     let rejectDetails = true;
@@ -49,9 +51,12 @@ export function HomeReturnFixture({ headerAudit = false }: { readonly headerAudi
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
     <HomeScreen dashboardQuery={fixture.query} assetCheckoutCommand={fixture.command}
-      notificationAction={headerAudit ? { kind: 'notifications', label: 'Notifications, 2 unread', badgeCount: 2, onPress: () => undefined } : undefined}
+      notificationAction={headerAudit ? { kind: 'notifications', label: 'Notifications, 2 unread', badgeCount: 2, onPress: () => setNotificationActivations(count => count + 1) } : undefined}
       expirationSection={headerAudit ? <ExpirationHomeSection data={{ items: headerAssets.map(toAssetCardViewModel), counts: { expired: 3, soon: 0, all: 3 }, timezone: 'UTC' }} onOpen={() => undefined} onOpenAsset={() => undefined} onRetry={() => undefined} /> : undefined}
     />
     <QueryReadinessDiagnostics client={fixture.client} />
+    {headerAudit ? <Text pointerEvents="none" style={{ position: 'absolute', left: 8, bottom: 24, fontSize: 10 }}>
+      {`Header notification activations: ${notificationActivations}`}
+    </Text> : null}
   </MobileServerStateProvider>;
 }

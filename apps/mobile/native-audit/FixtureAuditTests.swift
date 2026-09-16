@@ -1307,6 +1307,29 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-header-after-scroll")
   }
 
+  func testHomeNotificationHitRegionBeyondAccessibilityFrame() {
+    let open = app.buttons["Audit Home header"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    let menu = app.scrollViews.containing(.button, identifier: "Audit Home header").firstMatch
+    for _ in 0..<6 where !open.isHittable { menu.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let action = app.buttons["Notifications, 2 unread"]
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    XCTAssertTrue(action.isHittable)
+    // Probe inside each edge of a centered 44-point square, independently of
+    // the AX frame. Each tap must reach this action exactly once.
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      let center = action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      XCTAssertTrue(app.staticTexts["Header notification activations: \(index + 1)"].waitForExistence(timeout: 5),
+                    "Notification did not receive edge probe \(index): \(offset)")
+    }
+    capture("home-notification-hit-region")
+  }
+
   private func openHomeReturn() {
     let open = app.buttons["Audit Home Return"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))
