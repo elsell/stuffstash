@@ -50,7 +50,9 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
     : accessDenied || history.isError || inventory.isError ? { status: 'error', assetTitle, message: 'Checkout history could not be loaded.' }
       : { status: 'loading', assetTitle };
   const retry = () => { void (inventory.isError ? inventory.refetch() : coreAccessDenied ? core.refetch() : history.refetch()); };
-  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => router.back() }]);
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close', onPress: () => {
+    if (router.canGoBack()) router.back(); else router.replace('/');
+  } }]);
   const headerOptions = useMemo(() => ({ title: 'Checkout history', headerShown: true, ...actionOptions }), [actionOptions]);
   return <>
     <Stack.Screen options={headerOptions} />

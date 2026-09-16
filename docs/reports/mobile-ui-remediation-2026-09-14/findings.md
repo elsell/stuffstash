@@ -2918,3 +2918,11 @@ no extra modal or nested command. Replacement URI/headers start fresh; old image
 events cannot hide the replacement. Two failing regressions preceded correction;
 8 gallery tests and static checks pass on paul. Native rendering and assistive
 acceptance remain pending. See gallery-axis.md.
+
+### M212 — checkout history Close cannot leave direct entry
+
+P2 source-confirmed atc08aa31a. The native Close handler always called Back, even
+when no previous route existed. It now returns Back where possible and replaces
+with Home otherwise, including loading and failure states. Three RED cases precede
+the fix; nine route tests and static checks pass on paul. Critic found no blocker.
+Native direct-entry reachability remains pending; see checkout-history-axis.md.

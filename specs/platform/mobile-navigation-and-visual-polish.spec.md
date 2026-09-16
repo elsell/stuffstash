@@ -301,6 +301,13 @@ overlaid close target. Photo rails can scroll and commands can grow with text.
 Tag creation uses a native Add tag command below its fields/color choice, avoiding
 an undersized inline action squeezed beside text entry.
 
+### Checkout history direct-entry dismissal
+
+Checkout history must keep native Close available in loading, error and loaded
+states. Close returns to the previous route when one exists; direct entry without
+a back stack replaces the route with Home. A failed or slow history read must not
+trap the user in the sheet.
+
 ### Asset gallery photo command
 
 Gallery preview failures must replace the blank image with “Preview unavailable”.
