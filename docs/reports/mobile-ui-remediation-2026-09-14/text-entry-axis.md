@@ -228,3 +228,18 @@ of a previously shipped asset-contents failure. Native ref attachment timing and
 M232's clear-collapse remain unverified. Logs: `/tmp/native-search-enable-*`.
 Combined remote validation passes1,898 tests across296 files after this change
 (`/tmp/native-search-enable-full.log`). This is source evidence, not native QA.
+
+
+## Upstream comparison — September16
+
+The installed React Native version is0.83.6. The historical
+[cursor/prediction issue44157](https://github.com/react/react-native/issues/44157)
+is marked fixed and describes controlled-only behavior on0.75.4. It is not a
+confirmed explanation for this audit's failures, which also include a native-seeded
+RN name field. The open [CJK composition proposal56082](https://github.com/react/react-native/pull/56082)
+addresses marked-text preservation in Fabric; the current retained English/address
+captures do not establish that marked-text corruption caused these failures.
+Neither source justifies a blind dependency upgrade or broad native patch. Compare
+against the actual0.83.6 input implementation and preserve external value/reset
+ownership before adopting a correction. See the latest retained field/mirror values
+and paced-versus-unpaced results in [phone351214](native-phone-351214.md).
