@@ -35,3 +35,29 @@ Evidence: `/tmp/android-appearance-{red,green}.log`,
 `/tmp/check-android-cancel-contrast.py`, `/tmp/android-footer-disabled.xml`,
 `/tmp/android-footer-enabled.xml`, `/tmp/android-footer-enabled-settled.xml`,
 `/tmp/android-appearance-{check,structural,build}.log`.
+
+## Additional normal-size dark appearance checks
+
+On the same fa51a602 APK, the [Home header](evidence/android-home-dark.png) shows
+Add, Notifications and Profile in order, with only the notification count badge.
+A native tap increments the fixture's notification activation count from0 to1.
+This verifies rendering plus the notification handler in dark appearance; it does
+not repeat every header navigation probe.
+
+The [Sharing menu](evidence/android-sharing-dark-menu.png) renders the native
+Cancel invitation action legibly in dark appearance. The Create Invitation command
+reaches the synthetic repository, whose first response deliberately lacks a link.
+The resulting pending invitation remains available to cancel. The first confirmed
+cancellation deliberately fails and displays its item-scoped error; reopening the
+menu and confirming again reaches Cancelled, removes that error, and preserves the
+email field. No real invitation is sent. This exercises command and action-menu
+adapter families in addition to the previously verified sheet actions and header.
+Read-state, refinement and conversation button families still lack this native
+appearance sample. Android success does not resolve the separate iPhone Sharing
+keyboard/cancellation finding.
+
+The production root (`src/app/_layout.tsx`) explicitly supplies
+`headerStyle.backgroundColor = palette.surface`, unlike this fixture root.
+The white fixture header is therefore not evidence of a production root regression.
+Retained hierarchies: `/tmp/android-home-dark{,-tap}.xml`,
+`/tmp/android-sharing-{dark,created,menu,confirm,error,retry-menu,cancelled}.xml`.

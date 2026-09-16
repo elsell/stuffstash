@@ -3036,8 +3036,9 @@ See Android filter evidence for the stack and proposed presentation alternative.
 P1 runtime-confirmed on36fe660b: the0.6 form-sheet detent shows search, recovery
 and preview but neither Move here nor Cancel. Edit/Move share the sizing approach.
 Candidate uses full-screen Android native-stack presentation for all three and a
-shared keyboard-resizing frame; iOS detents remain unchanged. Native verification
-is in progress. [Before](evidence/android-move-initial-before.png).
+shared keyboard-resizing frame; iOS detents remain unchanged. The rebuilt Android Move Here sample exposes both actions, including with the
+keyboard open; Move destination/create coverage remains pending. See
+android-asset-actions.md. [Before](evidence/android-move-initial-before.png).
 
 ### M224 — Native Edit Back bypasses dirty confirmation in the migration candidate
 
@@ -3046,7 +3047,9 @@ created an exit outside Edit's explicit Cancel handler; the operation guard cove
 only pending work. A failing GO_BACK/POP regression now passes through the existing
 discard confirmation, preserving draft/visit guards and the original action.
 Keep editing retains the draft, pending commands prevent removal, and authorized
-Discard/Save can leave. Native header/hardware Back acceptance is pending.
+Discard/Save can leave. Android native header/hardware Back now verify the
+confirmation, Keep editing draft retention, and Discard return; see
+android-asset-actions.md for build evidence and remaining coverage.
 
 ### M225 — Android native controls ignore the app appearance override
 
