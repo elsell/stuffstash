@@ -44,3 +44,10 @@ checks pass on paul; critic found no blocker. Native compilation/execution remai
 pending. Different implementation defaults and accessory attachment are potential
 confounds, so even a pass will not establish a single-variable cause or physical
 keyboard fidelity.
+
+The350504 phone controlled baseline has a different retained final state:
+[native and application values both show reordered text](phone-controlled-text-350504.png),
+`Nativeraft name d`, rather than the requested `Native draft name`. Artifact
+10429678833/testOrdinaryControlledTextEntry provides this screenshot. This remains
+open; the later [onboarding address observation race](native-onboarding-350549.md)
+does not establish that every text-entry failure merely needs a longer wait.
