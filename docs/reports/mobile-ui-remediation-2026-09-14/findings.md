@@ -2957,3 +2957,17 @@ focus and teardown guards. All1,869 remote tests and static checks pass; critic 
 no blocker. Native placement remains unverified and M207 remains open. Eight shared
 consumers and the static-versus-Place captures are recorded in
 native-search-placement-350465.md.
+
+### M216 — iPad conversation review is crowded beneath the native header
+
+P2 runtime-observed at79c32758/run350592. The captured medium Conversation sheet
+draws its inventory context beneath native navigation chrome and leaves40.5 points
+of unobscured review viewport for a44-point destination control. The original
+location test scrolls the background and never opens the selector; its correction
+now targets the sheet and retains full-frame reachability. Do not conflate that
+test-procedure defect with the visible header overlap. Inspect top safe-area
+ownership and review-stage detent sizing in VoiceSessionSheetScreen and
+VoiceNativeSheetOptions. Acceptance must show context below the header and allow
+complete review/location editing with reachable approval controls on entry,
+scrolling, expansion and navigation return. Production correction remains open;
+see native-fixtures-350592.md and its retained iPad screenshot.

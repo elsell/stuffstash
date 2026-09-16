@@ -68,3 +68,11 @@ That guidance supports preserving the native label, not a claim that this edit f
 activation. The new independent exact-name native test is queued;15 related remote
 tests and static checks pass, critic found no blocker. Native name/VoiceOver
 verification remains open.
+
+Run350592 confirms one accessible name on both devices and direct opening/clear
+on phone. iPad direct activation fails: its inspected final capture and hierarchy
+show the unchanged parent without a picker. See `native-fixtures-350592.md` and
+`evidence/ipad-color-unopened-350592.png`. M213's naming correction has native
+name evidence; VoiceOver output remains unverified. M51 activation remains open,
+with different failing devices across runs. No blanket success or source cause
+is inferred from the phone pass.

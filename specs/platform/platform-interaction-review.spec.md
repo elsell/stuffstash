@@ -137,3 +137,11 @@ final `Tent`. Use a bounded five-second exact-value expectation after ordinary
 unpaced typing; retain the final equality and subsequent draft/save assertions.
 Do not replace lost-character checks with prefixes, disable assistance, or treat
 the failed original journey as passed. The corrected journey requires a native run.
+
+Proposal-location native acceptance must scroll the conversation's own review
+viewport, not the first scroll view in the application (which can be the dimmed
+background). Run350592's iPad hierarchy places the location control above the
+visible sheet scroll area. Reveal it with bounded, direction-aware gestures in
+the scroll view containing that control; require its full frame below the native
+header and within the viewport before activation, including after selection and
+Back. Preserve native lookup/retry/search and proposal-retention assertions.

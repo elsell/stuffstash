@@ -1347,8 +1347,8 @@ R057,voice.tsx,task,Task clarity and platform-pattern fit,finding,findings.md M1
 R057,voice.tsx,navigation,"Navigation, hierarchy and return",finding,findings.md M171 delayed media/navigation ownership; findings.md M178 native conversation header and single protected reset; native pending; voice-route-axis.md consolidated source review; native pending,M171; M178
 R057,voice.tsx,selection,Value selection and current value,source-reviewed,; voice-route-axis.md consolidated source review; native pending,
 R057,voice.tsx,modality,Presentation and dismissal,source-reviewed,; voice-route-axis.md consolidated source review; native pending,
-R057,voice.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-route-axis.md consolidated source review; native pending,
-R057,voice.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-route-axis.md consolidated source review; native pending,
+R057,voice.tsx,layout,"Safe areas, scroll edges and overlays",finding,; voice-route-axis.md consolidated source review; native pending; native-fixtures-350592.md iPad medium review header overlap/viewport,M216
+R057,voice.tsx,adaptation,Phone/tablet/window reflow,finding,; voice-route-axis.md consolidated source review; native pending; native-fixtures-350592.md iPad medium review header overlap/viewport,M216
 R057,voice.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; voice-route-axis.md consolidated source review; native pending,
 R057,voice.tsx,appearance,"Light/dark, contrast and materials",finding,findings.md M170; response/decision commands source review only; findings.md M178 native conversation header and single protected reset; native pending; voice-route-axis.md consolidated source review; native pending,M170; M178; M179
 R057,voice.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-route-axis.md consolidated source review; native pending,
@@ -2907,8 +2907,8 @@ S122,Voice / plan approval edits,task,Task clarity and platform-pattern fit,sour
 S122,Voice / plan approval edits,navigation,"Navigation, hierarchy and return",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M174
 S122,Voice / plan approval edits,selection,Value selection and current value,finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M174
 S122,Voice / plan approval edits,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M144;M174
-S122,Voice / plan approval edits,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
-S122,Voice / plan approval edits,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,layout,"Safe areas, scroll edges and overlays",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending; native-fixtures-350592.md iPad medium review header overlap/viewport,M216
+S122,Voice / plan approval edits,adaptation,Phone/tablet/window reflow,finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending; native-fixtures-350592.md iPad medium review header overlap/viewport,M216
 S122,Voice / plan approval edits,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
 S122,Voice / plan approval edits,appearance,"Light/dark, contrast and materials",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M175
 S122,Voice / plan approval edits,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,

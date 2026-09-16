@@ -59,3 +59,33 @@ Other failure descriptions above are log-level evidence unless explicitly stated
 The new paired Place fixture passes2 installer tests, TypeScript and mobile
 structural checks on paul after an observed missing-route RED test. Critic found
 no blocker. Swift compilation and native execution of the new journey are pending.
+
+## Inspected iPad follow-up
+
+Artifact10432808528's [color capture](evidence/ipad-color-unopened-350592.png)
+shows the parent controls and no system picker after activation. The hierarchy
+contains the single-name color well but no Sliders/popover. This is an unopened
+picker, not merely a changed Sliders selector. M51 remains unresolved; do not
+infer a touch-region defect solely from the36-point accessibility frame.
+
+The [voice capture](evidence/ipad-voice-before-location-350592.png) shows the
+Conversation sheet before destination navigation. Its review viewport is
+`(98,642.5),548×75.5`, while the location command is `(168.5,557.5),451×44`, above
+that viewport. The first app ScrollView belongs to the dimmed background.
+The test used that first scroll view and always swiped up. It never reached
+location search, so this failure does not demonstrate broken native search.
+
+The corrected procedure scopes scrolling to the location command's containing
+scroll view and chooses direction from current bounds. It requires the complete
+control frame inside the sheet viewport below the Conversation header on entry,
+after selection and after Back. All lookup/retry/search/proposal checks remain.
+Mobile structural validation passes on paul. Native execution remains pending;
+this is an acceptance-procedure correction, not a product-layout fix or a pass.
+
+Critic identified that gesture coordinates must also exclude the header; the
+helper now clips both visibility and gesture bounds consistently. In this capture,
+the header ends at677.5, leaving only40.5 points of unobscured scroll viewport for
+the44-point control. Native scrolling/detent behavior must resolve that constraint
+or the full-frame requirement will still fail. The context line also visually
+overlaps the header. This is a remaining sheet-layout investigation, not evidence
+that correcting the test alone fixes the conversation experience.

@@ -1733,8 +1733,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.isHittable); open.tap()
     let original = app.buttons["Change containing location, currently Inventory root"]
     XCTAssertTrue(original.waitForExistence(timeout: 15))
-    for _ in 0..<6 where !original.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(original.isHittable); original.tap()
+    revealVoiceProposalLocation(original)
+    original.tap()
     let header = app.navigationBars["Containing location"]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     let retry = app.buttons["Retry locations"]
@@ -1763,8 +1763,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(bin.isHittable); bin.tap()
     let changed = app.buttons["Change containing location, currently Garage / Garage bin"]
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
-    for _ in 0..<6 where !changed.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(changed.isHittable)
+    revealVoiceProposalLocation(changed)
     capture("voice-proposal-selected-location"); changed.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
@@ -1772,7 +1771,39 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(back.isHittable); back.tap()
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     XCTAssertFalse(original.exists)
+    revealVoiceProposalLocation(changed)
     capture("voice-proposal-location-back")
+  }
+
+  private func revealVoiceProposalLocation(_ control: XCUIElement) {
+    let scroll = app.scrollViews.containing(.button, identifier: control.label).firstMatch
+    XCTAssertTrue(scroll.exists, "The proposal location must belong to the conversation scroll view")
+    let header = app.navigationBars["Conversation"]
+    func visibleViewport() -> CGRect {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, header.frame.maxY)
+      return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bounds.maxY - top))
+    }
+    func visible() -> Bool {
+      let viewport = visibleViewport()
+      return control.isHittable && control.frame.minY >= viewport.minY &&
+        control.frame.maxY <= viewport.maxY && control.frame.minX >= viewport.minX &&
+        control.frame.maxX <= viewport.maxX
+    }
+    for _ in 0..<18 where !visible() {
+      let viewport = visibleViewport()
+      guard viewport.height > 0 else { break }
+      let above = control.frame.minY < viewport.minY
+      let origin = app.coordinate(withNormalizedOffset: .zero)
+      func point(_ fraction: CGFloat) -> XCUICoordinate {
+        origin.withOffset(CGVector(dx: viewport.midX - app.frame.minX,
+          dy: viewport.minY + viewport.height * fraction - app.frame.minY))
+      }
+      let start = point(above ? 0.25 : 0.75)
+      let end = point(above ? 0.75 : 0.25)
+      start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    XCTAssertTrue(visible(), "The complete proposal location control must be reachable within its sheet")
   }
 
   func testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset() {
