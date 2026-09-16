@@ -1593,7 +1593,7 @@ S067,Browse / list grid,typography,"Dynamic Type, wrapping and legibility",sourc
 S067,Browse / list grid,appearance,"Light/dark, contrast and materials",source-reviewed,appearance-axis.md: refinement badge contrast partial review; native composition/placement pending; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,M66
 S067,Browse / list grid,localization,"Locale, timezone, RTL and long strings",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S067,Browse / list grid,imagery,"Icons, photos and missing media",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
-S067,Browse / list grid,targets,Touch target size and reachability,source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
+S067,Browse / list grid,targets,Touch target size and reachability,source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending; android-compact-targets.md: M247 isolated native center/edge pass; consumer composition pending,M247
 S067,Browse / list grid,gestures,Gestures and explicit alternatives,source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S067,Browse / list grid,keyboard,"Keyboard, text entry and focus",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S067,Browse / list grid,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
@@ -1761,7 +1761,7 @@ S074,Expiration / soon expired all dates,typography,"Dynamic Type, wrapping and 
 S074,Expiration / soon expired all dates,appearance,"Light/dark, contrast and materials",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 S074,Expiration / soon expired all dates,localization,"Locale, timezone, RTL and long strings",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 S074,Expiration / soon expired all dates,imagery,"Icons, photos and missing media",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
-S074,Expiration / soon expired all dates,targets,Touch target size and reachability,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
+S074,Expiration / soon expired all dates,targets,Touch target size and reachability,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending; android-compact-targets.md: M247 isolated native center/edge pass; consumer composition pending,M247
 S074,Expiration / soon expired all dates,gestures,Gestures and explicit alternatives,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 S074,Expiration / soon expired all dates,keyboard,"Keyboard, text entry and focus",finding,; M118 compact native search; 3 focused tests/TypeScript/structural pass; native pending; expiration-results-axis.md; source50d48f3c; native pending,M118
 S074,Expiration / soon expired all dates,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
@@ -2265,7 +2265,7 @@ S095,Asset / overflow commands,typography,"Dynamic Type, wrapping and legibility
 S095,Asset / overflow commands,appearance,"Light/dark, contrast and materials",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
 S095,Asset / overflow commands,localization,"Locale, timezone, RTL and long strings",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
 S095,Asset / overflow commands,imagery,"Icons, photos and missing media",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
-S095,Asset / overflow commands,targets,Touch target size and reachability,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,targets,Touch target size and reachability,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending; android-compact-targets.md: M247 isolated native center/edge pass; consumer composition pending,M247
 S095,Asset / overflow commands,gestures,Gestures and explicit alternatives,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
 S095,Asset / overflow commands,keyboard,"Keyboard, text entry and focus",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
 S095,Asset / overflow commands,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,

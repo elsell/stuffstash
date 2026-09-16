@@ -1,3 +1,4 @@
+import { AndroidControlTargetsFixture } from './AndroidControlTargetsFixture';
 import { inventorySwitcherNativeOptions } from '../src/ui/screens/InventorySwitcherNativeOptions';
 export { ManagedSearchPlacementFixture } from './ManagedSearchPlacementFixture';
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
@@ -308,6 +309,7 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
       inheritedPolicy={{ enabled: true, upcoming: true, expired: true, advanceDays: 7 }}
       onSave={async value => setReminder(value)} onEditDays={() => {}} />
     <Text>{`Reminder mode: ${reminder === null ? 'defaults' : reminder.enabled ? 'custom' : 'off'}`}</Text>
+    {Platform.OS === 'android' ? <AndroidControlTargetsFixture /> : null}
   </FixturePage>;
 }
 

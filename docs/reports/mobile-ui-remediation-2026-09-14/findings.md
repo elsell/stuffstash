@@ -3385,3 +3385,13 @@ and the native SwiftUI picker are preserved. Shared consumers are Add/Edit inlin
 tags and customization tag editors. Twenty focused tests, TypeScript and structural
 checks pass; code review found no blocker. Native compact acceptance is recorded in
 tag-color-axis.md. This is normal-size interaction work, not enlarged-text coverage.
+
+### M247 — Android compact menu and filter targets are undersized
+
+P2; native normal-size observation. Real refinement, sort and overflow adapters
+exposed115–116px targets at420dpi, about44dp. A filter tap outside those bounds
+was not delivered. Shared Android adapters now use the existing48dp token for
+host, wrapper and explicit icon sizing; labeled hosts reserve48dp too. Native
+center/edge checks pass exactly once per activation, all three targets126×126px.
+Seven focused tests, TypeScript, structural and six fixture-installer checks pass;
+critic found no blocker. See [native scope and remaining composition checks](android-compact-targets.md).

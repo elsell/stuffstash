@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Icon, OutlinedButton
 import { selectable, size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { minimumTouchTargetSize } from '../theme/tokens';
 import { actionableMenuGroups, nativeMenuItemPresentation, pressNativeMenuItem } from './NativeActionMenuPresentation';
 import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
@@ -35,7 +36,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
             colors={{ contentColor: palette.action, disabledContentColor: palette.textMuted }}
             contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
             enabled={!menuDisabled}
-            modifiers={trigger.kind === 'icon' ? [size(44, 44)] : undefined}
+            modifiers={trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
             onClick={() => setExpanded(true)}
           >
             {trigger.kind === 'icon'
@@ -77,6 +78,6 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
 const styles = StyleSheet.create({
   wrapper: { alignSelf: 'flex-start' },
   disabled: { opacity: 0.5 },
-  compactHost: { height: 44, width: 44 },
-  labelHost: { height: 44, minWidth: 44 }
+  compactHost: { height: minimumTouchTargetSize, width: minimumTouchTargetSize },
+  labelHost: { height: minimumTouchTargetSize, minWidth: minimumTouchTargetSize }
 });

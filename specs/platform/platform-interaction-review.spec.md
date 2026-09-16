@@ -462,3 +462,18 @@ centers at320dp width with normal text, including wrapping and Cancel/Done reach
 At320dp width, adjustment labels must remain readable without forced mid-word
 splitting beside fixed controls. Present each label above its decrement/value/
 increment row, keeping the targets full size and the whole editor scrollable.
+
+## Android compact control target probe
+
+Runner-only settings controls may expose isolated real refinement, icon-menu and
+ellipsis-menu adapters with observable activation counts. Use native bounds and
+actual center/edge taps to determine whether Compose expands declared44dp hosts to
+48dp targets. A source literal alone is insufficient to classify native target
+failure. This probe must not alter shipped routes or the iOS settings-control fixture.
+
+Confirmed compact Android refinement and menu hosts must provide the shared48dp
+minimum, including their React Native accessibility wrapper and Compose button.
+Labeled hosts also reserve48dp vertically to avoid constraining native targets.
+Keep the iOS adapters unchanged. Verify native bounds and exactly-once center/edge
+activation for refinement, sort and overflow commands; inspect Browse and expiration
+header consumers and labeled choice menus for clipping.
