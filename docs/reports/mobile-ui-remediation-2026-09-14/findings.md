@@ -2835,3 +2835,12 @@ immutable targets and unsaved additions survive the roundtrip. Two RED cases
 preceded implementation;68 related tests and static checks pass remotely. Code
 critic found no confirmed blocker.
 Native acceptance remains pending. See field-applicability-axis.md.
+
+### M205 — Successful push setup keeps an obsolete accessible action name
+
+P2 source confirmed at6a4f9221. After setup, the visible Open device settings action
+still announced Set up alerts on this device. Its accessible name now matches the
+new action. Three enabled-path RED cases preceded the change;13 related checks
+verify Settings launch/retry ownership without repeated setup or preference writes.
+TypeScript/structural checks pass remotely; critic found no confirmed blocker.
+Native announcement and external Settings transition remain unverified.

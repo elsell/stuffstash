@@ -15,6 +15,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
 - `tag-color-axis.md`: all24 color-selection axes, shared consumers and phone/iPad activation evidence.
 - `field-applicability-axis.md`: all24 applicability axes and reversible unsaved expansion (M204).
+- `push-permission-axis.md`: all24 device-setup axes, command naming and physical verification limits.
 - `findings.md`: confirmed findings and remediation evidence.
 - `checkout-history-axis.md`: all24 axes, independent name recovery and access-retry evidence limits.
 - `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.
@@ -89,8 +90,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise343
-pending,2,335 source-reviewed,509 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise326
+pending,2,351 source-reviewed,510 finding,23 runtime-partial and198 not-applicable.
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined

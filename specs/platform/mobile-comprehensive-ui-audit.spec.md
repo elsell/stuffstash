@@ -1,5 +1,13 @@
 # Comprehensive mobile UI audit and remediation
 
+## Push setup command names
+
+When successful device setup changes the action to Open device settings, its
+accessible name must identify that new action too. It must not continue announcing
+setup while opening Settings. Activation must open Settings without re-registering
+the device or changing inventory preferences; launch failure/retry retains the
+existing visit-owned recovery behavior.
+
 ## Scope and completion
 
 The user authorizes a long-running audit and remediation of every mobile surface,
