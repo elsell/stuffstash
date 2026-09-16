@@ -23,3 +23,23 @@ unproven; no timeout relaxation or production change follows from this result.
 
 Artifacts10431384932 (phone) and10432333074 (iPad) retain complete evidence.
 The separate full fixture and Home-header runs remain active at this checkpoint.
+
+## Passing follow-up — run35063391045
+
+Source65acfd86, tested merge bd089623f61c94f1e9f9c0e7f15d398717cc1673:
+phone job104689596375 passes its main journey (two iPad-only skips), and iPad
+job104689596852 passes all three tests. This includes the previously failing
+initial-readiness/inside-column keyboard-dismissal comparison without relaxing
+its timeout or changing production after the previous observation failure.
+
+Inspected iPad [dismissal](evidence/ipad-onboarding-dismiss-350633.png) and
+[landscape](evidence/ipad-onboarding-landscape-350633.png) captures retain complete,
+unclipped form controls and primary command. The dismissal capture shows the
+exact entered address and no keyboard; landscape shows the empty-address disabled
+command with explanatory text. These are normal-size, light-appearance checks,
+not real-provider sign-in, VoiceOver or a whole-onboarding certification.
+
+Artifacts10433788455(phone) and10434365601(iPad) retain the evidence. Logs:
+`/tmp/native350633-onboarding-phone.log` and
+`/tmp/native350633-onboarding-ipad.log`. The iPad success resolves this named
+journey's latest failure; the older failure stays recorded above.
