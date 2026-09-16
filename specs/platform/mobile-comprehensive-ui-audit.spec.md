@@ -1469,6 +1469,32 @@ filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
 collection may exercise the shared screen with real query/policy adapters and a
 controlled repository; this is not production authorization or pagination evidence.
 
+### Android filter sheet geometry
+
+Browse and Expiration filters must expose their current page title and both commit
+and return/cancel commands at every allowed Android sheet detent. The pinned native
+stack does not display headers inside Android form sheets, and an absolute JS
+footer tracks the expanded content height. Use its Android `unstable_sheetFooter`
+adapter for these commands and an accessible title inside the scroll body. Keep
+footer space reserved for the last selectable row. Footer presentation must settle
+across navigation renders while callbacks read the latest committed draft, disabled
+state and teardown; do not freeze the initial draft. Preserve the existing iOS
+direct-scroll layout. Native acceptance covers initial/expanded detents, nested
+tags, apply/cancel, last-row scrolling, keyboard and system Back.
+If filters are the first route after a cold link, Android presents them as a root
+screen rather than a sheet. In that case reserve a normal full-screen footer;
+do not rely on the sheet-only footer slot. Hide native header chrome in this
+Android adapter so the accessible body title remains singular in both cases.
+Cold-root content must reserve the top system inset. Route bodies must not reapply
+headerShown=true over the Android sheet adapter on query/page rerenders; iOS gets
+its native header from the root stack registration.
+
+Browse and Expiration filter Cancel must work in loading, failure and ready states.
+With history, return Back without applying the draft. Without history, replace
+the root Home route (`/`) rather than leaving an inert Cancel. Browse must cancel
+its pending navigation operation before leaving; neither fallback applies filters
+or trusts a stale inventory identity.
+
 ### Android native header and vector compatibility
 
 Android header actions retain native Compose IconButton controls, accessible names,

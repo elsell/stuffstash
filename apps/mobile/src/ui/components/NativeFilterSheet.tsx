@@ -1,17 +1,13 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { NativeSheetActions } from './NativeSheetActions';
-import type { NativeSheetActionsProps } from './NativeSheetActions.types';
+import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
 import { useSheetKeyboardInset } from './useSheetKeyboardInset';
 
 /** Keep the native scroll body direct; reserve the measured, opaque action area. */
-export function NativeFilterSheet({ children, actions, footerTestID }: {
-  readonly children: ReactNode;
-  readonly actions: Omit<NativeSheetActionsProps, 'keyboardAvoidance'>;
-  readonly footerTestID: string;
-}) {
+export function NativeFilterSheet({ children, actions, footerTestID }: NativeFilterSheetProps) {
   const palette = useAppearancePalette();
   const [footerHeight, setFooterHeight] = useState(0);
   const boundaryRef = useRef<View>(null);

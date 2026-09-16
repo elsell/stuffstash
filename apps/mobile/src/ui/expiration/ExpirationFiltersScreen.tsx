@@ -17,12 +17,12 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
- const headerOptions = useMemo(() => ({ headerShown: true, title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
+ const headerOptions = useMemo(() => ({ title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
   }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
   <NativeNavigationSearch key={page} enabled={searchable} query={search} placeholder={`Search ${page}`} onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
-  <NativeFilterSheet footerTestID="expiration-filter-footer" actions={{
+  <NativeFilterSheet title={headerOptions.title} footerTestID="expiration-filter-footer" actions={{
    primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
    secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)

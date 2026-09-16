@@ -2997,3 +2997,28 @@ P2 runtime/source-confirmed on the same APK. The unconditional BadgedBox default
 to a red dot when no badge slot exists. It now wraps only positive counts. Native
 Home shows count2 only on Notifications and no dots on Add/Profile. Zero-count
 transition and wider Android acceptance remain pending; see the same evidence.
+
+### M219 — Android filter sheets hide title and actions at their initial height
+
+P1 runtime-observed on Android16 at normal text size. Initial Browse sheet lacks
+Show results/Cancel until expanded; Android form sheets also omit native headers.
+The native footer/body-title candidate renders at initial height. Cold-root and
+remaining interaction checks are still in progress; see
+[Android filter evidence](android-filter-sheet.md). Do not mark this closed.
+
+### M220 — Direct-entry filter cancellation assumes a back destination
+
+P2 source-confirmed in Browse and Expiration filter routes: loading, error and
+ready Cancel callbacks ultimately call router.back without a no-history fallback.
+Both routes now cancel through a shared Back-or-Home helper. Its regression test
+failed first and passes with the fix. Android synthetic cold-root Cancel returns
+to the fixture index. Production authentication/scope recovery is not certified
+by that fixture; see the filter evidence report.
+
+### M221 — Android filter selection pages lose search
+
+P1 runtime-confirmed for Browse Tags on the patched Android16 fixture: the page
+renders its choices and footer but no search field or command. Native header search
+cannot render in Android form sheets, whose headers are unsupported. Expiration
+uses the same pattern for types/tags/locations and requires acceptance too. Provide
+an appropriate in-sheet native search input while preserving iOS navigation search.

@@ -39,7 +39,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
   return <>
     <Stack.Screen options={{ title: titles[page], headerSearchBarOptions: undefined }} />
     {page === 'tags' ? <NativeNavigationSearch query={search} placeholder="Search tags" onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} /> : null}
-    <NativeFilterSheet footerTestID="browse-filter-footer" actions={{
+    <NativeFilterSheet title={titles[page]} footerTestID="browse-filter-footer" actions={{
       primaryLabel: 'Show results', secondaryLabel: page === 'overview' ? 'Cancel' : 'Back',
       secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
       onApply: () => onApply(draft), onBack: () => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }

@@ -11,7 +11,7 @@ export function FooterAppearanceFixture() {
   const router = useRouter();
   const [selected, setSelected] = useState(false);
   const [received, setReceived] = useState(false);
-  return <NativeFilterSheet footerTestID="footer-appearance-actions" actions={{
+  return <NativeFilterSheet title="Footer appearance" footerTestID="footer-appearance-actions" actions={{
     primaryLabel: 'Move', secondaryLabel: 'Cancel', disabled: !selected,
     onApply: () => setReceived(true),
     onBack: () => { void setPreference(initialPreference.current).then(() => router.back()); }
