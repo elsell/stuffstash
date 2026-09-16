@@ -64,3 +64,11 @@ retaining their checksum manifests and installed contents.
 No Android app has been built or exercised. The existing untracked
 `apps/mobile/android/` remains untouched. Android UI acceptance remains an explicit
 gap, not a pass inferred from emulator boot.
+
+The fixture installer now supports an explicitly marked disposable source archive
+outside GitHub Actions. Root identity, marker contents, Git ancestors, external
+backup location and symlink-free route paths are checked before mutation. Six
+remote regression cases pass, including preserving an external checkout reached
+through a symlink; that case failed before the guard correction. Remote mobile
+structural checks pass and critic review has no remaining blocker. This prepares
+safe synthetic app installation; it is not an Android app build or UI result.

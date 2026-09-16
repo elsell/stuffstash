@@ -1471,6 +1471,17 @@ controlled repository; this is not production authorization or pagination eviden
 
 ### Isolated Android runtime preparation
 
+Fixture installation outside GitHub Actions requires an explicitly disposable
+source archive: `MOBILE_AUDIT_ARCHIVE_ROOT` must resolve to the installer's root,
+which must contain a regular, non-symlink `.mobile-audit-archive` marker with exact
+content `disposable-mobile-audit` plus newline. Refuse any `.git` file/directory
+in that root or an ancestor, and require `RUNNER_TEMP` outside the archive for
+the production-route backup. Retain the explicit fixtures suite requirement and
+refusal to overwrite a previous backup. A marked archive is never a distributable
+release checkout. Ordinary local checkouts remain rejected without modifying routes.
+Before any route backup or deletion, reject symlinks in every route-path component
+below the archive root so an archive cannot redirect mutation into another checkout.
+
 Android simulator preparation may run on the authorized remote validation host,
 outside the repository and existing generated Android directories. Bootstrap the
 Linux command-line SDK tools from Google's numbered15859902 archive, verifying

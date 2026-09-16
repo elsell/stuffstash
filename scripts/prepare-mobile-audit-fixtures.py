@@ -1,17 +1,32 @@
 #!/usr/bin/env python3
-"""Install an isolated fixture route root in an ephemeral macOS audit checkout."""
+"""Install fixture routes in a runner checkout or an explicit disposable archive."""
 import os
 from pathlib import Path
 import shutil
 
-if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
-    raise SystemExit("Fixture routes may only be installed in a GitHub Actions runner checkout")
+root = Path(__file__).resolve().parents[1]
+runner_temp = os.environ.get("RUNNER_TEMP")
+if not runner_temp:
+    raise SystemExit("A production-route backup directory is required")
+if os.environ.get("GITHUB_ACTIONS") != "true":
+    archive_root = os.environ.get("MOBILE_AUDIT_ARCHIVE_ROOT")
+    marker = root / ".mobile-audit-archive"
+    if (not archive_root or Path(archive_root).resolve() != root
+            or marker.is_symlink() or not marker.is_file()
+            or marker.read_text() != "disposable-mobile-audit\n"
+            or any((parent / ".git").exists() for parent in (root, *root.parents))
+            or Path(runner_temp).resolve().is_relative_to(root)):
+        raise SystemExit("Fixture routes require a runner checkout or an explicit disposable source archive")
 if os.environ.get("AUDIT_SUITE") != "fixtures":
     raise SystemExit("Explicit AUDIT_SUITE=fixtures is required")
 
-root = Path(__file__).resolve().parents[1]
 routes = root / "apps/mobile/src/app"
-backup = Path(os.environ["RUNNER_TEMP"]) / "production-mobile-routes"
+for component in (routes, *routes.parents):
+    if component == root:
+        break
+    if component.is_symlink():
+        raise SystemExit("Fixture route paths must not contain symlinks")
+backup = Path(runner_temp) / "production-mobile-routes"
 if backup.exists():
     raise SystemExit("Production route backup already exists; refusing to replace it")
 shutil.copytree(routes, backup)

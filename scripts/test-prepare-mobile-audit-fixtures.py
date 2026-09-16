@@ -10,7 +10,8 @@ class FixtureRouteIsolationTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name) / "checkout"
+        self.root.mkdir()
         (self.root / "scripts").mkdir()
         self.script = self.root / "scripts/prepare-mobile-audit-fixtures.py"
         shutil.copyfile(Path(__file__).with_name("prepare-mobile-audit-fixtures.py"), self.script)
@@ -38,6 +39,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
     def test_retains_production_routes_and_installs_only_fixture_exports(self):
         self.assertEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
+
         self.assertEqual({p.name for p in self.routes.iterdir()} - {"audit-contents-search-preconfigured.tsx", "audit-tabs", "audit-invitation.tsx", "audit-customization-editor.tsx", "voice.tsx", "voice-plan-location.tsx", "audit-native-search-placement.tsx", "add.tsx", "settings.tsx"},
                          {"audit-customization.tsx", "_layout.tsx", "index.tsx", "audit-add.tsx", "audit-add-push.tsx", "audit-add-header.tsx", "audit-inventory-query.tsx", "audit-inventory-switcher.tsx", "audit-home-return.tsx", "audit-home-header.tsx", "home-return-details.tsx", "audit-checkout-history.tsx", "audit-edit-recovery.tsx", "audit-edit-tags.tsx", "audit-move-here-recovery.tsx", "audit-command-height.tsx", "audit-footer-appearance.tsx", "audit-sharing.tsx", "audit-account.tsx", "audit-connection.tsx", "audit-provider-editor.tsx", "audit-notice.tsx", "audit-notice-sheet.tsx", "audit-region-recovery.tsx", "audit-contents-search.tsx", "audit-detail-commands.tsx", "audit-sheet-diagnostic.tsx", "audit-browse.tsx", "audit-expiration.tsx", "audit-expiration-medium.tsx"})
         self.assertIn("AssetContentsSearchFixture as default", (self.routes / "audit-contents-search-preconfigured.tsx").read_text())
@@ -58,6 +60,55 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertIn("TabShellBrowsePlaceholder as default", (self.routes / "audit-tabs/search/index.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
+
+    def test_explicit_disposable_archive_keeps_external_production_backup(self):
+        (self.root / ".mobile-audit-archive").write_text("disposable-mobile-audit\n")
+        with tempfile.TemporaryDirectory() as backup:
+            result = self.run_script(GITHUB_ACTIONS="false", MOBILE_AUDIT_ARCHIVE_ROOT=str(self.root), RUNNER_TEMP=backup)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((Path(backup) / "production-mobile-routes/index.tsx").read_text(), "production route\n")
+            self.assertIn("FixtureMenu", (self.routes / "index.tsx").read_text())
+
+    def test_archive_authorization_rejects_missing_marker_git_and_internal_backup(self):
+        with tempfile.TemporaryDirectory() as backup:
+            settings = dict(GITHUB_ACTIONS="false", MOBILE_AUDIT_ARCHIVE_ROOT=str(self.root), RUNNER_TEMP=backup)
+            self.assertNotEqual(self.run_script(**settings).returncode, 0)
+            (self.root / ".mobile-audit-archive").write_text("disposable-mobile-audit\n")
+            git_entry = self.root / ".git"
+            git_entry.write_text("gitdir: elsewhere\n")
+            self.assertNotEqual(self.run_script(**settings).returncode, 0)
+            git_entry.unlink()
+            self.assertNotEqual(self.run_script(**{**settings, "RUNNER_TEMP": str(self.runner)}).returncode, 0)
+            self.assertEqual((self.routes / "index.tsx").read_text(), "production route\n")
+
+    def test_archive_rejects_external_route_ancestor_without_touching_it(self):
+        (self.root / ".mobile-audit-archive").write_text("disposable-mobile-audit\n")
+        with tempfile.TemporaryDirectory() as external, tempfile.TemporaryDirectory() as backup:
+            original = self.root / "apps/mobile"
+            redirected = Path(external) / "mobile"
+            shutil.move(original, redirected)
+            original.symlink_to(redirected, target_is_directory=True)
+            result = self.run_script(GITHUB_ACTIONS="false", MOBILE_AUDIT_ARCHIVE_ROOT=str(self.root), RUNNER_TEMP=backup)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual((redirected / "src/app/index.tsx").read_text(), "production route\n")
+            self.assertFalse((Path(backup) / "production-mobile-routes").exists())
+
+    def test_archive_rejects_git_ancestor_and_untrusted_marker(self):
+        marker = self.root / ".mobile-audit-archive"
+        with tempfile.TemporaryDirectory() as backup:
+            settings = dict(GITHUB_ACTIONS="false", MOBILE_AUDIT_ARCHIVE_ROOT=str(self.root), RUNNER_TEMP=backup)
+            marker.write_text("wrong marker\n")
+            self.assertNotEqual(self.run_script(**settings).returncode, 0)
+            marker.write_text("disposable-mobile-audit\n")
+            self.assertNotEqual(self.run_script(**{**settings, "MOBILE_AUDIT_ARCHIVE_ROOT": backup}).returncode, 0)
+            (self.root.parent / ".git").mkdir()
+            self.assertNotEqual(self.run_script(**settings).returncode, 0)
+            (self.root.parent / ".git").rmdir()
+            target = self.root / "marker-source"
+            marker.rename(target)
+            marker.symlink_to(target)
+            self.assertNotEqual(self.run_script(**settings).returncode, 0)
+            self.assertEqual((self.routes / "index.tsx").read_text(), "production route\n")
 
 
 if __name__ == "__main__":
