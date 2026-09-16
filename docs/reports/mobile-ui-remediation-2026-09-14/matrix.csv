@@ -1151,54 +1151,54 @@ R048,settings/sharing.tsx,privacy,"Account scope, data use and permissions",find
 R048,settings/sharing.tsx,notifications,System notification entry and state,source-reviewed,; sharing-axis.md complete R048 pass at0041dfad; native pending,
 R048,settings/sharing.tsx,media,"Camera, library, files and audio",source-reviewed,; sharing-axis.md complete R048 pass at0041dfad; native pending,
 R048,settings/sharing.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,Refresh owners inspected and migrated to usePullRefresh; blur/generation/duplicate tests plus real query-cache and inbox regression; underlying errors retained. Native scroll presentation pending.; sharing-axis.md: source/controlled-render review; native pending; M102: native cancellation menu with independent scoped pending locks and one-shot focused confirmation; native acceptance pending.; sharing-axis.md complete R048 pass at0041dfad; native pending,M05;M69;M102
-R049,settings/voice/[capability].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Voice stage explains function, selected profile, readiness and recommended repair.",
-R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",finding,Profile detail remains separate from value selection; navigation guarded while pending. M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M31;M105
-R049,settings/voice/[capability].tsx,selection,Value selection and current value,source-reviewed,"M31 shared native service picker preserves current value, excludes other archived choices, same-value no-op.",M31
-R049,settings/voice/[capability].tsx,modality,Presentation and dismissal,pending,,
-R049,settings/voice/[capability].tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R049,settings/voice/[capability].tsx,adaptation,Phone/tablet/window reflow,pending,,
-R049,settings/voice/[capability].tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R049,settings/voice/[capability].tsx,appearance,"Light/dark, contrast and materials",pending,,
-R049,settings/voice/[capability].tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R049,settings/voice/[capability].tsx,imagery,"Icons, photos and missing media",pending,,
-R049,settings/voice/[capability].tsx,targets,Touch target size and reachability,pending,,
-R049,settings/voice/[capability].tsx,gestures,Gestures and explicit alternatives,pending,,
-R049,settings/voice/[capability].tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R049,settings/voice/[capability].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Service selector/current value and profile action explicitly named; screen reader runtime pending.,
-R049,settings/voice/[capability].tsx,motion,Reduced motion and feedback alternatives,pending,,
-R049,settings/voice/[capability].tsx,content,"Lists, hierarchy, density and pagination",pending,,
-R049,settings/voice/[capability].tsx,search,"Search, scope and filters",pending,,
-R049,settings/voice/[capability].tsx,loading,"Loading, background refresh and progress",source-reviewed,M31 select/test/enable state identifies active operation and disables competing commands.,M31
-R049,settings/voice/[capability].tsx,recovery,"Empty, error, denied and retry",finding,"Selection failure retains server-confirmed choice; command errors use feedback, initial/refresh query failures handled separately.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md)",M81
-R049,settings/voice/[capability].tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R049,settings/voice/[capability].tsx,privacy,"Account scope, data use and permissions",source-reviewed,Selection footer explains tenant-wide effect; server authorization unchanged.,
-R049,settings/voice/[capability].tsx,notifications,System notification entry and state,pending,,
-R049,settings/voice/[capability].tsx,media,"Camera, library, files and audio",pending,,
-R049,settings/voice/[capability].tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
-R050,settings/voice/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Voice Setup reports readiness and explains listening/understanding/speaking stage purposes.,
-R050,settings/voice/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Stage rows open capability detail; advanced provider list has separate navigation.,
-R050,settings/voice/index.tsx,selection,Value selection and current value,pending,,
-R050,settings/voice/index.tsx,modality,Presentation and dismissal,pending,,
-R050,settings/voice/index.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
-R050,settings/voice/index.tsx,adaptation,Phone/tablet/window reflow,pending,,
-R050,settings/voice/index.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R050,settings/voice/index.tsx,appearance,"Light/dark, contrast and materials",pending,,
-R050,settings/voice/index.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
-R050,settings/voice/index.tsx,imagery,"Icons, photos and missing media",pending,,
-R050,settings/voice/index.tsx,targets,Touch target size and reachability,pending,,
-R050,settings/voice/index.tsx,gestures,Gestures and explicit alternatives,pending,,
-R050,settings/voice/index.tsx,keyboard,"Keyboard, text entry and focus",pending,,
-R050,settings/voice/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Stage action names include stage, tenant and readiness; native order/dynamic text pending.",
-R050,settings/voice/index.tsx,motion,Reduced motion and feedback alternatives,pending,,
-R050,settings/voice/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Configuration slots map to labeled sections with selected service context; no custom flat-selection screen introduced here.,
-R050,settings/voice/index.tsx,search,"Search, scope and filters",pending,,
-R050,settings/voice/index.tsx,loading,"Loading, background refresh and progress",pending,,
-R050,settings/voice/index.tsx,recovery,"Empty, error, denied and retry",finding,Provider/settings loading and errors have retry paths; refresh errors preserve existing provider view.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
-R050,settings/voice/index.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
-R050,settings/voice/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Header names tenant and explicitly says setup applies to everyone there.,
-R050,settings/voice/index.tsx,notifications,System notification entry and state,pending,,
-R050,settings/voice/index.tsx,media,"Camera, library, files and audio",pending,,
-R050,settings/voice/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+R049,settings/voice/[capability].tsx,task,Task clarity and platform-pattern fit,source-reviewed,"Voice stage explains function, selected profile, readiness and recommended repair.; voice-readiness-axis.md source review; native pending",
+R049,settings/voice/[capability].tsx,navigation,"Navigation, hierarchy and return",finding,Profile detail remains separate from value selection; navigation guarded while pending. M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.; voice-readiness-axis.md source review; native pending,M31;M105
+R049,settings/voice/[capability].tsx,selection,Value selection and current value,source-reviewed,"M31 shared native service picker preserves current value, excludes other archived choices, same-value no-op.; voice-readiness-axis.md source review; native pending",M31
+R049,settings/voice/[capability].tsx,modality,Presentation and dismissal,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,appearance,"Light/dark, contrast and materials",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,imagery,"Icons, photos and missing media",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,targets,Touch target size and reachability,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,gestures,Gestures and explicit alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Service selector/current value and profile action explicitly named; screen reader runtime pending.; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,search,"Search, scope and filters",not-applicable,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,loading,"Loading, background refresh and progress",finding,M31 select/test/enable state identifies active operation and disables competing commands.; voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M31; M180
+R049,settings/voice/[capability].tsx,recovery,"Empty, error, denied and retry",finding,"Selection failure retains server-confirmed choice; command errors use feedback, initial/refresh query failures handled separately.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending",M81; M180
+R049,settings/voice/[capability].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,privacy,"Account scope, data use and permissions",source-reviewed,Selection footer explains tenant-wide effect; server authorization unchanged.; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,notifications,System notification entry and state,not-applicable,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,media,"Camera, library, files and audio",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R049,settings/voice/[capability].tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.; voice-readiness-axis.md source review; native pending,M105
+R050,settings/voice/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Voice Setup reports readiness and explains listening/understanding/speaking stage purposes.; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,Stage rows open capability detail; advanced provider list has separate navigation.; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,selection,Value selection and current value,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,modality,Presentation and dismissal,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,appearance,"Light/dark, contrast and materials",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,imagery,"Icons, photos and missing media",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,targets,Touch target size and reachability,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,gestures,Gestures and explicit alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,keyboard,"Keyboard, text entry and focus",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Stage action names include stage, tenant and readiness; native order/dynamic text pending.; voice-readiness-axis.md source review; native pending",
+R050,settings/voice/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Configuration slots map to labeled sections with selected service context; no custom flat-selection screen introduced here.; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,search,"Search, scope and filters",not-applicable,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,loading,"Loading, background refresh and progress",finding,; voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+R050,settings/voice/index.tsx,recovery,"Empty, error, denied and retry",finding,Provider/settings loading and errors have retry paths; refresh errors preserve existing provider view.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M81; M180
+R050,settings/voice/index.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,Header names tenant and explicitly says setup applies to everyone there.; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,notifications,System notification entry and state,not-applicable,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,media,"Camera, library, files and audio",source-reviewed,; voice-readiness-axis.md source review; native pending,
+R050,settings/voice/index.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; voice-readiness-axis.md source review; native pending,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,task,Task clarity and platform-pattern fit,source-reviewed,Explicit replacement editor explains hidden prior value; credential purpose determines secret field versus server-managed credential explanation.,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md).,M105
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,selection,Value selection and current value,pending,,
@@ -1216,8 +1216,8 @@ R051,settings/voice/profiles/[providerProfileId]/credential.tsx,accessibility,"V
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,search,"Search, scope and filters",pending,,
-R051,settings/voice/profiles/[providerProfileId]/credential.tsx,loading,"Loading, background refresh and progress",source-reviewed,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.,
-R051,settings/voice/profiles/[providerProfileId]/credential.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
+R051,settings/voice/profiles/[providerProfileId]/credential.tsx,loading,"Loading, background refresh and progress",finding,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+R051,settings/voice/profiles/[providerProfileId]/credential.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M81; M180
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M30 freezes submitted draft and guards late edits; failure retains draft. Form keyed by owner/profile to prevent cross-scope reuse.,M30
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"Credential uses secureTextEntry, is not prefilled and clears after success; secret/prompt outside query cache. Native keyboard privacy verification pending.",
 R051,settings/voice/profiles/[providerProfileId]/credential.tsx,notifications,System notification entry and state,pending,,
@@ -1240,8 +1240,8 @@ R052,settings/voice/profiles/[providerProfileId]/index.tsx,accessibility,"VoiceO
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,search,"Search, scope and filters",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,"M29 tracks test/lifecycle/archive independently, shows progress only for active action.; provider-management-axis.md; source 5501152d; native acceptance pending",M29
-R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",finding,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending,M81
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,loading,"Loading, background refresh and progress",finding,"M29 tracks test/lifecycle/archive independently, shows progress only for active action.; provider-management-axis.md; source 5501152d; native acceptance pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending",M29; M180
+R052,settings/voice/profiles/[providerProfileId]/index.tsx,recovery,"Empty, error, denied and retry",finding,Missing profile/read failure uses retry view; refresh errors preserve prior data; command failures use persistent feedback.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M81; M180
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,editing,"Draft, save, cancel, undo and interruption",finding,M29 serializes actions and guards credential/prompt navigation; three operation-failure cases restore actions.; M146 mounted provider archive confirmation consumption; native pending; provider-management-axis.md; source 5501152d; native acceptance pending,M29; M146
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R052,settings/voice/profiles/[providerProfileId]/index.tsx,notifications,System notification entry and state,not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
@@ -1264,8 +1264,8 @@ R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,accessibility,"Voice
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,motion,Reduced motion and feedback alternatives,pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,search,"Search, scope and filters",pending,,
-R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,loading,"Loading, background refresh and progress",source-reviewed,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.,
-R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md),M81
+R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,loading,"Loading, background refresh and progress",finding,Save text changes to Saving with busy/disabled state; Cancel disabled. Background refresh error uses separate notice.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,recovery,"Empty, error, denied and retry",finding,Save failure retains draft with feedback; missing/unsupported profile uses retry state; refresh error does not replace form.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M81; M180
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M30 freezes submitted draft and guards late edits; failure retains draft. Form keyed by owner/profile to prevent cross-scope reuse.,M30
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"Credential uses secureTextEntry, is not prefilled and clears after success; secret/prompt outside query cache. Native keyboard privacy verification pending.",
 R053,settings/voice/profiles/[providerProfileId]/prompt.tsx,notifications,System notification entry and state,pending,,
@@ -1312,8 +1312,8 @@ R055,settings/voice/profiles/index.tsx,accessibility,"VoiceOver/TalkBack names, 
 R055,settings/voice/profiles/index.tsx,motion,Reduced motion and feedback alternatives,source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R055,settings/voice/profiles/index.tsx,content,"Lists, hierarchy, density and pagination",source-reviewed,Profiles sorted by capability/name in query; empty state offers Add; scaling for large lists requires runtime evaluation.; provider-management-axis.md; source 5501152d; native acceptance pending,
 R055,settings/voice/profiles/index.tsx,search,"Search, scope and filters",not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
-R055,settings/voice/profiles/index.tsx,loading,"Loading, background refresh and progress",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
-R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",finding,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending,M81
+R055,settings/voice/profiles/index.tsx,loading,"Loading, background refresh and progress",finding,provider-management-axis.md; source 5501152d; native acceptance pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+R055,settings/voice/profiles/index.tsx,recovery,"Empty, error, denied and retry",finding,ProviderStateView handles initial failure/retry; SettingsRefreshNotice retains visible list on refresh failure.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); provider-management-axis.md; source 5501152d; native acceptance pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M81; M180
 R055,settings/voice/profiles/index.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,provider-management-axis.md; source 5501152d; native acceptance pending,
 R055,settings/voice/profiles/index.tsx,privacy,"Account scope, data use and permissions",source-reviewed,"VoiceAdminGuard wraps route, tenant-wide scope explained; no secret credentials rendered.; provider-management-axis.md; source 5501152d; native acceptance pending",
 R055,settings/voice/profiles/index.tsx,notifications,System notification entry and state,not-applicable,provider-management-axis.md; source 5501152d; native acceptance pending,
@@ -2951,30 +2951,30 @@ S123,Voice / plan progress recovery,privacy,"Account scope, data use and permiss
 S123,Voice / plan progress recovery,notifications,System notification entry and state,not-applicable,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,media,"Camera, library, files and audio",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
-S124,Voice / provider readiness,task,Task clarity and platform-pattern fit,pending,,
-S124,Voice / provider readiness,navigation,"Navigation, hierarchy and return",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
-S124,Voice / provider readiness,selection,Value selection and current value,pending,,
-S124,Voice / provider readiness,modality,Presentation and dismissal,pending,,
-S124,Voice / provider readiness,layout,"Safe areas, scroll edges and overlays",pending,,
-S124,Voice / provider readiness,adaptation,Phone/tablet/window reflow,pending,,
-S124,Voice / provider readiness,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
-S124,Voice / provider readiness,appearance,"Light/dark, contrast and materials",pending,,
-S124,Voice / provider readiness,localization,"Locale, timezone, RTL and long strings",pending,,
-S124,Voice / provider readiness,imagery,"Icons, photos and missing media",pending,,
-S124,Voice / provider readiness,targets,Touch target size and reachability,pending,,
-S124,Voice / provider readiness,gestures,Gestures and explicit alternatives,pending,,
-S124,Voice / provider readiness,keyboard,"Keyboard, text entry and focus",pending,,
-S124,Voice / provider readiness,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S124,Voice / provider readiness,motion,Reduced motion and feedback alternatives,pending,,
-S124,Voice / provider readiness,content,"Lists, hierarchy, density and pagination",pending,,
-S124,Voice / provider readiness,search,"Search, scope and filters",pending,,
-S124,Voice / provider readiness,loading,"Loading, background refresh and progress",pending,,
-S124,Voice / provider readiness,recovery,"Empty, error, denied and retry",pending,,
-S124,Voice / provider readiness,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M54
-S124,Voice / provider readiness,privacy,"Account scope, data use and permissions",pending,,
-S124,Voice / provider readiness,notifications,System notification entry and state,pending,,
-S124,Voice / provider readiness,media,"Camera, library, files and audio",pending,,
-S124,Voice / provider readiness,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.,M105
+S124,Voice / provider readiness,task,Task clarity and platform-pattern fit,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,navigation,"Navigation, hierarchy and return",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.; voice-readiness-axis.md source review; native pending,M105
+S124,Voice / provider readiness,selection,Value selection and current value,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,modality,Presentation and dismissal,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.; voice-readiness-axis.md source review; native pending,M53
+S124,Voice / provider readiness,appearance,"Light/dark, contrast and materials",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,imagery,"Icons, photos and missing media",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,targets,Touch target size and reachability,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,gestures,Gestures and explicit alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,keyboard,"Keyboard, text entry and focus",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,motion,Reduced motion and feedback alternatives,source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,content,"Lists, hierarchy, density and pagination",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,search,"Search, scope and filters",not-applicable,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,loading,"Loading, background refresh and progress",finding,; voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+S124,Voice / provider readiness,recovery,"Empty, error, denied and retry",finding,; voice-readiness-axis.md source review; native pending; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+S124,Voice / provider readiness,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; voice-readiness-axis.md source review; native pending,M54
+S124,Voice / provider readiness,privacy,"Account scope, data use and permissions",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,notifications,System notification entry and state,not-applicable,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,media,"Camera, library, files and audio",source-reviewed,; voice-readiness-axis.md source review; native pending,
+S124,Voice / provider readiness,lifecycle,"Cold/warm start, blur, background and deep link",finding, M105: voice-stage select/test/enable use the provider visit guard; mounted departed success/failure checks pass; native return/placement pending.; voice-readiness-axis.md source review; native pending,M105
 S125,Voice / credential editor,task,Task clarity and platform-pattern fit,finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
 S125,Voice / credential editor,navigation,"Navigation, hierarchy and return",finding, M105: deferred provider completions and archive confirmations survive blur/return; source focus-session guard implemented with mounted regressions. Native navigation/feedback acceptance pending (findings.md). All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M105;M107
 S125,Voice / credential editor,selection,Value selection and current value,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
@@ -2992,8 +2992,8 @@ S125,Voice / credential editor,accessibility,"VoiceOver/TalkBack names, roles, s
 S125,Voice / credential editor,motion,Reduced motion and feedback alternatives,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S125,Voice / credential editor,content,"Lists, hierarchy, density and pagination",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S125,Voice / credential editor,search,"Search, scope and filters",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
-S125,Voice / credential editor,loading,"Loading, background refresh and progress",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
-S125,Voice / credential editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S125,Voice / credential editor,loading,"Loading, background refresh and progress",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+S125,Voice / credential editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M106; M180
 S125,Voice / credential editor,editing,"Draft, save, cancel, undo and interruption",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
 S125,Voice / credential editor,privacy,"Account scope, data use and permissions",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S125,Voice / credential editor,notifications,System notification entry and state,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
@@ -3016,8 +3016,8 @@ S126,Voice / prompt editor,accessibility,"VoiceOver/TalkBack names, roles, state
 S126,Voice / prompt editor,motion,Reduced motion and feedback alternatives,pending, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S126,Voice / prompt editor,content,"Lists, hierarchy, density and pagination",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S126,Voice / prompt editor,search,"Search, scope and filters",not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
-S126,Voice / prompt editor,loading,"Loading, background refresh and progress",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
-S126,Voice / prompt editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M106
+S126,Voice / prompt editor,loading,"Loading, background refresh and progress",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M180
+S126,Voice / prompt editor,recovery,"Empty, error, denied and retry",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.; M180 task-specific shared loading/error states;110 focused checks plus final copy check; native pending,M106; M180
 S126,Voice / prompt editor,editing,"Draft, save, cancel, undo and interruption",finding, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,M107
 S126,Voice / prompt editor,privacy,"Account scope, data use and permissions",source-reviewed, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,
 S126,Voice / prompt editor,notifications,System notification entry and state,not-applicable, All24 source review: provider-editors-axis.md; current native editor acceptance remains pending.,

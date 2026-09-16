@@ -4,7 +4,6 @@ import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   Text,
   View
@@ -22,6 +21,7 @@ import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import {
   SettingsActionRow,
+  SettingsLoadingRow,
   SettingsNavigationRow,
   SettingsSection,
   SettingsSeparator,
@@ -58,7 +58,7 @@ export function VoiceSetupScreen({
   const { styles } = useSettingsListStyles();
   const providers = useProviderSettings(query);
   const settings = useSettingsModel(settingsQuery);
-  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
+  if (providers.state.status !== 'ready') return <ProviderStateView taskLabel="voice setup" state={providers.state} onRetry={providers.retry} />;
   if (settings.state.status !== 'ready') return <SettingsStateBridge state={settings.state} onRetry={settings.load} />;
   const { configuration } = providers.state.viewModel;
   const tenant = settings.state.settings.selectedTenant;
@@ -124,10 +124,11 @@ export function VoiceCapabilityScreen({
   const working = operation !== undefined;
   const workingRef = useRef(false);
   const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${capability}`);
-  if (providers.state.status !== 'ready') return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
-  const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
-  if (!slot) return <ProviderStateView state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.retry} />;
   const stage = stagePresentation(capability);
+  const taskLabel = `${stage.title.toLowerCase()} settings`;
+  if (providers.state.status !== 'ready') return <ProviderStateView taskLabel={taskLabel} state={providers.state} onRetry={providers.retry} />;
+  const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
+  if (!slot) return <ProviderStateView taskLabel={taskLabel} state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.retry} />;
   const selectedProfile = slot.selectedProfile;
   const recommendedAction = slot.recommendedAction;
   const availableProfiles = providers.state.viewModel.profiles.filter(profile =>
@@ -252,8 +253,8 @@ export function VoiceCapabilityScreen({
 }
 
 function SettingsStateBridge({ state, onRetry }: { readonly state: ReturnType<typeof useSettingsModel>['state']; readonly onRetry: () => Promise<void> }) {
-  const { palette, styles } = useSettingsListStyles();
-  if (state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
+  const { styles } = useSettingsListStyles();
+  if (state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label="Loading household context" /></View>;
   if (state.status === 'error') return <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}><Text style={styles.errorTitle}>Could not load tenant context</Text><Text style={styles.errorMessage}>{state.message}</Text><NativeCommandButton label="Retry" onPress={() => void onRetry()} /></ScrollView>;
   return null;
 }

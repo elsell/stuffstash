@@ -2575,3 +2575,18 @@ adapter. The candidate uses NativeCommandButton with the same label and navigati
 callback and removes unused styles. Existing failure-presentation, native-command
 and navigation-contract checks verify retained semantics; native geometry remains
 pending. See voice-route-axis.md for the consolidated24-axis route review.
+
+### M180 — Shared provider states lose the current task identity
+
+P3 source-confirmed at684c54d5. ProviderStateView shows an unlabeled full-screen
+spinner and labels profile/credential/prompt failures Could not load Voice Setup.
+The household-context bridge also omits loading text. This is a task clarity/copy
+finding, not a claim that Apple requires a label on every spinner.
+
+The candidate requires a taskLabel at every shared consumer, reuses the labeled
+settings progress row, and identifies the task in error headings. Credential
+settings text refers to metadata; secrets are not read back. Existing query,
+permission and Retry behavior is unchanged. Six RED mounted cases reproduced
+missing task text. All110 related checks/static validation pass, plus six final
+copy checks; critic found no blocker. Native announcements/layout remain pending.
+See voice-readiness-axis.md for all24 source axes and affected consumers.

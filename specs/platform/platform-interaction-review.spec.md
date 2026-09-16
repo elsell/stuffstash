@@ -69,3 +69,9 @@ so Back exercises retained drafts. Test lookup failure/retry, native search,
 immediate destination selection, Back and visible proposal state. Fixture routes
 must remain runner-only and must not load production services or credentials.
 Simulator results do not establish physical capture or server authorization.
+
+Shared provider-settings loading and failure views must identify the current task
+(voice setup, voice stage, profile list/detail, credentials or prompt guidance).
+Use the shared labeled progress row; do not substitute an unlabeled spinner or
+label unrelated editor failures as Voice Setup. Tenant-context loading also names
+its task. Keep the existing scoped query and native retry behavior.
