@@ -571,3 +571,11 @@ pre-correction evidence: capture taps dismissed the keyboard and no trace was ex
 The focused text-entry selection includes controlled, seeded and system address
 comparisons as well as ordinary-name comparisons. It remains diagnostic-only;
 the full suite is still required for broader native acceptance.
+
+The runner-only input trace also records React Native key-press events before
+text-change events, without updating React state while recording. This separates
+received replacement/key events from resulting text values in run351480's missing
+character cases. These events are still framework-delivered evidence, not physical
+keystroke proof. Keep the bounded buffer, explicit snapshot command, assistance
+settings and exact-text assertions unchanged. Verify event order, absence of
+trace-induced renders, and bounded retention using the existing render harness.

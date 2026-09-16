@@ -275,7 +275,7 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
     <AppTextInput accessibilityLabel={`Audit ${mode} text`} multiline={mode === 'multiline'}
       {...(mode.startsWith('plain-controlled') ? { value } : { defaultValue: '' })}
       {...(mode.endsWith('no-assistance') ? { autoCorrect: false, spellCheck: false, smartInsertDelete: false } : {})}
-      onChangeText={setValue} onChange={trace.onChange} onSelectionChange={trace.onSelectionChange} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
+      onChangeText={setValue} onChange={trace.onChange} onKeyPress={trace.onKeyPress} onSelectionChange={trace.onSelectionChange} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>
     {trace.controls}
   </View>;
@@ -288,7 +288,7 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   </View>;
   return <View><AppTextInput accessibilityLabel={`Audit ${mode} address`} keyboardType="url"
     autoCorrect={false} autoCapitalize="none" onChangeText={setValue}
-    onChange={trace.onChange} onSelectionChange={trace.onSelectionChange}
+    onChange={trace.onChange} onKeyPress={trace.onKeyPress} onSelectionChange={trace.onSelectionChange}
     {...(mode === 'controlled' ? { value } : { defaultValue: '' })}
     style={{ minHeight: 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>

@@ -253,3 +253,12 @@ assistance setting changes. TypeScript, six fixture-isolation checks and the mob
 structural check pass on paul; critic found no blocker. Native attachment capture
 is pending. The existing uninstrumented production journeys remain required;
 tracing changes timing and does not by itself establish a cause or correction.
+
+
+## Focused event traces, September 16
+
+[Run35148050909](native-text-entry-351480.md) exports all24 expected React Native
+traces across both targets. Missing/reordered characters occur in received native
+change events with contiguous counts, including no-accessory comparisons. This
+narrows the observation boundary without proving a root cause or clearing real
+product workflows. Phone10/14 and iPad11/14 comparisons pass.

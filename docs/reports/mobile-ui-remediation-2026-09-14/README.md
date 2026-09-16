@@ -5,8 +5,10 @@ pass, with unresolved normal-size text entry, color opening and phone preconfigu
 Place search failures. Both onboarding jobs pass. See [phone results](native-phone-351404.md),
 [iPad results](native-ipad-351404.md) and [onboarding evidence](native-onboarding-351404.md).
 Input tracing produced no output because the fixture consumed the capture tap to
-dismiss the keyboard. The runner-only correction at a01fc760 is under focused
-run35148050909 and full run35148054814; no full native acceptance is claimed.
+dismiss the keyboard. The runner-only correction at a01fc760 now exports all expected traces in
+[focused run35148050909](native-text-entry-351480.md): phone10/14 and iPad11/14
+comparisons pass. Character-loss failures remain; full run35148054814 is in progress.
+No full native acceptance is claimed.
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
