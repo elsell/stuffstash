@@ -36,3 +36,18 @@ Evidence:112 related route/presentation cases, TypeScript and mobile structural
 checks pass on paul (`/tmp/photo-acquisition-visit-green.log`). New picker/upload
 failure cases reproduced departed notices before the two-line candidate fix.
 Critic found no blocker. No new native pass is claimed for either route.
+
+## Android independent-region recovery
+
+September16, Android16 Pixel6, normal text/light appearance, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+core identity Audit place and its More actions remain visible while both photo and
+contents reads fail. Retry photos removes only the photo error, revealing No photos;
+the contents failure and its retry remain. Retry contents then displays the separate
+[empty Spaces and Items sections](evidence/android-detail-regions-recovered.png)
+while retaining core identity and the recovered photo region. No production reads
+or mutations occur in this fixture. This verifies independent recovery, not real
+photo delivery, permissions, initial core failure or all navigation contexts.
+
+Evidence: `/tmp/android-region-{entry,photos-recovered,recovered}.xml` and
+`/tmp/android-region-recovered.png`. No implementation changed for this check.
