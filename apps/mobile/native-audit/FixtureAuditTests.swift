@@ -870,6 +870,15 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Search reconfigured"].waitForExistence(timeout: 5))
     let updatedPlacement = headerSearchIsPresent("Search reconfigured")
     capture("managed-search-after-header-update")
+    app.buttons["Add native header action"].tap()
+    let action = app.navigationBars["Search reconfigured"].buttons["Probe action"].firstMatch
+    XCTAssertTrue(action.waitForExistence(timeout: 5))
+    let actionPlacement = headerSearchIsPresent("Search reconfigured")
+    capture("managed-search-with-native-action")
+    XCTAssertTrue(action.isHittable)
+    if action.isHittable { action.tap() }
+    XCTAssertTrue(app.staticTexts["Action activations: 1"].waitForExistence(timeout: 5))
+    XCTAssertTrue(actionPlacement, "Native header actions must coexist with header search")
     XCTAssertTrue(initialPlacement, "Delayed native search must initially use the header")
     XCTAssertTrue(updatedPlacement, "Header updates must retain search placement")
   }

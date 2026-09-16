@@ -22,7 +22,10 @@ hierarchies are retained on both hosts in `/tmp/phone351121-selected`.
   probes and single-name checks pass. M51 remains unresolved.
 - Preconfigured Place search and Settings search again fail expected top search.
   Production Place and managed/static comparisons pass. This mixture does not
-  establish that delayed registration alone causes the layout mismatch.
+  establish that delayed registration alone causes the layout mismatch. The final
+  Settings capture confirms an expanded bottom Search tags field. A later controlled
+  comparison adds native header action registration after the passing managed-search
+  stages, asserting both search placement and action activation; its result is pending.
 - Sharing reaches the older cancellation menu but Cancel invitation is not hittable;
   the new direct cancellation command is newer than this run.
 - Normal Move Here rejection/retry and Add draft recovery pass.

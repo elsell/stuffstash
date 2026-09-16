@@ -430,3 +430,13 @@ unfinished-tag journey must allow at most five seconds for exact equality before
 continuing keyboard dismissal, Save blocking, disclosure collapse/reopen and draft
 retention checks. Do not weaken those downstream assertions or apply this diagnosis
 to controlled-field cases whose final captures still contain incorrect text.
+
+## Managed search and native action coexistence probe
+
+Phone run351121 retains bottom search in Settings while isolated managed search
+and production Place search pass. The next controlled comparison must add a native
+header action after the existing enable/title-update stages, then verify search
+remains in the header and the action activates. This isolates action registration
+as a possible contributor without claiming it is the cause. Preserve the earlier
+stages unchanged and make no production placement workaround until native evidence
+supports it. The fixture action changes only an observable activation count.
