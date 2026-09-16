@@ -1065,7 +1065,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTFail("Comparison input must be fully visible before typing")
   }
 
-  private func verifyOrdinaryTextEntry(_ mode: String) {
+  private func verifyOrdinaryTextEntry(_ mode: String, paced: Bool = false) {
     let open = app.buttons["Audit \(mode) input"]
     for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -1077,8 +1077,12 @@ final class FixtureAuditTests: XCTestCase {
     input.tap()
     waitForKeyboard()
     if mode.hasSuffix("no-accessory") { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
-    input.typeText("Native draft name")
-    capture("\(mode)-ordinary-text-entry")
+    if paced {
+      for character in "Native draft name" { input.typeText(String(character)) }
+    } else {
+      input.typeText("Native draft name")
+    }
+    capture("\(mode)-ordinary-text-entry\(paced ? "-paced" : "")")
     XCTAssertEqual(input.value as? String, "Native draft name")
     XCTAssertTrue(app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5))
   }
@@ -1090,6 +1094,8 @@ final class FixtureAuditTests: XCTestCase {
   func testControlledTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-controlled-no-accessory") }
   func testOrdinaryTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-no-assistance") }
   func testOrdinaryTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-no-accessory") }
+  func testPacedControlledTextEntryDiagnostic() { verifyOrdinaryTextEntry("plain-controlled", paced: true) }
+  func testPacedUncontrolledTextEntryDiagnostic() { verifyOrdinaryTextEntry("plain", paced: true) }
 
   func testSeededAddressWithoutKeyboardAccessory() { verifyAddressEntry("uncontrolled", withoutAccessory: true) }
 

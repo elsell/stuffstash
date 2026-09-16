@@ -1274,6 +1274,14 @@ dismiss action, not a callback that mutates the next session’s prompt state.
 
 ### Ordinary text entry isolation
 
+Add separate controlled and uncontrolled paced-injection diagnostic cases using
+the same assisted input and string, entering one character per XCTest call. Keep
+all existing whole-string cases and their exact assertions unchanged. This is an
+explicit timing comparison, never a replacement acceptance test: a paced pass
+cannot close a failed whole-string case or justify slowing production entry.
+Record its distinct screenshot names and include it in the text-entry diagnostic
+workflow. Do not infer that an upstream issue matches without the same conditions.
+
 The native audit must compare the same ordinary text with the default keyboard:
 uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
 and uncontrolled without the app keyboard accessory. Retain the baseline and exact
