@@ -226,3 +226,21 @@ paul. The final patch applies to pristine pinned0.2.2. Native rebuild is in
 progress; elapsed-time zoom retention, image replacement/paging and iOS remain
 open. This source reproduction does not prove which event caused the earlier
 interrupted native capture to reset.
+
+### M234 retained zoom on the rebuilt Android candidate
+
+APK `d9b1a7b5196c970f45131b6d960adea3ae02bc46ea5f4d772dff39ec8a00bb72`
+includes the retained gesture controller from `460007a9` and the opaque footer.
+On the same Android16 Pixel6 fixture at normal text size, double-tapped photo1
+remains enlarged after45 seconds and after Home followed by warm app return.
+The [resumed capture](evidence/android-photo-zoom-retained-after-resume.png) retains
+the same image crop and readable commands. Subsequent single taps hide and reveal
+commands while preserving the enlarged crop. Next selects filename2 at fit scale;
+a horizontal swipe returns to filename1, confirming paging is reenabled. Footer
+Close returns to Add with both thumbnails and both removal commands retained.
+
+Inspected captures: `/tmp/photo-retain-{start,delayed,resumed,hidden,revealed,next}.png`.
+Native hierarchy evidence on paul: `/tmp/photo-retain-{swipe,close}.xml`.
+The fixture uses two synthetic draft photos; no asset is saved. This strengthens
+Android Add-preview acceptance but does not verify iOS, asset-viewer consumers,
+pinch/pan, assistive operation or a fresh package-manager install.

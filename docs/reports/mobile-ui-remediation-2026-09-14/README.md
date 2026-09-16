@@ -2,6 +2,15 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
+Latest source checkpoint `460007a9`: **1,896 tests across295 files**, TypeScript
+and mobile structural checks pass on paul. Android Add-photo native checks verify
+zoom retention across elapsed time and warm return, control hide/reveal, paging
+and Close without losing draft photos; see [photo viewer evidence](photo-viewer-axis.md).
+This is partial runtime acceptance. iOS run350950 remains active on an older
+revision; latest source is pending in35101315533. Release remains gated on native
+review. Disk cleanup retains selected evidence and active build environments;
+current free space is11GB local,5.5GB on paul root and18GB in paul's `/tmp`.
+
 Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture
 content matches the remote tree by checksum. React act warnings remain. Log:
