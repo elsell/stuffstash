@@ -533,3 +533,12 @@ assertions and failure reporting; a longer job budget is not a test pass. Active
 runs retain their original configuration and must not be cancelled or restarted
 solely to adopt this change. Check future runs for completed result export and
 uploaded evidence as well as test totals.
+
+
+When a pnpm patch changes a native dependency's installed location, update both
+its dependency entry and external-source path in the checked-in iOS Podfile.lock
+before native validation. Keep pod versions and checksums unchanged when the
+podspec itself is unchanged. The Android-only Expo UI patch changes pnpm's directory
+identity on every host, including iOS; its ExpoUI path must follow the frozen
+installation. Preserve `pod install --deployment` as the native lock-consistency
+gate. Run35130374705 demonstrates the failing path contract before this correction.

@@ -2473,7 +2473,7 @@ DEPENDENCIES:
   - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_@expo+log-box@55.0.12_@expo+metro-runtime@55.0.11_@testing-library+_fb22fef325b147bf34333d0767e2f621/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios`)"
   - "ExpoSymbols (from `../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._5099956c01165c3b712d9b89728d05b9/node_modules/expo-symbols/ios`)"
-  - "ExpoUI (from `../../../node_modules/.pnpm/@expo+ui@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/@expo/ui/ios`)"
+  - "ExpoUI (from `../../../node_modules/.pnpm/@expo+ui@55.0.17_patch_hash=5aef927b713fa1c2e1397cf4651f32be66e9ce79674a0ff2e73db03586e_d6c404a6d4c4d34fbac715e26127dd30/node_modules/@expo/ui/ios`)"
   - "ExpoWebBrowser (from `../../../node_modules/.pnpm/expo-web-browser@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0_/node_modules/expo-web-browser/ios`)"
   - "EXUpdatesInterface (from `../../../node_modules/.pnpm/expo-updates-interface@55.1.6_expo@55.0.26/node_modules/expo-updates-interface/ios`)"
   - "FBLazyVector (from `../../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0/node_modules/react-native/Libraries/FBLazyVector`)"
@@ -2628,7 +2628,7 @@ EXTERNAL SOURCES:
   ExpoSymbols:
     :path: "../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._5099956c01165c3b712d9b89728d05b9/node_modules/expo-symbols/ios"
   ExpoUI:
-    :path: "../../../node_modules/.pnpm/@expo+ui@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/@expo/ui/ios"
+    :path: "../../../node_modules/.pnpm/@expo+ui@55.0.17_patch_hash=5aef927b713fa1c2e1397cf4651f32be66e9ce79674a0ff2e73db03586e_d6c404a6d4c4d34fbac715e26127dd30/node_modules/@expo/ui/ios"
   ExpoWebBrowser:
     :path: "../../../node_modules/.pnpm/expo-web-browser@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0_/node_modules/expo-web-browser/ios"
   EXUpdatesInterface:

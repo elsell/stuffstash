@@ -24,7 +24,7 @@ Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes
 iPad onboarding passes3/3; phone help activation fails (M240). See
 [native phone findings](native-phone-351121.md) and
 [native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
-terminal: phone67/85 fixture tests pass, with18 failures; iPad logs79/85 before the job budget cancels result finalization and loses its artifact. See [iPad log results and evidence limit](native-ipad-351214.md). Run35130374705 at0586f845 is now active and must finish undisturbed. See [current phone evidence and acceptance corrections](native-phone-351214.md). Both onboarding jobs pass their applicable cases with
+terminal: phone67/85 fixture tests pass, with18 failures; iPad logs79/85 before the job budget cancels result finalization and loses its artifact. See [iPad log results and evidence limit](native-ipad-351214.md). Run35130374705 at0586f845 failed before tests because the ExpoUI Podfile.lock path did not follow the patched pnpm package. Both path entries are corrected; remote resolution checks and unchanged podspec comparison pass. Native deployment verification remains pending. See [current phone evidence and acceptance corrections](native-phone-351214.md). Both onboarding jobs pass their applicable cases with
 [inspected help, keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
 c196d527 await native execution: bounded exact Add-tag observation and a managed
 search/header-action coexistence comparison. Neither is production acceptance.

@@ -490,3 +490,10 @@ Run35130374705 at0586f845 is now active; preserve its original execution. Future
 full audit jobs receive120 minutes after the confirmed351214 evidence-loss timeout.
 The iPad result is log-only, with no visual acceptance claim. Remote YAML parsing
 and critic review pass; result export under the revised budget remains to verify.
+
+Run35130374705 fails all four jobs before tests: `pod install --deployment` detects
+ExpoUI's changed path after the Android patch altered pnpm's package identity.
+Both Podfile.lock source entries now follow the frozen-installed patched path;
+remote resolution checks pass and the podspec is byte-identical. No pod version
+or checksum changes. Critic found no blocker; macOS deployment validation remains
+required. Input-event diagnostics are deferred until this integration gate clears.
