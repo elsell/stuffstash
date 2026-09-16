@@ -234,3 +234,12 @@ It does not establish scroll/drag disambiguation, TalkBack, keyboard or server
 persistence. Script `/tmp/verify-color-dark.py` and XML/PNG
 `/tmp/android-color-dark-targets.*` are retained on paul. System night mode was
 restored to its original disabled setting in the script's finally block.
+
+A controlled follow-up on the same APK reopens the selected Blue value and
+scrolls at x25px, outside the spectrum. Both light and dark configurations retain
+exact hex#2F80ED before any color adjustment; Cancel preserves the same parent.
+This rules out an opening-value defect in these samples and isolates the earlier
+capture from acceptance of scroll-only behavior. Dark hierarchy and capture are
+retained on paul as `/tmp/android-color-dark-outside-scroll.{xml,png}`. No product
+change was needed. The first direct query failed because the hex field was below
+the viewport; the outside scroll made it visible without changing its value.
