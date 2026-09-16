@@ -140,3 +140,20 @@ foreground; a background menu's mere existence cannot pass. The scenario is
 included in the focused Add-draft suite as well as the complete suite. Remote
 structural validation and critic review passed; Swift compilation and native
 execution remain pending, so this adds coverage, not iOS acceptance evidence.
+
+### Android zoom and system escape
+
+Same5660fb54 build, Android16 Pixel6, normal text/light: Add's selected synthetic
+photo opens with its filename, position and footer commands. Double tap visibly
+[enlarges the image and hides the footer](evidence/android-photo-zoomed.png). A
+single tap while enlarged does not reveal controls. A second double tap restores
+the fit image and [the full footer](evidence/android-photo-zoom-restored.png),
+including Close, paging and Remove. Zooming again and using Android system Back
+returns to Add item with both draft thumbnails and both removal commands intact
+(`/tmp/android-zoom-back.xml`). No asset was saved or photo removed.
+
+This confirms double-tap zoom/reset and system escape in the Add consumer. It
+does not establish pinch/pan behavior, access to commands while still zoomed,
+TalkBack, iOS gestures, or the unavailable-image transition during zoom. The
+single-tap observation is retained as an interaction limitation, not dismissed
+because zoom reset provides another path.
