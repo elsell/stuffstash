@@ -59,7 +59,10 @@ native run remains necessary for Add, Return, settings and other real consumers.
 ## Retained evidence
 
 GitHub artifacts10468633683 (phone) and10468513590 (iPad) contain result bundles.
-Large archives stay on paul as `/tmp/native351480-focused-phone.zip` and
+The complete synthetic trace payloads and test/attachment mapping are preserved
+in [phone JSON](evidence/phone-input-events-351480.json) and
+[iPad JSON](evidence/ipad-input-events-351480.json), so their evidence survives
+temporary-file cleanup and GitHub artifact expiry. Large archives stay on paul as `/tmp/native351480-focused-phone.zip` and
 `/tmp/native351480-focused-ipad.zip`. Only small extracted traces are local in
 `/tmp/phone351480-traces` and `/tmp/ipad351480-traces`; each has an index mapping
 its test to its attachment. They are temporary copies; GitHub retention is finite.
