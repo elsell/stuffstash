@@ -94,3 +94,25 @@ it does not retroactively mark the failed runs green or prove every point in a
 44-point region. Remote structural checks pass; the revised Swift assertion awaits
 native execution. VoiceOver, color-editing acceptance and inconsistent historical
 activation remain open.
+
+## Android custom-color staging sample
+
+September16, Android16 Pixel6, normal text/light, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+the Android fallback expands inline; scrolling outside the color surface reveals
+Hue/Saturation/Brightness adjustments, Hex color, Clear color, Cancel and Done.
+Increasing Hue and cancelling leaves No tag color selected. Reopening restores
+the original214-degree draft, rather than the cancelled adjustment. Increasing
+Hue again and choosing Done selects [Custom and marks the parent draft
+unsaved](evidence/android-tag-custom-draft.png). Parent Save reaches the fixture
+collection and shows Tag saved. No server or real definition was mutated.
+
+The destination collection uses its own synthetic repository; its rows do not
+prove persisted color readback. This sample verifies cancel/staging and successful
+command navigation only. Hex keyboard editing, direct color-surface dragging,
+Clear, rejection recovery, TalkBack, large text and iOS color activation remain
+open. The route-name header in the capture belongs to the fixture configuration;
+it is not evidence of the production title.
+
+Evidence: `/tmp/android-tag-{editor,custom,custom-bottom,cancel,reopened,done,saved}.xml`
+and `/tmp/android-tag-done.png`. No implementation changed for these checks.
