@@ -33,7 +33,7 @@ shutil.copytree(routes, backup)
 shutil.rmtree(routes)
 routes.mkdir()
 exports = {
-    "_layout": "FixtureLayout",
+    "_layout": "FixtureLayoutWithoutKeyboardProvider" if os.environ.get("AUDIT_TEST_CASE") == "text-entry-no-provider" else "FixtureLayout",
     "index": "FixtureMenu",
     "audit-sheet-diagnostic": "SheetLayoutFixture",
     "audit-add": "AddAssetFixture",

@@ -627,3 +627,11 @@ existing cleared entry and an enabled Save action. An existing SwiftUI text fiel
 may expose its empty value as nil, an empty string, or its placeholder. Never
 treat a nonexistent field as successful clearing; observe the complete staged
 state with a bounded wait before continuing to Clear draft.
+
+The runner-only `text-entry-no-provider` diagnostic must execute the same fourteen
+text-entry comparisons with AppKeyboardProvider and its accessory entirely absent.
+Hiding the accessory alone does not exclude the provider's native input hooks.
+The default/full fixture installation must retain the provider. Record actual
+provider omission in native evidence; keep exact text, mirror and trace checks,
+ordinary typing speed and system-field comparisons unchanged. This comparison is
+not a production configuration change or a substitute for full-suite acceptance.

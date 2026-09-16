@@ -64,6 +64,14 @@ const ResultContext = createContext({ result: '', setResult: (_value: string) =>
 const AppearanceWriteCount = createContext(0);
 
 export function FixtureLayout() {
+  return <FixtureRoot keyboardProviderEnabled />;
+}
+
+export function FixtureLayoutWithoutKeyboardProvider() {
+  return <FixtureRoot keyboardProviderEnabled={false} />;
+}
+
+function FixtureRoot({ keyboardProviderEnabled }: { readonly keyboardProviderEnabled: boolean }) {
   const [appearanceWrites, setAppearanceWrites] = useState(0);
   const [controller] = useState(() => {
     let preference: AppearancePreference = 'system';
@@ -72,12 +80,14 @@ export function FixtureLayout() {
       save: async value => { preference = value; setAppearanceWrites(count => count + 1); }
     });
   });
-  return <AppKeyboardProvider><AppearanceProvider controller={controller}>
-    <AppearanceWriteCount.Provider value={appearanceWrites}><VoiceProposalFixtureProvider><FixtureNavigation /></VoiceProposalFixtureProvider></AppearanceWriteCount.Provider>
-  </AppearanceProvider></AppKeyboardProvider>;
+  const body = <AppearanceProvider controller={controller}>
+    <AppearanceWriteCount.Provider value={appearanceWrites}><VoiceProposalFixtureProvider><FixtureNavigation keyboardProviderEnabled={keyboardProviderEnabled} /></VoiceProposalFixtureProvider></AppearanceWriteCount.Provider>
+  </AppearanceProvider>;
+  return keyboardProviderEnabled ? <AppKeyboardProvider>{body}</AppKeyboardProvider>
+    : <View testID="audit-keyboard-provider-omitted" collapsable={false} style={{ flex: 1 }}>{body}</View>;
 }
 
-function FixtureNavigation() {
+function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProviderEnabled: boolean }) {
   const { palette, isHydrated, resolvedColorScheme } = useAppearance();
   const [result, setResult] = useState('');
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
@@ -135,7 +145,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
-    <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} />
+    {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 

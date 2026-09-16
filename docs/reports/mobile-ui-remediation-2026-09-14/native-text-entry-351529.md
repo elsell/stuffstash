@@ -59,3 +59,19 @@ around pending edits, including the single-line delegate's pending-change state.
 They do not justify a production workaround or a claim that XCTest alone caused
 the problem. The focused filter run35154627907 has now started on both targets;
 full native run35148054814 remains active.
+
+## Next controlled comparison
+
+The no-accessory cases still mount AppKeyboardProvider. A runner-only
+`text-entry-no-provider` selection now omits both provider and accessory while
+running the same fourteen comparisons. Each test retains a configuration attachment
+from the root's native identifier so provider absence can be checked in the result.
+The normal/full fixture root retains the production provider. Installation tests
+first fail for the missing distinct root, then pass after the selector is added.
+
+The library's [upstream issue1588](https://github.com/kirillzyusko/react-native-keyboard-controller/issues/1588)
+reports delegate forwarding to the wrong input after navigation. Its reported
+missing key events differ from our complete key sequences; it is not an established
+explanation here. It does establish why merely hiding the accessory is insufficient
+to exclude the provider's delegate hooks. A provider-free comparison can narrow
+that boundary before any framework patch or production input replacement.

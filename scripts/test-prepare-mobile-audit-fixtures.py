@@ -28,7 +28,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
 
     def run_script(self, **settings):
         env = {**os.environ, "GITHUB_ACTIONS": "true", "RUNNER_TEMP": str(self.runner),
-               "AUDIT_SUITE": "fixtures", **settings}
+               "AUDIT_SUITE": "fixtures", "AUDIT_TEST_CASE": "all", **settings}
         return subprocess.run(["python3", str(self.script)], env=env, capture_output=True, text=True)
 
     def test_refuses_nonrunner_or_nonfixture_calls_without_modifying_production(self):
@@ -46,6 +46,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertIn("NotificationInboxFixture as default", (self.routes / "audit-notifications.tsx").read_text())
         self.assertIn("AssetContentsSearchFixture as default", (self.routes / "audit-contents-search-preconfigured.tsx").read_text())
         self.assertIn("FixtureMenu as default", (self.routes / "index.tsx").read_text())
+        self.assertIn("FixtureLayout as default", (self.routes / "_layout.tsx").read_text())
         self.assertIn("CustomizationEditorFixture as default", (self.routes / "audit-customization-editor.tsx").read_text())
         self.assertIn("VoiceProposalFixture as default", (self.routes / "voice.tsx").read_text())
         self.assertIn("VoicePlanLocationFixture as default", (self.routes / "voice-plan-location.tsx").read_text())
@@ -62,6 +63,12 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertIn("HomeTabShellFixture as default", (self.routes / "audit-tabs/(home)/index.tsx").read_text())
         self.assertIn("TabShellBrowsePlaceholder as default", (self.routes / "audit-tabs/search/index.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)
+        self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
+
+    def test_provider_free_diagnostic_installs_distinct_root_and_keeps_backup(self):
+        result = self.run_script(AUDIT_TEST_CASE="text-entry-no-provider")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("FixtureLayoutWithoutKeyboardProvider as default", (self.routes / "_layout.tsx").read_text())
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
 
     def test_explicit_disposable_archive_keeps_external_production_backup(self):

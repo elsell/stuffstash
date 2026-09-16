@@ -7,6 +7,11 @@ final class FixtureAuditTests: XCTestCase {
     continueAfterFailure = false
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
+    let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
+    providerEvidence.name = "keyboard-provider-configuration"
+    providerEvidence.lifetime = .keepAlways
+    add(providerEvidence)
   }
   override func tearDownWithError() throws {
     capture("final-state")

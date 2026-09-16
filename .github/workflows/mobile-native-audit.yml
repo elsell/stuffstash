@@ -12,6 +12,7 @@ on:
           - all
           - color-picker
           - text-entry
+          - text-entry-no-provider
           - add-draft
           - home-header
           - filters
@@ -123,7 +124,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
               )
               ;;
-            text-entry)
+            text-entry|text-entry-no-provider)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledAddressEntry'
