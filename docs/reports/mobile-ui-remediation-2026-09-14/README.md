@@ -81,8 +81,13 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise913
-pending,1,806 source-reviewed,484 finding,23 runtime-partial and182 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise889
+pending,1,824 source-reviewed,484 finding,23 runtime-partial and188 not-applicable.
+
+[Push entry](push-entry-axis.md) now has all 24 source axes reviewed. Eighteen
+adapter/application checks pass; mounted root navigation and physical cold/warm
+notification journeys remain explicit acceptance gaps. This adds source coverage,
+not new runtime verification or a production change.
 
 [System dialogs](system-dialog-axis.md) now has all 24 source axes reviewed, with
 caller-specific ownership evidence retained. M189 prevents late photo-removal
