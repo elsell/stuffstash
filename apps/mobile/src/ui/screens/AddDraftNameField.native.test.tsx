@@ -1,11 +1,11 @@
 import React from 'react';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
-import { AddAssetNameField } from './AddAssetNameField.ios';
+import { AddDraftNameField } from './AddDraftNameField.ios';
 
 it('retains the native seed during editing and replaces it only for a new draft revision', async () => {
   const h = new MobileRenderHarness(); const changes: string[] = [];
-  const field = (revision: number, value: string, editable = true) => <AddAssetNameField key={revision}
+  const field = (revision: number, value: string, editable = true) => <AddDraftNameField key={revision}
     accessibilityLabel="Asset name" editable={editable} value={value} onChangeText={text => changes.push(text)} />;
   try {
     await h.render(field(0, 'Restored tent'));

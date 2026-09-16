@@ -26,6 +26,27 @@ TypeScript and structural checks pass on paul. Critic found no blocker. Focused
 `add-draft` runs the four existing product journeys unchanged; native sizing,
 appearance, keyboard, full-string entry and draft recovery remain acceptance gates.
 
+Focused35058684319 at348e5fe8 completes2/4 phone Add journeys: stack entry and
+the preconfigured-header route both preserve full text and pass. The latter
+matches production's registered header. The old hidden-header diagnostic fails
+before reaching the field; it is not evidence of current production typing loss.
+The unfinished-tag journey now reaches the separate tag field and visibly retains
+`Cing` instead of `Camping`. iPad completes3/4: both name journeys and the existing
+tag journey pass; only the hidden-header pre-field diagnostic fails. That does not
+erase the observed phone failure or imply all iPad fields are verified.
+The inspected [phone rejected-save capture](evidence/phone-add-native-name-350586.png)
+shows the complete name in both the field and rejection message, with keyboard
+closed, commands visible and no clipping in this normal-size light state.
+
+The scoped adapter is now named AddDraftNameField and also serves the inline tag
+name. Successful staging advances its local reset revision; clear/restoration uses
+the parent draft revision. Disclosure restores the persisted unfinished name.
+The extended workflow test failed before implementation on paul, then25 related
+tests, TypeScript and the mobile structural check passed. Assertions use persisted
+draft values plus native seed ownership, rather than assuming a controlled field.
+Critic found no blocker. This remains a native typing/layout candidate until the
+unchanged tag journey passes on phone and iPad; no global text-input change is made.
+
 ## Reviewed task families and required ownership
 
 | Family / source | Text task | External changes that must survive any fix | Next native acceptance |

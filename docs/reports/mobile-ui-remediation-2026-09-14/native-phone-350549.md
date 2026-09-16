@@ -6,14 +6,15 @@ changes and loaded action return fix. iPad fixtures were still running at this
 checkpoint. Log retained at `/tmp/native350549-phone.log`.
 
 Normal-size failures remain in Add, color activation, RN text comparisons, Home
-notification AX geometry, Place contents search and Sharing. Add's stack journey
+Add-button AX geometry, Place contents search and Sharing. Add's stack journey
 reports `Nft name` instead of `Native draft name`; preconfigured-header Add passes,
 and the direct Add case fails before typing. Those failures occur at different stages
 and must not be collapsed into a single text corruption count. The tag-disclosure
 journey reports `T` instead of `Tent`. Color opening still fails its Sliders
 existence assertion, while the independent target test fails the28-point AX bound.
-The Home bound still reports36points; earlier actual edge-hit evidence remains
-separate and is not erased by this assertion.
+The Home loop fails first on Add at36points. Earlier actual notification edge-hit
+evidence does not certify Add or Profile; separate action probes now cover those
+destinations. The original bounds assertion remains unchanged pending that evidence.
 
 Other failed cases are the enlarged-text asset-region, command-height, detail,
 Edit metadata, Edit tags, expiration overview and Move-here journeys, plus full

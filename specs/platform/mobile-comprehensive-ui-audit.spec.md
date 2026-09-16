@@ -1381,6 +1381,16 @@ The focused `add-draft` workflow selection runs the existing Add typing/recovery
 navigation-stack, preconfigured-header and unfinished-tag journeys unchanged on
 phone and tablet. It is a diagnostic subset, not full native acceptance.
 
+The same scoped native name adapter may serve Add's inline new-tag name after
+run35058684319 passed phone asset-name entry but visibly truncated `Camping` to
+`Cing` in the separate tag field. Preserve its normal text assistance. Native
+editing owns its mount seed; application state still owns validation, draft
+persistence and staged tags. Staging a valid tag explicitly resets the field;
+invalid staging, color changes and removing another staged tag must not reset it.
+Collapsing/reopening details restores the unfinished name. Clear draft and scope
+restoration replace the seed deliberately. Keep the unchanged native unfinished-tag
+journey as acceptance; adapter tests alone cannot establish typing fidelity.
+
 Shared native navigation search options must settle across navigation-context
 updates. Query and caller callback changes update current committed handlers and
 native text, without reconstructing unchanged header presentation. Enabled state

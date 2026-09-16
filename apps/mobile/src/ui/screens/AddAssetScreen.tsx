@@ -1,7 +1,7 @@
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { AddAssetNameField } from './AddAssetNameField';
+import { AddDraftNameField } from './AddDraftNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
@@ -598,7 +598,7 @@ function ScopedAddAssetScreen({
                 />
 
                 <Text style={styles.fieldLabel}>Name</Text>
-                <AddAssetNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
+                <AddDraftNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
                   accessibilityLabel="Asset name"
                   editable={!draftBusy}
                   onChangeText={value => editDraft(() => setTitle(value))}
@@ -673,7 +673,7 @@ function ScopedAddAssetScreen({
                       style={[styles.input, styles.textArea]}
                       value={description}
                     />
-                    <AssetTagPicker disabled={draftBusy}
+                    <AssetTagPicker key={nameRevision} disabled={draftBusy}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
                       newTags={newTags}
@@ -1050,6 +1050,7 @@ function AssetTagPicker({
   readonly onChange: (tagIds: readonly string[], tags: readonly CreateAssetTagDraft[], entry: NonNullable<AddAssetDraft['inlineTag']>) => void;
 }) {
   const [tagSearch, setTagSearch] = useState('');
+  const [tagNameRevision, setTagNameRevision] = useState(0);
   const [showAllTags, setShowAllTags] = useState(false);
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.displayName, expanded: showAllTags, query: tagSearch });
   const colors = useAppearanceAwarePalette();
@@ -1080,6 +1081,7 @@ function AssetTagPicker({
       pendingTags: newTags
     });
     onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
+    if (transition.shouldClearInputs) setTagNameRevision(value => value + 1);
   }
 
   const resolution = resolveInlineAssetTag({
@@ -1145,7 +1147,7 @@ function AssetTagPicker({
       {choices.noMatches ? <Text accessibilityLiveRegion="polite" style={styles.parentPromotionText}>No matching tags</Text> : null}
       {choices.canDisclose ? <NativeCommandButton label={showAllTags ? 'Show fewer tags' : 'Show all tags'} disabled={disabled} onPress={() => { if (!disabled) setShowAllTags(current => !current); }} /> : null}
       <View style={styles.newTagRow}>
-        <AppTextInput editable={!disabled}
+        <AddDraftNameField key={Platform.OS === 'ios' ? tagNameRevision : 'tag-name'} editable={!disabled}
           accessibilityLabel="New tag name"
           onChangeText={setNewTagName}
           placeholder="New tag"

@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 import { Platform } from 'react-native';
 import { AppTextInput } from '../components/AppTextInput';
-import type { AddAssetNameFieldProps as Props } from './AddAssetNameField.types';
+import type { AddDraftNameFieldProps as Props } from './AddDraftNameField.types';
 
-export function AddAssetNameField(props: Props) {
+export function AddDraftNameField(props: Props) {
   return Platform.OS === 'ios' ? <NativeNameField {...props} /> : <AppTextInput {...props} />;
 }
 
