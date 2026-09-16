@@ -137,6 +137,10 @@ for a saved change with retryable photo attachments. Close retains its existing
 media-pause and dismissal behavior. Native compact-sheet and destination-return
 acceptance must cover the changed header.
 
+Provider-configuration recovery uses the shared native command control to open
+Voice setup. Keep its failure-specific label and existing navigation destination;
+do not introduce a custom button style for this ordinary command.
+
 Photo finalization validates uploaded bytes and may take longer than ordinary
 queries while thumbnails are being generated. Mobile API transport allows 60
 seconds for POST attachment direct-upload completion, versus 8 seconds for other

@@ -2566,3 +2566,12 @@ after it (`/tmp/voice-header-reviewed.log`). The new native fixture covers heade
 reachability, declining reset, closing and reopening the proposal; its compilation
 and execution are pending. Compact detents, keyboard layout and destination Back
 must be rechecked on the changed native header before claiming runtime acceptance.
+
+### M179 — Provider recovery uses an unnecessary custom button
+
+P2 source pattern finding at63d17e79. The conversation's provider recovery command
+is a styled Pressable with its own fill/font/shape despite the shared native command
+adapter. The candidate uses NativeCommandButton with the same label and navigation
+callback and removes unused styles. Existing failure-presentation, native-command
+and navigation-contract checks verify retained semantics; native geometry remains
+pending. See voice-route-axis.md for the consolidated24-axis route review.

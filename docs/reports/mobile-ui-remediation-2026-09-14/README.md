@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise1,248
-pending,1,561 source-reviewed,452 finding,24 runtime-partial and123 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise1,231
+pending,1,577 source-reviewed,453 finding,24 runtime-partial and123 not-applicable.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
 includes the visible pending name on approval and blocks blank names;52 focused
@@ -118,6 +118,13 @@ Shared header consumers retain their mappings. Combined validation passes1,774
 tests across280 files and static checks; nine focused cases/static checks pass
 after reviewer-requested options stabilization. The native proposal fixture adds
 Close/reopen and declined-reset journeys; execution remains pending.
+
+The [conversation route review](voice-route-axis.md) consolidates all24 source
+axes across its nested tasks without promoting native gaps to passes. M179 replaces
+the remaining custom provider-recovery button with the shared native command.
+All49 relevant presentation/adapter/navigation tests, TypeScript and structural
+checks pass remotely (`/tmp/voice-recovery-command.log`). Native acceptance remains
+open, including header/keyboard geometry and physical media interruptions.
 
 [Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
 on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size
