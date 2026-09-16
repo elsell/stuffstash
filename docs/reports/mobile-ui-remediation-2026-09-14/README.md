@@ -16,6 +16,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
 - `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
+- `native-onboarding-350592.md`: passing main phone/iPad journey and a distinct iPad entry-observation failure.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
 - `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
