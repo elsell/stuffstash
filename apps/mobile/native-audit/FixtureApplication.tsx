@@ -6,6 +6,7 @@ export { NoticePlacementFixture } from './NoticePlacementFixture';
 export { NativeSearchPlacementFixture } from './NativeSearchPlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { AccountConnectionFixture } from './AccountConnectionFixture';
+export { InvitationAcceptanceFixture } from './InvitationAcceptanceFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
@@ -96,6 +97,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-notice-sheet" options={{ title: 'Notice placement', presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-provider-editor" options={{ title: 'Provider editor' }} />
       <Stack.Screen name="audit-account" options={{ title: 'Account' }} />
+      <Stack.Screen name="audit-invitation" options={{ title: 'Invitation' }} />
       <Stack.Screen name="audit-connection" options={{ title: 'Connection' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
@@ -144,6 +146,7 @@ export function FixtureMenu() {
     <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />
     <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
     <Button title="Audit Account" onPress={() => router.push('/audit-account' as Href)} />
+    <Button title="Audit invitation acceptance" onPress={() => router.push('/audit-invitation' as Href)} />
     <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
     <Button title="Audit static search placement" onPress={() => router.push('/audit-native-search-placement' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />

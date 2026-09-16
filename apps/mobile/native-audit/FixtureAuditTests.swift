@@ -12,6 +12,60 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testInvitationAcceptanceRetainsAccessAfterOpeningFailure() {
+    func openInvitation() {
+      let entry = app.buttons["Audit invitation acceptance"].firstMatch
+      for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(entry.isHittable)
+      entry.tap()
+      XCTAssertTrue(app.navigationBars["Invitation"].waitForExistence(timeout: 10))
+      XCTAssertTrue(app.buttons["Join inventory"].waitForExistence(timeout: 5))
+    }
+    func visible(_ element: XCUIElement) -> Bool {
+      guard element.exists else { return false }
+      let viewport = app.scrollViews.firstMatch.frame.intersection(app.frame)
+      let frame = element.frame
+      return frame.width > 0 && frame.height > 0 &&
+        frame.minY >= max(viewport.minY, app.navigationBars["Invitation"].frame.maxY) &&
+        frame.maxY <= viewport.maxY && frame.minX >= viewport.minX && frame.maxX <= viewport.maxX
+    }
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
+      for _ in 0..<8 where !visible(element) {
+        if element.exists && element.frame.minY < app.navigationBars["Invitation"].frame.maxY {
+          app.scrollViews.firstMatch.swipeDown()
+        } else {
+          app.scrollViews.firstMatch.swipeUp()
+        }
+      }
+      XCTAssertTrue(visible(element), "Invitation content must fit below navigation and within the scroll viewport")
+      if requiresHit { XCTAssertTrue(element.isHittable) }
+    }
+    openInvitation()
+    let name = app.staticTexts["Family camping equipment and seasonal supplies shared with the household"].firstMatch
+    reveal(name, requiresHit: false)
+    reveal(app.staticTexts["Editor"].firstMatch, requiresHit: false)
+    capture("invitation-review-normal")
+    let later = app.buttons["Not now"].firstMatch
+    reveal(later)
+    later.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    openInvitation()
+    let join = app.buttons["Join inventory"].firstMatch
+    reveal(join)
+    join.tap()
+    let open = app.buttons["Open inventory"].firstMatch
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    reveal(open)
+    open.tap()
+    let recovery = app.staticTexts["The inventory could not be opened. Your access was still added."].firstMatch
+    XCTAssertTrue(recovery.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Join inventory"].exists)
+    reveal(recovery, requiresHit: false)
+    capture("invitation-open-recovery")
+    reveal(open)
+    open.tap()
+    XCTAssertTrue(app.staticTexts["Opened invitation inventory; accepted once"].waitForExistence(timeout: 5))
+  }
   private func verifyNoticePlacement(_ presentation: String) {
     let open = app.buttons["Audit Notice \(presentation)"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

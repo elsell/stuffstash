@@ -65,3 +65,19 @@ is introduced. System Back, inherited keyboard dismissal, icon traversal, spinne
 motion and phone/iPad clearance remain native checks, not source-certified passes.
 The dedicated invitation review remains appropriate; no new normal-size source
 defect was established in this follow-up.
+
+## Native journey added
+
+`InvitationAcceptanceFixture` renders the real screen under the production
+Invitation header, using synthetic ports only. The new normal-size phone/iPad
+journey reviews a long inventory name and Editor access, dismisses without joining,
+reopens and explicitly joins, then verifies that a failed Open retains accepted
+access and that retry opens the correct inventory without accepting twice.
+The fixture preserves the optional start-over command's production layout.
+
+The isolated-route preparation test first failed because the route was absent;
+both preparation tests, TypeScript and mobile structural checks pass on paul.
+Native Swift compilation, rendering and interaction are pending the next full run.
+This adds coverage, not a native pass. External link intake, real authentication,
+authorization, pending-operation timing and account-switch/start-over execution
+remain separate checks.

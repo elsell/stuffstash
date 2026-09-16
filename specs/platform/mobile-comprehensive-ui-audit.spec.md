@@ -1,5 +1,16 @@
 # Comprehensive mobile UI audit and remediation
 
+## Invitation native acceptance coverage
+
+The runner-only native suite must render the real invitation acceptance screen
+with synthetic preview/acceptance ports and the production Invitation header.
+At normal text size on phone and iPad, verify a long inventory name, visible
+access, reachable Join and Not now, dismissal without accepting, explicit joining,
+and retained accepted access when opening fails. Retrying Open must not accept the
+invitation again. Keep production routes untouched outside the isolated runner.
+This fixture does not certify external link intake, authentication, authorization,
+or physical-device transitions; those retain their separate acceptance boundaries.
+
 ## Asset action eligibility and retained drafts
 
 Edit and both Move forms must honor the current core view's edit/move capability,

@@ -39,6 +39,7 @@ exports = {
     "audit-notice-sheet": "NoticePlacementFixture",
     "audit-provider-editor": "ProviderEditorFixture",
     "audit-account": "AccountConnectionFixture",
+    "audit-invitation": "InvitationAcceptanceFixture",
     "audit-connection": "AccountConnectionFixture",
     "audit-sharing": "InventorySharingFixture",
     "audit-customization": "CustomizationCollectionFixture",
