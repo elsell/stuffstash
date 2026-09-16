@@ -1468,3 +1468,16 @@ Definition/tag collection header changes require native search activation, exact
 filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
 collection may exercise the shared screen with real query/policy adapters and a
 controlled repository; this is not production authorization or pagination evidence.
+
+### Isolated Android runtime preparation
+
+Android simulator preparation may run on the authorized remote validation host,
+outside the repository and existing generated Android directories. Bootstrap the
+Linux command-line SDK tools from Google's numbered15859902 archive, verifying
+SHA-256 `4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583`
+before extraction or execution. The `_latest` filename suffix is part of that
+numbered, checksum-pinned artifact; do not resolve an unversioned latest download.
+Record subsequent emulator/system-image package revisions and checksums before
+installing them. Check disk capacity and KVM access before provisioning a virtual
+device. Installing tools or booting an emulator does not establish app acceptance;
+record actual build, device, Android version and exercised interactions separately.
