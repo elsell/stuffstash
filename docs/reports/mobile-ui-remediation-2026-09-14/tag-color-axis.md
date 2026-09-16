@@ -1,5 +1,12 @@
 # Optional tag color — all 24 source axes
 
+M51 remains open after full phone351480. A runner-only observation now retains
+the state when ordinary opening misses its existing five-second check, then waits
+up to fifteen further seconds after capture for late system presentation. Both
+states and the outcome are retained; the original five-second result still
+controls pass/fail. This tests a timing hypothesis without changing the control
+or treating delayed opening as acceptance. Native execution is pending.
+
 S108 at71d54bb6. Consumers: settings tag create/edit, Add staged-tag creation,
 and item Edit tag creation. Reviewed TagColorPicker, FullSpectrumTagColorPicker,
 NativeTagColorPicker.ios and their presentation helpers and consumer composition.

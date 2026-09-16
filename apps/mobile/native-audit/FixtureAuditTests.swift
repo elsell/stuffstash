@@ -2021,7 +2021,17 @@ final class FixtureAuditTests: XCTestCase {
     capture("color-before-ordinary-tap")
     picker.tap()
     let sliders = app.buttons["Sliders"]
-    XCTAssertTrue(sliders.waitForExistence(timeout: 5), "The system color picker should open directly")
+    let openedDirectly = sliders.waitForExistence(timeout: 5)
+    if !openedDirectly {
+      capture("color-not-open-after-five-seconds")
+      let appearedLater = sliders.waitForExistence(timeout: 15)
+      let timing = XCTAttachment(string: "Opened within five seconds: false; appeared during further observation: \(appearedLater)")
+      timing.name = "color-late-presentation"
+      timing.lifetime = .keepAlways
+      add(timing)
+      capture("color-after-late-presentation-observation")
+    }
+    XCTAssertTrue(openedDirectly, "The system color picker should open directly")
     capture("native-color-picker")
     if UIDevice.current.userInterfaceIdiom == .pad {
       // The retained iPad hierarchy exposes the system popover dismiss region;

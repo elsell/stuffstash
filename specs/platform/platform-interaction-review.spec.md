@@ -635,3 +635,9 @@ The default/full fixture installation must retain the provider. Record actual
 provider omission in native evidence; keep exact text, mirror and trace checks,
 ordinary typing speed and system-field comparisons unchanged. This comparison is
 not a production configuration change or a substitute for full-suite acceptance.
+
+When ordinary color opening misses its existing five-second native observation,
+retain the failed state and observe a further bounded fifteen seconds for late
+presentation. Record whether the system picker eventually appears, but keep the
+original five-second result as the acceptance assertion. Diagnostic waiting must
+not silently convert a slow or failed activation into a passing test.
