@@ -2908,3 +2908,13 @@ cases cover direct denial, revocation/archive, recovery and reconciliation;
 49 related tests and static checks pass on paul. Critic found no blocker.
 Server mutation authorization remains authoritative; native acceptance is pending.
 See asset-edit-route-axis.md.
+
+### M211 — failed gallery previews leave a blank image area
+
+P2 source-confirmed at8a256a2a. AssetDetailPhotoGallery handled neither image errors
+nor a visible fallback. The candidate shows Preview unavailable and preserves
+opening the original photo, where existing viewer recovery applies. It introduces
+no extra modal or nested command. Replacement URI/headers start fresh; old image
+events cannot hide the replacement. Two failing regressions preceded correction;
+8 gallery tests and static checks pass on paul. Native rendering and assistive
+acceptance remain pending. See gallery-axis.md.

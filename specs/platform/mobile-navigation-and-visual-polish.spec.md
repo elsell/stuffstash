@@ -303,6 +303,14 @@ an undersized inline action squeezed beside text entry.
 
 ### Asset gallery photo command
 
+Gallery preview failures must replace the blank image with “Preview unavailable”.
+When the original photo can be opened, retain that action and label the recovery
+“Open photo”; the full-screen viewer owns original-image retry. Do not nest a
+second button inside the photo button or show raw network errors. Failure state
+belongs to the preview URI and authorization headers: a replacement source must
+start a fresh attempt, and a late event from the old source must not hide it.
+Other photos and the Add photos command remain usable.
+
 The gallery keeps one Add photos command below its empty or populated image area.
 Use the shared native command adapter on iOS and Android; the image itself remains
 an inspection action. Hide Add photos when permission or its callback is absent.
