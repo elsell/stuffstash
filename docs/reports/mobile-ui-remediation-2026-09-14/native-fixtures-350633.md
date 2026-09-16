@@ -82,3 +82,26 @@ address, controlled text without accessory, ordinary controlled text, Sharing
 email entry, enlarged Edit metadata, enlarged Edit tags and enlarged Move Here.
 Phone has22 failures and iPad12; the audit remains incomplete.
 Log `/tmp/native350633-ipad.log`; artifact10435721994 retains tablet evidence.
+
+## Wrapped-sheet comparison classification
+
+Inspected phone final captures for `testFooterFullSheetLayout` and
+`testNestedFullSheetLayout` show the diagnostic title with a blank body. The
+footer variant still shows Finish/Cancel. Their hierarchies lack Diagnostic Tags;
+this is missing rendered comparison content, not merely an ambiguous row selector.
+Both use the intentionally retained `SheetLayoutFixture` View-wrapped ScrollView
+variants. They do not mount production filters. The same run passes direct-scroll,
+direct-scroll/sibling-footer and scroll-contained-footer comparisons.
+
+Production Browse last-tag/footer/apply, in-place availability, expiration date
+actions, expiration search/keyboard and sheet expansion journeys all pass on phone.
+Production NativeFilterSheet retains its direct ScrollView and sibling footer.
+Therefore these two failed comparisons alone do not establish a current production
+filter regression; they retain evidence for the already documented container
+limitation. Keep their failed counts visible without equating them to two new
+product defects or calling the full suite green.
+
+Retained artifact files: footer279B13E0-E37D-4137-9BA5-C759E9AA97AC.png and
+52E85120-6BB6-4ECC-A954-892577DC00FA.txt; nested
+BB0506CF-228F-41BB-9C62-64ECB95CF7D3.png and
+AA822363-02C5-422A-B845-0C139DA0A575.txt.
