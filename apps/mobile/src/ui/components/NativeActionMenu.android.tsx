@@ -26,7 +26,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
       if (!menuDisabled) setExpanded(true);
     }}
     pointerEvents={menuDisabled ? 'none' : 'auto'}
-    style={menuDisabled && styles.disabled}
+    style={[styles.wrapper, menuDisabled && styles.disabled]}
   >
     <Host matchContents={!compactTrigger} style={compactTrigger ? styles.compactHost : styles.labelHost}>
       <DropdownMenu expanded={expanded} onDismissRequest={() => setExpanded(false)}>
@@ -61,7 +61,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
                 modifiers={item.isSelected === undefined
                   ? undefined
                   : [selectable(item.isSelected, chooseItem, 'radioButton')]}
-                onClick={item.isSelected === undefined ? chooseItem : undefined}
+                onClick={chooseItem}
               >
                 <DropdownMenuItem.Text><Text>{item.label}</Text></DropdownMenuItem.Text>
                 {item.isSelected ? <DropdownMenuItem.TrailingIcon><Text color={palette.action}>✓</Text></DropdownMenuItem.TrailingIcon> : null}
@@ -75,6 +75,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
 }
 
 const styles = StyleSheet.create({
+  wrapper: { alignSelf: 'flex-start' },
   disabled: { opacity: 0.5 },
   compactHost: { height: 44, width: 44 },
   labelHost: { height: 44, minWidth: 44 }

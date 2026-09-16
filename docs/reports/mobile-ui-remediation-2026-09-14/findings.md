@@ -3327,3 +3327,29 @@ RED case covers mounting behind another screen; initialization now starts once
 on the first usable focus instead of discarding that load permanently.
 All24 focused inbox checks, TypeScript and mobile structural validation pass on
 paul. Native interruption and actual accessory hit geometry remain unverified.
+
+### M243 — Android menu trigger advertises noninteractive blank space
+
+P2 native-confirmed at APK31457c4d, normal text, Pixel6/API36. Choose appearance,
+System had accessible bounds[53,473][1028,599] but its visible Compose button ended
+near448. Tapping the declared target center did not open the menu. Its React Native
+accessible wrapper stretched across its parent. Candidate aligns that wrapper to
+the start around its measured native child; APK0d8dca23 reports[53,473][448,599].
+[Missed trigger](evidence/android-appearance-missed-trigger.png).
+
+### M244 — Android selectable menu rows omit native click dispatch
+
+P1 native-confirmed in the same build: tapping the visible appearance trigger opens
+System/Light/Dark, but tapping Dark leaves System selected and the menu open.
+[Stuck selection](evidence/android-appearance-selection-stuck.png). The pinned
+ExpoUI DropdownMenuItem.kt always dispatches its own onItemPressed event; the shared
+adapter omitted onClick for rows carrying isSelected, relying on selectable instead.
+Candidate preserves native onClick for every item and retains selectable semantics
+and disabled guards. This affects shared Android choice menus, not only appearance.
+Native candidate selection and exactly-once save verification are tracked in
+appearance-settings-axis.md; do not infer TalkBack verification from pointer taps.
+
+M243/M244 native follow-up: APKb76e227a verifies target-center opening, actual
+Dark/Light/System selection and menu closure, exactly one store save per selection,
+dismissal preserving choice, and open-menu system-theme adaptation. See
+appearance-settings-axis.md. Native TalkBack and other platform checks remain open.

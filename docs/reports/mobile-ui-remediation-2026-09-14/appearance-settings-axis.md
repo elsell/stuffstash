@@ -52,3 +52,38 @@ Settings. All other shared control axes apply with the Settings section as paren
 Native geometry, screen-reader focus and open-menu appearance changes remain
 pending. Preserve the earlier limited native selection result without promoting
 the rest of this surface to runtime verified.
+
+## Android normal-text menu acceptance and M243/M244
+
+APK31457c4d reproduced two independent failures: a stretched accessible trigger
+whose center missed the visible button, then a visible Dark option tap that left
+System selected and the menu open. NativeActionMenu now sizes its wrapper around
+the measured control and retains DropdownMenuItem onClick for selectable items.
+The selected modifier remains for accessibility; disabled guards are unchanged.
+Reviewed shared consumers: Android NativeChoicePicker (including reminder mode),
+AssetOverflowMenu, ExpirationWorkspaceScreen and AssetHistoryRouteScreen.
+
+Candidate APK SHA256
+`b76e227a0c215b08da22f929024514b4b0721f9781e1d209811aaff877d1b4c1`
+was installed on Pixel6/API36,1080×2400,420dpi,font1. Native target-center taps now
+open the menu. Dark, Light and System changes close it and persist exactly once:
+a fixture-only store counter records1,2,3. Back dismisses without changing Dark.
+An open System menu adapts when the OS changes to dark. Light mode was restored.
+The underlying picker, menu, Compose host and appearance-provider source hashes
+matched HEAD before the candidate patch; the APK remains a selectively patched
+historical disposable tree, not a full HEAD build.
+
+[Dark selected](evidence/android-appearance-dark-selected.png) and
+[open-menu system change](evidence/android-appearance-open-theme-change.png).
+Unstyled black diagnostic text belongs to this runner-only fixture; these captures
+do not certify production Settings layout or its explanatory text. Native TalkBack
+selection, keyboard input and iPad/iOS checks remain separate.
+
+Nine focused menu/choice/appearance checks, TypeScript, six fixture installer tests
+and structural validation pass on paul. Critic found no blocker and specifically
+requested exactly-once native validation, now satisfied by the fixture counter.
+Native reproduction/check scripts remain `/tmp/verify-appearance-menu.py` and
+`/tmp/verify-appearance-choices.py` on paul, along with captures and XML.
+
+The shared reminder-mode consumer also passes actual Off and Use defaults selection
+and immediate result reconciliation in the same APK (`/tmp/verify-reminder-menu.py`).

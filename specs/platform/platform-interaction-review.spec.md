@@ -401,3 +401,23 @@ read recovery. Inspect actual accessory geometry and activate read/unread, mark-
 filter, item and breadcrumb navigation with return. Fixture destinations label the
 resolved target; they do not represent production item/settings content. This
 verifies presentation and interaction, not server authorization or APNs delivery.
+
+## Android native menu trigger bounds
+
+The accessible menu-trigger wrapper must size to its native Compose control rather
+than stretching into neighboring blank space. Its announced button bounds must
+contain an actionable center. Retain native menu selection, labels, disabled state
+and compact icon geometry. Validate by tapping the accessibility target center,
+not by substituting a text-child coordinate when the declared button misses.
+Apply to shared NativeActionMenu consumers; this is a geometry correction, not a
+change to menu option or navigation semantics.
+
+Selectable Android menu rows must retain DropdownMenuItem's native onClick event
+alongside selected-state accessibility semantics. The pinned Compose component
+always owns that click dispatch; a selectable modifier does not replace its event.
+Verify actual taps select System/Light/Dark and close the menu. Disabled choices
+remain inert and ordinary command items retain their existing activation path.
+
+The controlled settings fixture may display successful appearance-store write count
+to prove one save per native selection, including selections with both native click
+and accessibility modifier callbacks. This counter is fixture-only.

@@ -58,16 +58,19 @@ export { CheckoutHistoryFixture } from './CheckoutHistoryFixture';
 // Runner-only composition. No production session, service, or credentials are loaded.
 const ResultContext = createContext({ result: '', setResult: (_value: string) => {}, keyboardAccessoryEnabled: true, setKeyboardAccessoryEnabled: (_value: boolean) => {} });
 
+const AppearanceWriteCount = createContext(0);
+
 export function FixtureLayout() {
+  const [appearanceWrites, setAppearanceWrites] = useState(0);
   const [controller] = useState(() => {
     let preference: AppearancePreference = 'system';
     return new AppearancePreferenceController({
       load: async () => preference,
-      save: async value => { preference = value; }
+      save: async value => { preference = value; setAppearanceWrites(count => count + 1); }
     });
   });
   return <AppKeyboardProvider><AppearanceProvider controller={controller}>
-    <VoiceProposalFixtureProvider><FixtureNavigation /></VoiceProposalFixtureProvider>
+    <AppearanceWriteCount.Provider value={appearanceWrites}><VoiceProposalFixtureProvider><FixtureNavigation /></VoiceProposalFixtureProvider></AppearanceWriteCount.Provider>
   </AppearanceProvider></AppKeyboardProvider>;
 }
 
@@ -296,6 +299,7 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
     <Button title="Back to audit menu" onPress={onBack} />
     <AppearancePicker />
     <Text>{`Appearance value: ${preference}`}</Text>
+    <Text>{`Appearance writes: ${useContext(AppearanceWriteCount)}`}</Text>
     <TagColorPicker value={color} onChange={setColor} />
     <Text>{`Color value: ${color || 'none'}`}</Text>
     <ExpirationField initialPickerDate={new Date(2026, 8, 14, 12)} onChange={value => setExpiration(value?.date ?? 'No expiration')} />
