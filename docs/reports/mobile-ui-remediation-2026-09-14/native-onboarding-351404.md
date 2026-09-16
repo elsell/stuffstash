@@ -14,5 +14,11 @@ onboarding evidence, not real authentication or general text-input clearance.
 
 Log `/tmp/native351404-onboarding-ipad.log`; artifact10465890785 (4,936,579 bytes)
 at `/tmp/native351404-onboarding-ipad.zip`; selected captures under
-`/tmp/native351404-onboarding-ipad-selected`. Phone onboarding and both fixture
-jobs remain active at this checkpoint.
+`/tmp/native351404-onboarding-ipad-selected`. Both fixture jobs remain active at this checkpoint.
+
+Phone job104943442251 passes its applicable connection/help/keyboard journey in
+51.902 seconds, with two iPad-only skips and zero failures. This is log evidence;
+phone captures from this run have not been inspected. Log is retained at
+`/tmp/native351404-onboarding-phone.log`; artifact10466210779 is3,239,777 bytes
+and remains available in GitHub Actions. Both onboarding jobs are now successful,
+independently of the unresolved fixture interactions.
