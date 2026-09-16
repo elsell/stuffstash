@@ -28,3 +28,17 @@ hierarchies are extracted, preserving the original on GitHub. Downloaded zip is
 Next acceptance: a single help activation opens in place, a second closes, both
 preserve the address and leave sign-in reachable. Reproduce on the queued native
 revision and inspect event/layout evidence if it recurs. Track M240 as open.
+
+
+## iPad comparison
+
+The same source/merge passes all3 iPad onboarding tests in187.151 seconds, job104851679942.
+Artifact10454277964 retains its result. Inspected normal-text light-theme captures show
+[help expanded](evidence/ipad351121-onboarding-help.png),
+[exact URL and action above keyboard](evidence/ipad351121-onboarding-keyboard.png), and
+[landscape form/action containment](evidence/ipad351121-onboarding-landscape.png).
+The named journeys also assert help closing, keyboard dismissal from both the margin
+and inside the form, action reachability and retained typed address. This narrows
+M240's current failing observation to phone; it does not prove its cause or repair.
+Physical sign-in, assistive input, enlarged text and other device states are not
+certified by these captures. Both broader fixture jobs remain active.

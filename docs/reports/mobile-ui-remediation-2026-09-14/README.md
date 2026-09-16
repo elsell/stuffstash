@@ -20,7 +20,7 @@ Run35104157358 at14d7e06f finished: iPad77/84 and phone63/84 fixture passes;
 phone onboarding passes with two device-inapplicable skips, iPad onboarding3/3.
 The independent static iPad Clear comparison narrows M232 to a native-pattern test
 expectation; full production rerun remains required. See native-ipad-351041.md and native-phone-351041.md.
-Run35112198520 at1c2f8173 is now active; it must finish undisturbed. Release
+Run35112198520 at1c2f8173 remains active. iPad onboarding passes3/3 with inspected help, keyboard and landscape captures; phone fails help activation (M240). Both fixture jobs must finish undisturbed. See native-onboarding-351121.md. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.0GB on paul root and15GB in paul's
 `/tmp` after removing a verified duplicate Android installer extraction.
