@@ -1,5 +1,34 @@
 # Sharing interaction and recovery review
 
+## Android direct-command verification — September16
+
+APK SHA256 `ab28e3ef2f0d1e13053ba9b0a109e264cf9102c5e7eab7ba11395ec50cb19015`
+on paul's Pixel6 Android16/API36 emulator, font scale1, light theme, includes the
+1a373d0b Sharing change on the existing selectively patched audit build. It is not
+a whole-HEAD or production-service acceptance run.
+
+The production Sharing screen with controlled invitation ports verifies exact email
+entry, unavailable-link recovery, a visible native Cancel invitation command,
+recipient-named confirmation, Keep Invitation retaining the pending row, intentional
+cancellation failure and a subsequent successful retry. The final row reads Cancelled
+and has no cancellation command. Captures show no keyboard over these actions.
+An initial rapid coordinate sequence acted before modal presentation settled; it
+was discarded and the fixture restarted. The retained failure/retry sequence waits
+for native hierarchy observations between taps.
+
+- [Failure with reachable retry](evidence/android-sharing-direct-failure.png)
+- [Cancelled row and stale guidance](evidence/android-sharing-direct-complete.png)
+
+This confirms Android normal-size behavior only. M193's phone/iPad keyboard issue
+remains open pending the queued iOS revision. TalkBack, enlarged text, landscape,
+multi-row native disambiguation and real server cancellation are not established.
+
+M239 is newly runtime-confirmed: after cancellation succeeds, the retained creation
+notice still tells the user to cancel the invitation below. The same source stores
+creationError independently of cancellation. Recovery guidance must reflect the
+completed prerequisite without clearing unrelated or newer failures. Fix and native
+reverification remain outstanding.
+
 ## Native follow-up: M193/M194
 
 Phone run35042066124 shows the keyboard overlapping invitation cancellation

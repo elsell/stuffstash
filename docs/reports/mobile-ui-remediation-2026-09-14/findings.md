@@ -3257,3 +3257,16 @@ full-HEAD release build. Captures:
 [evidence/android-voice-keyboard-blank.png](evidence/android-voice-keyboard-blank.png),
 [evidence/android-voice-keyboard-result.png](evidence/android-voice-keyboard-result.png).
 Original obstruction: `/tmp/voice-review-failed.png` on both hosts.
+
+
+### M239 — Invitation recovery still requests an already completed cancellation
+
+P2 normal-text runtime-confirmed on Android APKab28e3ef, source1a373d0b Sharing.
+After successful cancellation, the row reads Cancelled and loses its action, but
+creationError still says Cancel the invitation below before trying again.
+Source: InventorySharingScreen create catch and cancel success retain independent
+notice state. Guidance must stay accurate after successful recovery, while preserving
+unrelated/newer errors and scope ownership. Acceptance: missing-link creation,
+failed cancellation, successful retry, current guidance and retained email; include
+unrelated invitation cancellation and a newer creation attempt during cancellation.
+See sharing-axis.md and evidence/android-sharing-direct-complete.png. Open.
