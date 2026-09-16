@@ -1,7 +1,12 @@
+import { Platform } from 'react-native';
 import type { HeaderOptions } from '../components/NativeHeaderActions.types';
 import type { MobileColorPalette } from '../theme/tokens';
 
-export function voiceNativeSheetOptions(palette: MobileColorPalette): HeaderOptions {
+export function voiceNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS): HeaderOptions {
+  if (platform === 'android') return {
+    contentStyle: { backgroundColor: palette.surface },
+    headerShown: true, title: 'Conversation', presentation: 'card'
+  };
   return {
     contentStyle: { backgroundColor: palette.surface },
     headerShown: true,

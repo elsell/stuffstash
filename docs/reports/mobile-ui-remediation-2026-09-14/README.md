@@ -541,3 +541,7 @@ open; this sample does not certify all Add workflows.
 inventory/history Close controls, root-return handling, and the Return details
 teardown crash found and fixed during shared-consumer verification. Native destination
 checks now require visible Home content and a surviving app, not only dismissal.
+
+[Android Conversation header](android-conversation-header.md) verifies restored
+Close/New controls and retained proposal/location flows. Its final reset observation
+exposes fixture reseeding that must be isolated before claiming reset acceptance.

@@ -3093,3 +3093,11 @@ passes native retry and Cancel journeys with positive Home destination checks. T
 original crash is retained; iOS regression acceptance remains pending. See
 android-header-sheets.md. Negative-only disappearance is never sufficient evidence
 of successful navigation.
+
+### M230 — Android Conversation lacks native Close and New actions
+
+P1 runtime-confirmed: form-sheet header omission hides Conversation's title and
+primary session commands. Android card presentation restores them. Native Close,
+proposal retention, New confirmation/Keep, and location recovery/selection pass.
+Confirmed-reset observation needs fixture seed-lifetime isolation; no empty-state
+claim follows. See android-conversation-header.md.

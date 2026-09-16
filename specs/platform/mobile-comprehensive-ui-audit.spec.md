@@ -1661,3 +1661,9 @@ its lifetime: active tasks delegate attempted exits to their existing close poli
 completed/absent tasks dispatch the original removal action. Native acceptance must
 positively observe the destination screen and surviving app process after Save or
 Cancel; disappearance of the task alone is insufficient and can hide a crash.
+
+Android Conversation requires its native Close and New conversation header actions.
+Use a full-screen native-stack card rather than an Android form sheet, which omits
+that header. Preserve iOS detents, retained conversation state, media pause on Close,
+and confirmation before discarding an unfinished proposal through New conversation.
+Verify context placement and proposal actions after the presentation change.
