@@ -185,6 +185,12 @@ Each uploaded build gets English **What to Test** notes automatically. The notes
 list features, fixes, and performance changes since the previous release, plus a
 link to the full GitHub changelog. Clear commit titles make these notes useful.
 
+For a large squash merge, include a `TestFlight notes:` section in the final
+commit body, followed immediately by `- ` bullet lines. Those highlights replace
+the generic commit title in the notes. End the section with a blank line; keep
+validation details outside it. Only feature, fix, and performance commits contribute
+notes, and the final text remains limited to 4,000 characters.
+
 Publication waits for Apple to process the exact version and build, then writes
 and verifies its notes. A notes failure leaves the uploaded binary intact and
 fails the release workflow.

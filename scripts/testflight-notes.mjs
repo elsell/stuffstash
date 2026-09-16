@@ -3,11 +3,23 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-export function renderNotes(tag, buildNumber, subjects) {
-  const changes = [...new Set(subjects.flatMap(subject => {
-    const match = /^(?:feat|fix|perf)(?:\([^)]*\))?!?:\s*(.+)$/.exec(subject);
-    return match ? [match[1]] : [];
-  }))];
+function releaseHighlights(message) {
+  const lines = message.trim().split(/\r?\n/);
+  const subject = /^(?:feat|fix|perf)(?:\([^)]*\))?!?:\s*(.+)$/.exec(lines[0]);
+  if (!subject) return [];
+  const marker = lines.indexOf('TestFlight notes:');
+  const highlights = [];
+  if (marker > 0) {
+    for (const line of lines.slice(marker + 1)) {
+      if (!line.startsWith('- ') || !line.slice(2).trim()) break;
+      highlights.push(line.slice(2).trim());
+    }
+  }
+  return highlights.length ? highlights : [subject[1]];
+}
+
+export function renderNotes(tag, buildNumber, messages) {
+  const changes = [...new Set(messages.flatMap(releaseHighlights))];
   const heading = `Stuff Stash ${tag.slice(1)} (${buildNumber})\n\n`;
   const footer = `\n\nFull changelog: https://github.com/elsell/stuffstash/releases/tag/${tag}`;
   const body = changes.length ? changes.map(change => '- ' + change).join('\n') : 'Maintenance and reliability updates. See the full changelog for details.';
@@ -120,8 +132,8 @@ function mainTarget(env) {
   git('merge-base', '--is-ancestor', tag, 'HEAD');
   const previous = git('tag', '--merged', tag, '--list', 'v[0-9]*.[0-9]*.[0-9]*', '--sort=-v:refname')
     .split('\n').find(value => value !== tag && /^v\d+\.\d+\.\d+$/.test(value));
-  const subjects = git('log', '--first-parent', '--format=%s', previous ? previous + '..' + tag : tag).split('\n');
-  return { tag, buildNumber, bundleId: env.MOBILE_BUNDLE_ID, notes: renderNotes(tag, buildNumber, subjects) };
+  const messages = git('log', '--first-parent', '--format=%B%x00', previous ? previous + '..' + tag : tag).split('\0');
+  return { tag, buildNumber, bundleId: env.MOBILE_BUNDLE_ID, notes: renderNotes(tag, buildNumber, messages) };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {

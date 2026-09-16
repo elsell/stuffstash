@@ -210,7 +210,14 @@ profiles, disable other capabilities, or silently change signing secrets.
   through App Store Connect betaBuildLocalizations. Release notes are part of
   successful TestFlight publication; failure is visible and can be retried without
   rebuilding or uploading another binary.
-- Generate plain-text notes from first-parent feat/fix/perf commit subjects between
+- A qualifying squash commit may include a reviewed `TestFlight notes:` body section,
+  followed immediately by nonempty `- ` bullet lines. Use those bullets instead of
+  its generic subject; stop at the first non-bullet line. Empty sections fall back
+  to the subject. Other body text never becomes release notes. This supports large
+  release batches without accepting arbitrary workflow inputs or executable refs.
+  Read whole first-parent commit messages with NUL record separators, preserving
+  commit boundaries, then deduplicate and apply the existing length/version rules.
+- Generate plain-text notes from first-parent feat/fix/perf commit messages between
   the previous stable ancestor tag and the target tag. Remove Conventional Commit
   prefixes, retain meaningful descriptions, deduplicate, and bound notes to 4,000
   characters. Include version/build and a release link; omit image digests,
