@@ -53,3 +53,15 @@ Join/Open pending feedback and disabled semantics, explicit acceptance, account
 switch, start-over recovery and accepted-access explanation after failed opening.
 Verify normal phone and iPad entry, long inventory name, pending states, failure,
 retry and dismissal. Do not infer runtime acceptance from adapter tests.
+
+## Current remaining-axis follow-up
+
+Atc08aa31a, R019 layout/typography/imagery/gestures/keyboard/motion/notifications
+were rechecked in InventoryInvitationScreen. The scrollable520-point maximum card
+uses wrapping text and stacked access/expiry values; native commands now replace
+historical custom commands. Decorative invitation/success icons supplement named
+states. No mandatory gesture, local input, notification handler or custom transition
+is introduced. System Back, inherited keyboard dismissal, icon traversal, spinner
+motion and phone/iPad clearance remain native checks, not source-certified passes.
+The dedicated invitation review remains appropriate; no new normal-size source
+defect was established in this follow-up.

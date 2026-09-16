@@ -68,3 +68,19 @@ JavaScript; current official DocC JSON supplied the readable guidance.
 Critic review found no report overclaims and requested reconciling older S058
 editing evidence with later native address/help passes. The matrix now retains
 that history and names the later passes without claiming Go submission acceptance.
+
+## Current server-entry follow-up
+
+Atc08aa31a, the remaining12 S058 axes were rechecked in OnboardingScreen,
+OnboardingPresentation and the iOS address adapter. Navigation goes through browser
+sign-in with visible return explanation; the required address is arbitrary text,
+not a selection or search task. Heading and error text wrap, native URL input
+disables correction/capitalization, and help discloses in place. Brand imagery
+does not replace field labels. Explicit commands supplement keyboard Go and no
+gesture is required. Heading focus follows step changes; required-value feedback
+and native pending state remain visible. English copy/RTL and assistive focus are
+not certified. No media acquisition or system notification request occurs here;
+pending invitation copy is contextual onboarding status. Generation guards prevent
+late completion after teardown. Browser/app-switch/process-loss acceptance remains
+open. No new source defect was established; source completeness does not close
+the existing native keyboard/typing findings.

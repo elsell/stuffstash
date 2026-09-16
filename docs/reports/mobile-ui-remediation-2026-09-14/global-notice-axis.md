@@ -130,3 +130,10 @@ This is not native geometry proof. Push/sheet containment, native header context
 Home/Browse transparent-header behavior, keyboard coexistence, direct-scroll
 compatibility and Android live-region behavior remain runtime acceptance. M103
 stays open; do not call every notice consumer visually verified from mounted tests.
+
+Currentc08aa31a follow-up completes the remaining adaptation/keyboard source cells:
+the notice uses left/right margins and wrapping text, changes to stacked layout at
+fontScale1.3, and has no text entry or keyboard autofocus. Placement comes from
+the active presenter, not a keyboard-dependent root offset. Keyboard coexistence,
+narrow windows, large action labels and focus restoration remain runtime checks.
+No additional source-confirmed defect was established by those two axes.

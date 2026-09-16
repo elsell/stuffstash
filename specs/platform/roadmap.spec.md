@@ -402,3 +402,15 @@ Onboarding commands reuse native controls and retain visible pending labels (M20
 Native350504 onboarding passes applicable phone/iPad cases at older802e4955; the
 new command migration still needs its own keyboard/geometry verification. The
 active fixture jobs and unresolved normal-size failures continue to gate release.
+
+The source inventory now covers all142 surfaces ×24 axes, with zero unreviewed
+cells. This is a coverage milestone, not completion:522 cells retain findings and
+25 partial runtime evidence. M208–M212 add native Add-photo removal, safe asset
+action exits/eligibility, gallery preview recovery and checkout-history direct-entry
+exit. The last full remote checkpoint is1,849 tests/286 files; subsequent gallery
+and checkout changes pass focused tests plus static checks and critic review.
+Run350504 completed50/72 phone and58/72 iPad fixture cases; current350549 remains
+active at8a256a2a. Prioritize normal-size typing, native menu/keyboard coexistence,
+color activation and search placement before enlarged-text acceptance. Preserve
+live native runs and carry this larger batch through review and TestFlight with
+changelog after the runtime gate is satisfied.

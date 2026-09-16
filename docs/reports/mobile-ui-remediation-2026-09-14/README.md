@@ -100,8 +100,11 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise27
-pending,2,636 source-reviewed,522 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise zero pending
+source-review cells,2,663 source-reviewed,522 finding,25 runtime-partial and198
+not-applicable. This completes source inventory coverage, not native acceptance or
+finding remediation. The remaining route/server-entry/notice reviews are linked
+in their surface reports; M212 adds direct-entry checkout-history exit recovery.
 
 Current expiration-entry, gallery and full-viewer follow-ups account for38 more
 source cells. M211 adds gallery preview failure recovery while retaining original
