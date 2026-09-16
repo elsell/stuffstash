@@ -53,3 +53,11 @@ defeated memoization; those are now stable, with a real AssetPhotoViewerSheet
 regression failing before the caller fix and passing afterward. Eleven focused
 checks, eighteen Add checks, TypeScript and structural validation passed remotely.
 An iOS Metro export validates bundling, not layout or native behavior.
+
+Current follow-up at8a256a2a rechecked the wrapper and gallery consumer across the
+24 axes above. M85 now renders Photo unavailable and a native Retry command;
+explicit Close remains available, current image headers are preserved, and Remove
+stays disabled while pending. Filename truncation, VoiceOver focus, zoom and
+background interruptions remain runtime acceptance. This completes the remaining
+source cells for S100 without closing native findings. Gallery preview failures
+are separately tracked as M211; the full-viewer repair did not cover that surface.

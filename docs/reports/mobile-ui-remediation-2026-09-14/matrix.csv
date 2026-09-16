@@ -2187,48 +2187,48 @@ S092,Add / expiration exact date,task,Task clarity and platform-pattern fit,sour
 S092,Add / expiration exact date,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,selection,Value selection and current value,runtime-partial,"Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Compact date picker opens, Add initializes a date and Clear restores no expiration; other date-edit interactions pending. See native-evidence.md.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending",M03
 S092,Add / expiration exact date,modality,Presentation and dismissal,finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
-S092,Add / expiration exact date,layout,"Safe areas, scroll edges and overlays",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,adaptation,Phone/tablet/window reflow,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,typography,"Dynamic Type, wrapping and legibility",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,appearance,"Light/dark, contrast and materials",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S092,Add / expiration exact date,layout,"Safe areas, scroll edges and overlays",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,adaptation,Phone/tablet/window reflow,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,typography,"Dynamic Type, wrapping and legibility",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,appearance,"Light/dark, contrast and materials",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S092,Add / expiration exact date,localization,"Locale, timezone, RTL and long strings",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,imagery,"Icons, photos and missing media",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,targets,Touch target size and reachability,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,gestures,Gestures and explicit alternatives,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,keyboard,"Keyboard, text entry and focus",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,motion,Reduced motion and feedback alternatives,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S092,Add / expiration exact date,imagery,"Icons, photos and missing media",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,targets,Touch target size and reachability,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,gestures,Gestures and explicit alternatives,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,keyboard,"Keyboard, text entry and focus",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S092,Add / expiration exact date,motion,Reduced motion and feedback alternatives,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S092,Add / expiration exact date,content,"Lists, hierarchy, density and pagination",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,search,"Search, scope and filters",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,loading,"Loading, background refresh and progress",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,recovery,"Empty, error, denied and retry",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,editing,"Draft, save, cancel, undo and interruption",finding,"M03; compact native iOS draft picker, explicit Add, outer save;5 focused tests/check/structural;native pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.",M03; M138
 S092,Add / expiration exact date,privacy,"Account scope, data use and permissions",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S092,Add / expiration exact date,notifications,System notification entry and state,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S092,Add / expiration exact date,notifications,System notification entry and state,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S092,Add / expiration exact date,media,"Camera, library, files and audio",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S092,Add / expiration exact date,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S093,Add / expiration month year,task,Task clarity and platform-pattern fit,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,navigation,"Navigation, hierarchy and return",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,selection,Value selection and current value,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,modality,Presentation and dismissal,finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
-S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,layout,"Safe areas, scroll edges and overlays",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S093,Add / expiration month year,adaptation,Phone/tablet/window reflow,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S093,Add / expiration month year,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,M53
-S093,Add / expiration month year,appearance,"Light/dark, contrast and materials",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,appearance,"Light/dark, contrast and materials",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S093,Add / expiration month year,localization,"Locale, timezone, RTL and long strings",source-reviewed,localization-axis.md: month-period formatting corrected; native calendar/digits/layout pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,M68
-S093,Add / expiration month year,imagery,"Icons, photos and missing media",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,targets,Touch target size and reachability,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,gestures,Gestures and explicit alternatives,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,imagery,"Icons, photos and missing media",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S093,Add / expiration month year,targets,Touch target size and reachability,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S093,Add / expiration month year,gestures,Gestures and explicit alternatives,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S093,Add / expiration month year,keyboard,"Keyboard, text entry and focus",finding,text-entry-axis.md records ownership/reset review; full native input acceptance still pending; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,M134
-S093,Add / expiration month year,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,motion,Reduced motion and feedback alternatives,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
+S093,Add / expiration month year,motion,Reduced motion and feedback alternatives,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S093,Add / expiration month year,content,"Lists, hierarchy, density and pagination",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,search,"Search, scope and filters",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,loading,"Loading, background refresh and progress",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,recovery,"Empty, error, denied and retry",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,editing,"Draft, save, cancel, undo and interruption",finding, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M54;M134; M138
 S093,Add / expiration month year,privacy,"Account scope, data use and permissions",source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
-S093,Add / expiration month year,notifications,System notification entry and state,pending,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
+S093,Add / expiration month year,notifications,System notification entry and state,source-reviewed,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; expiration-entry-axis.md current source follow-up; native acceptance pending,
 S093,Add / expiration month year,media,"Camera, library, files and audio",not-applicable,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending,
 S093,Add / expiration month year,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-entry-axis.md; sourcecd6f6556 plus M134; native pending; ce586b03 shared expiration-type confirmation ownership; mounted evidence; native pending.,M138
 S094,Add / draft recovery,task,Task clarity and platform-pattern fit,finding,; add-draft-axis.md all24 source review eac9c3ac; native typing/recovery pending,M197
@@ -2354,25 +2354,25 @@ S098,Asset / archive restore delete,lifecycle,"Cold/warm start, blur, background
 S099,Asset / photo gallery,task,Task clarity and platform-pattern fit,source-reviewed,Native Add photos command implemented on continuation branch; eight remote checks and critic pass. Native placement pending; excluded from interim0.24.11.,M43
 S099,Asset / photo gallery,navigation,"Navigation, hierarchy and return",source-reviewed,Gallery opens the selected photo ID; permission/callback absence disables opening. Source review only.,
 S099,Asset / photo gallery,selection,Value selection and current value,source-reviewed,Numbered image buttons identify photo position and open that exact ID. Source review only.,
-S099,Asset / photo gallery,modality,Presentation and dismissal,pending,,
-S099,Asset / photo gallery,layout,"Safe areas, scroll edges and overlays",pending,,
+S099,Asset / photo gallery,modality,Presentation and dismissal,source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,layout,"Safe areas, scroll edges and overlays",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
 S099,Asset / photo gallery,adaptation,Phone/tablet/window reflow,source-reviewed,Page width derives from current window width and supplied page padding; constrained-pane and rotation runtime pending.,
-S099,Asset / photo gallery,typography,"Dynamic Type, wrapping and legibility",pending,,
-S099,Asset / photo gallery,appearance,"Light/dark, contrast and materials",pending,,
-S099,Asset / photo gallery,localization,"Locale, timezone, RTL and long strings",pending,,
-S099,Asset / photo gallery,imagery,"Icons, photos and missing media",source-reviewed,Hero URI/header fallback and explicit no-photo presentation reviewed; actual missing-image/network rendering pending.,
-S099,Asset / photo gallery,targets,Touch target size and reachability,pending,,
-S099,Asset / photo gallery,gestures,Gestures and explicit alternatives,pending,,
-S099,Asset / photo gallery,keyboard,"Keyboard, text entry and focus",pending,,
+S099,Asset / photo gallery,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,appearance,"Light/dark, contrast and materials",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,localization,"Locale, timezone, RTL and long strings",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,imagery,"Icons, photos and missing media",finding,"Hero URI/header fallback and explicit no-photo presentation reviewed; actual missing-image/network rendering pending.; gallery-axis.md M211 preview recovery candidate; remote tests pass, native pending",M211
+S099,Asset / photo gallery,targets,Touch target size and reachability,source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,gestures,Gestures and explicit alternatives,source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,keyboard,"Keyboard, text entry and focus",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
 S099,Asset / photo gallery,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,Image buttons have numbered names/disabled state and exclude decorative Image; assistive-technology runtime pending.,
-S099,Asset / photo gallery,motion,Reduced motion and feedback alternatives,pending,,
-S099,Asset / photo gallery,content,"Lists, hierarchy, density and pagination",pending,,
-S099,Asset / photo gallery,search,"Search, scope and filters",pending,,
-S099,Asset / photo gallery,loading,"Loading, background refresh and progress",pending,,
-S099,Asset / photo gallery,recovery,"Empty, error, denied and retry",finding,"; findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M151;M158
+S099,Asset / photo gallery,motion,Reduced motion and feedback alternatives,source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,content,"Lists, hierarchy, density and pagination",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,search,"Search, scope and filters",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,loading,"Loading, background refresh and progress",source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
+S099,Asset / photo gallery,recovery,"Empty, error, denied and retry",finding,"; findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending; gallery-axis.md M211 preview recovery candidate; remote tests pass, native pending",M151;M158; M211
 S099,Asset / photo gallery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M64 asset change/unmount and duplicate photo-task behavior checks; native chooser interruption pending; focus-only lifecycle not cleared,M64
 S099,Asset / photo gallery,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
-S099,Asset / photo gallery,notifications,System notification entry and state,pending,,
+S099,Asset / photo gallery,notifications,System notification entry and state,source-reviewed,; gallery-axis.md current source follow-up; native acceptance pending,
 S099,Asset / photo gallery,media,"Camera, library, files and audio",finding,"M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M63; M151;M158
 S099,Asset / photo gallery,lifecycle,"Cold/warm start, blur, background and deep link",finding,"M64 asset change/unmount and duplicate photo-task behavior checks; native chooser interruption pending; focus-only lifecycle not cleared; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M64;M158
 S100,Asset / full screen viewer,task,Task clarity and platform-pattern fit,source-reviewed,Full-screen image inspection supports zoom and paging; modal exception is recorded in mobile-navigation-and-visual-polish.spec.md.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
@@ -2381,22 +2381,22 @@ S100,Asset / full screen viewer,selection,Value selection and current value,sour
 S100,Asset / full screen viewer,modality,Presentation and dismissal,finding,native-evidence.md run34947056524 iPad removal-error dialog only; other modal states pending; dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M139
 S100,Asset / full screen viewer,layout,"Safe areas, scroll edges and overlays",finding,"Bottom toolbar accounts for safe-bottom inset; full-screen and enlarged-text runtime pending.; M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md)",M83
 S100,Asset / full screen viewer,adaptation,Phone/tablet/window reflow,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,typography,"Dynamic Type, wrapping and legibility",pending,,
+S100,Asset / full screen viewer,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,appearance,"Light/dark, contrast and materials",source-reviewed,Neutral dark viewer canvas intentionally preserves image appearance; native contrast review pending.,
-S100,Asset / full screen viewer,localization,"Locale, timezone, RTL and long strings",pending,,
+S100,Asset / full screen viewer,localization,"Locale, timezone, RTL and long strings",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,imagery,"Icons, photos and missing media",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,targets,Touch target size and reachability,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,gestures,Gestures and explicit alternatives,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,keyboard,"Keyboard, text entry and focus",pending,,
+S100,Asset / full screen viewer,keyboard,"Keyboard, text entry and focus",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Viewer commands have accessible names, button roles and disabled states; image announcements/focus order pending.",
 S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,finding,M84: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M84
 S100,Asset / full screen viewer,content,"Lists, hierarchy, density and pagination",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,search,"Search, scope and filters",pending,,
+S100,Asset / full screen viewer,search,"Search, scope and filters",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,loading,"Loading, background refresh and progress",finding,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M42;M85
 S100,Asset / full screen viewer,recovery,"Empty, error, denied and retry",finding,"M83 native acknowledgment replaces root failure notice; 61 remote checks pass; photo-specific native alert/retention fixture added, runtime pending (findings.md); M85: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending",M83;M85
 S100,Asset / full screen viewer,editing,"Draft, save, cancel, undo and interruption",finding,Scoped removal guard/progress retains changed viewing context; six mounted route cases pass incl index shift and asset switch. Native verification pending; excluded from interim0.24.11.; photo-viewer-axis.md source review at82669f4b; native acceptance pending; dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M42; M139
 S100,Asset / full screen viewer,privacy,"Account scope, data use and permissions",source-reviewed,Authorized image headers retained; Remove is permission-gated and system confirmation precedes command. No boundary changes.; photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,notifications,System notification entry and state,pending,,
+S100,Asset / full screen viewer,notifications,System notification entry and state,source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,media,"Camera, library, files and audio",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,lifecycle,"Cold/warm start, blur, background and deep link",finding,dcbf1fe0 stored-photo confirmation invalidation and one-shot acceptance; nine mounted cases; native pending.,M139
 S101,Asset / upload retry,task,Task clarity and platform-pattern fit,source-reviewed,upload-retry-axis.md; source c8b460c2; 40 related tests remotely; native acceptance pending,

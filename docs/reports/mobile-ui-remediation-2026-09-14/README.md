@@ -100,8 +100,15 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise80
-pending,2,584 source-reviewed,521 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise42
+pending,2,621 source-reviewed,522 finding,25 runtime-partial and198 not-applicable.
+
+Current expiration-entry, gallery and full-viewer follow-ups account for38 more
+source cells. M211 adds gallery preview failure recovery while retaining original
+photo opening;8 remote tests and static checks pass. Native visual acceptance
+remains pending. Run350504's iPad job finished58/72 with14 failures; see
+[iPad results](native-ipad-350504.md). Passing source checks do not close these
+native failures.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is
