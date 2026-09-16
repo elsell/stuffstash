@@ -1555,6 +1555,31 @@ final class FixtureAuditTests: XCTestCase {
     capture("voice-proposal-location-back")
   }
 
+  func testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset() {
+    let open = app.buttons["Audit voice proposal"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Conversation"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let proposal = app.buttons["Change containing location, currently Inventory root"]
+    XCTAssertTrue(proposal.waitForExistence(timeout: 15))
+    let newConversation = header.buttons["New conversation"]
+    let close = header.buttons["Close voice session"]
+    XCTAssertTrue(newConversation.isHittable); XCTAssertTrue(close.isHittable)
+    newConversation.tap()
+    let confirmation = app.alerts["Start a new conversation?"]
+    XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+    confirmation.buttons["Keep conversation"].tap()
+    XCTAssertTrue(proposal.exists)
+    capture("voice-native-header-protected-proposal")
+    XCTAssertTrue(close.isHittable); close.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(proposal.waitForExistence(timeout: 10))
+    capture("voice-native-header-returned-proposal")
+  }
+
   func testSettingsEditorNativeBackProtectsDirtyDraft() {
     openCustomizationEditor()
     let name = app.textFields["Name"]

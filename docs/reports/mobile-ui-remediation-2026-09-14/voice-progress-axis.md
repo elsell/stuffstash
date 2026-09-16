@@ -26,7 +26,7 @@ timing and physical uploads are not established by this review.
 | Search | Not applicable: progress has no searchable choices or filter scope. |
 | Loading | Saving and photo uploading are separate stages. Retry marks progress and suppresses duplicate retry in provider; applying the plan is not repeated. |
 | Recovery | M176 fixes loss of safe failure detail when only some attachments fail. Retry keeps successful attachments and attempts failures only. Permanent missing-intent failures remain counted. |
-| Editing | Execution status changes only on confirmed events. Attachment retry does not reopen proposal editing or repeat the inventory mutation. |
+| Editing | Execution status changes only on confirmed events. Attachment retry does not reopen proposal editing or repeat the inventory mutation. M178 removes the inline Reset bypass so retryable photos receive the same confirmation as native New conversation. |
 | Privacy | Failure reasons follow the existing allowlist; arbitrary exception text becomes generic. New mixed-success test includes a synthetic private URL and token to verify redaction. No authorization policy changes. |
 | Notifications | Not applicable: the progress widget does not register notifications or own notification entry. |
 | Media | Attachment retry uses retained photo inputs and reports saved/partial outcomes. Physical library access and upload finalization are outside mounted evidence. |

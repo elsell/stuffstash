@@ -11,6 +11,7 @@ const icons = {
   back: require('./android-icons/header-back.xml'),
   save: require('./android-icons/header-save.xml'),
   settings: require('./android-icons/header-settings.xml'),
+  compose: require('./android-icons/header-compose.xml'),
   'mark-read': require('./android-icons/header-mark-read.xml')
 };
 function Actions({ actions }: { readonly actions: readonly NativeHeaderAction[] }) {

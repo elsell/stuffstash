@@ -2540,3 +2540,29 @@ after leaving or returning. Errors stay available if retry fails again. Two real
 provider/recovery tests cover scope/context failure and recovery, and a component
 test covers lock/visit ownership. Whole-workspace runtime, compact detents and
 VoiceOver remain pending. See voice-processing-axis.md for24 source axes.
+
+### M178 — Conversation header is custom and duplicate reset bypasses protection
+
+P2 source-confirmed at828b87ba. Close and New conversation are custom40-point
+Pressables despite an available native header adapter. A second Reset session
+command calls onReset directly in terminal states, bypassing the confirmation
+used by New conversation when photo retries remain. Source dimensions are not
+native hit-region measurements; the bypass is visible in callback wiring.
+
+The candidate enables the native sheet header with Close and a system compose
+action. Inventory context remains body text. The duplicate inline reset is removed;
+the sole reset entry retains the existing plan/photo confirmation policy. A
+mounted header case verifies retryable-photo confirmation and independent Close.
+An iOS adapter case verifies compose semantics; navigation-feedback coverage
+verifies current committed handlers. Composed options are memoized after critic
+review; the feedback harness passed before memoization, so no reproduced loop is
+claimed. All existing header mappings remain unchanged; shared consumers inspected
+include Home, Browse, Add, notifications, settings editors/collections, reminder
+timing, checkout history, provider editors and inventory switcher.
+
+All1,774 tests across280 files and static checks pass on paul before final options
+memoization (`/tmp/mobile-m178-full.log`). Nine focused cases and static checks pass
+after it (`/tmp/voice-header-reviewed.log`). The new native fixture covers header
+reachability, declining reset, closing and reopening the proposal; its compilation
+and execution are pending. Compact detents, keyboard layout and destination Back
+must be rechecked on the changed native header before claiming runtime acceptance.

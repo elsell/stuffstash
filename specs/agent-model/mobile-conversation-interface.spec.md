@@ -129,6 +129,14 @@ resolution). Disable duplicate retry while it is running, retain the error on
 another failure, and restore the composer when context loads. A retry command
 retained after leaving or replacing the context must not start a new request.
 
+Conversation Close and New conversation belong in the native navigation header,
+using the existing platform header action adapter. Retain inventory context as
+body text. New conversation is the sole reset entry and always follows the same
+draft/photo confirmation policy; a second inline Reset must not bypass protection
+for a saved change with retryable photo attachments. Close retains its existing
+media-pause and dismissal behavior. Native compact-sheet and destination-return
+acceptance must cover the changed header.
+
 Photo finalization validates uploaded bytes and may take longer than ordinary
 queries while thumbnails are being generated. Mobile API transport allows 60
 seconds for POST attachment direct-upload completion, versus 8 seconds for other

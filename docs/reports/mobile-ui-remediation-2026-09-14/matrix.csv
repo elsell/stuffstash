@@ -1344,16 +1344,16 @@ R056,tenant-switcher.tsx,notifications,System notification entry and state,pendi
 R056,tenant-switcher.tsx,media,"Camera, library, files and audio",pending,,
 R056,tenant-switcher.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Preventive M46 follow-through: stable native header presentation with current committed callbacks; Home/Browse option-feedback regression and mounted Home behavior tests. Native acceptance remains pending.; M78 focus ownership and both completion/refocus orderings remote verified; native pending; M79 accepted selection observer ordering remote verified,M46;M78;M79
 R057,voice.tsx,task,Task clarity and platform-pattern fit,finding,findings.md M170; response/decision commands source review only,M170
-R057,voice.tsx,navigation,"Navigation, hierarchy and return",finding,findings.md M171 delayed media/navigation ownership,M171
+R057,voice.tsx,navigation,"Navigation, hierarchy and return",finding,findings.md M171 delayed media/navigation ownership; findings.md M178 native conversation header and single protected reset; native pending,M171; M178
 R057,voice.tsx,selection,Value selection and current value,pending,,
 R057,voice.tsx,modality,Presentation and dismissal,pending,,
 R057,voice.tsx,layout,"Safe areas, scroll edges and overlays",pending,,
 R057,voice.tsx,adaptation,Phone/tablet/window reflow,pending,,
 R057,voice.tsx,typography,"Dynamic Type, wrapping and legibility",pending,,
-R057,voice.tsx,appearance,"Light/dark, contrast and materials",finding,findings.md M170; response/decision commands source review only,M170
+R057,voice.tsx,appearance,"Light/dark, contrast and materials",finding,findings.md M170; response/decision commands source review only; findings.md M178 native conversation header and single protected reset; native pending,M170; M178
 R057,voice.tsx,localization,"Locale, timezone, RTL and long strings",pending,,
 R057,voice.tsx,imagery,"Icons, photos and missing media",pending,,
-R057,voice.tsx,targets,Touch target size and reachability,finding,findings.md M170; response/decision commands source review only,M170
+R057,voice.tsx,targets,Touch target size and reachability,finding,findings.md M170; response/decision commands source review only; findings.md M178 native conversation header and single protected reset; native pending,M170; M178
 R057,voice.tsx,gestures,Gestures and explicit alternatives,pending,,
 R057,voice.tsx,keyboard,"Keyboard, text entry and focus",pending,,
 R057,voice.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
@@ -1362,7 +1362,7 @@ R057,voice.tsx,content,"Lists, hierarchy, density and pagination",pending,,
 R057,voice.tsx,search,"Search, scope and filters",pending,,
 R057,voice.tsx,loading,"Loading, background refresh and progress",pending,,
 R057,voice.tsx,recovery,"Empty, error, denied and retry",pending,,
-R057,voice.tsx,editing,"Draft, save, cancel, undo and interruption",pending,,
+R057,voice.tsx,editing,"Draft, save, cancel, undo and interruption",finding,; findings.md M178 native conversation header and single protected reset; native pending,M178
 R057,voice.tsx,privacy,"Account scope, data use and permissions",pending,,
 R057,voice.tsx,notifications,System notification entry and state,pending,,
 R057,voice.tsx,media,"Camera, library, files and audio",pending,,
@@ -2865,7 +2865,7 @@ S120,Voice / processing,typography,"Dynamic Type, wrapping and legibility",sourc
 S120,Voice / processing,appearance,"Light/dark, contrast and materials",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
 S120,Voice / processing,localization,"Locale, timezone, RTL and long strings",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
 S120,Voice / processing,imagery,"Icons, photos and missing media",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
-S120,Voice / processing,targets,Touch target size and reachability,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,targets,Touch target size and reachability,finding,"voice-processing-axis.md; source review/M177 recovery, native pending; findings.md M178 native conversation header and single protected reset; native pending",M178
 S120,Voice / processing,gestures,Gestures and explicit alternatives,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
 S120,Voice / processing,keyboard,"Keyboard, text entry and focus",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
 S120,Voice / processing,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
@@ -2946,7 +2946,7 @@ S123,Voice / plan progress recovery,content,"Lists, hierarchy, density and pagin
 S123,Voice / plan progress recovery,search,"Search, scope and filters",not-applicable,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,loading,"Loading, background refresh and progress",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,recovery,"Empty, error, denied and retry",finding,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",M176
-S123,Voice / plan progress recovery,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
+S123,Voice / plan progress recovery,editing,"Draft, save, cancel, undo and interruption",finding,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending; findings.md M178 native conversation header and single protected reset; native pending",M178
 S123,Voice / plan progress recovery,privacy,"Account scope, data use and permissions",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,notifications,System notification entry and state,not-applicable,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",
 S123,Voice / plan progress recovery,media,"Camera, library, files and audio",source-reviewed,"voice-progress-axis.md; M176 partial photo recovery; source/mounted evidence, native acceptance pending",

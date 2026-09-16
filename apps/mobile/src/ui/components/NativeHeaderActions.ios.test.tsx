@@ -37,6 +37,14 @@ it('provides a system close action for native sheets', () => {
   expect(closed).toBe(true);
 });
 
+it('uses the system compose action for a new conversation', () => {
+  let started = false;
+  const item = nativeHeaderActionOptions([{ kind: 'compose', label: 'New conversation', onPress: () => { started = true; } }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ accessibilityLabel: 'New conversation', icon: { type: 'sfSymbol', name: 'square.and.pencil' } });
+  if (item?.type === 'button') item.onPress?.();
+  expect(started).toBe(true);
+});
+
 
 it('keeps invalid save commands disabled and exposes a leading close command', () => {
   const calls: string[] = [];

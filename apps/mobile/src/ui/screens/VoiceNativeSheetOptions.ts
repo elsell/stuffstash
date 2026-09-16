@@ -4,7 +4,8 @@ import type { MobileColorPalette } from '../theme/tokens';
 export function voiceNativeSheetOptions(palette: MobileColorPalette): HeaderOptions {
   return {
     contentStyle: { backgroundColor: palette.surface },
-    headerShown: false,
+    headerShown: true,
+    title: 'Conversation',
     presentation: 'formSheet',
     sheetAllowedDetents: [0.42, 0.88],
     sheetCornerRadius: 24,

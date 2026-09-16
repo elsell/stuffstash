@@ -17,7 +17,7 @@ reviews. Native geometry, speech and interruption behavior remain unverified.
 | Appearance | Palette text/status with native spinner, cancel and new Retry. Contrast and platform rendering remain unmeasured. |
 | Localization | Status vocabulary and retry/error labels are English; no locale/RTL certification. |
 | Imagery | Activity indicator is accompanied by a textual phase; no dependency on photos for processing feedback. |
-| Targets | Native Cancel request and Retry conversation. Close/New conversation remain shared custom header controls; no actual hit-region measurements are claimed here. |
+| Targets | Native Cancel request and Retry conversation. M178 moves Close/New conversation into the native header; actual hit regions and compact detents remain unverified. |
 | Gestures | Explicit cancellation during cancellable processing; approved writes cannot be cancelled. No gesture is needed to recover initial context failure after M177. |
 | Keyboard | Composer becomes noneditable during processing, while cancellation remains a separate command. Native keyboard/action overlap remains open. |
 | Accessibility | Progress text uses polite updates; Retry has a label/disabled state and error content a heading. Native reading order and announcements remain pending. |
@@ -26,7 +26,7 @@ reviews. Native geometry, speech and interruption behavior remain unverified.
 | Search | Not applicable: this is conversational execution, not a search/filter control. Result discovery is audited under response. |
 | Loading | Query loading is independent of recording/processing stages. M177 retries scoped context rather than restarting a conversation or recording. |
 | Recovery | M177 fixes initial Voice unavailable with no Retry. Failed retry retains error; success restores ready provider state. Subsequent request errors already render safe recovery content. |
-| Editing | Processing disables new input submission. Existing M144 confirmation ownership protects pending plan/photo drafts on reset. Native draft dismissal remains open. |
+| Editing | Processing disables new input submission. Existing M144 confirmation ownership protects pending plan/photo drafts; M178 removes the duplicate unprotected terminal Reset path. Native draft dismissal remains open. |
 | Privacy | Progress text passes safe presentation filtering; inventory context stays query-scoped. Retry does not bypass existing access checks or introduce an endpoint. |
 | Notifications | Not applicable: this surface does not own notification entry or permission registration. |
 | Media | Busy microphone cannot start another request; close pauses media. Physical speech playback/interruptions require separate runtime evidence. |

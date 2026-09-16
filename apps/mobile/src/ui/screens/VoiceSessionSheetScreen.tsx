@@ -5,13 +5,13 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { VoicePlanNameEditor } from './VoicePlanNameEditor';
-import { useNewConversation } from './useNewConversation';
+import { VoiceConversationHeader } from './VoiceConversationHeader';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
+import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, SendHorizontal } from 'lucide-react-native';
 import {
   ActivityIndicator,
   Keyboard,
@@ -246,7 +246,6 @@ function VoiceSessionSheet({
     tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || 'Tenant'
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
-  const startNewConversation = useNewConversation(readyState?.realtime ?? null, photoDrafts, commandDrafts, onReset);
   const bottomAction = session.bottomAction;
   const actionPlan = session.actionPlan;
   const references = voiceConversationReferences(readyState?.realtime ?? null);
@@ -254,23 +253,9 @@ function VoiceSessionSheet({
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
-      <View style={styles.sheetHeader}>
-        <View style={styles.sheetTitleGroup}>
-          <Text style={styles.sheetTitle}>Conversation</Text>
-          <Text numberOfLines={1} style={styles.sheetContext}>
-            {session.contextLabel}
-          </Text>
-        </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={startNewConversation}><RotateCcw color={palette.textMuted} size={20} /></Pressable>
-        <Pressable
-          accessibilityLabel="Close voice session"
-          accessibilityRole="button"
-          onPress={onClose}
-          style={styles.iconButton}
-        >
-          <X color={palette.textMuted} size={21} strokeWidth={2.4} />
-        </Pressable>
-      </View>
+      <VoiceConversationHeader realtime={readyState?.realtime ?? null} photoDrafts={photoDrafts}
+        commandDrafts={commandDrafts} onReset={onReset} onClose={onClose} />
+      <Text style={styles.sheetContext}>{session.contextLabel}</Text>
 
       {state.status === 'loading' ? (
         <SessionLoadingState />
@@ -452,12 +437,6 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {session.canReset ? (
-              <Pressable accessibilityRole="button" onPress={onReset} style={styles.resetButton}>
-                <RotateCcw color={palette.textMuted} size={17} strokeWidth={2.4} />
-                <Text style={styles.resetButtonText}>Reset session</Text>
-              </Pressable>
-            ) : null}
           </ScrollView>
 
           <View style={[styles.bottomActionBar, { paddingBottom: spacing.md + safeAreaBottom }]}>
@@ -767,15 +746,6 @@ function createStyles(colors: MobileColorPalette) {
     lineHeight: 22,
     marginTop: spacing.xs
   },
-  iconButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: 'center',
-    width: 40
-  },
   progressGroup: {
     flex: 1,
     minWidth: 0
@@ -821,22 +791,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20
-  },
-  resetButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  resetButtonText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800'
   },
   recoveryButton: {
     alignItems: 'center',
@@ -930,24 +884,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 14,
     fontWeight: '700',
     marginTop: 2
-  },
-  sheetHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm
-  },
-  sheetTitle: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 24
-  },
-  sheetTitleGroup: {
-    flex: 1,
-    minWidth: 0
   },
   editableNameButton: {
     alignItems: 'center',
