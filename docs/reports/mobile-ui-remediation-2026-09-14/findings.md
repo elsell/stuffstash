@@ -3282,3 +3282,14 @@ guidance. See evidence/android-sharing-guidance-complete.png. Twenty-two sharing
 behavior tests, six fixture-preparation tests and structural checks pass on paul;
 critic found no blocker. iOS copy/layout acceptance remains pending in the updated
 journey; unrelated/newer errors cannot be cleared by this copy-only change.
+
+
+### M240 — Connection help fails to open after native phone activation
+
+P2 normal-text runtime-observed in run35112198520 phone onboarding. After one
+hittable-button tap, both screenshot and hierarchy retain collapsed help. Native
+bounds are152.3×44 with no keyboard/overlay. Local functional state toggling has
+no identified source failure; previous run351041 passed. Keep open, without timeout
+or double-tap workarounds, until a named native revision verifies one-tap open/close,
+address retention and reachable sign-in. See native-onboarding-351121.md. The other
+jobs remain independent and active; this failure is not an address-entry failure.
