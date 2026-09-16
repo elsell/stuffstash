@@ -414,3 +414,12 @@ active at8a256a2a. Prioritize normal-size typing, native menu/keyboard coexisten
 color activation and search placement before enlarged-text acceptance. Preserve
 live native runs and carry this larger batch through review and TestFlight with
 changelog after the runtime gate is satisfied.
+
+Remote validation atebdd3090 now passes1,854 tests/286 files plus TypeScript and
+structural checks with no tracked mobile source/configuration drift. Focused
+text-entry35056372549 atfdbf30bf is active alongside the retained full run350549.
+Onboarding350549 artifacts show eventual complete address entry and keyboard
+dismissal despite observation failures; bounded exact-value observation and
+per-gesture geometry reads are queued without weakening end-state assertions.
+Separate retained ordinary controlled input still contains reordered text. Do not
+generalize the onboarding timing diagnosis or close the native gate prematurely.

@@ -106,6 +106,14 @@ not-applicable. This completes source inventory coverage, not native acceptance 
 finding remediation. The remaining route/server-entry/notice reviews are linked
 in their surface reports; M212 adds direct-entry checkout-history exit recovery.
 
+At ebdd3090, a checksum comparison confirmed the tracked mobile source, fixture
+and test configuration matched paul's validation tree. All1,854 tests across286
+files, TypeScript and mobile structural checks pass (`/tmp/audit-batch-ebdd-full.log`).
+This includes gallery preview and direct-entry checkout-history fixes; it does
+not establish native rendering. Text-entry diagnostic35056372549 runs separately
+atfdbf30bf while the full350549 fixtures continue. Release remains gated by the
+recorded normal-size runtime failures, not by incomplete source enumeration.
+
 Current expiration-entry, gallery and full-viewer follow-ups account for38 more
 source cells. M211 adds gallery preview failure recovery while retaining original
 photo opening;8 remote tests and static checks pass. Native visual acceptance
