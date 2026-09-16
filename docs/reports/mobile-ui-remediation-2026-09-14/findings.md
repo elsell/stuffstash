@@ -3427,3 +3427,19 @@ on paul. The native assertion now checks complete action clearance above the
 accessory. This is a candidate, not a proven root cause or accepted native fix.
 Browse shares the hook; its corresponding keyboard state requires verification.
 Android's separate IME-aware sheet is unchanged. Native rerun remains required.
+
+### M250 — Browse tag edits remove the active native search configuration
+
+P2 source/mounted-test confirmed. BrowseFiltersScreen writes an explicit undefined
+search option on each draft render while NativeNavigationSearch retains its stable
+options object. Selecting a tag therefore removes the merged current search
+configuration. The earlier test reused the last historical truthy configuration,
+so it could exercise an event handler that was no longer installed.
+
+The regression now reads the currently merged options and fails after selecting a
+tag. Removing the parent's search reset leaves enable/disable ownership with the
+search adapter. Eleven focused tests, TypeScript and structural checks pass on
+paul; selection, query updates, application and overview search removal are covered.
+The focused native Browse keyboard journey must still verify actual behavior on
+iPhone and iPad. This does not establish the cause of the separate Place search
+placement issue. Android owns an inline search adapter and is unchanged.

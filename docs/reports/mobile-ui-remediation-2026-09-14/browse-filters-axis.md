@@ -7,6 +7,12 @@ selection and calendar-dismissal behavior, but visual review finds M249: the pho
 keyboard accessory overlaps Back despite a hittability-only test pass. The native
 clearance candidate remains unverified. Earlier source observations follow.
 
+M250 adds a separate source-confirmed search ownership fix: selecting a tag removed
+the current native search configuration. The parent no longer clears options
+owned by NativeNavigationSearch. The mounted regression now checks merged current
+options rather than historical handlers; eleven scoped tests pass on paul. The
+new native Browse search/selection/apply journey remains pending.
+
 
 R016 and S071–S073 reviewed at e303e4f7, September15. Sources: browse-filters
 route, BrowseFiltersScreen, BrowseFilterRouteState, useBrowseFilterNavigation,

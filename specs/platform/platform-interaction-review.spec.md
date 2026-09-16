@@ -609,3 +609,9 @@ menu, expiration date/calendar dismissal, and expiration search with keyboard.
 Both searchable consumers must use the same full-action/accessory clearance
 assertion, preserve the complete query, and exercise the intended draft/result or
 Back behavior. Focused results cannot replace full-suite release acceptance.
+
+Searchable filter pages must have one owner of the native search options. Updating
+the title or selecting a tag must not clear the active search field or its query.
+Mounted acceptance must inspect the currently merged navigation options, not a
+previous truthy search configuration that may already have been removed. Returning
+to the overview must remove search through the search owner's disabled state.

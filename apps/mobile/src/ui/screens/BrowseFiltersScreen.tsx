@@ -36,7 +36,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
   const visibleTags = [...tags].sort((a, b) => a.label.localeCompare(b.label))
     .filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <>
-    <Stack.Screen options={{ title: titles[page], headerSearchBarOptions: undefined }} />
+    <Stack.Screen options={{ title: titles[page] }} />
     <NativeFilterSheet title={titles[page]} search={page === 'tags' ? { query: search, placeholder: 'Search tags', onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="browse-filter-footer" actions={{
       primaryLabel: 'Show results', secondaryLabel: page === 'overview' ? 'Cancel' : 'Back',
       secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
