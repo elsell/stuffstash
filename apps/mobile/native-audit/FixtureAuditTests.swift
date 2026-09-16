@@ -1253,7 +1253,27 @@ final class FixtureAuditTests: XCTestCase {
     capture("expiration-native-calendar")
     let dismiss = app.buttons["PopoverDismissRegion"]
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
-    dismiss.tap()
+    let calendar = app.datePickers.containing(.button, identifier: "DatePicker.NextMonth").firstMatch
+    XCTAssertTrue(calendar.waitForExistence(timeout: 5))
+    let visible = dismiss.frame.intersection(app.frame)
+    let popup = calendar.frame.intersection(visible)
+    XCTAssertFalse(popup.isEmpty)
+    let outside = [
+      CGRect(x: visible.minX, y: visible.minY, width: popup.minX - visible.minX, height: visible.height),
+      CGRect(x: popup.maxX, y: visible.minY, width: visible.maxX - popup.maxX, height: visible.height),
+      CGRect(x: visible.minX, y: visible.minY, width: visible.width, height: popup.minY - visible.minY),
+      CGRect(x: visible.minX, y: popup.maxY, width: visible.width, height: visible.maxY - popup.maxY)
+    ].filter { !$0.isEmpty && !$0.isInfinite && !$0.isNull }
+    let region = try XCTUnwrap(outside.max { $0.width * $0.height < $1.width * $1.height })
+    let point = CGPoint(x: region.midX, y: region.midY)
+    XCTAssertTrue(visible.contains(point))
+    XCTAssertFalse(popup.contains(point))
+    let geometry = XCTAttachment(string: "dismiss=\(visible); calendar=\(popup); tap=\(point)")
+    geometry.name = "calendar-dismissal-geometry"
+    geometry.lifetime = .keepAlways
+    add(geometry)
+    app.coordinate(withNormalizedOffset: .zero)
+      .withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: dismiss)], timeout: 5), .completed)
     capture("expiration-calendar-dismissed")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)

@@ -621,6 +621,14 @@ only for the focused filters selection; full audit routes retain their unmodifie
 fixture presentation. The probe is an independent event-time sample, not a trace
 of the production hook’s applied inset or synchronized XCTest measurement.
 
+Calendar dismissal acceptance must tap the visible dismissal region outside the
+expanded date-picker frame. A full-screen PopoverDismissRegion AX element's
+default center can lie inside its foreground calendar (phone351546: center201,437
+inside calendar46.3,160,320,332). Derive an outside point from current frames,
+retain both frames and the chosen point, and require the popover to disappear
+before testing the sheet commands. Do not change production dismissal behavior
+to accommodate a test that taps the calendar itself.
+
 Searchable filter pages must have one owner of the native search options. Updating
 the title or selecting a tag must not clear the active search field or its query.
 Mounted acceptance must inspect the currently merged navigation options, not a
@@ -652,3 +660,20 @@ retain the failed state and observe a further bounded fifteen seconds for late
 presentation. Record whether the system picker eventually appears, but keep the
 original five-second result as the acceptance assertion. Diagnostic waiting must
 not silently convert a slow or failed activation into a passing test.
+
+## Bounded release batches during the comprehensive audit
+
+Freeze each release's production source cutoff, changed workflows and critical
+regression checklist before acceptance. The comprehensive audit remains a separate,
+ongoing workstream; completing every audit finding is not a release prerequisite.
+Do not add unrelated remediation to a frozen batch. A correction needed to satisfy
+its existing acceptance may extend the cutoff with explicit source/evidence mapping.
+
+Release when the changed workflows and critical regression checks pass. Keep
+unrelated existing findings, enlarged-text follow-up and diagnostic-only experiments
+tracked separately. A failing diagnostic requires triage against the batch's real
+workflow, not automatic promotion to a release blocker and not automatic dismissal.
+Security, data loss and failures of required changed workflows remain blockers.
+Record the reason and evidence for every failed check's inclusion or exclusion.
+Preserve native evidence limits and publish the batch's own TestFlight changelog;
+Apple processing and notes readback complete the release.

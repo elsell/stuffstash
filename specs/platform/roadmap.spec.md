@@ -512,3 +512,13 @@ accepted. Provider-free input35156439952 and full35156794515 are active; focused
 geometry35158457674 is pending. Keep these executions, normal-text-first sequencing,
 and the complete native/release gate. The coverage inventory remains142 surfaces
 by24 axes (3,408 cells); source review does not substitute for native acceptance.
+
+
+Release sequencing correction (user-directed): freeze production cutoff33dfc002
+for the batch after112.1 and verify its changed workflows plus critical regressions.
+Use `docs/reports/mobile-ui-remediation-2026-09-14/release-batch-113.md` as the bounded
+acceptance record. Ship once those checks pass; do not require completion of the
+comprehensive audit. M249 and last-tag application affect required batch workflows;
+unrelated existing findings, enlarged-text follow-up and diagnostic-only layouts
+remain separately tracked. Keep ongoing native jobs and credit their evidence where
+production source matches. No unrelated remediation enters this frozen batch.

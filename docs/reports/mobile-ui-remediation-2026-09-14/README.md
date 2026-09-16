@@ -5,7 +5,8 @@
 The coverage inventory contains142 surfaces ×24 axes =3,408 cells:2,593
 source-reviewed,577 finding,198 not-applicable and40 runtime-partial. These are
 review classifications, not3,408 completed native acceptance checks. The full
-audit and release remain open; normal-size findings take priority.
+audit remains open; normal-size findings take priority. Release now follows the
+[frozen batch checklist](release-batch-113.md), independently of audit completion.
 
 Latest completed full run35148054814 at a01fc760 records phone69/86 and iPad79/86
 fixture passes. Both onboarding jobs pass their applicable cases. The iPad result
