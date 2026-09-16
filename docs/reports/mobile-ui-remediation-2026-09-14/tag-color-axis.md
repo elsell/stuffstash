@@ -154,3 +154,21 @@ previous parent value `#123456`. Evidence XMLs and screenshots are retained as
 This closes the sampled normal-size Android invalid-hex recovery and direct
 spectrum-drag checks. It does not establish server persistence/rejection recovery,
 TalkBack operation, other layouts, or iOS activation. M51 remains unresolved.
+
+### M245 retained-control correction
+
+A mounted regression reproduced a retained drag sending obsolete red to the old
+parent after a green/current-parent rerender, and a retained hue button dispatching
+while disabled. The committed-handler guard covers gestures, accessibility actions
+and all adjustment buttons, retiring them on disable/unmount. Twenty focused tests,
+TypeScript and structural checks pass on paul; code review is clear after adding
+the adjustment-button guard and regression. Add/Edit inline tags and customization
+tag editors share this component.
+
+Candidate APK `3977d66a7f0bd8a1df3a095ed9199e4ce3bb23a491685ebf8f61ce6dab65825d`
+was installed on the same normal/light Android emulator. A native drag changes
+saturation/brightness to75%/25% without moving the surface; Increase hue changes214
+to219 degrees; Cancel preserves parent `none`. [Drag evidence](evidence/android-color-guard-drag.png)
+and `/tmp/android-color-guard-drag.xml` retain the sample. Native retained-handler
+races are covered by the mounted boundary regression, not claimed as manually
+reproduced on the emulator. iOS ColorPicker activation remains a separate open issue.

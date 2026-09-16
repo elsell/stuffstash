@@ -3353,3 +3353,20 @@ M243/M244 native follow-up: APKb76e227a verifies target-center opening, actual
 Dark/Light/System selection and menu closure, exactly one store save per selection,
 dismissal preserving choice, and open-menu system-theme adaptation. See
 appearance-settings-axis.md. Native TalkBack and other platform checks remain open.
+
+### M245 — Retained Android color controls dispatch obsolete edits
+
+P2; confirmed by mounted control regression. A retained spectrum movement callback
+still dispatched red to the old parent after the picker changed to green with a
+new parent callback. Retained adjustment buttons likewise dispatched an old color
+while disabled. This is a source/runtime-boundary test finding, not a captured
+physical-device incident. Native responders now use the latest layout-committed
+enabled owner, retired on disable and unmount; accessibility and all six adjustment
+buttons share that owner. The regression verifies current color/callback delivery,
+disable and teardown. Twenty focused tests, TypeScript and structural checks pass
+on paul; critic's adjustment-button finding was reproduced and corrected.
+
+Shared consumers inspected: Add new-tag color, Edit new-tag color, and customization
+tag editor, through TagColorPicker. The normal iOS SwiftUI adapter is unchanged;
+the project spectrum fallback inherits this guard where selected. Native Android
+rechecking of ordinary dragging and cancellation is recorded in tag-color-axis.md.

@@ -440,3 +440,12 @@ remains in the header and the action activates. This isolates action registratio
 as a possible contributor without claiming it is the cause. Preserve the earlier
 stages unchanged and make no production placement workaround until native evidence
 supports it. The fixture action changes only an observable activation count.
+
+## Android color gesture ownership
+
+Retained native color gesture, adjustment-button and accessibility callbacks must use the latest
+committed color state, selection callback and enabled state. Disabling or unmounting
+the picker retires mutation delivery, including a drag already in progress. Handler
+retention must not target an earlier parent callback or compute hue/spectrum changes
+from an obsolete value. Verify through the real mounted control with retained
+native callback references, then recheck ordinary native dragging and cancellation.

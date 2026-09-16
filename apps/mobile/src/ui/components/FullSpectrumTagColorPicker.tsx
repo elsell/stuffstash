@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -27,20 +27,33 @@ function AndroidSpectrum({ compact, disabled, onChange, value }: { readonly comp
     setHue(next.hue); setSaturation(next.saturation); setBrightness(next.brightness);
   }, [value]);
   const hueColor = rgbToHex(hsvToRgb({ hue, saturation: 1, brightness: 1 }));
+  const gestures = useRef<{
+    spectrum: (x: number, y: number) => void;
+    hue: (x: number) => void;
+    adjust: (control: 'spectrum' | 'hue', action: string) => void;
+  } | undefined>(undefined);
+  useLayoutEffect(() => {
+    gestures.current = disabled ? undefined : {
+      spectrum: selectSpectrum,
+      hue: selectHue,
+      adjust: (control, action) => apply(adjustSpectrumValue({ hue, saturation, brightness }, control, action))
+    };
+    return () => { gestures.current = undefined; };
+  });
   const spectrumResponder = useMemo(() => PanResponder.create({
     ...spectrumGestureOwnership,
-    onStartShouldSetPanResponder: () => !disabled,
-    onMoveShouldSetPanResponder: () => !disabled,
-    onPanResponderGrant: (event) => selectSpectrum(event.nativeEvent.locationX, event.nativeEvent.locationY),
-    onPanResponderMove: (event) => selectSpectrum(event.nativeEvent.locationX, event.nativeEvent.locationY)
-  }), [disabled, hue, spectrumSize]);
+    onStartShouldSetPanResponder: () => Boolean(gestures.current),
+    onMoveShouldSetPanResponder: () => Boolean(gestures.current),
+    onPanResponderGrant: (event) => gestures.current?.spectrum(event.nativeEvent.locationX, event.nativeEvent.locationY),
+    onPanResponderMove: (event) => gestures.current?.spectrum(event.nativeEvent.locationX, event.nativeEvent.locationY)
+  }), []);
   const hueResponder = useMemo(() => PanResponder.create({
     ...spectrumGestureOwnership,
-    onStartShouldSetPanResponder: () => !disabled,
-    onMoveShouldSetPanResponder: () => !disabled,
-    onPanResponderGrant: (event) => selectHue(event.nativeEvent.locationX),
-    onPanResponderMove: (event) => selectHue(event.nativeEvent.locationX)
-  }), [disabled, saturation, brightness, spectrumSize.width]);
+    onStartShouldSetPanResponder: () => Boolean(gestures.current),
+    onMoveShouldSetPanResponder: () => Boolean(gestures.current),
+    onPanResponderGrant: (event) => gestures.current?.hue(event.nativeEvent.locationX),
+    onPanResponderMove: (event) => gestures.current?.hue(event.nativeEvent.locationX)
+  }), []);
 
   function selectSpectrum(x: number, y: number) {
     const nextSaturation = clamp(x / spectrumSize.width); const nextBrightness = 1 - clamp(y / spectrumSize.height);
@@ -59,17 +72,15 @@ function AndroidSpectrum({ compact, disabled, onChange, value }: { readonly comp
 
   return <View style={[styles.android, disabled && styles.disabled]}>
     <View {...spectrumResponder.panHandlers} {...accessibility.spectrum} onAccessibilityAction={(event) => {
-      if (disabled) return;
-      apply(adjustSpectrumValue({ hue, saturation, brightness }, 'spectrum', event.nativeEvent.actionName));
+      gestures.current?.adjust('spectrum', event.nativeEvent.actionName);
     }} onLayout={(event) => setSpectrumSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })} style={[styles.spectrum, compact && styles.compactSpectrum, { borderColor: palette.border }]}>
       <Svg height="100%" width="100%"><Defs><LinearGradient id="white" x1="0" y1="0" x2="1" y2="0"><Stop offset="0" stopColor="#FFFFFF" /><Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" /></LinearGradient><LinearGradient id="black" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor="#000000" stopOpacity="0" /><Stop offset="1" stopColor="#000000" /></LinearGradient></Defs><Rect fill={hueColor} height="100%" width="100%" /><Rect fill="url(#white)" height="100%" width="100%" /><Rect fill="url(#black)" height="100%" width="100%" /></Svg>
       <View pointerEvents="none" style={[styles.marker, { borderColor: palette.surface, left: `${saturation * 100}%`, top: `${(1 - brightness) * 100}%` }]} />
     </View>
     <View {...hueResponder.panHandlers} {...accessibility.hue} onAccessibilityAction={(event) => {
-      if (disabled) return;
-      apply(adjustSpectrumValue({ hue, saturation, brightness }, 'hue', event.nativeEvent.actionName));
+      gestures.current?.adjust('hue', event.nativeEvent.actionName);
     }} style={[styles.hue, { borderColor: palette.border }]}><Svg height="100%" width="100%"><Defs><LinearGradient id="hue" x1="0" y1="0" x2="1" y2="0">{['#FF0000','#FFFF00','#00FF00','#00FFFF','#0000FF','#FF00FF','#FF0000'].map((color, index) => <Stop key={color + index} offset={index / 6} stopColor={color} />)}</LinearGradient></Defs><Rect fill="url(#hue)" height="100%" width="100%" /></Svg><View pointerEvents="none" style={[styles.hueMarker, { borderColor: palette.surface, left: `${(hue / 360) * 100}%` }]} /></View>
-    {!compact ? <><Adjustment label="Hue" value={`${Math.round(hue)} degrees`} disabled={disabled} onDecrease={() => apply({ hue: (hue + 355) % 360, saturation, brightness })} onIncrease={() => apply({ hue: (hue + 5) % 360, saturation, brightness })} /><Adjustment label="Saturation" value={`${Math.round(saturation * 100)} percent`} disabled={disabled} onDecrease={() => apply({ hue, saturation: clamp(saturation - 0.05), brightness })} onIncrease={() => apply({ hue, saturation: clamp(saturation + 0.05), brightness })} /><Adjustment label="Brightness" value={`${Math.round(brightness * 100)} percent`} disabled={disabled} onDecrease={() => apply({ hue, saturation, brightness: clamp(brightness - 0.05) })} onIncrease={() => apply({ hue, saturation, brightness: clamp(brightness + 0.05) })} /></> : null}
+    {!compact ? <><Adjustment label="Hue" value={`${Math.round(hue)} degrees`} disabled={disabled} onDecrease={() => gestures.current?.adjust('hue', 'decrement')} onIncrease={() => gestures.current?.adjust('hue', 'increment')} /><Adjustment label="Saturation" value={`${Math.round(saturation * 100)} percent`} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decrement')} onIncrease={() => gestures.current?.adjust('spectrum', 'increment')} /><Adjustment label="Brightness" value={`${Math.round(brightness * 100)} percent`} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decreaseBrightness')} onIncrease={() => gestures.current?.adjust('spectrum', 'increaseBrightness')} /></> : null}
   </View>;
 }
 
