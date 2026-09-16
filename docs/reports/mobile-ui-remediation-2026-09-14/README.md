@@ -541,8 +541,8 @@ retain individual runtime verification gaps.
 
 [Android Add header](android-add-header.md) records M226's missing native commands,
 shared presentation fix, and native Save/failure/Close acceptance. The separate
-M227 no-history Close fallback and remaining header-dependent Android sheets remain
-open; this sample does not certify all Add workflows.
+M227 no-history Close fallback now has source and Android runtime evidence in that
+report; broader Add workflows retain their individual verification gaps.
 
 [Android header-dependent sheets](android-header-sheets.md) records restored
 inventory/history Close controls, root-return handling, and the Return details
@@ -550,5 +550,10 @@ teardown crash found and fixed during shared-consumer verification. Native desti
 checks now require visible Home content and a surviving app, not only dismissal.
 
 [Android Conversation header](android-conversation-header.md) verifies restored
-Close/New controls and retained proposal/location flows. Its final reset observation
-exposes fixture reseeding that must be isolated before claiming reset acceptance.
+Close/New controls and retained proposal/location flows. Provider-lifetime fixture seeding now permits a verified confirmed reset to the
+empty composer; physical audio and broader device coverage remain open.
+
+[Run350919 build failures](native-build-350919.md) distinguish unavailable React
+Native prebuilt dependencies from two XCTest API availability compile errors.
+The URL-entry compatibility correction preserves the native acceptance scenarios;
+its macOS rerun remains pending.
