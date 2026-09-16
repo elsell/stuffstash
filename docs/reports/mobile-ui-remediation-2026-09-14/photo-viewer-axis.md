@@ -181,3 +181,30 @@ SHA-256. Existing paul pnpm installs left the old package symlink in place, so
 validation explicitly applied the patch to pristine source and copied that result
 into the validation dependency. A fresh CI install remains necessary to verify
 package-manager materialization; native Android rebuild is in progress.
+
+### M234 rebuilt Android and footer contrast
+
+APK22ac03fb9bb1f81fc65b2475ab1986852643cf2b87bf51424906cea360176536
+contains the regenerated bundle (the first Gradle assembly reused the old APK;
+forcing the bundle task produced this distinct build). Android16 Pixel6 normal
+text/light: double tap zooms; separate single taps hide/reveal commands without
+resetting the image in the captured sequence. Closing while commands are hidden
+via system Back and reopening the same thumbnail restores the footer. Swiping
+to photo2 while commands are hidden also restores it (`/tmp/photo-tap-reopened.xml`,
+`/tmp/photo-tap-swiped.xml`).
+
+This exposed [white position text over bright image pixels](evidence/android-photo-zoom-label-contrast-before.png).
+The complete footer now has the viewer's opaque neutral background. Ten focused
+consumer tests, TypeScript and structural checks pass on paul; critic found no
+blocker. Rebuilt APKa960ab9282b8188ce996d49f5fcec3d10fad745c85be707dba58abd29a35573f
+shows [readable labels while zoomed](evidence/android-photo-zoom-label-contrast-after.png).
+The matching [hidden state](evidence/android-photo-zoom-controls-hidden.png) and
+revealed state preserve the same enlarged image. Footer Close positively returns
+to Add with both thumbnails/removal commands retained (`/tmp/photo-footer-closed.xml`).
+
+An earlier interrupted capture sequence on a960ab92 returned to fit scale between
+the zoom capture and subsequent hide/reveal captures; the cause was not observed.
+The immediate repeat above preserves scale, but zoom persistence across unrelated
+rerenders/elapsed time is still unverified and needs a targeted check. iOS, asset
+viewer regression, pinch/pan and assistive operation remain open. This is partial
+Android acceptance, not closure of M234.

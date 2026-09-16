@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
   loadError: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
   loadErrorText: { color: viewerColors.foreground, fontSize: 20, textAlign: 'center', flexShrink: 1 },
   toolbarOuter: {
+    backgroundColor: viewerColors.background,
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm

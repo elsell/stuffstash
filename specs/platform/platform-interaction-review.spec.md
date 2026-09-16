@@ -239,3 +239,8 @@ iOS and Android separately.
 Zoom gestures change image scale only; a single tap controls toolbar visibility.
 Newly selected images and loading failures restore commands. Keep visibility in
 a stable controller so showing commands does not remount or reset the image.
+
+Photo viewer footer labels and commands must remain readable over any image,
+including a zoomed white region. Use the viewer's opaque neutral canvas behind
+the complete footer, not only behind its command row; do not rely on image
+brightness or a black letterbox for text contrast.
