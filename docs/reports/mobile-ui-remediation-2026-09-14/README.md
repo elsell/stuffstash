@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint (M193 direct invitation command): **1,905 tests across298 files**, TypeScript
+Latest source checkpoint (M241 sharing access recovery): **1,905 tests across298 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
@@ -40,6 +40,8 @@ Combined source checkpoint2bfd3814 passes **1,885 tests across293 files**, TypeS
 and mobile structural checks on paul. Validation used the tracked HEAD archive in
 the existing remote validation tree. Logs: `/tmp/mobile-audit-2bfd3814-{full,check,structural}.log`.
 This includes the shared asset-action guard; native coverage remains separate.
+
+Current ledger reconciliation: 3,408 unique surface/axis pairs; all primary source paths exist. Source review covers the full inventory, while native acceptance remains partial. Recent Sharing and onboarding findings are reconciled in the matrix; source review is not runtime clearance.
 
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).

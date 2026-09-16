@@ -55,9 +55,9 @@ it('reuses safe invitation pages and keeps a created secret out of cache', async
 });
 
 it('hides cached invitations after denial and cancels a departed scope read', async () => {
-  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let denied = false; let signal: AbortSignal | undefined;
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let denied = false; let signal: AbortSignal | undefined; let reads = 0;
   const repository: InventoryInvitationManagementRepository = {
-    list: async (selected, request) => { if (selected.inventoryId === 'other') { signal = request?.signal; return new Promise(() => undefined); } if (denied) throw Object.assign(new Error('denied'), { status: 403 }); return { items: [item] }; },
+    list: async (selected, request) => { reads++; if (selected.inventoryId === 'other') { signal = request?.signal; return new Promise(() => undefined); } if (denied) throw Object.assign(new Error('denied'), { status: 403 }); return { items: [item] }; },
     create: async () => ({ ...item, inviteUrl: 'secret' }), cancel: async () => undefined
   };
   const query = new ListInventoryInvitationsQuery(repository);
@@ -66,6 +66,17 @@ it('hides cached invitations after denial and cancels a departed scope read', as
     await h.render(view(scope)); await settle(h); expect(h.allText()).toContain('old@example.test');
     denied = true; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.invitations('scope', 'tenant', 'inventory') })); await settle(h);
     expect(h.allText()).not.toContain('old@example.test');
+    expect(h.allText()).toContain('Sharing unavailable');
+    expect(h.byLabel('Retry')).toBeUndefined();
+    denied = false; await h.press(h.byLabel('Check Again')); await settle(h);
+    expect(h.allText()).toContain('old@example.test');
+    const readsBeforeDenial = reads;
+    await h.render(view({ ...scope, permissions: [] })); await settle(h);
+    expect(reads).toBe(readsBeforeDenial);
+    expect(h.allText()).not.toContain('old@example.test');
+    expect(h.allText()).toContain('You don’t have permission to manage invitations for Garage.');
+    expect(h.byLabel('Retry')).toBeUndefined();
+    expect(h.byLabel('Check Again')).toBeUndefined();
     await h.render(view({ ...scope, inventoryId: 'other' })); await settle(h); expect(signal?.aborted).toBe(false);
     await h.render(view(scope, false)); expect(signal?.aborted).toBe(true);
   } finally { await h.unmount(); }

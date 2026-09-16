@@ -1,5 +1,17 @@
 # Platform Interaction Review
 
+## Sharing access recovery
+
+The Sharing screen distinguishes denied/unavailable access from an ordinary list
+load failure. Hide cached metadata on access failure as before. When the supplied
+scope lacks sharing permission, explain that limitation and do not expose a list
+retry which cannot refresh that scope; the route guard owns fresh scope discovery.
+When the scope still grants sharing but a read returns an access failure, show
+Sharing unavailable and Check Again through the existing authorized read path.
+Do not claim the precise reason for401/403/404; credentials, access and inventory
+availability may all change. Ordinary network errors retain Retry. Verify denial
+with cached rows, allowed recovery, and no repository reads without permission.
+
 ## Missing-link recovery guidance
 
 The current missing-link error confirms scoped creation without exposing the created

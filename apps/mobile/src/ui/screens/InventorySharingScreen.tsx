@@ -205,9 +205,12 @@ export function InventorySharingScreen({
   if (denied || (list.isError && !list.data)) {
     return (
       <ScrollView style={settingsStyles.shell} contentContainerStyle={settingsStyles.errorContainer}>
-        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>Could not load invitations</Text>
-        <Text style={settingsStyles.errorMessage}>Your invitation settings are still safe. Try again.</Text>
-        <NativeCommandButton label="Retry" onPress={() => { void list.refetch({ cancelRefetch: false }); }} />
+        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>{denied ? 'Sharing unavailable' : 'Could not load invitations'}</Text>
+        <Text style={settingsStyles.errorMessage}>{!canShare
+          ? `You don’t have permission to manage invitations for ${scope.inventoryName}.`
+          : denied ? 'Your access to this inventory could not be confirmed. Check again or return to your inventories.'
+          : 'Your invitations could not be loaded. Try again.'}</Text>
+        {canShare ? <NativeCommandButton label={denied ? 'Check Again' : 'Retry'} onPress={() => { void list.refetch({ cancelRefetch: false }); }} /> : null}
       </ScrollView>
     );
   }

@@ -3293,3 +3293,19 @@ no identified source failure; previous run351041 passed. Keep open, without time
 or double-tap workarounds, until a named native revision verifies one-tap open/close,
 address retention and reachable sign-in. See native-onboarding-351121.md. The other
 jobs remain independent and active; this failure is not an address-entry failure.
+
+
+### M241 — Sharing access loss uses generic load-failure recovery
+
+P2 source/mounted-confirmed, completing the denial-copy gap recorded in sharing-axis.md.
+The screen used generic load failure and Retry even when its supplied scope lacked
+share permission. It now renders Sharing unavailable, explains missing permission,
+hides cached rows and omits the ineffective list retry. The route guard owns fresh
+scope discovery. With share permission still present, server access failures retain
+Check Again through the existing authorized read;401/403/404 are not misrepresented
+as one specific cause. Ordinary load failures retain Retry.
+The mounted regression failed first; all1,905 mobile tests, TypeScript and structural
+checks pass on paul. Final focused check verifies no additional repository reads
+on permission loss, metadata hiding, restored-access recovery and departed-read
+cancellation. Native denied-state appearance remains unverified; no authorization
+service or transport enforcement changed.
