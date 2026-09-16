@@ -2797,3 +2797,12 @@ Not selected yet until selection or clearing. Existing exact-match resolution on
 Save is unchanged. The search/retry case failed first on the missing unresolved
 status and now verifies both that status and recovery to intentional top-level
 placement when cleared. Native wrapping and screen-reader reading remain open.
+
+### M201 — Staged Add tag removal has no explicit action name
+
+P2 source/mounted confirmed at327391bf. A staged new-tag chip's inferred accessible
+name was only its tag text, concealing its remove action. It now names Remove new
+tag {name} and exposes disabled state. The draft workflow verifies that invoking
+the command removes only that staged definition, preserving another staged tag
+and unfinished name before saving. This does not delete persisted inventory tags.
+Actual screen-reader output and visual target acceptance remain native work.

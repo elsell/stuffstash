@@ -1108,6 +1108,8 @@ function AssetTagPicker({
             <Pressable
               disabled={disabled}
               accessibilityRole="button"
+              accessibilityLabel={`Remove new tag ${tag.displayName}`}
+              accessibilityState={{ disabled }}
               key={`${tag.displayName}-${index.toString()}`}
               onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}
               style={[

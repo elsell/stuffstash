@@ -82,8 +82,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise463
-pending,2,219 source-reviewed,505 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise446
+pending,2,235 source-reviewed,506 finding,23 runtime-partial and198 not-applicable.
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined

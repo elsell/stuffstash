@@ -2111,29 +2111,29 @@ S088,Add / type choice,privacy,"Account scope, data use and permissions",source-
 S088,Add / type choice,notifications,System notification entry and state,not-applicable,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
 S088,Add / type choice,media,"Camera, library, files and audio",not-applicable,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
 S088,Add / type choice,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
-S089,Add / tags select create,task,Task clarity and platform-pattern fit,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
+S089,Add / tags select create,task,Task clarity and platform-pattern fit,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,navigation,"Navigation, hierarchy and return",finding, M96: unfinished tag name/color are local to a conditionally mounted picker and absent from scoped draft storage; see add-tags-axis.md.,M96
-S089,Add / tags select create,selection,Value selection and current value,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,modality,Presentation and dismissal,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,layout,"Safe areas, scroll edges and overlays",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,adaptation,Phone/tablet/window reflow,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,typography,"Dynamic Type, wrapping and legibility",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,appearance,"Light/dark, contrast and materials",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,localization,"Locale, timezone, RTL and long strings",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,imagery,"Icons, photos and missing media",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
+S089,Add / tags select create,selection,Value selection and current value,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,modality,Presentation and dismissal,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,layout,"Safe areas, scroll edges and overlays",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,adaptation,Phone/tablet/window reflow,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,typography,"Dynamic Type, wrapping and legibility",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,appearance,"Light/dark, contrast and materials",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,localization,"Locale, timezone, RTL and long strings",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,imagery,"Icons, photos and missing media",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,targets,Touch target size and reachability,source-reviewed,Tag choices use48point minimum; tag/photo actions use native command buttons. Twenty focused remote tests/check/structural and critic pass. Native enlarged text/rail/hit areas pending.,M40
-S089,Add / tags select create,gestures,Gestures and explicit alternatives,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,keyboard,"Keyboard, text entry and focus",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,motion,Reduced motion and feedback alternatives,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
+S089,Add / tags select create,gestures,Gestures and explicit alternatives,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,keyboard,"Keyboard, text entry and focus",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,add-tags-axis.md current327391bf follow-through; native acceptance remains open; M201 staged-removal command named; 39 remote tests and static pass; critic no blocker,M201
+S089,Add / tags select create,motion,Reduced motion and feedback alternatives,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,content,"Lists, hierarchy, density and pagination",finding,"M94: Add hid unselected choices before search. Shared Add/Edit initial disclosure, trimmed matching and no-match feedback now pass26 remote tests; native acceptance pending. See add-tags-axis.md.",M94
 S089,Add / tags select create,search,"Search, scope and filters",finding,"M94: Add hid unselected choices before search. Shared Add/Edit initial disclosure, trimmed matching and no-match feedback now pass26 remote tests; native acceptance pending. See add-tags-axis.md.",M94
-S089,Add / tags select create,loading,"Loading, background refresh and progress",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
+S089,Add / tags select create,loading,"Loading, background refresh and progress",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,recovery,"Empty, error, denied and retry",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M93: Add now explains overlong inline names;18 remote tests pass. Native feedback pending.,M21;M93
 S089,Add / tags select create,editing,"Draft, save, cancel, undo and interruption",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M96: unfinished tag name/color are local to a conditionally mounted picker and absent from scoped draft storage; see add-tags-axis.md.,M21;M96
-S089,Add / tags select create,privacy,"Account scope, data use and permissions",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,notifications,System notification entry and state,pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
-S089,Add / tags select create,media,"Camera, library, files and audio",pending,add-tags-axis.md records source observations and unresolved acceptance for this axis.,
+S089,Add / tags select create,privacy,"Account scope, data use and permissions",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,notifications,System notification entry and state,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
+S089,Add / tags select create,media,"Camera, library, files and audio",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,lifecycle,"Cold/warm start, blur, background and deep link",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M96: unfinished tag name/color are local to a conditionally mounted picker and absent from scoped draft storage; see add-tags-axis.md.,M21;M96
 S090,Add / photo selection,task,Task clarity and platform-pattern fit,pending,,
 S090,Add / photo selection,navigation,"Navigation, hierarchy and return",pending,,

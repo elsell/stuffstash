@@ -339,6 +339,14 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     await h.press(h.byLabel('Add tag'));
     expect(h.byLabel('New tag name')?.props.value).toBe('');
+    await h.changeText(h.byLabel('New tag name'), 'Other');
+    await h.press(h.byLabel('Add tag'));
+    await h.changeText(h.byLabel('New tag name'), 'Unfinished');
+    expect(h.byLabel('Remove new tag Other')).toBeDefined();
+    await h.press(h.byLabel('Remove new tag Other'));
+    expect(store.load(draftContext)?.newTags).toEqual([{ displayName: 'Camping' }]);
+    expect(h.byLabel('New tag name')?.props.value).toBe('Unfinished');
+    await h.changeText(h.byLabel('New tag name'), '');
     await h.press(h.byLabel('Save item')); await settle();
     expect(saved).toEqual([expect.objectContaining({ title: 'Tent', newTags: [{ displayName: 'Camping' }] })]);
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
