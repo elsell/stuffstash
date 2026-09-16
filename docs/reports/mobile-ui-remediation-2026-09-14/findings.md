@@ -2385,6 +2385,12 @@ checks pass on paul; critic found no blockers. Native acceptance remains pending
 
 ### M169 — Return-details error heading is obscured after failed Save
 
+Verification follow-up: native35046586497 atb6321dcb passes the complete error-frame
+and retained-note/retry checks on iPhone17 and iPad mini. Both failed-save screenshots
+were inspected: the entire error is below the header and commands are unobscured.
+The named overlap is corrected for these normal-size light states. See
+home-return-axis.md and the retained350465 captures; wider acceptance stays open.
+
 P2 screenshot-confirmed on iPhone17 run35029854251 at
 e8b3d42dccf3f13428fb26bbb1cfd85ea8b0dd9e. In
 [the failed-save capture](phone-return-error-350298.png), the retained note and

@@ -1,5 +1,33 @@
 # Home return details — 24 source axes
 
+## Optional details and pending/recovery follow-up S137/S138
+
+Reviewed at5013f1af against all24 axes below. S137 owns optional note entry after
+the return; S138 owns pending Save/Cancel and recovery. Source inspection confirms
+the native-owned multiline seed is keyed by return session, while the application
+draft receives edits. Save/Cancel share a synchronous lock. Failed save retains
+the note and permits retry; unavailable undo gives Close instead of suggesting
+that cancellation remains possible. Permission loss retains read-only text with
+an explicit non-mutating Close. No additional source defect was established.
+
+Native run35046586497 atb6321dcb passes both HomeReturnCancelRestoresCheckout and
+HomeReturnDetailsRecoverInsideSheet on iPhone17 and iPad mini. The current complete
+error-frame assertion also exists in that tested source. Inspected failed-save
+captures show the entire error below the header, Returned clean retained, keyboard
+dismissed, and Save/Cancel unobscured. The named M169 overlap is corrected in these
+normal-size light-appearance states. Evidence:
+[phone capture](phone-return-error-350465.png),
+[phone hierarchy](phone-return-error-350465.txt),
+[iPad capture](ipad-return-error-350465.png),
+[iPad hierarchy](ipad-return-error-350465.txt).
+
+The native retry completes and dismisses the sheet. Its synthetic save port still
+does not assert persisted note contents; mounted tests assert submitted details.
+This combination supports partial runtime layout/recovery evidence, not full
+certification of alternate appearances, permission revocation, background/return,
+physical device keyboard behavior or enlarged text. These cases remain on the
+acceptance worklist. Existing finding cells stay linked to their original issues.
+
 ## Checked-out entry S065 follow-up
 
 S065 reviewed at d6130098 across the24 axes below, with these entry-specific

@@ -90,8 +90,14 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise326
-pending,2,351 source-reviewed,510 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise292
+pending,2,383 source-reviewed,510 finding,25 runtime-partial and198 not-applicable.
+
+Home Return's optional details and pending/recovery now have complete source
+follow-ups. Run350465's phone/iPad captures verify the full failed-save error is
+below the native header with the note and commands retained; named overlap M169
+is corrected for these normal-size light states. Wider native acceptance remains
+open. See [Home Return evidence](home-return-axis.md).
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined

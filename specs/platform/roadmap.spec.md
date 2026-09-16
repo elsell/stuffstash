@@ -385,3 +385,12 @@ pending. Normal-size text entry, color activation/targets and header/search
 behavior remain priorities. Newer native run35050407693 is active; preserve its
 execution while continuing source work. Release remains pending native review,
 with detailed evidence in the mobile remediation report.
+
+The next source follow-up reaches292 pending cells after tag color, field
+applicability, push setup and Home Return details/recovery review. Unsaved field
+applicability is reversible in place; successful push setup announces its new
+Settings action accurately. Their targeted/static checks and critic reviews pass
+on paul. Inspected350465 phone/iPad Home Return captures verify M169's error
+overlap correction in normal-size light appearance; they do not close wider
+lifecycle or native acceptance. Continue remaining source coverage and the active
+native collection/header/text-input investigation before release.

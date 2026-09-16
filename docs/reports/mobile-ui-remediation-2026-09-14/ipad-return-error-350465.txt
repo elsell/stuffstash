@@ -1,0 +1,130 @@
+Attributes: Application, 0x11ed4c140, pid: 1243, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11ed4c140, pid: 1243, label: 'Stuff Stash'
+    Window (Main), 0x11ed4c3c0, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11ed4c500, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11ed4c640, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x11ed4c780, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x11ed4c8c0, {{-744.0, -1133.0}, {2232.0, 3399.0}}
+            Other, 0x11ed4ca00, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x11ed4cb40, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x11ed4cc80, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x11ed4cdc0, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x11ed4cf00, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x11ed4d040, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x11ed4d180, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x11ed4d2c0, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'RNSScreen'
+                            Button, 0x11ed4d400, {{14.0, 32.0}, {180.0, 44.0}}, label: 'Current inventory Audit inventory, tenant Audit home. Switch inventory'
+                            Button, 0x11ed4d540, {{626.0, 36.0}, {44.0, 36.0}}, label: 'Add an asset'
+                            Button, 0x11ed4d680, {{686.0, 36.0}, {44.0, 36.0}}, label: 'Open account and settings'
+                          Other, 0x11ed4d7c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11ed4d900, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x11ed4da40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x11ed4db80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x11ed4dcc0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x11ed4de00, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      Other, 0x11ed4df40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        ScrollView, 0x11ed4e080, {{0.0, 86.0}, {744.0, 1047.0}}
+                                          Other, 0x11ed4e1c0, {{0.0, 86.0}, {744.0, 214.0}}
+                                            Other, 0x11ed4e300, {{0.0, 86.0}, {744.0, 214.0}}
+                                              StaticText, 0x11ed4e440, {{24.0, 112.5}, {163.0, 23.0}}, label: 'Recently changed'
+                                                StaticText, 0x11ed4e580, {{24.0, 112.5}, {163.0, 23.0}}, label: 'Recently changed'
+                                              Button, 0x11ed4e6c0, {{659.5, 102.0}, {60.5, 44.0}}, label: 'View all recently changed assets'
+                                              Other, 0x11ed4e800, {{24.0, 156.0}, {696.0, 88.0}}
+                                              Other, 0x11ed4e940, {{24.0, 168.0}, {64.0, 64.0}}
+                                                Other, 0x11ed4ea80, {{24.0, 168.0}, {64.0, 64.0}}
+                                                  StaticText, 0x11ed4ebc0, {{34.5, 188.0}, {42.5, 24.0}}, label: 'Item'
+                                                    StaticText, 0x11ed4ed00, {{34.5, 188.0}, {42.5, 24.0}}, label: 'Item'
+                                              Button, 0x11ed4ee40, {{98.0, 168.0}, {612.0, 63.5}}, label: 'Open asset Audit drill'
+                                          Other, 0x11ed4ef80, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                            Other, 0x11ed4f0c0, {{738.0, 742.5}, {3.0, 355.5}}
+                                          Other, 0x11ed4f200, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                            Other, 0x11ed4f340, {{3.0, 1107.0}, {738.0, 3.0}}
+                                          Other, 0x11ed4f480, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                            Other, 0x11ed4f5c0, {{738.0, 742.5}, {3.0, 355.5}}
+                                          Other, 0x11ed4f700, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                            Other, 0x11ed4f840, {{3.0, 1107.0}, {738.0, 3.0}}
+                                    StaticText, 0x11ed4f980, {{8.0, 1113.0}, {100.0, 16.0}}, identifier: 'audit-query-readiness', label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","home"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","home"],"status":"success","fetch":"idle","data":true,"observers":1}]}', value: {"online":true,"fo...
+                                      StaticText, 0x11ed4fac0, {{8.0, 1113.0}, {100.0, 16.0}}, label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","home"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","home"],"status":"success","fetch":"idle","data":true,"observers":1}]}'
+                          Other, 0x11ed4fc00, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11ed4fd40, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11ed4fe80, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11ed4a580, {{-744.0, -1133.0}, {2232.0, 3399.0}}
+        Other, 0x11ed4a6c0, {{82.0, 288.5}, {580.0, 598.0}}
+          Button, 0x11ed4bc00, {{334.0, 283.5}, {76.0, 25.0}}, label: 'Sheet Grabber', value: Half screen
+          Other, 0x11ed4bd40, {{82.0, 288.5}, {580.0, 598.0}}
+            Other, 0x11ed4be80, {{82.0, 288.5}, {580.0, 598.0}}
+              Other, 0x11ed56a80, {{82.0, 288.5}, {580.0, 598.0}}
+                Other, 0x11ed56940, {{82.0, 288.5}, {580.0, 598.0}}
+                  Other, 0x11ed548c0, {{82.0, 288.5}, {580.0, 598.0}}
+                    Other, 0x11ed57c00, {{82.0, 288.5}, {580.0, 598.0}}
+                      Other, 0x11ed57d40, {{82.0, 288.5}, {580.0, 598.0}}
+                        NavigationBar, 0x11ed57e80, {{82.0, 298.5}, {580.0, 54.0}}, identifier: 'Return details'
+                          StaticText, 0x11ed57340, {{316.5, 310.0}, {111.0, 21.0}}, label: 'Return details'
+                        Other, 0x11ed55e00, {{82.0, 288.5}, {580.0, 598.0}}
+                          Other, 0x11ed55f40, {{82.0, 288.5}, {580.0, 598.0}}
+                            Other, 0x11ed56080, {{82.0, 288.5}, {580.0, 598.0}}
+                              Other, 0x11ed561c0, {{82.0, 288.5}, {580.0, 598.0}}
+                                Other, 0x11ed56300, {{82.0, 288.5}, {580.0, 598.0}}
+                                  Other, 0x11ed56440, {{82.0, 288.5}, {580.0, 598.0}}
+                                    ScrollView, 0x11ed56580, {{82.0, 288.5}, {580.0, 598.0}}
+                                      Other, 0x11ed566c0, {{82.0, 288.5}, {580.0, 598.0}}
+                                        Other, 0x11ed44000, {{82.0, 288.5}, {580.0, 118.8}}
+                                      Other, 0x11ed44140, {{82.0, 288.5}, {580.0, 598.0}}
+                                      Other, 0x11ed44280, {{82.0, 352.5}, {580.0, 598.0}}
+                                        Other, 0x11ed443c0, {{82.0, 352.5}, {580.0, 598.0}}
+                                          StaticText, 0x11ed44500, {{102.0, 372.5}, {540.0, 20.5}}, label: 'Audit drill'
+                                            StaticText, 0x11ed44640, {{102.0, 372.5}, {540.0, 20.5}}, label: 'Audit drill'
+                                          StaticText, 0x11ed44780, {{102.0, 409.0}, {540.0, 33.5}}, label: 'Return details error'
+                                            StaticText, 0x11ed448c0, {{102.0, 409.0}, {540.0, 33.5}}, label: 'Return details error'
+                                          StaticText, 0x11ed44a00, {{102.0, 458.5}, {540.0, 17.0}}, label: 'Optional return details'
+                                            StaticText, 0x11ed44b40, {{102.0, 458.5}, {540.0, 17.0}}, label: 'Optional return details'
+                                          Other, 0x11ed44c80, {{102.0, 491.5}, {540.0, 160.0}}
+                                            TextView, 0x11ed44dc0, {{103.0, 492.5}, {538.0, 158.0}}, label: 'Optional return details', value: Returned clean
+                                              Other, 0x11ed44f00, {{103.0, 492.5}, {0.0, 0.0}}, identifier: '_UITextSelectionRangeAdjustmentContainerView'
+                                                Other, 0x11ed45040, {{103.0, 492.5}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                                  Other, 0x11ed45180, {{95.8, 479.0}, {16.5, 16.5}}
+                                                  Other, 0x11ed452c0, {{103.0, 492.5}, {2.0, 0.0}}
+                                                Other, 0x11ed45400, {{103.0, 492.5}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                                  Other, 0x11ed45540, {{95.8, 479.0}, {16.5, 16.5}}
+                                                  Other, 0x11ed45680, {{103.0, 492.5}, {2.0, 0.0}}
+                                              Other, 0x11ed457c0, {{608.0, 492.5}, {30.0, 158.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                Other, 0x11ed45900, {{635.0, 608.5}, {3.0, 39.0}}
+                                              Other, 0x11ed45a40, {{103.0, 617.5}, {538.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                Other, 0x11ed45b80, {{106.0, 644.5}, {532.0, 3.0}}
+                                          Other, 0x11ed45cc0, {{102.0, 667.5}, {262.0, 48.0}}
+                                            Other, 0x11ed45e00, {{102.0, 667.5}, {262.0, 48.0}}
+                                              Other, 0x11ed45f40, {{102.0, 667.5}, {262.0, 48.0}}
+                                                Button, 0x11ed46080, {{181.5, 667.5}, {103.0, 48.0}}, label: 'Cancel return'
+                                          Other, 0x11ed461c0, {{380.0, 667.5}, {262.0, 48.0}}
+                                            Other, 0x11ed46300, {{380.0, 667.5}, {262.0, 48.0}}
+                                              Other, 0x11ed46440, {{380.0, 667.5}, {262.0, 48.0}}
+                                                Button, 0x11ed46580, {{492.5, 667.5}, {37.0, 48.0}}, label: 'Save'
+                                      Other, 0x11ed466c0, {{629.0, 352.5}, {30.0, 510.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                        Other, 0x11ed46800, {{656.0, 355.5}, {3.0, 455.5}}
+                                      Other, 0x11ed46940, {{106.0, 853.5}, {532.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11ed46a80, {{109.0, 880.5}, {526.0, 3.0}}
+                                      Other, 0x11ed46bc0, {{629.0, 352.5}, {30.0, 510.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                        Other, 0x11ed46d00, {{656.0, 355.5}, {3.0, 455.5}}
+                                      Other, 0x11ed46e40, {{106.0, 853.5}, {532.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11ed46f80, {{109.0, 880.5}, {526.0, 3.0}}
+                        Other, 0x11ed470c0, {{82.0, 288.5}, {580.0, 598.0}}
+                          Other, 0x11ed47200, {{82.0, 288.5}, {580.0, 598.0}}
+          Other, 0x11ed47340, {{82.0, 288.5}, {580.0, 598.0}}
+            Other, 0x11ed47480, {{82.0, 288.5}, {580.0, 598.0}}
+              Other, 0x11ed475c0, {{82.0, 288.5}, {580.0, 598.0}}
+                Other, 0x11ed47700, {{82.0, 288.5}, {580.0, 598.0}}
+                  Other, 0x11ed47840, {{82.0, 288.5}, {580.0, 598.0}}
+                    Other, 0x11ed47980, {{82.0, 288.5}, {580.0, 377.0}}
+                Other, 0x11ed47ac0, {{82.0, 288.5}, {580.0, 598.0}}
+                  Other, 0x11ed47c00, {{82.0, 288.5}, {580.0, 377.0}}
+    Window, 0x11ed47d40, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11ed47e80, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11ed68000, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x11ed4c140, pid: 1243, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11ed68140, pid: 1243, label: 'Stuff Stash'
+  }
