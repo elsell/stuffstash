@@ -2,8 +2,8 @@
 
 Source211bdc2bcd7b4e3fa70333791417ae70ef936c16; tested merge
 df3486fed51bc7c0044eadca6ac06a87649d8c81. Phone job104708278597
-finished with59/81 cases passing and22 failures. Both onboarding jobs passed.
-The iPad fixture job was still running when this phone checkpoint was recorded.
+finished with59/81 cases passing and22 failures. iPad job104708278267 subsequently
+finished with71/81 passing and10 failures. Both onboarding jobs passed.
 The following selected screenshots and hierarchies were subsequently inspected.
 
 ## Evidence that changes the next action
@@ -70,3 +70,24 @@ unchanged and must rerun; this is not accepted from source alone. Nineteen focus
 tests, TypeScript and mobile structural checks pass on paul after correcting an
 initial hook-scope error caught by TypeScript and review. Validation log:
 `/tmp/voice-header-reservation-validation.log`.
+
+## Terminal iPad results
+
+The iPad log (`/tmp/native350695-ipad.log`) confirms the Add unfinished-tag journey,
+nine color touch probes, Home header scrolling, Sharing cancellation/recovery and
+both Place search variants pass. Phone failures for those latter two surfaces must
+not be generalized to iPad. Both targets still fail Conversation context clearance:
+iPad context minY326.5 versus header maxY378.5. This source predates the measured
+header-reservation follow-up2978fe7b.
+
+The ten iPad failures are hidden-header Add, color accessibility bounds36pt,
+controlled address, controlled text without accessory, ordinary controlled text,
+three enlarged-text journeys (Edit metadata, Edit tags, Move), Home tab-shell
+selection, and Conversation context clearance. The Home tab-shell failure uses
+the old TabBar selector; its platform-aware correction43e585ef is not included.
+
+Phone Sharing's trace checks keyboard absence at33.98 seconds, taps the menu
+trigger at34.14 seconds and then finds its command unhittable. The final screenshot
+shows the returning keyboard. Inspection of the app menu adapter finds no explicit
+focus call; the native cause is unresolved. Do not replace the menu or suppress
+typing assistance solely to evade this failure.

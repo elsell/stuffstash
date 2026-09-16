@@ -20,7 +20,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `native-onboarding-350592.md`: passing main phone/iPad journey and a distinct iPad entry-observation failure.
 - `native-fixtures-350592.md`: phone56/75 and iPad64/75, confirmed phone bottom search, and paired production Place diagnostic.
 - `native-fixtures-350633.md`: phone57/79 and iPad67/79; passing action probes/invitation acceptance on both, phone Home tab return, and unresolved iPad tab-container selection. Inspected Account notice contradicts its phone geometry timeout.
-- `native-fixtures-350695.md`: phone59/81; Add tag journey, Home and color touch probes pass. Inspected captures retain Conversation overlap, bottom Place search and keyboard-obscured Sharing cancellation; iPad results pending.
+- `native-fixtures-350695.md`: phone59/81 and iPad71/81; Add tag journey, Home header and color touch probes pass on both. Phone captures retain bottom Place search and keyboard-obscured Sharing cancellation, while those journeys pass on iPad. Conversation overlap remains on both.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
 - `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
