@@ -2714,3 +2714,19 @@ The unavailable-route mounted case also has a body Back button, so its label che
 does not uniquely certify the header. The valid-route test does, and native
 hittability/return assertions remain required on the next build. No Swift/runtime
 pass is inferred from Linux validation.
+
+### M193 — Sharing keyboard obscures cancellation recovery
+
+P2 runtime-observed on phone run35042066124. The keyboard remains over the
+invitation cancellation menu after submission recovery. Creation now explicitly
+ends keyboard editing while retaining failed email drafts. The regression test
+failed with zero dismissals before implementation and passes afterward. This is
+a candidate correction; actual keyboard absence and cancellation require retest.
+
+### M194 — Native ellipsis menu has an undersized hit region
+
+P2 runtime-observed in the same Sharing capture: native button bounds are
+21.7 by 6.7 points despite a 44-point React Native host. The native image label
+now owns a 44-point frame and rectangular content shape. Sharing and Asset
+overflow are affected; label and sort-icon variants remain unchanged. Native
+bounds and menu interaction assertions must pass before closing this finding.

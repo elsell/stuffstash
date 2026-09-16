@@ -160,7 +160,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
 
     let cancel = app.buttons["Invitation actions for audit@example.invalid"].firstMatch
-    reveal(cancel); cancel.tap()
+    reveal(cancel)
+    XCTAssertGreaterThanOrEqual(cancel.frame.width, 44)
+    XCTAssertGreaterThanOrEqual(cancel.frame.height, 44)
+    XCTAssertFalse(app.keyboards.firstMatch.exists, "Submitting an invitation must end keyboard editing")
+    cancel.tap()
     let cancelAction = app.buttons["Cancel invitation"].firstMatch
     XCTAssertTrue(cancelAction.waitForExistence(timeout: 5)); cancelAction.tap()
     let confirm = app.alerts.buttons["Cancel Invitation"]

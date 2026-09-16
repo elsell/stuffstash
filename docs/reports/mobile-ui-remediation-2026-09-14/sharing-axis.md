@@ -1,5 +1,19 @@
 # Sharing interaction and recovery review
 
+## Native follow-up: M193/M194
+
+Phone run35042066124 shows the keyboard overlapping invitation cancellation
+recovery and an ellipsis trigger measuring 21.7 by 6.7 points. Retained evidence:
+[screenshot](sharing-keyboard-350420.png) and [hierarchy](sharing-keyboard-350420.txt).
+Creation now dismisses editing before sending, preserves failed email drafts,
+and the iOS ellipsis label owns a 44-point native frame/content shape. The shared
+Asset overflow consumer is included in review; label/sort-icon triggers are
+unchanged. Twenty-eight Sharing/menu checks plus TypeScript and structural checks
+pass remotely on paul. An additional 18 Asset detail/overflow checks pass there.
+Critic found no blocker. Native assertions now require
+44-point button bounds and keyboard absence before cancellation. Actual iPhone
+and iPad acceptance remains pending; do not infer it from these source checks.
+
 Reviewed September 15 against source after PR138, covering R048 Sharing and a
 partial comparison with R019/S131 invitation acceptance/link entry. This is source
 and controlled-render evidence, not native accessibility or security certification.

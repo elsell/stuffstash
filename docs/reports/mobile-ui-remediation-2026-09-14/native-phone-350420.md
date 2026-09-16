@@ -2,8 +2,9 @@
 
 Completed job 104625118262: **46/69 cases passed; 23 failed**. Source
 d39e423321528376c41f3f78b4629e680cc0c66e, tested merge
-627e5dae2647cadf19ad7012a010560915f082a8. The iPad fixture job was still running
-when this report was written; this is not the whole workflow conclusion.
+627e5dae2647cadf19ad7012a010560915f082a8. The workflow has now completed with
+failure: iPad fixtures passed 52/69 cases; phone onboarding passed and iPad
+onboarding passed 2/3. These results belong to that source, not current head.
 Evidence: completed job log `/tmp/native350420-phone.log`, retrieved through the
 job-log API while the parent run remained active. Current branch fixes after
 d39e4233 are not validated by this run.
@@ -35,4 +36,14 @@ prioritizing the normal-size failures per the user's sequence. Expiration's
 accessibility failure remains in the existing finding backlog as well.
 
 No current-build native acceptance or TestFlight readiness follows from this
-checkpoint. Continue the existing iPad job; preserve its authoritative handle.
+checkpoint. The completed iPad job is 104625118209; its log is retained at
+`/tmp/native350420-ipad.log`.
+
+Sharing's phone capture shows the keyboard covering the cancellation menu and
+the invitation ellipsis accessibility bounds measuring only 21.7 by 6.7 points.
+M193/M194 address submission keyboard dismissal and the native label's hit area.
+See sharing-axis.md for evidence and pending verification.
+
+The full/nested footer failures are isolated comparison fixtures, previously
+documented in phone-sheet-comparison-350298.md. They are not new evidence that
+the production direct-scroll filter sheet regressed; preserve that distinction.

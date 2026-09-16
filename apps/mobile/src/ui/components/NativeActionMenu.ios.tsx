@@ -5,6 +5,9 @@ import {
   accessibilityValue as nativeAccessibilityValue,
   buttonStyle,
   controlSize,
+  contentShape,
+  frame,
+  shapes,
   disabled as nativeDisabled,
   labelStyle,
   tint
@@ -25,7 +28,11 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
   const menuDisabled = disabled || actionableGroups.length === 0;
   const menuLabel = trigger.kind === 'label'
     ? trigger.label
-    : <Image size={trigger.kind === 'icon' ? 16 : 20} systemName={(trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') as SwiftImageName} />;
+    : <Image
+      size={trigger.kind === 'icon' ? 16 : 20}
+      systemName={(trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') as SwiftImageName}
+      modifiers={trigger.kind === 'ellipsis' ? [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())] : undefined}
+    />;
   const compactTrigger = trigger.kind !== 'label';
 
   return <View

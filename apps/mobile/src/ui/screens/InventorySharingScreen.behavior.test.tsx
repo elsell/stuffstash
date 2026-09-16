@@ -3,7 +3,7 @@ import { InventoryInvitationLinkUnavailableError } from '../../application/shari
 import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import React from 'react';
-import { pressAlertButton } from '../../test-support/react-native';
+import { pressAlertButton, keyboardDismissCount } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -151,6 +151,7 @@ it.each(['copy', 'share', 'cancel'] as const)('suppresses late %s feedback after
 
 it('refreshes safe metadata and shows link-unavailable recovery inside the sharing form', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creations = 0;
+  const dismissalsBefore = keyboardDismissCount();
   const repository: InventoryInvitationManagementRepository = {
     list: async () => ({ items: creations === 2 ? [{ ...item, id: 'second', email: 'second@example.test' }, item] : creations ? [item] : [] }),
     create: async () => { if (++creations === 1) return { ...item, inviteUrl: 'https://example.test/#token=previous' }; throw new InventoryInvitationLinkUnavailableError(); }, cancel: async () => undefined
@@ -165,6 +166,7 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
     await h.press(h.byLabel('Create Invitation')); await settle(h);
     const recovery = h.byText('Invitation created, link unavailable');
+    expect(keyboardDismissCount()).toBe(dismissalsBefore + 2);
     expect(recovery).toBeDefined();
     let parent = recovery?.parent;
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;

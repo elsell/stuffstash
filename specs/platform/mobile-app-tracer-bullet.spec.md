@@ -536,3 +536,13 @@ refresh and failed saves do not. Pending save/parent/photo operations keep the f
 noneditable and reject late draft callbacks. Android retains its existing controlled
 field until its own native evidence justifies a different adapter. This correction
 does not change description, parent search, tags or Add sheet presentation.
+## Sharing keyboard and overflow target
+
+Submitting an invitation ends keyboard editing before starting the request while
+preserving the email draft for failure recovery. This leaves the response and
+invitation actions available without the keyboard covering the native menu.
+The iOS ellipsis menu label must occupy a 44-point square native hit region, not
+only a 44-point React Native host around a small symbol. Keep its native Menu
+semantics and visible ellipsis; apply the hit region to the label content. Verify
+the rendered trigger bounds and cancellation flow on phone and iPad. This does
+not establish that all native menu geometry is correct from source declarations.

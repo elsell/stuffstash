@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'r
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
+  Keyboard,
   Platform,
   Alert,
   RefreshControl,
@@ -110,6 +111,7 @@ export function InventorySharingScreen({
 
   async function create(): Promise<void> {
     if (workingRef.current) return;
+    Keyboard.dismiss();
     workingRef.current = true;
     setWorking(true);
     setCreationError(undefined);
