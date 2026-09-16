@@ -80,18 +80,28 @@ final class FixtureAuditTests: XCTestCase {
     let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
     let content = app.descendants(matching: .any).matching(identifier: "notice-placement-content").firstMatch
     XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
-    func belowNavigation(_ control: XCUIElement) -> Bool {
-      let bounds = content.frame.intersection(app.frame)
+    var lastGeometry = "No geometry sample evaluated"
+    func belowNavigation(_ control: XCUIElement, bounds: CGRect, headerBottom: CGFloat) -> Bool {
       let rect = control.frame
-      return rect.height > 0 && rect.minY >= max(bounds.minY, header.frame.maxY) &&
+      let contained = rect.height > 0 && rect.minY >= max(bounds.minY, headerBottom) &&
         rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
+      lastGeometry += "\n\(control.identifier): \(rect), contained=\(contained)"
+      return contained
     }
     let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      belowNavigation(notice) && belowNavigation(dismiss) && belowNavigation(action)
+      let appBounds = self.app.frame
+      let contentBounds = content.frame
+      let headerBounds = header.frame
+      let bounds = contentBounds.intersection(appBounds)
+      lastGeometry = "app=\(appBounds), content=\(contentBounds), header=\(headerBounds)"
+      let results = [notice, dismiss, action].map {
+        belowNavigation($0, bounds: bounds, headerBottom: headerBounds.maxY)
+      }
+      return results.allSatisfy { $0 }
     }, object: nil)
     let placement = XCTWaiter.wait(for: [settled], timeout: 5)
     capture("notice-\(presentation)-placement")
-    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation")
+    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation. Last sample: \(lastGeometry)")
     XCTAssertTrue(dismiss.isHittable); XCTAssertTrue(action.isHittable)
     let back = presentation == "sheet" ? header.buttons["Close notice fixture"] : header.buttons["BackButton"].firstMatch
     XCTAssertTrue(back.isHittable)

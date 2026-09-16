@@ -91,3 +91,16 @@ trigger at34.14 seconds and then finds its command unhittable. The final screens
 shows the returning keyboard. Inspection of the app menu adapter finds no explicit
 focus call; the native cause is unresolved. Do not replace the menu or suppress
 typing assistance solely to evade this failure.
+
+## Notice placement observation gap
+
+The phone sheet notice's five-second geometry assertion failed. Its inspected
+final screenshot and hierarchy nevertheless show header maxY132, content
+rectangle(0,62,402,812), notice(16,142,370,93), dismiss control(33,153,147.3,71)
+and action(190.3,164.7,178.7,48), all within the asserted final bounds.
+Capture: [notice sheet](evidence/phone-notice-sheet-350695.png).
+This does not establish what the predicate saw earlier or retroactively pass the
+journey. Add last-sample geometry diagnostics to the unchanged containment gate;
+sample shared bounds once per predicate evaluation and record all three results
+without short-circuiting. Native rerun remains required; no product correction is
+claimed from the later capture.

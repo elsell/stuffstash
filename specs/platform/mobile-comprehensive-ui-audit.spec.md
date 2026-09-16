@@ -1469,6 +1469,14 @@ filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
 collection may exercise the shared screen with real query/policy adapters and a
 controlled repository; this is not production authorization or pagination evidence.
 
+### Notice geometry diagnostics
+
+Notice placement acceptance must retain its full-rectangle containment requirement.
+When timed geometry checks disagree with final captures, record the last sampled
+header, content, app and control rectangles and each control's containment result
+in the failure message. Do not infer a corrected product layout from a later
+screenshot or relax the bounds to make an intermittent observation pass.
+
 ### Isolated Android runtime preparation
 
 Fixture installation outside GitHub Actions requires an explicitly disposable
