@@ -2490,8 +2490,9 @@ plan, pending approval and command validity gate editing. The old inline panel
 and its layout/styles are removed. Eight tests cover choice modeling, lookup
 states, disabled existing choices, successful Back and obsolete callback rejection
 after scope/plan mismatch or leaving. Back preserves the proposal/name draft.
-The route adds R142 to the audit inventory; full axis and native sheet-to-stack,
-keyboard and assistive-technology acceptance remain pending.
+The route adds R142 to the audit inventory; its full source-axis review is in
+voice-location-axis.md. Native sheet-to-stack, keyboard and assistive-technology
+acceptance remain pending.
 
 ### M175 — Inline proposal name commands remain custom narrow icons
 
@@ -2508,3 +2509,19 @@ related proposal checks pass on paul, with TypeScript and structural checks.
 Code critic found no blocker. The initial test failed because the extracted
 component did not yet exist; it is not a reproduction of native target geometry.
 Native keyboard/targets and parent integration acceptance remain pending.
+
+### M176 — Partial photo failure drops its recovery detail
+
+P2 source-confirmed atcd353ee2. The controller replaces safe upload failure reasons
+with a count-only message when at least one attachment succeeds. The shared
+progress presentation also appends reasons only for total failure and shows a
+success checkmark for either terminal failure. Users can see incomplete counts
+without the available explanation, in both the active proposal and history.
+
+The candidate preserves the existing allowlisted reason for partial failure,
+renders it alongside counts, and uses a warning symbol while keeping the inventory
+change marked saved. Two controller regressions verify safe detail/redaction and
+retrying only the failed photo; a mounted shared-progress test verifies visible
+and accessible detail. All three failed before implementation. No server boundary
+or authorization behavior changes. Native reason visibility, contrast and
+announcements remain pending; see voice-progress-axis.md for all24 source axes.

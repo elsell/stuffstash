@@ -957,7 +957,7 @@ export class RealtimeVoiceSessionController {
     if (failed < attempted) {
       return {
         status: 'partial_failed', attachedCount: attempted - failed, totalCount, failedCount: failed,
-        message: `${(attempted - failed).toString()} of ${attempted.toString()} photos attached.`,
+        message: photoUploadFailureMessage(failureMessages, true),
         canRetry: hasRetryablePhotos(remaining)
       };
     }
@@ -1086,12 +1086,13 @@ function safePhotoUploadFailureReason(error: unknown): string {
   }
 }
 
-function photoUploadFailureMessage(reasons: readonly string[]): string {
+function photoUploadFailureMessage(reasons: readonly string[], partial = false): string {
+  const summary = partial ? 'Some photos could not be attached' : 'The change was applied, but photos could not be attached';
   const firstReason = reasons.find((reason) => reason.trim().length > 0);
   if (!firstReason) {
-    return 'The change was applied, but photos could not be attached.';
+    return `${summary}.`;
   }
-  return `The change was applied, but photos could not be attached: ${firstReason}`;
+  return `${summary}: ${firstReason}`;
 }
 
 function photoApprovalRequests(drafts: VoiceActionPlanPhotoDrafts): readonly VoiceActionPlanPhotoApprovalRequest[] {

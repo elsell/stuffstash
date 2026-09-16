@@ -874,6 +874,36 @@ describe('RealtimeVoiceSessionController', () => {
     ]);
   });
 
+  it.each([
+    ['Attachment content is not available for JSON upload fallback.', 'Attachment content is not available for JSON upload fallback.'],
+    ['PUT https://uploads.example.test/private?token=secret failed', 'Photo upload failed.']
+  ])('retains safe partial upload recovery detail for %s', async (failure, expected) => {
+    const transport = new ReviewDecisionTransport({
+      commandResults: [{ commandId: 'cmd-water-bottle', assetId: 'asset-water-bottle', operation: 'create', assetKind: 'item' }],
+      attachmentUploadIntents: [testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'first.jpg'),
+        { ...testUploadIntent('cmd-water-bottle', 'asset-water-bottle', 'second.jpg'), photoIndex: 1 }]
+    });
+    const repository = new FakeInventoryRepository();
+    repository.failPhotoUploads = 1;
+    repository.photoUploadFailureMessage = failure;
+    const controller = new RealtimeVoiceSessionController(repository, new FakeRecorder(), transport, new FakePlayer());
+    await controller.start();
+    const stop = controller.stop();
+    await transport.reviewReady;
+    await controller.approveActionPlan('plan-1', { 'cmd-water-bottle': ['first.jpg', 'second.jpg'].map(fileName => ({
+      fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5
+    })) });
+    const states = await stop;
+    expect(states.at(-1)?.actionPlan?.status).toBe('executed');
+    expect(states.at(-1)?.photoAttachmentStatus).toMatchObject({
+      status: 'partial_failed', attachedCount: 1, totalCount: 2, failedCount: 1, canRetry: true,
+      message: `Some photos could not be attached: ${expected}`
+    });
+    const retry = await controller.retryPhotoAttachments('plan-1');
+    expect(retry).toMatchObject({ status: 'attached', attachedCount: 2, totalCount: 2, failedCount: 0 });
+    expect(repository.addedPhotos.map(photo => photo.fileName)).toEqual(['second.jpg', 'first.jpg']);
+  });
+
   it('surfaces the safe photo upload failure reason when all staged photos fail', async () => {
     const transport = new ReviewDecisionTransport({
       commandResults: [{
@@ -2529,7 +2559,7 @@ it('uploads a whole photo batch and retains cumulative totals after retrying onl
   const stop = controller.stop(state => progress.push(state));
   await transport.reviewReady;
   await controller.approveActionPlan('plan-1', { 'cmd-water-bottle': names.map(fileName => ({ fileName, contentType: 'image/jpeg', contentBase64: 'cGhvdG8=', sizeBytes: 5 })) });
-  expect((await stop).at(-1)?.photoAttachmentStatus?.message).toBe('2 of 3 photos attached.');
+  expect((await stop).at(-1)?.photoAttachmentStatus).toMatchObject({ attachedCount: 2, totalCount: 3, failedCount: 1, message: 'Some photos could not be attached: Photo upload failed.' });
   expect(progress.filter(state => state.photoAttachmentStatus?.status === 'uploading').map(state => state.photoAttachmentStatus?.attachedCount)).toEqual([0, 0, 1, 2]);
   const retryProgress: number[] = [];
   await controller.cancel();

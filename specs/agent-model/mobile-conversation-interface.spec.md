@@ -117,6 +117,12 @@ targets using hit slop where necessary. Horizontal rails do not stretch vertical
 Show a single applying-change indicator, and distinguish saved changes from
 pending or failed photo attachments.
 
+Partial photo failure must retain the same safe, stage-specific failure reason as
+total failure, alongside cumulative attachment counts. Both the current exchange
+and retained history must show that reason. Do not substitute a success checkmark
+for a terminal attachment warning; the inventory change remains saved and only
+unsuccessful attachments are retried. Never expose arbitrary upload exception text.
+
 Photo finalization validates uploaded bytes and may take longer than ordinary
 queries while thumbnails are being generated. Mobile API transport allows 60
 seconds for POST attachment direct-upload completion, versus 8 seconds for other
