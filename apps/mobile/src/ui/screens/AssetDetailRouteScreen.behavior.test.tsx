@@ -170,7 +170,7 @@ describe('pending photo removal', () => {
 });
 
 
-it.each([false, true])('handles photo-removal failure while mounted or after route teardown', async leaveRoute => {
+it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal failure in the %s visit', async visit => {
   const firstRemoval = deferred<{ message: string }>(); let calls = 0;
   const test = setup({ deleteAssetPhotoCommand: { execute: async () => {
     calls++; return calls === 1 ? firstRemoval.promise : { message: 'Removed' };
@@ -182,11 +182,21 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
     await test.harness.press(test.harness.byLabel('Open photo 1 of 1'));
     await test.harness.press(test.harness.byLabel('Remove photo'));
     await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
-    if (leaveRoute) { test.hide(); await test.render(); }
+    if (visit === 'unmounted') { test.hide(); await test.render(); }
+    if (visit === 'departed' || visit === 'returned') await test.harness.run(() => setScreenFocused(false));
+    if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
     await test.harness.run(() => firstRemoval.reject(new Error('Connection failed')));
     await settle(test.harness);
-    if (leaveRoute) {
+    if (visit !== 'current') {
       expect(latestAlert()?.title).not.toBe('Could not remove photo');
+      if (visit !== 'unmounted') {
+        if (visit === 'departed') await test.harness.run(() => setScreenFocused(true));
+        expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
+        await test.harness.press(test.harness.byLabel('Remove photo'));
+        await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
+        await settle(test.harness);
+        expect(calls).toBe(2);
+      }
     } else {
       expect(latestAlert()?.title).toBe('Could not remove photo');
       expect(latestAlert()?.message).toBe('Connection failed');
@@ -201,7 +211,7 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
       expect(calls).toBe(2);
       expect(test.harness.byType('ImageViewing')).toBeUndefined();
     }
-  } finally { await test.harness.unmount(); }
+  } finally { await test.harness.unmount(); setScreenFocused(true); }
 });
 
 

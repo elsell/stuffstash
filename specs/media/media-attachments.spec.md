@@ -333,3 +333,11 @@ selection and do not start an upload. Already-started uploads may finish for the
 original asset, but their progress, result, error, and cleanup cannot mutate the
 replacement screen. Failed photo drafts belong to that asset and reset on change.
 Native chooser dismissal and cancellation retain the current asset context.
+## Mobile removal failure presentation
+
+A photo-removal command may finish after navigating away from the asset. Its
+failure alert belongs to the focused visit that started removal and must not
+appear over another route or a later visit. Preserve command completion and
+resource reconciliation; release the pending lock so a fresh removal can be
+attempted on return. Current-visit failures still show the safe error and retain
+the photo for retry. Verify both blur and blur/refocus, in addition to teardown.

@@ -298,6 +298,7 @@ export function AssetDetailRouteScreen({
 
   async function removePhoto(photoId: string): Promise<void> {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setIsRemovingPhoto(true);
@@ -318,6 +319,7 @@ export function AssetDetailRouteScreen({
       await assetPhotos.reconcile();
     } catch (error) {
       if (!scope.active) return;
+      if (!canPresent()) return;
       feedback.showDialog({
         title: 'Could not remove photo',
         message: readableError(error, 'Photo removal failed.'),

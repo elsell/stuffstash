@@ -36,9 +36,10 @@ see settings-exit-axis.md. That review does not certify every lifecycle dialog.
 
 The shared AppFeedback dialog adapter forwards caller actions to the system alert;
 it does not establish their task ownership. Each mutating caller therefore remains
-responsible for its own validity and lifetime checks. AppServicesFeedbackGate,
-provider archive, customization lifecycle dialogs and sheet operation
-failure alerts still need completion of their individual reviews. Already-corrected
+responsible for its own validity and lifetime checks. The follow-up in
+[system-dialog-axis.md](system-dialog-axis.md) reviews AppServicesFeedbackGate,
+provider archive and customization lifecycle ownership. M189 corrects the remaining
+photo-removal failure presentation gap. Sheet failures retain M147 evidence. Already-corrected
 photo, expiration, account, conversation and Edit discard entries retain their
 finding-specific evidence rather than being relabeled as fully verified here.
 

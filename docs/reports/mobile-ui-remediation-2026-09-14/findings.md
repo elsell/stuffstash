@@ -2676,3 +2676,11 @@ pending-option Save validation and immutable saved values remain intact. All 70
 related checks plus TypeScript/structural validation pass remotely; critic found
 no blocker. Native keyboard and feedback presentation remain pending. See
 [custom field options](custom-field-options-axis.md) for the 24-axis review.
+### M189 — Photo-removal failure alert crosses navigation visits
+
+P2 source-confirmed at 53e3915c. A still-mounted Details route checked the asset
+lifetime but could show a failed-removal alert after leaving or leaving/returning.
+Both cases reproduced before the change. The candidate captures the existing task
+presentation predicate and gates the error alert; pending cleanup and fresh retry
+remain intact. Current and unmounted cases remain covered. Native alert timing and
+navigation acceptance remain pending; see system-dialog-axis.md.
