@@ -97,3 +97,22 @@ CMake3.22.1 required by native modules. Installation and cold launch succeeded;
 normal-size Home inspection found incompatible vector strokes and unintended
 default badges. The corrected APK built in53s and passed the recorded Home checks.
 See the linked inspection for exact APK digests and remaining acceptance limits.
+
+## Audit artifact retention — September16 cleanup
+
+The local root filesystem reached23MB free. Removed45 superseded `native349*`
+`results.xcresult` directories (10.69GiB), retaining their screenshots, logs and
+revision records plus all committed evidence. On paul, removed21 superseded
+`native*.zip` downloads older than run350806 (14.09GiB); retained the latest350806
+archives, extracted evidence, active build/validation trees and emulator. Removed
+356MiB of JDK/Android command-line installer archives after confirming their
+installed executables. No source, user attachments or current runtime was removed.
+Cleanup manifests remain at `/tmp/stuffstash-audit-cleanup-20260916.txt` on each host.
+
+After cleanup: local root11GB free; paul root5.8GB free and `/tmp`18GB free.
+Check both root and `/tmp` before further large builds/downloads. Retain selected
+screenshots, hierarchy, revision and logs with each report; remove superseded raw
+ZIP/result bundles once their evidence has been extracted. Recheck disk after
+build/artifact batches. Raw temporary artifacts named by earlier reports may no
+longer be locally retained; committed evidence remains authoritative for those
+summaries. Do not treat stale artifact paths as available without checking.
