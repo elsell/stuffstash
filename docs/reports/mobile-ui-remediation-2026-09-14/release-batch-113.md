@@ -30,6 +30,15 @@ an audit report changed.
 
 ## Current decisions
 
+[Named native checks](release-batch-checks.csv) classify the87 fixture cases:
+55 required workflow/regression checks,24 diagnostic comparisons and8 enlarged-text
+follow-ups. The prior351480 results are included as historical evidence, not current
+acceptance. The added Browse keyboard journey was not present in that older run;
+later351546 results supersede old filter passes where they conflict. Separate
+onboarding jobs, Android evidence, source/security tests and release CI still apply.
+Normal-size control accessibility checks remain required; enlarged-text follow-up
+does not excuse missing names or unusable controls at the default size.
+
 - M249 remains a batch blocker: required filter actions visibly overlap the phone
   keyboard accessory. Geometry diagnostics are pending; no offset guess is accepted.
 - iPad last-tag application remains a batch blocker pending triage: geometry passes
@@ -49,6 +58,13 @@ an audit report changed.
 - Enlarged-text audit findings and physical assistive-technology coverage remain
   separately tracked. They do not require finishing the whole audit before this
   release. Any critical safety/data-loss finding is assessed independently of size.
+- The prior expiration-overview automated audit reports only possible clipping
+  at larger Dynamic Type sizes, with no element identified. Its
+  [retained issue detail](evidence/expiration-accessibility-351480.txt) belongs to
+  enlarged-text follow-up, not a demonstrated default-size release blocker. This
+  mixed audit still supplies required normal hit-region, description and trait
+  checks; triage individual reported issues instead of gating on its aggregate
+  red status. Do not claim the enlarged-text issue is fixed.
 
 ## Ship condition and notes
 
