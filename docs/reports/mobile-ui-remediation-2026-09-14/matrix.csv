@@ -3119,30 +3119,30 @@ S130,System / push cold warm tap,privacy,"Account scope, data use and permission
 S130,System / push cold warm tap,notifications,System notification entry and state,source-reviewed,push-entry-axis.md; sourceabdbf5d5; 18 adapter/application checks pass; root navigator and physical acceptance pending,
 S130,System / push cold warm tap,media,"Camera, library, files and audio",not-applicable,push-entry-axis.md; sourceabdbf5d5; 18 adapter/application checks pass; root navigator and physical acceptance pending,
 S130,System / push cold warm tap,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,push-entry-axis.md; sourceabdbf5d5; 18 adapter/application checks pass; root navigator and physical acceptance pending,
-S131,System / invitation link,task,Task clarity and platform-pattern fit,pending,,
-S131,System / invitation link,navigation,"Navigation, hierarchy and return",source-reviewed,; sharing-axis.md M72 route completion ownership; native pending,M72
-S131,System / invitation link,selection,Value selection and current value,pending,,
-S131,System / invitation link,modality,Presentation and dismissal,pending,,
-S131,System / invitation link,layout,"Safe areas, scroll edges and overlays",pending,,
-S131,System / invitation link,adaptation,Phone/tablet/window reflow,pending,,
-S131,System / invitation link,typography,"Dynamic Type, wrapping and legibility",pending,,
-S131,System / invitation link,appearance,"Light/dark, contrast and materials",pending,,
-S131,System / invitation link,localization,"Locale, timezone, RTL and long strings",pending,,
-S131,System / invitation link,imagery,"Icons, photos and missing media",pending,,
-S131,System / invitation link,targets,Touch target size and reachability,pending,,
-S131,System / invitation link,gestures,Gestures and explicit alternatives,pending,,
-S131,System / invitation link,keyboard,"Keyboard, text entry and focus",pending,,
-S131,System / invitation link,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S131,System / invitation link,motion,Reduced motion and feedback alternatives,pending,,
-S131,System / invitation link,content,"Lists, hierarchy, density and pagination",pending,,
-S131,System / invitation link,search,"Search, scope and filters",pending,,
-S131,System / invitation link,loading,"Loading, background refresh and progress",source-reviewed,; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M71
-S131,System / invitation link,recovery,"Empty, error, denied and retry",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending,M70;M71
-S131,System / invitation link,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete,M70
-S131,System / invitation link,privacy,"Account scope, data use and permissions",pending,,
-S131,System / invitation link,notifications,System notification entry and state,pending,,
-S131,System / invitation link,media,"Camera, library, files and audio",pending,,
-S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending; sharing-axis.md M72 route completion ownership; native pending,M70;M71;M72
+S131,System / invitation link,task,Task clarity and platform-pattern fit,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,navigation,"Navigation, hierarchy and return",source-reviewed,; sharing-axis.md M72 route completion ownership; native pending; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,M72
+S131,System / invitation link,selection,Value selection and current value,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,modality,Presentation and dismissal,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,layout,"Safe areas, scroll edges and overlays",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,adaptation,Phone/tablet/window reflow,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,appearance,"Light/dark, contrast and materials",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,localization,"Locale, timezone, RTL and long strings",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,imagery,"Icons, photos and missing media",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,targets,Touch target size and reachability,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,gestures,Gestures and explicit alternatives,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,keyboard,"Keyboard, text entry and focus",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,motion,Reduced motion and feedback alternatives,source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,content,"Lists, hierarchy, density and pagination",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,search,"Search, scope and filters",not-applicable,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,loading,"Loading, background refresh and progress",source-reviewed,; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,M71
+S131,System / invitation link,recovery,"Empty, error, denied and retry",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,M70;M71
+S131,System / invitation link,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,M70
+S131,System / invitation link,privacy,"Account scope, data use and permissions",source-reviewed,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,notifications,System notification entry and state,not-applicable,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,media,"Camera, library, files and audio",not-applicable,; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,
+S131,System / invitation link,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; sharing-axis.md M70 replacement recovery; route/native coverage incomplete; sharing-axis.md M71 mounted lookup rejection/cleanup; native pending; sharing-axis.md M72 route completion ownership; native pending; invitation-link-axis.md all24 source review c090a391; 64 remote checks; physical entry pending,M70;M71;M72
 S132,System / permission denied recovery,task,Task clarity and platform-pattern fit,source-reviewed,permission-recovery-axis.md; source91c22aa3 plus M190; 109 related checks/static pass; M191 candidate; 10 settings launch tests/static pass; physical acceptance pending,
 S132,System / permission denied recovery,navigation,"Navigation, hierarchy and return",finding,permission-recovery-axis.md; source91c22aa3 plus M190; 109 related checks/static pass; M191 candidate; 10 settings launch tests/static pass; physical acceptance pending,M191
 S132,System / permission denied recovery,selection,Value selection and current value,source-reviewed,permission-recovery-axis.md; source91c22aa3 plus M190; 109 related checks/static pass; M191 candidate; 10 settings launch tests/static pass; physical acceptance pending,

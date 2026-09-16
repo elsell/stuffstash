@@ -81,8 +81,13 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise865
-pending,1,842 source-reviewed,488 finding,23 runtime-partial and190 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise846
+pending,1,857 source-reviewed,489 finding,23 runtime-partial and193 not-applicable.
+
+[Invitation link intake](invitation-link-axis.md) now covers S131 across all24
+axes, with64 remote checks. Physical cold/warm handoff remains pending. Sharing's
+native keyboard/menu findings and Home's separate tap-delivery diagnostic are
+recorded in their surface reports; source fixes are not runtime acceptance.
 
 [Permission recovery](permission-recovery-axis.md) now has all 24 source axes
 reviewed. M190 adds camera/microphone recovery guidance; 109 related checks/static

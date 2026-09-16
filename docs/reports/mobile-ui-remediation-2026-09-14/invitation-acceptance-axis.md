@@ -1,5 +1,10 @@
 # Invitation acceptance review
 
+Current follow-up: the destination now uses NativeCommandButton (M133 candidate
+implemented). Historical custom-control descriptions below describe the reviewed
+source checkpoint. External intake now has its own [24-axis review](invitation-link-axis.md);
+physical entry and destination visual acceptance remain pending.
+
 R019, source review at6f45c031, normal text first. Entrypoint:
 `app/invitations/accept.tsx` → `InventoryInvitationScreen`; system-link intake
 S131 is related but is not certified by this route review. The route delegates
