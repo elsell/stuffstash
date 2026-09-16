@@ -531,6 +531,11 @@ Typing/searching alone never changes the saved time zone.
 
 ### Inventory switcher focus ownership
 
+Selection callbacks belong to the focused visit that rendered them. Retained
+callbacks must not start a selection after departure, including after returning
+to the same switcher. A fresh visit provides fresh selections. Close must ignore
+inactive visits and retire its current visit immediately before navigation.
+
 Selection completion belongs to the switcher's uninterrupted focus session.
 When the sheet loses focus, abort its request signal and suppress late navigation
 or selection-error feedback, even if it remains mounted or regains focus before

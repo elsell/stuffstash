@@ -2626,3 +2626,13 @@ and household identity independent named loading/error/retry states. Access fail
 suppress cached identity; transport text is not shown. Two mounted RED cases
 reproduce the hidden context;68 settings tests and static checks pass remotely.
 See about-diagnostics-axis.md; native geometry and announcements remain open.
+
+### M184 — Departed switcher callbacks can still change inventory
+
+P2 source-confirmed atfc93c151. Selection completion was guarded, but a retained
+selection callback could begin a new command after blur, including after return.
+The candidate binds rendered selection callbacks to the active visit and retires
+that visit on blur, session/command replacement and Close. The pending request lock
+and existing cancellation behavior remain. A mounted RED case proves the unwanted
+post-blur command; coverage also verifies fresh return actions and immediate Close.
+See inventory-switcher-axis.md for all24 source axes and remaining native gates.

@@ -21,6 +21,7 @@ import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
+import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 
 type TenantSwitcherSheetScreenProps = {
   readonly dashboardQuery: HomeDashboardQuery;
@@ -36,14 +37,20 @@ export function TenantSwitcherSheetScreen({
   const [selectionError, setSelectionError] = useState('');
   const pending = useRef<AbortController | undefined>(undefined);
   const focused = useRef(true);
-  useFocusEffect(useCallback(() => { focused.current = true; setSelecting(Boolean(pending.current)); return () => { focused.current = false; pending.current?.abort(); }; }, []));
+  const scopeId = useMobileServerStateScopeId();
+  const [visit, setVisit] = useState<{ active: boolean } | null>(null);
+  useFocusEffect(useCallback(() => {
+    const owner = { active: true };
+    focused.current = true; setVisit(owner); setSelecting(Boolean(pending.current));
+    return () => { owner.active = false; focused.current = false; pending.current?.abort(); };
+  }, [scopeId, selectInventoryCommand]));
   const dashboard = useMobileInventoryServerQuery({
     key: mobileQueryKeys.home,
     query: (signal) => dashboardQuery.execute({ signal })
   });
 
   async function selectInventory(inventoryId: string): Promise<void> {
-    if (pending.current) return;
+    if (!visit?.active || pending.current) return;
     const request = new AbortController(); pending.current = request;
     setSelecting(true); setSelectionError('');
     try {
@@ -57,7 +64,11 @@ export function TenantSwitcherSheetScreen({
     }
   }
 
-  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => { pending.current?.abort(); router.back(); } }]);
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => {
+    if (!visit?.active) return;
+    visit.active = false;
+    pending.current?.abort(); router.back();
+  } }]);
   const headerOptions = useMemo(() => ({ title: 'Inventories', ...actionOptions }), [actionOptions]);
 
   return (

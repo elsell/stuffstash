@@ -25,6 +25,39 @@ it('opens the current household by identity when names collide, with scroll and 
   } finally { await h.unmount(); }
 });
 
+it('retires retained selection callbacks across departure and return', async () => {
+  resetNavigation(); setScreenFocused(true);
+  const h = new MobileRenderHarness(); let calls = 0;
+  try {
+    await h.render(fixture(new SelectInventoryCommand({ async selectInventory() { calls++; } })));
+    const retained = h.byLabel('Switch to inventory Main')!.props.onPress as () => Promise<void>;
+    await h.run(() => setScreenFocused(false));
+    await h.run(retained);
+    expect(calls).toBe(0);
+    await h.run(() => setScreenFocused(true));
+    await h.run(retained);
+    expect(calls).toBe(0);
+    expect(dispatchedActions()).toEqual([]);
+    await h.press(h.byLabel('Switch to inventory Main'));
+    expect(calls).toBe(1);
+    expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
+});
+
+it('retires selection immediately when Close is pressed', async () => {
+  resetNavigation(); setScreenFocused(true);
+  const h = new MobileRenderHarness(); let calls = 0;
+  try {
+    await h.render(fixture(new SelectInventoryCommand({ async selectInventory() { calls++; } })));
+    const retained = h.byLabel('Switch to inventory Main')!.props.onPress as () => Promise<void>;
+    await h.press(h.byLabel('Close inventory switcher'));
+    await h.run(retained);
+    await h.press(h.byLabel('Close inventory switcher'));
+    expect(calls).toBe(0);
+    expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+  } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
+});
+
 it('retains the switcher with safe retry feedback when selecting an inventory fails', async () => {
   const h = new MobileRenderHarness();
   try {
