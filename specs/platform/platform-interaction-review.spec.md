@@ -627,7 +627,12 @@ default center can lie inside its foreground calendar (phone351546: center201,43
 inside calendar46.3,160,320,332). Derive an outside point from current frames,
 retain both frames and the chosen point, and require the popover to disappear
 before testing the sheet commands. Do not change production dismissal behavior
-to accommodate a test that taps the calendar itself.
+to accommodate a test that taps the calendar itself. The target must also avoid
+underlying commands: iPad351595's outside point landed on Back and returned to
+the overview. Prefer the noninteractive part of the current Date range navigation
+bar outside the popover, exclude button/title bounds, and assert Date range remains
+present after dismissal before exercising Back. Fail with geometry evidence if no
+safe target exists; do not guess a device-specific coordinate.
 
 Searchable filter pages must have one owner of the native search options. Updating
 the title or selecting a tag must not clear the active search field or its query.

@@ -1268,24 +1268,40 @@ final class FixtureAuditTests: XCTestCase {
     let visible = dismiss.frame.intersection(app.frame)
     let popup = calendar.frame.intersection(visible)
     XCTAssertFalse(popup.isEmpty)
+    let navigation = app.navigationBars["Date range"]
+    XCTAssertTrue(navigation.exists)
+    let navigationFrame = navigation.frame.intersection(visible)
     let outside = [
       CGRect(x: visible.minX, y: visible.minY, width: popup.minX - visible.minX, height: visible.height),
       CGRect(x: popup.maxX, y: visible.minY, width: visible.maxX - popup.maxX, height: visible.height),
       CGRect(x: visible.minX, y: visible.minY, width: visible.width, height: popup.minY - visible.minY),
       CGRect(x: visible.minX, y: popup.maxY, width: visible.width, height: visible.maxY - popup.maxY)
-    ].filter { !$0.isEmpty && !$0.isInfinite && !$0.isNull }
-    let region = try XCTUnwrap(outside.max { $0.width * $0.height < $1.width * $1.height })
-    let point = CGPoint(x: region.midX, y: region.midY)
-    XCTAssertTrue(visible.contains(point))
-    XCTAssertFalse(popup.contains(point))
-    let geometry = XCTAttachment(string: "dismiss=\(visible); calendar=\(popup); tap=\(point)")
+    ].map { $0.intersection(navigationFrame) }
+      .filter { !$0.isEmpty && !$0.isInfinite && !$0.isNull }
+    let commands = app.buttons.allElementsBoundByIndex
+      .filter { $0.identifier != "PopoverDismissRegion" }.map { $0.frame }
+    let titles = navigation.staticTexts.allElementsBoundByIndex.map { $0.frame }
+    let candidates = outside.flatMap { region in
+      [0.25, 0.5, 0.75].map { fraction in
+        CGPoint(x: region.minX + region.width * fraction, y: region.midY)
+      }
+    }
+    let selectedPoint = candidates.first { point in
+      !commands.contains { $0.contains(point) } && !titles.contains { $0.contains(point) }
+    }
+    let geometry = XCTAttachment(string: "dismiss=\(visible); calendar=\(popup); navigation=\(navigationFrame); commands=\(commands); titles=\(titles); candidates=\(candidates); tap=\(String(describing: selectedPoint))")
     geometry.name = "calendar-dismissal-geometry"
     geometry.lifetime = .keepAlways
     add(geometry)
+    let point = try XCTUnwrap(selectedPoint, "No non-command calendar dismissal target in the navigation bar")
+    XCTAssertTrue(visible.contains(point))
+    XCTAssertTrue(navigationFrame.contains(point))
+    XCTAssertFalse(popup.contains(point))
     app.coordinate(withNormalizedOffset: .zero)
       .withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: dismiss)], timeout: 5), .completed)
     capture("expiration-calendar-dismissed")
+    XCTAssertTrue(navigation.exists, "Dismissing the calendar must leave the Date range page open")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     let back = app.buttons["Cancel or return to filters"]
     XCTAssertTrue(back.isHittable)

@@ -23,3 +23,11 @@ Retained evidence: [dismissal geometry](evidence/ipad-calendar-geometry-351595.t
 Full artifact10472872529 remains on paul at `/tmp/native351595-filters-ipad.zip`;
 log `/tmp/native351595-filters-ipad.log` is local. Phone geometry remains needed
 before changing the production keyboard inset.
+
+Candidate test correction: restrict outside-popover targets to the current Date
+range navigation bar and exclude all button/title bounds. Record geometry before
+requiring a candidate, then assert the Date range navigation bar remains after
+popover dismissal. The native failure above supplies the red case; eight fixture
+preparation checks and mobile structural checks pass remotely. Critic review found
+and corrected missing geometry on the no-candidate path. Swift compilation and
+native acceptance remain pending. Production controls are unchanged.
