@@ -424,6 +424,16 @@ platform-native command adapter for Retry and Load more, including the route's
 inventory-load failure. Preserve the existing loading guard, error recovery,
 pagination merge and scoped query behavior; do not substitute an extra screen.
 
+## Inbox access-loss recovery
+
+An authentication-required or permission-denied result from any inbox read or
+command must discard loaded rows, continuation cursor and local read markers.
+Show the safe failure and retain explicit retry; do not present an empty inbox as
+an authorized result. A later transport failure must not restore denied data.
+Only a successful current-scope list read may repopulate the inbox. Ordinary
+transport failures without prior access loss may retain usable rows. Verify this
+through the mobile HTTP adapter for refresh, opening, read-state and mark-all.
+
 ## Device setup feedback lifetime
 
 Permission/registration feedback describes the last explicit setup attempt, not a

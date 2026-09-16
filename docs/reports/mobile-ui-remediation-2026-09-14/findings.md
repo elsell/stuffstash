@@ -2645,3 +2645,23 @@ candidate uses that adapter with the same label/callback and footer position.
 The existing mounted sparse-page journey still reaches the matching second page;
 all13 related tests and static checks pass remotely. Native geometry remains open.
 See browse-route-axis.md for the full route/list/search source review.
+
+### M186 — Inbox retains private rows after access is denied
+
+P1 source-confirmed at17f9e2b7. Inbox uses local row state outside the shared query
+cache. Its error handler kept loaded titles/paging after authentication or permission
+failure. The candidate clears rows, cursor, read markers and loaded state on typed
+access loss while retaining safe error/Retry. Ordinary failures retain useful data;
+failed retries after denial cannot restore it. Eight mounted HTTP-adapter RED cases
+cover401/403 across refresh/open/read-state/mark-all. All31 related checks/static
+validation pass remotely; critic found no blocker. Native presentation remains open.
+
+### M187 — Inbox read-state accessory still uses a custom command
+
+P3 source-confirmed at17f9e2b7; not yet implemented. Per-row read/unread uses a
+Pressable plus Lucide envelope while surrounding inbox commands use platform
+controls. No concrete native limitation is documented. Add a suitable native icon
+command adapter for iOS/Android, preserving independent row-open behavior, spoken
+action, disabled state and read-state reversal. Do not reuse the refinement adapter:
+its Android icon is specifically a filter. Native hit bounds and row fit need
+verification after the replacement.

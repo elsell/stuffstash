@@ -48,7 +48,14 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     pending.current = true; setBusy(true); setError('');
     const request = new AbortController(); controller.current = request;
     try { await operation(request.signal); }
-    catch (caught) { if (mounted.current && !request.signal.aborted) setError(caught instanceof NotificationFailure ? caught.message : fallback); }
+    catch (caught) {
+      if (mounted.current && !request.signal.aborted) {
+        if (caught instanceof NotificationFailure && (caught.kind === 'authentication-required' || caught.kind === 'permission-denied')) {
+          setRows([]); setCursor(null); setLocallyRead(new Set()); setLoaded(false);
+        }
+        setError(caught instanceof NotificationFailure ? caught.message : fallback);
+      }
+    }
     finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
   async function fetchPage(selected: Filter, signal: AbortSignal, after?: string) {
