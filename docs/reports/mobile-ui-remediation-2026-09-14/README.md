@@ -1,19 +1,50 @@
 # Comprehensive mobile UI audit and remediation
 
+## Current checkpoint — September 16
+
+The coverage inventory contains142 surfaces ×24 axes =3,408 cells:2,593
+source-reviewed,577 finding,198 not-applicable and40 runtime-partial. These are
+review classifications, not3,408 completed native acceptance checks. The full
+audit and release remain open; normal-size findings take priority.
+
+Latest completed full run35148054814 at a01fc760 records phone69/86 and iPad79/86
+fixture passes. Both onboarding jobs pass their applicable cases. The iPad result
+is currently log-reviewed (`/tmp/native351480-ipad-complete.log`); its screenshots
+have not been reviewed. It retains ordinary color-opening and controlled-input
+failures plus keyboard-readiness and enlarged-text failures. See
+[phone evidence](native-phone-351480.md). This predates the current readiness,
+Add-tag assertion, search-ownership and diagnostic changes.
+
+[Focused filters35154627907](native-filters-351546.md) at bef2150a confirms M249
+still overlaps Back on phone; iPad keyboard/search journeys pass. The iPad
+last-tag journey passes geometry but applies no selected tag, requiring tap/state
+investigation. It is not footer clipping. M250 has iPad search-journey evidence;
+phone stops at the overlap assertion before post-selection verification.
+
+At this checkpoint, provider-free input run35156439952 and full run35156794515
+are live; geometry run35158457674 is pending behind the former. The geometry
+probe at6128c8f5 is fixture-only and passes remote checks and critic review. No
+production inset correction is inferred before measurements arrive. Preserve all
+active runs. Current free space is13GB locally,4.9GB on paul root and roughly12GB
+in its tmpfs before the additional121MB iPad filter archive. Archives stay on paul;
+only selected evidence is retained here.
+
+## Earlier checkpoints
+
 New [key-event evidence](native-text-entry-351529.md) from focused run35152978881
 records phone9/14 and iPad11/14 passes. Failed inputs receive the complete requested
 key sequence before text-change values lose or reorder letters. A separate phone
 keyboard-readiness failure prevents one comparison from typing. No input fix is
 claimed from this diagnostic evidence.
 
-Latest completed native run35140471580: phone69/86 and iPad79/86 fixture tests
+Earlier completed native run35140471580: phone69/86 and iPad79/86 fixture tests
 pass, with unresolved normal-size text entry, color opening and phone preconfigured
 Place search failures. Both onboarding jobs pass. See [phone results](native-phone-351404.md),
 [iPad results](native-ipad-351404.md) and [onboarding evidence](native-onboarding-351404.md).
 Input tracing produced no output because the fixture consumed the capture tap to
 dismiss the keyboard. The runner-only correction at a01fc760 now exports all expected traces in
 [focused run35148050909](native-text-entry-351480.md): phone10/14 and iPad11/14
-comparisons pass. Character-loss failures remain; full run35148054814 is in progress.
+comparisons pass. Character-loss failures remain; full run35148054814 subsequently completed as noted above.
 No full native acceptance is claimed.
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.

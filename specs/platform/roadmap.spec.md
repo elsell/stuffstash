@@ -497,3 +497,18 @@ Both Podfile.lock source entries now follow the frozen-installed patched path;
 remote resolution checks pass and the podspec is byte-identical. No pod version
 or checksum changes. Critic found no blocker; macOS deployment validation remains
 required. Input-event diagnostics are deferred until this integration gate clears.
+
+
+September16 current UI audit checkpoint: full35148054814 completes with phone69/86
+and iPad79/86 fixture passes; both onboarding jobs pass applicable cases. iPad
+fixture evidence is log-reviewed, not visually accepted. Normal-size color and
+controlled-input failures remain. Focused filters35154627907 establishes that M249
+persists on phone despite settled-keyboard remeasurement; iPad keyboard journeys
+pass, while last-tag application fails after geometry checks succeed. M250 removes
+competing Browse search-option ownership and has scoped source tests and iPad
+search-journey evidence. A fixture-only coordinate probe at6128c8f5 now compares
+sheet boundary measurements with keyboard frames; no production offset guess is
+accepted. Provider-free input35156439952 and full35156794515 are active; focused
+geometry35158457674 is pending. Keep these executions, normal-text-first sequencing,
+and the complete native/release gate. The coverage inventory remains142 surfaces
+by24 axes (3,408 cells); source review does not substitute for native acceptance.
