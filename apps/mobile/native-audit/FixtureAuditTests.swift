@@ -81,23 +81,39 @@ final class FixtureAuditTests: XCTestCase {
     let content = app.descendants(matching: .any).matching(identifier: "notice-placement-content").firstMatch
     XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
     var lastGeometry = "No geometry sample evaluated"
-    func belowNavigation(_ control: XCUIElement, bounds: CGRect, headerBottom: CGFloat) -> Bool {
+    func descendants(_ snapshot: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
+      [snapshot] + snapshot.children.flatMap { descendants($0) }
+    }
+    func belowNavigation(_ control: any XCUIElementSnapshot, bounds: CGRect, headerBottom: CGFloat) -> Bool {
       let rect = control.frame
-      let contained = rect.height > 0 && rect.minY >= max(bounds.minY, headerBottom) &&
+      let contained = rect.width > 0 && rect.height > 0 && rect.minY >= max(bounds.minY, headerBottom) &&
         rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
-      lastGeometry += "\n\(control.identifier): \(rect), contained=\(contained)"
+      lastGeometry += "\n\(control.identifier.isEmpty ? control.label : control.identifier): \(rect), contained=\(contained)"
       return contained
     }
     let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      let appBounds = self.app.frame
-      let contentBounds = content.frame
-      let headerBounds = header.frame
-      let bounds = contentBounds.intersection(appBounds)
-      lastGeometry = "app=\(appBounds), content=\(contentBounds), header=\(headerBounds)"
-      let results = [notice, dismiss, action].map {
-        belowNavigation($0, bounds: bounds, headerBottom: headerBounds.maxY)
+      do {
+        let snapshot = try self.app.snapshot()
+        let elements = descendants(snapshot)
+        guard let contentSnapshot = elements.first(where: { $0.identifier == "notice-placement-content" }),
+              let headerSnapshot = elements.first(where: { $0.elementType == .navigationBar && $0.identifier == "Notice placement" }),
+              let noticeSnapshot = elements.first(where: { $0.identifier == "app-notice-container" }),
+              let dismissSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Audit notice. A retained action must leave navigation reachable. Dismiss message" }),
+              let actionSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Complete audit action" }) else {
+          lastGeometry = "Required notice geometry element missing from snapshot"
+          return false
+        }
+        let bounds = contentSnapshot.frame.intersection(snapshot.frame)
+        lastGeometry = "app=\(snapshot.frame), content=\(contentSnapshot.frame), header=\(headerSnapshot.frame)"
+        guard !bounds.isEmpty, !bounds.isNull, !headerSnapshot.frame.isEmpty else { return false }
+        let results = [noticeSnapshot, dismissSnapshot, actionSnapshot].map {
+          belowNavigation($0, bounds: bounds, headerBottom: headerSnapshot.frame.maxY)
+        }
+        return results.allSatisfy { $0 }
+      } catch {
+        lastGeometry = "Could not capture notice geometry: \(error)"
+        return false
       }
-      return results.allSatisfy { $0 }
     }, object: nil)
     let placement = XCTWaiter.wait(for: [settled], timeout: 5)
     capture("notice-\(presentation)-placement")

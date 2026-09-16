@@ -40,4 +40,21 @@ The new Swift diagnostic awaits macOS execution; no production workaround was ad
 
 Selected evidence is under `/tmp/ipad350806-selected/` and
 `/tmp/ipad350806-context/`. Full ZIP preserves event and screenshot metadata.
-Pushed-notice final geometry still requires inspection before assigning a cause.
+## Pushed notice observation
+
+The failed predicate's last sample has valid app/content/header bounds but zero
+rectangles and empty identifiers for all three notice controls. The
+[retained final capture](evidence/ipad-notice-final-350806.png) and hierarchy instead
+show notice(16,96,712,70), dismiss(33,107,489.5,48), action(532.5,107,178.5,48),
+all below header bottom86 and inside content(0,86,744,1047). The log records repeated
+failed element resolutions during the geometry predicate. This contradicts a
+claim of visible header overlap in the final state; it does not prove the earlier
+bounded observation passed or establish the cause of the zero rectangles.
+
+The acceptance gate now reads app, content, header and control frames from a single
+public XCTest snapshot per sample. Missing elements, snapshot errors, empty bounds
+and failed full containment still fail. The five-second timeout and later actual
+command/dismiss/navigation checks remain. This changes measurement consistency,
+not product layout or acceptance requirements. Swift compilation/native execution
+remain pending on macOS; remote mobile structural check passes. Local evidence:
+`/tmp/ipad350806-notice/`; source log: `/tmp/notice-snapshot-structural.log`.

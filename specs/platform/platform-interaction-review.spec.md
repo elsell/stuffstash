@@ -10,6 +10,15 @@ affordance or force a particular idle field width. Phone journeys retain Cancel
 and collapse assertions. Record screenshots/hierarchy that justify this distinction;
 an amended test remains unverified until rerun on its native target.
 
+For notice placement, measure the application, active content, navigation bar and
+notice controls from one XCTest hierarchy snapshot per observation. Independent
+queries in run350806 returned zero control rectangles while the retained hierarchy
+showed valid contained controls. Preserve positive-size, full-containment and
+below-navigation checks, the bounded timeout and subsequent actual command taps.
+A missing snapshot or element fails that observation; never substitute final
+screenshots for the live acceptance gate. Use Apple's public
+[snapshot API](https://developer.apple.com/documentation/xcuiautomation/xcuielementsnapshotproviding/snapshot%28%29).
+
 ## Purpose
 
 Choose familiar platform interactions before implementation. Native components alone
