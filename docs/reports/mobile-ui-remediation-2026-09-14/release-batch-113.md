@@ -89,3 +89,14 @@ adaptation. Its alternate form-column comparison stops at unchanged help expansi
 noncritical help issue in audit follow-up; it is not a newly demonstrated batch
 regression. See [evidence and decision](native-onboarding-351567.md). Phone
 onboarding and the remaining required batch checks are still pending.
+
+
+## Source verification checkpoint
+
+CI35159545733 succeeds at624bcf292ae3637438d038ac294a8f61002de678, with production
+code unchanged from the frozen cutoff. Required checks include1,915 mobile tests
+across301 files,1,119 web tests across151 files and67 client tests across8 files.
+The other CI jobs (iOS dependency lock, self-host runtime, web release image,
+conversation browser journey and search benchmark) also succeed. Native workflow
+acceptance remains separate; this does not clear the filter failures. Full required
+check log: `/tmp/ci351595-required.log`.
