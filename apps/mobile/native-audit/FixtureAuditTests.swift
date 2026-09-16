@@ -1445,13 +1445,15 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(save.isEnabled)
     reveal(details)
     details.tap()
-    XCTAssertFalse(entry.exists)
+    XCTAssertTrue(entry.waitForNonExistence(timeout: 5))
     let guidance = app.staticTexts["Open More details to add or clear the unfinished tag before saving."].firstMatch
-    XCTAssertTrue(guidance.exists)
+    XCTAssertTrue(guidance.waitForExistence(timeout: 5))
     reveal(guidance, requiresHit: false)
     capture("add-unstaged-tag-collapsed")
     reveal(details)
     details.tap()
+    let retainedTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND value == %@", "Camping"), object: entry)
+    XCTAssertEqual(XCTWaiter.wait(for: [retainedTag], timeout: 5), .completed)
     XCTAssertEqual(entry.value as? String, "Camping")
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)

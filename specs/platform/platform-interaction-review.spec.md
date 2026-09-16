@@ -431,6 +431,13 @@ continuing keyboard dismissal, Save blocking, disclosure collapse/reopen and dra
 retention checks. Do not weaken those downstream assertions or apply this diagnosis
 to controlled-field cases whose final captures still contain incorrect text.
 
+Run351318's phone collapse assertion similarly precedes the collapsed hierarchy.
+Observe entry removal and collapsed guidance within five seconds, then observe
+the exact retained entry value within five seconds after reopening. Preserve
+Save blocking, staging and clear assertions; do not retry the tap or omit the
+downstream journey. This is bounded observation of asynchronous UI completion,
+not permission to accept a disclosure that fails to finish or loses its draft.
+
 ## Managed search and native action coexistence probe
 
 Phone run351121 retains bottom search in Settings while isolated managed search
