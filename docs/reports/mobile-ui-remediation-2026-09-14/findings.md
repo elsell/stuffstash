@@ -2901,6 +2901,14 @@ Follow-up run350806 passes the production Place/settings journeys. Inspected pho
 Place has header Search, while its preconfigured comparison retains bottom search.
 See native-phone-350806.md; M207 remains open for consistency and shared consumers.
 
+Run35156794515 extends the observed placement failure to the required settings
+collection journey: Add succeeds, then Search tags is a persistent bottom field
+instead of the requested header button. The native adapter still requests
+`integratedButton` and disables toolbar integration. See
+[native phone review](native-phone-351567.md). Source options alone do not establish
+correct native placement; this workflow remains pending release acceptance.
+
+
 ### M208 — Add photo removal remains a small custom overlay
 
 P2 source-confirmed at73ed44fb. Add's28-point overlaid X competed with preview and

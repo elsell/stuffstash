@@ -26,4 +26,23 @@ remain tracked rather than being represented as universally resolved.
 
 Artifact10474460392 (1.68GB) is being retained on paul as
 `/tmp/native351567-full-phone.zip`. Complete local log:
-`/tmp/native351567-full-phone.log`. Selected artifact review is pending.
+`/tmp/native351567-full-phone.log`. Selected artifact review is recorded below.
+
+## Selected artifact review
+
+The [settings capture](evidence/phone-settings-search-351567.png) and
+[hierarchy](evidence/phone-settings-search-351567.txt) show Add in the header but
+Search tags as a persistent bottom field at33,803,336,38. Search is not absent; its
+placement differs from the requested integrated header button. This extends M207
+to this required settings workflow; do not change the test to accept the bottom
+field without resolving the intended product interaction.
+
+The [sharing capture](evidence/phone-sharing-entry-351567.png) visibly confirms the
+reordered email, with the insertion cursor in its middle. The
+[hierarchy](evidence/phone-sharing-entry-351567.txt) agrees with the assertion.
+No typing/provider root cause is established by this screenshot.
+
+The [expiration issue](evidence/expiration-accessibility-351567.txt) again reports
+possible clipping only at larger Dynamic Type sizes, without identifying an
+element. Keep that issue in enlarged-text follow-up, while normal trait/name/target
+acceptance remains required. This is not evidence of a new default-size blocker.

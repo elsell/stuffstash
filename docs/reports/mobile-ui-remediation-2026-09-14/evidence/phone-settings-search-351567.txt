@@ -1,0 +1,91 @@
+Attributes: Application, 0x11e0ccc80, pid: 60686, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11e0ccc80, pid: 60686, label: 'Stuff Stash'
+    Window (Main), 0x11e0ccf00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11e0cd040, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e0cd180, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11e0cd2c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11e0cd400, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11e0cd540, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11e0cf840, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11e0cf980, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11e0cfac0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11e0cfc00, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11e0cfe80, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'audit-customization'
+                          Button, 0x11e0e8000, {{16.0, 62.0}, {90.0, 44.0}}, identifier: 'BackButton', label: 'Back'
+                          StaticText, 0x11e0e8140, {{118.3, 73.7}, {165.0, 20.7}}, label: 'audit-customization'
+                          Button, 0x11e0e8280, {{338.0, 66.0}, {44.0, 36.0}}, label: 'Add Tag'
+                        Other, 0x11e0e83c0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11e0e8500, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11e0e8640, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x11e0e8780, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x11e0e88c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  StaticText, 0x11e0e8a00, {{0.0, 0.0}, {402.0, 17.0}}, label: 'Add tag requested'
+                                    StaticText, 0x11e0e8b40, {{0.0, 0.0}, {402.0, 17.0}}, label: 'Add tag requested'
+                                  Other, 0x11e0e8c80, {{0.0, 17.0}, {402.0, 857.0}}
+                                    ScrollView, 0x11e0e8dc0, {{0.0, 17.0}, {402.0, 857.0}}
+                                      Other, 0x11e0e8f00, {{0.0, 17.0}, {402.0, 857.0}}
+                                        Other, 0x11e0e9040, {{0.0, 17.0}, {402.0, 153.8}}
+                                        Other, 0x11e0e9180, {{0.0, 733.2}, {402.0, 140.8}}
+                                      Other, 0x11e0e92c0, {{0.0, 17.0}, {402.0, 857.0}}
+                                        Other, 0x11e0e9400, {{0.0, 733.2}, {402.0, 140.8}}
+                                          Image, 0x11e0e9540, {{-120.0, 738.0}, {642.0, 272.0}}, identifier: 'AdditionalDimmingOverlay'
+                                          Other, 0x11e0e9680, {{0.0, 733.2}, {402.0, 140.8}}
+                                            Other, 0x11e0e97c0, {{0.0, 733.2}, {402.0, 140.8}}
+                                          Other, 0x11e0e9900, {{0.0, 733.2}, {402.0, 140.8}}
+                                            Other, 0x11e0e9a40, {{0.0, 733.2}, {402.0, 140.8}}
+                                            Other, 0x11e0e9b80, {{0.0, 733.2}, {402.0, 140.8}}
+                                      Other, 0x11e0e9cc0, {{0.0, 115.7}, {402.0, 1207.0}}
+                                        Other, 0x11e0e9e00, {{0.0, 115.7}, {402.0, 1207.0}}
+                                          Other, 0x11e0e9f40, {{16.0, 139.7}, {370.0, 1151.0}}
+                                            Button, 0x11e0ea080, {{16.0, 139.7}, {370.0, 52.0}}, label: 'Garden, No color'
+                                            Button, 0x11e0ea1c0, {{16.0, 192.0}, {370.0, 52.0}}, label: 'Storage 1, No color'
+                                            Button, 0x11e0ea300, {{16.0, 244.3}, {370.0, 52.0}}, label: 'Storage 10, No color'
+                                            Button, 0x11e0ea440, {{16.0, 296.7}, {370.0, 52.0}}, label: 'Storage 11, No color'
+                                            Button, 0x11e0ea580, {{16.0, 349.0}, {370.0, 52.0}}, label: 'Storage 12, No color'
+                                            Button, 0x11e0ea6c0, {{16.0, 401.3}, {370.0, 52.0}}, label: 'Storage 13, No color'
+                                            Button, 0x11e0ea800, {{16.0, 453.7}, {370.0, 52.0}}, label: 'Storage 14, No color'
+                                            Button, 0x11e0ea940, {{16.0, 506.0}, {370.0, 52.0}}, label: 'Storage 15, No color'
+                                            Button, 0x11e0eaa80, {{16.0, 558.3}, {370.0, 52.0}}, label: 'Storage 16, No color'
+                                            Button, 0x11e0eabc0, {{16.0, 610.7}, {370.0, 52.0}}, label: 'Storage 17, No color'
+                                            Button, 0x11e0ead00, {{16.0, 663.0}, {370.0, 52.0}}, label: 'Storage 18, No color'
+                                            Button, 0x11e0eae40, {{16.0, 715.3}, {370.0, 52.0}}, label: 'Storage 19, No color'
+                                            Button, 0x11e0eaf80, {{16.0, 767.7}, {370.0, 52.0}}, label: 'Storage 2, No color'
+                                            Button, 0x11e0eb0c0, {{16.0, 820.0}, {370.0, 52.0}}, label: 'Storage 20, No color'
+                                            Button, 0x11e0eb200, {{16.0, 872.3}, {370.0, 52.0}}, label: 'Storage 3, No color'
+                                            Button, 0x11e0eb340, {{16.0, 924.7}, {370.0, 52.0}}, label: 'Storage 4, No color'
+                                            Button, 0x11e0eb480, {{16.0, 977.0}, {370.0, 52.0}}, label: 'Storage 5, No color'
+                                            Button, 0x11e0eb5c0, {{16.0, 1029.3}, {370.0, 52.0}}, label: 'Storage 6, No color'
+                                            Button, 0x11e0eb700, {{16.0, 1081.7}, {370.0, 52.0}}, label: 'Storage 7, No color'
+                                            Button, 0x11e0eb840, {{16.0, 1134.0}, {370.0, 52.0}}, label: 'Storage 8, No color'
+                                            Button, 0x11e0eb980, {{16.0, 1186.3}, {370.0, 52.0}}, label: 'Storage 9, No color'
+                                            Button, 0x11e0ebac0, {{16.0, 1238.7}, {370.0, 52.0}}, label: 'Tools, No color'
+                                      Other, 0x11e0ebc00, {{369.0, 116.0}, {30.0, 672.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                        Other, 0x11e0ebd40, {{396.0, 119.0}, {3.0, 410.0}}
+                                      Other, 0x11e0ebe80, {{62.0, 755.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11e100000, {{65.0, 782.0}, {272.0, 3.0}}
+                                      Other, 0x11e100140, {{369.0, 116.0}, {30.0, 672.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                        Other, 0x11e100280, {{396.0, 119.0}, {3.0, 410.0}}
+                                      Other, 0x11e1003c0, {{62.0, 755.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11e100500, {{65.0, 782.0}, {272.0, 3.0}}
+                        Other, 0x11e100640, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11e100780, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11e1008c0, {{0.0, 788.0}, {402.0, 86.0}}
+                              Other, 0x11e100a00, {{28.0, 798.0}, {346.0, 48.0}}
+                                Other, 0x11e100b40, {{28.0, 798.0}, {346.0, 48.0}}
+                                  Other, 0x11e100c80, {{28.0, 798.0}, {0.0, 0.0}}
+                                    Other, 0x11e100dc0, {{28.0, 798.0}, {346.0, 48.0}}
+                                      Other, 0x11e100f00, {{28.0, 798.0}, {346.0, 48.0}}
+                                        Other, 0x11e101040, {{33.0, 803.0}, {336.0, 38.0}}
+                                          SearchField, 0x11e101180, {{33.0, 803.0}, {336.0, 38.0}}, label: 'Search tags', placeholderValue: 'Search tags'
+                                            Image, 0x11e1012c0, {{46.0, 812.0}, {20.7, 19.3}}, identifier: 'magnifyingglass', label: 'Search'
+    Window, 0x11e101400, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11e101540, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e101680, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11e0ccc80, pid: 60686, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11e1017c0, pid: 60686, label: 'Stuff Stash'
+  }

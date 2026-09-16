@@ -1,0 +1,140 @@
+Attributes: Application, 0x11e15bac0, pid: 65131, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11e15bac0, pid: 65131, label: 'Stuff Stash'
+    Window (Main), 0x11e159f40, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11e159180, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e1592c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11e159400, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11e15b980, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11e15b840, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11e15b700, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11e159a40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11e159900, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11e1597c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11e159680, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Sharing'
+                          Button, 0x11e159540, {{16.0, 62.0}, {90.0, 44.0}}, identifier: 'BackButton', label: 'Back'
+                          StaticText, 0x11e153e80, {{169.3, 73.7}, {63.3, 20.7}}, label: 'Sharing'
+                        Other, 0x11e153d40, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11e153c00, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11e153ac0, {{0.0, 116.0}, {402.0, 758.0}}
+                              Other, 0x11e153340, {{0.0, 116.0}, {402.0, 758.0}}
+                                Other, 0x11e14f700, {{0.0, 116.0}, {402.0, 758.0}}
+                                  Other, 0x11e14f0c0, {{0.0, 116.0}, {402.0, 758.0}}
+                                    ScrollView, 0x11e14f200, {{0.0, 116.0}, {402.0, 758.0}}
+                                      Other, 0x11e14f340, {{0.0, 116.0}, {402.0, 539.0}}
+                                        Other, 0x11e14cc80, {{0.0, 116.0}, {402.0, 539.0}}
+                                          StaticText, 0x11e14c000, {{16.0, 140.0}, {370.0, 28.7}}, label: 'Share Audit inventory'
+                                            StaticText, 0x11e14c140, {{16.0, 140.0}, {370.0, 28.7}}, label: 'Share Audit inventory'
+                                          StaticText, 0x11e14c280, {{16.0, 174.7}, {370.0, 21.0}}, label: 'Invite someone by email as a viewer or editor.'
+                                            StaticText, 0x11e14c3c0, {{16.0, 174.7}, {370.0, 21.0}}, label: 'Invite someone by email as a viewer or editor.'
+                                          StaticText, 0x11e14c500, {{16.0, 219.7}, {370.0, 15.7}}, label: 'NEW INVITATION'
+                                            StaticText, 0x11e14ef80, {{16.0, 219.7}, {370.0, 15.7}}, label: 'NEW INVITATION'
+                                          Other, 0x11e14f840, {{16.0, 241.3}, {370.0, 226.0}}
+                                            StaticText, 0x11e14f980, {{32.0, 257.3}, {338.0, 15.7}}, label: 'Email'
+                                              StaticText, 0x11e14fac0, {{32.0, 257.3}, {338.0, 15.7}}, label: 'Email'
+                                            Other, 0x11e14fc00, {{32.0, 283.0}, {338.0, 48.0}}
+                                              TextField, 0x11e14fd40, {{32.3, 283.3}, {337.3, 47.3}}, label: 'Invitee email', placeholderValue: 'friend@example.com', value: aexample.invalidud..., Keyboard Focused
+                                            Other, 0x11e14fe80, {{48.0, 344.3}, {306.0, 48.0}}
+                                              Other, 0x11e14ed00, {{48.0, 344.3}, {306.0, 48.0}}
+                                                Other, 0x11e14ee40, {{48.0, 344.3}, {306.0, 48.0}}
+                                                  StaticText, 0x11e110000, {{48.0, 358.2}, {55.0, 20.3}}, label: 'Access'
+                                                  Button, 0x11e110140, {{261.7, 351.3}, {92.3, 34.3}}, label: 'Access, Choose invitation access'
+                                                    StaticText, 0x11e110280, {{273.3, 358.3}, {52.0, 20.3}}, label: 'Viewer'
+                                            Other, 0x11e1103c0, {{32.0, 405.3}, {338.0, 48.0}}
+                                              Other, 0x11e110500, {{32.0, 405.3}, {338.0, 48.0}}
+                                                Other, 0x11e110640, {{32.0, 405.3}, {338.0, 48.0}}
+                                                  Button, 0x11e110780, {{32.0, 406.3}, {338.0, 46.0}}, label: 'Create Invitation'
+                                          StaticText, 0x11e1108c0, {{16.0, 491.3}, {370.0, 15.7}}, label: 'INVITATIONS'
+                                            StaticText, 0x11e110a00, {{16.0, 491.3}, {370.0, 15.7}}, label: 'INVITATIONS'
+                                          Other, 0x11e110b40, {{16.0, 513.0}, {370.0, 68.0}}
+                                            StaticText, 0x11e110c80, {{32.0, 537.3}, {338.0, 19.3}}, label: 'No invitations yet.'
+                                              StaticText, 0x11e110dc0, {{32.0, 537.3}, {338.0, 19.3}}, label: 'No invitations yet.'
+                                          StaticText, 0x11e110f00, {{16.0, 587.0}, {370.0, 36.0}}, label: 'Invitation links are shown only when created. Existing invitations never reveal their links again.'
+                                            StaticText, 0x11e111040, {{16.0, 587.0}, {370.0, 36.0}}, label: 'Invitation links are shown only when created. Existing invitations never reveal their links again.'
+                                      Other, 0x11e111180, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11e1112c0, {{396.0, 366.0}, {3.0, 443.0}}
+                                      Other, 0x11e111400, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11e111540, {{65.0, 868.0}, {272.0, 3.0}}
+                                      Other, 0x11e111680, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11e1117c0, {{396.0, 366.0}, {3.0, 443.0}}
+                                      Other, 0x11e111900, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11e111a40, {{65.0, 868.0}, {272.0, 3.0}}
+                        Other, 0x11e111b80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11e111cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11e111e00, {{0.0, 830.0}, {402.0, 44.0}}, identifier: 'app-keyboard-accessory-host'
+                    Other, 0x11e111f40, {{0.0, 830.0}, {402.0, 44.0}}
+    Window, 0x11e112080, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11e1121c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e112300, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e112440, {{0.0, 522.0}, {402.0, 352.0}}
+          Other, 0x11e112580, {{0.0, 522.0}, {402.0, 44.0}}
+            Other, 0x11e1126c0, {{20.0, 512.0}, {362.0, 44.0}}
+              Other, 0x11e112800, {{0.0, 512.0}, {402.0, 44.0}}
+                Button, 0x11e112940, {{338.0, 512.0}, {44.0, 44.0}}, label: 'Dismiss keyboard'
+            Other, 0x11e112a80, {{0.0, 522.0}, {201.0, 44.0}}
+            Other, 0x11e112bc0, {{201.0, 522.0}, {201.0, 44.0}}
+          Other, 0x11e112d00, {{0.0, 566.0}, {402.0, 308.0}}, identifier: 'inputView'
+    Window, 0x11e112e40, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11e112f80, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11e1130c0, {{0.0, 522.0}, {402.0, 352.0}}
+          Other, 0x11e113200, {{0.0, 522.0}, {402.0, 44.0}}
+          Other, 0x11e113340, {{0.0, 566.0}, {402.0, 308.0}}
+            Other, 0x11e113480, {{0.0, 566.0}, {402.0, 308.0}}
+              Other, 0x11e1135c0, {{0.0, 566.0}, {402.0, 308.0}}
+          Other, 0x11e113700, {{0.0, 583.0}, {402.0, 233.0}}
+            Keyboard, 0x11e113840, {{0.0, 583.0}, {402.0, 233.0}}
+              Other, 0x11e113980, {{0.0, 583.0}, {402.0, 233.0}}
+                Other, 0x11e113ac0, {{0.0, 583.0}, {402.0, 233.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x11e113c00, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x11e113d40, {{4.7, 590.0}, {39.3, 54.0}}, label: 'q'
+                  Key, 0x11e113e80, {{44.0, 590.0}, {39.7, 54.0}}, label: 'w'
+                  Key, 0x11e130000, {{83.7, 590.0}, {39.3, 54.0}}, label: 'e'
+                  Key, 0x11e130140, {{123.0, 590.0}, {39.7, 54.0}}, label: 'r'
+                  Key, 0x11e130280, {{162.7, 590.0}, {39.3, 54.0}}, label: 't'
+                  Key, 0x11e1303c0, {{202.0, 590.0}, {39.7, 54.0}}, label: 'y'
+                  Key, 0x11e130500, {{241.7, 590.0}, {39.3, 54.0}}, label: 'u'
+                  Key, 0x11e130640, {{281.0, 590.0}, {39.7, 54.0}}, label: 'i'
+                  Key, 0x11e130780, {{320.7, 590.0}, {39.3, 54.0}}, label: 'o'
+                  Key, 0x11e1308c0, {{360.0, 590.0}, {39.7, 54.0}}, label: 'p'
+                  Key, 0x11e130a00, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x11e130b40, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x11e130c80, {{24.3, 644.0}, {39.3, 54.0}}, label: 'a'
+                  Key, 0x11e130dc0, {{63.7, 644.0}, {39.7, 54.0}}, label: 's'
+                  Key, 0x11e130f00, {{103.3, 644.0}, {39.3, 54.0}}, label: 'd'
+                  Key, 0x11e131040, {{142.7, 644.0}, {39.7, 54.0}}, label: 'f'
+                  Key, 0x11e131180, {{182.3, 644.0}, {39.3, 54.0}}, label: 'g'
+                  Key, 0x11e1312c0, {{221.7, 644.0}, {39.7, 54.0}}, label: 'h'
+                  Key, 0x11e131400, {{261.3, 644.0}, {39.3, 54.0}}, label: 'j'
+                  Key, 0x11e131540, {{300.7, 644.0}, {39.7, 54.0}}, label: 'k'
+                  Key, 0x11e131680, {{340.3, 644.0}, {39.3, 54.0}}, label: 'l'
+                  Key, 0x11e1317c0, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Button, 0x11e131900, {{4.7, 698.0}, {51.3, 54.0}}, identifier: 'shift', label: 'shift'
+                  Key, 0x11e131a40, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x11e131b80, {{63.7, 698.0}, {39.7, 54.0}}, label: 'z'
+                  Key, 0x11e131cc0, {{103.3, 698.0}, {39.3, 54.0}}, label: 'x'
+                  Key, 0x11e131e00, {{142.7, 698.0}, {39.7, 54.0}}, label: 'c'
+                  Key, 0x11e131f40, {{182.3, 698.0}, {39.3, 54.0}}, label: 'v'
+                  Key, 0x11e132080, {{221.7, 698.0}, {39.7, 54.0}}, label: 'b'
+                  Key, 0x11e1321c0, {{261.3, 698.0}, {39.3, 54.0}}, label: 'n'
+                  Key, 0x11e132300, {{300.7, 698.0}, {39.7, 54.0}}, label: 'm'
+                  Key, 0x11e132440, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x11e132580, {{348.0, 698.0}, {51.7, 54.0}}, identifier: 'delete', label: 'delete'
+                  Key, 0x11e1326c0, {{4.7, 752.0}, {98.7, 54.0}}, identifier: 'more', label: 'numbers'
+                  Key, 0x11e132800, {{103.3, 752.0}, {98.7, 54.0}}, identifier: 'space', label: ' '
+                  Key, 0x11e132940, {{202.0, 752.0}, {49.3, 54.0}}, label: '@'
+                  Key, 0x11e132a80, {{251.3, 752.0}, {49.3, 54.0}}, label: '.'
+                  Button, 0x11e132bc0, {{300.7, 752.0}, {99.0, 54.0}}, identifier: 'Return', label: 'return'
+          Other, 0x11e132d00, {{0.0, 583.0}, {402.0, 291.0}}
+            Button, 0x11e132e40, {{8.5, 805.7}, {68.1, 68.7}}, label: 'Emoji'
+              StaticText, 0x11e132f80, {{8.5, 805.7}, {0.0, 0.0}}
+            Button, 0x11e1330c0, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x11e133200, {{325.4, 805.4}, {0.0, 0.0}}
+            Button, 0x11e133340, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x11e133480, {{325.4, 805.4}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x11e15bac0, pid: 65131, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11e1335c0, pid: 65131, label: 'Stuff Stash'
+  }

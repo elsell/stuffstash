@@ -1,0 +1,3 @@
+Text clipped
+Text of this element may be clipped at larger Dynamic Type sizes.
+XCTest did not identify an element
