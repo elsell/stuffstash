@@ -348,3 +348,12 @@ settings and retain choosing a library photo as an alternative. Do not launch
 Settings or the camera automatically. Recheck permission on the next explicit
 camera attempt; a prior denial must not permanently disable capture. Preserve
 draft photos and the current task while displaying the existing failure UI.
+
+## Mobile photo acquisition failure ownership
+
+Photo picker and upload exception notices belong to the focused asset visit that
+started acquisition. A retained Details route must not publish that failure over
+another route or a later visit. Keep already-started command completion, current
+asset photo results and failed-photo retry state intact, and always release its
+pending lock. Current-visit failures retain their safe notice and permit a fresh
+attempt. Cover both picker rejection and upload rejection across blur/refocus.

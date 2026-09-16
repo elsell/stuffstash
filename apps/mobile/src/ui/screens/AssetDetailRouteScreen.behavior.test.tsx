@@ -298,6 +298,48 @@ it('rejects duplicate source callbacks and hides old upload failures after chang
 });
 
 
+it.each(['picker', 'upload'] as const)('owns %s failure notices by the starting visit', async stage => {
+  for (const visit of ['current', 'departed', 'returned']) {
+    const failure = deferred<never>();
+    let selections = 0; let uploads = 0;
+    const test = setup({
+      photoSelectionQuery: new PhotoSelectionQuery({
+        selectFromLibrary: async () => {
+          selections++;
+          if (stage === 'picker' && selections === 1) return failure.promise;
+          return [selectedPhoto];
+        }, captureFromCamera: async () => []
+      }),
+      addAssetPhotosCommand: { execute: async () => {
+        uploads++;
+        if (stage === 'upload' && uploads === 1) return failure.promise;
+        return { attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'Fresh photo added', canRetry: false };
+      } }
+    });
+    try {
+      setScreenFocused(true);
+      test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.run(() => latestActionSheetCallback()?.(1));
+      await settle(test.harness);
+      if (visit !== 'current') await test.harness.run(() => setScreenFocused(false));
+      if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
+      await test.harness.run(() => failure.reject(new Error('Acquisition failed')));
+      await settle(test.harness);
+      expect(Boolean(test.harness.byText('Could not add photos'))).toBe(visit === 'current');
+      expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+      await test.harness.run(() => setScreenFocused(true));
+      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.run(() => latestActionSheetCallback()?.(1));
+      await settle(test.harness);
+      expect(selections).toBe(2);
+      expect(uploads).toBe(stage === 'picker' ? 1 : 2);
+      expect(test.harness.allText()).toContain('Fresh photo added');
+    } finally { await test.harness.unmount(); test.client.clear(); setScreenFocused(true); }
+  }
+});
+
 it('keeps the new asset upload pending when the previous upload finishes', async () => {
   type UploadResult = Awaited<ReturnType<React.ComponentProps<typeof AssetDetailRouteScreen>['addAssetPhotosCommand']['execute']>>;
   const oldUpload = deferred<UploadResult>(); const newUpload = deferred<UploadResult>();

@@ -81,8 +81,12 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise846
-pending,1,857 source-reviewed,489 finding,23 runtime-partial and193 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise804
+pending,1,899 source-reviewed,489 finding,23 runtime-partial and193 not-applicable.
+
+Both [Details routes](asset-detail-route-axis.md) now have a shared24-axis source
+review and112 passing related checks. M195 fixes late picker/upload exception
+notices crossing navigation visits; native focus and placement remain pending.
 
 [Invitation link intake](invitation-link-axis.md) now covers S131 across all24
 axes, with64 remote checks. Physical cold/warm handoff remains pending. Sharing's

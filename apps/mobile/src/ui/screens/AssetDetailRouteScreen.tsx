@@ -263,6 +263,7 @@ export function AssetDetailRouteScreen({
     failureTitle: string
   ): Promise<void> {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setPendingAction('photos');
@@ -284,7 +285,7 @@ export function AssetDetailRouteScreen({
       await assetPhotos.reconcile();
       if (scope.active && result.failedCount === 0) setPhotoUploads([]);
     } catch (error) {
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: failureTitle,

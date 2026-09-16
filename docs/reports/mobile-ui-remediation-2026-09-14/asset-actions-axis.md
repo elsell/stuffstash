@@ -1,5 +1,11 @@
 # Asset command review
 
+Current follow-up: availability and maintenance now use NativeCommandButton;
+the custom-Pressable note below describes the earlier checkpoint. The shared
+[Details route review](asset-detail-route-axis.md) covers R012/R020 across all24
+axes and records M195 photo acquisition failure ownership. Native acceptance
+remains open.
+
 Scope: S095 overflow, S096 checkout, S097 return, S098 archive/restore/delete.
 Reviewed source at7fcb38cb with the M86 candidate applied. This is source evidence,
 not a native interaction pass.

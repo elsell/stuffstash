@@ -2730,3 +2730,15 @@ P2 runtime-observed in the same Sharing capture: native button bounds are
 now owns a 44-point frame and rectangular content shape. Sharing and Asset
 overflow are affected; label and sort-icon variants remain unchanged. Native
 bounds and menu interaction assertions must pass before closing this finding.
+
+### M195 — Photo acquisition errors outlive their Details visit
+
+P2 source/mounted confirmed at fa504041. Picker and upload exceptions could
+publish a global failure notice while Details remained mounted behind another
+route or after returning to a new visit. Both rejection cases failed first.
+The candidate gates only the exception notice with the existing focused-visit
+predicate; results, failed-photo state, reconciliation and pending cleanup are
+preserved. Current failure plus fresh retry remain covered. All112 related
+Details checks, TypeScript and structural validation pass remotely. Critic found
+no blocker. Native picker navigation focus and notice placement remain pending;
+the guard is not an AppState/background policy.
