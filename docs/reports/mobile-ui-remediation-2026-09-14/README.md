@@ -81,8 +81,13 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise804
-pending,1,899 source-reviewed,489 finding,23 runtime-partial and193 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise724
+pending,1,974 source-reviewed,489 finding,23 runtime-partial and198 not-applicable.
+
+The [Move route review](move-route-axis.md) covers both routes, selection and
+creation across24 axes. M196 makes creation a native command;82 related checks
+and static validation pass. The preceding bba8c1e3 full suite passed1,815 tests
+across284 files remotely; native acceptance remains incomplete.
 
 Both [Details routes](asset-detail-route-axis.md) now have a shared24-axis source
 review and112 passing related checks. M195 fixes late picker/upload exception

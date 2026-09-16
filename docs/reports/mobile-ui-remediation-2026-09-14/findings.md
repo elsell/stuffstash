@@ -2742,3 +2742,14 @@ preserved. Current failure plus fresh retry remain covered. All112 related
 Details checks, TypeScript and structural validation pass remotely. Critic found
 no blocker. Native picker navigation focus and notice placement remain pending;
 the guard is not an AppState/background policy.
+
+### M196 — Move destination creation uses a custom selection-like row
+
+P2 source-confirmed at bba8c1e3. Creating a destination is a command, but its
+custom Pressable looked like the surrounding parent rows and combined action/help
+text. It now uses NativeCommandButton with a complete action label and separate
+help explaining automatic selection. Existing creation/move locking remains.
+Three named-command cases failed before implementation; all82 related checks,
+TypeScript and structural validation pass remotely. Critic found no blocker.
+Native long-label wrapping, disabled appearance and keyboard reachability remain
+pending. This does not migrate parent selection rows or change creation semantics.

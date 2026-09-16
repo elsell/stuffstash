@@ -1,5 +1,9 @@
 # Move surfaces: source review
 
+The [current five-surface review](move-route-axis.md) supersedes historical layout
+and custom-footer observations below. M196 migrates the remaining inline creation
+command. Native layout, keyboard and interaction acceptance remains pending.
+
 Scope: S134 destination search/selection, S135 destination creation, S136 Move
 here search/selection. Source at3df1d610. This is a source review, not native
 acceptance. Follow the platform-interaction decision framework; large/searchable

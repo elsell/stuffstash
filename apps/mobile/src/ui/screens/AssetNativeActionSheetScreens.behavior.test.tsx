@@ -156,10 +156,12 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await settle(h); await settle(h);
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
-    const create = h.byText('Create location "New box"')?.parent;
+    const create = h.byLabel('Create location "New box"');
+    expect(create).toBeDefined();
     const move = h.byLabel('Move');
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
+    expect(h.byLabel('Create location "New box"')?.props.disabled).toBe(true);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.allByType('TextInput')[0], 'Changed');

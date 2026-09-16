@@ -356,16 +356,9 @@ export function MoveAssetSheet({
             <Text style={styles.createPlacementText}>
               {moveDestinationCreatePlacementLabel(createPlacement)}
             </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: isSaving }}
-              disabled={isSaving}
-              onPress={onCreateDestination}
-              style={[styles.parentCreateRow, isSaving ? styles.disabledAction : null]}
-            >
-              <Text style={styles.parentTitle}>{moveDestinationCreateButtonLabel(createKind, createTitle)}</Text>
-              <Text style={styles.parentSubtitle}>Then select it as the destination</Text>
-            </Pressable>
+            <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
+              disabled={isSaving} onPress={onCreateDestination} />
+            <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
           </View>
         ) : null}
         <ParentRow
@@ -719,11 +712,6 @@ function createStyles(colors: MobileColorPalette) {
   },
   parentRowSelected: {
     backgroundColor: colors.selected
-  },
-  parentCreateRow: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md
   },
   parentEmptyState: {
     backgroundColor: colors.surfaceMuted,
