@@ -224,3 +224,14 @@ remove the final photo and assert automatic return to Add with its empty photo
 chooser. Dismiss Add to the audit root without saving. Run it in both the complete
 fixture suite and the focused Add-draft suite; recording the scenario is not a
 native pass.
+
+Full-screen photo viewing must allow a single tap to reveal or hide commands
+without resetting the image's zoom/pan. Keep double-tap zoom distinct from single
+tap, cancel delayed tap work on unmount or image change, and preserve platform
+system dismissal. This adopts the Photos interaction documented in Apple's iOS26
+user guide (https://support.apple.com/en-sg/guide/iphone/iph3d267610/26/ios/26);
+retaining zoom while revealing commands is a project usability requirement, not
+a quoted HIG rule. Acceptance covers both asset and Add previews: zoom, reveal
+commands, close without changing draft/media, double-tap without an extra toggle,
+and image-change/unmount without delayed effects. Native verification must cover
+iOS and Android separately.

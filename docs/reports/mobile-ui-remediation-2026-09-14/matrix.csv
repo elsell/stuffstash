@@ -2386,7 +2386,7 @@ S100,Asset / full screen viewer,appearance,"Light/dark, contrast and materials",
 S100,Asset / full screen viewer,localization,"Locale, timezone, RTL and long strings",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,imagery,"Icons, photos and missing media",source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
 S100,Asset / full screen viewer,targets,Touch target size and reachability,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
-S100,Asset / full screen viewer,gestures,Gestures and explicit alternatives,source-reviewed,photo-viewer-axis.md source review at82669f4b; native acceptance pending,
+S100,Asset / full screen viewer,gestures,Gestures and explicit alternatives,finding,M234 Android zoom hides commands until zoom reset; shared source confirms no single-tap reveal; iOS pending,M234
 S100,Asset / full screen viewer,keyboard,"Keyboard, text entry and focus",source-reviewed,; photo-viewer-axis.md current source follow-up; native acceptance pending,
 S100,Asset / full screen viewer,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"Viewer commands have accessible names, button roles and disabled states; image announcements/focus order pending.",
 S100,Asset / full screen viewer,motion,Reduced motion and feedback alternatives,finding,M84: pinned viewer dependency gap; photo-viewer-axis.md; repair/runtime pending,M84

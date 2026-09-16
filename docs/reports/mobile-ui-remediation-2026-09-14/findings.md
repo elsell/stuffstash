@@ -3136,3 +3136,20 @@ and suppresses the default header in favor of the existing safe-area footer Clos
 Both asset and draft-photo consumers retain their removal, paging and dismissal
 behavior. Android rebuilt unavailable-photo Retry/Close passes; iOS/zoom/assistive coverage remains
 open. Evidence: photo-viewer-axis.md.
+
+### M234 — Photo commands cannot be revealed without resetting zoom
+
+P2, Android runtime and shared dependency source confirmed. On5660fb54, a double
+tap enlarges the Add draft image and hides commands; a single tap does nothing.
+Only resetting zoom restores the footer. Android system Back exits with both
+photos retained, so this is command discoverability/access, not a proven trap.
+`react-native-image-viewing/dist/ImageViewing.js` calls
+`toggleBarsVisible(!isScaled)` in `onZoom`; both platform gesture adapters lack a
+single-tap control toggle. Native iOS behavior remains unverified.
+
+Apple's [Photos iOS26 guide](https://support.apple.com/en-sg/guide/iphone/iph3d267610/26/ios/26)
+describes single-tap hide/show. Preserve zoom while revealing commands as a
+project interaction requirement. Separate the command-visibility state from zoom,
+keep double-tap zoom and platform dismissal, and test delayed single-tap cleanup.
+Repair and acceptance remain open; screenshots and observed escape evidence are
+in photo-viewer-axis.md.
