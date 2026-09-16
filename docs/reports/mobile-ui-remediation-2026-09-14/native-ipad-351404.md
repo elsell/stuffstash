@@ -33,3 +33,8 @@ Normal-size work retains priority. This remains a failed full native release gat
 Follow-up at a01fc760: focused text-entry run35148050909 and full
 run35148054814 are active/queued. They preserve exact text acceptance and add
 reliable diagnostic-command delivery. No application text-entry change is claimed.
+
+Storage update (September 16): the downloaded full fixture ZIP copies for runs
+35131892834 and35140471580 were removed from paul to recover temporary space.
+GitHub confirms the original artifacts remain unexpired through September 30.
+Retained selected captures, hierarchies and logs are unchanged.

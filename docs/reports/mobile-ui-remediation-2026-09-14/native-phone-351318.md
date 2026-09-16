@@ -67,3 +67,8 @@ Log: `/tmp/native351318-phone-complete.log` locally. Artifact10463884462 is
 Selected PNG/text attachments and manifest are under `/tmp/phone351318-selected`
 on both hosts. No complete archive was downloaded locally. The iPad job was not
 cancelled or restarted, and the later trace candidate remains queued.
+
+Storage update (September 16): the downloaded full fixture ZIP copies for runs
+35131892834 and35140471580 were removed from paul to recover temporary space.
+GitHub confirms the original artifacts remain unexpired through September 30.
+Retained selected captures, hierarchies and logs are unchanged.

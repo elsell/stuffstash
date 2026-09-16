@@ -50,3 +50,8 @@ Complete logs are `/tmp/native351404-phone-complete.log` and
 retain result bundles. Small selected raw Home attachments remain under
 `/tmp/home351404-phone` and `/tmp/home351404-ipad` on both hosts; the four captures
 above are retained in the repository without copying the large result archives.
+
+Storage update (September 16): the downloaded full fixture ZIP copies for runs
+35131892834 and35140471580 were removed from paul to recover temporary space.
+GitHub confirms the original artifacts remain unexpired through September 30.
+Retained selected captures, hierarchies and logs are unchanged.

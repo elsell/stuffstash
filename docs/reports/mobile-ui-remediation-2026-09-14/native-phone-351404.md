@@ -50,3 +50,8 @@ Code critic found no blocker in the tap/capture correction. The focused text-ent
 selection also includes the four existing address comparisons so the next diagnostic
 run can collect both address and name traces. A focused pass cannot clear the full
 native release gate.
+
+Storage update (September 16): the downloaded full fixture ZIP copies for runs
+35131892834 and35140471580 were removed from paul to recover temporary space.
+GitHub confirms the original artifacts remain unexpired through September 30.
+Retained selected captures, hierarchies and logs are unchanged.
