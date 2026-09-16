@@ -89,6 +89,22 @@ Do not mark global lifecycle axes N/A merely because their content is read-only.
 
 ## Follow-up review at 570b804c
 
+Current follow-up at8599d4b3 covers R024/R026 across every axis below. Re-read both
+route wrappers, AccountSettingsScreen/ConnectionSettingsScreen and confirmation
+ownership helpers. The historical custom-command observations below are superseded:
+Sign Out and Change Server now use NativeCommandButton. Native route Back remains
+available; neither task needs a value-selection menu or a draft editor. Both
+commands explain their effect in a native confirmation with Cancel, reject reused
+or departed acceptance, and prevent duplicate execution while working. Failure
+restores command availability and only reports in its originating visit.
+
+Account continues to offer sign-out independently of inventory availability;
+Connection reads the injected server diagnostics without a network prerequisite.
+The displayed values remain read-only and selectable. These routes add no media,
+notification, search or editable-selection task. Current source establishes no
+new defect. The table's native layout, long-value, focus, contrast and lifecycle
+gaps remain; the full1,849-test checkpoint is not native session-transition proof.
+
 
 R024/R026, source570b804c plus M141. Inspected route wiring, both screens,
 SettingsQuery, SettingsList, SettingsRefreshNotice and shared styles. This is a

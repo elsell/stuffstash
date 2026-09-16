@@ -100,8 +100,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise148
-pending,2,516 source-reviewed,521 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise80
+pending,2,584 source-reviewed,521 finding,25 runtime-partial and198 not-applicable.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is
