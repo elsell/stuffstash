@@ -11,10 +11,12 @@ alternatives. It does not automatically open Settings or resume capture. A direc
 Settings shortcut for these two workflows remains a usability recommendation;
 this change provides guidance through their existing error surfaces.
 
-M191 is still open: NotificationSettingsScreen discards both Linking.openSettings
+M191 candidate corrects NotificationSettingsScreen discarding both Linking.openSettings
 promises without handling failure. The [React Native API](https://reactnative.dev/docs/linking#opensettings)
 returns a promise; source review establishes missing rejection handling, not an
-observed OS failure. Add safe current-visit fallback/retry and controlled tests.
+observed OS failure. Safe current-visit fallback/retry now passes controlled tests,
+including newer-launch isolation. Ten related checks and static validation pass
+on paul (`/tmp/settings-launch-reviewed.log`); critic found no blocker.
 Apple's [privacy guidance](https://developer.apple.com/design/human-interface-guidelines/privacy)
 returned a JavaScript shell during this pass; no unavailable text is quoted.
 
@@ -38,7 +40,7 @@ returned a JavaScript shell during this pass; no unavailable text is quoted.
 | Content | Camera/mic reasons now include correction and alternatives. Notification outcome describes setup attempt, not live permission truth. |
 | Search | N/A: permission recovery is not discovery/search. |
 | Loading | Notification setup is guarded as pending; voice startup supports cancellation before capture. Camera system prompt lifetime still needs physical testing. |
-| Recovery | Denial does not launch camera/start audio. Later explicit attempt rechecks permission. M191 still lacks Settings-opening failure recovery. |
+| Recovery | Denial does not launch camera/start audio. Later explicit attempt rechecks permission. M191 supplies Settings-opening failure recovery; physical acceptance remains pending. |
 | Editing | Photo and conversation tasks retain their existing drafts/state; no new clearing on denial. Adapter tests do not prove every mounted draft consumer. |
 | Privacy | Library avoids broad authorization; camera/audio gate capture on granted. OS restrictions, revocation and limited access need physical evidence. |
 | Notifications | Permission and inventory push preference are distinct. Background reconciliation reads status; explicit setup requests consent. |

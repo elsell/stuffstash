@@ -54,6 +54,14 @@ export function SectionList(props: Record<string, unknown>) {
     props.ListFooterComponent as ReactNode);
 }
 const appStateListeners = new Set<(state: string) => void>();
+export const deviceSettingsFake = {
+  attempts: 0,
+  completion: undefined as Promise<void> | undefined,
+  reset() { this.attempts = 0; this.completion = undefined; }
+};
+export const Linking = {
+  async openSettings() { deviceSettingsFake.attempts++; await deviceSettingsFake.completion; }
+};
 export const AppState = {
   currentState: 'active',
   addEventListener(_event: string, callback: (state: string) => void) {
@@ -164,6 +172,7 @@ export const Animated = { ValueXY: AnimatedValueXY, Value: AnimatedValue, View: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  deviceSettingsFake.reset();
   scrollCommands.length = 0;
   imageSizeRequests.length = 0;
   reducedMotionSnapshot = undefined;

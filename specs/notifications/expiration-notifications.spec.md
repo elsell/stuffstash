@@ -455,3 +455,10 @@ Invalidate feedback ownership on navigation departure and backgrounding so a del
 setup result cannot restore stale feedback. Allow setup persistence to complete.
 Transient inactive states, including the native permission prompt, retain the
 attempt's feedback ownership so granting or denying permission can show its result.
+## Device Settings launch recovery
+
+Explicit device-Settings commands must handle native launch rejection with safe
+manual guidance and a retry. Do not expose native exception text or change push
+preferences. Prevent duplicate launches while pending. Retire pending presentation
+on blur or background; a late failure must not appear on a new visit or clear a
+newer attempt's busy state. Successful launch does not prove permission was granted.

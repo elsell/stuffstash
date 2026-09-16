@@ -28,17 +28,35 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [pushOutcome, setPushOutcome] = useState<'enabled' | 'denied'>();
+  const [openingSettings, setOpeningSettings] = useState(false);
+  const [settingsError, setSettingsError] = useState('');
+  const settingsLaunch = useRef<object | undefined>(undefined);
   const pushMessage = pushOutcome === 'enabled' ? 'Device setup completed.' : pushOutcome === 'denied' ? 'Allow notifications for Stuff Stash in your device settings, then try again.' : '';
   const pending = useRef(false); const mounted = useRef(true);
   const feedbackGeneration = useRef(0);
   const controller = useRef<AbortController | null>(null);
   useFocusEffect(useCallback(() => {
-    mounted.current = true; feedbackGeneration.current += 1; setPushOutcome(undefined); void load();
+    mounted.current = true; feedbackGeneration.current += 1; setPushOutcome(undefined);
+    settingsLaunch.current = undefined; setOpeningSettings(false); setSettingsError(''); void load();
     const appState = AppState.addEventListener('change', state => {
-      if (state === 'background') { feedbackGeneration.current += 1; setPushOutcome(undefined); }
+      if (state === 'background') { feedbackGeneration.current += 1; setPushOutcome(undefined); settingsLaunch.current = undefined; setOpeningSettings(false); setSettingsError(''); }
     });
-    return () => { appState.remove(); feedbackGeneration.current += 1; mounted.current = false; controller.current?.abort(); controller.current = null; pending.current = false; };
+    return () => { appState.remove(); feedbackGeneration.current += 1; mounted.current = false; settingsLaunch.current = undefined; controller.current?.abort(); controller.current = null; pending.current = false; };
   }, [session, tenantId, inventoryId]));
+  async function openDeviceSettings() {
+    if (!mounted.current || settingsLaunch.current) return;
+    const launch = {}; settingsLaunch.current = launch;
+    const generation = feedbackGeneration.current;
+    setOpeningSettings(true); setSettingsError('');
+    try { await Linking.openSettings(); }
+    catch {
+      if (mounted.current && settingsLaunch.current === launch && feedbackGeneration.current === generation) {
+        setSettingsError('Device settings could not be opened. Open Settings on your device and choose Stuff Stash to change notification access, or try again.');
+      }
+    } finally {
+      if (settingsLaunch.current === launch) { settingsLaunch.current = undefined; if (mounted.current) setOpeningSettings(false); }
+    }
+  }
   async function load() {
     if (pending.current) return;
     pending.current = true; setBusy(true); setError('');
@@ -95,6 +113,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   return <><Stack.Screen options={{ title }} /><ScrollView style={styles.shell} contentContainerStyle={[styles.content, {flexGrow:1}]} automaticallyAdjustKeyboardInsets alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode={appKeyboardDismissMode()}
     refreshControl={page.kind === 'overview' ? <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} /> : undefined}>
     {error ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:colors.danger}}>{error}</Text></View> : null}
+    {settingsError ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:colors.danger}}>{settingsError}</Text></View> : null}
     {busy && !preferences ? <SettingsSection><SettingsLoadingRow label="Loading reminders" /></SettingsSection> : null}
     {!preferences && !busy ? <SettingsSection><SettingsActionRow accessibilityLabel="Retry loading reminders" label="Retry" onPress={() => void load()} /></SettingsSection> : null}
     {preferences && unavailable ? <SettingsSection footer="This asset type is no longer available for expiration reminders."><SettingsActionRow label="Back" onPress={onBack} /></SettingsSection> : null}
@@ -105,8 +124,8 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
         <View style={styles.detailHeader}><Text style={styles.secondaryText}>Your reminders for this inventory.</Text></View>
         {pushSession ? <SettingsSection title="Notifications" footer={pushMessage || 'Push alerts also need server delivery support. In-app reminders are independent.'}>
           <SettingsSwitchRow label="Push notifications" value={preferences.pushEnabled} disabled={busy} onValueChange={enabled => void changePush(enabled)} />
-          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Set up alerts on this device" label={pushOutcome === 'enabled' ? 'Open device settings' : 'Enable on this device'} disabled={busy} onPress={() => { if (pushOutcome === 'enabled') void Linking.openSettings(); else void changePush(true); }} /></> : null}
-          {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Open notification system settings" label="Open Settings" onPress={() => void Linking.openSettings()} /></> : null}
+          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Set up alerts on this device" label={pushOutcome === 'enabled' ? 'Open device settings' : 'Enable on this device'} disabled={busy || openingSettings} onPress={() => { if (pushOutcome === 'enabled') void openDeviceSettings(); else void changePush(true); }} /></> : null}
+          {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Open notification system settings" label="Open Settings" disabled={openingSettings} onPress={() => void openDeviceSettings()} /></> : null}
         </SettingsSection> : null}
         <ExpirationReminderEditor initialPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing'})} onSave={async value => { if (value) await save(signal => session.saveDefaults(value,{signal})); }} />
         <SettingsSection footer="Expiration dates use this time zone, even when you travel."><SettingsNavigationRow label="Time zone" accessibilityLabel="Time zone" value={readableTimeZone(preferences.timezone)} disabled={busy} onPress={() => onNavigate({kind:'timezone'})} /></SettingsSection>

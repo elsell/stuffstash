@@ -86,7 +86,8 @@ pending,1,843 source-reviewed,487 finding,23 runtime-partial and190 not-applicab
 
 [Permission recovery](permission-recovery-axis.md) now has all 24 source axes
 reviewed. M190 adds camera/microphone recovery guidance; 109 related checks/static
-validation pass. M191 tracks unhandled notification Settings launch failures.
+validation pass. M191 adds notification Settings launch-failure recovery with
+10 related checks and static validation passing remotely.
 Physical permission, Settings return and native feedback verification remain open.
 
 [Push entry](push-entry-axis.md) now has all 24 source axes reviewed. Eighteen

@@ -2694,9 +2694,11 @@ not implemented by this copy change. Physical recovery and message fit remain op
 
 ### M191 — Notification Settings opening has no failure recovery
 
-P2 source-confirmed at 91c22aa3; implementation pending. Both device-Settings
-actions discard Linking.openSettings promises. A rejected native launch has no
-handled user feedback or recovery. Add safe failure guidance and a fresh retry,
-owned by the originating focus/foreground context. Verify rejection, successful
-retry and late rejection after leaving; do not assume an OS launch has failed
-merely from the source gap. See permission-recovery-axis.md.
+P2 source-confirmed at 91c22aa3. Both device-Settings actions discarded
+Linking.openSettings promises. The candidate catches rejection, shows safe manual
+guidance and permits retry without changing preferences. Launch identity and
+foreground/focus generation reject late errors and keep an old completion from
+unlocking a newer attempt. Ten focused checks plus TypeScript/structural validation
+pass remotely; critic found no blocker. The RED run reproduced unhandled rejection;
+physical Settings launch/return and visual feedback remain pending. See
+permission-recovery-axis.md.
