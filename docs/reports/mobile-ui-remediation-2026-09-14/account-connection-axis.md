@@ -142,3 +142,32 @@ copy is shown, sign-out remains present, retry loads principal and removes error
 61 settings tests, TypeScript and structural checks pass remotely. Native acceptance
 is not inferred from these tests. The shared refresh notice's other callers keep
 the same default message and behavior.
+
+## Android normal-text session-command sample
+
+September16, Android16 Pixel6, light appearance and font scale1.0, isolated APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+Account entry shows the synthetic principal and Sign Out. Activating Sign Out opens
+Android's native confirmation with the principal and saved-server consequence.
+The first accepted command fails; [feedback and Sign Out remain
+reachable](evidence/android-account-recovery.png). Dismissing feedback and retrying
+confirmation positively returns to the fixture index, with its Account entry.
+
+Connection entry shows the synthetic server host and complete address. Its native
+confirmation explains sign-out, forgetting the local server/household and retaining
+server data. Cancel returns to the unchanged Connection content. Accepting the next
+confirmation fails, leaves Change Server reachable and shows the appropriate error.
+Dismissing feedback and accepting retry positively returns to the fixture index,
+including its Connection entry. These are fake session actions: no real credentials,
+server settings or household selection are changed. Production session teardown,
+initial identity-read errors, background departure and assistive technology remain
+outside this sample.
+
+The transient error banner overlays the principal row while present; the screenshot
+does not establish unobstructed content during feedback. Its duplicate accessibility
+containers also require the shared notice traversal review. This sample establishes
+command recovery, not full notice layout or accessibility acceptance.
+
+Evidence: `/tmp/android-account-{entry,confirm,error,return}.xml`,
+`/tmp/android-connection-{entry,confirm,cancel,error,return}.xml`, and
+`/tmp/android-account-error.png`. No implementation changed in this follow-up.
