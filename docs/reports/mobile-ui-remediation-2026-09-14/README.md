@@ -1,10 +1,12 @@
 # Comprehensive mobile UI audit and remediation
 
-Latest completed native run35131892834: phone64/86 and iPad79/86 fixture tests
-pass, with unresolved normal-size text entry and phone search/color failures.
-Both fixture artifacts exported successfully. See [phone results](native-phone-351318.md),
-[iPad results](native-ipad-351318.md) and [onboarding evidence](native-onboarding-351318.md).
-Run35140471580 at a1b827e0 is the active follow-up; no full native acceptance is claimed.
+Latest completed native run35140471580: phone69/86 and iPad79/86 fixture tests
+pass, with unresolved normal-size text entry, color opening and phone preconfigured
+Place search failures. Both onboarding jobs pass. See [phone results](native-phone-351404.md),
+[iPad results](native-ipad-351404.md) and [onboarding evidence](native-onboarding-351404.md).
+Input tracing produced no output because the fixture consumed the capture tap to
+dismiss the keyboard. The runner-only correction at a01fc760 is under focused
+run35148050909 and full run35148054814; no full native acceptance is claimed.
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
