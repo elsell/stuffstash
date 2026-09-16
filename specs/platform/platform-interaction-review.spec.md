@@ -251,3 +251,14 @@ or geometry change, explicit zoom reset or viewer dismissal. Pending gestures
 retire with their owning image; updated callbacks must still reach the current
 consumer. Verify retained scale through the installed Android responder as well
 as a delayed native capture.
+
+Asset-detail overflow presentation must remain stable across callback-only renders,
+just like native header command actions. Its identity changes for title, action
+eligibility or disabled state; retained handlers dispatch only the current committed
+callback and do nothing after disabling, removing eligibility or unmounting.
+Loading/error transitions explicitly clear the installed menu. This prevents
+incidental reconfiguration alongside native search; it does not establish M207's
+runtime cause. Preserve phone/iPad search-placement acceptance unchanged.
+Menu callback ownership is scoped to the serialized asset resource key. Replacing
+that resource retires retained native handlers even when the replacement has the
+same title and permissions; current callbacks are forwarded only within one scope.

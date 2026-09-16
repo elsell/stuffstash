@@ -37,8 +37,8 @@ import {
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
 import {
-  assetHeaderOverflowScreenOptions
-} from './AssetHeaderOverflow';
+  useAssetHeaderOverflowOptions
+} from './useAssetHeaderOverflowOptions';
 import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
@@ -462,6 +462,7 @@ export function AssetDetailRouteScreen({
     onHistory: () => openHistory(screenState.asset),
     onLifecycleAction: (action: AssetLifecycleActionKind) => requestLifecycleAction(action, screenState.asset)
   } : undefined;
+  const headerOverflowOptions = useAssetHeaderOverflowOptions(headerOverflow, JSON.stringify(coreAsset.resourceKey));
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
@@ -469,7 +470,7 @@ export function AssetDetailRouteScreen({
         onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
-        ...(headerOverflow ? assetHeaderOverflowScreenOptions(headerOverflow) : {})
+        ...headerOverflowOptions
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
       {screenState.status === 'error' ? (

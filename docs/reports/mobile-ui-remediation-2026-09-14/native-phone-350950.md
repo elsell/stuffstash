@@ -49,3 +49,33 @@ Log: `/tmp/native350950-phone.log` locally. Artifact10448184747 is retained as
 extracted to `/tmp/phone350950-selected` on both hosts; no duplicate full xcresult
 extraction. Inspect the corresponding iPad results when that live job completes;
 continue the native search/text-entry diagnosis without relaxing acceptance.
+
+### Source follow-up: asset menu presentation
+
+Inspection found a remaining source of native-header reconfiguration in the
+production Place composition: `assetHeaderOverflowScreenOptions` was called on
+every render, recreating its native menu callback even when presentation was
+unchanged. The asset route now uses a presentation-memoized hook with current
+committed handlers. Title, eligibility and disabled changes still update options;
+loading/error clears the menu, and retained handlers cannot run disabled or
+removed lifecycle actions or act after teardown. The existing search assertions
+are unchanged. This removes unnecessary header updates, but a native rerun must
+establish whether M207's placement changes.
+
+A regression failed on callback-only option identity against the existing factory
+wrapper, then passed with the hook. All46 focused hook/asset-route/iOS-menu tests,
+TypeScript and mobile structural checks pass on paul. Logs:
+`/tmp/asset-menu-{red,green,check,structural}.log`. This is source validation only.
+Apple documents disabling toolbar integration to prevent bottom toolbar search;
+our adapter already requests that setting. See
+[search toolbar integration](https://developer.apple.com/documentation/uikit/uinavigationitem/searchbarplacementallowstoolbarintegration).
+
+Combined validation after the menu change passes1,897 tests across296 files on
+paul (`/tmp/asset-menu-full.log`), with TypeScript and structural checks also clean.
+
+Review caught an unscoped retained-handler risk on same-title asset replacement.
+A new regression failed before resource ownership was added; old handlers now
+retire when `coreAsset.resourceKey` changes. The replacement handler's own removal
+and teardown are checked independently. Critic confirmed the scope correction;
+final combined source validation still passes1,897 tests/296 files, TypeScript
+and structural checks (`/tmp/asset-menu-final-{full,check,structural}.log`).
