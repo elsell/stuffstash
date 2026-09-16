@@ -26,7 +26,24 @@ Three enlarged-text journeys fail: Edit metadata, Edit tags and Move Here recove
 Keep those queued behind normal-size remediation.
 
 Log: `/tmp/native350950-ipad-final.log` locally. Artifact10448943886 (about1.4GB)
-is downloading to `/tmp/native350950-ipad.zip` on paul. Inspect targeted attachments
+is retained at `/tmp/native350950-ipad.zip` on paul. Inspect targeted attachments
 before making visual or causal claims; do not extract the full xcresult twice.
 Latest-source run35104157358 at14d7e06f has started independently through the queued
 workflow. It includes subsequent photo, asset-menu and email fixes absent here.
+
+## Inspected native captures
+
+Selected attachments were extracted to `/tmp/ipad350950-selected` on both hosts,
+without unpacking the full xcresult. The ordinary color tap records a36×36-point
+hittable color-well frame at(684,326.5). Its final screenshot still shows the
+closed color well, no picker. In the same run, color-well target and nine-point
+touch-delivery tests pass. This discrepancy remains unresolved; do not substitute
+the coordinate probes for the failed ordinary opening journey.
+
+The location-clear final screenshot shows a collapsed Search icon, no keyboard,
+and restored Garage bin result. Thus M232 persists in this run. The existing
+static focused-clear comparison is included in current run35104157358; its result
+is still required before attributing collapse to product handlers or UIKit.
+
+All four current-run jobs reached native interaction execution after pinned
+dependency/native installation. This is build progress, not runtime acceptance.
