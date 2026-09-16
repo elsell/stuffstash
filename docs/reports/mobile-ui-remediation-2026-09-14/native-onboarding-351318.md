@@ -19,6 +19,28 @@ Inspected phone captures:
 Selected files are under `/tmp/native351318-onboarding-phone-selected`.
 This verifies the named normal-size, light-mode phone scenario. It does not verify
 real OIDC sign-in, every orientation, accessibility text sizes or assistive output.
-The iPad onboarding and phone/iPad fixture jobs remain active at this checkpoint.
+The phone/iPad fixture jobs remain active at this checkpoint.
 The ExpoUI lock path correction has passed deployment installation on all four jobs;
 that integration success is distinct from the remaining UI acceptance gates.
+
+## iPad result
+
+iPad mini job104914725527 completed with one pass and two setup failures.
+The connection/help/keyboard test timed out launching the app through Xcode.
+The inside-form keyboard-dismissal test failed to acquire the app's background
+assertion after a launch-service process error. Neither reached its interaction
+assertions. These are missing acceptance evidence; the logs do not establish a
+product UI defect or its underlying cause. No assertions have been relaxed.
+
+The subsequent landscape test passed. Inspected capture
+`DEFB2E3B-FFAA-45B4-BF42-0DCC34330B76.png` shows the centered form, address field,
+help link, empty-address guidance and disabled connection action within the
+landscape viewport. The preceding failed test's final capture
+`E3B621ED-E803-44E6-9871-7D47331EF411.png` shows the empty portrait form, not the
+keyboard-dismissal journey; it cannot clear that scenario.
+
+Log: `/tmp/native351318-onboarding-ipad.log`. Artifact10462697292 is104,314,911
+bytes and is retained on paul at `/tmp/native351318-onboarding-ipad.zip`.
+Only selected captures were copied locally to conserve disk. The already queued
+run35132227322 provides another opportunity to verify the two missing scenarios;
+the active fixture jobs remain undisturbed.
