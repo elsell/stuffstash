@@ -3426,7 +3426,9 @@ updates while retaining stale-measurement and hide guards. Eleven focused tests 
 on paul. The native assertion now checks complete action clearance above the
 accessory. This is a candidate, not a proven root cause or accepted native fix.
 Browse shares the hook; its corresponding keyboard state requires verification.
-Android's separate IME-aware sheet is unchanged. Native rerun remains required.
+Android's separate IME-aware sheet is unchanged. Focused run35154627907 reproduces
+the same phone overlap despite settled remeasurement; iPad keyboard journeys pass.
+The candidate is not sufficient. See [paired results](native-filters-351546.md).
 
 ### M250 — Browse tag edits remove the active native search configuration
 
@@ -3440,6 +3442,6 @@ The regression now reads the currently merged options and fails after selecting 
 tag. Removing the parent's search reset leaves enable/disable ownership with the
 search adapter. Eleven focused tests, TypeScript and structural checks pass on
 paul; selection, query updates, application and overview search removal are covered.
-The focused native Browse keyboard journey must still verify actual behavior on
-iPhone and iPad. This does not establish the cause of the separate Place search
+The focused native Browse keyboard journey passes on iPad in run35154627907;
+iPhone stops at M249 before post-selection verification. This does not establish the cause of the separate Place search
 placement issue. Android owns an inline search adapter and is unchanged.
