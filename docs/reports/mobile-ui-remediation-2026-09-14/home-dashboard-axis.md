@@ -1,5 +1,13 @@
 # Home dashboard — all 24 source axes
 
+## Current native evidence, September 16
+
+[Run351404 Home review](native-home-351404.md) records seven passing Home scenarios
+on each iOS target and inspected header/tab-return captures. It also links the
+existing Android header checks. Remaining gaps and fixture limits are explicit
+there; the earlier source-checkpoint observations below are historical.
+
+
 R002, source81e91f74 plus M160. Inspected HomeRoute, HomeScreen, its styles and
 header, HomeDashboardQuery, scoped query and pull-refresh hooks, notification and
 expiration entry composition, and return-task ownership. Header, summary and

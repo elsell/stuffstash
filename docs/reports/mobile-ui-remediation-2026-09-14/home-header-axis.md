@@ -1,5 +1,13 @@
 # Home action header — all 24 axes
 
+## Current native evidence, September 16
+
+[Run351404 Home review](native-home-351404.md) records seven passing Home scenarios
+on each iOS target and inspected header/tab-return captures. It also links the
+existing Android header checks. Remaining gaps and fixture limits are explicit
+there; the earlier source-checkpoint observations below are historical.
+
+
 S066, source checkpoint `3d61163d`. Reviewed HomeNavigationHeader,
 HomeHeaderLayout, HomeScreen, NotificationHomeEntry/Bell, the platform header
 adapters and Home stack options. The inventory switcher destination and dashboard

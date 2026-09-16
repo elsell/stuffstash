@@ -1,5 +1,13 @@
 # Home return details — 24 source axes
 
+## Current native evidence, September 16
+
+[Run351404 Home review](native-home-351404.md) records seven passing Home scenarios
+on each iOS target and inspected header/tab-return captures. It also links the
+existing Android header checks. Remaining gaps and fixture limits are explicit
+there; the earlier source-checkpoint observations below are historical.
+
+
 ## Cancellation follow-up S139
 
 Reviewed atdc901a08 against all24 axes below: HomeReturnDetailsRouteScreen,
