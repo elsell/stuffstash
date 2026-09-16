@@ -52,3 +52,20 @@ before final installation; the committed lock change contains only the Expo patc
 Full mobile regression suite passes1,911 tests in299 files on the matched source
 and installed patch set (`/tmp/android-command-label-full-tests.log`). This remains
 separate from native and TalkBack acceptance.
+
+
+## Screen-reader environment probe
+
+TalkBack16.0.0.738667889 (versionCode60149353) is installed on the same API36
+emulator. Enabling it produced a bound TalkBack service, touch exploration enabled,
+and a visible green focus outline. Retained service dump on paul:
+`/tmp/android-talkback-accessibility-state.txt`. This confirms availability only.
+
+The emulator launches with `-no-audio`. Injected taps activated a command directly,
+and injected Alt/Action navigation shortcuts did not demonstrate focus movement
+or activation. Therefore this attempt does not establish a TalkBack interaction
+or spoken-output pass. [Google documents the supported keyboard commands](https://support.google.com/accessibility/android/answer/6110948?hl=en),
+but injection alone did not reproduce that keyboard path here. No application bug
+is inferred from the inconclusive harness behavior. Enabled accessibility services
+were restored to the prior empty setting and accessibility disabled after the probe.
+A usable screen-reader input/audio path remains necessary for this acceptance axis.
