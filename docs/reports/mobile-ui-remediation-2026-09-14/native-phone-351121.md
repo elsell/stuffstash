@@ -5,15 +5,19 @@ iPhone17 job104851680499. Complete XCTest log:65/84 pass,19 failures,
 3429.015 seconds. Job failure. Onboarding fails separately at help activation
 (M240); its two iPad-only cases skip. Complete log:
 `/tmp/native351121-phone-complete.log` locally. Artifact10457496721 is1,615,132,152
-bytes and is downloading to paul; screenshot inspection is pending.
+bytes, retained on paul as `/tmp/native351121-phone.zip`. Selected captures and
+hierarchies are retained on both hosts in `/tmp/phone351121-selected`.
 
 ## Normal-size product work
 
 - Add photo journey again fails its old root-menu return assertion after the photo
   operations; the newer retained-scroll acceptance correction is absent here.
-- Add unfinished tag reads `Camp` immediately after typing `Camping`. Inspect its
-  final capture/value before choosing between an observation-timing issue and a
-  retained incorrect draft. Do not infer either from this assertion alone.
+- Add unfinished tag reads `Camp` immediately after typing `Camping`, but the final
+  screenshot and hierarchy both contain exact `Camping`. This is evidence of an
+  early observation, not a retained corrupted draft. The candidate test waits up
+  to five seconds for exact equality before continuing the existing Save-blocking
+  and disclosure-retention assertions. Native acceptance of that candidate is
+  still pending. [Final capture](evidence/phone351121-add-tag-final.png).
 - Ordinary native color opening fails, while target-opening, delivered-touch
   probes and single-name checks pass. M51 remains unresolved.
 - Preconfigured Place search and Settings search again fail expected top search.

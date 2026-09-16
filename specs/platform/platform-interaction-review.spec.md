@@ -421,3 +421,12 @@ remain inert and ordinary command items retain their existing activation path.
 The controlled settings fixture may display successful appearance-store write count
 to prove one save per native selection, including selections with both native click
 and accessibility modifier callbacks. This counter is fixture-only.
+
+## Unfinished-tag native observation
+
+Run351121's phone Add-tag assertion reads Camp immediately after typing Camping;
+its final screenshot and hierarchy both retain the exact full Camping value. The
+unfinished-tag journey must allow at most five seconds for exact equality before
+continuing keyboard dismissal, Save blocking, disclosure collapse/reopen and draft
+retention checks. Do not weaken those downstream assertions or apply this diagnosis
+to controlled-field cases whose final captures still contain incorrect text.

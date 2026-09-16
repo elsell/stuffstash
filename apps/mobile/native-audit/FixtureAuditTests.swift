@@ -1379,6 +1379,8 @@ final class FixtureAuditTests: XCTestCase {
     entry.tap()
     waitForKeyboard()
     entry.typeText("Camping")
+    let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)
     XCTAssertEqual(entry.value as? String, "Camping")
     dismissKeyboard()
     XCTAssertFalse(save.isEnabled)
