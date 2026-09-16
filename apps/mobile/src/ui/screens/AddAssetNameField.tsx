@@ -1,8 +1,7 @@
 import { useRef } from 'react';
-import { Platform, type TextInputProps } from 'react-native';
+import { Platform } from 'react-native';
 import { AppTextInput } from '../components/AppTextInput';
-
-type Props = Omit<TextInputProps, 'value' | 'defaultValue'> & { readonly value: string };
+import type { AddAssetNameFieldProps as Props } from './AddAssetNameField.types';
 
 export function AddAssetNameField(props: Props) {
   return Platform.OS === 'ios' ? <NativeNameField {...props} /> : <AppTextInput {...props} />;

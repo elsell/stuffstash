@@ -1367,6 +1367,20 @@ address comparison. This separates the native field path from React Native text
 input without changing production fields or relaxing any original failing case.
 Passing the comparison does not establish physical typing or prove the cause.
 
+The iOS Add name field may use the already-pinned SwiftUI TextField as a scoped
+candidate after the default-assisted comparison passes on phone and iPad. Keep
+ordinary text assistance, its visible Name label and accessible Asset name. Seed
+once per existing name revision; restored drafts and Clear draft deliberately
+remount the field, while typing, metadata refresh and rejected saves do not. Keep
+application state as the save/validation owner and disable changes while busy.
+Android retains its current field. Do not generalize this migration to multiline,
+search, generated-key or externally controlled fields. Unchanged Add whole-string
+typing, failed-save recovery, clear and restored-draft native journeys must pass
+before claiming the candidate solves product text entry.
+The focused `add-draft` workflow selection runs the existing Add typing/recovery,
+navigation-stack, preconfigured-header and unfinished-tag journeys unchanged on
+phone and tablet. It is a diagnostic subset, not full native acceptance.
+
 The native tag color well must expose one accessible “Choose any color” name.
 Use the native ColorPicker label as its naming source; do not repeat it through
 an accessibility-label modifier. Retained350504 hierarchy duplicates the name.

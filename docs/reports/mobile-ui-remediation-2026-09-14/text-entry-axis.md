@@ -15,6 +15,17 @@ comparisons pass. This is evidence of risk in the current runtime, not proof tha
 all controlled fields are broken. M65 is a Return-note candidate pending rerun.
 No generic AppTextInput rewrite is justified without preserving external changes.
 
+Current follow-up at c27a8eab: focused350563 completes8/10 iPad and7/10 phone.
+Default-assisted SwiftUI passes both, while RN failures cross controlled and seeded
+ordinary inputs. Full350549 phone reproduces Add name loss (`Nft name`) in the
+navigation-stack case. A scoped iOS Add name candidate now uses SwiftUI TextField,
+retaining ordinary assistance and the existing nameRevision reset ownership. It
+does not change Android or other field families. The adapter test covers seed
+retention, clear/resource remount, disabled edits and retry;25 related source tests,
+TypeScript and structural checks pass on paul. Critic found no blocker. Focused
+`add-draft` runs the four existing product journeys unchanged; native sizing,
+appearance, keyboard, full-string entry and draft recovery remain acceptance gates.
+
 ## Reviewed task families and required ownership
 
 | Family / source | Text task | External changes that must survive any fix | Next native acceptance |

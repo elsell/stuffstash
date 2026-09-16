@@ -2,7 +2,7 @@
 
 Sourcefdbf30bf, focused workflow selection `text-entry`; this is not a full native
 acceptance run. iPad job104667325488 completed8/10 passing. Phone104667325335
-remains active at this checkpoint. Artifact10430144671 retains iPad evidence.
+completed7/10. Artifacts10430144671 and10430943560 retain their evidence.
 
 | Comparison | iPad result |
 | --- | --- |
@@ -26,5 +26,16 @@ cases. Before changing a shared adapter, inspect actual draft ownership and prov
 programmatic updates, clears, resource replacement, refs, disabled state and
 selection behavior remain correct. Add's iOS name already uses a revision-keyed
 native draft; a blanket conversion would duplicate or break existing ownership.
-Await phone comparison and current full-run Add/Edit journeys to prioritize the
-production change. No code fix is claimed by this diagnostic.
+Phone results prevent attributing all failures to controlled assisted editing:
+ordinary controlled RN passes, but no-accessory controlled reports `Nve draft name`,
+no-assistance controlled reports `Ne draft name`, and ordinary uncontrolled
+single-line reports `Nive draft name`. Multiline, uncontrolled no-accessory and
+no-assistance, both paced cases, and default-assisted SwiftUI pass. The inspected
+uncontrolled final screenshot retains `Nive draft name` in both field and observed
+application text; this is not merely an early partial assertion. See
+`evidence/phone-uncontrolled-text-350563.png`.
+
+The scoped Add name candidate uses the successful SwiftUI path with the existing
+revision-owned seed. Twenty-five related tests and static checks pass on paul;
+critic found no blocker. These checks establish adapter/draft behavior, not native
+fidelity. Unchanged product Add journeys must rerun before accepting the candidate.

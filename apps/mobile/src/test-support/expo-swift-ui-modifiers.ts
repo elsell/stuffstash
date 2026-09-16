@@ -12,3 +12,4 @@ export const tag=modifier('tag');
 export const labelStyle=modifier('labelStyle');
 
 export const labelsHidden=modifier('labelsHidden');
+export const textFieldStyle=modifier('textFieldStyle');
