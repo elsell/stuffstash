@@ -3206,3 +3206,30 @@ checks. Code review found no source blocker. Explicit scope-replacement and
 concurrent-decision tests are not added here; existing provider/controller guards
 remain. Native event-delivery acceptance is still open. Logs on paul:
 `/tmp/voice-review-{red,green,full,check,structural}.log`.
+
+
+### M238 — Android voice review footer stays underneath the keyboard
+
+P2 native-confirmed at normal text on APKab6f52ed. Editing a proposed name showed
+the software keyboard over Approve/Cancel. UIAutomator still exposed their old
+bounds; a tap at the reported Approve position entered a keyboard character.
+The retained screenshot, not the accessibility bounds, established the obstruction.
+
+Android conversation now uses height-based keyboard avoidance with the native
+header offset, matching the existing filter/asset stack form pattern. iOS keeps
+its padding behavior. APKd2cafbc6 verifies visible footer commands above the
+keyboard, a blank-name hint and disabled Approve, and actual Approve activation
+with an edited name. The synthetic transport rejects approval; the failure view
+retains `Native audit drill`. This is command activation/recovery evidence, not a
+successful backend mutation. Code critic and remote TypeScript/structural checks
+pass. Existing1,905 tests passed before this two-line layout correction; no
+prop-mirroring test was added. Native iOS and enlarged-text checks remain separate.
+
+Build: `/tmp/voice-keyboard-build.log` on paul; full APK SHA256:
+`d2cafbc60c76c60f57526e58075fc5597b27d3e8799cb83ef16b42fe66341a4a`.
+Pixel6 Android16 API36, normal font, light appearance. Selectively patched Android
+audit tree based ondb8d2bb8, including183e6de6 and this keyboard correction; not a
+full-HEAD release build. Captures:
+[evidence/android-voice-keyboard-blank.png](evidence/android-voice-keyboard-blank.png),
+[evidence/android-voice-keyboard-result.png](evidence/android-voice-keyboard-result.png).
+Original obstruction: `/tmp/voice-review-failed.png` on both hosts.

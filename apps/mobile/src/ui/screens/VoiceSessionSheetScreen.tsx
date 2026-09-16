@@ -240,7 +240,8 @@ function VoiceSessionSheet({
   const references = voiceConversationReferences(readyState?.realtime ?? null);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'android' ? navigationHeaderHeight : 0}>
     <SafeAreaView style={[styles.sheet, { paddingTop: Platform.OS === 'ios' ? navigationHeaderHeight : 0 }]}
       edges={Platform.OS === 'ios' ? ['left', 'right'] : ['top', 'left', 'right']}>
       <VoiceConversationHeader realtime={readyState?.realtime ?? null} photoDrafts={photoDrafts}

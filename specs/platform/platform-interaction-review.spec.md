@@ -21,6 +21,12 @@ screenshots for the live acceptance gate. Use Apple's public
 
 ## Purpose
 
+Android conversation review must resize its scroll body above the software keyboard
+while keeping Approve/Cancel visible and reachable. Use the existing native stack
+form pattern: height-based keyboard avoidance with the native header offset.
+iOS retains sheet padding behavior. Verify an actual keyboard-visible capture
+and command activation; accessibility bounds alone can include obscured controls.
+
 Voice review decisions belong to one proposed plan within one inventory scope.
 Retained Approve/Cancel events must read current committed command/photo drafts,
 respect an invalid visible name, and reject hidden or removed review tasks. Mount
