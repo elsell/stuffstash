@@ -2855,30 +2855,30 @@ S119,Voice / recording,privacy,"Account scope, data use and permissions",finding
 S119,Voice / recording,notifications,System notification entry and state,source-reviewed,voice-recording-axis.md; source3f601d5d; native acceptance pending,
 S119,Voice / recording,media,"Camera, library, files and audio",source-reviewed,voice-recording-axis.md; source3f601d5d; native acceptance pending,
 S119,Voice / recording,lifecycle,"Cold/warm start, blur, background and deep link",finding,voice-recording-axis.md; source3f601d5d; native acceptance pending; findings.md M172 pending native capture,M172
-S120,Voice / processing,task,Task clarity and platform-pattern fit,pending,,
-S120,Voice / processing,navigation,"Navigation, hierarchy and return",pending,,
-S120,Voice / processing,selection,Value selection and current value,pending,,
-S120,Voice / processing,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending,M144
-S120,Voice / processing,layout,"Safe areas, scroll edges and overlays",pending,,
-S120,Voice / processing,adaptation,Phone/tablet/window reflow,pending,,
-S120,Voice / processing,typography,"Dynamic Type, wrapping and legibility",pending,,
-S120,Voice / processing,appearance,"Light/dark, contrast and materials",pending,,
-S120,Voice / processing,localization,"Locale, timezone, RTL and long strings",pending,,
-S120,Voice / processing,imagery,"Icons, photos and missing media",pending,,
-S120,Voice / processing,targets,Touch target size and reachability,pending,,
-S120,Voice / processing,gestures,Gestures and explicit alternatives,pending,,
-S120,Voice / processing,keyboard,"Keyboard, text entry and focus",pending,,
-S120,Voice / processing,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S120,Voice / processing,motion,Reduced motion and feedback alternatives,pending,,
-S120,Voice / processing,content,"Lists, hierarchy, density and pagination",pending,,
-S120,Voice / processing,search,"Search, scope and filters",pending,,
-S120,Voice / processing,loading,"Loading, background refresh and progress",pending,,
-S120,Voice / processing,recovery,"Empty, error, denied and retry",pending,,
-S120,Voice / processing,editing,"Draft, save, cancel, undo and interruption",finding,; M144 mounted reset confirmation ownership; native pending,M144
-S120,Voice / processing,privacy,"Account scope, data use and permissions",pending,,
-S120,Voice / processing,notifications,System notification entry and state,pending,,
-S120,Voice / processing,media,"Camera, library, files and audio",pending,,
-S120,Voice / processing,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending,M144
+S120,Voice / processing,task,Task clarity and platform-pattern fit,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,navigation,"Navigation, hierarchy and return",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,selection,Value selection and current value,not-applicable,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,modality,Presentation and dismissal,finding,"; M144 mounted reset confirmation ownership; native pending; voice-processing-axis.md; source review/M177 recovery, native pending",M144
+S120,Voice / processing,layout,"Safe areas, scroll edges and overlays",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,adaptation,Phone/tablet/window reflow,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,typography,"Dynamic Type, wrapping and legibility",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,appearance,"Light/dark, contrast and materials",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,localization,"Locale, timezone, RTL and long strings",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,imagery,"Icons, photos and missing media",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,targets,Touch target size and reachability,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,gestures,Gestures and explicit alternatives,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,keyboard,"Keyboard, text entry and focus",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,motion,Reduced motion and feedback alternatives,source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,content,"Lists, hierarchy, density and pagination",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,search,"Search, scope and filters",not-applicable,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,loading,"Loading, background refresh and progress",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,recovery,"Empty, error, denied and retry",finding,"voice-processing-axis.md; source review/M177 recovery, native pending",M177
+S120,Voice / processing,editing,"Draft, save, cancel, undo and interruption",finding,"; M144 mounted reset confirmation ownership; native pending; voice-processing-axis.md; source review/M177 recovery, native pending",M144
+S120,Voice / processing,privacy,"Account scope, data use and permissions",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,notifications,System notification entry and state,not-applicable,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,media,"Camera, library, files and audio",source-reviewed,"voice-processing-axis.md; source review/M177 recovery, native pending",
+S120,Voice / processing,lifecycle,"Cold/warm start, blur, background and deep link",finding,"; M144 mounted reset confirmation ownership; native pending; voice-processing-axis.md; source review/M177 recovery, native pending",M144
 S121,Voice / response,task,Task clarity and platform-pattern fit,finding,findings.md M170; response/decision commands source review only; conversation-response-axis.md; source722ca46c; native acceptance pending,M170
 S121,Voice / response,navigation,"Navigation, hierarchy and return",finding,conversation-response-axis.md; source722ca46c; native acceptance pending; findings.md M171 delayed media/navigation ownership,M171
 S121,Voice / response,selection,Value selection and current value,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,

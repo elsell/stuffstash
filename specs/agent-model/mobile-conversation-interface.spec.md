@@ -123,6 +123,12 @@ and retained history must show that reason. Do not substitute a success checkmar
 for a terminal attachment warning; the inventory change remains saved and only
 unsuccessful attachments are retried. Never expose arbitrary upload exception text.
 
+If the initial conversation context cannot load, show an in-place native Retry
+command that retries the scoped context query (including failed inventory scope
+resolution). Disable duplicate retry while it is running, retain the error on
+another failure, and restore the composer when context loads. A retry command
+retained after leaving or replacing the context must not start a new request.
+
 Photo finalization validates uploaded bytes and may take longer than ordinary
 queries while thumbnails are being generated. Mobile API transport allows 60
 seconds for POST attachment direct-upload completion, versus 8 seconds for other

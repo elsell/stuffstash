@@ -31,6 +31,7 @@ import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
+import { VoicePreviewRecovery } from './VoicePreviewRecovery';
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 import {
   showVoicePlanPhotoSourceChooser,
@@ -230,7 +231,7 @@ function VoiceSessionSheet({
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
-  const { history, scrollOffset, titleEditor } = useVoiceInteractionState();
+  const { history, scrollOffset, titleEditor, retryPreview, scopeIdentity } = useVoiceInteractionState();
   const conversationScroll = useRef<ScrollView>(null);
   const followingLatest = useRef(scrollOffset.current === 0);
   const palette = useAppearancePalette();
@@ -274,7 +275,7 @@ function VoiceSessionSheet({
       {state.status === 'loading' ? (
         <SessionLoadingState />
       ) : state.status === 'error' ? (
-        <SessionErrorState message={state.message} />
+        <VoicePreviewRecovery key={scopeIdentity} message={state.message} identity={scopeIdentity} onRetry={retryPreview} />
       ) : (
         <>
           <ScrollView
@@ -554,16 +555,6 @@ function SessionLoadingState() {
   );
 }
 
-function SessionErrorState({ message }: { readonly message: string }) {
-  const styles = createStyles(useAppearancePalette());
-  return (
-    <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Voice unavailable</Text>
-      <Text style={styles.centerStateText}>{message}</Text>
-    </View>
-  );
-}
-
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
   conversationViewport: { flex: 1, minHeight: 0 },
@@ -775,12 +766,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 15,
     lineHeight: 22,
     marginTop: spacing.xs
-  },
-  errorTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0
   },
   iconButton: {
     alignItems: 'center',

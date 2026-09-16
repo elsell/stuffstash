@@ -36,6 +36,7 @@ export type VoiceInteractionState =
 type TitleEditor = { readonly commandId: string; readonly value: string } | null;
 type ConversationDraftState = { readonly planId?: string; readonly drafts: VoicePlanCommandDrafts };
 type VoiceInteractionStateContextValue = {
+  readonly retryPreview: () => Promise<void>;
   readonly scopeIdentity: string;
   readonly titleEditor: TitleEditor;
   readonly setTitleEditor: Dispatch<SetStateAction<TitleEditor>>;
@@ -79,12 +80,13 @@ type VoiceInteractionStateProviderProps = {
 export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
   const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
   const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, 'Voice preview is not available.') } : { status: 'loading' };
-  return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState} />;
+  return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState}
+    retryPreview={async () => { await preview.refetch({ cancelRefetch: false }); }} />;
 }
 
 type PreviewState = { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel };
 
-function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string }) {
+function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey, retryPreview }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string; readonly retryPreview: () => Promise<void> }) {
   const [titleEditor, setTitleEditor] = useState<TitleEditor>(null);
   const [history, setHistory] = useState<readonly VoiceRealtimeState[]>([]);
   const [composerText, setComposerText] = useState('');
@@ -154,6 +156,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
 
     return {
       scopeIdentity: scopeKey,
+      retryPreview,
       titleEditor, setTitleEditor,
       history: stateOwner === scopeKey ? history : [], composerText: stateOwner === scopeKey ? composerText : '', setComposerText,
       photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, scrollOffset, railOffsets,
@@ -350,7 +353,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         setStage('ready');
       }
     };
-  }, [titleEditor, history, composerText, photoDrafts, commandDraftState, diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey]);
+  }, [titleEditor, history, composerText, photoDrafts, commandDraftState, diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey, retryPreview]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>

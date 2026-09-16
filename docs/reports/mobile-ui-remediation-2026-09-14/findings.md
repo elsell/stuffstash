@@ -2525,3 +2525,18 @@ retrying only the failed photo; a mounted shared-progress test verifies visible
 and accessible detail. All three failed before implementation. No server boundary
 or authorization behavior changes. Native reason visibility, contrast and
 announcements remain pending; see voice-progress-axis.md for all24 source axes.
+
+### M177 — Initial conversation failure has no in-place retry
+
+P2 source-confirmed at9e11dfe1. SessionErrorState renders Voice unavailable and
+the failure message without a retry command. The underlying scoped query already
+supports context and inventory-scope recovery, but the conversation does not
+expose it. Users must leave the task or depend on background refetch.
+
+The candidate exposes that existing scoped refetch through the interaction
+provider and uses a scrollable failure view with native Retry conversation.
+Pending retries reject duplicates; visit ownership rejects retained callbacks
+after leaving or returning. Errors stay available if retry fails again. Two real
+provider/recovery tests cover scope/context failure and recovery, and a component
+test covers lock/visit ownership. Whole-workspace runtime, compact detents and
+VoiceOver remain pending. See voice-processing-axis.md for24 source axes.

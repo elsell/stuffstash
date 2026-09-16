@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise1,270
-pending,1,546 source-reviewed,448 finding,24 runtime-partial and120 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise1,249
+pending,1,563 source-reviewed,449 finding,24 runtime-partial and123 not-applicable.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
 includes the visible pending name on approval and blocks blank names;52 focused
@@ -104,6 +104,13 @@ regressions reproduced the lost reason and verify safe text plus retry ownership
 Combined validation passes all1,769 tests across278 files, TypeScript and structural
 checks on paul (`/tmp/mobile-m176-full.log`). Critic found no blockers; native
 visibility, contrast and announcements remain pending.
+
+[Conversation loading/processing](voice-processing-axis.md) now has all24 source
+axes reviewed. M177 adds native in-place Retry for initial context failure, with
+duplicate suppression and focused-visit ownership. All45 focused cases, TypeScript
+and structural checks pass remotely (`/tmp/voice-preview-green.log`). Critic found
+no blocker. Query/provider/component evidence does not establish whole-workspace
+native recovery; compact-sheet geometry and announcements remain pending.
 
 [Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
 on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size

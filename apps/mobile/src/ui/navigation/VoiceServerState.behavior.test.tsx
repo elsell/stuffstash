@@ -8,6 +8,45 @@ import { VoiceInteractionPreviewQuery } from '../../application/voice/VoiceInter
 import { RealtimeVoiceSessionController } from '../../application/voice/RealtimeVoiceSession';
 import { MobileServerStateProvider } from './MobileServerStateProvider';
 import { VoiceInteractionStateProvider, useVoiceInteractionState } from './VoiceInteractionStateContext';
+import { VoicePreviewRecovery } from '../screens/VoicePreviewRecovery';
+import { setScreenFocused } from '../../test-support/navigation';
+
+it.each(['scope', 'context'])('recovers failed initial %s from the conversation Retry command', async failure => {
+  setScreenFocused(true);
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let attempts = 0;
+  const failTwice = () => { if (++attempts <= 2) throw new Error('Context temporarily unavailable'); };
+  const context = { getVoiceInventoryContext: async () => {
+    if (failure === 'context') failTwice();
+    return { tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), tenantName: 'Home', inventoryName: 'Inventory' };
+  } };
+  const unused = async (): Promise<never> => { throw new Error('Unused'); };
+  const controller = new RealtimeVoiceSessionController(context,
+    { start: unused, stop: unused, cancel: async () => {}, recordingLevel: () => 0 },
+    { run: unused, canSendFollowUpAudio: () => false, sendFollowUpAudio: unused, approveActionPlan: unused, cancelActionPlan: unused },
+    { playChunk: async () => {}, stop: async () => {} });
+  const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
+  function Surface() {
+    const { state, scopeIdentity, retryPreview } = useVoiceInteractionState();
+    return state.status === 'error'
+      ? <VoicePreviewRecovery key={scopeIdentity} message={state.message} identity={scopeIdentity} onRetry={retryPreview} />
+      : <Text>{state.status === 'ready' ? 'Conversation ready' : 'Loading'}</Text>;
+  }
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => {
+      if (failure === 'scope') failTwice(); return { tenantId: 'tenant', inventoryId: 'inventory' };
+    }}><VoiceInteractionStateProvider previewQuery={new VoiceInteractionPreviewQuery(context)} realtimeController={controller}>
+      <Surface />
+    </VoiceInteractionStateProvider></MobileServerStateProvider>);
+    await settle(); await settle();
+    expect(h.allText()).toContain('Voice unavailable');
+    await h.press(h.byLabel('Retry conversation')); await settle();
+    expect(attempts).toBe(2); expect(h.allText()).toContain('Voice unavailable');
+    await h.press(h.byLabel('Retry conversation')); await settle(); await settle();
+    expect(attempts).toBe(3);
+    expect(h.allText()).not.toContain('Voice unavailable');
+    expect(h.allText()).toContain('Conversation ready');
+  } finally { await h.unmount(); client.clear(); }
+});
 
 it('shares focused voice context and cancels recording on inventory replacement', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let selected = 'Garage'; let cancelled = 0;
