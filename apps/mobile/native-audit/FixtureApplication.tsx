@@ -87,7 +87,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-inventory-switcher" options={{ presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.5, 1], sheetCornerRadius: 24, sheetGrabberVisible: true, contentStyle: { backgroundColor: palette.surface } }} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
-      <Stack.Screen name="audit-add-header" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: true, title: 'Add item', contentStyle: { backgroundColor: palette.background } }} />
+      <Stack.Screen name="audit-add-header" options={sheets.add} />
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />

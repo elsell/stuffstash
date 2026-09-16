@@ -1631,3 +1631,9 @@ Preserve Material enabled/disabled colors and existing interaction semantics.
 Acceptance must include switching light/dark while controls remain mounted,
 readable enabled secondary actions, disabled-command non-execution and enabled
 primary execution. Source propagation alone does not prove rendered contrast.
+
+Android Add must use a full-screen native-stack card so its Close and Save header
+commands remain visible. Android form sheets do not render the requested header.
+Keep the existing retained-draft and busy-operation guards, save eligibility and
+return behavior; iOS keeps the full-height native Add sheet. Production route and
+the production-equivalent native audit fixture must share these options.

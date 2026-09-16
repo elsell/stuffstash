@@ -24,3 +24,12 @@ it('keeps Android asset actions out of partial sheet geometry', () => {
   }
   expect(options.edit.gestureEnabled).toBe(false);
 });
+
+it('keeps Add header commands available on Android without changing the iOS sheet', () => {
+  const android = createAssetNativeSheetOptions(colors, 'android').add;
+  expect(android).toMatchObject({ presentation: 'card', headerShown: true, title: 'Add item' });
+  expect(android).not.toHaveProperty('sheetAllowedDetents');
+  expect(createAssetNativeSheetOptions(colors, 'ios').add).toMatchObject({
+    presentation: 'formSheet', headerShown: true, title: 'Add item', sheetAllowedDetents: [1]
+  });
+});

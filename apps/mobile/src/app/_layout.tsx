@@ -99,18 +99,7 @@ function ThemedApp() {
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/index" options={{ title: 'Provider Profile' }} />
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/credential" options={{ title: 'Credential' }} />
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/prompt" options={{ title: 'Prompt Guidance' }} />
-        <Stack.Screen
-          name="add"
-          options={{
-            contentStyle: { backgroundColor: palette.background },
-            headerShown: true,
-            title: 'Add item',
-            presentation: 'formSheet',
-            sheetAllowedDetents: [1],
-            sheetCornerRadius: 24,
-            sheetGrabberVisible: true
-          }}
-        />
+        <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
         <Stack.Screen
           name="assets/[assetId]/edit"

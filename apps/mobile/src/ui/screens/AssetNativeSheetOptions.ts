@@ -31,6 +31,14 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
 export function createAssetNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
+    add: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'card' as const, headerShown: true, title: 'Add item'
+    } : {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'formSheet' as const, headerShown: true, title: 'Add item',
+      sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true
+    },
     filters: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.background },
       presentation: 'card' as const, headerShown: true, title: 'Filters'

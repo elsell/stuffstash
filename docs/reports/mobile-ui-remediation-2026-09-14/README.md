@@ -531,3 +531,8 @@ Android native controls now share the app appearance override. The normal-size
 Cancel contrast regression and rebuilt dark/light evidence are recorded in
 [Android Compose appearance](android-compose-appearance.md); other adapter families
 retain individual runtime verification gaps.
+
+[Android Add header](android-add-header.md) records M226's missing native commands,
+shared presentation fix, and native Save/failure/Close acceptance. The separate
+M227 no-history Close fallback and remaining header-dependent Android sheets remain
+open; this sample does not certify all Add workflows.

@@ -3059,3 +3059,18 @@ appearance-aware host now covers all seven adapters. Rebuilt native footer sampl
 passes dark10.89:1/light8.96:1 and disabled/enabled command checks; individual
 appearance coverage of other adapter families remains open. See
 [Android appearance evidence](android-compose-appearance.md).
+
+### M226 — Android Add sheet omits Close and Save
+
+P1 runtime-confirmed. Android does not render the requested native sheet header,
+leaving Add without its commands. The shared Android card/iOS sheet option now
+passes native Save-current-draft/rejection-retention and ordinary Close return.
+See [Android Add evidence](android-add-header.md); successful persistence and root
+entry remain outside that sample.
+
+### M227 — Direct-entry Add Close has no return fallback
+
+P2 source-confirmed during M226 review: `src/app/add.tsx` dismisses only through
+`router.back()`. With no back destination, Close cannot ensure an escape. Reuse a
+bounded return policy that goes back when possible and otherwise returns Home,
+while preserving retained drafts and pending-operation guards. Not fixed by M226.
