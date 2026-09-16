@@ -101,3 +101,26 @@ not open DraftPhotoPreviewModal. It must not be counted as native acceptance for
 that full-screen consumer. AddAssetFixture currently returns no selected photos;
 controlled photo selection needs extending before native preview/paging/Close
 acceptance can be claimed. Its8 mounted draft-preview cases remain distinct.
+
+### Actual Add preview consumer
+
+The Add fixture now returns two distinct IDs/filenames backed by the bundled glyph
+from its library port once per fixture lifetime; subsequent selection and camera
+return empty. It exercises the real Add chooser/thumbnail/preview composition.
+TypeScript and structural checks pass on paul; critic found no blocker. No real
+library, provider or upload is used.
+
+Android16 Pixel6, normal text/light, APK
+`5660fb54a10d43f04f9be57288832bf8532f558ca4a07186429ff6623528348c`:
+Add photos → Choose from library creates two thumbnails. Opening the first shows
+1 of2 and its filename. Next shows the second filename and2 of2. Remove's native
+confirmation identifies the new-item draft; Cancel preserves the second photo.
+Accepting removal then [shows the first photo as1 of1](evidence/android-add-preview-remaining.png)
+without paging buttons. Close positively returns to Add item with Remove photo1
+and without Remove photo2. The duplicate library header stays absent. Distinct
+filenames/counts prove paging because the synthetic images share pixels.
+
+Evidence: `/tmp/android-add-photo-{entry,source,selected}.xml` and
+`/tmp/android-add-preview-{first,second,remove-confirm,cancel,removed,closed}.xml`.
+Last-photo removal, zoom chrome restoration, iOS, TalkBack and physical media
+selection/upload remain outside this sample. No asset was saved.

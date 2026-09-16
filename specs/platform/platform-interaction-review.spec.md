@@ -202,3 +202,11 @@ unsupported runtimes fail the URL-entry journey explicitly rather than silently
 skipping acceptance. Current iOS 26 runners must execute the same URL and all
 subsequent assertions. Run350919 failed compilation at the two unguarded calls;
 its fixture jobs provide no runtime acceptance evidence.
+
+Add photo-preview native acceptance must enter through the production Add screen
+and its photo-source chooser. The isolated library port returns two distinct IDs
+and filenames backed by a bundled image, once per fixture lifetime; subsequent
+library requests and camera return no selection. Keep these synthetic selections
+out of production adapters. Verify preview paging, removal cancellation/acceptance,
+remaining draft thumbnails and Close without saving an asset. Conversation draft
+thumbnails alone do not cover the full-screen Add preview consumer.

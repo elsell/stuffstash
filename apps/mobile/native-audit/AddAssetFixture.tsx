@@ -1,7 +1,7 @@
 import { returnToPreviousOrHome } from '../src/ui/navigation/returnToPreviousOrHome';
 import { QueryReadinessDiagnostics } from './QueryReadinessDiagnostics';
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from 'react';
-import { ScrollView, Text } from 'react-native';
+import { Image, ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
 import { AddAssetScreen } from '../src/ui/screens/AddAssetScreen';
 import { MobileServerStateProvider } from '../src/ui/navigation/MobileServerStateProvider';
@@ -14,6 +14,7 @@ import { PhotoSelectionQuery } from '../src/application/add/PhotoSelectionQuery'
 
 export function AddAssetFixture() {
   const [fixture] = useState(() => {
+    let selectedPhotos = false;
     const context = { tenantId: 'audit-tenant', tenantName: 'Audit household', inventoryId: 'audit-inventory', inventoryName: 'Audit inventory', canAdd: true, assetTags: [] };
     return {
       context,
@@ -22,7 +23,16 @@ export function AddAssetFixture() {
       scopeQuery: new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'audit-principal' }) }),
       draftStore: new InMemoryAddAssetDraftStore('audit'),
       parents: new ParentLookupQuery({ listParentCandidates: async () => [] }),
-      photos: new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })
+      photos: new PhotoSelectionQuery({
+        selectFromLibrary: async () => {
+          if (selectedPhotos) return [];
+          selectedPhotos = true;
+          const uri = Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri;
+          return [1, 2].map(index => ({ id: `audit-draft-photo-${index}`, uri,
+            fileName: `audit-draft-photo-${index}.png`, contentType: 'image/png' as const, sizeBytes: 1 }));
+        },
+        captureFromCamera: async () => []
+      })
     };
   });
   useEffect(() => () => fixture.client.clear(), [fixture]);
