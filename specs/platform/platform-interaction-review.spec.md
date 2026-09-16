@@ -108,3 +108,16 @@ Settings workflows. Keep the original frame assertions until those controls have
 their own native touch-delivery evidence.
 The focused `home-header` workflow selection runs the original geometry/scroll
 journey and all three action probes on phone and tablet; it is not full acceptance.
+
+Run35059882579 supplies independent Home action evidence: all three nine-point
+probes pass on iPad; phone notification/Profile pass and phone Add completes all
+nine destination/return assertions before its screenshot request times out. Both
+devices still report a36-point Add accessibility frame. Accordingly, the Home
+layout journey must assert nonempty, onscreen, hittable, ordered and stationary
+action frames, not equate accessibility-frame size with touch-region size.
+Keep raw frames in captured hierarchies and keep all three delivered-touch probes
+as separate requirements. Apple's Buttons guidance concerns the hit region:
+https://developer.apple.com/design/human-interface-guidelines/buttons
+The nine points sample the center and near edges/corners of a44-point square;
+they do not measure every point in the region or certify VoiceOver behavior.
+The phone capture failure and pending scroll-layout rerun remain recorded failures.
