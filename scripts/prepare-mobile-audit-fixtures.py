@@ -58,6 +58,8 @@ exports = {
     "audit-invitation": "InvitationAcceptanceFixture",
     "audit-connection": "AccountConnectionFixture",
     "audit-sharing": "InventorySharingFixture",
+    "audit-notifications": "NotificationInboxFixture",
+    "audit-notification-target": "NotificationTargetFixture",
     "audit-customization": "CustomizationCollectionFixture",
     "audit-managed-search": "ManagedSearchPlacementFixture",
     "audit-native-search-placement": "NativeSearchPlacementFixture",

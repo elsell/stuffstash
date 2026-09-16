@@ -12,6 +12,45 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testNotificationInboxReadStateAndNavigationReturn() {
+    let entry = app.buttons["Audit Notifications"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable); entry.tap()
+    let title = "Household medicine with a long descriptive label"
+    let markRead = app.buttons["Mark \(title) read"].firstMatch
+    XCTAssertTrue(markRead.waitForExistence(timeout: 10))
+    XCTAssertTrue(markRead.isHittable)
+    XCTAssertGreaterThanOrEqual(markRead.frame.width, 44)
+    XCTAssertGreaterThanOrEqual(markRead.frame.height, 44)
+    capture("notification-inbox-long-row")
+    markRead.tap()
+    let markUnread = app.buttons["Mark \(title) unread"].firstMatch
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5)); markUnread.tap()
+    XCTAssertTrue(markRead.waitForExistence(timeout: 5))
+    app.buttons["Open location Cold and cough supplies"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: box"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markRead.waitForExistence(timeout: 5))
+    app.buttons["Open \(title)"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: medicine-item"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5))
+    app.buttons["Reminder settings"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: Reminder settings"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5))
+    app.buttons["Mark Emergency batteries unread"].firstMatch.tap()
+    let markAll = app.buttons["Mark all read"].firstMatch
+    XCTAssertTrue(app.buttons["Mark Emergency batteries read"].firstMatch.waitForExistence(timeout: 5))
+    expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: markAll)
+    waitForExpectations(timeout: 5); markAll.tap()
+    XCTAssertTrue(app.buttons["Mark Emergency batteries unread"].firstMatch.waitForExistence(timeout: 5))
+    let unreadFilter = app.buttons["Unread"].firstMatch
+    expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: unreadFilter)
+    waitForExpectations(timeout: 5); unreadFilter.tap()
+    XCTAssertTrue(app.staticTexts["No unread notifications."].waitForExistence(timeout: 5))
+    capture("notification-inbox-unread-empty")
+  }
   func testInvitationAcceptanceRetainsAccessAfterOpeningFailure() {
     func openInvitation() {
       let entry = app.buttons["Audit invitation acceptance"].firstMatch

@@ -10,6 +10,7 @@ export { NativeSearchPlacementFixture } from './NativeSearchPlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { AccountConnectionFixture } from './AccountConnectionFixture';
 export { InvitationAcceptanceFixture } from './InvitationAcceptanceFixture';
+export { NotificationInboxFixture, NotificationTargetFixture } from './NotificationInboxFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
@@ -115,6 +116,8 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-account" options={{ title: 'Account' }} />
       <Stack.Screen name="audit-invitation" options={{ title: 'Invitation' }} />
       <Stack.Screen name="audit-connection" options={{ title: 'Connection' }} />
+      <Stack.Screen name="audit-notifications" options={{ title: 'Notifications' }} />
+      <Stack.Screen name="audit-notification-target" options={{ title: 'Notification destination' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
@@ -167,6 +170,7 @@ export function FixtureMenu() {
     <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
     <Button title="Audit static search placement" onPress={() => router.push('/audit-native-search-placement' as Href)} />
     <Button title="Audit preconfigured place search" onPress={() => router.push('/audit-contents-search-preconfigured' as Href)} />
+    <Button title="Audit Notifications" onPress={() => router.push('/audit-notifications' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />

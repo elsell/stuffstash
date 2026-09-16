@@ -390,3 +390,14 @@ label and require existence, enabled state and hittability before tapping. Prese
 the five-second candidate wait, rejected-command draft retention, retry and positive
 return assertions. This corrects test target semantics, not a product recovery fix;
 the amended journey remains unverified until native execution.
+
+## Native inbox acceptance fixture
+
+Runner-only notification fixtures reuse the production inbox and application query
+with an in-memory notification repository. Include long titles, month/day dates,
+read/unread rows and location trails. A separate scenario rejects its first mutation
+with permission denied so native acceptance can verify metadata removal and fresh
+read recovery. Inspect actual accessory geometry and activate read/unread, mark-all,
+filter, item and breadcrumb navigation with return. Fixture destinations label the
+resolved target; they do not represent production item/settings content. This
+verifies presentation and interaction, not server authorization or APNs delivery.

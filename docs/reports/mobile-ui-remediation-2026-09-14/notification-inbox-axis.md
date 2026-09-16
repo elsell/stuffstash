@@ -52,3 +52,32 @@ reproduced offscreen writes/navigation, and a fifth protects first loading after
 an unfocused mount. Current focused commands still execute; retained callbacks
 after teardown do not. All24 inbox checks, TypeScript and structural validation
 pass on paul. Native interruption and current-build geometry remain open.
+
+## Android native acceptance — September 16
+
+Pixel6/API36 emulator,1080×2400 at420dpi, font1, light appearance. APK SHA256
+`31457c4de8c7b78759039732b3b7adc9849a83daee44d448e5f7ba6b5f52be00` comes from
+the disposable Android tree with M242 production screen and this fixture applied;
+it is not a complete HEAD build. Initial build failed because that historical tree
+lacked ManagedSearchPlacementFixture; copying the required fixture resolved the build.
+
+Actual taps verified read/unread changes; breadcrumb navigation without changing
+read state; item opening with read synchronization; settings navigation and return;
+mark-all followed by empty Unread; and a denied mutation hiding all private rows
+until an explicit successful Retry. The clickable read accessory parent measured
+126×126 pixels (48dp), separate from the item target. The long title wraps and the
+month/date/path content remains visible in the inspected initial capture.
+
+Controlled repository denial tests client recovery, not backend access enforcement.
+Fixture destination labels prove the resolved target, not production destination
+content. This does not establish TalkBack traversal, dark appearance, tablet fit,
+physical APNs behavior, interrupted in-flight completion or iOS acceptance.
+The corresponding Swift journey is added but uncompiled/unexecuted here. Review
+corrected asynchronous state waits before mark-all and Unread activation.
+
+Evidence: [initial](evidence/android-inbox-initial.png),
+[denied](evidence/android-inbox-denied.png),
+[empty unread](evidence/android-inbox-unread-empty.png).
+The script `/tmp/verify-inbox-native.py`, all four XML/capture pairs and build log
+remain on paul. Six fixture installer checks, TypeScript and structural validation
+pass; code critic has no remaining confirmed blocker.

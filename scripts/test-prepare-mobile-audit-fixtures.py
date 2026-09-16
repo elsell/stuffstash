@@ -40,8 +40,9 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
 
-        self.assertEqual({p.name for p in self.routes.iterdir()} - {"audit-managed-search.tsx", "audit-contents-search-preconfigured.tsx", "audit-tabs", "audit-invitation.tsx", "audit-customization-editor.tsx", "voice.tsx", "voice-plan-location.tsx", "audit-native-search-placement.tsx", "add.tsx", "settings.tsx"},
+        self.assertEqual({p.name for p in self.routes.iterdir()} - {"audit-notifications.tsx", "audit-notification-target.tsx", "audit-managed-search.tsx", "audit-contents-search-preconfigured.tsx", "audit-tabs", "audit-invitation.tsx", "audit-customization-editor.tsx", "voice.tsx", "voice-plan-location.tsx", "audit-native-search-placement.tsx", "add.tsx", "settings.tsx"},
                          {"audit-customization.tsx", "_layout.tsx", "index.tsx", "audit-add.tsx", "audit-add-push.tsx", "audit-add-header.tsx", "audit-inventory-query.tsx", "audit-inventory-switcher.tsx", "audit-home-return.tsx", "audit-home-header.tsx", "home-return-details.tsx", "audit-checkout-history.tsx", "audit-edit-recovery.tsx", "audit-edit-tags.tsx", "audit-move-here-recovery.tsx", "audit-command-height.tsx", "audit-footer-appearance.tsx", "audit-sharing.tsx", "audit-account.tsx", "audit-connection.tsx", "audit-provider-editor.tsx", "audit-notice.tsx", "audit-notice-sheet.tsx", "audit-region-recovery.tsx", "audit-contents-search.tsx", "audit-detail-commands.tsx", "audit-sheet-diagnostic.tsx", "audit-browse.tsx", "audit-expiration.tsx", "audit-expiration-medium.tsx"})
+        self.assertIn("NotificationInboxFixture as default", (self.routes / "audit-notifications.tsx").read_text())
         self.assertIn("AssetContentsSearchFixture as default", (self.routes / "audit-contents-search-preconfigured.tsx").read_text())
         self.assertIn("FixtureMenu as default", (self.routes / "index.tsx").read_text())
         self.assertIn("CustomizationEditorFixture as default", (self.routes / "audit-customization-editor.tsx").read_text())
