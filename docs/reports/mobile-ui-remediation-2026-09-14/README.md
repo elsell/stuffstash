@@ -2,10 +2,10 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest full source checkpoint:44e15bc9 plus M210 passes1,849 tests across286 files, TypeScript
+Latest full source checkpoint:348e5fe8 plus M215 passes1,869 tests across288 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture
 content matches the remote tree by checksum. React act warnings remain. Log:
-`/tmp/action-eligibility-full.log`. This does not establish native acceptance.
+`/tmp/mobile-search-stability-full.log`. This does not establish native acceptance.
 
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).

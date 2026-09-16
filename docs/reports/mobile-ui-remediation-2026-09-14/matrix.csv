@@ -1647,7 +1647,7 @@ S069,Browse / map search path,keyboard,"Keyboard, text entry and focus",finding,
 S069,Browse / map search path,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
 S069,Browse / map search path,motion,Reduced motion and feedback alternatives,source-reviewed,; motion-axis.md M62 shared preference; Map request tests and notice tests; native motion pending; map-axis.md; source 608b1e54; native acceptance pending,M62
 S069,Browse / map search path,content,"Lists, hierarchy, density and pagination",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
-S069,Browse / map search path,search,"Search, scope and filters",finding,; map-axis.md; source 608b1e54; native acceptance pending,M125
+S069,Browse / map search path,search,"Search, scope and filters",finding,; map-axis.md; source 608b1e54; native acceptance pending; native-search-placement-350465.md M215 stable committed search options; 1869 remote tests/static pass; native placement pending,M125; M215
 S069,Browse / map search path,loading,"Loading, background refresh and progress",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
 S069,Browse / map search path,recovery,"Empty, error, denied and retry",finding,; map-axis.md; source 608b1e54; native acceptance pending,M125
 S069,Browse / map search path,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; map-axis.md; source 608b1e54; native acceptance pending,
@@ -1671,7 +1671,7 @@ S070,Browse / list search,keyboard,"Keyboard, text entry and focus",finding,; fi
 S070,Browse / list search,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S070,Browse / list search,motion,Reduced motion and feedback alternatives,source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S070,Browse / list search,content,"Lists, hierarchy, density and pagination",finding,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,M185
-S070,Browse / list search,search,"Search, scope and filters",finding,; findings.md M123; source f13ea7e1; focus callback/debounce tests; native return pending; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,M123
+S070,Browse / list search,search,"Search, scope and filters",finding,; findings.md M123; source f13ea7e1; focus callback/debounce tests; native return pending; browse-route-axis.md source2f861b25 plus M185; native acceptance pending; native-search-placement-350465.md M215 stable committed search options; 1869 remote tests/static pass; native placement pending,M123; M215
 S070,Browse / list search,loading,"Loading, background refresh and progress",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S070,Browse / list search,recovery,"Empty, error, denied and retry",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
 S070,Browse / list search,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,

@@ -38,3 +38,27 @@ Swift compilation/execution is pending. Critic found no confirmed blocker.
 This comparison differs in refs, callbacks, content and timing; a different outcome
 would narrow investigation rather than identify the cause. No production fix is
 claimed and no live native run was canceled/restarted.
+
+## Run350549 comparison and M215
+
+The phone static comparison passes. Its inspected idle capture shows the icon in
+the navigation bar; Place's failed production journey instead shows a bottom
+“Search this place” field. Artifact10431223485 retains both. See
+`evidence/place-bottom-search-350549.png` and
+`evidence/static-header-search-350549.png`. This confirms a rendered difference,
+but the comparison differs in more than registration timing.
+
+Independent mounted feedback testing reproduces a shared NativeNavigationSearch
+options loop: every render creates another headerSearchBarOptions object. The
+candidate memoizes presentation by enabled state/placeholder and reads committed
+current callbacks from a ref. Query synchronization and focus/removal guards remain.
+The test fails at the bounded25-update guard before the fix and passes afterward,
+including replacement callbacks, disabled events and changed placeholders.
+
+Eight consumers were inspected: Browse List, Map, Browse tags, Expiration filter
+selection, timezone search, settings collections, Place contents and voice location.
+All1,869 tests across288 files, TypeScript and structural checks pass on paul.
+Four Browse tests were corrected to read the latest explicit search-options update
+rather than assuming unrelated title/action updates always precede search; explicit
+removal still fails the test. Critic found no blocker. Source checks prove stable
+configuration and current callbacks, not corrected native placement. M207 stays open.

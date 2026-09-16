@@ -14,6 +14,16 @@ import { toAssetCardViewModel } from '../../application/assets/AssetViewModels';
 import { assetId, type AssetSummary } from '../../domain/assets/AssetSummary';
 import type { AssetBrowsePage } from '../../application/home/InventorySummaryRepository';
 
+function latestNativeSearch() {
+  // Other Stack.Screen calls update title/actions independently of search.
+  // Read the latest explicit search update, including an explicit removal.
+  const options = navigationOptions().findLast(value => Object.prototype.hasOwnProperty.call(value, 'headerSearchBarOptions')) as {
+    headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void; placeholder: string }
+  } | undefined;
+  expect(options?.headerSearchBarOptions).toBeDefined();
+  return options!.headerSearchBarOptions!;
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (error: Error) => void;
@@ -191,7 +201,7 @@ it('retries unavailable context before showing cached Browse results again', asy
 it('keeps native search and refinements across an immediate List/Map switch',async()=>{
  const h=new MobileRenderHarness();const client=createMobileQueryClient();resetNavigation();
  const props=propsFor({initialTagIds:['tag'],inventoryMapQuery:new InventoryMapQuery({listActiveInventoryMapAssets:async()=>({sessionScopeId:'scope',tenantId:tenantId('tenant'),inventoryId:inventoryId('inventory'),inventoryName:'Home',permissions:['view'],assets:[]})})});
- const nativeSearch=()=> (navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void;onCancelButtonPress:()=>void;placeholder:string}}).headerSearchBarOptions;
+ const nativeSearch=latestNativeSearch;
  const switchTo=async(label:string)=>h.run(()=>h.allByType('NativeSegmentedControl').find(node=>node.props.values?.includes('Map'))?.props.onValueChange(label));
  try{
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);
@@ -218,7 +228,7 @@ it('settles pending search and opens a scoped native filter sheet', async () => 
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>);
     await settle(h); await settle(h);
-    const search = (navigationOptions().at(-1) as { headerSearchBarOptions: { onChangeText: (e: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
+    const search = latestNativeSearch();
     await h.run(() => search.onChangeText({ nativeEvent: { text: 'Fresh query' } }));
     await h.press(h.byLabel('Filters, 1 applied'));
     expect(dispatchedActions().filter(action => action.type === 'push').at(-1)).toMatchObject({
@@ -235,7 +245,7 @@ it('pauses pending Browse query on blur and resumes it on return', async () => {
  const requests:string[]=[];const props=propsFor({searchAssetsQuery:new SearchAssetsQuery({browseAssets:async input=>{requests.push(input.query);return {assets:[],hasMore:false};}})});
  try {
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);await settle(h);await settle(h);
-  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+  const search=latestNativeSearch();
   await h.run(()=>search.onChangeText({nativeEvent:{text:'retained'}}));
   await h.run(()=>setScreenFocused(false));
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,350)));
@@ -253,7 +263,7 @@ it('uses external Browse criteria instead of a paused draft after returning', as
  const view=(initialQuery:string)=><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props} initialQuery={initialQuery}/></AppFeedbackProvider></MobileServerStateProvider>;
  try {
   await h.render(view(''));await settle(h);await settle(h);
-  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+  const search=latestNativeSearch();
   await h.run(()=>search.onChangeText({nativeEvent:{text:'abandoned'}}));
   await h.run(()=>setScreenFocused(false));
   await h.render(view('replacement'));await settle(h);

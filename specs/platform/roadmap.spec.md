@@ -423,3 +423,13 @@ dismissal despite observation failures; bounded exact-value observation and
 per-gesture geometry reads are queued without weakening end-state assertions.
 Separate retained ordinary controlled input still contains reordered text. Do not
 generalize the onboarding timing diagnosis or close the native gate prematurely.
+
+The current checkpoint (348e5fe8 plus M215) passes1,869 tests/288 files, TypeScript
+and structural checks on paul. Source/configuration checksum comparison is clean.
+M214 extends direct-entry return to loaded Edit/Move actions. M215 stabilizes shared
+native search options while preserving current handlers and presentation changes;
+the captured bottom-search mismatch remains a separate native gate. Focused350563
+finishes8/10 iPad and7/10 phone, with default-assisted SwiftUI passing both. A scoped
+iOS Add-name candidate retains revision-owned draft resets and runs unchanged Add
+journeys in35058684319. Full350549 phone finishes52/73; iPad remains active. The
+coverage ledger now retains529 finding cells. Continue normal-size native work.

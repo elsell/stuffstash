@@ -1381,6 +1381,14 @@ The focused `add-draft` workflow selection runs the existing Add typing/recovery
 navigation-stack, preconfigured-header and unfinished-tag journeys unchanged on
 phone and tablet. It is a diagnostic subset, not full native acceptance.
 
+Shared native navigation search options must settle across navigation-context
+updates. Query and caller callback changes update current committed handlers and
+native text, without reconstructing unchanged header presentation. Enabled state
+and placeholder changes still update presentation. Old events after disabling or
+unmount must do nothing; return to a focused enabled route restores interaction.
+This prevents repeated header reconfiguration; it does not by itself prove the
+dynamic search placement failure is resolved. Retain native placement acceptance.
+
 The native tag color well must expose one accessible “Choose any color” name.
 Use the native ColorPicker label as its naming source; do not repeat it through
 an accessibility-label modifier. Retained350504 hierarchy duplicates the name.

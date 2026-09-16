@@ -2946,3 +2946,14 @@ Seven direct-entry RED cases preceded the fix; six back-stack counterparts passe
 All62 related tests pass on paul, plus TypeScript and the structural check after a
 test-only nullable-target correction. Critic found no blocker. Native direct-entry
 navigation remains pending. See asset-actions-axis.md.
+
+### M215 — shared native search repeatedly reconfigures navigation
+
+P2 source/test-confirmed at348e5fe8. Shared search creates fresh native header
+options for every render, including navigation-context feedback. A bounded mounted
+regression exceeds25 updates before the fix. Stable presentation now uses current
+committed handlers and preserves enabled/placeholder updates, query synchronization,
+focus and teardown guards. All1,869 remote tests and static checks pass; critic found
+no blocker. Native placement remains unverified and M207 remains open. Eight shared
+consumers and the static-versus-Place captures are recorded in
+native-search-placement-350465.md.
