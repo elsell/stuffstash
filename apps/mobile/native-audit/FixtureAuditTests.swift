@@ -235,7 +235,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
     let create = app.buttons["Create Invitation"].firstMatch
     reveal(create); create.tap()
-    feedback("Invitation created, link unavailable", message: "Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.", captureName: "sharing-unavailable-link")
+    feedback("Invitation created, link unavailable", message: "If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.", captureName: "sharing-unavailable-link")
     XCTAssertEqual(email.value as? String, "audit@example.invalid")
     XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
 
@@ -251,6 +251,8 @@ final class FixtureAuditTests: XCTestCase {
     reveal(cancel); cancel.tap()
     XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)], timeout: 5), .completed)
+    XCTAssertEqual(email.value as? String, "audit@example.invalid")
+    XCTAssertTrue(app.staticTexts["If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again."].exists)
 
     reveal(create); create.tap()
     let link = app.staticTexts["Complete invitation link"].firstMatch

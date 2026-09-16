@@ -1,5 +1,17 @@
 # Platform Interaction Review
 
+## Missing-link recovery guidance
+
+The current missing-link error confirms scoped creation without exposing the created
+invitation ID. Its guidance must remain accurate after cancellation: if the invitation
+is still pending, cancel it; if already cancelled, retry creation. Do not infer the
+created ID from email, incomplete paginated lists or the next cancelled row. Do not
+clear a newer or unrelated creation error after cancellation. Preserve the submitted
+email and historical missing-link notice until a new attempt or focused visit resets
+it. This conditional guidance corrects M239 without adding unsafe identity inference.
+Native acceptance must inspect the guidance and retained email after successful
+cancellation, as well as failure/retry and removal of the cancelled row's command.
+
 ## Invitation cancellation interaction
 
 A pending, unexpired invitation exposes its single command directly as a native

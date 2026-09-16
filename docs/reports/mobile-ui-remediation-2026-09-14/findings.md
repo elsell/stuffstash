@@ -3270,3 +3270,15 @@ unrelated/newer errors and scope ownership. Acceptance: missing-link creation,
 failed cancellation, successful retry, current guidance and retained email; include
 unrelated invitation cancellation and a newer creation attempt during cancellation.
 See sharing-axis.md and evidence/android-sharing-direct-complete.png. Open.
+
+
+M239 correction: missing-link errors contain no created invitation ID, so cancellation
+must not clear a notice by inferred email/row identity. Guidance now explicitly covers
+both still-pending and already-cancelled states. The historical creation notice and
+email remain; a new attempt still resets it. No cancellation state or ownership change.
+Android APKde9ebc9e verifies missing-link creation, deliberate cancellation failure,
+successful retry, Cancelled row without command, retained email and accurate conditional
+guidance. See evidence/android-sharing-guidance-complete.png. Twenty-two sharing
+behavior tests, six fixture-preparation tests and structural checks pass on paul;
+critic found no blocker. iOS copy/layout acceptance remains pending in the updated
+journey; unrelated/newer errors cannot be cleared by this copy-only change.

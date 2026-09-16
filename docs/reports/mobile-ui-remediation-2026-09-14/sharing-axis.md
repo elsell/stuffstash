@@ -26,8 +26,13 @@ multi-row native disambiguation and real server cancellation are not established
 M239 is newly runtime-confirmed: after cancellation succeeds, the retained creation
 notice still tells the user to cancel the invitation below. The same source stores
 creationError independently of cancellation. Recovery guidance must reflect the
-completed prerequisite without clearing unrelated or newer failures. Fix and native
-reverification remain outstanding.
+completed prerequisite without clearing unrelated or newer failures. The correction uses conditional pending/already-cancelled guidance because the error
+has no created invitation ID. It does not guess identity or clear unrelated/newer
+errors. Android APK `de9ebc9e2717f72cf4d03250caae843717cebbf082cc443c5d04ebde721c1d2b`
+repeats the unavailable-link, failure, retry and terminal-row journey. The retained
+email and [updated guidance](evidence/android-sharing-guidance-complete.png) are
+visible after success. Existing22 sharing checks, six fixture-preparation checks
+and structural checks pass; critic clear. iOS acceptance remains pending.
 
 ## Native follow-up: M193/M194
 

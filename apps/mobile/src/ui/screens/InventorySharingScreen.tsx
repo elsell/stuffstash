@@ -131,7 +131,7 @@ export function InventorySharingScreen({
       setEmailRevision(value => value + 1);
     } catch (error) {
       if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
-        ? { title: 'Invitation created, link unavailable', message: 'Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.' }
+        ? { title: 'Invitation created, link unavailable', message: 'If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.' }
         : { title: 'Could not create invitation', message: readableError(error) });
     } finally {
       workingRef.current = false;
