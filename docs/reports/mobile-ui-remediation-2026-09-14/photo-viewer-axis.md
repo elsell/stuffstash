@@ -98,9 +98,9 @@ not real deletion or pending-interaction protection. Evidence:
 
 The existing Audit draft photos fixture renders VoicePlanPhotoDraftStrip and does
 not open DraftPhotoPreviewModal. It must not be counted as native acceptance for
-that full-screen consumer. AddAssetFixture currently returns no selected photos;
-controlled photo selection needs extending before native preview/paging/Close
-acceptance can be claimed. Its8 mounted draft-preview cases remain distinct.
+that full-screen consumer. At the initial review, AddAssetFixture returned no selected photos. The fixture
+extension and actual Add preview acceptance below close that sampling gap on
+Android. Its 8 mounted draft-preview cases remain distinct.
 
 ### Actual Add preview consumer
 
@@ -124,3 +124,10 @@ Evidence: `/tmp/android-add-photo-{entry,source,selected}.xml` and
 `/tmp/android-add-preview-{first,second,remove-confirm,cancel,removed,closed}.xml`.
 Last-photo removal, zoom chrome restoration, iOS, TalkBack and physical media
 selection/upload remain outside this sample. No asset was saved.
+
+Last-photo follow-up on the same5660fb54 Android build: reopening the remaining
+thumbnail and accepting draft-photo removal closes the viewer automatically.
+The positive destination is Add item, with Add photos and Asset name present and
+no Remove photo1 thumbnail command. Close Add then returns to the audit root. No
+asset was saved. Evidence: `/tmp/android-add-last-{entry,confirm,removed,close}.xml`.
+This closes the last-photo runtime gap for this Android sample, not zoom or iOS.

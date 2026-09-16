@@ -557,3 +557,9 @@ empty composer; physical audio and broader device coverage remain open.
 Native prebuilt dependencies from two XCTest API availability compile errors.
 The URL-entry compatibility correction preserves the native acceptance scenarios;
 its macOS rerun remains pending.
+
+Combined source validation at `92cfadc4` on paul passed all 1,888 tests in
+293 files, TypeScript, and mobile structural checks. This includes the shared
+photo-viewer correction and Add photo fixture; it does not establish native iOS
+acceptance. Run350950 remains active, with iPad onboarding passing and phone
+onboarding failing its existing address wait; see the onboarding report.
