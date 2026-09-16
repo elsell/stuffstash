@@ -28,6 +28,7 @@ import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Button, Image, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
 import { AppearanceProvider, useAppearance } from '../src/ui/theme/AppearanceContext';
 import { AppKeyboardProvider } from '../src/ui/components/AppKeyboardProvider';
@@ -70,13 +71,19 @@ export function FixtureLayout() {
 }
 
 function FixtureNavigation() {
-  const { palette, isHydrated } = useAppearance();
+  const { palette, isHydrated, resolvedColorScheme } = useAppearance();
   const [result, setResult] = useState('');
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
   return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
-    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{ headerBackTitle: 'Back', headerTintColor: palette.action, contentStyle: { backgroundColor: palette.background } }}>
+    <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
+    <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
+      headerBackTitle: 'Back', headerTintColor: palette.action,
+      contentStyle: { backgroundColor: palette.background },
+      headerStyle: { backgroundColor: palette.surface },
+      headerTitleStyle: { color: palette.text, fontWeight: '700' }
+    }}>
       <Stack.Screen name="voice" options={voiceNativeSheetOptions(palette)} />
       <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />

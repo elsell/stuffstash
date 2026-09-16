@@ -38,6 +38,20 @@ focus order. No spoken-output claim is made. Captures are retained as
 `/tmp/talkback-{focus,next,explore}.png` on both hosts. The originally empty enabled
 service setting and disabled accessibility state were restored and read back.
 
+### Fixture appearance correction
+
+The runner-only root now supplies production's existing header surface, title
+color/weight and resolved-theme StatusBar defaults. Production code is unchanged.
+Six fixture-preparation tests, TypeScript and structural checks pass on paul;
+critic review found no blocker. Rebuilt APK
+`114130346cc27a21d098dc90b662b463a87a9af4562756c1cf2aba17bec1b50c`
+shows the corrected [dark header](evidence/android-fixture-header-dark.png) and
+[light header](evidence/android-fixture-header-light.png), with matching status
+glyphs and readable filter actions. The first cold-start light capture preceded
+content readiness; the retained light capture is after restoring light mode from
+the loaded dark view. This verifies the Android fixture's theme change, not iOS
+appearance or the remaining filter interaction/accessibility checks.
+
 Android16 Pixel6 emulator on paul, normal text, light appearance. The initial
 Browse filter sheet at detent0.7 lacks its title and both footer commands;
 expanding to1.0 reveals Show results/Cancel. The ADB assertion that Show results

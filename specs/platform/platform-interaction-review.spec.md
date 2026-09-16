@@ -21,6 +21,14 @@ screenshots for the live acceptance gate. Use Apple's public
 
 ## Purpose
 
+Runner-only native fixture navigation must render the production root's appearance
+defaults: palette-backed content and header surfaces, text-colored header titles,
+action-colored controls and status glyphs matching the resolved color scheme.
+Otherwise a system-theme change can leave a light native header over a dark task
+and invalidate appearance observations. Synthetic route/service composition stays
+isolated; matching appearance does not make fixture evidence a production-data test.
+Inspect both themes on a rebuilt native candidate before accepting this correction.
+
 Choose familiar platform interactions before implementation. Native components alone
 are not evidence that a workflow uses the right interaction. This standard covers
 Stuff Stash iOS, Android, web, and human-facing documentation surfaces.
