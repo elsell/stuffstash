@@ -53,3 +53,26 @@ Retained evidence: `/tmp/android-inventory-switcher.xml`,
 `/tmp/android-return-stable-{entry,error,saved,cancelled}.xml`,
 `/tmp/android-return-after-fix-crash-buffer.log`, `/tmp/android-header-batch-full.log`,
 `/tmp/return-stable-guard-{check,structural,build}.log`.
+
+## History recovery, pagination and root Close follow-up
+
+September16, Android16 Pixel6, normal text/light appearance, APK
+`e37351994c5f6f398188fcdd829cddb499f6d1501afc4e34ccc2c16d29eddd28`:
+three history records remain visible while the asset-name query fails. Scrolling
+reveals the separate name Retry and Load older checkouts commands. Retry removes
+the error; scrolling back positively confirms the recovered title Audit ladder.
+Load older appends [Older audit checkout](evidence/android-history-older-page.png)
+and its return note while retaining the preceding records. The exhausted cursor
+removes the load-more command. Both older notes fit above the system bottom area.
+
+Native Close returns to the audit index after pagination. A separate force-stop
+and cold URL entry, without launching the index first, also exposes Close and
+returns positively to the root audit index. These exercise the production route
+with synthetic read ports; production asset-detail focus restoration, denied
+reads, failed continuation, larger text and TalkBack remain outside this sample.
+The existing duplicated Returned title/status is still tracked for presentation
+and assistive-reading review; this sample does not certify all history styling.
+
+Evidence: `/tmp/history-pagination-{entry,bottom,recovered,older,name,close}.xml`,
+`/tmp/history-root-{entry,close}.xml`, `/tmp/history-pagination-older.png`.
+No source implementation changed for this verification.

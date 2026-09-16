@@ -62,3 +62,8 @@ remain native acceptance. M212 identifies Close calling Back even without a stac
 The candidate replaces with Home only on direct entry. Loading/error/ready tests
 failed before correction and now cover both entry conditions. Nine route tests,
 TypeScript and structural checks pass on paul; critic found no blocker.
+
+September16 Android normal-text follow-up now verifies independent name recovery,
+older-page append/exhaustion, retained notes, ordinary Close and cold-root Close.
+See android-header-sheets.md for exact APK and retained evidence. Production detail
+focus, failed continuation and assistive reading remain separate acceptance work.
