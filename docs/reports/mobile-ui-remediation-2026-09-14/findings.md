@@ -3192,13 +3192,17 @@ files. Native event-delivery acceptance remains separate. Logs on paul:
 
 ### M237 — Voice review actions retain obsolete draft callbacks
 
-P2 source finding, still open. `VoiceSessionSheetScreen` forwards callbacks
-capturing the review's plan and current command/photo drafts. Provider lifetime
-checks protect error presentation; controller decision locks prevent concurrent
-submissions but do not establish focused command startup with the latest drafts.
-A retained action could therefore submit obsolete edits or start while hidden.
+P2, reproduced with the real voice provider/controller and a controlled transport.
+Retained Approve submitted an earlier title after the visible editor became blank.
+A separate review owner now reads current committed command/photo drafts, checks
+focus and current validity, and unmounts outside proposed/nonpending review.
+The owner is keyed by scope and plan so old events cannot act on a replacement.
 
-Add mounted command-payload and plan-replacement tests before fixing. The owning
-review must read current drafts while rejecting retired plan identities, hidden
-starts and removed tasks. Do not make an old plan's event approve a newer plan.
-This is source evidence, not observed delayed native event delivery.
+The production decision component is mounted with the actual provider and
+controller. Tests cover a blank pending name, updated name/placement/photo payload,
+blur/refocus, reset, direct incoming plan replacement, current Cancel and teardown.
+All1,905 tests across298 files pass on paul, as do TypeScript and structural
+checks. Code review found no source blocker. Explicit scope-replacement and
+concurrent-decision tests are not added here; existing provider/controller guards
+remain. Native event-delivery acceptance is still open. Logs on paul:
+`/tmp/voice-review-{red,green,full,check,structural}.log`.

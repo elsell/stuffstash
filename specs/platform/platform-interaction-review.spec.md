@@ -21,6 +21,14 @@ screenshots for the live acceptance gate. Use Apple's public
 
 ## Purpose
 
+Voice review decisions belong to one proposed plan within one inventory scope.
+Retained Approve/Cancel events must read current committed command/photo drafts,
+respect an invalid visible name, and reject hidden or removed review tasks. Mount
+a distinct action owner when the plan or scope changes, or when review ends; an
+old event must never approve a replacement plan. Preserve controller duplicate
+submission locks. Verify workspace-to-transport payloads, refocus, replacement and
+teardown with mounted tests before claiming this source repair complete.
+
 Asset Edit, Move and Move Here footer events must resolve the current committed
 draft and eligibility within their mounted asset task, reject events while blurred
 or removed, and retain the existing duplicate-operation lock. Changing the scoped

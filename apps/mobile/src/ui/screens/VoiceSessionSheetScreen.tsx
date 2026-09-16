@@ -2,7 +2,7 @@ import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import type { PhotoSelectionProvider } from '../../application/add/PhotoSelectionQuery';
 import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { NativeSheetActions } from '../components/NativeSheetActions';
+import { VoiceReviewActions } from './VoiceReviewActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { VoicePlanNameEditor } from './VoicePlanNameEditor';
 import { VoiceConversationHeader } from './VoiceConversationHeader';
@@ -49,7 +49,6 @@ import { assetDetailHref } from './AssetDetailNavigation';
 import { navigateAfterTransientDismissal } from '../navigation/TransientNavigation';
 import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
-  voicePlanCommandEdits,
   type VoicePlanCommandDrafts
 } from './VoicePlanEdits';
 
@@ -61,9 +60,7 @@ export function VoiceSessionSheetScreen() {
 export function VoiceSessionWorkspace({ photoSelectionQuery }: { readonly photoSelectionQuery: PhotoSelectionProvider }) {
   const {
     photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia, scopeIdentity,
-    approveRealtimeActionPlan,
     cancelRealtime,
-    cancelRealtimeActionPlan,
     diagnosticsEnabled,
     reset,
     retryRealtimeActionPlanPhotos,
@@ -120,12 +117,6 @@ export function VoiceSessionWorkspace({ photoSelectionQuery }: { readonly photoS
       }}
       onCancelSession={() => {
         void cancelRealtime();
-      }}
-      onApproveActionPlan={(planId) => {
-        void approveRealtimeActionPlan(planId, photoDrafts, voicePlanCommandEdits(commandDrafts));
-      }}
-      onCancelActionPlan={(planId) => {
-        void cancelRealtimeActionPlan(planId);
       }}
       onRetryPhotos={(planId) => {
         void retryRealtimeActionPlanPhotos(planId);
@@ -194,8 +185,6 @@ function VoiceSessionSheet({
   diagnosticsEnabled,
   onClose,
   onCancelSession,
-  onApproveActionPlan,
-  onCancelActionPlan,
   onAddPhotos,
   onRemovePhoto,
   onRetryPhotos,
@@ -213,8 +202,6 @@ function VoiceSessionSheet({
 }: {
   readonly diagnosticsExpanded: boolean;
   readonly diagnosticsEnabled: boolean;
-  readonly onApproveActionPlan: (planId: string) => void;
-  readonly onCancelActionPlan: (planId: string) => void;
   readonly onAddPhotos: (commandKey: string) => void;
   readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
   readonly onRetryPhotos: (planId: string) => void;
@@ -444,11 +431,7 @@ function VoiceSessionSheet({
               {bottomAction.kind === 'review_decision' ? (
                 <>
                 {titleEditor && !titleEditor.value.trim() ? <Text accessibilityLiveRegion="polite" style={styles.progressHint}>Enter a name before approving.</Text> : null}
-                <NativeSheetActions primaryLabel="Approve" primaryAccessibilityLabel="Approve voice change"
-                  secondaryLabel="Cancel" secondaryAccessibilityLabel="Cancel voice change"
-                  keyboardAvoidance="container" disabled={!!titleEditor && !titleEditor.value.trim()}
-                  onApply={() => onApproveActionPlan(bottomAction.planId)}
-                  onBack={() => onCancelActionPlan(bottomAction.planId)} />
+                <VoiceReviewActions planId={bottomAction.planId} />
                 </>
               ) : <VoiceConversationComposer onMic={onSessionMic} />}
 

@@ -2,11 +2,12 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint (M236 asset footer pass): **1,904 tests across297 files**, TypeScript
+Latest source checkpoint (M237 voice review pass): **1,905 tests across298 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
-tests. M237 voice review ownership remains open.
+tests. M237 voice decisions now read current drafts and retire with their plan;
+provider-to-transport tests cover names, placement, photos and plan replacement.
 The `88fe7499` native-test selector correction passes fixture preparation and
 structural checks; its native rerun is pending. Android Add-photo native checks verify
 zoom retention across elapsed time and warm return, control hide/reveal, paging
@@ -15,7 +16,8 @@ This is partial runtime acceptance. Completed run350950 records phone65/83 and
 iPad73/83 fixture passes; see the target reports for failures and evidence limits.
 Run35104157358 at14d7e06f is active: its phone onboarding journey passes, with two
 device-inapplicable skips, and all three iPad onboarding journeys pass. Both fixture
-suites remain running. The latest source is queued in35108934622. Release
+suites remain running. The asset-footer source is queued in35110848956; the next push replaces only
+the pending run. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.0GB on paul root and15GB in paul's
 `/tmp` after removing a verified duplicate Android installer extraction.
