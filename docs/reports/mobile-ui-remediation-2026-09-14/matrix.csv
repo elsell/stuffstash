@@ -1535,30 +1535,30 @@ S064,Home / recent changes,privacy,"Account scope, data use and permissions",sou
 S064,Home / recent changes,notifications,System notification entry and state,source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
 S064,Home / recent changes,media,"Camera, library, files and audio",source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
 S064,Home / recent changes,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; home-summary-axis.md; sourcea67157f9; native pending,
-S065,Home / checked-out return,task,Task clarity and platform-pattern fit,pending,,
-S065,Home / checked-out return,navigation,"Navigation, hierarchy and return",pending,,
-S065,Home / checked-out return,selection,Value selection and current value,pending,,
-S065,Home / checked-out return,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S065,Home / checked-out return,layout,"Safe areas, scroll edges and overlays",pending,,
-S065,Home / checked-out return,adaptation,Phone/tablet/window reflow,pending,,
-S065,Home / checked-out return,typography,"Dynamic Type, wrapping and legibility",pending,,
-S065,Home / checked-out return,appearance,"Light/dark, contrast and materials",pending,,
-S065,Home / checked-out return,localization,"Locale, timezone, RTL and long strings",pending,,
-S065,Home / checked-out return,imagery,"Icons, photos and missing media",pending,,
-S065,Home / checked-out return,targets,Touch target size and reachability,pending,,
-S065,Home / checked-out return,gestures,Gestures and explicit alternatives,pending,,
-S065,Home / checked-out return,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S065,Home / checked-out return,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.,M47
-S065,Home / checked-out return,motion,Reduced motion and feedback alternatives,pending,,
-S065,Home / checked-out return,content,"Lists, hierarchy, density and pagination",pending,,
-S065,Home / checked-out return,search,"Search, scope and filters",pending,,
-S065,Home / checked-out return,loading,"Loading, background refresh and progress",pending,,
-S065,Home / checked-out return,recovery,"Empty, error, denied and retry",pending,,
-S065,Home / checked-out return,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
-S065,Home / checked-out return,privacy,"Account scope, data use and permissions",source-reviewed,"Home canReturn derives from edit_asset, independent of create/role. Viewer/create-only hidden, edit-only active and stale revocation callback tested. API adversarial checkout suite verifies denied attempts preserve open state; Go1.25.8 pass. Native pending; open-details permission changes tracked under M47.",M49
-S065,Home / checked-out return,notifications,System notification entry and state,pending,,
-S065,Home / checked-out return,media,"Camera, library, files and audio",pending,,
-S065,Home / checked-out return,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.",M48
+S065,Home / checked-out return,task,Task clarity and platform-pattern fit,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,navigation,"Navigation, hierarchy and return",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,selection,Value selection and current value,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,modality,Presentation and dismissal,finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M47
+S065,Home / checked-out return,layout,"Safe areas, scroll edges and overlays",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,adaptation,Phone/tablet/window reflow,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,appearance,"Light/dark, contrast and materials",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,localization,"Locale, timezone, RTL and long strings",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,imagery,"Icons, photos and missing media",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,targets,Touch target size and reachability,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,gestures,Gestures and explicit alternatives,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,keyboard,"Keyboard, text entry and focus",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M47
+S065,Home / checked-out return,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,Source: Home return details renders inline View with bespoke commands and placeholder-only input; native-sheet requirement is not met. Native replacement pending.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M47
+S065,Home / checked-out return,motion,Reduced motion and feedback alternatives,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,content,"Lists, hierarchy, density and pagination",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,search,"Search, scope and filters",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,loading,"Loading, background refresh and progress",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,recovery,"Empty, error, denied and retry",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,editing,"Draft, save, cancel, undo and interruption",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending",M48
+S065,Home / checked-out return,privacy,"Account scope, data use and permissions",source-reviewed,"Home canReturn derives from edit_asset, independent of create/role. Viewer/create-only hidden, edit-only active and stale revocation callback tested. API adversarial checkout suite verifies denied attempts preserve open state; Go1.25.8 pass. Native pending; open-details permission changes tracked under M47.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending",M49
+S065,Home / checked-out return,notifications,System notification entry and state,source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,media,"Camera, library, files and audio",source-reviewed,; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S065,Home / checked-out return,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Implemented scope-owned Return/Save/undo serialization; checkout-identity guard permits later checkout; reconciliation feedback gated by originating focus. Four reproduced failures fixed; 20 focused and full1394 tests pass, TypeScript/structural and critic clean. Native acceptance pending.; home-return-axis.md all24 source follow-up d6130098; 89 remote cases; native pending",M48
 S066,Home / native action header,task,Task clarity and platform-pattern fit,source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,navigation,"Navigation, hierarchy and return",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,selection,Value selection and current value,source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
@@ -3359,30 +3359,30 @@ R140,home-return-details.tsx,privacy,"Account scope, data use and permissions",s
 R140,home-return-details.tsx,notifications,System notification entry and state,source-reviewed,home-return-axis.md; source cf05fb1a; native acceptance pending,
 R140,home-return-details.tsx,media,"Camera, library, files and audio",source-reviewed,home-return-axis.md; source cf05fb1a; native acceptance pending,
 R140,home-return-details.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,home-return-axis.md; source cf05fb1a; native acceptance pending,
-S141,Settings / retained customization completion,task,Task clarity and platform-pattern fit,source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
-S141,Settings / retained customization completion,navigation,"Navigation, hierarchy and return",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
-S141,Settings / retained customization completion,selection,Value selection and current value,pending,,
-S141,Settings / retained customization completion,modality,Presentation and dismissal,pending,,
-S141,Settings / retained customization completion,layout,"Safe areas, scroll edges and overlays",pending,,
-S141,Settings / retained customization completion,adaptation,Phone/tablet/window reflow,pending,,
-S141,Settings / retained customization completion,typography,"Dynamic Type, wrapping and legibility",pending,,
-S141,Settings / retained customization completion,appearance,"Light/dark, contrast and materials",pending,,
-S141,Settings / retained customization completion,localization,"Locale, timezone, RTL and long strings",pending,,
-S141,Settings / retained customization completion,imagery,"Icons, photos and missing media",pending,,
-S141,Settings / retained customization completion,targets,Touch target size and reachability,pending,,
-S141,Settings / retained customization completion,gestures,Gestures and explicit alternatives,pending,,
-S141,Settings / retained customization completion,keyboard,"Keyboard, text entry and focus",pending,,
-S141,Settings / retained customization completion,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S141,Settings / retained customization completion,motion,Reduced motion and feedback alternatives,pending,,
-S141,Settings / retained customization completion,content,"Lists, hierarchy, density and pagination",pending,,
-S141,Settings / retained customization completion,search,"Search, scope and filters",pending,,
-S141,Settings / retained customization completion,loading,"Loading, background refresh and progress",pending,,
-S141,Settings / retained customization completion,recovery,"Empty, error, denied and retry",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
-S141,Settings / retained customization completion,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
-S141,Settings / retained customization completion,privacy,"Account scope, data use and permissions",pending,,
-S141,Settings / retained customization completion,notifications,System notification entry and state,pending,,
-S141,Settings / retained customization completion,media,"Camera, library, files and audio",pending,,
-S141,Settings / retained customization completion,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+S141,Settings / retained customization completion,task,Task clarity and platform-pattern fit,source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M59
+S141,Settings / retained customization completion,navigation,"Navigation, hierarchy and return",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M59
+S141,Settings / retained customization completion,selection,Value selection and current value,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,modality,Presentation and dismissal,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,layout,"Safe areas, scroll edges and overlays",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,adaptation,Phone/tablet/window reflow,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,appearance,"Light/dark, contrast and materials",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,localization,"Locale, timezone, RTL and long strings",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,imagery,"Icons, photos and missing media",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,targets,Touch target size and reachability,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,gestures,Gestures and explicit alternatives,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,keyboard,"Keyboard, text entry and focus",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,motion,Reduced motion and feedback alternatives,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,content,"Lists, hierarchy, density and pagination",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,search,"Search, scope and filters",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,loading,"Loading, background refresh and progress",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,recovery,"Empty, error, denied and retry",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M59
+S141,Settings / retained customization completion,editing,"Draft, save, cancel, undo and interruption",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M59
+S141,Settings / retained customization completion,privacy,"Account scope, data use and permissions",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,notifications,System notification entry and state,source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,media,"Camera, library, files and audio",source-reviewed,; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,
+S141,Settings / retained customization completion,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending; retained-completion-axis.md all24 source follow-up d6130098; 89 remote cases; native pending,M59
 R142,voice-plan-location.tsx,task,Task clarity and platform-pattern fit,source-reviewed,"voice-location-axis.md; M174 source/mounted checks; native fixture prepared, execution pending; M192 native missing Back observed350420; explicit native header candidate; 10 tests/static pass; native retest pending",
 R142,voice-plan-location.tsx,navigation,"Navigation, hierarchy and return",finding,"voice-location-axis.md; M174 source/mounted checks; native fixture prepared, execution pending; M192 native missing Back observed350420; explicit native header candidate; 10 tests/static pass; native retest pending",M174;M192
 R142,voice-plan-location.tsx,selection,Value selection and current value,source-reviewed,"voice-location-axis.md; M174 source/mounted checks; native fixture prepared, execution pending; M192 native missing Back observed350420; explicit native header candidate; 10 tests/static pass; native retest pending",M174

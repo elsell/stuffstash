@@ -1,5 +1,23 @@
 # Home return details — 24 source axes
 
+## Checked-out entry S065 follow-up
+
+S065 reviewed at d6130098 across the24 axes below, with these entry-specific
+differences: Home shows at most three checked-out cards, each with a named Return
+action; View all navigates to Browse's checked-out scope. Permission to return is
+independent of creation permission. The card itself opens Details; Return starts
+the one-tap command and subsequent optional-details task. Entry has no text input,
+search field or independent modal; the details route owns those interactions.
+
+Source inspection includes HomeScreen, useHomeReturnActions and task presentation.
+Tests cover duplicate callbacks, already-returned checkout identity, later checkouts,
+permission loss, failed detail save/cancel and reconciliation after departure.
+The shared89-case completion run passes remotely; native card target geometry,
+sheet navigation, keyboard, lifecycle and reconciliation remain unverified. No
+additional defect was established; prior native recovery failures stay open.
+
+## Details route R140
+
 R140 atcf05fb1a. Reviewed HomeReturnDetailsRouteScreen, HomeReturnTaskPresentation,
 HomeReturnDetailsSheet, useHomeReturnActions, route registration, checkout spec,
 HomeScreen and presentation tests. This is a production route for the existing
