@@ -61,3 +61,10 @@ a production fix from the later screenshot. The iPad onboarding job104756068979
 passes. The two fixture jobs remain running at this checkpoint. Artifact10442577020
 and `/tmp/native350806-onboarding-phone.log` retain the phone evidence. This run
 uses source da1a3e38, tested merge c04b6a5bac882cf50df6a7926e415a421e8c13d7.
+
+Run350950 phone onboarding fails at OnboardingAuditTests.swift90: ordinary address
+entry does not reach its complete expected value within the bounded five seconds.
+The later keyboard assertions are not reached. One failure, two iPad-only skips;
+log `/tmp/native350950-onboarding-phone.log`. This differs from the preceding350919
+phone pass. Artifact inspection is still needed before assigning a product cause
+or changing the acceptance check.
