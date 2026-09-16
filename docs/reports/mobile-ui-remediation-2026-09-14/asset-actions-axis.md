@@ -1,5 +1,43 @@
 # Asset command review
 
+## Current S096/S097/S098 follow-through — all24 source axes
+
+Reviewed at46f23136 plus M203. This supersedes the historical confirmation and
+blur-coverage observations below. Checkout and Return remain direct native
+commands. Restore now also acts directly; asking whether to reverse an archive
+added interruption without an additional choice or irreversible consequence.
+Apple advises avoiding alerts for routine reversible actions; applying that to
+Restore is a project design judgment. Archive's removal from normal work retains
+the existing project confirmation, while permanent deletion remains explicitly
+irreversible. [Apple alerts](https://developer.apple.com/design/human-interface-guidelines/alerts).
+
+| Axes | Current source evidence and remaining acceptance |
+| --- | --- |
+| Task, selection | Checkout/Return change availability; Restore returns to active work. These are commands, not value pickers. Permanent delete is segregated from ordinary commands. |
+| Navigation, modality | Native iOS UIMenu and Android action-menu adapter expose lifecycle actions. Restore needs no alert. Archive/Delete still name the affected asset and allow Cancel. Successful focused delete returns Back or replaces with Home if no history exists. |
+| Layout, adaptation, typography | Availability uses shared native command adapters; menu/alert layout is platform-owned. Normal-size long names, iPad anchoring and source-to-destination focus remain native checks. Enlarged-text work follows normal-size issues. |
+| Appearance, imagery | Labels and SF Symbols identify operations; permanent delete has destructive semantics. Shared semantic status palette. Contrast, disabled appearance and icon accessibility traversal remain unverified. |
+| Localization | English action/status text includes asset names; long translated text and RTL are unverified. No date/number entry belongs to these direct commands. |
+| Targets, gestures, keyboard | Explicit buttons/menu entries avoid gesture-only actions. There is no command-specific text input here; Home's optional return notes are a separate task. Actual header/menu hit areas and hardware keyboard operation remain runtime work. |
+| Accessibility, motion | Named controls and working/success text exist. Native menu/alert focus, announcements and reduced-motion behavior need inspection. Prop-level labels are not spoken-output evidence. |
+| Content, search | Current asset capability flags choose available actions. Commands have no independent search or paged list; checkout/history navigation leads to separately audited read tasks. |
+| Loading | A synchronous resource-owned lock prevents duplicate requests and competing actions; pending UI disables controls. Departed completion cannot unlock a replacement asset's operation. |
+| Recovery | Current-visit failure is safe feedback with retry. Mutation success followed by refresh failure is described as successful mutation with refresh guidance, rather than falsely claiming the mutation failed. |
+| Editing | No intermediate draft for these direct commands. Restore can be reversed by Archive through ordinary lifecycle policy. These Details actions do not offer Home's return-note/Undo task; no global Undo guarantee is inferred. |
+| Privacy | Capability-filtered presentation and injected command ports preserve architectural boundaries. API authorization remains authoritative, and these UI tests do not prove server isolation. Changes to capability while a confirmation is already displayed need separate native/integration review; focus ownership alone does not certify that scenario. |
+| Notifications, media | No permission prompt or media acquisition owned here. Delete messaging accounts for attachments/contents consequences. External notification interruption is a route lifecycle scenario, not verified physical behavior. |
+| Lifecycle | Source tests cover success/failure after blur/refocus for all five actions, old confirmation retirement for Archive/Delete, duplicate confirmation consumption and resource replacement. Process termination and OS background behavior remain open. |
+
+M203 verification: three cases failed before direct Restore dispatch. The new
+command case verifies no added alert, one pending request despite repeated taps,
+failure and successful retry. Shared visit tests retain Restore success/failure.
+Obsolete Restore-confirmation cases were removed, leaving Archive/Delete coverage.
+All115 related tests across5 files pass remotely (`/tmp/restore-direct-green.log`).
+The first typecheck found a nullable test-instance argument; normalizing it to
+undefined restores static compatibility. Static evidence is recorded separately
+in `/tmp/restore-direct-static.log`. Critic found no blocker. Native direct-menu
+Restore acceptance remains pending.
+
 Current follow-up: availability and maintenance now use NativeCommandButton;
 the custom-Pressable note below describes the earlier checkpoint. The shared
 [Details route review](asset-detail-route-axis.md) covers R012/R020 across all24

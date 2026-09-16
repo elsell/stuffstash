@@ -2815,3 +2815,12 @@ cancel/dismiss now get cancellation feedback; other outcomes get safe retry
 guidance without provider parameters. Three composed onboarding/OIDC cases failed
 first and now verify rejection without session/tenant discovery and a valid fresh
 retry. Cancel/dismiss checks remain. Live OS browser-return acceptance is pending.
+
+### M203 — Restore interrupts a routine reversible command with confirmation
+
+P2 design/source confirmed at46f23136. Restore from archived Details asked users
+to confirm returning the item to active work. It now dispatches directly from the
+native menu, retaining synchronous locking, current-visit feedback and retry.
+Archive/Delete confirmations remain. Three RED cases reproduced the required
+extra alert; all115 related tests pass with direct Restore and departed outcomes.
+Critic found no blocker. Native menu activation/status/focus remains pending.

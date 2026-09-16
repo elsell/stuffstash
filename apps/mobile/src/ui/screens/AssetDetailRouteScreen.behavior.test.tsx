@@ -389,7 +389,7 @@ it('submits checkout once and suppresses its late failure after leaving the rout
   } finally { await test.harness.unmount(); }
 });
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('owns %s confirmation and suppresses late navigation after teardown', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('owns %s confirmation and suppresses late navigation after teardown', async label => {
   const command = deferred<void>(); let calls = 0;
   const core = snapshot();
   const test = setup({
@@ -411,6 +411,33 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('owns %s confirma
     await test.harness.run(() => confirm!());
     expect(calls).toBe(1);
   } finally { await test.harness.unmount(); }
+});
+
+it('restores directly, rejects duplicate dispatch and supports retry after failure', async () => {
+  const command = deferred<void>(); let calls = 0;
+  const core = snapshot();
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => ({ ...core, asset: { ...core.asset, lifecycleState: 'archived' } }) }),
+    assetLifecycleCommand: { execute: async () => { if (++calls === 1) await command.promise; } }
+  });
+  try {
+    await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    const restore = test.harness.byText('Restore')?.parent;
+    expect(restore).toBeDefined();
+    const alertBefore = latestAlert();
+    await test.harness.run(() => { restore!.props.onPress(); restore!.props.onPress(); });
+    expect(latestAlert()).toBe(alertBefore);
+    expect(calls).toBe(1);
+    await test.harness.run(() => command.reject(new Error('Restore unavailable')));
+    await settle(test.harness);
+    expect(test.harness.allText().join(' ')).toContain('Restore unavailable');
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    await test.harness.press(test.harness.byText('Restore')?.parent ?? undefined);
+    await settle(test.harness);
+    expect(calls).toBe(2);
+    expect(test.harness.allText().join(' ')).toContain('Restored Family tent.');
+  } finally { await test.harness.unmount(); test.client.clear(); }
 });
 
 it('does not let old checkout completion unlock the replacement asset operation', async () => {
@@ -575,9 +602,11 @@ it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ l
       else {
         await test.harness.press(test.harness.byLabel('More actions for Family tent'));
         await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
-        const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
-        expect(confirm).toBeTypeOf('function');
-        await test.harness.run(() => confirm!());
+        if (label !== 'Restore') {
+          const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+          expect(confirm).toBeTypeOf('function');
+          await test.harness.run(() => confirm!());
+        }
       }
     }
     try {
@@ -598,7 +627,7 @@ it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ l
   }
 );
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('rejects %s confirmation from an earlier visit', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('rejects %s confirmation from an earlier visit', async label => {
   resetNavigation(); let calls = 0;
   const base = snapshot();
   const test = setup({
@@ -618,7 +647,7 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('rejects %s confi
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
 });
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s confirmation once even after completion', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('consumes %s confirmation once even after completion', async label => {
   resetNavigation(); let calls = 0;
   const base = snapshot();
   const test = setup({

@@ -818,7 +818,7 @@ describe('asset lifecycle presentation helpers', () => {
     });
   });
 
-  it('explains archive and restore without treating them like permanent delete', () => {
+  it('explains archive without treating it like permanent delete', () => {
     expect(assetLifecycleConfirmation('archive', {
       title: 'Water bottle',
       photos: [],
@@ -828,17 +828,6 @@ describe('asset lifecycle presentation helpers', () => {
       title: 'Archive Water bottle?',
       message: 'Water bottle will be hidden from normal inventory work. You can restore it later from archived asset views.',
       confirmLabel: 'Archive',
-      isDestructive: false
-    });
-    expect(assetLifecycleConfirmation('restore', {
-      title: 'Water bottle',
-      photos: [],
-      containedAssetsLabel: '0 things inside',
-      canContainAssets: false
-    })).toEqual({
-      title: 'Restore Water bottle?',
-      message: 'Water bottle will return to active inventory work.',
-      confirmLabel: 'Restore',
       isDestructive: false
     });
   });

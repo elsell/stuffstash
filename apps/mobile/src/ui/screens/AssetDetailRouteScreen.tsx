@@ -353,9 +353,10 @@ export function AssetDetailRouteScreen({
     router.push(assetDetailHref(parent.id));
   }
 
-  function confirmLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
+  function requestLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
     const canPresent = captureCommandVisit();
     if (!canPresent()) return;
+    if (action === 'restore') { void runLifecycleAction(action, asset); return; }
     let confirmed = false;
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
@@ -459,7 +460,7 @@ export function AssetDetailRouteScreen({
     disabled: pendingAction !== undefined,
     onCheckoutHistory: () => router.push(`/assets/${screenState.asset.id}/checkouts`),
     onHistory: () => openHistory(screenState.asset),
-    onLifecycleAction: (action: AssetLifecycleActionKind) => confirmLifecycleAction(action, screenState.asset)
+    onLifecycleAction: (action: AssetLifecycleActionKind) => requestLifecycleAction(action, screenState.asset)
   } : undefined;
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>

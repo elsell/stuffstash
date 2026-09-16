@@ -243,7 +243,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Active assets show an `Archive` action.
   - Archived assets show a `Restore` action and a destructive `Delete permanently` action.
   - Archive, restore, and permanent delete must call the generated API client through mobile application ports and commands. UI code must not call generated DTO clients directly.
-  - Archive, restore, and permanent delete must use native confirmation before mutation. Permanent delete must be framed as irreversible and must not share the same visual weight as ordinary edit or move actions.
+  - Restore is a direct native-menu command: it returns an archived asset to active work without a redundant confirmation. Pending locking, safe failure/retry and inline success remain required. Archive retains confirmation because it removes the asset from normal work; permanent delete requires irreversible destructive confirmation and must not share the same visual weight as ordinary edit or move actions. This is a task-specific application of Apple's guidance to avoid alerts for common reversible actions, not a universal removal of confirmations.
   - The lifecycle overflow must name the current asset and separate reversible lifecycle actions from the irreversible permanent-delete action using native destructive styling where available.
   - Lifecycle confirmation copy must name the asset and explain the consequence of the selected operation. Permanent delete confirmation must state that the asset itself and its photos are removed while audit history remains.
   - Archive and restore must refresh the asset detail view from the application query after success so lifecycle state, updated-at labels, and downstream lists converge with API state.
