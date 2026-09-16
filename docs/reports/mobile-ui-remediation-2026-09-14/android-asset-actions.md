@@ -34,3 +34,20 @@ Final title-only rebuildab582c2f1b91992a82880f4ce077411696a471abc11b596ce5dee1c5
 passes the native assertion: exactly one Move something here heading and both
 Move here/Cancel present. The earlier failing two-heading assertion is retained in
 `/tmp/asset-heading-red.log`. Critic found no blocker in that final adjustment.
+
+## Edit metadata and rejected-save recovery
+
+On the final ab582c2f APK, both initial metadata errors expose separate retry
+commands. Retrying types clears its error while retaining the tags error. After
+changing the name to `Audit tentchanged`, retrying tags clears its error without
+losing that draft. Scrolling exposes the tag-color controls and Add tag above the
+Save/Cancel commands. Save reaches the fixture's intentionally rejected command
+and displays Could not save changes; dismissing that alert preserves the edited
+name and both footer commands. The inspected
+[recovered form](evidence/android-edit-recovered.png) confirms the lower controls
+remain visually separate from the actions. This verifies error recovery through
+synthetic ports; successful backend persistence and every metadata variant remain
+outside this sample. XML snapshots are retained at
+`/tmp/edit-recovery-android.xml`, `/tmp/edit-retry-android.xml`,
+`/tmp/edit-bottom-android.xml`, `/tmp/edit-save-error-android.xml` and
+`/tmp/edit-recovered-android.xml`.
