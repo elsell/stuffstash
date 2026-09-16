@@ -77,6 +77,12 @@ and destination route screen under synthetic voice/query ports. Share the real
 voice sheet options with the fixture; keep its provider above both native routes
 so Back exercises retained drafts. Test lookup failure/retry, native search,
 immediate destination selection, Back and visible proposal state. Fixture routes
+seed their initial proposal once per provider lifetime, not per route mount.
+Activate seeding only on first entry to the proposal route; unrelated fixtures
+must retain their idle conversation state before that entry.
+Closing/reopening a route must retain the conversation; confirming New conversation
+must leave it empty without synthetic reseeding. Verify both outcomes positively.
+Fixture routes
 must remain runner-only and must not load production services or credentials.
 Simulator results do not establish physical capture or server authorization.
 

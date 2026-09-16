@@ -31,3 +31,25 @@ Retained native hierarchies: `/tmp/android-voice-{dark,header,new-confirm,closed
 Logs: `/tmp/android-voice-header-{red,green,structural,build}.log`.
 iOS native acceptance, physical audio and individual composer-control appearance
 remain open. This fixture APK is not a TestFlight/release artifact.
+
+## Reset fixture follow-up
+
+The seed now activates only on first proposal-route entry and remains mounted
+at provider lifetime. A review caught eager provider seeding before entry; that
+would contaminate Home, so activation remains route-triggered. Production
+conversation behavior is unchanged.
+
+Android APK `cdb7654eca5c5a1bd3ca18e5eed688154b2ccc1d0f9fbdff8b52cca3ab179d2e`
+now passes Close/reopen retention and confirmed New: the proposal disappears and
+[the empty composer and introductory text](evidence/android-conversation-empty.png)
+are present. A fresh launch into Home in tabs exposes “Start voice interaction,”
+confirming no proposal is seeded before Conversation entry. Same API36 Pixel6
+runtime at normal text size; synthetic ports only.
+
+Code critic accepted the corrected lifetime/activation. TypeScript passes in the
+current source validation tree on paul. An initial check in the selectively
+patched native build tree failed on stale unrelated test files; it is not used
+as source validation. Native build and installation passed.
+Evidence: `/tmp/voice-seed-{retained,confirm,empty,idle-home}.xml`;
+logs on paul: `/tmp/android-voice-seed-build.log`,
+`/tmp/voice-seed-source-check.log`. Remaining iOS/audio coverage is unchanged.

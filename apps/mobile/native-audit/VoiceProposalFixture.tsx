@@ -13,8 +13,10 @@ import { VoicePlanLocationRouteScreen } from '../src/ui/screens/VoicePlanLocatio
 const scope = { tenantId: 'audit-voice-tenant', inventoryId: 'audit-voice-inventory' };
 const unavailable = async (): Promise<never> => { throw new Error('Not supported by the proposal selection fixture'); };
 const LookupContext = createContext<Pick<ParentLookupQuery, 'execute'> | null>(null);
+const ActivateProposalContext = createContext<((active: boolean) => void) | null>(null);
 
 export function VoiceProposalFixtureProvider({ children }: { readonly children: ReactNode }) {
+  const [proposalActivated, setProposalActivated] = useState(false);
   const [fixture] = useState(() => {
     const context = { getVoiceInventoryContext: async () => ({ tenantId: tenantId(scope.tenantId), inventoryId: inventoryId(scope.inventoryId), tenantName: 'Audit home', inventoryName: 'Audit inventory' }), addInventoryAssetPhoto: unavailable };
     const controller = new RealtimeVoiceSessionController(context,
@@ -37,12 +39,15 @@ export function VoiceProposalFixtureProvider({ children }: { readonly children: 
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit-voice" loadInventoryScope={async () => scope}>
     <VoiceInteractionStateProvider previewQuery={fixture.preview} realtimeController={fixture.controller}>
-      <LookupContext.Provider value={fixture.lookup}>{children}</LookupContext.Provider>
+      {proposalActivated && <VoiceProposalSeed />}
+      <ActivateProposalContext.Provider value={setProposalActivated}>
+        <LookupContext.Provider value={fixture.lookup}>{children}</LookupContext.Provider>
+      </ActivateProposalContext.Provider>
     </VoiceInteractionStateProvider>
   </MobileServerStateProvider>;
 }
 
-export function VoiceProposalFixture() {
+function VoiceProposalSeed() {
   const { state, composerText, setComposerText, sendText } = useVoiceInteractionState();
   const seeded = useRef(false);
   const sent = useRef(false);
@@ -54,6 +59,12 @@ export function VoiceProposalFixture() {
   useEffect(() => {
     if (composerText === 'Add the audit drill' && !sent.current) { sent.current = true; void sendText(); }
   }, [composerText, sendText]);
+  return null;
+}
+
+export function VoiceProposalFixture() {
+  const activate = useContext(ActivateProposalContext);
+  useEffect(() => { activate?.(true); }, [activate]);
   return <VoiceSessionWorkspace photoSelectionQuery={{ selectFromLibrary: unavailable, captureFromCamera: unavailable }} />;
 }
 
