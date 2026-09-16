@@ -104,3 +104,9 @@ row is y1812–1949, above Show results y2075–2118. Selecting that row and app
 returns the explicit fixture result `Browse selected tags: audit-last`. This
 supersedes the earlier sheet-layout last-row evidence for the new implementation.
 Local inspected hierarchies: `/tmp/card-final-row.xml`, `/tmp/card-final-result.xml`.
+
+Date-range check on36fe660b: Android opens its system calendar dialog. Selecting
+October20 and OK replaces October15 in the range. Selecting another date and
+Cancel preserves October20. Clear date range, then Back, returns the overview with
+Any date. These observations cover local draft controls, not backend query results.
+[Selected date](evidence/android-date-range-selected.png).
