@@ -66,6 +66,7 @@ export type MoveIntoDraft = {
 };
 
 export function EditAssetSheet({
+  readOnly = false,
   asset,
   assetTypes,
   assetTypesFailed = false,
@@ -77,6 +78,7 @@ export function EditAssetSheet({
   onClose,
   onSave
 }: {
+  readonly readOnly?: boolean;
   readonly asset: AssetDetailViewModel;
   readonly assetTypes?: readonly CustomAssetTypeDefinition[];
   readonly assetTypesFailed?: boolean;
@@ -90,11 +92,13 @@ export function EditAssetSheet({
 }) {
   const styles = useStyles();
   const editContext = assetEditContext(asset);
-  const canSave = canSaveEditAsset(asset, draft) && !isSaving;
+  const disabled = isSaving || readOnly;
+  const canSave = canSaveEditAsset(asset, draft) && !disabled;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <Text style={styles.sheetTitle}>Edit asset</Text>
+        {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
           <Text style={styles.readOnlyContextLabel}>Kind</Text>
@@ -109,7 +113,7 @@ export function EditAssetSheet({
         <AppTextInput
           accessibilityLabel="Asset name"
           autoCapitalize="sentences"
-          editable={!isSaving}
+          editable={!disabled}
           onChangeText={(title) => onChange({ ...draft, title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={styles.input}
           value={draft?.title ?? ''}
@@ -117,15 +121,15 @@ export function EditAssetSheet({
         <Text style={styles.inputLabel}>Description</Text>
         <AppTextInput
           accessibilityLabel="Description"
-          editable={!isSaving}
+          editable={!disabled}
           multiline
           onChangeText={(description) => onChange({ ...draft, title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={[styles.input, styles.multilineInput]}
           value={draft?.description ?? ''}
         />
-        {assetTypes || !assetTypesFailed ? <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={isSaving} onChange={onChange} /> : null}
+        {assetTypes || !assetTypesFailed ? <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={disabled} onChange={onChange} /> : null}
         <EditTagPicker
-          disabled={isSaving}
+          disabled={disabled}
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
@@ -287,6 +291,7 @@ function EditTagPicker({
 }
 
 export function MoveAssetSheet({
+  readOnly = false,
   isCreatingDestination = false, asset,
   draft,
   candidatesAvailable = true,
@@ -300,6 +305,7 @@ export function MoveAssetSheet({
   onSelectParent,
   onSelectRoot
 }: {
+  readonly readOnly?: boolean;
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
   readonly candidatesAvailable?: boolean;
@@ -316,7 +322,8 @@ export function MoveAssetSheet({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !isSaving : false;
+  const disabled = isSaving || readOnly;
+  const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !disabled : false;
   const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
   const createPlacement = moveDestinationCreatePlacement(asset);
   const createTitle = draft?.query.trim() ?? '';
@@ -333,13 +340,14 @@ export function MoveAssetSheet({
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <Text accessibilityRole="header" style={styles.moveHeading}>Move</Text>
+        {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.moveSubject}>{asset.title}</Text>
         {placement ? <PlacementPanel preview={placement} /> : null}
         <Text style={styles.inputLabel}>Put in</Text>
         <AppTextInput
           accessibilityLabel="Put in"
           autoCapitalize="sentences"
-          editable={!isSaving}
+          editable={!disabled}
           onChangeText={onChangeQuery}
           placeholder="Search places, boxes, shelves"
           placeholderTextColor={palette.textMuted}
@@ -351,19 +359,19 @@ export function MoveAssetSheet({
           <View style={styles.createDestinationPanel}>
             <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
               value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
-              includeEmptyOption={false} disabled={isSaving}
-              onChange={value => { if (!isSaving && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
+              includeEmptyOption={false} disabled={disabled}
+              onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
             <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
             <Text style={styles.createPlacementText}>
               {moveDestinationCreatePlacementLabel(createPlacement)}
             </Text>
             <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
-              disabled={isSaving} onPress={onCreateDestination} />
+              disabled={disabled} onPress={onCreateDestination} />
             <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
           </View>
         ) : null}
         <ParentRow
-          disabled={isSaving}
+          disabled={disabled}
           isSelected={draft?.selectedParent === null}
           row={{
             title: 'No parent',
@@ -374,7 +382,7 @@ export function MoveAssetSheet({
         />
         {draft?.matches.map((match) => (
           <ParentRow
-            disabled={isSaving}
+            disabled={disabled}
             key={match.id}
             isSelected={draft.selectedParent?.id === match.id}
             row={moveDestinationRow(match)}
@@ -394,6 +402,7 @@ export function MoveAssetSheet({
 }
 
 export function MoveThingsHereSheet({
+  readOnly = false,
   draft,
   candidatesAvailable = true,
   candidateStatus,
@@ -403,6 +412,7 @@ export function MoveThingsHereSheet({
   onSave,
   onSelectAsset
 }: {
+  readonly readOnly?: boolean;
   readonly draft: MoveIntoDraft | undefined;
   readonly candidatesAvailable?: boolean;
   readonly candidateStatus?: ReactNode;
@@ -414,18 +424,20 @@ export function MoveThingsHereSheet({
 }) {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
-  const canSave = draft?.selectedAsset !== undefined && !isSaving;
+  const disabled = isSaving || readOnly;
+  const canSave = draft?.selectedAsset !== undefined && !disabled;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <Text style={styles.sheetTitle}>Move something here</Text>
+        {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
         <Text style={styles.inputLabel}>Find item, box, or place</Text>
         <AppTextInput
           accessibilityLabel="Find item, box, or place"
           autoCapitalize="sentences"
-          editable={!isSaving}
+          editable={!disabled}
           onChangeText={onChangeQuery}
           placeholder="Search your inventory"
           placeholderTextColor={palette.textMuted}
@@ -441,7 +453,7 @@ export function MoveThingsHereSheet({
         ) : null}
         {draft?.matches.map((match) => (
           <ParentRow
-            disabled={isSaving}
+            disabled={disabled}
             key={match.id}
             isSelected={draft.selectedAsset?.id === match.id}
             row={moveIntoCandidateRow(match)}
@@ -464,6 +476,13 @@ export function MoveThingsHereSheet({
   );
 }
 
+
+function ActionEligibilityNotice() {
+  const styles = useStyles();
+  return <Text accessibilityRole="alert" style={styles.sheetSubtitle}>
+    This item cannot be changed here. Your draft is kept while this screen is open.
+  </Text>;
+}
 
 function ParentRow({
   disabled, isSelected,

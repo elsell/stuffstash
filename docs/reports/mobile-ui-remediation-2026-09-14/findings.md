@@ -2899,9 +2899,12 @@ Native reachability remains pending; see asset-edit-route-axis.md.
 
 P2 source-confirmed atdc901a08, not a demonstrated server authorization bypass.
 AssetCoreQuery derives canEdit/canMove from permission and active lifecycle, but
-ActionAsset and its action forms do not consult those capabilities. A readable
-view-only or archived asset can retain editing/move affordances and attempt a
-command after direct entry or refresh. Correction remains pending: retain draft
-and Close, explain unavailable editing, reject stale action callbacks, and cover
-Edit/Move/Move-here with adversarial route tests. Server mutation authorization
-must remain authoritative. See asset-edit-route-axis.md.
+the action forms did not consult those capabilities. A readable view-only or
+archived asset could retain editing/move affordances and attempt a command.
+The candidate preserves a read-only draft and Cancel, explains unavailability,
+and rejects retained mutation/change callbacks using committed eligibility.
+Edit rechecks after asynchronous tag reconciliation. Thirteen adversarial route
+cases cover direct denial, revocation/archive, recovery and reconciliation;
+49 related tests and static checks pass on paul. Critic found no blocker.
+Server mutation authorization remains authoritative; native acceptance is pending.
+See asset-edit-route-axis.md.

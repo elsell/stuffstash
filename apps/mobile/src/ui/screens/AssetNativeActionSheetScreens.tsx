@@ -2,7 +2,7 @@ import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import type { InventoryAssetTypesQuery } from '../../application/assets/InventoryAssetTypesQuery';
-import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
+import { Fragment, ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { router, Stack, useNavigation } from 'expo-router';
 import {
   ActivityIndicator,
@@ -95,7 +95,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), query: (signal) => inventoryAssetTypesQuery.execute(asset.tenantId ?? '', asset.inventoryId ?? '', { signal }) });
   const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
   const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
-  const operation = useAssetSheetOperation();
+  const operation = useAssetSheetOperation(asset.canEdit);
   const isSaving = operation.busy;
   const captureDiscard = useTaskPresentation(undefined, JSON.stringify([assetId, draft, isSaving]));
 
@@ -113,7 +113,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       { text: 'Discard', style: 'destructive', onPress: () => {
         if (!isCurrent() || accepted || operation.locked()) return;
         accepted = true;
-        operation.change(() => router.back());
+        operation.leave(() => router.back());
       } }
     ]);
   }
@@ -125,6 +125,8 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     if (!operation.begin()) return;
     try {
       const normalized = normalizedEditDraft(draft);
+      const activeTags = normalized.newTags?.length ? await tags.reconcile() : tags.data ?? [];
+      if (!operation.canMutate()) return;
       const result = await updateAssetCommand.execute({
         assetId,
         expiration: normalized.expiration,
@@ -133,7 +135,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
         description: normalized.description,
         tagIds: normalized.tagIds,
         newTags: normalized.newTags,
-        activeTags: normalized.newTags?.length ? await tags.reconcile() : tags.data ?? []
+        activeTags
       });
       if (!operation.canPresent()) return;
       recordAssetActionCompletion({
@@ -173,6 +175,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   return (
     <NativeSheetFrame title="Edit asset" busy={isSaving} dismissible={false}>
       <EditAssetSheet
+        readOnly={!asset.canEdit}
         metadataRecovery={<>
           {types.isError ? <InlineQueryError message="Asset types could not be loaded." retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
           {tags.isError ? <InlineQueryError message="Tags could not be loaded." retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
@@ -206,7 +209,7 @@ export function AssetMoveSheetRouteScreen(props: MoveProps) {
 function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLookupQuery }: MoveProps & { asset: AssetDetailViewModel }) {
   const assetId = asset.id;
   const [draft, setDraft] = useState<MoveDraft>(() => ({ createKind: 'location', query: '', matches: [], selectedParent: parentFromCurrentAssetPath(asset) }));
-  const operation = useAssetSheetOperation();
+  const operation = useAssetSheetOperation(asset.canMove);
   const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
   const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(candidates.data ?? [], asset) };
@@ -265,6 +268,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
     <NativeSheetFrame title="Move asset" busy={isSaving}>
       {(
         <MoveAssetSheet
+          readOnly={!asset.canMove}
           candidatesAvailable={candidates.data !== undefined}
           candidateStatus={<CandidateStatus candidates={candidates} />}
           asset={asset}
@@ -273,7 +277,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
           isCreatingDestination={operation.kind === 'create'}
           onChangeCreateKind={(createKind) => operation.change(() => setDraft((current) => current ? { ...current, createKind } : current))}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
-          onClose={() => operation.change(() => router.back())}
+          onClose={() => operation.leave(() => router.back())}
           onCreateDestination={() => void createDestination(asset)}
           onSelectParent={(selectedParent) => operation.change(() => setDraft((current) => current ? { ...current, selectedParent } : current))}
           onSelectRoot={() => operation.change(() => setDraft((current) => current ? { ...current, selectedParent: null } : current))}
@@ -293,7 +297,7 @@ export function AssetMoveHereSheetRouteScreen(props: MoveHereProps) {
 }
 function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHereProps & { asset: AssetDetailViewModel }) {
   const [draft, setDraft] = useState<MoveIntoDraft>({ target: asset, query: '', matches: [], selectedAsset: undefined });
-  const operation = useAssetSheetOperation();
+  const operation = useAssetSheetOperation(asset.canMove && asset.canContainAssets);
   const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
   const shownDraft = { ...draft, matches: (candidates.data ?? []).filter((match) => isSelectableMoveIntoCandidate(match, asset)) };
@@ -322,12 +326,13 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
     <NativeSheetFrame title="Move something here" busy={isSaving}>
       {(
         <MoveThingsHereSheet
+          readOnly={!asset.canMove || !asset.canContainAssets}
           candidatesAvailable={candidates.data !== undefined}
           candidateStatus={<CandidateStatus candidates={candidates} />}
           draft={shownDraft}
           isSaving={isSaving}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
-          onClose={() => operation.change(() => router.back())}
+          onClose={() => operation.leave(() => router.back())}
           onSave={() => void save()}
           onSelectAsset={(selectedAsset) => operation.change(() => setDraft((current) => current ? { ...current, selectedAsset } : current))}
         />
@@ -438,7 +443,9 @@ function createStyles(colors: MobileColorPalette) {
 }
 
 /** One mutation owns the sheet draft until it settles. */
-function useAssetSheetOperation() {
+function useAssetSheetOperation(eligible: boolean) {
+  const eligibility = useRef(eligible);
+  useLayoutEffect(() => { eligibility.current = eligible; }, [eligible]);
   const capturePresentation = useTaskPresentation();
   const completionOwner = useRef<(() => boolean) | undefined>(undefined);
   const pending = useRef(false);
@@ -454,14 +461,16 @@ function useAssetSheetOperation() {
     kind, busy: kind !== null,
     canPresent: () => mounted.current && completionOwner.current?.() === true,
     locked: () => pending.current || !mounted.current,
+    canMutate: () => eligibility.current && mounted.current,
     begin: (next: 'save' | 'create' = 'save') => {
       const isCurrent = capturePresentation();
-      if (pending.current || !mounted.current || !isCurrent()) return false;
+      if (pending.current || !mounted.current || !eligibility.current || !isCurrent()) return false;
       completionOwner.current = isCurrent;
       pending.current = true; completed.current = false; setKind(next); return true;
     },
     complete: (leave: () => void) => { if (mounted.current && completionOwner.current?.()) { completed.current = true; leave(); } },
     end: () => { pending.current = false; if (mounted.current) setKind(null); },
-    change: (change: () => void) => { if (!pending.current && mounted.current) change(); }
+    change: (change: () => void) => { if (!pending.current && mounted.current && eligibility.current) change(); },
+    leave: (leave: () => void) => { if (!pending.current && mounted.current) leave(); }
   };
 }

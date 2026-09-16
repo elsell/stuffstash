@@ -2,10 +2,10 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest full source checkpoint:2edf4dbd passes1,830 tests across285 files, TypeScript
+Latest full source checkpoint:44e15bc9 plus M210 passes1,849 tests across286 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture
 content matches the remote tree by checksum. React act warnings remain. Log:
-`/tmp/mobile-audit-2edf4dbd-full.log`. This does not establish native acceptance.
+`/tmp/action-eligibility-full.log`. This does not establish native acceptance.
 
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
@@ -15,6 +15,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
 - `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
+- `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
 - `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
@@ -100,7 +101,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise148
-pending,2,518 source-reviewed,519 finding,25 runtime-partial and198 not-applicable.
+pending,2,516 source-reviewed,521 finding,25 runtime-partial and198 not-applicable.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is

@@ -15,13 +15,15 @@ edit-tags-axis.md. This is source coverage, not a native pass.
 | Targets, gestures, accessibility | Named text fields and native Save/Cancel, retry and disclosure commands. Tag choices expose selection; staged removal now names its distinct action (M201). Explicit Cancel avoids relying on gestures. Device focus order and actual target geometry remain open. |
 | Motion, content, search | No editor-specific animation; system sheet/keyboard transitions need Reduce Motion review. Tag disclosure retains selected extras. No whole-editor search task; tag discovery remains limited as documented in edit-tags-axis.md. |
 | Loading, recovery | Core gates the form; types/tags load independently and expose retries within the form. M209 prevents a loading/error dead end. Save failure keeps the draft and presents a native error. Existing controlled-text and color runtime failures are not resolved by these checks. |
-| Privacy, lifecycle | Core query scopes by inventory and suppresses access-error data. However ActionAsset passes a valid view-only/archived asset into the editor without honoring canEdit; M210 is an open source finding. Busy mutations guard removal and late completion; scoped discard callbacks reject obsolete drafts. Process death is not durable draft recovery. |
+| Privacy, lifecycle | Core query scopes by inventory and suppresses access-error data. M210 now makes readable view-only/archived assets read-only, preserves drafts and Cancel, and rejects retained callbacks. Busy mutations guard removal and late completion; scoped discard callbacks reject obsolete drafts. Process death is not durable draft recovery. |
 | Notifications, media | No notification entry, camera, upload or audio in Edit. Interruption/resume belongs to lifecycle acceptance, not a separate media feature. |
 
 M209 applies to the shared Edit/Move/Move-here loading shell. The ready forms keep
 their existing operation/dismissal behavior. Mounted tests establish navigation
-commands, not actual native sheet placement. M210 needs adversarial route tests
-before correction and must cover all shared consumers, including stale callbacks.
+commands, not actual native sheet placement. M210 has13 adversarial route cases
+across all three forms: initial denial, revocation/archive, retained callbacks,
+recovery and Edit eligibility changing during tag reconciliation. It leaves
+server authorization unchanged. Native permission-transition acceptance is pending.
 
 M201/M209 validation:64 related mounted tests, TypeScript and mobile structural
 checks pass on paul (`/tmp/action-exit-reviewed.log`), including normal Back and

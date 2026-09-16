@@ -1,5 +1,19 @@
 # Comprehensive mobile UI audit and remediation
 
+## Asset action eligibility and retained drafts
+
+Edit and both Move forms must honor the current core view's edit/move capability,
+including read-only access and archived lifecycle, on direct entry and refresh.
+When unavailable, retain the draft in the mounted form, disable fields/choices
+and mutation commands, and explain why no action can be submitted. Cancel remains
+available and keeps existing discard protection. Restored eligibility may resume
+the retained draft. Previously captured mutation and draft-change callbacks must
+consult current committed eligibility, not the permission captured when rendered.
+Already-submitted mutations remain authorized by the server; this UI guard is not
+an authorization substitute. Edit must recheck eligibility after asynchronous tag
+reconciliation and before submitting the update. Shared route tests must exercise
+denied direct entry, revocation, archive, retained draft recovery and stale callbacks.
+
 ## Asset action loading and error exits
 
 Edit, Move and Move-here must expose a native Close command while the asset core
