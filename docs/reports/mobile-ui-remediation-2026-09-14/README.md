@@ -13,6 +13,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `surfaces.json`: route and nested task enumeration.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
+- `tag-color-axis.md`: all24 color-selection axes, shared consumers and phone/iPad activation evidence.
 - `findings.md`: confirmed findings and remediation evidence.
 - `checkout-history-axis.md`: all24 axes, independent name recovery and access-retry evidence limits.
 - `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.
@@ -36,9 +37,10 @@ The follow-up [350465 onboarding run](native-onboarding-350465.md) passes its
 phone case (two device-inapplicable skips) and all three iPad cases. The 350420
 fixture jobs are complete; see `native-phone-350420.md` for failures and limits.
 The [350465 iPad fixture job](native-ipad-350465.md) is now terminal:58/71 cases
-pass, with13 failures. Both paced typing diagnostics pass, while original
-controlled-input comparisons still fail. Phone fixtures remain active; paced
-typing is diagnostic evidence only and does not replace normal acceptance.
+pass, with13 failures. The [phone fixture result](native-phone-350465.md) is49/71
+with22 failures. Both targets pass paced typing diagnostics while original
+controlled-input comparisons still fail. Paced typing is diagnostic evidence only
+and does not replace normal acceptance. Newer run35050407693 is active.
 
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
@@ -86,8 +88,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise378
-pending,2,301 source-reviewed,508 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise360
+pending,2,319 source-reviewed,508 finding,23 runtime-partial and198 not-applicable.
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined

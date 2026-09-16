@@ -1,0 +1,50 @@
+# Optional tag color — all 24 source axes
+
+S108 at71d54bb6. Consumers: settings tag create/edit, Add staged-tag creation,
+and item Edit tag creation. Reviewed TagColorPicker, FullSpectrumTagColorPicker,
+NativeTagColorPicker.ios and their presentation helpers and consumer composition.
+
+[Apple's color-well guidance](https://developer.apple.com/design/human-interface-guidelines/color-wells)
+recommends considering the system picker for familiarity. The project chooses it
+on iOS; the pinned Expo package has no equivalent Android picker. The fallback
+is a documented platform limitation, not permission to substitute custom iOS UI.
+
+| Axis | Source conclusion and remaining acceptance |
+| --- | --- |
+| Task | Choose optional decorative metadata for a named tag. In-place presets plus a system color well fit; there is no reason for a separate navigation route. |
+| Navigation | iOS system presentation returns to the existing draft; Android custom panel expands in context. Actual native return/focus needs repeated phone acceptance. |
+| Selection | Six named presets, explicit No tag color, arbitrary RGB selection. Empty values map to no native selection without inventing a persisted color. M51 activation remains unresolved. |
+| Modality | Current iOS code opens the native picker directly; the earlier redundant custom panel is removed. Android retains its local Done/Cancel transaction. |
+| Layout | Presets wrap; the native host fills available width with a minimum height. The fallback separates spectrum gestures from scrolling supplementary controls. Keyboard/small-window runtime acceptance remains open. |
+| Adaptation | Native color presentation owns phone/tablet differences. Fallback compacts its spectrum according to measured space/font scale. This does not establish enlarged-text acceptance. |
+| Typography | Text labels supplement swatches; native label allows wrapping. Long labels and large text remain runtime work. |
+| Appearance | Semantic palette for neutral controls; selected checkmark contrast derives from each swatch. System picker owns its chrome. Light/dark runtime parity is unverified. |
+| Localization | English preset names; arbitrary RGB values remain stable hex. RTL spectrum direction and localized long labels are unverified, not declared compliant. |
+| Imagery | No image assets. Checkmark, clear symbol and named colors prevent color being the sole indicator. |
+| Targets | Presets declare minimum targets; native well declares44 points but exposes28 on phone/36 on iPad. Actual hit area is separate from AX frame. M51 remains open. |
+| Gestures | iOS uses native activation; Android offers adjustable accessibility actions, adjustment buttons and hex input alongside dragging. Native activation still fails on the captured phone run. |
+| Keyboard | iOS color editing delegates input to the system. Fallback hex entry disables correction and labels format. Actual keyboard/dismissal/return acceptance is pending. |
+| Accessibility | Presets expose names, selected and disabled states. Native capture duplicates Choose any color in the button label; spoken output/order is unverified. Android exposes hue/saturation/brightness adjustments. |
+| Motion | No project-owned color transition animation; native presentation/reduced-motion behavior remains unverified. |
+| Content | Small finite preset row with optional full picker; named read-only value replaces mutation controls for inherited/read-only definitions. |
+| Search | No search task in a small color palette. |
+| Loading | Color selection itself is synchronous. Parent mutation state disables interaction; native availability is checked before choosing the adapter. |
+| Recovery | Invalid values receive corrective text; clear removes optional color. Parent save failures retain drafts. Opening failure currently has no recovery beyond retry/presets: M51. |
+| Editing | iOS selection updates the parent draft, not the server. Explicit clear is distinct from opening. Android Cancel discards its temporary draft and Done commits a valid value. |
+| Privacy | No additional service or permission requested. Parent settings/item authorization gates persistence; a color control is not an authorization boundary. |
+| Notifications | No notification task or permission in this surface. |
+| Media | No camera/library/file/audio operation. System picker internals do not justify adding app media permissions. |
+| Lifecycle | Parent draft/workflow owns navigation and save. Component unmount discards fallback-local editing state. Background and system-picker interruption require native acceptance. |
+
+## Evidence
+
+Existing mounted tests exercise presets, clear, invalid input, disabled choices,
+fallback arbitrary colors, Cancel/Done, adjustable spectrum and compact geometry.
+The complete remote suite at71d54bb6 passes1,824 tests; these do not mount SwiftUI.
+
+Native350465 atb6321dcb: phone system-picker activation fails and leaves the parent
+unchanged; iPad open/clear passes. See [phone result](native-phone-350465.md).
+No speculative adapter change is justified by that difference alone. Repeat native
+center activation, selection, close, explicit clear, disabled state, parent draft
+retention and re-entry before closing M51. Source review completes the18 pending
+cells for S108 without turning the three existing M51 finding cells into passes.

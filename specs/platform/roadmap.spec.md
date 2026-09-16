@@ -374,3 +374,14 @@ permission handling are corrected in source. All1,704 mobile tests plus static
 checks pass remotely atfcc2f9b8. Native acceptance remains incomplete; focused
 text-entry diagnostics35029455242 and subsequent full collection/header
 verification remain required. Normal-size findings still precede enlarged text.
+
+PR153 source71d54bb6 now passes1,824 mobile tests across285 files plus static checks
+on paul. Audit inventory is142 surfaces/24 axes; source coverage is not native
+acceptance. Full native run35046586497 at olderb6321dcb completed49/71 phone and
+58/71 iPad fixtures, with onboarding passing its applicable cases. Paced typing
+diagnostics pass while original controlled typing still fails. The iPad search
+reset procedure now follows captured platform controls; rerun verification is
+pending. Normal-size text entry, color activation/targets and header/search
+behavior remain priorities. Newer native run35050407693 is active; preserve its
+execution while continuing source work. Release remains pending native review,
+with detailed evidence in the mobile remediation report.

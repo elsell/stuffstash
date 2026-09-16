@@ -28,4 +28,6 @@ Follow-up: [iPad run350465](native-ipad-350465.md) compiled and executed both pa
 cases successfully while the unchanged controlled whole-string cases still fail.
 The seven original comparisons remain in the suite. This demonstrates cadence
 sensitivity for that run, not a production fix or physical-typing acceptance.
-The phone result remains pending at this checkpoint.
+The [phone result](native-phone-350465.md) now shows the same paced passes with
+continued original controlled-input failures. Earlier uncontrolled failures still
+prevent a controlled-only causal conclusion.
