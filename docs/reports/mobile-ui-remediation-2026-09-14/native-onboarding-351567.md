@@ -4,7 +4,8 @@ Source2043abb0, tested merge2209ff1c347187e92eef215f965b5fe68e040df2.
 iPad job105001197814 finishes2/3 cases. Standard help/keyboard/action journey and
 landscape adaptation pass. The inside-form-column comparison fails at help opening,
 before address entry or its alternate keyboard-dismissal gesture. This is not
-observed failure of that gesture. Phone results remain pending at this inspection.
+observed failure of that gesture. Phone job105001197852 passes the standard journey; the two iPad-only comparisons
+are correctly skipped.
 
 The [final screenshot](evidence/ipad-onboarding-help-351567.png) and
 [hierarchy](evidence/ipad-onboarding-help-351567.txt) show collapsed help at
@@ -27,3 +28,15 @@ Artifact10472545793 (74.9MB) remains on paul at
 `/tmp/native351567-onboarding-ipad.zip`. Local log:
 `/tmp/native351567-onboarding-ipad.log`. Only compact selected evidence is copied
 into the repository; the main full-run jobs continue unchanged.
+
+## Phone review
+
+The phone journey passes help expansion, complete address entry, keyboard dismissal
+and action reachability. Reviewed help, keyboard and final action captures. The
+[keyboard capture](evidence/phone-onboarding-keyboard-351567.png) retains the full
+`https://example.invalid` address with Connect clear of the keyboard. The
+[action capture](evidence/phone-onboarding-action-351567.png) retains that address
+and an unobstructed Connect and sign in command after dismissal. This verifies the
+local onboarding interaction, not a live identity-provider sign-in.
+
+Phone artifact10472429253; log `/tmp/native351567-onboarding-phone.log`.

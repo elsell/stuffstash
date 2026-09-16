@@ -7,8 +7,8 @@ this batch. Necessary batch corrections get an explicit updated cutoff.
 
 Full native run35156794515 tests2043abb0, whose production mobile source, packages,
 patches and app configuration match this cutoff. Later changes are diagnostics and
-reports. Focused run35158457674 at6128c8f5 adds geometry observations, not a product
-fix. Ongoing full audit coverage is not the release gate.
+reports. Focused run35159542174 at624bcf29 adds geometry observations, selected-tag
+checks and a corrected calendar dismissal target, not a product fix. Ongoing full audit coverage is not the release gate.
 
 ## Changed workflows and acceptance
 
@@ -88,7 +88,8 @@ adaptation. Its alternate form-column comparison stops at unchanged help expansi
 (M240), before exercising its keyboard comparison. Keep that intermittent,
 noncritical help issue in audit follow-up; it is not a newly demonstrated batch
 regression. See [evidence and decision](native-onboarding-351567.md). Phone
-onboarding and the remaining required batch checks are still pending.
+onboarding also passes complete entry, help, keyboard dismissal and reachable
+actions, with captures reviewed. Remaining required batch checks are still pending.
 
 
 ## Source verification checkpoint
