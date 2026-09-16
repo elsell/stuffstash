@@ -1,4 +1,4 @@
-import { type RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 import { StyleSheet, Text, View, type TextInput } from 'react-native';
 import type { CustomAssetTypeDefinition, CustomFieldApplicability, CustomFieldType } from '../../domain/customization/Customization';
 import { suggestedCustomizationKey } from '../../domain/customization/Customization';
@@ -12,6 +12,7 @@ import { AppTextInput } from './AppTextInput';
 export function CustomizationFieldControls(props: { readonly busy?: boolean; readonly applicability: CustomFieldApplicability; readonly canMutate: boolean; readonly eligibleTypes: readonly CustomAssetTypeDefinition[]; readonly enumOptions: readonly string[]; readonly fieldType: CustomFieldType; readonly mode: 'create' | 'edit'; readonly newOption: string; readonly onApplicability: (value: CustomFieldApplicability) => void; readonly onEnumOptions: (value: readonly string[]) => void; readonly onFieldType: (value: CustomFieldType) => void; readonly onNewOption: (value: string) => void; readonly onTargets: (value: readonly string[]) => void; readonly persistedEnumOptions: readonly string[]; readonly persistedTargetIds: readonly string[]; readonly targetIds: readonly string[] }) {
   const styles = createStyles(useAppearancePalette()); const types: readonly CustomFieldType[] = ['text', 'number', 'boolean', 'date', 'url', 'enum'];
   const disabled = !props.canMutate || Boolean(props.busy);
+  const [optionError, setOptionError] = useState('');
   const unavailableTargets = props.targetIds.filter(id => !props.eligibleTypes.some(type => type.id === id));
   const unavailableSavedCount = unavailableTargets.filter(id => props.persistedTargetIds.includes(id)).length;
   const unavailableDraftTargets = unavailableTargets.filter(id => !props.persistedTargetIds.includes(id));
@@ -21,13 +22,17 @@ export function CustomizationFieldControls(props: { readonly busy?: boolean; rea
       ? <Text key={option} style={styles.lockedValue}>{props.persistedEnumOptions.includes(option) ? `${option} · Existing` : option}</Text>
       : <NativeCommandButton key={option} label={`Remove ${option}`} disabled={disabled}
           onPress={() => { if (!disabled) props.onEnumOptions(props.enumOptions.filter(value => value !== option)); }} />)}{props.enumOptions.length === 0 ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Add at least one option.</Text> : null}{props.canMutate ? <View style={styles.enumOptionInput}>
-        <AppTextInput editable={!disabled} accessibilityLabel="New enum option" onChangeText={props.onNewOption}
+        <AppTextInput editable={!disabled} accessibilityLabel="New enum option" accessibilityHint={optionError || undefined} onChangeText={value => { setOptionError(''); props.onNewOption(value); }}
           placeholder="Add option" style={[styles.input, styles.enumDraftInput]} value={props.newOption} />
+        {optionError ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{optionError}</Text> : null}
         {props.newOption.trim() ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Add or clear this option before saving.</Text> : null}
         <NativeCommandButton label="Add option" disabled={disabled} onPress={() => {
           if (disabled) return;
           const next = suggestedCustomizationKey(props.newOption);
-          if (next && !props.enumOptions.includes(next)) props.onEnumOptions([...props.enumOptions, next]);
+          if (!next) { setOptionError('Use letters to start the option, then letters, numbers, or hyphens.'); return; }
+          if (props.enumOptions.includes(next)) { setOptionError('This option already exists.'); return; }
+          props.onEnumOptions([...props.enumOptions, next]);
+          setOptionError('');
           props.onNewOption('');
         }} />
       </View> : null}</View> : null}

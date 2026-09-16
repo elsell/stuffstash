@@ -455,3 +455,12 @@ real navigation stack with a synthetic repository. Verify native Back with a dir
 draft (Keep Editing and Discard), native Save returning to the collection, and
 Archive confirmation cancellation and completion. Fixture data must never reach
 production services. Source tests remain separate from simulator acceptance.
+
+## Enum option entry recovery
+
+Adding an enum option must clear its draft only after adding a new usable option.
+If the normalized value is empty or already exists, preserve the user's text and
+show an inline explanation. Keep the existing key normalization contract; this
+does not expand backend enum formats. Clear obsolete feedback when editing or
+successfully adding an option. Invalid pending text continues to prevent saving
+through the existing editor validation, and busy/read-only commands stay disabled.

@@ -3,6 +3,31 @@ import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { CustomizationFieldControls } from './CustomizationEditorFields';
 
+it.each([
+  ['!!!', 'Use letters to start the option, then letters, numbers, or hyphens.'],
+  ['Saved', 'This option already exists.']
+])('preserves rejected enum draft %s and allows correction', async (draft, message) => {
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [options, setOptions] = useState<readonly string[]>(['saved']);
+    const [value, setValue] = useState(draft);
+    return <CustomizationFieldControls persistedEnumOptions={['saved']} persistedTargetIds={[]} applicability="all_assets" canMutate eligibleTypes={[]} enumOptions={options} fieldType="enum" mode="edit" newOption={value}
+      onApplicability={() => {}} onEnumOptions={setOptions} onFieldType={() => {}} onNewOption={setValue} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    await h.press(h.byLabel('Add option'));
+    expect(h.byLabel('New enum option')?.props.value).toBe(draft);
+    expect(h.byText(message)).toBeDefined();
+    await h.changeText(h.byLabel('New enum option'), 'Corrected');
+    expect(h.byText(message)).toBeUndefined();
+    await h.press(h.byLabel('Add option'));
+    expect(h.byLabel('Remove corrected')).toBeDefined();
+    expect(h.byLabel('New enum option')?.props.value).toBe('');
+    expect(h.byText('saved · Existing')).toBeDefined();
+  } finally { await h.unmount(); }
+});
+
 it('does not change a field type from an option opened before the form became read-only', async () => {
   const h = new MobileRenderHarness(); const changes: string[] = [];
   const form = (canMutate: boolean) => <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability="all_assets" canMutate={canMutate} eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="create" newOption=""

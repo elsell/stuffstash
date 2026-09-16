@@ -81,8 +81,14 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise975
-pending,1,758 source-reviewed,479 finding,24 runtime-partial and172 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise937
+pending,1,787 source-reviewed,481 finding,23 runtime-partial and180 not-applicable.
+
+[Custom field type/options](custom-field-options-axis.md) now has all 24 source
+axes reviewed for both nested controls. M188 preserves rejected option drafts;
+70 related checks and static validation pass remotely. Its new editing finding
+supersedes a runtime-partial classification while preserving the earlier evidence.
+Normal-size native typing and feedback acceptance remain open.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
 includes the visible pending name on approval and blocks blank names;52 focused

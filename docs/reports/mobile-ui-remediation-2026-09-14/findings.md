@@ -2666,3 +2666,13 @@ row-open behavior, spoken action, disabled state and read-state reversal. It
 reserves 48 points for the accessory. Twenty focused tests plus TypeScript and
 structural checks pass remotely. Native hit bounds, row fit and assistive grouping
 still require verification; the preview Pressable is only the non-native fallback.
+### M188 — Rejected enum option entry disappears
+
+P2 source-confirmed at 9c2c7246. Add option cleared the draft even when normalization
+produced no usable value or the option already existed. Two mounted RED cases
+reproduced the loss. The candidate preserves rejected input, explains the reason
+inline, and clears obsolete feedback on editing or successful addition. Existing
+pending-option Save validation and immutable saved values remain intact. All 70
+related checks plus TypeScript/structural validation pass remotely; critic found
+no blocker. Native keyboard and feedback presentation remain pending. See
+[custom field options](custom-field-options-axis.md) for the 24-axis review.

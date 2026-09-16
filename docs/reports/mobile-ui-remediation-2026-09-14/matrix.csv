@@ -2495,30 +2495,30 @@ S104,Settings / appearance selection,privacy,"Account scope, data use and permis
 S104,Settings / appearance selection,notifications,System notification entry and state,pending,,
 S104,Settings / appearance selection,media,"Camera, library, files and audio",pending,,
 S104,Settings / appearance selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S105,Settings / field type choice,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
-S105,Settings / field type choice,navigation,"Navigation, hierarchy and return",pending,,
-S105,Settings / field type choice,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
-S105,Settings / field type choice,modality,Presentation and dismissal,pending,,
-S105,Settings / field type choice,layout,"Safe areas, scroll edges and overlays",pending,,
-S105,Settings / field type choice,adaptation,Phone/tablet/window reflow,pending,,
-S105,Settings / field type choice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
-S105,Settings / field type choice,appearance,"Light/dark, contrast and materials",pending,,
-S105,Settings / field type choice,localization,"Locale, timezone, RTL and long strings",pending,,
-S105,Settings / field type choice,imagery,"Icons, photos and missing media",pending,,
-S105,Settings / field type choice,targets,Touch target size and reachability,pending,,
-S105,Settings / field type choice,gestures,Gestures and explicit alternatives,pending,,
-S105,Settings / field type choice,keyboard,"Keyboard, text entry and focus",pending,,
-S105,Settings / field type choice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.",M02
-S105,Settings / field type choice,motion,Reduced motion and feedback alternatives,pending,,
-S105,Settings / field type choice,content,"Lists, hierarchy, density and pagination",pending,,
-S105,Settings / field type choice,search,"Search, scope and filters",pending,,
-S105,Settings / field type choice,loading,"Loading, background refresh and progress",pending,,
-S105,Settings / field type choice,recovery,"Empty, error, denied and retry",pending,,
-S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.",M02;M54
-S105,Settings / field type choice,privacy,"Account scope, data use and permissions",pending,,
-S105,Settings / field type choice,notifications,System notification entry and state,pending,,
-S105,Settings / field type choice,media,"Camera, library, files and audio",pending,,
-S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S105,Settings / field type choice,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02
+S105,Settings / field type choice,navigation,"Navigation, hierarchy and return",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02
+S105,Settings / field type choice,modality,Presentation and dismissal,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,layout,"Safe areas, scroll edges and overlays",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,adaptation,Phone/tablet/window reflow,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,M53
+S105,Settings / field type choice,appearance,"Light/dark, contrast and materials",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,localization,"Locale, timezone, RTL and long strings",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,imagery,"Icons, photos and missing media",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,targets,Touch target size and reachability,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,gestures,Gestures and explicit alternatives,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,keyboard,"Keyboard, text entry and focus",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02
+S105,Settings / field type choice,motion,Reduced motion and feedback alternatives,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,content,"Lists, hierarchy, density and pagination",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,search,"Search, scope and filters",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,loading,"Loading, background refresh and progress",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,recovery,"Empty, error, denied and retry",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11. M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02;M54
+S105,Settings / field type choice,privacy,"Account scope, data use and permissions",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,notifications,System notification entry and state,not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,media,"Camera, library, files and audio",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S105,Settings / field type choice,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
 S106,Settings / field applicability,task,Task clarity and platform-pattern fit,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
 S106,Settings / field applicability,navigation,"Navigation, hierarchy and return",pending,,
 S106,Settings / field applicability,selection,Value selection and current value,source-reviewed,Shared field controls reviewed: Type/initial applicability use native pickers; expand applicability and add enum option now native commands with existing draft behavior. 45 source checks/typecheck/structural pass; native adaptation and assistive-technology verification pending.,M52
@@ -2543,30 +2543,30 @@ S106,Settings / field applicability,privacy,"Account scope, data use and permiss
 S106,Settings / field applicability,notifications,System notification entry and state,pending,,
 S106,Settings / field applicability,media,"Camera, library, files and audio",pending,,
 S106,Settings / field applicability,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
-S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
-S107,Settings / enum options,navigation,"Navigation, hierarchy and return",pending,,
-S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
-S107,Settings / enum options,modality,Presentation and dismissal,pending,,
-S107,Settings / enum options,layout,"Safe areas, scroll edges and overlays",pending,,
-S107,Settings / enum options,adaptation,Phone/tablet/window reflow,pending,,
-S107,Settings / enum options,typography,"Dynamic Type, wrapping and legibility",pending,,
-S107,Settings / enum options,appearance,"Light/dark, contrast and materials",pending,,
-S107,Settings / enum options,localization,"Locale, timezone, RTL and long strings",pending,,
-S107,Settings / enum options,imagery,"Icons, photos and missing media",pending,,
-S107,Settings / enum options,targets,Touch target size and reachability,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
-S107,Settings / enum options,gestures,Gestures and explicit alternatives,pending,,
-S107,Settings / enum options,keyboard,"Keyboard, text entry and focus",pending,,
-S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.",M15;M52
-S107,Settings / enum options,motion,Reduced motion and feedback alternatives,pending,,
-S107,Settings / enum options,content,"Lists, hierarchy, density and pagination",pending,,
-S107,Settings / enum options,search,"Search, scope and filters",pending,,
-S107,Settings / enum options,loading,"Loading, background refresh and progress",pending,,
-S107,Settings / enum options,recovery,"Empty, error, denied and retry",pending,,
-S107,Settings / enum options,editing,"Draft, save, cancel, undo and interruption",runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Fixture removes draft enum option while preserving saved option; full editor routing/persistence pending. See native-evidence.md.,M15
-S107,Settings / enum options,privacy,"Account scope, data use and permissions",pending,,
-S107,Settings / enum options,notifications,System notification entry and state,pending,,
-S107,Settings / enum options,media,"Camera, library, files and audio",pending,,
-S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S107,Settings / enum options,task,Task clarity and platform-pattern fit,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M15;M52
+S107,Settings / enum options,navigation,"Navigation, hierarchy and return",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,selection,Value selection and current value,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M15;M52
+S107,Settings / enum options,modality,Presentation and dismissal,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,layout,"Safe areas, scroll edges and overlays",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,adaptation,Phone/tablet/window reflow,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,appearance,"Light/dark, contrast and materials",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,localization,"Locale, timezone, RTL and long strings",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,imagery,"Icons, photos and missing media",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,targets,Touch target size and reachability,source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M15;M52
+S107,Settings / enum options,gestures,Gestures and explicit alternatives,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,keyboard,"Keyboard, text entry and focus",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,"M52: Add option now a native command; normalized addition, duplicate handling, draft clearing and saved option protection pass source tests. 45 tests/typecheck/structural pass; native layout and assistive-technology acceptance pending.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M15;M52
+S107,Settings / enum options,motion,Reduced motion and feedback alternatives,source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,content,"Lists, hierarchy, density and pagination",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,search,"Search, scope and filters",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,loading,"Loading, background refresh and progress",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,recovery,"Empty, error, denied and retry",finding,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,M188
+S107,Settings / enum options,editing,"Draft, save, cancel, undo and interruption",finding,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Fixture removes draft enum option while preserving saved option; full editor routing/persistence pending. See native-evidence.md.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,M15;M188
+S107,Settings / enum options,privacy,"Account scope, data use and permissions",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,notifications,System notification entry and state,not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,media,"Camera, library, files and audio",not-applicable,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
+S107,Settings / enum options,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
 S108,Settings / tag color,task,Task clarity and platform-pattern fit,source-reviewed,Native color picker nested inside custom draft panel; redundant iOS edit surface found. Android fallback has spec-level native limitation.,M23
 S108,Settings / tag color,navigation,"Navigation, hierarchy and return",pending,,
 S108,Settings / tag color,selection,Value selection and current value,finding,Native349197 row activation failed on phone/iPad; inspected iPad screenshot shows parent unchanged. Independent trailing-well probe pending; earlier pass does not establish reliability.,M51
