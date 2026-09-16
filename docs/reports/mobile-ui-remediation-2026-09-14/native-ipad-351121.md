@@ -51,3 +51,10 @@ text. They are not merely immediate incomplete-value reads. The voice-location
 final hierarchy again exposes an in-header Search button and restored choices,
 consistent with the separate static comparison behind the newer acceptance rule;
 the newer full re-entry assertions still need their own execution.
+
+## Artifact retention update — September 16
+
+The full archive named above was removed from paul after confirming its GitHub
+artifact remains available through September 30. Selected captures, hierarchies,
+and recorded findings remain retained. This cleanup recovered space without
+removing current-run evidence or touching active native jobs.

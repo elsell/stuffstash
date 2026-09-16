@@ -76,3 +76,10 @@ keyboard accessory, or declaring controlled state the sole cause. In particular,
 the native-seeded RN name failure survives removing the accessory. Production
 field families still need their own complete-entry, reset, retry and external-change
 acceptance; passing a paced diagnostic must not replace those requirements.
+
+## Artifact retention update — September 16
+
+The full archive named above was removed from paul after confirming its GitHub
+artifact remains available through September 30. Selected captures, hierarchies,
+and recorded findings remain retained. This cleanup recovered space without
+removing current-run evidence or touching active native jobs.

@@ -57,3 +57,10 @@ Sharing, Android-menu or test-observation changes.
 
 The completed run remains a failed release gate. Newer run35121454700 at1a15ca11
 has started normally and is monitored with a45-second sleep/change-only loop.
+
+## Artifact retention update — September 16
+
+The full archive named above was removed from paul after confirming its GitHub
+artifact remains available through September 30. Selected captures, hierarchies,
+and recorded findings remain retained. This cleanup recovered space without
+removing current-run evidence or touching active native jobs.
