@@ -1,3 +1,4 @@
+import { FilterGeometryProbe } from './FilterGeometryProbe';
 import { useInputEventTrace } from './InputEventTrace';
 export { AndroidHeaderCompositionFixture } from './AndroidHeaderCompositionFixture';
 import { AndroidControlTargetsFixture } from './AndroidControlTargetsFixture';
@@ -242,24 +243,28 @@ function FixturePage({ children, persistHandledTaps = false }: { readonly childr
   return <ScrollView keyboardShouldPersistTaps={persistHandledTaps ? 'handled' : 'never'} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>{children}</ScrollView>;
 }
 
-export function BrowseFilterFixture() {
+export function BrowseFilterGeometryFixture() { return <BrowseFilterFixture geometry />; }
+
+export function BrowseFilterFixture({ geometry = false }: { readonly geometry?: boolean } = {}) {
   const router = useRouter();
   const { setResult } = useContext(ResultContext);
-  return <BrowseFiltersScreen initial={{ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' }}
+  return <><BrowseFiltersScreen initial={{ scope: 'all', lifecycleState: 'active', checkoutState: 'any', tagIds: [], sort: 'updated_desc' }}
     query="" tags={[{ id: 'audit-tools', key: 'tools', label: 'Tools' }, { id: 'audit-holiday', key: 'holiday', label: 'Holiday supplies' }, ...Array.from({ length: 30 }, (_, index) => ({ id: `audit-tag-${index}`, key: `audit-tag-${index}`, label: `Long list tag ${String(index + 1).padStart(2, '0')}` })), { id: 'audit-last', key: 'audit-last', label: 'ZZ final tag' }]}
     onApply={draft => { setResult(draft.tagIds.length ? `Browse selected tags: ${draft.tagIds.join(',')}` : `Browse availability: ${draft.checkoutState}`); router.back(); }}
     onCancel={() => returnToPreviousOrHome(router)}
-    onExpiration={mode => { setResult(`Expiration mode: ${mode}`); router.back(); }} />;
+    onExpiration={mode => { setResult(`Expiration mode: ${mode}`); router.back(); }} />{geometry ? <FilterGeometryProbe /> : null}</>;
 }
 
-export function ExpirationFilterFixture() {
+export function ExpirationFilterGeometryFixture() { return <ExpirationFilterFixture geometry />; }
+
+export function ExpirationFilterFixture({ geometry = false }: { readonly geometry?: boolean } = {}) {
   const router = useRouter();
   const { setResult } = useContext(ResultContext);
-  return <ExpirationFiltersScreen initial={{ mode: 'all', throughDate: '2026-10-15' }} choices={{
+  return <><ExpirationFiltersScreen initial={{ mode: 'all', throughDate: '2026-10-15' }} choices={{
     types: [{ id: 'audit-food', label: 'Food' }],
     tags: [{ id: 'audit-tools', label: 'Tools' }, { id: 'audit-holiday', label: 'Holiday supplies' }],
     locations: [{ id: 'audit-kitchen', label: 'Kitchen / Cabinet' }, { id: 'audit-garage', label: 'Garage / Cabinet' }]
-  }} onApply={filter => { setResult(`Expiration mode: ${filter.mode}`); router.back(); }} onCancel={() => returnToPreviousOrHome(router)} />;
+  }} onApply={filter => { setResult(`Expiration mode: ${filter.mode}`); router.back(); }} onCancel={() => returnToPreviousOrHome(router)} />{geometry ? <FilterGeometryProbe /> : null}</>;
 }
 
 function DraftOptionsFixture() {

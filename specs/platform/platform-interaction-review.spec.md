@@ -610,6 +610,17 @@ Both searchable consumers must use the same full-action/accessory clearance
 assertion, preserve the complete query, and exercise the intended draft/result or
 Back behavior. Focused results cannot replace full-suite release acceptance.
 
+After run35154627907, collect fixture-only sheet geometry before another inset
+correction: the unmoved bottom edge's measureInWindow coordinates, delivered
+keyboard frame and resulting shared boundary calculation. Compare these with XCTest
+screen frames. The phone footer ends 62 points below the keyboard container top,
+matching the presented sheet origin; this is a coordinate-space hypothesis, not
+yet a proven cause. The probe must not change production layout or keyboard
+policy and must ignore late measurements after hide or unmount. Install the probe
+only for the focused filters selection; full audit routes retain their unmodified
+fixture presentation. The probe is an independent event-time sample, not a trace
+of the production hook’s applied inset or synchronized XCTest measurement.
+
 Searchable filter pages must have one owner of the native search options. Updating
 the title or selecting a tag must not clear the active search field or its query.
 Mounted acceptance must inspect the currently merged navigation options, not a

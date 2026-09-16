@@ -76,6 +76,9 @@ exports = {
     "audit-expiration": "ExpirationFilterFixture",
     "audit-expiration-medium": "ExpirationFilterFixture",
 }
+if os.environ.get("AUDIT_TEST_CASE") == "filters":
+    exports["audit-browse"] = "BrowseFilterGeometryFixture"
+    exports["audit-expiration"] = "ExpirationFilterGeometryFixture"
 for route, component in exports.items():
     (routes / f"{route}.tsx").write_text(
         f"export {{ {component} as default }} from '../../native-audit/FixtureApplication';\n"

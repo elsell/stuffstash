@@ -42,3 +42,20 @@ on paul. Only the compact reviewed evidence above is copied into the repository.
 The iPad artifact is 10471498466. Full local logs are
 `/tmp/native351546-filters-phone.log` and `/tmp/native351546-filters-ipad.log`.
 No production fix or new native acceptance is inferred from the failed candidate.
+
+## Next diagnostic
+
+The hierarchy puts the sheet origin at Y62, the footer bottom at Y557 and the
+keyboard container top at Y495. The 62-point difference suggests a sheet/window
+coordinate mismatch; the extender additionally draws its control 10 points above
+its container. Neither number should become a hard-coded inset.
+
+The focused filters fixture now exposes a small, noninteractive geometry sample:
+an unmoved sibling bottom boundary measured with measureInWindow, the settled
+keyboard event frame and their shared boundary calculation. This does not record
+the production hook's applied inset and is not synchronized to XCTest; compare
+the sample with final hierarchy frames before drawing a causal conclusion. Full
+audit routes do not mount this diagnostic. The fixture lifecycle test and eight
+route-isolation checks pass on paul, together with TypeScript and structural checks.
+Critic review found no blocker; pending-callback-after-unmount is guarded in source
+but is not independently demonstrated by the mounted test.

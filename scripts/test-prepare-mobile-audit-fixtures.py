@@ -65,6 +65,13 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.assertNotEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
 
+    def test_filter_diagnostic_installs_geometry_probes_only_for_focused_selection(self):
+        result = self.run_script(AUDIT_TEST_CASE="filters")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("BrowseFilterGeometryFixture as default", (self.routes / "audit-browse.tsx").read_text())
+        self.assertIn("ExpirationFilterGeometryFixture as default", (self.routes / "audit-expiration.tsx").read_text())
+        self.assertIn("ExpirationFilterFixture as default", (self.routes / "audit-expiration-medium.tsx").read_text())
+
     def test_provider_free_diagnostic_installs_distinct_root_and_keeps_backup(self):
         result = self.run_script(AUDIT_TEST_CASE="text-entry-no-provider")
         self.assertEqual(result.returncode, 0, result.stderr)
