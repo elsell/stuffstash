@@ -24,7 +24,8 @@ Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes
 iPad onboarding passes3/3; phone help activation fails (M240). See
 [native phone findings](native-phone-351121.md) and
 [native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
-active and must finish undisturbed. Subsequent test-only candidates f54eec01 and
+active and must finish undisturbed. Its iPad onboarding job passes3/3 with
+[inspected keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
 c196d527 await native execution: bounded exact Add-tag observation and a managed
 search/header-action coexistence comparison. Neither is production acceptance.
 M242 inbox ownership and M243/M244 Android menu corrections have source checks and
