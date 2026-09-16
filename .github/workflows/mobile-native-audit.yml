@@ -13,6 +13,7 @@ on:
           - color-picker
           - text-entry
           - add-draft
+          - home-header
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -89,6 +90,15 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
+              )
+              ;;
+            home-header)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeHeaderKeepsAllActionsAboveScrollingContent'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeProfileHitRegionBeyondAccessibilityFrame'
               )
               ;;
             add-draft)

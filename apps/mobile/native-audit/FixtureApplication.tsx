@@ -15,7 +15,7 @@ export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecov
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
-export { HomeReturnFixture, HomeHeaderFixture } from './HomeReturnFixture';
+export { HomeReturnFixture, HomeHeaderFixture, HomeAddProbeDestination, HomeProfileProbeDestination } from './HomeReturnFixture';
 import { nativeTabHeaderOptions } from '../src/ui/navigation/NativeTabHeader';
 export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
 import { Host, TextField } from '@expo/ui/swift-ui';

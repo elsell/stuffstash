@@ -1349,6 +1349,39 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-notification-hit-region")
   }
 
+  func testHomeAddHitRegionBeyondAccessibilityFrame() {
+    verifyHomeNavigationHitRegion(label: "Add an asset", destination: "Header Add destination", captureName: "home-add-hit-region")
+  }
+
+  func testHomeProfileHitRegionBeyondAccessibilityFrame() {
+    verifyHomeNavigationHitRegion(label: "Open account and settings", destination: "Header Profile destination", captureName: "home-profile-hit-region")
+  }
+
+  private func verifyHomeNavigationHitRegion(label: String, destination: String, captureName: String) {
+    let open = app.buttons["Audit Home header"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    let menu = app.scrollViews.containing(.button, identifier: "Audit Home header").firstMatch
+    for _ in 0..<6 where !open.isHittable { menu.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let action = app.buttons[label]
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      XCTAssertTrue(action.waitForExistence(timeout: 10))
+      XCTAssertTrue(action.isHittable)
+      let center = action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      XCTAssertTrue(app.staticTexts[destination].waitForExistence(timeout: 5),
+                    "\(label) did not reach its destination for edge probe \(index): \(offset)")
+      let back = app.navigationBars.buttons["BackButton"].firstMatch
+      XCTAssertTrue(back.isHittable)
+      back.tap()
+    }
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    capture(captureName)
+  }
+
   private func openHomeReturn() {
     let open = app.buttons["Audit Home Return"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))

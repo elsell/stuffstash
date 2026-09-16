@@ -99,3 +99,12 @@ evidence of touch delivery. The Home fixture may count its synthetic notificatio
 callback to observe center and edge taps without navigating away. Keep the
 original geometry gate intact until evidence justifies any change to acceptance;
 the diagnostic does not certify other actions, devices, or full Home composition.
+
+Extend that independent evidence to Add and Profile through their real Home header
+callbacks. Runner-only `/add` and `/settings` destinations identify the dispatched
+route; after each center/edge/corner tap, require the correct destination and a
+return to the same header. These probe destinations do not stand in for the Add or
+Settings workflows. Keep the original frame assertions until those controls have
+their own native touch-delivery evidence.
+The focused `home-header` workflow selection runs the original geometry/scroll
+journey and all three action probes on phone and tablet; it is not full acceptance.

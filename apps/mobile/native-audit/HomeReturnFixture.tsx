@@ -24,6 +24,11 @@ const headerAssets: readonly AssetSummary[] = [drill, ...['Audit camping equipme
 
 export function HomeHeaderFixture() { return <HomeReturnFixture headerAudit />; }
 
+// Observe the production header's actual router destinations without replacing
+// its handlers or claiming acceptance of the destination workflows.
+export function HomeAddProbeDestination() { return <Text>Header Add destination</Text>; }
+export function HomeProfileProbeDestination() { return <Text>Header Profile destination</Text>; }
+
 export function HomeReturnFixture({ headerAudit = false }: { readonly headerAudit?: boolean }) {
   const [notificationActivations, setNotificationActivations] = useState(0);
   const [fixture] = useState(() => {
