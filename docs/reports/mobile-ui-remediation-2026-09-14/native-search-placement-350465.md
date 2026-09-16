@@ -84,3 +84,24 @@ Original Place/settings tests remain unchanged. No title-toggle workaround or
 native dependency patch is applied to production. The installer test failed first
 for the absent route; all6 installer tests, TypeScript and structural checks pass
 on paul. Swift/native execution remains pending.
+
+## Run351318 comparison and upstream cross-check
+
+The managed enable/title-change/native-action probe passes on both devices, while
+phone Settings and preconfigured Place still render bottom search fields. iPad
+passes both production journeys. Thus generic enablement/header mutation alone
+is not a sufficient reproducer. Place additionally keys its search component on
+asset/enabled state, but Settings does not; that key cannot by itself explain both
+failures. Preserve both production acceptance cases.
+
+The pinned react-native-screens4.23.0 adapter forwards integrated-button placement
+and disabled toolbar integration to UINavigationItem. Its native header code
+contains an iOS26 repeated-configuration workaround specifically for stacked
+placement, but the current evidence does not establish the same cause here.
+Upstream [issue4381](https://github.com/software-mansion/react-native-screens/issues/4381)
+reports missing stacked search with scrolling collapse; our configuration already
+sets hideWhenScrolling=false and fails with a visible bottom field.
+[Issue3935](https://github.com/software-mansion/react-native-screens/issues/3935)
+reports title overlap for integratedCentered placement after navigation. Neither
+report proves a fix for this integratedButton failure. No dependency upgrade or
+blanket custom-search replacement is justified by those reports alone.
