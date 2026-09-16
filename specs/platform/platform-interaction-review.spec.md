@@ -21,6 +21,15 @@ screenshots for the live acceptance gate. Use Apple's public
 
 ## Purpose
 
+Filter footer actions on both mobile platforms must read the current committed
+draft and current primary/secondary disabled state. Retained native callbacks
+must not apply an earlier valid range after the user makes it invalid, or cancel
+the whole task when the current nested-page command is Back. Reject callbacks
+while the owning route is blurred and after removal; refocusing permits the
+current actions. Share this ownership guard across the iOS and Android layouts.
+Verify these retained-event cases through mounted behavior tests; source evidence
+does not establish that native platforms delivered a delayed event in practice.
+
 Runner-only native fixture navigation must render the production root's appearance
 defaults: palette-backed content and header surfaces, text-colored header titles,
 action-colored controls and status glyphs matching the resolved color scheme.

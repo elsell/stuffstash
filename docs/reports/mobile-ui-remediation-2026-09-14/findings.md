@@ -3156,3 +3156,19 @@ single-tap hide/reveal while zoomed, retained zoom after warm return, replacemen
 paging and asset-photo removal-failure recovery. Zoomed pan and a long upward
 dismissal also have native evidence. iOS, pinch and assistive acceptance remain
 open; see photo-viewer-axis.md for exact build, scenarios and evidence limits.
+
+### M235 — Filter footer callbacks outlive their draft or focused route
+
+P2 source-confirmed through mounted retained-callback tests, not observed native
+event delivery. The iOS filter footer retained an earlier draft and page action;
+both platforms could execute footer actions after blur. Expiration's Apply can
+navigate directly, so downstream navigation did not supply a focus guard.
+
+Both layouts now share `useFilterFooterActions`: dispatch reads committed actions,
+checks current primary/secondary disabled state, rejects blur/removal and resumes
+current actions on refocus. This covers Browse and Expiration, the two production
+consumers. The new cases failed before implementation (old iOS draft/page and
+blurred Android dispatch) and pass after it. All1,900 tests across297 files,
+TypeScript and structural checks pass on paul; critic review found no remaining
+source blocker. Logs: `/tmp/filter-actions-{red,green,check,structural}.log`.
+The change does not alter native layout; native acceptance remains separate.

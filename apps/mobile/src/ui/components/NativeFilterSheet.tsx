@@ -6,10 +6,12 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { NativeSheetActions } from './NativeSheetActions';
 import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
 import { useSheetKeyboardInset } from './useSheetKeyboardInset';
+import { useFilterFooterActions } from './useFilterFooterActions';
 
 /** Keep the native scroll body direct; reserve the measured, opaque action area. */
 export function NativeFilterSheet({ title, search, children, actions, footerTestID }: NativeFilterSheetProps) {
   const palette = useAppearancePalette();
+  const footerActions = useFilterFooterActions(actions);
   const [footerHeight, setFooterHeight] = useState(0);
   const boundaryRef = useRef<View>(null);
   const keyboard = useSheetKeyboardInset(boundaryRef);
@@ -25,7 +27,7 @@ export function NativeFilterSheet({ title, search, children, actions, footerTest
       onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
       style={[styles.footer, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
       <View testID={footerTestID} style={styles.actions}>
-        <NativeSheetActions {...actions} keyboardAvoidance="container" />
+        <NativeSheetActions {...footerActions} keyboardAvoidance="container" />
       </View>
     </SafeAreaView>
   </>;

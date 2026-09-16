@@ -378,11 +378,11 @@ R016,browse-filters.tsx,content,"Lists, hierarchy, density and pagination",findi
 R016,browse-filters.tsx,search,"Search, scope and filters",finding,; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,M114
 R016,browse-filters.tsx,loading,"Loading, background refresh and progress",finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; M116 pending Cancel candidate; controlled behavior pass; native pending,M116
 R016,browse-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; findings.md M114 empty/matching tag explanation; 8focused tests pass; native pending,"M32,M114"
-R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
+R016,browse-filters.tsx,editing,"Draft, save, cancel, undo and interruption",finding,browse-filters-axis.md; e303e4f7 source; native acceptance pending; M235 committed focused footer guard; 1900 remote tests pass; native delivery unverified,M235
 R016,browse-filters.tsx,privacy,"Account scope, data use and permissions",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,notifications,System notification entry and state,source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
 R016,browse-filters.tsx,media,"Camera, library, files and audio",source-reviewed,browse-filters-axis.md; e303e4f7 source; native acceptance pending,
-R016,browse-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M115 focused verification; 15focused tests pass; native pending,M115
+R016,browse-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M115 focused verification; 15focused tests pass; native pending; M235 committed focused footer guard; 1900 remote tests pass; native delivery unverified,M115;M235
 R017,expiration-filters.tsx,task,Task clarity and platform-pattern fit,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,navigation,"Navigation, hierarchy and return",finding,"expiration-filters-axis.md; source b15a38d5; native acceptance pending; Android M219-M222: android-filter-sheet.md, normal-size native geometry and keyboard candidate pending",M219;M220;M221;M222
 R017,expiration-filters.tsx,selection,Value selection and current value,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
@@ -402,11 +402,11 @@ R017,expiration-filters.tsx,content,"Lists, hierarchy, density and pagination",s
 R017,expiration-filters.tsx,search,"Search, scope and filters",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,loading,"Loading, background refresh and progress",finding,M116 pending Cancel candidate; controlled behavior pass; native pending; expiration-filters-axis.md; source b15a38d5; native acceptance pending,M116
 R017,expiration-filters.tsx,recovery,"Empty, error, denied and retry",finding,M32 recovery fallback now scrolls; Retry/Cancel and existing scope/access validation preserved. 61 focused remote regression tests plus typecheck/structural pass; critic no blocker. Native enlarged-text recovery pending.; M81: native command migration through 770e582c; source-reviewed callbacks/guard decisions and remote recovery checks; native layout pending (findings.md); expiration-filters-axis.md; source b15a38d5; native acceptance pending,M32;M81
-R017,expiration-filters.tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
+R017,expiration-filters.tsx,editing,"Draft, save, cancel, undo and interruption",finding,expiration-filters-axis.md; source b15a38d5; native acceptance pending; M235 committed focused footer guard; 1900 remote tests pass; native delivery unverified,M235
 R017,expiration-filters.tsx,privacy,"Account scope, data use and permissions",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,notifications,System notification entry and state,source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
 R017,expiration-filters.tsx,media,"Camera, library, files and audio",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
-R017,expiration-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,expiration-filters-axis.md; source b15a38d5; native acceptance pending,
+R017,expiration-filters.tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,expiration-filters-axis.md; source b15a38d5; native acceptance pending; M235 committed focused footer guard; 1900 remote tests pass; native delivery unverified,M235
 R018,expiration.tsx,task,Task clarity and platform-pattern fit,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 R018,expiration.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
 R018,expiration.tsx,selection,Value selection and current value,source-reviewed,; expiration-results-axis.md; source50d48f3c; native pending,
