@@ -443,3 +443,21 @@ the bottom and Sharing retains missing typed characters despite its iOS default-
 value field. Its iPad fixture job remains active. Continue normal-size search,
 text-entry and sheet-body diagnosis; preserve the queued current-source native
 run. These partial results do not satisfy the release gate or complete the audit.
+
+Current checkpoint `c31199a3` passes1,910 mobile tests/298 files on paul. All914
+tracked mobile/client files match the source manifest after syncing the new Swift
+journey; Swift is not compiled by these Linux checks. Latest TypeScript, structural
+and six fixture-installer checks pass. M242 guards departed inbox actions and
+initial focus loading. Native Android normal/compact dark evidence covers inbox
+read-state, navigation return and denial recovery. M243/M244 fix native menu target
+bounds and selectable-item activation, with actual appearance/reminder selection
+and exactly-once preference writes verified in APKb76e227a.
+
+Run351121 at1c2f8173 still has both fixture jobs active as of September16 16:22UTC;
+iPad onboarding passes3/3, while phone onboarding fails help activation (M240).
+Older351041 fixtures finish63/84 phone and77/84 iPad; retain normal-size search,
+Sharing menu/keyboard and diagnostic text-entry failures without applying later
+corrections retroactively. The current native revision is queued. Continue native
+normal-size acceptance before enlarged text, then release the complete reviewed
+batch with the explicit TestFlight notes section and Apple readback. The full audit
+and release gate remain open.
