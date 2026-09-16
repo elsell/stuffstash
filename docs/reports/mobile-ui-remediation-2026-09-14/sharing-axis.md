@@ -187,3 +187,29 @@ and universal links above remain separate surfaces and acceptance requirements.
 
 Source coverage does not mean acceptance. Full1,618-test validation atcd245a20
 includes the current Sharing candidate; no screenshot yet proves its typing fix.
+
+
+## Android access-state verification — M241
+
+APK `894025716d0b28df6683bafe35c3ec72b785bc29661d9bf63b8a1c2968a6670d`
+includes c72f7750's production Sharing screen and the controlled access scenarios.
+Pixel6 Android16, normal text, light theme. Independent cold launches verify:
+
+- [Permissionless scope](evidence/android-sharing-permissionless.png): explanatory
+  Sharing unavailable state without metadata, creation or ineffective list retry.
+- [Rejected access read](evidence/android-sharing-access-denied.png): Check Again
+  is visible and its actual tap [recovers the form](evidence/android-sharing-access-recovered.png).
+- [Ordinary failed read](evidence/android-sharing-load-failure.png): Retry is visible
+  and its actual tap recovers the empty invitation list and creation form.
+
+The first warm transition consumed the controlled first-read failure before
+observation. It is not used as denied-state evidence. Cold-launch observations and
+explicit retry taps retain production query policy; the fixture does not disable
+retries or substitute UI controls. The keyed scenario owns its query client and
+ports, with no real server mutations. Mounted tests separately verify cached data
+hiding and no reads when permission is absent.
+
+TypeScript, six fixture preparation checks and structural checks pass on paul;
+critic found no blocker. iOS access-state appearance, assistive navigation and real
+server authorization remain separate verification requirements. Android captures
+verify these specific presentation/recovery paths, not complete Sharing acceptance.

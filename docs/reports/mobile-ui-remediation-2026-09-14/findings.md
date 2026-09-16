@@ -3309,3 +3309,9 @@ checks pass on paul. Final focused check verifies no additional repository reads
 on permission loss, metadata hiding, restored-access recovery and departed-read
 cancellation. Native denied-state appearance remains unverified; no authorization
 service or transport enforcement changed.
+
+
+M241 Android follow-up: APK89402571 cold-launch scenarios verify permissionless
+presentation, visible Check Again and actual allowed recovery after a rejected
+access read, and Retry recovery after an ordinary read failure. See sharing-axis.md
+and its retained captures. iOS denied-state appearance remains pending.

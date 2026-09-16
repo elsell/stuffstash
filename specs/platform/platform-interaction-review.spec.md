@@ -1,5 +1,15 @@
 # Platform Interaction Review
 
+## Native Sharing access fixtures
+
+Runner-only Sharing scenarios may seed a permissionless scope, one rejected access
+read, or one ordinary read failure through controlled ports. They reuse production
+query policy and screen controls, never real invitations or credentials. Changing
+scenario remounts its owned query client and counters. Native acceptance distinguishes
+no retry without permission, Check Again recovering after access failure, and Retry
+recovering after an ordinary failure. These fixtures prove presentation/recovery,
+not server authorization enforcement.
+
 ## Sharing access recovery
 
 The Sharing screen distinguishes denied/unavailable access from an ordinary list
