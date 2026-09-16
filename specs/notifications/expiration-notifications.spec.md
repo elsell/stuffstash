@@ -471,3 +471,12 @@ manual guidance and a retry. Do not expose native exception text or change push
 preferences. Prevent duplicate launches while pending. Retire pending presentation
 on blur or background; a late failure must not appear on a new visit or clear a
 newer attempt's busy state. Successful launch does not prove permission was granted.
+
+## Inbox retained action ownership
+
+Retained inbox callbacks must not start read-state mutations, loads, settings
+navigation or breadcrumb navigation while the inbox is unfocused or unmounted.
+The focused screen retains all existing commands after returning. Already-started
+read mutations may reconcile mounted state and counts, preserving the separate
+focus-session restriction on delayed item navigation. Verify retained callbacks
+after blur and teardown as well as successful current focused actions.

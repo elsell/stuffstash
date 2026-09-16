@@ -46,3 +46,9 @@ Code review caught an Android wrapper whose accessibility activation was iOS-onl
 The candidate now places the content description on the Compose icon inside its
 native button, matching the existing conversation adapter. Follow-up review found
 no blocker; TypeScript and structural checks pass after the correction.
+
+M242 follow-up closes the retained-action source gap: four mounted regressions
+reproduced offscreen writes/navigation, and a fifth protects first loading after
+an unfocused mount. Current focused commands still execute; retained callbacks
+after teardown do not. All24 inbox checks, TypeScript and structural validation
+pass on paul. Native interruption and current-build geometry remain open.

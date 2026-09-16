@@ -3315,3 +3315,15 @@ M241 Android follow-up: APK89402571 cold-launch scenarios verify permissionless
 presentation, visible Check Again and actual allowed recovery after a rejected
 access read, and Retry recovery after an ordinary read failure. See sharing-axis.md
 and its retained captures. iOS denied-state appearance remains pending.
+
+### M242 — Retained inbox actions still execute after departure
+
+P2 mounted-confirmed. Four RED cases reproduced read-state changes, mark-all,
+settings navigation and breadcrumb navigation while the inbox was unfocused.
+Commands now require mounted, focused ownership before starting; already-started
+operations retain their existing reconciliation and delayed-navigation rules.
+Review identified a first-load edge case introduced by the new guard. An additional
+RED case covers mounting behind another screen; initialization now starts once
+on the first usable focus instead of discarding that load permanently.
+All24 focused inbox checks, TypeScript and mobile structural validation pass on
+paul. Native interruption and actual accessory hit geometry remain unverified.

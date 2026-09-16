@@ -31,20 +31,25 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const focusSession = useRef<object | undefined>(undefined);
+  const initialLoadStarted = useRef(false);
   useFocusEffect(useCallback(() => {
     const session = {}; focusSession.current = session;
+    void Promise.resolve().then(() => {
+      if (focusSession.current !== session || initialLoadStarted.current) return;
+      initialLoadStarted.current = true;
+      void load('all');
+    });
     return () => { if (focusSession.current === session) focusSession.current = undefined; };
   }, []));
   const pending = useRef(false);
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
   useEffect(() => {
-    let active = true; mounted.current = true;
-    void Promise.resolve().then(() => { if (active) void load('all'); });
-    return () => { active = false; mounted.current = false; controller.current?.abort(); };
+    mounted.current = true;
+    return () => { mounted.current = false; controller.current?.abort(); };
   }, []);
   async function run(operation: (signal: AbortSignal) => Promise<void>, fallback: string) {
-    if (pending.current) return;
+    if (!mounted.current || !focusSession.current || pending.current) return;
     pending.current = true; setBusy(true); setError('');
     const request = new AbortController(); controller.current = request;
     try { await operation(request.signal); }
@@ -102,7 +107,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
       { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
-      { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
+      { kind: 'settings', label: 'Reminder settings', onPress: () => { if (mounted.current && focusSession.current) onSettings(); } }
     ]);
   const headerOptions = useMemo(() => ({ title: 'Notifications', ...actionOptions }), [actionOptions]);
   return <>
@@ -122,7 +127,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     </Pressable>
       <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} /></View>
       {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? 'Partial location path' : 'Location unavailable'}</Text> : null}
-      <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(!busy)onOpenAsset(entry.id);}} />
+      <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(mounted.current && focusSession.current && !pending.current)onOpenAsset(entry.id);}} />
     </View>)}
     {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}</Text> : null}
     {cursor ? button('Load more notifications', () => void load(filter, cursor)) : null}
