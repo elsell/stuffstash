@@ -2636,3 +2636,12 @@ that visit on blur, session/command replacement and Close. The pending request l
 and existing cancellation behavior remain. A mounted RED case proves the unwanted
 post-blur command; coverage also verifies fresh return actions and immediate Close.
 See inventory-switcher-axis.md for all24 source axes and remaining native gates.
+
+### M185 — Browse continuation uses a bespoke command control
+
+P3 source-confirmed at2f861b25. Sparse-page continuation is a custom Pressable while
+pagination Retry and other result commands already use NativeCommandButton. The
+candidate uses that adapter with the same label/callback and footer position.
+The existing mounted sparse-page journey still reaches the matching second page;
+all13 related tests and static checks pass remotely. Native geometry remains open.
+See browse-route-axis.md for the full route/list/search source review.

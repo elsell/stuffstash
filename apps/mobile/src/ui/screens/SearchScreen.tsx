@@ -1,4 +1,5 @@
 import { usePullRefresh } from '../serverState/usePullRefresh';
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { BrowseAddHeader } from './BrowseAddHeader';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -9,7 +10,6 @@ import {
   ActivityIndicator,
   Platform,
   FlatList,
-  Pressable,
   Text,
   useWindowDimensions,
   View
@@ -460,7 +460,7 @@ export function SearchScreen({
           ) : isLoadingMore ? (
             <View style={styles.footer}><ActivityIndicator color={palette.accent} /></View>
           ) : state.results.hasMore ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Continue loading results" onPress={() => void loadNextPage()} style={styles.footer}><Text style={{ color: palette.action }}>Continue loading results</Text></Pressable>
+            <View style={styles.footer}><NativeCommandButton label="Continue loading results" onPress={() => void loadNextPage()} /></View>
           ) : null
         }
         renderItem={({ item }) => item.type === 'place' ? (
