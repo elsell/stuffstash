@@ -89,6 +89,13 @@ caller-specific ownership evidence retained. M189 prevents late photo-removal
 alerts crossing navigation visits; 101 related checks/static validation pass.
 Native alert activation, interruption and focus return remain open.
 
+Combined checkpoint at a2ad3163: all 1,808 mobile tests across 283 files,
+TypeScript and mobile structural checks pass on paul
+(`/tmp/mobile-audit-a2ad3163-full.log`). A checksum dry-run confirms tracked mobile
+source, native fixtures and listed package/test configuration match the validation
+tree; timestamp/permission differences were excluded. The suite emits React act
+warnings. This is source/mounted validation, not current-build native acceptance.
+
 [Custom field type/options](custom-field-options-axis.md) now has all 24 source
 axes reviewed for both nested controls. M188 preserves rejected option drafts;
 70 related checks and static validation pass remotely. Its new editing finding
