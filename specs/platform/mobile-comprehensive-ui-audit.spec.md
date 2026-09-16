@@ -11,6 +11,20 @@ invitation again. Keep production routes untouched outside the isolated runner.
 This fixture does not certify external link intake, authentication, authorization,
 or physical-device transitions; those retain their separate acceptance boundaries.
 
+## Home within the production tab shell
+
+Standalone header probes do not establish composition with the native tabs and
+voice accessory. The isolated runner must also reuse the three production tab
+layouts unchanged from its saved route tree, supplying synthetic Home data and a
+clearly identified Browse placeholder. Mount them at a distinct `audit-tabs` path
+with the same folder depth, avoiding an ambiguous second root index while keeping
+relative imports intact. Verify normal-size Home action order,
+voice entry reachability, bottom-row clearance, scrolling and Home→Browse→Home
+return without a stuck pull indicator on phone and iPad. The placeholder verifies
+tab transitions only, not Browse content/search. Do not replace the existing
+standalone action probes or claim real audio/provider/device coverage from this
+composition fixture. Runner diagnostics must not overlay the content being checked.
+
 ## Asset action eligibility and retained drafts
 
 Edit and both Move forms must honor the current core view's edit/move capability,

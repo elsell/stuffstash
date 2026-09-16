@@ -16,7 +16,7 @@ export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecov
 import { PhotoRecoveryFixture } from './PhotoRecoveryFixture';
 export { InventorySwitcherFixture } from './InventorySwitcherFixture';
 import { HomeReturnTaskProvider } from '../src/ui/navigation/HomeReturnTaskPresentation';
-export { HomeReturnFixture, HomeHeaderFixture, HomeAddProbeDestination, HomeProfileProbeDestination } from './HomeReturnFixture';
+export { HomeReturnFixture, HomeHeaderFixture, HomeTabShellFixture, TabShellBrowsePlaceholder, HomeAddProbeDestination, HomeProfileProbeDestination } from './HomeReturnFixture';
 import { nativeTabHeaderOptions } from '../src/ui/navigation/NativeTabHeader';
 export { default as HomeReturnDetailsRoute } from '../src/ui/screens/HomeReturnDetailsRouteScreen';
 import { Host, TextField } from '@expo/ui/swift-ui';
@@ -80,6 +80,7 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
+      <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-inventory-switcher" options={{ presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.5, 1], sheetCornerRadius: 24, sheetGrabberVisible: true, contentStyle: { backgroundColor: palette.surface } }} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
@@ -146,6 +147,7 @@ export function FixtureMenu() {
     <Button title="Audit Provider credential" onPress={() => router.push('/audit-provider-editor?kind=credential' as Href)} />
     <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
     <Button title="Audit Account" onPress={() => router.push('/audit-account' as Href)} />
+    <Button title="Audit Home in tabs" onPress={() => router.push('/audit-tabs/(home)' as Href)} />
     <Button title="Audit invitation acceptance" onPress={() => router.push('/audit-invitation' as Href)} />
     <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
     <Button title="Audit static search placement" onPress={() => router.push('/audit-native-search-placement' as Href)} />

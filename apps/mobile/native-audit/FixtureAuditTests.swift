@@ -1382,6 +1382,54 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-header-after-scroll")
   }
 
+  func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {
+    let entry = app.buttons["Audit Home in tabs"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable)
+    entry.tap()
+    let add = app.buttons["Add an asset"].firstMatch
+    let notifications = app.buttons["Notifications, 2 unread"].firstMatch
+    let profile = app.buttons["Open account and settings"].firstMatch
+    let voice = app.buttons["Start voice interaction"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(voice.waitForExistence(timeout: 10))
+    let tabs = app.tabBars.firstMatch
+    XCTAssertTrue(tabs.exists)
+    func verifyActions() {
+      for action in [add, notifications, profile, voice] {
+        XCTAssertTrue(action.isHittable)
+        XCTAssertTrue(app.frame.contains(action.frame))
+      }
+      XCTAssertLessThanOrEqual(add.frame.maxX, notifications.frame.minX)
+      XCTAssertLessThanOrEqual(notifications.frame.maxX, profile.frame.minX)
+    }
+    verifyActions()
+    capture("home-tab-shell-entry")
+    let headerTop = add.frame.minY
+    let lastReturn = app.buttons["Return Audit garden tools"].firstMatch
+    let scroll = app.scrollViews.containing(.staticText, identifier: "Recently changed").firstMatch
+    func clearOfChrome() -> Bool {
+      lastReturn.exists && lastReturn.isHittable && app.frame.contains(lastReturn.frame) &&
+        !lastReturn.frame.intersects(voice.frame) && !lastReturn.frame.intersects(tabs.frame)
+    }
+    for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
+    XCTAssertTrue(clearOfChrome(), "Last Home action must remain reachable clear of native tabs and voice entry")
+    verifyActions()
+    XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
+    capture("home-tab-shell-scrolled")
+    let browseTab = tabs.buttons["Browse"].firstMatch
+    XCTAssertTrue(browseTab.isHittable)
+    browseTab.tap()
+    XCTAssertTrue(app.staticTexts["Tab shell Browse placeholder"].waitForExistence(timeout: 5))
+    let homeTab = tabs.buttons["Home"].firstMatch
+    XCTAssertTrue(homeTab.isHittable)
+    homeTab.tap()
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.activityIndicators.firstMatch.waitForNonExistence(timeout: 5), "Tab return must not leave a pull indicator active")
+    verifyActions()
+    capture("home-tab-shell-return")
+  }
+
   func testHomeNotificationHitRegionBeyondAccessibilityFrame() {
     let open = app.buttons["Audit Home header"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))

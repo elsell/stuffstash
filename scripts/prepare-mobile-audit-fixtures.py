@@ -60,3 +60,17 @@ for route, component in exports.items():
     (routes / f"{route}.tsx").write_text(
         f"export {{ {component} as default }} from '../../native-audit/FixtureApplication';\n"
     )
+
+# Preserve the exact production shell and nested stack layouts. Only their data
+# screens are replaced; no production services, session, or route root is mounted.
+for layout in ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/search/_layout.tsx"):
+    target = routes / layout.replace("(tabs)/", "audit-tabs/", 1)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(backup / layout, target)
+for route, component in {
+    "audit-tabs/(home)/index.tsx": "HomeTabShellFixture",
+    "audit-tabs/search/index.tsx": "TabShellBrowsePlaceholder",
+}.items():
+    (routes / route).write_text(
+        f"export {{ {component} as default }} from '../../../../native-audit/FixtureApplication';\n"
+    )
