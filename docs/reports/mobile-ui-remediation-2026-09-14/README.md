@@ -22,13 +22,20 @@ last-tag journey passes geometry but applies no selected tag, requiring tap/stat
 investigation. It is not footer clipping. M250 has iPad search-journey evidence;
 phone stops at the overlap assertion before post-selection verification.
 
-At this checkpoint, provider-free input run35156439952 and full run35156794515
-are live; geometry run35158457674 is pending behind the former. The geometry
-probe at6128c8f5 is fixture-only and passes remote checks and critic review. No
-production inset correction is inferred before measurements arrive. Preserve all
-active runs. Current free space is13GB locally,4.9GB on paul root and roughly12GB
-in its tmpfs before the additional121MB iPad filter archive. Archives stay on paul;
-only selected evidence is retained here.
+Provider-free input run35156439952 is complete: phone and iPad each pass11/14
+comparisons, with input loss still reproduced. See [diagnostic results](native-text-entry-351564.md);
+these comparisons are not independent release gates. Full run35156794515 and
+focused filters35159542174 remain live. The focused run adds fixture-only geometry,
+selected-tag state observation and a geometrically corrected calendar-dismissal tap.
+No production inset correction is inferred before measurements arrive.
+
+[Current onboarding evidence](native-onboarding-351567.md) verifies the standard
+complete address/help/keyboard/action journey on phone and iPad. The unchanged,
+intermittent iPad help comparison remains M240 audit follow-up. CI35159545733 passes
+at624bcf29, including1,915 mobile tests; see the frozen batch checklist for the
+remaining native gates. Older downloaded full archives were removed after checking
+GitHub retention; selected evidence stays retained. Free space is13GB locally,
+4.9GB on paul root and17GB in its temporary filesystem.
 
 ## Earlier checkpoints
 
