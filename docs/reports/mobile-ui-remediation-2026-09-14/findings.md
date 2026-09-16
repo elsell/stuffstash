@@ -2824,3 +2824,14 @@ native menu, retaining synchronous locking, current-visit feedback and retry.
 Archive/Delete confirmations remain. Three RED cases reproduced the required
 extra alert; all115 related tests pass with direct Restore and departed outcomes.
 Critic found no blocker. Native menu activation/status/focus remains pending.
+
+### M204 — Unsaved field expansion cannot be reversed in place
+
+P2 source confirmed at1695cab3. Expand to all assets removed the targeted choice
+from an edited field before Save, forcing users to discard other edits to recover.
+The shared native applicability picker now permits a draft roundtrip when the
+persisted field targets selected types. Saved all-assets fields remain static;
+immutable targets and unsaved additions survive the roundtrip. Two RED cases
+preceded implementation;68 related tests and static checks pass remotely. Code
+critic found no confirmed blocker.
+Native acceptance remains pending. See field-applicability-axis.md.

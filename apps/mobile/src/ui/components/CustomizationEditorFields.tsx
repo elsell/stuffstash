@@ -9,9 +9,10 @@ import { NativeChoicePicker } from './NativeChoicePicker';
 import { NativeCommandButton } from './NativeCommandButton';
 import { AppTextInput } from './AppTextInput';
 
-export function CustomizationFieldControls(props: { readonly busy?: boolean; readonly applicability: CustomFieldApplicability; readonly canMutate: boolean; readonly eligibleTypes: readonly CustomAssetTypeDefinition[]; readonly enumOptions: readonly string[]; readonly fieldType: CustomFieldType; readonly mode: 'create' | 'edit'; readonly newOption: string; readonly onApplicability: (value: CustomFieldApplicability) => void; readonly onEnumOptions: (value: readonly string[]) => void; readonly onFieldType: (value: CustomFieldType) => void; readonly onNewOption: (value: string) => void; readonly onTargets: (value: readonly string[]) => void; readonly persistedEnumOptions: readonly string[]; readonly persistedTargetIds: readonly string[]; readonly targetIds: readonly string[] }) {
+export function CustomizationFieldControls(props: { readonly persistedApplicability?: CustomFieldApplicability; readonly busy?: boolean; readonly applicability: CustomFieldApplicability; readonly canMutate: boolean; readonly eligibleTypes: readonly CustomAssetTypeDefinition[]; readonly enumOptions: readonly string[]; readonly fieldType: CustomFieldType; readonly mode: 'create' | 'edit'; readonly newOption: string; readonly onApplicability: (value: CustomFieldApplicability) => void; readonly onEnumOptions: (value: readonly string[]) => void; readonly onFieldType: (value: CustomFieldType) => void; readonly onNewOption: (value: string) => void; readonly onTargets: (value: readonly string[]) => void; readonly persistedEnumOptions: readonly string[]; readonly persistedTargetIds: readonly string[]; readonly targetIds: readonly string[] }) {
   const styles = createStyles(useAppearancePalette()); const types: readonly CustomFieldType[] = ['text', 'number', 'boolean', 'date', 'url', 'enum'];
   const disabled = !props.canMutate || Boolean(props.busy);
+  const canChooseApplicability = props.canMutate && (props.mode === 'create' || props.persistedApplicability === 'custom_asset_types');
   const [optionError, setOptionError] = useState('');
   const unavailableTargets = props.targetIds.filter(id => !props.eligibleTypes.some(type => type.id === id));
   const unavailableSavedCount = unavailableTargets.filter(id => props.persistedTargetIds.includes(id)).length;
@@ -36,7 +37,10 @@ export function CustomizationFieldControls(props: { readonly busy?: boolean; rea
           props.onNewOption('');
         }} />
       </View> : null}</View> : null}
-    <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>Applies to</Text> : null}{props.mode === 'edit' ? props.applicability === 'all_assets' ? <Text style={styles.lockedValue}>All assets</Text> : <><Text style={styles.lockedValue}>Selected asset types</Text>{props.canMutate ? <NativeCommandButton disabled={disabled} label="Expand to all assets" onPress={() => { if (!disabled) props.onApplicability('all_assets'); }} /> : null}</> : <SingleChoicePicker disabled={disabled} label="Applies to" onChange={props.onApplicability} options={[{ label: 'All assets', value: 'all_assets' }, { label: 'Selected asset types', value: 'custom_asset_types' }]} value={props.applicability} />}</View>
+    <View style={styles.formRow}>{canChooseApplicability
+      ? <SingleChoicePicker disabled={disabled} label="Applies to" onChange={props.onApplicability} options={[{ label: 'All assets', value: 'all_assets' }, { label: 'Selected asset types', value: 'custom_asset_types' }]} value={props.applicability} />
+      : <><Text style={styles.label}>Applies to</Text><Text style={styles.lockedValue}>{props.applicability === 'all_assets' ? 'All assets' : 'Selected asset types'}</Text></>}
+    </View>
     {props.applicability === 'custom_asset_types' ? <View style={styles.formRow}>
       <Text style={styles.label}>Asset types</Text>
       {props.eligibleTypes.map(type => {

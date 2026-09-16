@@ -135,20 +135,20 @@ it('can remove the last option from a create draft and shows validation', async 
   } finally { await h.unmount(); }
 });
 
-it('expands applicability as a named command and updates the current draft', async () => {
+it('changes draft applicability in place while preserving the saved constraint', async () => {
   const h = new MobileRenderHarness();
   function Form() {
     const [applicability, setApplicability] = useState<'all_assets' | 'custom_asset_types'>('custom_asset_types');
-    return <CustomizationFieldControls persistedEnumOptions={[]} persistedTargetIds={[]} applicability={applicability} canMutate eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="edit" newOption=""
+    return <CustomizationFieldControls persistedApplicability="custom_asset_types" persistedEnumOptions={[]} persistedTargetIds={[]} applicability={applicability} canMutate eligibleTypes={[]} enumOptions={[]} fieldType="text" mode="edit" newOption=""
       onApplicability={setApplicability} onEnumOptions={() => {}} onFieldType={() => {}} onNewOption={() => {}} onTargets={() => {}} targetIds={[]} />;
   }
   try {
     await h.render(<Form />);
-    const expand = h.byLabel('Expand to all assets');
-    expect(expand?.props.accessibilityRole).toBe('button');
-    await h.press(expand);
-    expect(h.byText('All assets')).toBeDefined();
-    expect(h.byLabel('Expand to all assets')).toBeUndefined();
+    await h.press(h.byLabel('Choose Applies to. Current value Selected asset types'));
+    await h.press(h.byLabel('All assets'));
+    await h.press(h.byLabel('Choose Applies to. Current value All assets'));
+    await h.press(h.byLabel('Selected asset types'));
+    expect(h.byLabel('Choose Applies to. Current value Selected asset types')).toBeDefined();
   } finally { await h.unmount(); }
 });
 

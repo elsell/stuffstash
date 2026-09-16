@@ -361,8 +361,34 @@ describe('rendered mobile customization production states', () => {
     const type = assetType('type-1', 'Appliance', 'inventory');
     const record = { ...field('field-1', 'Priority', 'inventory'), type: 'enum' as const, enumOptions: ['high'], applicability: 'custom_asset_types' as const, customAssetTypeIds: [type.id] };
     const screen = await renderEditor({ kind: 'field', mode: 'edit', query: collectionQuery({ fields: [record], assetTypes: [type] }), resourceId: record.id });
-    expect(screen.allText()).toEqual(expect.arrayContaining(['Enum', 'Appliance · Existing', 'Expand to all assets']));
+    expect(screen.allText()).toEqual(expect.arrayContaining(['Enum', 'Appliance · Existing']));
+    expect(screen.byLabel('Choose Applies to. Current value Selected asset types')).toBeDefined();
     expect(screen.byText('Enum')?.parent?.type).not.toBe('Pressable');
+  });
+
+  it('reverses an unsaved applicability expansion without losing target or name edits', async () => {
+    const saved = assetType('saved', 'Appliance', 'inventory');
+    const added = assetType('added', 'Furniture', 'inventory');
+    const record = { ...field('priority', 'Priority', 'inventory'), applicability: 'custom_asset_types' as const, customAssetTypeIds: [saved.id] };
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', resourceId: record.id, query: collectionQuery({ fields: [record], assetTypes: [saved, added] }) });
+    await screen.changeText(screen.byLabel('Name'), 'My priority');
+    await screen.press(screen.byLabel('Furniture'));
+    await screen.press(screen.byLabel('Choose Applies to. Current value Selected asset types'));
+    await screen.press(screen.byLabel('All assets'));
+    expect(screen.allText()).not.toContain('Appliance · Existing');
+    await screen.press(screen.byLabel('Choose Applies to. Current value All assets'));
+    await screen.press(screen.byLabel('Selected asset types'));
+    expect(screen.byLabel('Name')?.props.value).toBe('My priority');
+    expect(screen.allText()).toContain('Appliance · Existing');
+    expect(screen.byLabel('Furniture')?.props.accessibilityState.checked).toBe(true);
+    expect(screen.byLabel('Save')?.props.disabled).toBe(false);
+  });
+
+  it('does not offer narrowing for a saved all-assets field', async () => {
+    const record = field('all', 'All', 'inventory');
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', resourceId: record.id, query: collectionQuery({ fields: [record] }) });
+    expect(screen.allText()).toContain('All assets');
+    expect(screen.byLabel('Choose Applies to. Current value All assets')).toBeUndefined();
   });
 
   it('reports unavailable existing targets without leaking their identifiers', async () => {
