@@ -36,8 +36,11 @@ The iPad fixture job was still active at this inspection; do not restart it.
 
 Seven explicit enlarged-text workflows fail: asset-region, command height,
 Details commands, Edit metadata, Edit tags, footer appearance and Move Here.
-Expiration accessibility audit again reports Text clipped; retained issue details
-from this run still need inspection before classifying it. Footer-full-sheet and
+Expiration accessibility audit reports Text clipped. Inspected retained attachment
+`E77CA478-877D-4589-A6F3-568120663EB6.txt` explicitly says, “Text of this element
+may be clipped at larger Dynamic Type sizes.” This belongs to the deferred
+enlarged-text investigation; it does not establish a normal-size clipping defect.
+The attachment does not identify the element, so its cause remains unlocalized. Footer-full-sheet and
 nested-full-sheet comparisons fail, while scroll-footer-full-sheet passes; the
 failing comparison configurations are not the shipped route configurations.
 
