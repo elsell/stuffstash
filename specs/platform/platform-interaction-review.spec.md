@@ -75,3 +75,9 @@ Shared provider-settings loading and failure views must identify the current tas
 Use the shared labeled progress row; do not substitute an unlabeled spinner or
 label unrelated editor failures as Voice Setup. Tenant-context loading also names
 its task. Keep the existing scoped query and native retry behavior.
+
+Native acceptance selectors must distinguish duplicate accessibility descendants
+from distinct controls. When a recorded hierarchy exposes the same nested text
+twice, select its first matching text container explicitly; retain the complete
+visibility assertion. Do not weaken geometry or interaction checks to make an
+ambiguous selector pass. Record the failed run and require a native rerun.

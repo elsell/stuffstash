@@ -1341,7 +1341,9 @@ final class FixtureAuditTests: XCTestCase {
     save.tap()
     XCTAssertTrue(app.staticTexts["Return details error"].waitForExistence(timeout: 5))
     XCTAssertEqual(details.value as? String, "Returned clean")
-    let error = app.staticTexts["Return details error"]
+    // UIKit exposes this nested alert text as both a container and its child.
+    // Select the containing text without weakening the complete-frame check.
+    let error = app.staticTexts.matching(identifier: "Return details error").firstMatch
     let errorVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       let rect = error.frame
       let header = self.app.navigationBars["Return details"].frame

@@ -138,6 +138,11 @@ M181 fixes false success feedback when a completed provider connection test retu
 `failed`. Profile and stage settings now accept only `succeeded`; 82 focused checks
 and static validation pass remotely. Native feedback presentation remains pending.
 
+[Native run35038625270](native-350386-followup.md) finished with43/67 phone and
+51/67 iPad fixture cases passing; both onboarding jobs passed. The Home Return
+visibility check hit duplicate nested text matches; its selector is corrected
+without relaxing geometry acceptance. Current-head native verification remains open.
+
 [Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
 on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size
 text-entry, search and target findings remain open. This predates current fixes.
