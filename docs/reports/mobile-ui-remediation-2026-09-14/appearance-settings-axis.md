@@ -35,3 +35,20 @@ whole Settings screen. Shared materials review remains in appearance-axis.md.
 
 Four picker tests and four controller cases cover the ownership/persistence slice;
 source evidence is not native acceptance. No whole-app appearance pass is claimed.
+
+## Inline Settings selection follow-up
+
+S104 reviewed at f80a4b7e against the same24 axes above. SettingsScreen renders
+AppearancePicker directly inside SettingsSection with separators; it does not
+wrap it in a navigation row. The dedicated route adds an explanatory System
+footer; inline selection has no such footer. Its three familiar labels remain
+visible through the native picker. This difference is not proof of a defect.
+
+Current provider/store review confirms serialized persistence, latest-failure
+rollback and native scheme application. The trigger rejects invalid/unchanged
+choices and suppresses failed-save notices after a newer choice or departure.
+The table's route Back statements apply only to R025; S104 selection stays in
+Settings. All other shared control axes apply with the Settings section as parent.
+Native geometry, screen-reader focus and open-menu appearance changes remain
+pending. Preserve the earlier limited native selection result without promoting
+the rest of this surface to runtime verified.

@@ -48,3 +48,18 @@ on paul (`/tmp/history-actor-green.log`); critic found no confirmed issues.
 Run current native detail entry, disclosure, copy, unavailable/error/retry, reversal
 cancel/success/conflict and navigation-return journeys. Source-reviewed cells do
 not establish any of those native results.
+
+## Revert surface S103 follow-up
+
+S103 reviewed at f80a4b7e across the same24 axes, scoped to the native Revert
+command, confirmation and result. It owns no separate page, search, media or
+editable draft; surrounding geometry/typography is the detail table above.
+M198 adds missing snapshot invalidation: a dialog cannot act on an activity that
+changed or failed refresh after it opened. New confirmation after recovery remains
+available. Focus and resource identity still govern started-command completion.
+
+The combined History and appearance follow-up passes34 tests across7 files on
+paul (`/tmp/history-confirmation-green.log`). TypeScript initially identified
+nullable entry at the hook boundary; the correction and structural validation are
+recorded in `/tmp/history-confirmation-static.log`. Native dialog acceptance remains
+open, including cancellation, refresh while open and fresh recovery.

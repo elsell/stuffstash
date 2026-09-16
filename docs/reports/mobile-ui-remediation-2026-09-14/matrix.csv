@@ -233,12 +233,12 @@ R010,assets/[assetId]/history/[activityId].tsx,motion,Reduced motion and feedbac
 R010,assets/[assetId]/history/[activityId].tsx,content,"Lists, hierarchy, density and pagination",finding,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,M182
 R010,assets/[assetId]/history/[activityId].tsx,search,"Search, scope and filters",not-applicable,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
 R010,assets/[assetId]/history/[activityId].tsx,loading,"Loading, background refresh and progress",source-reviewed,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
-R010,assets/[assetId]/history/[activityId].tsx,recovery,"Empty, error, denied and retry",source-reviewed,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
+R010,assets/[assetId]/history/[activityId].tsx,recovery,"Empty, error, denied and retry",finding,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending; M198 stale snapshot confirmation regression/candidate,M198
 R010,assets/[assetId]/history/[activityId].tsx,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending",M44
 R010,assets/[assetId]/history/[activityId].tsx,privacy,"Account scope, data use and permissions",source-reviewed,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
 R010,assets/[assetId]/history/[activityId].tsx,notifications,System notification entry and state,not-applicable,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
 R010,assets/[assetId]/history/[activityId].tsx,media,"Camera, library, files and audio",not-applicable,; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending,
-R010,assets/[assetId]/history/[activityId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending",M44
+R010,assets/[assetId]/history/[activityId].tsx,lifecycle,"Cold/warm start, blur, background and deep link",finding,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md; source953bb1ff plus M182; native acceptance pending; M198 stale snapshot confirmation regression/candidate",M44; M198
 R011,assets/[assetId]/history/index.tsx,task,Task clarity and platform-pattern fit,source-reviewed,history-list-axis.md; source153a6be3 plus M162; native acceptance pending; History is an asset-scoped chronological collection. Two flat Show values use existing NativeActionMenu with current selection; row navigation opens substantial change detail. No text search is offered or required by current History spec; native selection still pending.,
 R011,assets/[assetId]/history/index.tsx,navigation,"Navigation, hierarchy and return",source-reviewed,history-list-axis.md; source153a6be3 plus M162; native acceptance pending,
 R011,assets/[assetId]/history/index.tsx,selection,Value selection and current value,source-reviewed,history-list-axis.md; source153a6be3 plus M162; native acceptance pending; History is an asset-scoped chronological collection. Two flat Show values use existing NativeActionMenu with current selection; row navigation opens substantial change detail. No text search is offered or required by current History spec; native selection still pending.,
@@ -2255,30 +2255,30 @@ S094,Add / draft recovery,privacy,"Account scope, data use and permissions",sour
 S094,Add / draft recovery,notifications,System notification entry and state,source-reviewed,; add-draft-axis.md all24 source review eac9c3ac; native typing/recovery pending,
 S094,Add / draft recovery,media,"Camera, library, files and audio",source-reviewed,; add-draft-axis.md all24 source review eac9c3ac; native typing/recovery pending,
 S094,Add / draft recovery,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; add-draft-axis.md all24 source review eac9c3ac; native typing/recovery pending,M21
-S095,Asset / overflow commands,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
-S095,Asset / overflow commands,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending,
-S095,Asset / overflow commands,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
-S095,Asset / overflow commands,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending,
-S095,Asset / overflow commands,layout,"Safe areas, scroll edges and overlays",pending,,
-S095,Asset / overflow commands,adaptation,Phone/tablet/window reflow,pending,,
-S095,Asset / overflow commands,typography,"Dynamic Type, wrapping and legibility",pending,,
-S095,Asset / overflow commands,appearance,"Light/dark, contrast and materials",pending,,
-S095,Asset / overflow commands,localization,"Locale, timezone, RTL and long strings",pending,,
-S095,Asset / overflow commands,imagery,"Icons, photos and missing media",pending,,
-S095,Asset / overflow commands,targets,Touch target size and reachability,pending,,
-S095,Asset / overflow commands,gestures,Gestures and explicit alternatives,pending,,
-S095,Asset / overflow commands,keyboard,"Keyboard, text entry and focus",pending,,
-S095,Asset / overflow commands,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S095,Asset / overflow commands,motion,Reduced motion and feedback alternatives,pending,,
-S095,Asset / overflow commands,content,"Lists, hierarchy, density and pagination",pending,,
-S095,Asset / overflow commands,search,"Search, scope and filters",pending,,
-S095,Asset / overflow commands,loading,"Loading, background refresh and progress",pending,,
-S095,Asset / overflow commands,recovery,"Empty, error, denied and retry",pending,,
-S095,Asset / overflow commands,editing,"Draft, save, cancel, undo and interruption",pending,,
-S095,Asset / overflow commands,privacy,"Account scope, data use and permissions",pending,,
-S095,Asset / overflow commands,notifications,System notification entry and state,pending,,
-S095,Asset / overflow commands,media,"Camera, library, files and audio",pending,,
-S095,Asset / overflow commands,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S095,Asset / overflow commands,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,navigation,"Navigation, hierarchy and return",source-reviewed,asset-actions-axis.md; native interaction pending; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,modality,Presentation and dismissal,source-reviewed,asset-actions-axis.md; native interaction pending; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,layout,"Safe areas, scroll edges and overlays",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,adaptation,Phone/tablet/window reflow,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,appearance,"Light/dark, contrast and materials",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,localization,"Locale, timezone, RTL and long strings",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,imagery,"Icons, photos and missing media",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,targets,Touch target size and reachability,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,gestures,Gestures and explicit alternatives,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,keyboard,"Keyboard, text entry and focus",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,motion,Reduced motion and feedback alternatives,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,content,"Lists, hierarchy, density and pagination",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,search,"Search, scope and filters",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,loading,"Loading, background refresh and progress",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,recovery,"Empty, error, denied and retry",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,editing,"Draft, save, cancel, undo and interruption",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,privacy,"Account scope, data use and permissions",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,notifications,System notification entry and state,source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,media,"Camera, library, files and audio",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
+S095,Asset / overflow commands,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; asset-actions-axis.md all24 source follow-up f80a4b7e; native pending,
 S096,Asset / checkout action,task,Task clarity and platform-pattern fit,source-reviewed,asset-actions-axis.md; native interaction pending,
 S096,Asset / checkout action,navigation,"Navigation, hierarchy and return",finding,asset-actions-axis.md; native interaction pending; M110 focused visit/core-resource ownership for command completion and single-use lifecycle confirmation;91 remote tests plus TS/structural pass. Native acceptance pending; asset-actions-axis.md.,M110
 S096,Asset / checkout action,selection,Value selection and current value,source-reviewed,asset-actions-axis.md; native interaction pending,
@@ -2447,54 +2447,54 @@ S102,Asset / contained items,privacy,"Account scope, data use and permissions",p
 S102,Asset / contained items,notifications,System notification entry and state,pending,contained-items-axis.md: notifications (source review; runtime acceptance pending),
 S102,Asset / contained items,media,"Camera, library, files and audio",pending,contained-items-axis.md: media (source review; runtime acceptance pending),
 S102,Asset / contained items,lifecycle,"Cold/warm start, blur, background and deep link",finding,contained-items-axis.md: lifecycle (source review; runtime acceptance pending); findings.md M122; source f13ea7e1; focus callback/debounce tests; native return pending,M122
-S103,Asset / history revert,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.",
-S103,Asset / history revert,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
-S103,Asset / history revert,selection,Value selection and current value,pending,,
-S103,Asset / history revert,modality,Presentation and dismissal,pending,,
-S103,Asset / history revert,layout,"Safe areas, scroll edges and overlays",pending,,
-S103,Asset / history revert,adaptation,Phone/tablet/window reflow,pending,,
-S103,Asset / history revert,typography,"Dynamic Type, wrapping and legibility",pending,,
-S103,Asset / history revert,appearance,"Light/dark, contrast and materials",pending,,
-S103,Asset / history revert,localization,"Locale, timezone, RTL and long strings",pending,,
-S103,Asset / history revert,imagery,"Icons, photos and missing media",pending,,
-S103,Asset / history revert,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.,M45
-S103,Asset / history revert,gestures,Gestures and explicit alternatives,pending,,
-S103,Asset / history revert,keyboard,"Keyboard, text entry and focus",pending,,
-S103,Asset / history revert,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S103,Asset / history revert,motion,Reduced motion and feedback alternatives,pending,,
-S103,Asset / history revert,content,"Lists, hierarchy, density and pagination",pending,,
-S103,Asset / history revert,search,"Search, scope and filters",pending,,
-S103,Asset / history revert,loading,"Loading, background refresh and progress",pending,,
-S103,Asset / history revert,recovery,"Empty, error, denied and retry",pending,,
-S103,Asset / history revert,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
-S103,Asset / history revert,privacy,"Account scope, data use and permissions",pending,,
-S103,Asset / history revert,notifications,System notification entry and state,pending,,
-S103,Asset / history revert,media,"Camera, library, files and audio",pending,,
-S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.",M44
-S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
-S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
-S104,Settings / appearance selection,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Appearance native menu selects Dark in place and displays saved value. See native-evidence.md.,M22
-S104,Settings / appearance selection,modality,Presentation and dismissal,pending,,
-S104,Settings / appearance selection,layout,"Safe areas, scroll edges and overlays",pending,,
-S104,Settings / appearance selection,adaptation,Phone/tablet/window reflow,pending,,
-S104,Settings / appearance selection,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.,M53
-S104,Settings / appearance selection,appearance,"Light/dark, contrast and materials",pending,,
-S104,Settings / appearance selection,localization,"Locale, timezone, RTL and long strings",pending,,
-S104,Settings / appearance selection,imagery,"Icons, photos and missing media",pending,,
-S104,Settings / appearance selection,targets,Touch target size and reachability,pending,,
-S104,Settings / appearance selection,gestures,Gestures and explicit alternatives,pending,,
-S104,Settings / appearance selection,keyboard,"Keyboard, text entry and focus",pending,,
-S104,Settings / appearance selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S104,Settings / appearance selection,motion,Reduced motion and feedback alternatives,pending,,
-S104,Settings / appearance selection,content,"Lists, hierarchy, density and pagination",pending,,
-S104,Settings / appearance selection,search,"Search, scope and filters",pending,,
-S104,Settings / appearance selection,loading,"Loading, background refresh and progress",pending,,
-S104,Settings / appearance selection,recovery,"Empty, error, denied and retry",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.",M22
-S104,Settings / appearance selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.,M54
-S104,Settings / appearance selection,privacy,"Account scope, data use and permissions",pending,,
-S104,Settings / appearance selection,notifications,System notification entry and state,pending,,
-S104,Settings / appearance selection,media,"Camera, library, files and audio",pending,,
-S104,Settings / appearance selection,lifecycle,"Cold/warm start, blur, background and deep link",pending,,
+S103,Asset / history revert,task,Task clarity and platform-pattern fit,source-reviewed,"Read-only detail shows selected operation changes and optional technical disclosure. Revert is a compensating command with native explanatory confirmation, not a whole-asset restore. Source/spec reviewed; native rendering pending.; history-detail-axis.md all24 source follow-up f80a4b7e; native pending",
+S103,Asset / history revert,navigation,"Navigation, hierarchy and return",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md all24 source follow-up f80a4b7e; native pending",M44
+S103,Asset / history revert,selection,Value selection and current value,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,modality,Presentation and dismissal,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,layout,"Safe areas, scroll edges and overlays",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,adaptation,Phone/tablet/window reflow,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,appearance,"Light/dark, contrast and materials",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,localization,"Locale, timezone, RTL and long strings",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,imagery,"Icons, photos and missing media",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,targets,Touch target size and reachability,source-reviewed,M45: standard Retry/pagination/reversal commands use shared NativeCommandButton (48-point minimum); checkout Close uses native bar action. Existing navigable rows/disclosure retained. Runtime hit regions and enlarged text unverified.; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,M45
+S103,Asset / history revert,gestures,Gestures and explicit alternatives,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,keyboard,"Keyboard, text entry and focus",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,motion,Reduced motion and feedback alternatives,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,content,"Lists, hierarchy, density and pagination",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,search,"Search, scope and filters",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,loading,"Loading, background refresh and progress",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,recovery,"Empty, error, denied and retry",finding,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending; M198 stale snapshot confirmation regression/candidate,M198
+S103,Asset / history revert,editing,"Draft, save, cancel, undo and interruption",source-reviewed,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md all24 source follow-up f80a4b7e; native pending",M44
+S103,Asset / history revert,privacy,"Account scope, data use and permissions",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,notifications,System notification entry and state,source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,media,"Camera, library, files and audio",source-reviewed,; history-detail-axis.md all24 source follow-up f80a4b7e; native pending,
+S103,Asset / history revert,lifecycle,"Cold/warm start, blur, background and deep link",finding,"M44: deferred reversal regression, scoped operation/focus ownership, late completion retains cache invalidation without navigation; applied outcome guards resubmission. Ten remote History tests/check/structural; critic addressed. Native return/gesture pending.; history-detail-axis.md all24 source follow-up f80a4b7e; native pending; M198 stale snapshot confirmation regression/candidate",M44; M198
+S104,Settings / appearance selection,task,Task clarity and platform-pattern fit,source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending",M22
+S104,Settings / appearance selection,navigation,"Navigation, hierarchy and return",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending",M22
+S104,Settings / appearance selection,selection,Value selection and current value,runtime-partial,Run34907820613/source a01407dc: iPhone17 and iPad mini fixture scenario passed. Appearance native menu selects Dark in place and displays saved value. See native-evidence.md.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,M22
+S104,Settings / appearance selection,modality,Presentation and dismissal,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,layout,"Safe areas, scroll edges and overlays",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,adaptation,Phone/tablet/window reflow,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,typography,"Dynamic Type, wrapping and legibility",source-reviewed,M53 shared native picker label uses vertically unconstrained native Text. All shared consumers inspected; 9 source tests/typecheck/structural and 2 installer tests pass. Native enlarged-text and clipping acceptance pending.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,M53
+S104,Settings / appearance selection,appearance,"Light/dark, contrast and materials",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,localization,"Locale, timezone, RTL and long strings",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,imagery,"Icons, photos and missing media",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,targets,Touch target size and reachability,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,gestures,Gestures and explicit alternatives,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,keyboard,"Keyboard, text entry and focus",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,motion,Reduced motion and feedback alternatives,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,content,"Lists, hierarchy, density and pagination",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,search,"Search, scope and filters",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,loading,"Loading, background refresh and progress",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,recovery,"Empty, error, denied and retry",source-reviewed,"Appearance uses shared in-place menu; three choices, immediate apply and storage rollback. Native verification pending.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending",M22
+S104,Settings / appearance selection,editing,"Draft, save, cancel, undo and interruption",source-reviewed, M54: shared choice adapters reject disabled-render events and resume after unlocking;22 source tests/typecheck/structural pass. Open native menu timing remains unverified.; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,M54
+S104,Settings / appearance selection,privacy,"Account scope, data use and permissions",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,notifications,System notification entry and state,source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,media,"Camera, library, files and audio",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
+S104,Settings / appearance selection,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,; appearance-settings-axis.md all24 source follow-up f80a4b7e; native pending,
 S105,Settings / field type choice,task,Task clarity and platform-pattern fit,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02
 S105,Settings / field type choice,navigation,"Navigation, hierarchy and return",source-reviewed,; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending,
 S105,Settings / field type choice,selection,Value selection and current value,source-reviewed,"CustomizationEditorFields: native menu choices, immutable edit values, allowed-value/read-only guard; focused regression tests. Native runtime pending; target editing separately M11.; custom-field-options-axis.md source9c2c7246 plus M188; native acceptance pending",M02

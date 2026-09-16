@@ -43,3 +43,19 @@ success while preventing reuse of a completed confirmation. Pending ownership an
 mutation-observer reconciliation remain intact. All91 focused tests, TypeScript and
 structural checks pass remotely. Native alert, gesture, background and remount
 behavior remain unverified; photo/undo completion is outside this change.
+
+## Overflow S095 current source completion
+
+S095 reviewed at f80a4b7e across all24 axes in the table above, alongside the
+current Details route report. The iOS header installs UIBarButtonItem/UIMenu;
+AssetOverflowMenu is the shared fallback/Android consumer. Do not transfer the
+Sharing SwiftUI ellipsis bounds to the separate iOS header implementation.
+History, lifecycle and permanent deletion remain separate command groups with
+capability-derived availability and native destructive semantics for deletion.
+
+There is no search, text editing or media acquisition inside overflow. The
+containing Details route owns keyboard/content/media and query recovery; native
+menu anchoring, target bounds, long names, focus and route-return behavior remain
+unverified. Access-failure header cleanup remains an integration check, not a
+proven pass. Existing112 Details checks support command ownership and presentation
+behavior; they do not establish this menu's native geometry.

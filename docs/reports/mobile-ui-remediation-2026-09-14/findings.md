@@ -2762,3 +2762,14 @@ destructive command inside More details, retaining the pending guard and scoped
 reset. The named-command test failed first; recovery checks now clear a stored
 title and unfinished tag/color before creating a new draft. Native appearance,
 target bounds and focus remain pending. No confirmation or Close semantics changed.
+
+### M198 — Retained History confirmation can submit an obsolete operation
+
+P2 source/mounted confirmed at f80a4b7e. After opening Revert, a failed refresh or
+replacement operation on the same activity did not invalidate the dialog callback.
+Both regression cases submitted the old operation before the fix. Confirmation
+now captures activity-snapshot ownership through useTaskPresentation; a fresh
+record needs a new confirmation. Started reversals retain their existing completion
+behavior. Fresh recovery and old-callback retirement pass. Critic identified a
+nullable entry type mismatch, corrected with entry ?? undefined. Native dialog
+timing, focus and reachability remain pending.

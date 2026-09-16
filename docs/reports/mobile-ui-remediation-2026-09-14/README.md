@@ -81,8 +81,13 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise667
-pending,2,030 source-reviewed,490 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise610
+pending,2,083 source-reviewed,494 finding,23 runtime-partial and198 not-applicable.
+
+Appearance selection, History reversal and asset overflow now have complete
+source follow-ups in their surface reports. M198 rejects retained confirmations
+after an activity changes or refresh fails;34 combined History/appearance checks
+and static validation pass. Native confirmation timing remains pending.
 
 [Add and draft recovery](add-draft-axis.md) now cover three surfaces across24
 axes. M197 migrates Clear draft to a native destructive command;23 Add checks

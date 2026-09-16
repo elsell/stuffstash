@@ -111,6 +111,30 @@ async function reversalFixture() {
 }
 
 describe('History reversal presentation ownership', () => {
+  it.each(['refresh failure', 'changed operation'] as const)('retires retained confirmation after %s', async change => {
+    const f = await reversalFixture();
+    const queryKey = mobileQueryKeys.assetActivity('scope', 'tenant', 'inventory', 'asset', 'one');
+    try {
+      const stale = await f.confirm();
+      if (change === 'refresh failure') {
+        await f.harness.run(() => f.client.invalidateQueries({ queryKey, exact: true }));
+      } else {
+        await f.harness.run(() => f.client.setQueryData(queryKey, { ...entry, id: 'one', undo: { status: 'available', operationId: 'new-operation' } }));
+      }
+      await settle(f.harness);
+      await f.harness.run(stale);
+      expect(f.operations).toEqual([]);
+      await f.harness.run(() => f.client.setQueryData(queryKey, { ...entry, id: 'one', undo: { status: 'available', operationId: 'fresh-operation' } }));
+      await settle(f.harness);
+      await f.harness.run(stale);
+      expect(f.operations).toEqual([]);
+      await f.harness.run(await f.confirm());
+      expect(f.operations).toEqual(['fresh-operation']);
+      await f.harness.run(() => f.pending[0]!.resolve());
+      expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+    } finally { await f.close(); }
+  });
+
   it('submits once, retains failed activity for retry, and returns after successful retry', async () => {
     const f = await reversalFixture();
     try {
