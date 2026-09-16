@@ -1278,22 +1278,21 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
-    verifyAddDraft(entry: "Audit Add draft")
+    verifyAddDraft(route: "audit-add")
   }
 
   func testAddDraftInNavigationStack() {
-    verifyAddDraft(entry: "Audit Add navigation draft")
+    verifyAddDraft(route: "audit-add-push")
   }
 
   func testAddDraftWithHeaderConfiguredBeforePresentation() {
-    verifyAddDraft(entry: "Audit Add configured header")
+    verifyAddDraft(route: "audit-add-header")
   }
 
-  private func verifyAddDraft(entry: String) {
-    let open = app.buttons[entry]
-    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+  private func verifyAddDraft(route: String) {
+    // Synthetic menu scrolling previously delivered a tap to an unrelated fixture.
+    // Production Home entry has its own tests; isolate this presentation comparison.
+    app.open(URL(string: "stuffstash:///\(route)")!)
     let name = app.textFields["Asset name"]
     XCTAssertTrue(name.waitForExistence(timeout: 10))
     XCTAssertTrue(app.navigationBars["Add item"].exists)
@@ -1678,6 +1677,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    let target = XCTAttachment(string: "Color target before ordinary tap: \(picker.frame); hittable=\(picker.isHittable)")
+    target.name = "color-ordinary-tap-target"
+    target.lifetime = .keepAlways
+    add(target)
+    capture("color-before-ordinary-tap")
     picker.tap()
     let sliders = app.buttons["Sliders"]
     XCTAssertTrue(sliders.waitForExistence(timeout: 5), "The system color picker should open directly")

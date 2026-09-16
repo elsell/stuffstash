@@ -24,3 +24,30 @@ absent from the phone failure list in this run.
 
 The next run35080602419 (da1a3e38) is now live; run35084537103 (da5ded17) is pending.
 The newer fixes have not yet received their native acceptance result.
+
+## Inspected captures
+
+The purported ordinary Add failure shows **Loading inventory / Audit query state**,
+an unrelated fixture, after the menu-label tap. It did not reach Add and cannot
+establish an Add product regression. Also, audit-add/audit-add-push intentionally
+start with hidden headers; production Add preconfigures its header as does the
+passing audit-add-header comparison. Isolated Add tests now open their fixture URL
+with Apple's XCUIApplication.open API; their draft assertions remain unchanged.
+Native execution of this setup correction is pending.
+[Capture](evidence/ipad-add-wrong-fixture-350702.png).
+
+Color's final capture remains on the correct settings-control fixture with its
+picker closed; its well frame is x684/y326.5/36×36. All nine delivered-touch probes
+pass in the same run, so ordinary activation remains unresolved. A pre-tap capture
+and target geometry attachment now supplement that scenario without replacing
+its ordinary activation with a coordinate tap or relaxing its open assertion.
+[Capture](evidence/ipad-color-unopened-350702.png).
+
+Apple documents [XCUIApplication.open](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/open(_:))
+as URL-based application entry. This is test setup, not proof of production deep-link
+or navigation correctness.
+
+Critic found no setup blocker. The color pre-tap capture adds time before activation;
+a changed outcome must not be attributed to a product fix, since no picker code
+changed. Structural checks passed on paul; Swift compilation and native execution
+are pending. The diagnostic change does not resolve the ordinary-tap finding.

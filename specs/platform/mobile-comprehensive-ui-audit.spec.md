@@ -1585,3 +1585,13 @@ action region. A flexible scroll body reserves that region without overlaying
 choices. This preserves all filter functionality and draft semantics; iOS retains
 its current detented sheet. Do not patch or upgrade dependencies to hide this
 failure without a separately reviewed dependency change.
+
+Native fixture setup must distinguish the synthetic audit menu from production
+navigation. Run350702's Add test tapped an audit-menu label but opened the unrelated
+inventory-query fixture. Isolated Add comparisons must enter their explicitly named
+fixture URLs with XCUIApplication.open, then assert Add content before interacting.
+This does not establish Home-to-Add navigation; retain the separate Home header
+and production-configured Add scenarios. Hidden-header Add variants remain
+configuration diagnostics, not evidence that the production preconfigured header
+regressed. Capture color target bounds and pre-tap appearance when investigating
+an ordinary activation failure alongside passing delivered-touch probes.
