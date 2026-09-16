@@ -42,7 +42,7 @@ observed cases without proving a cause or justifying globally disabling assistan
 Retained hierarchy files: `5AC7D36B-95E9-498D-B42C-F3E6A3DC5421.txt`,
 `020FCCA6-FD0F-46EA-B13D-C39179393241.txt`, and
 `54C340B1-BCB2-47FB-9058-41A476F6E9E6.txt` in the selected-capture directory.
-The controlled-address final hierarchy has not yet been inspected. Footer-full-sheet and nested-full-sheet comparisons fail but do not represent
+The controlled-address final hierarchy `E57D78EB-E8C4-4554-90E2-F6EFE16E85D9.txt` was subsequently inspected on paul: both the focused field and mirrored React observation retain `h//example.invalid`. Thus this diagnostic also retains incorrect text after the typing assertion; it is not merely an early read. Footer-full-sheet and nested-full-sheet comparisons fail but do not represent
 the shipped route configurations. Expiration overview's retained issue description specifically says text may be
 clipped at larger Dynamic Type sizes; XCTest supplies no affected element. The
 [issue capture](evidence/phone351121-expiration-accessibility-issue.png) shows the
