@@ -68,3 +68,22 @@ The later keyboard assertions are not reached. One failure, two iPad-only skips;
 log `/tmp/native350950-onboarding-phone.log`. This differs from the preceding350919
 phone pass. Artifact inspection is still needed before assigning a product cause
 or changing the acceptance check.
+
+350950 artifact10446722019 inspection: merge revision093408914d8f3f229eb349eb91024bf08683ffdb.
+The [final screenshot](evidence/phone-onboarding-full-address-350950.png), captured
+about19 seconds after failure, displays the full `https://example.invalid` address
+with keyboard and Connect visible. Its hierarchy truncates the value. The attached
+field debug description at failure contains only the query chain, no resolved
+field. Log timestamps also show prolonged keyboard/field lookups. This does not
+establish lost characters or prove successful observation inside the five-second
+window; the journey remains failed. No product cause is assigned from this sample.
+
+A failure-only diagnostic now records full text-field values/labels/frames from
+one native snapshot after the wait returns failure. It preserves the original
+exact equality, five-second limit and remaining keyboard/interaction assertions.
+Snapshot exceptions are retained as diagnostic failures. macOS compilation and
+execution remain pending; remote structural checks pass.
+
+Selected evidence is retained under `/tmp/onboarding350950-selected/` (manifest,
+text attachments and final screenshot), with the96MB original ZIP at
+`/tmp/native350950-onboarding-phone.zip`; no full xcresult extraction was needed.

@@ -210,3 +210,10 @@ library requests and camera return no selection. Keep these synthetic selections
 out of production adapters. Verify preview paging, removal cancellation/acceptance,
 remaining draft thumbnails and Close without saving an asset. Conversation draft
 thumbnails alone do not cover the full-screen Add preview consumer.
+
+When onboarding's exact-address wait fails, retain the same timeout and assertion
+but attach a failure-only native snapshot listing full text-field labels, values
+and frames. Debug hierarchies truncate values and may contain only a failed query
+chain. The later screenshot in run350950 shows the full address despite a failed
+lookup; it does not prove the value or query state within the acceptance interval.
+Diagnostic snapshot failure must be recorded, never converted into a pass.

@@ -25,6 +25,21 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
   }
 
+  private func captureAddressFailureSnapshot() {
+    func fields(_ node: XCUIElementSnapshot) -> [String] {
+      let current = node.elementType == .textField
+        ? ["label=\(node.label); value=\(String(describing: node.value)); frame=\(node.frame)"] : []
+      return current + node.children.flatMap { fields($0) }
+    }
+    let details: String
+    do { details = fields(try app.snapshot()).joined(separator: "\n") }
+    catch { details = "Snapshot failed: \(error)" }
+    let attachment = XCTAttachment(string: details.isEmpty ? "No text fields in snapshot" : details)
+    attachment.name = "address-failure-full-values"
+    attachment.lifetime = .keepAlways
+    add(attachment)
+  }
+
   private func capture(_ name: String) {
     let attachment = XCTAttachment(screenshot: app.screenshot())
     attachment.name = name
@@ -87,7 +102,9 @@ final class OnboardingAuditTests: XCTestCase {
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     let completeAddress = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "value == %@", "https://example.invalid"), object: address)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeAddress], timeout: 5), .completed,
+    let addressResult = XCTWaiter.wait(for: [completeAddress], timeout: 5)
+    if addressResult != .completed { captureAddressFailureSnapshot() }
+    XCTAssertEqual(addressResult, .completed,
       "Address entry must finish with the complete value within five seconds")
     capture("onboarding-keyboard")
     XCTAssertEqual(address.value as? String, "https://example.invalid", "Typing must preserve the complete server address")
