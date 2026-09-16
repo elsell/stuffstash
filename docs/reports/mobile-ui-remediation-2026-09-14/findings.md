@@ -2876,6 +2876,10 @@ remains unknown. A static route-registration comparison is queued without relaxi
 the original production journeys; installer/static checks pass, native execution
 is pending. Shared consumers require investigation, not assumed failure.
 
+Follow-up run350806 passes the production Place/settings journeys. Inspected phone
+Place has header Search, while its preconfigured comparison retains bottom search.
+See native-phone-350806.md; M207 remains open for consistency and shared consumers.
+
 ### M208 — Add photo removal remains a small custom overlay
 
 P2 source-confirmed at73ed44fb. Add's28-point overlaid X competed with preview and
@@ -2980,7 +2984,9 @@ The recorded hierarchy supplies failing geometry (context625.5 versus header
 bottom677.5); the new assertion has not yet executed. Twenty related tests,
 TypeScript and mobile structural checks pass on paul. Critic found no source
 blocker. Phone/iPad native entry, spacing, resize and navigation remain required;
-M216 is not closed.
+M216 is not closed. Run350806 now passes the phone context geometry and complete
+location-editing journey; the inspected context clears the header and actions are
+visible. See native-phone-350806.md. iPad and resized-detent acceptance remain open.
 
 ### M217 — Android vectors depend on unsupported strokes
 

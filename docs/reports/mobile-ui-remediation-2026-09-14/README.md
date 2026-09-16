@@ -21,6 +21,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
 - `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
+- `native-phone-350806.md`: phone61/81 with inspected passing Conversation/production search and retained color/preconfigured-search failures.
 - `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
 - `native-onboarding-350592.md`: passing main phone/iPad journey and a distinct iPad entry-observation failure.
 - `native-fixtures-350592.md`: phone56/75 and iPad64/75, confirmed phone bottom search, and paired production Place diagnostic.
