@@ -1568,3 +1568,20 @@ Linux x64 HotSpot archive must pass SHA-256
 `166774efcf0f722f2ee18eba0039de2d685b350ee14d7b69e6f83437dafd2af1`
 before extraction/execution. This is a validation-host toolchain, not a change to
 the app dependency graph.
+
+Android filter selection pages must expose search inside the sheet body: native
+navigation headers are unsupported for Android form sheets. Reuse AppTextInput
+(the platform TextInput/EditText adapter) as a labelled single-line search field
+with the search IME action, no automatic capitalization or correction, and live
+filtering. iOS keeps native navigation search. The shared sheet owns placement;
+searchable callers supply query handlers, not platform-specific layout. Leaving a
+selection page removes search and preserves existing draft/Back semantics.
+
+The keyboard acceptance run rejects the Android native sheet-footer candidate:
+react-native-screens 4.23.0 calls a stable-state footer calculation during keyboard
+settling and crashes. Android filters therefore use a full-screen native stack
+route with its normal title bar, an in-body search field, and a layout-owned bottom
+action region. A flexible scroll body reserves that region without overlaying
+choices. This preserves all filter functionality and draft semantics; iOS retains
+its current detented sheet. Do not patch or upgrade dependencies to hide this
+failure without a separately reviewed dependency change.

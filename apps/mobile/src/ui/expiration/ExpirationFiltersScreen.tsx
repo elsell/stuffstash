@@ -1,4 +1,3 @@
-import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
@@ -21,8 +20,7 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
   }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
-  <NativeNavigationSearch key={page} enabled={searchable} query={search} placeholder={`Search ${page}`} onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
-  <NativeFilterSheet title={headerOptions.title} footerTestID="expiration-filter-footer" actions={{
+  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: `Search ${page}`, onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
    primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
    secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)

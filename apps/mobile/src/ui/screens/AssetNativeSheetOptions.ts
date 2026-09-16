@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { colors, type MobileColorPalette } from '../theme/tokens';
 
 type AssetNativeSheetOptions = {
@@ -27,10 +28,13 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
   } as const;
 }
 
-export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
+export function createAssetNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
-    filters: {
+    filters: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'card' as const, headerShown: true, title: 'Filters'
+    } : {
       ...baseOptions,
       headerShown: true,
       sheetAllowedDetents: [0.7, 1],

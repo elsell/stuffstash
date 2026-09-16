@@ -1,3 +1,4 @@
+import { NativeNavigationSearch } from './NativeNavigationSearch';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,12 +8,13 @@ import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
 import { useSheetKeyboardInset } from './useSheetKeyboardInset';
 
 /** Keep the native scroll body direct; reserve the measured, opaque action area. */
-export function NativeFilterSheet({ children, actions, footerTestID }: NativeFilterSheetProps) {
+export function NativeFilterSheet({ title, search, children, actions, footerTestID }: NativeFilterSheetProps) {
   const palette = useAppearancePalette();
   const [footerHeight, setFooterHeight] = useState(0);
   const boundaryRef = useRef<View>(null);
   const keyboard = useSheetKeyboardInset(boundaryRef);
   return <>
+    <NativeNavigationSearch key={title} enabled={!!search} query={search?.query ?? ''} placeholder={search?.placeholder ?? 'Search'} onChange={search?.onChange ?? (() => {})} onSubmit={search?.onSubmit ?? (() => {})} onClear={search?.onClear ?? (() => {})} />
     <ScrollView automaticallyAdjustKeyboardInsets style={[styles.body, { backgroundColor: palette.background }]}
       contentContainerStyle={{ paddingBottom: footerHeight + 20 }} scrollIndicatorInsets={{ bottom: footerHeight }}
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">

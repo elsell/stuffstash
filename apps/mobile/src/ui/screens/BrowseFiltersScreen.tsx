@@ -7,7 +7,6 @@ import type { AssetBrowseSort } from '../../application/home/InventorySummaryRep
 import type { BrowseDraftFilters } from './BrowseFilterState';
 import { SettingsActionRow, SettingsChoiceRow, SettingsNavigationRow, SettingsSection, SettingsValueRow, useSettingsListStyles } from './SettingsList';
 import { NativeFilterSheet } from '../components/NativeFilterSheet';
-import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
 
 export type BrowseFilterDraft = BrowseDraftFilters & { readonly sort: AssetBrowseSort };
@@ -38,8 +37,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
     .filter(tag => tag.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <>
     <Stack.Screen options={{ title: titles[page], headerSearchBarOptions: undefined }} />
-    {page === 'tags' ? <NativeNavigationSearch query={search} placeholder="Search tags" onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} /> : null}
-    <NativeFilterSheet title={titles[page]} footerTestID="browse-filter-footer" actions={{
+    <NativeFilterSheet title={titles[page]} search={page === 'tags' ? { query: search, placeholder: 'Search tags', onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="browse-filter-footer" actions={{
       primaryLabel: 'Show results', secondaryLabel: page === 'overview' ? 'Cancel' : 'Back',
       secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
       onApply: () => onApply(draft), onBack: () => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }

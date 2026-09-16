@@ -57,3 +57,43 @@ close full filter acceptance: native Tags search is absent in the headerless And
 sheet (M221). Expiration, keyboard, dark appearance and assistive technology remain.
 The white status glyphs in the synthetic root capture are not production evidence:
 the fixture omits production StatusBar configuration.
+
+## Keyboard rejection of the footer candidate
+
+Adding in-body search reveals a native crash on focus: RNScreens
+`ScreenFooter.onParentLayout` calls `sheetTopInStableState` while the bottom sheet
+is settling during keyboard inset changes. AndroidRuntime reports
+`IllegalArgumentException: [RNScreens] use of stable-state method for unstable state`.
+The process exits to the launcher. The pinned implementation confirms this call
+has no dragging/settling branch. The initial/last-row successes above do not
+establish keyboard safety, and this candidate must not ship as accepted.
+
+The in-body search has a failing-before/passing-after interaction test; critic also
+caught stale page events, now guarded with a keyed input, committed handler ref,
+focus cleanup and unmount cleanup. Tests verify hidden events are ignored, current
+input recovers on focus, and removed-page events cannot restore old queries.
+These guards are not a fix for the native footer crash. The next candidate is an
+Android full-screen native stack presentation with a layout-owned footer and
+keyboard handling, preserving iOS sheets. It requires spec and native acceptance.
+
+## Replacement presentation and keyboard checks
+
+The replacement uses Android native-stack `card` presentation, a normal title bar,
+in-body search and a flex-layout footer. It removes `unstable_sheetFooter` entirely.
+Initial native typing no longer crashed, but Gboard covered the footer; an explicit
+KeyboardAvoidingView with the native header offset corrected that.
+
+APK SHA-256 `36fe660b24f35a8b9b7d8b2d98f4feac9d03495ae95392807fed71eac5adbe92`
+(db8d2bb8 fixture archive plus current icon/filter patches) was tested at normal
+size on the same Android16 emulator. Browse and Expiration Tags both accept
+`Tools`, narrow to the matching row, and keep primary/Back controls above Gboard.
+Browse Back removes search and restores the filter overview. Expiration selection
+and Apply return to the prior Browse filter route in the fixture stack. [Keyboard capture](evidence/android-filter-keyboard-after.png).
+This is synthetic interaction evidence, not production backend acceptance.
+
+The final full source suite before the KeyboardAvoidingView adjustment passed
+1,876 tests in291 files; the final wrapper passed the3 focused filter tests,
+TypeScript and structural checks on paul. Broader search/clear/last-row retesting,
+dark mode, TalkBack and production navigation remain open; iOS search placement
+must still be verified. The earlier native-footer candidate is superseded, not an
+accepted fallback.

@@ -3022,3 +3022,11 @@ renders its choices and footer but no search field or command. Native header sea
 cannot render in Android form sheets, whose headers are unsupported. Expiration
 uses the same pattern for types/tags/locations and requires acceptance too. Provide
 an appropriate in-sheet native search input while preserving iOS navigation search.
+
+### M222 — Android filter native footer crashes during keyboard resize
+
+P1 runtime-confirmed in the unshipped Android filter candidate. Focusing the new
+Tags search exits the app: ScreenFooter.onParentLayout assumes a stable sheet
+state during keyboard inset transitions. Therefore M219's native footer candidate
+is rejected for release despite successful initial-detent and last-row checks.
+See Android filter evidence for the stack and proposed presentation alternative.

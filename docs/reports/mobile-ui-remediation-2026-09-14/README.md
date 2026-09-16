@@ -2,11 +2,16 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
+Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture
 content matches the remote tree by checksum. React act warnings remain. Log:
 `/tmp/mobile-audit-3d20-full.log`. This includes the native Add/tag fields and M216
 conversation layout candidate. This does not establish native acceptance.
+
+Latest Android filter candidate:1,876 tests across291 files passed on paul before
+the final keyboard wrapper; focused tests, TypeScript and structural checks passed
+after it. See `android-filter-sheet.md` for native crash rejection and replacement
+evidence; acceptance remains incomplete.
 
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
@@ -110,7 +115,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise zero pending
-source-review cells,2,650 source-reviewed,535 finding,25 runtime-partial and198
+source-review cells,2,638 source-reviewed,547 finding,25 runtime-partial and198
 not-applicable. This completes source inventory coverage, not native acceptance or
 finding remediation. The remaining route/server-entry/notice reviews are linked
 in their surface reports; M212 adds direct-entry checkout-history exit recovery.
