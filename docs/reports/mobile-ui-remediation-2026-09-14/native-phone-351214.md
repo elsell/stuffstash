@@ -54,3 +54,25 @@ are incorporated. Swift compilation and runtime acceptance await the next native
 
 ![Add returned to the audit index](evidence/phone351214-add-return.png)
 ![Inbox before target assertion](evidence/phone351214-inbox.png)
+
+## Retained text-entry comparison
+
+Final hierarchies from the same artifact confirm that the field and React-observed
+value agree on damaged text; these are not merely intermediate read assertions.
+
+| Diagnostic | Final value | Retained hierarchy |
+| --- | --- | --- |
+| Controlled address | `h/example.invalid` | `AA7695E3-E282-4213-962C-BFFA182BC0A9.txt` |
+| Controlled ordinary name | `Nve draft name` | `495A9882-148A-4FBB-9901-B8329AE7F119.txt` |
+| Controlled name without accessory | `Nraft name` | `68A323EF-530B-4F2C-8F35-0444F8D594EF.txt` |
+| Native-seeded RN name without accessory | `Nive draft name` | `0436C75D-9C6C-4DCF-A022-0D32BDA607E0.txt` |
+
+The expected strings are `https://example.invalid` and `Native draft name`.
+The job log records passes for both paced name variants, both no-assistance name
+variants, the default-assisted SwiftUI field, the native system address, and the
+uncontrolled RN address (with and without the accessory). These contrasts narrow
+investigation but do not justify disabling assistance app-wide, blaming the
+keyboard accessory, or declaring controlled state the sole cause. In particular,
+the native-seeded RN name failure survives removing the accessory. Production
+field families still need their own complete-entry, reset, retry and external-change
+acceptance; passing a paced diagnostic must not replace those requirements.
