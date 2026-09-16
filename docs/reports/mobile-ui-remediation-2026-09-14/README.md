@@ -83,7 +83,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise480
-pending,2,213 source-reviewed,494 finding,23 runtime-partial and198 not-applicable.
+pending,2,203 source-reviewed,504 finding,23 runtime-partial and198 not-applicable.
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined

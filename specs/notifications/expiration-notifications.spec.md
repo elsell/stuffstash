@@ -434,6 +434,15 @@ the preview renderer is not evidence of native geometry.
 
 ## Inbox access-loss recovery
 
+Reminder settings must also retire displayed preferences, type names and editable
+controls after an authentication-required or permission-denied read or save.
+Access loss while loading the supporting type collection has the same effect.
+Retained callbacks cannot submit another write until a successful authorized
+settings load. Retry remains available; a failed retry must not restore cached
+preferences. Ordinary transient failures without prior access loss may retain
+the current editor and retry draft. Verify through the mobile screen and actual
+client/notification adapter against controlled HTTP denial and recovery responses.
+
 An authentication-required or permission-denied result from any inbox read or
 command must discard loaded rows, continuation cursor and local read markers.
 Show the safe failure and retain explicit retry; do not present an empty inbox as

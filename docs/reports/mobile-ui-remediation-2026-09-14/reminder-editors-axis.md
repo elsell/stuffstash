@@ -35,9 +35,9 @@ does not establish that every row's implementation looks or behaves natively.
 | Keyboard | Custom input uses number-pad and accepts integer0–3650, rejecting decimal/negative/non-numeric values. Parent permits handled taps, keyboard dismissal and adjusted insets. Verify the native Save is reachable while editing. |
 | Motion | No custom editor transition or decorative motion. System navigation/search, progress and Reduce Motion still require runtime checks. |
 | Content, search | Timezone results are capped at30 with guidance to search further; saved zone, UTC and device zone are included in candidates. A valid exact identifier can be selected even if absent from Intl's enumerated list. No-match is explicit. This is bounded search, not a fully displayed/paginated directory. |
-| Loading, recovery | Parent locks changes during requests. Initial load, retry, missing type and inline save errors have distinct branches. Mode failures offer Retry/Discard; timing retries the retained selection; timezone leaves the saved value intact. Denied-refresh rendering with previously cached preferences needs a separate adversarial follow-up; these checks do not certify it. |
+| Loading, recovery | Parent locks changes during requests. Initial load, retry, missing type and inline save errors have distinct branches. Mode failures offer Retry/Discard; timing retries the retained selection; timezone leaves the saved value intact. The M199 follow-up below corrects denied-refresh/save rendering with cached preferences. |
 | Editing | Custom typing is local until Save; Back abandons the unsaved task. Presets commit on selection. Pending refs reject duplicates; failed saves preserve retry state. Retained drafts are in-memory, not process-death recovery. |
-| Privacy | Scoped route key includes service-state scope, tenant and inventory; mismatched expected inventory is rejected. Backend authorization and post-revocation cached-data behavior are not established by this source review. |
+| Privacy | Scoped route key includes service-state scope, tenant and inventory; mismatched expected inventory is rejected. M199 verifies UI data retirement through controlled HTTP denial responses. Backend authorization enforcement is not established by these screen tests. |
 | Notifications, media | Editors change personal reminder preferences, not physical APNs delivery. Device permission/setup is the separate S116 task. No camera/audio/library interaction originates in these editors. |
 | Lifecycle | Child presentation ownership suppresses late errors/completion after focus departure; parent aborts departed requests and reloads on focus. Tests cover returning before settlement and a fresh retry. OS suspension, process termination and external notification interruption remain runtime work. |
 
@@ -46,3 +46,19 @@ timing, timezone, retained task presentation, real settings parent/session,
 destination validation and preference session. Log: `/tmp/reminder-editor-audit.log`.
 No implementation changed in this pass. These tests do not resolve existing
 native findings or establish full settings authorization acceptance.
+
+## M199 follow-up — cached settings after access loss
+
+The separate adversarial follow-up reproduced editable defaults remaining after
+401/403 refresh or save failures, and a denied supporting-type read. The screen
+now removes preferences/types and blocks further saves until an authorized reload.
+Ordinary transient errors retain the editor; after denial, transient retry errors
+cannot restore it. Retained callbacks cannot write during denied recovery.
+
+Five cases cover actual API client/notification adapter HTTP401/403 reads and
+writes, plus a typed supporting-query denial, followed by failed retry and
+successful authorized reload/save. The initial six RED cases included a redundant
+supporting-query case, consolidated before GREEN. All36 related tests, TypeScript
+and structural checks pass remotely on paul (`/tmp/reminder-access-green.log`).
+This does not prove server authorization enforcement or native focus/announcement
+after the editable content is removed. Those remain separate acceptance work.

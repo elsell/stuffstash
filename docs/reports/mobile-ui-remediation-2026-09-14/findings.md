@@ -2773,3 +2773,18 @@ record needs a new confirmation. Started reversals retain their existing complet
 behavior. Fresh recovery and old-callback retirement pass. Critic identified a
 nullable entry type mismatch, corrected with entry ?? undefined. Native dialog
 timing, focus and reachability remain pending.
+
+### M199 — Reminder settings retain editable data after access loss
+
+P1 source/mounted confirmed at6729c57f. NotificationSettingsScreen retained its
+preferences and editor after authentication/permission denial during refresh or
+save, including denial of the supporting type collection. The candidate clears
+displayed preferences/type data and locks save entry until an authorized reload.
+Ordinary transient failures preserve drafts; failed retries after denial cannot
+restore revoked data. Five adversarial recovery cases exercise the real client
+and notification adapter against controlled HTTP responses, plus typed collection
+denial. All36 related checks, TypeScript and structural validation pass remotely.
+Code critic found no blocker; the supporting-query case is explicitly a typed
+query failure, not an HTTP-boundary test.
+Native content removal/focus and backend authorization enforcement are separate
+from this UI recovery evidence.

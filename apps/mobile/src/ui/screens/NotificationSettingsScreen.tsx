@@ -8,6 +8,7 @@ import type { InventoryAssetTypesQuery } from '../../application/assets/Inventor
 import type { NotificationPreferences } from '../../domain/notifications/Notification';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
 import { NotificationFailure } from '../../application/notifications/NotificationFailure';
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { ExpirationReminderEditor } from '../components/ExpirationReminderEditor';
 import { ReminderTimingEditor } from '../components/ReminderTimingEditor';
 import { TimeZonePicker, readableTimeZone } from '../components/TimeZonePicker';
@@ -33,6 +34,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const settingsLaunch = useRef<object | undefined>(undefined);
   const pushMessage = pushOutcome === 'enabled' ? 'Device setup completed.' : pushOutcome === 'denied' ? 'Allow notifications for Stuff Stash in your device settings, then try again.' : '';
   const pending = useRef(false); const mounted = useRef(true);
+  const accessLost = useRef(false);
   const feedbackGeneration = useRef(0);
   const controller = useRef<AbortController | null>(null);
   useFocusEffect(useCallback(() => {
@@ -66,12 +68,14 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       const first = session.snapshot === null;
       const loaded = first ? await session.initialize(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', { signal: request.signal }) : await session.refresh({ signal: request.signal });
       if (mounted.current && !request.signal.aborted) {
+        accessLost.current = false;
         setTypes(loadedTypes.filter((type) => type.expirationEnabled)); setPreferences(loaded);
       }
-    } catch (caught) { if (mounted.current && !request.signal.aborted) setError(message(caught, 'Reminder settings could not be loaded. Try again.')); }
+    } catch (caught) { if (mounted.current && !request.signal.aborted) presentFailure(caught, 'Reminder settings could not be loaded. Try again.'); }
     finally { if (controller.current === request) { pending.current = false; if (mounted.current) setBusy(false); } }
   }
   async function save(operation: (signal: AbortSignal) => Promise<NotificationPreferences>) {
+    if (!mounted.current || accessLost.current) throw new Error('Reload authorized reminder settings before saving.');
     if (pending.current) throw new Error('Another settings request is in progress.');
     pending.current = true; setBusy(true); setError('');
     const request = new AbortController(); controller.current = request;
@@ -80,9 +84,16 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       if (!mounted.current || request.signal.aborted) throw new Error('Settings navigation changed.');
       setPreferences(loaded); onChanged?.();
     } catch (caught) {
-      if (mounted.current && !request.signal.aborted) setError(message(caught, 'Your changes are still here. Refresh saved settings before trying again.'));
+      if (mounted.current && !request.signal.aborted) presentFailure(caught, 'Your changes are still here. Refresh saved settings before trying again.');
       throw caught;
     } finally { if (controller.current === request) { pending.current = false; if (mounted.current) setBusy(false); } }
+  }
+  function presentFailure(caught: unknown, fallback: string) {
+    if (isAccessFailure(caught) || (caught instanceof NotificationFailure && (caught.kind === 'authentication-required' || caught.kind === 'permission-denied'))) {
+      accessLost.current = true;
+      setPreferences(null); setTypes([]); setPushOutcome(undefined);
+    }
+    setError(message(caught, fallback));
   }
   async function changePush(enabled: boolean) {
     if (!pushSession || pending.current) return;
