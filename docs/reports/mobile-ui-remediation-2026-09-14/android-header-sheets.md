@@ -76,3 +76,18 @@ and assistive-reading review; this sample does not certify all history styling.
 Evidence: `/tmp/history-pagination-{entry,bottom,recovered,older,name,close}.xml`,
 `/tmp/history-root-{entry,close}.xml`, `/tmp/history-pagination-older.png`.
 No source implementation changed for this verification.
+
+## Cold-root inventory selection recovery
+
+On the same e3735199 APK and Android16 Pixel6 configuration, cold URL entry to
+`audit-inventory-switcher` opens the production switcher with synthetic ports.
+Switch household opens the household list; Workshop household opens Workshop tools.
+The first selection fails and [retains that household and inventory with an error
+and reachable Close](evidence/android-switcher-selection-recovery.png). Retrying
+succeeds and positively returns to the Native UI audit index, including its entry
+buttons. This checks failed-selection recovery and root fallback, not production
+context refresh: the fixture's scope provider deliberately stays synthetic.
+
+Evidence: `/tmp/switcher-root-selection-{entry,households,workshop,error,return}.xml`
+and `/tmp/switcher-root-selection-error.png`. The household count also displays
+“1 inventories”; that minor copy defect remains for correction.
