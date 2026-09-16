@@ -1360,6 +1360,13 @@ cannot close a failed whole-string case or justify slowing production entry.
 Record its distinct screenshot names and include it in the text-entry diagnostic
 workflow. Do not infer that an upstream issue matches without the same conditions.
 
+Include a runner-only SwiftUI TextField comparison with default text assistance,
+the same whole-string injection and native/application-value assertions. It must
+not inherit URL keyboard or autocorrection-disabling modifiers from the existing
+address comparison. This separates the native field path from React Native text
+input without changing production fields or relaxing any original failing case.
+Passing the comparison does not establish physical typing or prove the cause.
+
 The native audit must compare the same ordinary text with the default keyboard:
 uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
 and uncontrolled without the app keyboard accessory. Retain the baseline and exact

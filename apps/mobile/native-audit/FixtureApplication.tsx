@@ -112,7 +112,7 @@ function FixtureNavigation() {
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
-type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'
+type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'
   | 'plain-controlled' | 'plain-no-assistance' | 'plain-no-accessory'
   | 'plain-controlled-no-assistance' | 'plain-controlled-no-accessory';
 
@@ -176,6 +176,7 @@ export function FixtureMenu() {
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
+    <Button title="Audit native-default input" onPress={() => setInputMode('native-default')} />
     <Button title="Audit plain-controlled input" onPress={() => setInputMode('plain-controlled')} />
     <Button title="Audit plain-controlled-no-assistance input" onPress={() => setInputMode('plain-controlled-no-assistance')} />
     <Button title="Audit plain-controlled-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-controlled-no-accessory'); }} />
@@ -231,6 +232,13 @@ function DraftOptionsFixture() {
 
 function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   const [value, setValue] = useState('');
+  if (mode === 'native-default') return <View>
+    <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
+      <TextField defaultValue="" onValueChange={setValue}
+        modifiers={[accessibilityLabel('Audit native-default text'), textFieldStyle('roundedBorder')]} />
+    </Host>
+    <Text>{`Observed native-default input: ${value}`}</Text>
+  </View>;
   if (mode.startsWith('plain') || mode === 'multiline') return <View>
     <AppTextInput accessibilityLabel={`Audit ${mode} text`} multiline={mode === 'multiline'}
       {...(mode.startsWith('plain-controlled') ? { value } : { defaultValue: '' })}

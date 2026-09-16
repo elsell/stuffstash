@@ -93,6 +93,7 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinarySingleLineTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeDefaultAssistedTextEntryDiagnostic'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryMultilineTextEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryControlledTextEntry'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledTextEntryWithoutAssistance'

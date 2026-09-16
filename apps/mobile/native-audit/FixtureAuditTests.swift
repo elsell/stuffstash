@@ -1110,6 +1110,7 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
+  func testNativeDefaultAssistedTextEntryDiagnostic() { verifyOrdinaryTextEntry("native-default") }
   func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
   func testOrdinaryControlledTextEntry() { verifyOrdinaryTextEntry("plain-controlled") }
   func testControlledTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-controlled-no-assistance") }

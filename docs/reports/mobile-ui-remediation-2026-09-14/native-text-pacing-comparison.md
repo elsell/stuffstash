@@ -31,3 +31,16 @@ sensitivity for that run, not a production fix or physical-typing acceptance.
 The [phone result](native-phone-350465.md) now shows the same paced passes with
 continued original controlled-input failures. Earlier uncontrolled failures still
 prevent a controlled-only causal conclusion.
+
+## Default native-field comparison
+
+The next diagnostic adds a SwiftUI TextField with default text assistance, using
+the same complete string and native/application-value assertions. The earlier
+native system comparison was URL-specific and disabled correction/capitalization;
+it could not isolate ordinary assisted entry. The new case does not alter any
+production input, existing assertion or injection cadence. It is included in the
+focused text-entry workflow and the full fixture suite. TypeScript and structural
+checks pass on paul; critic found no blocker. Native compilation/execution remains
+pending. Different implementation defaults and accessory attachment are potential
+confounds, so even a pass will not establish a single-variable cause or physical
+keyboard fidelity.
