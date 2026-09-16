@@ -195,3 +195,10 @@ visible sheet scroll area. Reveal it with bounded, direction-aware gestures in
 the scroll view containing that control; require its full frame below the native
 header and within the viewport before activation, including after selection and
 Back. Preserve native lookup/retry/search and proposal-retention assertions.
+
+Native fixture URL entry uses XCTest's application URL-opening API only inside an
+iOS 16.4 availability check. The test target retains its existing minimum OS;
+unsupported runtimes fail the URL-entry journey explicitly rather than silently
+skipping acceptance. Current iOS 26 runners must execute the same URL and all
+subsequent assertions. Run350919 failed compilation at the two unguarded calls;
+its fixture jobs provide no runtime acceptance evidence.

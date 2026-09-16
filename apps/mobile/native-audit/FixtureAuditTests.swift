@@ -807,7 +807,7 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testManagedSearchPlacementAfterEnableAndHeaderUpdate() {
-    app.open(URL(string: "stuffstash:///audit-managed-search")!)
+    guard openFixtureURL("audit-managed-search") else { return }
     let enable = app.buttons["Enable managed search"]
     XCTAssertTrue(enable.waitForExistence(timeout: 10))
     enable.tap()
@@ -1379,10 +1379,19 @@ final class FixtureAuditTests: XCTestCase {
     verifyAddDraft(route: "audit-add-header")
   }
 
+  private func openFixtureURL(_ route: String) -> Bool {
+    if #available(iOS 16.4, *) {
+      app.open(URL(string: "stuffstash:///\(route)")!)
+      return true
+    }
+    XCTFail("Native fixture URL entry requires iOS 16.4 or later")
+    return false
+  }
+
   private func verifyAddDraft(route: String) {
     // Synthetic menu scrolling previously delivered a tap to an unrelated fixture.
     // Production Home entry has its own tests; isolate this presentation comparison.
-    app.open(URL(string: "stuffstash:///\(route)")!)
+    guard openFixtureURL(route) else { return }
     let name = app.textFields["Asset name"]
     XCTAssertTrue(name.waitForExistence(timeout: 10))
     XCTAssertTrue(app.navigationBars["Add item"].exists)
