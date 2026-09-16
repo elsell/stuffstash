@@ -1,5 +1,11 @@
 # Comprehensive mobile UI audit and remediation
 
+Latest completed native run35131892834: phone64/86 and iPad79/86 fixture tests
+pass, with unresolved normal-size text entry and phone search/color failures.
+Both fixture artifacts exported successfully. See [phone results](native-phone-351318.md),
+[iPad results](native-ipad-351318.md) and [onboarding evidence](native-onboarding-351318.md).
+Run35140471580 at a1b827e0 is the active follow-up; no full native acceptance is claimed.
+
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
 Latest full source checkpoint (5c05f66e): **1,911 tests across299 files**, TypeScript
