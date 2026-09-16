@@ -1,5 +1,11 @@
 # Comprehensive mobile UI audit and remediation
 
+New [key-event evidence](native-text-entry-351529.md) from focused run35152978881
+records phone9/14 and iPad11/14 passes. Failed inputs receive the complete requested
+key sequence before text-change values lose or reorder letters. A separate phone
+keyboard-readiness failure prevents one comparison from typing. No input fix is
+claimed from this diagnostic evidence.
+
 Latest completed native run35140471580: phone69/86 and iPad79/86 fixture tests
 pass, with unresolved normal-size text entry, color opening and phone preconfigured
 Place search failures. Both onboarding jobs pass. See [phone results](native-phone-351404.md),
