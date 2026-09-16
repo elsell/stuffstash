@@ -100,6 +100,12 @@ caller-specific ownership evidence retained. M189 prevents late photo-removal
 alerts crossing navigation visits; 101 related checks/static validation pass.
 Native alert activation, interruption and focus return remain open.
 
+[Phone run350420 follow-up](native-phone-350420.md): the completed phone job
+passed46/69 cases. Text/target/footer failures remain; the voice location journey
+now reaches its final Back selector and needs artifact inspection to diagnose
+that failure. The iPad fixture job remains active at this checkpoint. This older
+source revision does not verify current-head candidates.
+
 Combined checkpoint at a2ad3163: all 1,808 mobile tests across 283 files,
 TypeScript and mobile structural checks pass on paul
 (`/tmp/mobile-audit-a2ad3163-full.log`). A checksum dry-run confirms tracked mobile
