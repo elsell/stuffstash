@@ -262,3 +262,7 @@ runtime cause. Preserve phone/iPad search-placement acceptance unchanged.
 Menu callback ownership is scoped to the serialized asset resource key. Replacing
 that resource retires retained native handlers even when the replacement has the
 same title and permissions; current callbacks are forwarded only within one scope.
+Native search enabled after an unavailable/loading state must initialize its native
+field from the current retained query. Disabled fields receive no imperative text
+updates. Native edit echoes must not rewrite text during typing; initial enabling
+and explicit application query changes are separate synchronization cases.

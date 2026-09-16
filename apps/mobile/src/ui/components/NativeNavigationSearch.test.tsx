@@ -60,3 +60,27 @@ it('ignores hidden native callbacks and accepts input again after return', async
   expect(values).toEqual(['returned']);
  }finally{await h.unmount();resetNavigation();setScreenFocused(true);}
 });
+
+it('seeds a newly enabled native field without rewriting native edit echoes', async () => {
+ resetNavigation(); const h = new MobileRenderHarness();
+ const { subscribeNavigationOptions } = await import('../../test-support/navigation');
+ const writes:string[]=[];
+ let ref: { current: { setText: (text:string)=>void } | null } | undefined;
+ const unsubscribe = subscribeNavigationOptions(() => {
+  const options = navigationOptions().at(-1) as {headerSearchBarOptions?:{ref:NonNullable<typeof ref>}};
+  if (ref) ref.current = null;
+  ref = options.headerSearchBarOptions?.ref;
+  if (ref) ref.current = {setText:text=>writes.push(text)};
+ });
+ const render=(enabled:boolean,query:string)=><NativeNavigationSearch enabled={enabled} query={query}
+  placeholder="Search" onChange={()=>{}} onSubmit={()=>{}} onClear={()=>{}} />;
+ try {
+  await h.render(render(false,'retained')); expect(writes).toEqual([]);
+  await h.render(render(true,'retained')); expect(writes).toEqual(['retained']);
+  const search=(navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+  await h.run(()=>search.onChangeText({nativeEvent:{text:'typing'}}));
+  await h.render(render(true,'typing')); expect(writes).toEqual(['retained']);
+  await h.render(render(false,'replacement')); expect(writes).toEqual(['retained']);
+  await h.render(render(true,'replacement')); expect(writes).toEqual(['retained','replacement']);
+ } finally {await h.unmount();unsubscribe();resetNavigation();}
+});

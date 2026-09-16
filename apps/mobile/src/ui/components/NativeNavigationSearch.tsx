@@ -17,8 +17,9 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
   return()=>{current.current=undefined;};
  },[onChange,onSubmit,onClear,enabled]);
  useFocusEffect(useCallback(()=>{active.current=enabled;return()=>{active.current=false;};},[enabled]));
- useEffect(()=>{ref.current?.setText(query);},[]);
- useEffect(()=>{if(query!==nativeText.current){nativeText.current=query;ref.current?.setText(query);}},[query]);
+ // Recreated native fields need the retained query; native edit echoes do not.
+ useEffect(()=>{if(enabled){nativeText.current=query;ref.current?.setText(query);}},[enabled]);
+ useEffect(()=>{if(enabled&&query!==nativeText.current){nativeText.current=query;ref.current?.setText(query);}},[query,enabled]);
  // Keep presentation stable while reading the current committed caller for events.
  const options=useMemo<HeaderOptions>(()=>{
  const owner=()=>active.current&&current.current?.enabled?current.current:undefined;

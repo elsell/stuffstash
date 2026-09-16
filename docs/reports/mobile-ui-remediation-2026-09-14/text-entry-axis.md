@@ -209,3 +209,22 @@ assistance. Phone tag acceptance remains unverified until that journey completes
 Phone job104685220242/artifact10433691877; iPad job104685220604/artifact10433966175.
 Mobile structural check passes on paul; Swift/native execution of the corrected
 assertion remains pending. Both original failures remain recorded.
+
+### Native search enable transition
+
+A shared adapter regression reproduced a blank native field when a mounted search
+starts disabled and is later enabled with a retained, unchanged query. The prior
+mount-only initialization had already run with no native field; its query-change
+synchronizer saw no changed text. Enabling now seeds the current query, disabled
+states receive no native writes, and native edit echoes still avoid text writeback.
+
+The fake native command port regression fails before the correction and passes
+afterward, including disable/change/re-enable and native typing echoes. Fifty
+focused search/asset/location checks, TypeScript and structural checks pass on
+paul; critic found no blocker. Consumer inspection includes Browse list, containment
+Map, timezone, voice location and asset contents. Asset contents currently remounts
+its search on enabled changes, so this is an adapter transition defect, not proof
+of a previously shipped asset-contents failure. Native ref attachment timing and
+M232's clear-collapse remain unverified. Logs: `/tmp/native-search-enable-*`.
+Combined remote validation passes1,898 tests across296 files after this change
+(`/tmp/native-search-enable-full.log`). This is source evidence, not native QA.
