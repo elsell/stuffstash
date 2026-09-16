@@ -1,5 +1,24 @@
 # Reminder editors — all 24 source axes
 
+## Inventory overview route R044 follow-up
+
+Reviewed at2edf4dbd across the24 axes below, plus push-permission-axis.md for the
+device subsection. R044 resolves the current authorized settings context before
+mounting the reminder screen. Initial context loading is named; failure has a
+native Retry command. The scoped child key includes service-state scope, tenant
+and inventory, so a selection change replaces the session owner. Overview edits
+personal inventory defaults, timezone, per-type rules and push preference; it is
+not a household-wide policy editor.
+
+Child destinations encode tenant/inventory identities. R043 validates those route
+parameters and rejects mismatched currently selected inventory. Changes invalidate
+only the scoped inventory query key. Shared screen and editor findings M199/M205
+apply here; the earlier24-axis table and push review describe layout, keyboard,
+state, selection, accessibility and lifecycle limits. No additional source defect
+was established in this route pass. Parser tests and controlled HTTP denied-state
+tests do not independently prove backend access enforcement or cold-deep-link Back
+behavior; those remain separate acceptance boundaries.
+
 Reviewed R043 and S111–S115 at 0ab593c2, including the route parser, scoped
 NotificationSettingsRoute, NotificationSettingsScreen, ExpirationReminderEditor,
 ReminderTimingEditor, TimeZonePicker and shared SettingsList rows. This extends

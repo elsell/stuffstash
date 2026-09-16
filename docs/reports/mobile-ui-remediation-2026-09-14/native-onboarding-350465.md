@@ -10,6 +10,15 @@ explicitly skipped: iPad centered-column comparison and landscape (the shipped
 iPhone configuration is portrait-only). Do not report this as three phone passes.
 
 Completed logs are retained at `/tmp/native350465-onboarding-ipad.log` and
-`/tmp/native350465-onboarding-phone.log`. Fixture jobs104638923397 and104638923406
-remain active. Later branch changes, full fixture acceptance and TestFlight
-readiness are not validated by these onboarding results.
+`/tmp/native350465-onboarding-phone.log`. Fixture jobs subsequently completed;
+see native-phone-350465.md and native-ipad-350465.md for their failures.
+Later branch changes and TestFlight readiness are not validated by these results.
+
+## Next run35050407693
+
+At source802e4955, phone job104649681618 passes its connection-help/keyboard case
+with two platform-inapplicable skips. iPad job104649681924 passes all three cases.
+Logs `/tmp/native350504-onboarding-phone.log` and
+`/tmp/native350504-onboarding-ipad.log` were inspected. Fixture jobs remain active
+at this checkpoint. Neither onboarding job contains M206's later native command
+migration at2edf4dbd; repeat those native scenarios on the migrated controls.

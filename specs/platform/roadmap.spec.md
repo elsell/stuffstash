@@ -394,3 +394,11 @@ on paul. Inspected350465 phone/iPad Home Return captures verify M169's error
 overlap correction in normal-size light appearance; they do not close wider
 lifecycle or native acceptance. Continue remaining source coverage and the active
 native collection/header/text-input investigation before release.
+
+At2edf4dbd, the full remote suite passes1,830 tests/285 files plus type and mobile
+structural checks. Household/first-inventory/partial-recovery and the inventory
+reminder route now have complete source follow-ups;227 review cells remain pending.
+Onboarding commands reuse native controls and retain visible pending labels (M206).
+Native350504 onboarding passes applicable phone/iPad cases at older802e4955; the
+new command migration still needs its own keyboard/geometry verification. The
+active fixture jobs and unresolved normal-size failures continue to gate release.

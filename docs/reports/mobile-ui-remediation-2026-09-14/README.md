@@ -2,6 +2,11 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
+Latest full source checkpoint:2edf4dbd passes1,830 tests across285 files, TypeScript
+and mobile structural checks on paul. Tracked mobile source/config/native fixture
+content matches the remote tree by checksum. React act warnings remain. Log:
+`/tmp/mobile-audit-2edf4dbd-full.log`. This does not establish native acceptance.
+
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
@@ -91,8 +96,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise243
-pending,2,427 source-reviewed,515 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise227
+pending,2,443 source-reviewed,515 finding,25 runtime-partial and198 not-applicable.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is
