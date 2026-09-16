@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint (M241 sharing access recovery): **1,905 tests across298 files**, TypeScript
+Latest full source checkpoint (c31199a3): **1,910 tests across298 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
@@ -20,10 +20,19 @@ Run35104157358 at14d7e06f finished: iPad77/84 and phone63/84 fixture passes;
 phone onboarding passes with two device-inapplicable skips, iPad onboarding3/3.
 The independent static iPad Clear comparison narrows M232 to a native-pattern test
 expectation; full production rerun remains required. See native-ipad-351041.md and native-phone-351041.md.
-Run35112198520 at1c2f8173 remains active. iPad onboarding passes3/3 with inspected help, keyboard and landscape captures; phone fails help activation (M240). Both fixture jobs must finish undisturbed. See native-onboarding-351121.md. Release
-remains gated on native review. Disk cleanup preserves selected evidence and active
-build environments; free space is11GB local,5.0GB on paul root and15GB in paul's
-`/tmp` after removing a verified duplicate Android installer extraction.
+Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes.
+iPad onboarding passes3/3; phone help activation fails (M240). See
+[native phone findings](native-phone-351121.md) and
+[native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
+active and must finish undisturbed. Subsequent test-only candidates f54eec01 and
+c196d527 await native execution: bounded exact Add-tag observation and a managed
+search/header-action coexistence comparison. Neither is production acceptance.
+M242 inbox ownership and M243/M244 Android menu corrections have source checks and
+scoped Android runtime evidence; iOS acceptance remains pending. Release remains
+gated on native review. Stale archive cleanup preserves selected evidence and
+active build environments; last checked free space is11GB local,4.9GB on paul root
+and18GB in paul's `/tmp`.
+
 
 Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture

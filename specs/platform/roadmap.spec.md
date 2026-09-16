@@ -453,11 +453,14 @@ read-state, navigation return and denial recovery. M243/M244 fix native menu tar
 bounds and selectable-item activation, with actual appearance/reminder selection
 and exactly-once preference writes verified in APKb76e227a.
 
-Run351121 at1c2f8173 still has both fixture jobs active as of September16 16:22UTC;
+Run351121 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes;
 iPad onboarding passes3/3, while phone onboarding fails help activation (M240).
-Older351041 fixtures finish63/84 phone and77/84 iPad; retain normal-size search,
-Sharing menu/keyboard and diagnostic text-entry failures without applying later
-corrections retroactively. The current native revision is queued. Continue native
+Run35121454700 at1a15ca11 is active. The older run does not validate later Sharing,
+inbox or Android-menu corrections. Its phone Add-tag final capture retains Camping,
+so f54eec01 adds bounded exact-value observation. Incorrect controlled-name values
+persist in final hierarchies and remain a separate diagnostic concern. Candidate
+c196d527 adds native action registration to the passing managed-search comparison;
+no production search workaround is inferred. Continue native
 normal-size acceptance before enlarged text, then release the complete reviewed
 batch with the explicit TestFlight notes section and Apple readback. The full audit
 and release gate remain open.

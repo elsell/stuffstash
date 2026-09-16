@@ -34,8 +34,15 @@ hierarchies are retained on both hosts in `/tmp/phone351121-selected`.
 
 Controlled address reads `h//example.invalid`, controlled name without accessory
 reads `N draft name`, and ordinary controlled name reads `Nativet name draf`.
-These fail exact-value requirements; inspect final hierarchies before attributing
-cause. Footer-full-sheet and nested-full-sheet comparisons fail but do not represent
+The final ordinary-name and no-accessory hierarchies retain those incorrect
+values in both the field and the mirrored React observation. Their failures are
+not explained by the early-read diagnosis from the Add-tag journey. The controlled
+no-assistance comparison retains exact `Native draft name`. This narrows the
+observed cases without proving a cause or justifying globally disabling assistance.
+Retained hierarchy files: `5AC7D36B-95E9-498D-B42C-F3E6A3DC5421.txt`,
+`020FCCA6-FD0F-46EA-B13D-C39179393241.txt`, and
+`54C340B1-BCB2-47FB-9058-41A476F6E9E6.txt` in the selected-capture directory.
+The controlled-address final hierarchy has not yet been inspected. Footer-full-sheet and nested-full-sheet comparisons fail but do not represent
 the shipped route configurations. Expiration overview reports Text clipped; retain
 its accessibility audit detail rather than assume which element or size failed.
 
