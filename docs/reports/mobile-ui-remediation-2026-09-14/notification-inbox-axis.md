@@ -81,3 +81,22 @@ Evidence: [initial](evidence/android-inbox-initial.png),
 The script `/tmp/verify-inbox-native.py`, all four XML/capture pairs and build log
 remain on paul. Six fixture installer checks, TypeScript and structural validation
 pass; code critic has no remaining confirmed blocker.
+
+### Compact dark comparison
+
+The same APK also passes the complete interaction/recovery sequence at an Android
+window override of840×1867 pixels,420dpi (320dp wide), normal font1, system dark.
+The long title wraps to three lines without colliding with the 48dp read accessory.
+The immediate-parent chip remains visible; the earlier ancestor initially extends
+outside the horizontal trail viewport. Do not label that initial capture as showing
+the entire path. Width and appearance are restored after the comparison.
+[Compact entry](evidence/android-inbox-compact-dark.png) and
+[compact denial](evidence/android-inbox-compact-denied.png) retain visual evidence.
+This adds compact Android/dark coverage, not iOS, tablet or assistive verification.
+
+A separate horizontal swipe reveals the earlier Hall medicine closet chip fully,
+and an actual tap resolves `closet`. See
+[revealed ancestor](evidence/android-inbox-ancestor-revealed.png). The follow-up
+script is `/tmp/verify-inbox-trail.py`; the full compact sequence is
+`/tmp/verify-inbox-compact.py`, with `/tmp/inbox-compact-dark.log` on paul.
+Original1080×2400 size and light mode were explicitly confirmed restored.
