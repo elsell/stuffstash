@@ -5,7 +5,7 @@ settled-keyboard measurement candidate and Browse search ownership fix.
 
 | Journey | iPhone 17 | iPad mini (A17 Pro) |
 | --- | --- | --- |
-| Last tag clears footer and applies | Pass | Fails footer containment assertion |
+| Last tag clears footer and applies | Pass | Geometry passes; selected-tag result fails |
 | Browse search, keyboard clearance and selection | Fails clearance | Pass |
 | In-place availability and apply | Pass | Pass |
 | Expiration calendar and bottom actions | Fails popover dismissal | Pass |
@@ -13,7 +13,14 @@ settled-keyboard measurement candidate and Browse search ownership fix.
 
 Phone job 104993585435 passes 2/5; iPad job 104993585635 passes 4/5.
 An assertion pass is scoped to its journey, not a whole-screen visual acceptance.
-The iPad footer failure still needs attachment review.
+The [iPad last-row capture](evidence/ipad-filter-last-tag-351546.png) and
+[hierarchy](evidence/ipad-filter-last-tag-351546.txt) show the last row at
+Y674.5–726.5, above the footer at Y746.5–886.5. Both action frames fit, and all
+geometry assertions pass. The failure is the final selected-tag result after
+row tap, Back and Show results: the result is `Browse availability: any`, not
+`Browse selected tags: audit-last`. This corrects the earlier attribution made
+from a line number in the current file instead of the run's source revision.
+Inspect row tap delivery and selected-state transition before changing layout.
 
 ## Confirmed phone overlap
 
