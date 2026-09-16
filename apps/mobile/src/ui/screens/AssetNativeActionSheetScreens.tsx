@@ -78,7 +78,7 @@ function AssetLoadState({ failed, onRetry }: { readonly failed: boolean; readonl
   const styles = useStyles();
   return <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
     {failed ? <ErrorState message="Could not load asset." onRetry={onRetry} /> : <LoadingState label="Loading asset" />}
-    <NativeCommandButton label="Close" onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/'); }} />
+    <NativeCommandButton label="Close" onPress={returnFromAssetAction} />
   </SafeAreaView>;
 }
 
@@ -102,7 +102,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   function close(): void {
     if (operation.locked()) return;
     if (!hasDirtyEditAssetDraft(asset, draft)) {
-      router.back();
+      returnFromAssetAction();
       return;
     }
     const isCurrent = captureDiscard();
@@ -113,7 +113,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       { text: 'Discard', style: 'destructive', onPress: () => {
         if (!isCurrent() || accepted || operation.locked()) return;
         accepted = true;
-        operation.leave(() => router.back());
+        operation.leave(returnFromAssetAction);
       } }
     ]);
   }
@@ -144,7 +144,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
         message: result.message,
         undoableOperationId: result.undoableOperationId
       });
-      operation.complete(() => router.back());
+      operation.complete(returnFromAssetAction);
     } catch (error) {
       if (!operation.canPresent()) return;
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
@@ -256,7 +256,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
       });
       if (!operation.canPresent()) return;
       recordAssetActionCompletion({ assetId, action: 'move', message: result.message });
-      operation.complete(() => router.back());
+      operation.complete(returnFromAssetAction);
     } catch (error) {
       if (operation.canPresent()) Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
     } finally {
@@ -277,7 +277,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
           isCreatingDestination={operation.kind === 'create'}
           onChangeCreateKind={(createKind) => operation.change(() => setDraft((current) => current ? { ...current, createKind } : current))}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
-          onClose={() => operation.leave(() => router.back())}
+          onClose={() => operation.leave(returnFromAssetAction)}
           onCreateDestination={() => void createDestination(asset)}
           onSelectParent={(selectedParent) => operation.change(() => setDraft((current) => current ? { ...current, selectedParent } : current))}
           onSelectRoot={() => operation.change(() => setDraft((current) => current ? { ...current, selectedParent: null } : current))}
@@ -314,7 +314,7 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
       });
       if (!operation.canPresent()) return;
       recordAssetActionCompletion({ assetId: draft.target.id, action: 'move', message: result.message });
-      operation.complete(() => router.back());
+      operation.complete(returnFromAssetAction);
     } catch (error) {
       if (operation.canPresent()) Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
     } finally {
@@ -332,13 +332,17 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
           draft={shownDraft}
           isSaving={isSaving}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
-          onClose={() => operation.leave(() => router.back())}
+          onClose={() => operation.leave(returnFromAssetAction)}
           onSave={() => void save()}
           onSelectAsset={(selectedAsset) => operation.change(() => setDraft((current) => current ? { ...current, selectedAsset } : current))}
         />
       )}
     </NativeSheetFrame>
   );
+}
+
+function returnFromAssetAction(): void {
+  if (router.canGoBack()) router.back(); else router.replace('/');
 }
 
 function NativeSheetFrame({

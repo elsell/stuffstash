@@ -303,6 +303,12 @@ an undersized inline action squeezed beside text entry.
 
 ### Checkout history direct-entry dismissal
 
+Loaded Edit, Move, and Move here sheets also return to the previous route when
+available and replace with Home when entered without a back stack. Apply this to
+Cancel, confirmed Edit discard, and successful submission. Keep dirty Edit
+confirmation, pending-operation navigation locks, and late-completion ownership
+checks intact; a fallback destination must not bypass these guards.
+
 Checkout history must keep native Close available in loading, error and loaded
 states. Close returns to the previous route when one exists; direct entry without
 a back stack replaces the route with Home. A failed or slow history read must not

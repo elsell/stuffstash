@@ -97,3 +97,15 @@ menu anchoring, target bounds, long names, focus and route-return behavior remai
 unverified. Access-failure header cleanup remains an integration check, not a
 proven pass. Existing112 Details checks support command ownership and presentation
 behavior; they do not establish this menu's native geometry.
+
+## Loaded sheet return follow-up — M214
+
+The loading/error exit review did not establish loaded-form return behavior.
+Edit, Move, and Move here still called Back without checking for a prior route.
+The shared return now replaces with Home for direct entry, including successful
+save, ordinary Cancel and confirmed Edit discard. It runs inside existing operation
+and presentation ownership guards. Thirteen route cases cover these paths and
+their back-stack counterparts; seven failed before the fix. Combined62 route and
+eligibility tests, TypeScript and structural checks pass on paul. Critic found no
+blocker. Native direct-entry return remains unverified; no geometry or typing claim
+follows from these tests.

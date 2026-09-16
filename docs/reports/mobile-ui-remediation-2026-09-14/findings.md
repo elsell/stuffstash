@@ -2935,3 +2935,14 @@ modifier. A separate exact-name native test precedes the adapter edit and preser
 activation tests unchanged. Fifteen related tests, TypeScript and structural checks
 pass on paul; critic found no blocker. Those checks do not mount SwiftUI; native
 name acceptance remains pending, separately from M51 activation. See tag-color-axis.md.
+
+### M214 — loaded asset action sheets cannot return from direct entry
+
+P2 source-confirmed at f92a2274. Edit, Move and Move here unconditionally called
+Back for Cancel and successful mutation; confirmed Edit discard did the same.
+Without a back stack these paths could not leave. They now share Back-or-Home
+return with loading/error Close. Existing pending, focus and discard guards remain.
+Seven direct-entry RED cases preceded the fix; six back-stack counterparts passed.
+All62 related tests pass on paul, plus TypeScript and the structural check after a
+test-only nullable-target correction. Critic found no blocker. Native direct-entry
+navigation remains pending. See asset-actions-axis.md.
