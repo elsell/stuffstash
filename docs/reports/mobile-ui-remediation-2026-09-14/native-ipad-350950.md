@@ -47,3 +47,15 @@ is still required before attributing collapse to product handlers or UIKit.
 
 All four current-run jobs reached native interaction execution after pinned
 dependency/native installation. This is build progress, not runtime acceptance.
+
+### Move Here candidate target correction
+
+Both the phone and iPad retained failure hierarchies expose a Button labeled
+`Audit tent, Item, Garage`; neither exposes the standalone `Audit tent` StaticText
+queried by the test. This resolves the selector mismatch, not the whole recovery
+journey. Native acceptance now waits for the exact observed button, verifies it
+is enabled/hittable and taps it. The five-second wait, rejection alert, selected
+preview retention, retry and positive return assertions are unchanged. The same
+candidate-presence selector in the enlarged-text comparison is corrected without
+changing its layout or keyboard gates. Six fixture preparation tests and structural
+checks pass on paul. Swift compilation and native rerun remain required.

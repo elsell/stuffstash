@@ -266,3 +266,11 @@ Native search enabled after an unavailable/loading state must initialize its nat
 field from the current retained query. Disabled fields receive no imperative text
 updates. Native edit echoes must not rewrite text during typing; initial enabling
 and explicit application query changes are separate synchronization cases.
+
+Move Here native acceptance must activate the accessible candidate row as a button.
+Run350950 phone/iPad hierarchies expose `Audit tent, Item, Garage` as one grouped
+button, with no standalone `Audit tent` StaticText. Select that observed native
+label and require existence, enabled state and hittability before tapping. Preserve
+the five-second candidate wait, rejected-command draft retention, retry and positive
+return assertions. This corrects test target semantics, not a product recovery fix;
+the amended journey remains unverified until native execution.

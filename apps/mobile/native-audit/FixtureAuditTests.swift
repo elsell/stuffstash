@@ -355,8 +355,11 @@ final class FixtureAuditTests: XCTestCase {
     let retry = app.buttons["Retry suggestions"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     retry.tap()
-    let candidate = app.staticTexts["Audit tent"].firstMatch
+    // Native accessibility groups title, kind and location into the candidate button.
+    let candidate = app.buttons["Audit tent, Item, Garage"].firstMatch
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
+    XCTAssertTrue(candidate.isEnabled)
+    XCTAssertTrue(candidate.isHittable)
     candidate.tap()
     let move = app.buttons["Move here"].firstMatch
     XCTAssertTrue(move.isEnabled)
@@ -414,7 +417,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("move-here-suggestions-error")
     retry.tap()
-    XCTAssertTrue(app.staticTexts["Audit tent"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Audit tent, Item, Garage"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
     capture("move-here-suggestions-recovered")
     app.buttons["Cancel"].firstMatch.tap()
