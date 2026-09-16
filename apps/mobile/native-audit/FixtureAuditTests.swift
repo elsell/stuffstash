@@ -1384,7 +1384,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     verifyActions()
     let headerTop = add.frame.minY
-    let recent = app.staticTexts["Recently changed"]
+    let recent = app.staticTexts["Recently changed"].firstMatch
     XCTAssertTrue(recent.exists)
     let contentTop = recent.frame.minY
     capture("home-header-before-scroll")

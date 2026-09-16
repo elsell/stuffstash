@@ -91,6 +91,9 @@ from distinct controls. When a recorded hierarchy exposes the same nested text
 twice, select its first matching text container explicitly; retain the complete
 visibility assertion. Do not weaken geometry or interaction checks to make an
 ambiguous selector pass. Record the failed run and require a native rerun.
+Run350633 exposes nested duplicate `Recently changed` text nodes in the Home
+scroll journey. Select the first text container for that heading while retaining
+the measured scroll displacement and stationary, ordered header assertions.
 
 When a system bar item's accessibility frame is smaller than the recommended
 44-point hit region, record the frame failure and separately test delivered
