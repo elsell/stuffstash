@@ -1,5 +1,4 @@
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
-import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -191,6 +190,7 @@ export function InventorySharingScreen({
   function requestCancellation(invitation: InventoryInvitationSummary): void {
     const ownsConfirmation = captureFeedbackOwner();
     if (!ownsConfirmation() || pendingCancellations.current.has(cancellationKey(invitation.id))) return;
+    Keyboard.dismiss();
     let confirmed = false;
     confirmCancel(invitation, async value => {
       if (confirmed || !ownsConfirmation()) return;
@@ -298,13 +298,12 @@ export function InventorySharingScreen({
                   <Text style={styles.successTitle}>Could not cancel invitation</Text>
                   <Text style={settingsStyles.errorMessage}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
+                {invitation.status === 'pending' && !invitation.isExpired ? (
+                  <NativeCommandButton label="Cancel invitation" role="destructive"
+                    disabled={cancellingKeys.has(cancellationKey(invitation.id))}
+                    onPress={() => requestCancellation(invitation)} />
+                ) : null}
               </View>
-              {invitation.status === 'pending' && !invitation.isExpired ? (
-                <NativeActionMenu accessibilityLabel={`Invitation actions for ${invitation.email}`}
-                  disabled={cancellingKeys.has(cancellationKey(invitation.id))}
-                  groups={[{ id: 'invitation', items: [{ id: 'cancel', label: 'Cancel invitation',
-                    isDestructive: true, systemImage: 'xmark.circle', onPress: () => requestCancellation(invitation) }] }]} />
-              ) : null}
             </View>
           </View>
         ))}

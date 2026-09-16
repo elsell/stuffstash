@@ -1,5 +1,19 @@
 # Platform Interaction Review
 
+## Invitation cancellation interaction
+
+A pending, unexpired invitation exposes its single command directly as a native
+Cancel invitation text button below the recipient and status. An overflow menu
+adds no choice here and makes failed-link recovery harder to discover. This is a
+project task/pattern decision, not a universal prohibition on single-item menus.
+Keep destructive confirmation naming the recipient, permission/scope ownership,
+independent pending locks, failure recovery and terminal-state removal unchanged.
+End keyboard editing before presenting confirmation. Use the existing native
+command adapter without adding a shared control API. Verify confirmation (including
+Keep Invitation), actual cancellation, concurrent invitation locks and recovery in
+mounted tests, then native phone/iPad reachability with the keyboard dismissed.
+Do not claim the native menu/keyboard root cause is resolved from source tests.
+
 ## Native fixture observation boundaries
 
 Run351041's Add name assertion read Nat immediately after typing, while its

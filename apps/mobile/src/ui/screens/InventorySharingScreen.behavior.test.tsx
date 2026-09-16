@@ -14,9 +14,14 @@ import { CreateInventoryInvitationCommand, CancelInventoryInvitationCommand, Lis
 
 const scope: InventorySharingScope = { tenantId: 'tenant', inventoryId: 'inventory', inventoryName: 'Garage', permissions: ['share'] };
 const item: InventoryInvitationSummary = { id: 'one', email: 'old@example.test', relationship: 'viewer', status: 'pending', isExpired: false, expiresAt: '2027-01-01' };
+function cancellationButton(h: MobileRenderHarness, email: string) {
+  const recipient = h.allByType('Text').find(node => node.children.length === 1 && node.children[0] === email);
+  return recipient?.parent?.queryAll(node => node.props.accessibilityLabel === 'Cancel invitation')[0];
+}
 async function openCancellation(h: MobileRenderHarness, email: string) {
-  await h.press(h.byLabel(`Invitation actions for ${email}`));
-  await h.press(h.byText('Cancel invitation')?.parent ?? undefined);
+  const command = cancellationButton(h, email);
+  expect(command, 'cancellation must be directly available beside its recipient').toBeDefined();
+  await h.press(command);
 }
 const settle = async (h: MobileRenderHarness) => { await h.run(() => new Promise(r => setTimeout(r, 10))); };
 it('reuses safe invitation pages and keeps a created secret out of cache', async () => {
@@ -40,7 +45,8 @@ it('reuses safe invitation pages and keeps a created secret out of cache', async
     failRefresh = true;
     await openCancellation(h, 'new@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation')); await settle(h);
-    expect(h.byLabel('Invitation actions for new@example.test')).toBeUndefined();
+    expect(cancellationButton(h, 'new@example.test')).toBeUndefined();
+    expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     failRefresh = false;
     await h.render(view(true, 'replacement')); await settle(h);
     expect(h.allText()).not.toContain('https://example.test/#token=secret');
@@ -209,7 +215,7 @@ it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
     expect(parent?.type, 'task feedback must scroll with the form, outside the navigation overlay').toBe('ScrollView');
     if (action !== 'cancel') expect(h.byLabel('Complete invitation link')).toBeDefined();
-    else expect(h.byLabel('Invitation actions for old@example.test')).toBeDefined();
+    else expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     fail = false; await perform();
     expect(h.byText(`Could not ${action} invitation`)).toBeUndefined();
     if (action === 'copy') {
@@ -291,19 +297,25 @@ it('keeps each invitation locked independently and rejects duplicate confirmatio
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(h);
+    const dismissalsBefore = keyboardDismissCount();
+    await openCancellation(h, 'old@example.test');
+    expect(keyboardDismissCount()).toBe(dismissalsBefore + 1);
+    await h.run(() => pressAlertButton('Keep Invitation'));
+    expect(calls).toEqual([]);
+    expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     await openCancellation(h, 'old@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation'));
     await h.run(() => pressAlertButton('Cancel Invitation'));
     expect(calls).toEqual(['one']);
     await openCancellation(h, 'second@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation'));
-    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(true);
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'old@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(true);
     await h.run(() => finish.get('one')?.(new Error('First cancellation failed')));
-    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(false);
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'old@example.test')?.props.disabled).toBe(false);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(true);
     await h.run(() => finish.get('two')?.(new Error('Second cancellation failed')));
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(false);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(false);
     await h.run(() => pressAlertButton('Cancel Invitation'));
     expect(calls).toEqual(['one', 'two']);
   } finally { await h.unmount(); client.clear(); }

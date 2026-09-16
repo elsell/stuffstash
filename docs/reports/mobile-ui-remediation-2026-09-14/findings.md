@@ -2733,6 +2733,19 @@ invitation menu precedes keyboard reappearance and an unhittable Cancel invitati
 The original creation-only explanation is insufficient; M193 remains open. See
 native-phone-351041.md.
 
+Follow-up source correction replaces the one-item overflow with a visible native
+Cancel invitation command below its recipient/status. Confirmation still names the
+recipient and requires explicit destructive approval; Keep Invitation does nothing.
+Keyboard editing ends before confirmation. Mounted tests preserve independent locks,
+scope/visit ownership, duplicate rejection, failure retry and terminal removal.
+The first direct-command test run failed six cases before implementation. All1,905
+mobile tests, TypeScript, six fixture-preparation tests and structural checks pass
+on paul; the final22 sharing tests include cancelled/pending row discrimination.
+Code critic identified and verified correction of a row-lookup false positive.
+Phone/iPad native confirmation, cancellation failure/retry and keyboard reachability
+remain required; neither this substitution nor mounted tests proves the shared
+menu keyboard cause. M193 stays open pending native evidence.
+
 ### M194 — Native ellipsis menu has an undersized hit region
 
 P2 runtime-observed in the same Sharing capture: native button bounds are

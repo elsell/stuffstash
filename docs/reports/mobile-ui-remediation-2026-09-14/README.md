@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint (M237 voice review pass): **1,905 tests across298 files**, TypeScript
+Latest source checkpoint (M193 direct invitation command): **1,905 tests across298 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
