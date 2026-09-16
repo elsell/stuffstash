@@ -113,3 +113,27 @@ These are source/mounted results, not native keyboard, toolbar or gesture proof.
 Normal-size native acceptance above remains open.
 
 The additional server-ADC journey confirms Save is enabled without a secret, the repository receives no credential value, and synchronous Save/Back cannot leave before settlement.
+
+## Android normal-text editor recovery
+
+September16, Android16 Pixel6, light appearance/font scale1.0, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+credential entry masks the synthetic key and exposes native Save above Gboard
+([keyboard capture](evidence/android-provider-credential-keyboard.png)). The first
+Save fails inline, retaining the masked draft and available Save. Native header
+Back opens Discard changes with Keep Editing/Discard. Keep Editing retains all17
+masked characters. Retrying Save positively returns to the audit index and its
+credential entry. The fixture never contacts a provider or stores real secrets.
+
+Prompt guidance retains the exact entered “Keep answers concise” draft after its
+first rejected Save; [inline feedback and native Save remain
+visible](evidence/android-provider-guidance-recovery.png). Retrying Save positively
+returns to the audit index and its prompt entry. The error screenshot is after
+keyboard dismissal and does not establish multiline keyboard reachability.
+
+Evidence: `/tmp/android-provider-{entry,keyboard,error,discard,kept,return}.xml`,
+`/tmp/android-provider-keyboard.png`, `/tmp/android-prompt-{entry,error,return}.xml`
+and `/tmp/android-prompt-error.png`. These extend the earlier mounted evidence;
+accepted Discard, pending-removal blocking, server ADC, long multiline input,
+TalkBack, large text and real authorization/session behavior remain outside this
+native sample. No implementation changed for these checks.

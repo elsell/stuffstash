@@ -12,8 +12,12 @@ The iPad onboarding job104781815556 independently fails dependency installation.
 React Native's prebuilt probes return no artifacts and fall back to source;
 `pod install --deployment` rejects the resulting dependency change. The deployment
 lock remains intact. This supplies no onboarding runtime evidence. Phone onboarding
-was still running when this report was written.
+subsequently passed its applicable help/keyboard journey (88.523 seconds); the two
+iPad-only journeys were skipped on phone. This is one passed phone journey, not
+three-device-scenario acceptance. The overall run remains failed.
 
 Logs: `/tmp/native350919-phone.log`, `/tmp/native350919-ipad.log`,
 `/tmp/native350919-onboarding-ipad.log`. Preserve previous run failures; do not count
 these build failures as passed or as newly observed UI regressions.
+
+Phone log: `/tmp/native350919-onboarding-phone.log`.
