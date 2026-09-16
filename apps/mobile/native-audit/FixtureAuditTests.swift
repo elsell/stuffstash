@@ -1733,6 +1733,13 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.isHittable); open.tap()
     let original = app.buttons["Change containing location, currently Inventory root"]
     XCTAssertTrue(original.waitForExistence(timeout: 15))
+    let context = app.staticTexts["Audit inventory · Audit home"].firstMatch
+    XCTAssertTrue(context.exists)
+    let conversationHeader = app.navigationBars["Conversation"]
+    XCTAssertGreaterThanOrEqual(context.frame.minY, conversationHeader.frame.maxY,
+      "The inventory context must be fully below native navigation chrome")
+    XCTAssertLessThanOrEqual(context.frame.maxY, app.frame.maxY)
+    capture("voice-proposal-entry-context")
     revealVoiceProposalLocation(original)
     original.tap()
     let header = app.navigationBars["Containing location"]

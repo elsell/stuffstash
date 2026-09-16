@@ -11,7 +11,7 @@ export function voiceNativeSheetOptions(palette: MobileColorPalette): HeaderOpti
     sheetCornerRadius: 24,
     sheetExpandsWhenScrolledToEdge: true,
     sheetGrabberVisible: true,
-    sheetInitialDetentIndex: 0,
+    sheetInitialDetentIndex: 1,
     sheetLargestUndimmedDetentIndex: 'none'
   };
 }

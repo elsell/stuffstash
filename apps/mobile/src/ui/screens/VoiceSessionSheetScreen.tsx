@@ -252,7 +252,7 @@ function VoiceSessionSheet({
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
+    <SafeAreaView style={styles.sheet} edges={['top', 'left', 'right']}>
       <VoiceConversationHeader realtime={readyState?.realtime ?? null} photoDrafts={photoDrafts}
         commandDrafts={commandDrafts} onReset={onReset} onClose={onClose} />
       <Text style={styles.sheetContext}>{session.contextLabel}</Text>

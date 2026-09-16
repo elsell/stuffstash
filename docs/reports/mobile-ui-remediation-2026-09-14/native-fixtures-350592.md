@@ -89,3 +89,12 @@ the44-point control. Native scrolling/detent behavior must resolve that constrai
 or the full-frame requirement will still fail. The context line also visually
 overlaps the header. This is a remaining sheet-layout investigation, not evidence
 that correcting the test alone fixes the conversation experience.
+
+The subsequent M216 product candidate changes initial presentation to the existing
+larger detent and includes the body's top safe area. Both detents remain available;
+the footer still exclusively owns bottom clearance. The native entry journey now
+requires the context line below the header before location interaction. The
+retained capture contradicts that assertion, but no new native run has executed
+it yet. Twenty relevant source tests plus TypeScript/structural checks pass on paul
+(`/tmp/voice-layout-validation.log`); critic found no source blocker. Extra inset
+spacing, medium/expanded behavior and phone/tablet return still need native review.

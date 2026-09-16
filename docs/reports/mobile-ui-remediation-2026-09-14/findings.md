@@ -2971,3 +2971,13 @@ VoiceNativeSheetOptions. Acceptance must show context below the header and allow
 complete review/location editing with reachable approval controls on entry,
 scrolling, expansion and navigation return. Production correction remains open;
 see native-fixtures-350592.md and its retained iPad screenshot.
+
+Candidate: the shared production/fixture sheet now opens at its existing larger
+detent, retaining both detents for user resizing. Its body respects the top safe
+area; footer bottom/keyboard ownership is unchanged. The native journey now checks
+the full context line below the header before exercising location editing.
+The recorded hierarchy supplies failing geometry (context625.5 versus header
+bottom677.5); the new assertion has not yet executed. Twenty related tests,
+TypeScript and mobile structural checks pass on paul. Critic found no source
+blocker. Phone/iPad native entry, spacing, resize and navigation remain required;
+M216 is not closed.

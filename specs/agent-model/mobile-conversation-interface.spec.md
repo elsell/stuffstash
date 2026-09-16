@@ -51,6 +51,18 @@ The conversation list has a bounded, flexible viewport between the fixed header
 and composer; long answers and result rails remain reachable by scrolling.
 Only the viewport owns vertical scrolling. Response text beside an icon gets its
 width from that row, without imposing vertical growth on text used in bubbles.
+
+The conversation sheet opens at its existing larger native detent, retaining the
+smaller detent for user resizing. Conversation history, proposal editing and fixed
+decision controls need usable space immediately; do not start them in the former
+compact voice-only presentation. The sheet body owns native top/left/right safe
+areas so its context line and review content cannot begin beneath navigation
+chrome. The existing footer continues to own bottom/keyboard clearance; do not
+double-apply bottom insets. Opening, resize, keyboard and location-picker return
+must preserve drafts and allow every review control to be reached.
+This starting-size choice follows observed iPad review crowding (M216), rather
+than an Apple-mandated detent fraction. Retain native sheet gestures and dismissal:
+https://developer.apple.com/design/human-interface-guidelines/sheets
 User messages link only asset names actually mentioned, without adding answer
 result buttons to the user's bubble. Assistant messages retain fallback controls
 for ambiguous or otherwise unplaced resolved references.
