@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest full source checkpoint (c31199a3): **1,910 tests across298 files**, TypeScript
+Latest full source checkpoint (a46d7bb3): **1,911 tests across299 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
@@ -24,8 +24,8 @@ Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes
 iPad onboarding passes3/3; phone help activation fails (M240). See
 [native phone findings](native-phone-351121.md) and
 [native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
-active and must finish undisturbed. Its iPad onboarding job passes3/3 with
-[inspected keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
+active and must finish undisturbed. Both onboarding jobs pass their applicable cases with
+[inspected help, keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
 c196d527 await native execution: bounded exact Add-tag observation and a managed
 search/header-action coexistence comparison. Neither is production acceptance.
 M242 inbox ownership and M243/M244 Android menu corrections have source checks and

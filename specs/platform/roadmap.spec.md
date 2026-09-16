@@ -464,3 +464,15 @@ no production search workaround is inferred. Continue native
 normal-size acceptance before enlarged text, then release the complete reviewed
 batch with the explicit TestFlight notes section and Apple readback. The full audit
 and release gate remain open.
+
+
+September16 follow-up: a46d7bb3 fixes M245 retained Android color gestures,
+accessibility adjustments and +/- callbacks targeting obsolete state. Mounted RED
+regressions,20 focused tests, TypeScript/structural checks, critic review and native
+Android drag/adjust/Cancel smoke checks complete. Full mobile suite now passes1,911
+tests/299 files on paul;915 tracked mobile/client files match the current source
+manifest. Log: `/tmp/mobile-audit-a46d7bb3-full.log`. Both onboarding jobs in
+351214 pass their applicable cases with captures inspected. The two fixture jobs
+remain active; that older native source does not include the latest managed-search
+comparison, exact Add-tag wait or M245. Preserve normal-size-first sequencing and
+native acceptance before release; the comprehensive goal remains incomplete.
