@@ -472,8 +472,7 @@ regressions,20 focused tests, TypeScript/structural checks, critic review and na
 Android drag/adjust/Cancel smoke checks complete. Full mobile suite now passes1,911
 tests/299 files on paul;915 tracked mobile/client files match the current source
 manifest. Log: `/tmp/mobile-audit-a46d7bb3-full.log`. Both onboarding jobs in
-351214 pass their applicable cases with captures inspected. Phone fixtures subsequently finish67/85 with18 failures; iPad fixtures
-remain active; that older native source does not include the latest managed-search
+351214 pass their applicable cases with captures inspected. Phone fixtures subsequently finish67/85 with18 failures; iPad logs79/85, but the90-minute budget cancels result finalization and prevents artifact retention; that older native source does not include the latest managed-search
 comparison, exact Add-tag wait or M245. Preserve normal-size-first sequencing and
 native acceptance before release; the comprehensive goal remains incomplete.
 
@@ -486,3 +485,8 @@ inbox failure to an AX-glyph size assumption. The next native candidates use
 geometric scrolling and real delivered-target taps; neither is yet accepted.
 Sharing recovery passes on phone; ordinary color opening, preconfigured Place
 search and controlled-input diagnostics remain unresolved.
+
+Run35130374705 at0586f845 is now active; preserve its original execution. Future
+full audit jobs receive120 minutes after the confirmed351214 evidence-loss timeout.
+The iPad result is log-only, with no visual acceptance claim. Remote YAML parsing
+and critic review pass; result export under the revised budget remains to verify.

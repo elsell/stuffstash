@@ -520,3 +520,16 @@ from delivered hit regions. A24-point icon frame alone neither proves nor dispro
 a44-point target. Verify center, four edges and four corners at21-point offsets,
 with each real tap producing the intended read-state transition and retaining
 the same row. Preserve the full inbox read/unread/navigation workflow separately.
+
+
+### Native audit execution budget
+
+The full iOS audit job allows120 minutes for dependency setup, compilation,
+interaction tests, result-bundle finalization and evidence export. Run35121454700
+finished85 iPad tests after roughly91 minutes of total job time but exceeded the
+former90-minute limit before the result bundle finalized; its screenshot artifact
+was lost. This observed failure justifies the larger bounded budget. Keep all
+assertions and failure reporting; a longer job budget is not a test pass. Active
+runs retain their original configuration and must not be cancelled or restarted
+solely to adopt this change. Check future runs for completed result export and
+uploaded evidence as well as test totals.
