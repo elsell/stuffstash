@@ -101,3 +101,10 @@ underlines words. It is not proof that these traits caused the observed missing
 characters. The existing unchanged native exact-email assertion remains the gate.
 All22 Sharing behavior tests, TypeScript and mobile structural checks pass on paul;
 critic found no blocker. Logs: `/tmp/sharing-email-traits-{test,check,structural}.log`.
+
+Settings dirty-Back follow-up: the inspected final capture shows Name focused and
+the native keyboard visibly populated; hierarchy also contains keyboard keys with
+nonzero frames. Its readiness assertion nevertheless failed before typing. Final
+evidence is later than the observation window and does not prove an interactive
+keyboard within that window. Retain this as an unresolved observation, not a
+confirmed missing keyboard or passing dirty-draft journey.
