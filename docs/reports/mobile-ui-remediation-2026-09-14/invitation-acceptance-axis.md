@@ -81,3 +81,25 @@ Native Swift compilation, rendering and interaction are pending the next full ru
 This adds coverage, not a native pass. External link intake, real authentication,
 authorization, pending-operation timing and account-switch/start-over execution
 remain separate checks.
+
+## Android acceptance and opening recovery
+
+September16, Android16 Pixel6, normal text/light appearance, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+entry shows the long inventory name, Editor access, expiry and reachable Join,
+Sign out and start over, and Not now commands. Not now positively returns to the
+audit index before any acceptance. Reopening and joining displays You’re in and
+Open inventory. The first open fails independently of acceptance; the screen
+[explicitly retains access and offers Open inventory again](evidence/android-invitation-open-recovery.png).
+The long name, explanatory failure text and retry button fit without truncation.
+Retry positively displays the fixture’s “Opened invitation inventory; accepted
+once” result, proving the selected inventory and one acceptance command in this
+isolated journey. It is not evidence of a production inventory dashboard transition.
+
+No invitation was sent and no server authorization changed. Invalid, expired,
+wrong-account, offline and denied invitations, sign-out/start-over, real deep-link
+handoff, TalkBack and enlarged text remain outside this native sample. No
+implementation changed in this follow-up.
+
+Evidence: `/tmp/android-invitation-{entry,dismissed,accepted,error,opened}.xml`,
+`/tmp/android-invitation-{entry,accepted,error}.png`.
