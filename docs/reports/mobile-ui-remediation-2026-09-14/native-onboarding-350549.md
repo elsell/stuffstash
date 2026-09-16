@@ -25,3 +25,22 @@ compilation/rerun remain pending. Do not extrapolate this observation to differe
 reordered React Native fields or call address entry fixed from artifacts alone.
 Earlier onboarding passes do not certify this newer source. Other jobs in this
 run remain active and must not be restarted.
+
+## Phone onboarding result
+
+Job104663309509 failed its applicable connection/help journey; two iPad-only cases
+were skipped. Address equality passed. The five-second keyboard-disappearance
+predicate after the margin drag timed out. Artifact10430568792's
+[final screenshot](phone-onboarding-dismissed-350549.png) and hierarchy show the
+keyboard absent with the full address retained. This later state does not convert
+the deadline failure into a pass.
+
+The log spends over a minute repeatedly resolving scroll bounds before the drag
+(67.91s,93.63s,125.14s; gesture139.51s). The candidate reads each required frame
+once per gesture and retains the same coordinates, containment assertion,
+keyboard deadline and subsequent checks. Structural check and critic review pass;
+native rerun remains pending. No keyboard-dismissal production fix is inferred.
+
+Focused text-entry run35056372549 is independently active atfdbf30bf, jobs
+104667325335(phone) and104667325488(iPad). It includes the default native assisted
+comparison but not onboarding; the full run350549 fixture jobs remain untouched.

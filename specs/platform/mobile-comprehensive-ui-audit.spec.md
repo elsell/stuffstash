@@ -1374,6 +1374,13 @@ with focus retained; typeText returning is not sufficient completion evidence.
 Do not retry typing, substitute paced injection, accept substrings or suppress a
 timeout. Capture the resulting state whether the predicate succeeds or fails.
 
+The onboarding dismissal gesture must read each required frame once per gesture
+and use those local bounds for its origin, containment assertion and destination.
+Repeated XCUI frame resolution can stall for tens of seconds on the retained
+350549 phone run. Keep the gesture coordinates, keyboard-disappearance deadline
+and following action/draft assertions unchanged; do not cache across gestures or
+silently treat delayed teardown screenshots as passing acceptance.
+
 The native audit must compare the same ordinary text with the default keyboard:
 uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
 and uncontrolled without the app keyboard accessory. Retain the baseline and exact

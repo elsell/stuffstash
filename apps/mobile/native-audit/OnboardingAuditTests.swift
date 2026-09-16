@@ -95,13 +95,17 @@ final class OnboardingAuditTests: XCTestCase {
     let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
     let scroll = app.scrollViews.firstMatch
     XCTAssertTrue(scroll.exists)
-    let startPoint = CGPoint(x: formColumnDrag ? address.frame.midX : scroll.frame.minX + 8, y: min(scroll.frame.maxY, app.keyboards.firstMatch.frame.minY) - 80)
-    XCTAssertTrue(scroll.frame.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
+    // Resolve each frame once: repeated accessibility snapshots can stall on CI.
+    let scrollBounds = scroll.frame
+    let keyboardBounds = app.keyboards.firstMatch.frame
+    let applicationBounds = app.frame
+    let startPoint = CGPoint(x: formColumnDrag ? address.frame.midX : scrollBounds.minX + 8, y: min(scrollBounds.maxY, keyboardBounds.minY) - 80)
+    XCTAssertTrue(scrollBounds.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
     if formColumnDrag {
       XCTAssertGreaterThan(startPoint.y, app.buttons["Connect and sign in"].frame.maxY, "Comparison drag must begin in blank content, not on a command")
     }
     let start = origin.withOffset(CGVector(dx: startPoint.x, dy: startPoint.y))
-    let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(app.frame.maxY - 24, startPoint.y + 300)))
+    let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(applicationBounds.maxY - 24, startPoint.y + 300)))
     start.press(forDuration: 0.1, thenDragTo: end)
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]
