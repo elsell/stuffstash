@@ -84,3 +84,20 @@ positively returns with Photos remaining:1, Removal attempts:0 and Back to audit
 menu. Evidence: `/tmp/android-photo-fixed{,-retry,-closed}.xml` and
 `/tmp/android-photo-fixed.png`. This confirms the Android unavailable-asset sample;
 iOS, draft-photo native acceptance, zoom chrome restoration and TalkBack remain open.
+
+### Asset removal consumer follow-up
+
+On the same426c83b8 Android candidate, Remove opens the native confirmation. Accepting
+produces the fixture's delayed rejection and [native acknowledgment above the
+viewer](evidence/android-photo-remove-recovery.png). OK returns to the viewer;
+footer Close positively returns with Removal attempts:1 and Photos remaining:1.
+This confirms reachable error recovery and retained media in the asset consumer,
+not real deletion or pending-interaction protection. Evidence:
+`/tmp/android-photo-remov{al-entry,e-confirm,e-error,e-retained}.xml` and
+`/tmp/android-photo-remove-error.png`.
+
+The existing Audit draft photos fixture renders VoicePlanPhotoDraftStrip and does
+not open DraftPhotoPreviewModal. It must not be counted as native acceptance for
+that full-screen consumer. AddAssetFixture currently returns no selected photos;
+controlled photo selection needs extending before native preview/paging/Close
+acceptance can be claimed. Its8 mounted draft-preview cases remain distinct.
