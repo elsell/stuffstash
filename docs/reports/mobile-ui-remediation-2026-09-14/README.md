@@ -32,8 +32,9 @@ Android runtime remains unavailable. No local builds/tests, per session constrai
 
 The [350420 iPad onboarding inspection](native-onboarding-350420.md) records a
 pre-typing readiness timeout despite a visible keyboard in the final capture.
-The candidate narrows observation to an actual URL-keyboard key; native validation
-remains pending. The fixture jobs from this run are still active.
+The follow-up [350465 onboarding run](native-onboarding-350465.md) passes its
+phone case (two device-inapplicable skips) and all three iPad cases. The 350420
+fixture jobs are complete; see `native-phone-350420.md` for failures and limits.
 
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
@@ -81,8 +82,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise573
-pending,2,120 source-reviewed,494 finding,23 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise480
+pending,2,213 source-reviewed,494 finding,23 runtime-partial and198 not-applicable.
 
 [Retained customization completion](retained-completion-axis.md) and Home's
 checked-out Return entry now have source follow-ups across24 axes. Their combined
