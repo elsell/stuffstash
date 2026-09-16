@@ -1924,8 +1924,11 @@ final class FixtureAuditTests: XCTestCase {
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     XCTAssertTrue(picker.isHittable)
-    XCTAssertGreaterThanOrEqual(picker.frame.width, 44)
-    XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+    // The system well's AX frame is smaller than its delivered touch region.
+    // testColorWellDeliveredTouchRegion independently probes the surrounding area.
+    XCTAssertGreaterThan(picker.frame.width, 0)
+    XCTAssertGreaterThan(picker.frame.height, 0)
+    XCTAssertTrue(app.frame.contains(picker.frame), "The complete visible well must remain onscreen")
     XCTAssertLessThanOrEqual(picker.frame.width, picker.frame.height + 1,
       "The accessible target must be the well, not a wide inactive label row")
     picker.tap()

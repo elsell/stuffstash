@@ -1329,10 +1329,15 @@ assertions; a locator correction must not remove the behavior being verified.
 
 The compact iOS tag color well must retain a44-point minimum actionable target.
 Use the platform's larger control size and minimum frame constraints rather than
-scaling its drawing or widening an inactive label. Keep native target-size and
-center-activation assertions; if the framework does not honor this sizing, record
-the failed runtime evidence and investigate the adapter rather than certifying
-the React wrapper's dimensions.
+scaling its drawing or widening an inactive label. Verify touch delivery independently
+of the accessibility frame: the system color well exposes28/36-point AX bounds
+while run350695 opens and dismisses it from all nine center/edge/corner probes
+on both devices. Retain nonempty, onscreen, compact AX bounds and ordinary activation
+checks, plus all nine delivered-touch probes. Record the smaller AX frames rather
+than failing touch acceptance solely from their size. Sampled probes do not prove
+every point in a44-point square, VoiceOver operation, or color editing; retain
+those evidence limits and the earlier activation failures. React wrapper dimensions
+alone never establish native touch acceptance.
 
 ### Focused native diagnosis
 

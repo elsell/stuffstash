@@ -84,3 +84,13 @@ failed opening/dismissal captures the state and stops that journey. The focused
 color-picker workflow includes this diagnostic. Remote structural validation and
 critic review pass; execution on phone/iPad is pending. This is evidence-gathering
 for M51, not a production correction or a replacement for color-editing acceptance.
+
+Run350695 passes all nine delivered-touch probes on both devices, plus ordinary
+opening/clear and single-name checks. AX frames remain28pt on phone and36pt on
+iPad. Following review, the separate opening test now requires nonempty, onscreen,
+compact AX bounds instead of equating that frame with the effective touch region.
+All nine touch probes remain required. This corrects an invalid measurement proxy;
+it does not retroactively mark the failed runs green or prove every point in a
+44-point region. Remote structural checks pass; the revised Swift assertion awaits
+native execution. VoiceOver, color-editing acceptance and inconsistent historical
+activation remain open.
