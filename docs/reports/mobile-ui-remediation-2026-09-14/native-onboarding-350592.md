@@ -87,3 +87,11 @@ execution remain pending; remote structural checks pass.
 Selected evidence is retained under `/tmp/onboarding350950-selected/` (manifest,
 text attachments and final screenshot), with the96MB original ZIP at
 `/tmp/native350950-onboarding-phone.zip`; no full xcresult extraction was needed.
+# Run351041 phone follow-up
+
+Job104821415253 completed successfully on September16 at source14d7e06f.
+`testConnectionHelpAndKeyboardKeepActionsReachable` passed in51.582seconds;
+the two iPad-only/landscape cases were skipped by the existing device applicability
+guards. This is one passing phone journey, not three verified interactions or proof
+that earlier intermittent text-entry failures are resolved. Full log retained at
+`/tmp/native351041-onboarding-phone.log`. Other jobs in this run remain separate.

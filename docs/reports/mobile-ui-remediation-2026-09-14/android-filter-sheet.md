@@ -1,5 +1,22 @@
 # Android filter sheet inspection (in progress)
 
+## Retained candidate search-clear follow-up
+
+On September16, APK `d9b1a7b5196c970f45131b6d960adea3ae02bc46ea5f4d772dff39ec8a00bb72`
+on the same normal-size emulator opens Browse Tags, accepts `Tools`, and exposes
+the matching choice with Show results/Back above Gboard. Selecting Tools, deleting
+the five search characters, then choosing Back restores the overview with
+`1 selected`. The empty search field stayed focused and the full tag list returned.
+Hierarchies on paul: `/tmp/filter-{typed,clear,overview}.xml`; inspected screenshot
+`/tmp/filter-current.png` on both hosts. This adds search-clear/draft-retention
+evidence, not dark appearance, TalkBack or production query acceptance.
+
+Cold-link Apply was not accepted by this fixture's `router.back()` callback because
+there was no previous route. The production Browse Filters route instead verifies
+the inventory scope and calls `router.dismissTo('/search', params)`; this fixture
+result does not establish a production navigation defect. Warm-entry Apply retains
+the earlier explicit selected-tag result evidence below.
+
 Android16 Pixel6 emulator on paul, normal text, light appearance. The initial
 Browse filter sheet at detent0.7 lacks its title and both footer commands;
 expanding to1.0 reveals Show results/Cancel. The ADB assertion that Show results

@@ -1,7 +1,27 @@
 # Photo viewer source review
 
-Reviewed at82669f4b, including the installed, pinned react-native-image-viewing0.2.2
-implementation. This is source evidence; the new photo recovery fixture has not run.
+## Android pan and gesture dismissal follow-up
+
+On September 16, the retained APK SHA-256
+`d9b1a7b5196c970f45131b6d960adea3ae02bc46ea5f4d772dff39ec8a00bb72`
+ran on paul's Pixel 6/API 36 emulator at normal font scale. In the synthetic asset
+photo recovery fixture, double-tap enlarged the image; a diagonal drag changed its
+visible crop while the footer remained available. A second double-tap restored the
+fitted image. Captures `/tmp/asset-pan-{before,after,fit}.png` on both hosts record
+these states.
+
+Two downward gestures and a shorter upward gesture did not dismiss the viewer.
+A longer upward gesture from (540,1900) to (540,200), over 250 ms, did dismiss it.
+The resulting hierarchy positively showed Back to audit menu, Removal attempts: 0,
+and Photos remaining: 1. Evidence: `/tmp/asset-pan-swipe.png` on both hosts and
+`/tmp/asset-pan-close.xml` on paul. This establishes one successful upward dismissal,
+not bidirectional or short-swipe acceptance. Pinch, assistive operation and iOS
+gesture acceptance remain open. No live media or removal service was used.
+
+The original source review below was made at82669f4b, including the installed,
+pinned react-native-image-viewing0.2.2 implementation, before the photo recovery
+fixture ran. Subsequent sections record fixes and Android runtime evidence;
+the original table is not the current verification status.
 
 | Axis | Evidence and remaining acceptance |
 | --- | --- |

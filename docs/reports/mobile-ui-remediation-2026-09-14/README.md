@@ -2,14 +2,19 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint `460007a9`: **1,896 tests across295 files**, TypeScript
-and mobile structural checks pass on paul. Android Add-photo native checks verify
+Latest source checkpoint `a66201e5`: **1,898 tests across296 files**, TypeScript
+and mobile structural checks pass on paul. The subsequent `88fe7499` native-test
+selector correction passes fixture preparation and structural checks; its native
+rerun is pending. Android Add-photo native checks verify
 zoom retention across elapsed time and warm return, control hide/reveal, paging
 and Close without losing draft photos; see [photo viewer evidence](photo-viewer-axis.md).
-This is partial runtime acceptance. iOS run350950 remains active on an older
-revision; latest source is pending in35101315533. Release remains gated on native
-review. Disk cleanup retains selected evidence and active build environments;
-current free space is11GB local,5.5GB on paul root and18GB in paul's `/tmp`.
+This is partial runtime acceptance. Completed run350950 records phone65/83 and
+iPad73/83 fixture passes; see the target reports for failures and evidence limits.
+Run35104157358 at14d7e06f is active: its phone onboarding journey passes, with two
+device-inapplicable skips. The latest source is queued in35105369296. Release
+remains gated on native review. Disk cleanup preserves selected evidence and active
+build environments; free space is11GB local,5.7GB on paul root and15GB in paul's
+`/tmp` after removing a verified duplicate Android installer extraction.
 
 Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
 and mobile structural checks on paul. Tracked mobile source/config/native fixture
@@ -36,6 +41,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
 - `native-phone-350950.md`: phone65/83; Add and notice journeys pass, bottom Place search and missing Sharing characters remain.
+- `native-ipad-350950.md`: complete iPad73/83 log despite cancelled job status; ordinary color activation, text entry and focused search clear remain unresolved.
 - `native-ipad-350806.md`: iPad74/81; entry context now clears navigation, focused location-search clear remains under investigation.
 - `native-phone-350806.md`: phone61/81 with inspected passing Conversation/production search and retained color/preconfigured-search failures.
 - `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
