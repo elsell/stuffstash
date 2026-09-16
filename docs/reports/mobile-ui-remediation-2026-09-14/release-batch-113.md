@@ -101,3 +101,9 @@ The other CI jobs (iOS dependency lock, self-host runtime, web release image,
 conversation browser journey and search benchmark) also succeed. Native workflow
 acceptance remains separate; this does not clear the filter failures. Full required
 check log: `/tmp/ci351595-required.log`.
+
+Current correction checkpoint: CI35162604544 succeeds atc40e7965, including the
+calendar dismissal test correction and retained audit reports. Focused native
+run35162612814 is queued behind35159542174; full run35162604601 is queued behind
+35156794515. Production remains identical to the frozen cutoff. This CI result
+does not establish Swift test compilation or clear outstanding native gates.
