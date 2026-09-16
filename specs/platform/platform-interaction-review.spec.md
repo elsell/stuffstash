@@ -217,3 +217,10 @@ and frames. Debug hierarchies truncate values and may contain only a failed quer
 chain. The later screenshot in run350950 shows the full address despite a failed
 lookup; it does not prove the value or query state within the acceptance interval.
 Diagnostic snapshot failure must be recorded, never converted into a pass.
+
+The iOS Add-preview acceptance journey must positively identify the surviving
+filename and thumbnail count after removal, close and reopen the preview, then
+remove the final photo and assert automatic return to Add with its empty photo
+chooser. Dismiss Add to the audit root without saving. Run it in both the complete
+fixture suite and the focused Add-draft suite; recording the scenario is not a
+native pass.

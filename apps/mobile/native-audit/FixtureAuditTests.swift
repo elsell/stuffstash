@@ -1379,6 +1379,66 @@ final class FixtureAuditTests: XCTestCase {
     verifyAddDraft(route: "audit-add-header")
   }
 
+  func testAddPhotoPreviewPagingAndDraftRemoval() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let add = app.buttons["Add photos"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(add.isHittable)
+    add.tap()
+    let library = app.buttons["Choose from Library"].firstMatch
+    XCTAssertTrue(library.waitForExistence(timeout: 5))
+    library.tap()
+    let secondThumbnail = app.buttons["Remove photo 2"].firstMatch
+    XCTAssertTrue(secondThumbnail.waitForExistence(timeout: 5))
+    func openFirstPhoto(count: Int) {
+      let preview = app.descendants(matching: .any).matching(
+        NSPredicate(format: "value == %@", "1 of \(count)")).firstMatch
+      XCTAssertTrue(preview.waitForExistence(timeout: 5))
+      XCTAssertTrue(preview.isHittable)
+      preview.tap()
+      XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
+      XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].exists)
+    }
+    func confirmRemoval() {
+      let remove = app.buttons["Remove photo"]
+      XCTAssertTrue(remove.isHittable)
+      remove.tap()
+      XCTAssertTrue(app.alerts["Remove photo?"].waitForExistence(timeout: 5))
+    }
+    openFirstPhoto(count: 2)
+    let next = app.buttons["Next photo"]
+    XCTAssertTrue(next.isHittable)
+    next.tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].waitForExistence(timeout: 5))
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Cancel"].tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].exists)
+    XCTAssertTrue(app.staticTexts["2 of 2"].exists)
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Remove"].tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["1 of 1"].exists)
+    XCTAssertFalse(next.exists)
+    capture("add-photo-preview-surviving-draft")
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.buttons["Remove photo 1"].waitForExistence(timeout: 5))
+    XCTAssertFalse(secondThumbnail.exists)
+    openFirstPhoto(count: 1)
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Remove"].tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable)
+    XCTAssertTrue(app.textFields["Asset name"].exists)
+    XCTAssertFalse(app.buttons["Remove photo 1"].exists)
+    capture("add-photo-last-removal-returns-to-draft")
+    app.buttons["Close Add"].tap()
+    XCTAssertTrue(app.textFields["Asset name"].waitForNonExistence(timeout: 5))
+    let root = app.buttons["Audit Browse filters"]
+    XCTAssertTrue(root.waitForExistence(timeout: 5))
+    XCTAssertTrue(root.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
+  }
+
   private func openFixtureURL(_ route: String) -> Bool {
     if #available(iOS 16.4, *) {
       app.open(URL(string: "stuffstash:///\(route)")!)

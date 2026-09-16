@@ -131,3 +131,12 @@ The positive destination is Add item, with Add photos and Asset name present and
 no Remove photo1 thumbnail command. Close Add then returns to the audit root. No
 asset was saved. Evidence: `/tmp/android-add-last-{entry,confirm,removed,close}.xml`.
 This closes the last-photo runtime gap for this Android sample, not zoom or iOS.
+
+The matching iOS acceptance scenario now enters through Add's library chooser,
+checks both filenames during paging, cancels then accepts removal, closes/reopens
+the surviving thumbnail, and removes the last photo. Final dismissal requires
+Add's field to disappear, the root menu to be hittable, and the app to remain
+foreground; a background menu's mere existence cannot pass. The scenario is
+included in the focused Add-draft suite as well as the complete suite. Remote
+structural validation and critic review passed; Swift compilation and native
+execution remain pending, so this adds coverage, not iOS acceptance evidence.

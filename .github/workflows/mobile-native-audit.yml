@@ -108,6 +108,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftInNavigationStack'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
               )
               ;;
