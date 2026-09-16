@@ -46,8 +46,9 @@ are intentional: route coverage and interaction coverage are independent.
 Runtime availability: macOS GitHub runners build and launch the genuine application
 on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`
 for inspected screenshots and the distinction between procedure and app findings.
-An isolated Android16 emulator now boots on `paul`; the synthetic app build is
-in progress. Android UI acceptance remains unverified; see
+An isolated Android16 emulator now runs the synthetic app on `paul`.
+[Initial Home icon findings and verification](android-native-icons.md) record the
+first native Android checks; broader Android acceptance remains pending. See also
 [runtime preparation](android-runtime-preparation.md). No local builds/tests,
 per session constraint.
 
@@ -109,7 +110,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise zero pending
-source-review cells,2,652 source-reviewed,533 finding,25 runtime-partial and198
+source-review cells,2,650 source-reviewed,535 finding,25 runtime-partial and198
 not-applicable. This completes source inventory coverage, not native acceptance or
 finding remediation. The remaining route/server-entry/notice reviews are linked
 in their surface reports; M212 adds direct-entry checkout-history exit recovery.

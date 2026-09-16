@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -121,6 +122,18 @@ def main() -> int:
         return 1
 
     failed = False
+    for path in sorted(root.rglob("android-icons/*.xml")):
+        try:
+            tree = ET.parse(path)
+            for element in tree.iter():
+                for attribute in element.attrib:
+                    name = attribute.rsplit("}", 1)[-1]
+                    if name.startswith("stroke") or name == "fillType":
+                        failed = True
+                        print(f"{path}: unsupported Android vector attribute {name}; use filled contours supported by the pinned Expo UI loader", file=sys.stderr)
+        except ET.ParseError as error:
+            failed = True
+            print(f"{path}: invalid Android vector XML: {error}", file=sys.stderr)
     for path in source_files(root):
         for line, reason in violations(path):
             failed = True

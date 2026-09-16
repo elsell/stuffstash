@@ -1469,6 +1469,26 @@ filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
 collection may exercise the shared screen with real query/policy adapters and a
 controlled repository; this is not production authorization or pagination evidence.
 
+### Android native header and vector compatibility
+
+Android header actions retain native Compose IconButton controls, accessible names,
+48dp hosts and the requested Add/Notifications/Profile order. Only a positive unread
+count may instantiate BadgedBox; its native fallback otherwise draws an unintended
+dot. Zero/absent counts must render the icon directly.
+
+The pinned Expo UI55.0.17 XML vector loader supports pathData and fillColor but
+ignores stroke properties and fillType. Shared Android vectors must therefore use
+filled contours supported by this adapter. Guard these assets mechanically against
+unsupported stroke/fillType attributes, with rejecting and accepting fixtures.
+The mobile structural pre-commit hook also runs for XML asset edits.
+Review every consumer (headers, conversation commands, notification read state,
+filter/sort). Native acceptance requires recognizable icons, correct badges and
+working actions on normal-size Android, not merely a successful APK build.
+Use Google's filled Material24px icon contours from reviewed repository revision
+`40a7a292a79d9394157e1ea24f83d52d5e17c556`; retain source mapping and Apache2.0
+license alongside the local vectors. Convert only opaque path contours to Android
+XML, omitting SVG canvas paths marked fill=none; no runtime asset download.
+
 ### Notice geometry diagnostics
 
 Notice placement acceptance must retain its full-rectangle containment requirement.

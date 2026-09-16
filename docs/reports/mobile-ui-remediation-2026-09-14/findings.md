@@ -2981,3 +2981,19 @@ bottom677.5); the new assertion has not yet executed. Twenty related tests,
 TypeScript and mobile structural checks pass on paul. Critic found no source
 blocker. Phone/iPad native entry, spacing, resize and navigation remain required;
 M216 is not closed.
+
+### M217 — Android vectors depend on unsupported strokes
+
+P1 runtime/source-confirmed on Android16, initial APK db8d2bb8. Add is invisible,
+Profile becomes a filled disk, and thirteen shared assets use strokes ignored by
+Expo UI55.0.17. Filled Material contours correct the Home symbols on the patched
+native APK; Add/Profile center taps and system Back pass. The new structural guard
+rejects unsupported vector attributes. Remaining consumer/adaptation acceptance is
+tracked in [Android evidence](android-native-icons.md).
+
+### M218 — Android unbadged actions show notification dots
+
+P2 runtime/source-confirmed on the same APK. The unconditional BadgedBox defaults
+to a red dot when no badge slot exists. It now wraps only positive counts. Native
+Home shows count2 only on Notifications and no dots on Add/Profile. Zero-count
+transition and wider Android acceptance remain pending; see the same evidence.

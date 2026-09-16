@@ -61,9 +61,9 @@ bars; remote capture is `~/.cache/stuffstash-android-audit/android16-boot.png`.
 Approximately10GiB disk remains after removing the verified archive copies while
 retaining their checksum manifests and installed contents.
 
-No Android app has been built or exercised. The existing untracked
-`apps/mobile/android/` remains untouched. Android UI acceptance remains an explicit
-gap, not a pass inferred from emulator boot.
+At this boot checkpoint no Android app had been exercised. The existing untracked
+`apps/mobile/android/` remains untouched. Subsequent build and first interaction
+evidence is recorded below and in [native icon inspection](android-native-icons.md).
 
 The fixture installer now supports an explicitly marked disposable source archive
 outside GitHub Actions. Root identity, marker contents, Git ancestors, external
@@ -85,9 +85,15 @@ Gradle9. The captured stack trace matches the
 [upstream React Native issue](https://github.com/react/react-native/issues/55781).
 Installed Temurin17.0.16+8 from its numbered Linux x64 HotSpot archive after checking
 published SHA-256 `166774efcf0f722f2ee18eba0039de2d685b350ee14d7b69e6f83437dafd2af1`.
-NDK27.1.12297006 installation also completed. The x86_64 build is now retrying with
+NDK27.1.12297006 installation also completed. The x86_64 build retried with
 explicit Java17 and automatic Java downloads disabled, with caches outside the
 archive. Its generated release variant uses the debug signing key;
 it is not a distributable release. Prebuild also warns that automatic Android
 appearance needs expo-system-ui; this needs runtime investigation before a finding
 is accepted or a dependency change proposed.
+
+That retry completed successfully in6m30s with793 tasks. Gradle installed pinned
+CMake3.22.1 required by native modules. Installation and cold launch succeeded;
+normal-size Home inspection found incompatible vector strokes and unintended
+default badges. The corrected APK built in53s and passed the recorded Home checks.
+See the linked inspection for exact APK digests and remaining acceptance limits.

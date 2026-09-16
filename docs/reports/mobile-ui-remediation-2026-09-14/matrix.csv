@@ -1568,7 +1568,7 @@ S066,Home / native action header,adaptation,Phone/tablet/window reflow,source-re
 S066,Home / native action header,typography,"Dynamic Type, wrapping and legibility",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,appearance,"Light/dark, contrast and materials",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,localization,"Locale, timezone, RTL and long strings",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
-S066,Home / native action header,imagery,"Icons, photos and missing media",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
+S066,Home / native action header,imagery,"Icons, photos and missing media",finding,home-header-axis.md; android-native-icons.md; Android16 normal-size Home correction verified; other consumers/adaptation pending,M217
 S066,Home / native action header,targets,Touch target size and reachability,source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,gestures,Gestures and explicit alternatives,source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,keyboard,"Keyboard, text entry and focus",not-applicable,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
@@ -1580,7 +1580,7 @@ S066,Home / native action header,loading,"Loading, background refresh and progre
 S066,Home / native action header,recovery,"Empty, error, denied and retry",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,editing,"Draft, save, cancel, undo and interruption",not-applicable,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,privacy,"Account scope, data use and permissions",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
-S066,Home / native action header,notifications,System notification entry and state,source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
+S066,Home / native action header,notifications,System notification entry and state,finding,home-header-axis.md; android-native-icons.md; Android16 normal-size Home correction verified; other consumers/adaptation pending,M218
 S066,Home / native action header,media,"Camera, library, files and audio",not-applicable,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S066,Home / native action header,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,home-header-axis.md; source 3d61163d; native three-action/scroll scenario missing,
 S067,Browse / list grid,task,Task clarity and platform-pattern fit,source-reviewed,; browse-route-axis.md source2f861b25 plus M185; native acceptance pending,
