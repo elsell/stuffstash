@@ -60,3 +60,13 @@ hierarchies and the result bundle. Full log: `/tmp/native350695-phone.log`.
   search is a bottom field, not the requested header button. The hierarchy places
   it at(33,803),336×38. This reproduces the placement problem despite configuring
   the header before presentation; retain that comparison as negative evidence.
+
+## Conversation follow-up candidate
+
+The iOS body now reserves `useHeaderHeight()` rather than relying on top safe-area
+padding, retaining side safe areas and the existing footer ownership. Android
+retains top safe-area handling. The existing failing native context assertion is
+unchanged and must rerun; this is not accepted from source alone. Nineteen focused
+tests, TypeScript and mobile structural checks pass on paul after correcting an
+initial hook-scope error caught by TypeScript and review. Validation log:
+`/tmp/voice-header-reservation-validation.log`.

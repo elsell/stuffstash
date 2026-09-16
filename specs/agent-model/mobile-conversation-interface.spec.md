@@ -55,9 +55,11 @@ width from that row, without imposing vertical growth on text used in bubbles.
 The conversation sheet opens at its existing larger native detent, retaining the
 smaller detent for user resizing. Conversation history, proposal editing and fixed
 decision controls need usable space immediately; do not start them in the former
-compact voice-only presentation. The sheet body owns native top/left/right safe
-areas so its context line and review content cannot begin beneath navigation
-chrome. The existing footer continues to own bottom/keyboard clearance; do not
+compact voice-only presentation. On iOS the sheet body reserves the current native
+navigation header height, and owns left/right safe areas. Top safe-area padding
+alone does not reserve the overlaid form-sheet header (observed in run350695).
+Do not combine a second top safe-area inset with that measured header reservation.
+Android retains native top safe-area handling. The existing footer continues to own bottom/keyboard clearance; do not
 double-apply bottom insets. Opening, resize, keyboard and location-picker return
 must preserve drafts and allow every review control to be reached.
 This starting-size choice follows observed iPad review crowding (M216), rather

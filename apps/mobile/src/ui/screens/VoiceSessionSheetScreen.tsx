@@ -11,6 +11,7 @@ import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, SendHorizontal } from 'lucide-react-native';
 import {
   ActivityIndicator,
@@ -232,6 +233,7 @@ function VoiceSessionSheet({
   readonly state: VoiceInteractionState;
 }) {
   const { history, scrollOffset, titleEditor, retryPreview, scopeIdentity } = useVoiceInteractionState();
+  const navigationHeaderHeight = useHeaderHeight();
   const conversationScroll = useRef<ScrollView>(null);
   const followingLatest = useRef(scrollOffset.current === 0);
   const palette = useAppearancePalette();
@@ -252,7 +254,8 @@ function VoiceSessionSheet({
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <SafeAreaView style={styles.sheet} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.sheet, { paddingTop: Platform.OS === 'ios' ? navigationHeaderHeight : 0 }]}
+      edges={Platform.OS === 'ios' ? ['left', 'right'] : ['top', 'left', 'right']}>
       <VoiceConversationHeader realtime={readyState?.realtime ?? null} photoDrafts={photoDrafts}
         commandDrafts={commandDrafts} onReset={onReset} onClose={onClose} />
       <Text style={styles.sheetContext}>{session.contextLabel}</Text>
