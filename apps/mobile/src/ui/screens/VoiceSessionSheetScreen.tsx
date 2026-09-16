@@ -3,6 +3,7 @@ import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
+import { VoicePlanNameEditor } from './VoicePlanNameEditor';
 import { useNewConversation } from './useNewConversation';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
@@ -560,49 +561,9 @@ function EditablePlanCommandFields({
 
   if (editing) {
     return (
-      <View style={styles.inlineNameEditor}>
-        <AppTextInput
-          accessibilityLabel="Proposed item name"
-          autoFocus
-          maxLength={200}
-          onChangeText={setValue}
-          onSubmitEditing={() => {
-            if (value.trim()) {
-              onChangeTitle(value.trim());
-              setEditing(false);
-            }
-          }}
-          returnKeyType="done"
-          selectTextOnFocus
-          style={styles.inlineNameInput}
-          value={value}
-        />
-        <Pressable
-          accessibilityLabel="Save proposed name"
-          accessibilityRole="button"
-          disabled={!value.trim()}
-          onPress={() => {
-            if (value.trim()) {
-              onChangeTitle(value.trim());
-              setEditing(false);
-            }
-          }}
-          style={styles.inlineEditorIconButton}
-        >
-          <Check color={palette.accentStrong} size={18} strokeWidth={2.6} />
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Cancel editing proposed name"
-          accessibilityRole="button"
-          onPress={() => {
-            setValue(title);
-            setEditing(false);
-          }}
-          style={styles.inlineEditorIconButton}
-        >
-          <X color={palette.textMuted} size={18} strokeWidth={2.4} />
-        </Pressable>
-      </View>
+      <VoicePlanNameEditor value={value} onChange={setValue}
+        onSave={name => { onChangeTitle(name); setEditing(false); }}
+        onCancel={() => setEditing(false)} />
     );
   }
 
@@ -1177,29 +1138,6 @@ function createStyles(colors: MobileColorPalette) {
   },
   editablePlanFields: {
     alignItems: 'stretch'
-  },
-  inlineEditorIconButton: {
-    alignItems: 'center',
-    height: 44,
-    justifyContent: 'center',
-    width: 36
-  },
-  inlineNameEditor: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 2
-  },
-  inlineNameInput: {
-    backgroundColor: colors.surface,
-    borderColor: colors.accent,
-    borderRadius: radius.sm,
-    borderWidth: 2,
-    color: colors.text,
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
   },
   parentOption: {
     alignItems: 'center',

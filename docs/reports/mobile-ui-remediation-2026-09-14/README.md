@@ -84,7 +84,9 @@ includes the visible pending name on approval and blocks blank names;52 focused
 tests and static checks pass. Critic found no implementation blocker, while noting
 that the new provider test does not render the actual proposal/failed-review UI.
 M174 tracks the custom destination panel and missing lookup recovery; M175 tracks
-the narrow custom inline name commands. Both remain to be corrected.
+the narrow custom inline name commands. M175 now uses native commands below a
+full-width field;46 focused tests and static checks pass, with critic review.
+Native acceptance and the M174 destination-panel correction remain open.
 
 [Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
 identifies capture starting after cancellation during native permission/preparation;

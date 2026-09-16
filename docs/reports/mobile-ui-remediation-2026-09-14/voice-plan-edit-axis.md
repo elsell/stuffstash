@@ -14,10 +14,10 @@ native keyboard, selection and approval geometry remain unverified.
 | Layout | Scrolling proposal plus native bottom decision controls. Parent panel competes for the same vertical area; geometry must be tested after M174. |
 | Adaptation | Flexible name text and wrapping descriptions; fixed inline command widths and parent header need native window checks. |
 | Typography | Plain native text/input, bounded200-character name. Long summaries, risks and names require native acceptance. |
-| Appearance | Native Approve/Cancel and staged-photo commands. Inline name Save/Cancel still use custom icon Pressables (M175). |
+| Appearance | Native Approve/Cancel and staged-photo commands. M175 candidate also uses native inline name Save/Cancel commands. |
 | Localization | Labels are English; name normalization preserves Unicode characters while collapsing whitespace. Long translations/RTL remain open. |
 | Imagery | Local photo previews retain original URIs; numbered remove commands. Symbols distinguish editing and destination selection. |
-| Targets | Inline name commands reserve36×44 points with no hitSlop (M175); native geometry unverified. |
+| Targets | M175 replaces36×44 custom name icons with shared native commands below the field; actual native geometry remains unverified. |
 | Gestures | Explicit edit, save, cancel and approve commands. No drag-only requirement. Parent rows currently use navigation chevrons for value selection (M174). |
 | Keyboard | Name autofocus/Done commits; keyboard avoidance wraps conversation. M173 includes the visible pending name on Approve. Parent search uses a custom text input (M174). |
 | Accessibility | Named edit/location/photo commands and disabled parent semantics. Parent state indication and inline name command geometry require corrections/acceptance. |
@@ -35,3 +35,8 @@ native keyboard, selection and approval geometry remain unverified.
 M173 has mounted provider/controller evidence for blank rejection, latest name,
 preserved placement/other edits and failed-submission draft retention. Source
 validation does not prove native action visibility, reading order or safe-area fit.
+
+M175 adds four mounted name editor cases (Save, Done, Cancel, blank). All46 focused
+editor/approval/presentation tests and static checks pass on paul; code critic
+review is complete. Name ownership remains above the sheet. Native acceptance
+and the M174 destination-selection correction remain open.

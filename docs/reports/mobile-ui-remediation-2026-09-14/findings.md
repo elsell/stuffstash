@@ -2491,4 +2491,11 @@ custom Pressables with36-point widths and44-point heights, with no hitSlop.
 Reuse native command controls and preserve explicit save/cancel semantics alongside
 M173 final approval. Source geometry is not a measured native hit-region result.
 Acceptance includes blank disabling, cancel restoring the committed name, Done,
-keyboard visibility and native targets at normal text size. Correction remains open.
+keyboard visibility and native targets at normal text size. The candidate extracts
+VoicePlanNameEditor with a full-width field and native Cancel/Save commands below.
+Save and keyboard Done share normalized nonblank validation; Cancel only closes
+the editor, preserving the committed draft. Four mounted callback cases and42
+related proposal checks pass on paul, with TypeScript and structural checks.
+Code critic found no blocker. The initial test failed because the extracted
+component did not yet exist; it is not a reproduction of native target geometry.
+Native keyboard/targets and parent integration acceptance remain pending.
