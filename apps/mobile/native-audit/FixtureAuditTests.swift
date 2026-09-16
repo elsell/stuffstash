@@ -1224,6 +1224,8 @@ final class FixtureAuditTests: XCTestCase {
     name.tap()
     waitForKeyboard()
     name.typeText("Tent")
+    let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
     XCTAssertEqual(name.value as? String, "Tent")
     dismissKeyboard()
     let save = app.buttons["Save item"].firstMatch

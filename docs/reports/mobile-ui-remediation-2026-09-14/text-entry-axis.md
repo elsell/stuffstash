@@ -190,3 +190,22 @@ and timezone choice. Full1,619-test validation passes; this does not establish
 caller debounce/request cancellation or native return behavior. Expiration filter
 selections now use the shared adapter; its results screen retains its separate
 debounced hook with M120 focus handling.
+
+### Focused Add run35060706395 — native tag adapter
+
+At f7b09835, phone completes2/4 and iPad3/4. Both stack and
+production-equivalent preconfigured-header Add recovery journeys pass; the older
+hidden-header diagnostic still fails before field readiness. The full tag
+disclosure/staging journey passes on iPad.
+
+Phone stops before reaching the tag field: the immediate asset-name assertion
+reads `T` after typing `Tent`. Its [final capture](evidence/phone-add-name-settled-350607.png)
+and inspected final hierarchy both show `Tent`. This supports delayed observation
+for this assertion, not an inference that all prior text failures were timing.
+The test now waits at most5 seconds for exact `Tent`, then retains the equality
+and all following draft/save checks. No paced typing, prefixes or disabled text
+assistance. Phone tag acceptance remains unverified until that journey completes.
+
+Phone job104685220242/artifact10433691877; iPad job104685220604/artifact10433966175.
+Mobile structural check passes on paul; Swift/native execution of the corrected
+assertion remains pending. Both original failures remain recorded.

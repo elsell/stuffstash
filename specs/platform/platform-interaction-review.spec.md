@@ -129,3 +129,11 @@ Both routes run the same search, result, clear, cancel and Back assertions; the
 production shared search adapter still supplies current handlers and query state.
 This comparison changes initial route configuration only. A passing comparison
 does not certify a production correction or justify weakening the original gate.
+
+Native text assertions may wait for an exact expected value when a recorded final
+capture and hierarchy establish delayed observation after the immediate read.
+For the Add tag journey's asset-name entry, run350607 records immediate `T` but
+final `Tent`. Use a bounded five-second exact-value expectation after ordinary
+unpaced typing; retain the final equality and subsequent draft/save assertions.
+Do not replace lost-character checks with prefixes, disable assistance, or treat
+the failed original journey as passed. The corrected journey requires a native run.
