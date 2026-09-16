@@ -237,6 +237,8 @@ export function InventorySharingScreen({
             key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
             autoCapitalize="none"
             autoComplete="email"
+            autoCorrect={false}
+            spellCheck={false}
             accessibilityLabel="Invitee email"
             keyboardType="email-address"
             editable={!working}

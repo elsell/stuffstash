@@ -1678,3 +1678,12 @@ same retry callback and unavailable-photo state. Use the existing safe-area-awar
 viewer toolbar as the single explicit Close affordance; suppress the image library's
 redundant default header, which overlaps Android status icons. Preserve swipe/system
 Back dismissal and removal/paging controls. Verify both asset and draft-photo consumers.
+
+### Invitation email keyboard semantics
+
+Sharing email entry uses the email keyboard and email autofill, without automatic
+capitalization, spelling correction or spell-check underlining. Email local parts
+are identifiers, not prose. Keep native draft ownership and successful-create/scope
+reset behavior. Run350950's unchanged exact-email native assertion fails visibly;
+changing keyboard traits is a candidate correction, not proof that missing typed
+characters are resolved. Preserve that native gate and submission/retry checks.

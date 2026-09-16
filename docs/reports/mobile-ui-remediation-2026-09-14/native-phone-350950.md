@@ -79,3 +79,25 @@ retire when `coreAsset.resourceKey` changes. The replacement handler's own remov
 and teardown are checked independently. Critic confirmed the scope correction;
 final combined source validation still passes1,897 tests/296 files, TypeScript
 and structural checks (`/tmp/asset-menu-final-{full,check,structural}.log`).
+
+### Follow-up classification and email traits
+
+The failed nested/footer sheet comparisons use intentionally retained View-wrapped
+ScrollView alternatives in `SheetLayoutFixture`, not production filters. This is
+the same container limitation documented in native-fixtures-350633.md; keep the
+failed counts but do not treat them as two new production regressions.
+
+The inspected expiration audit attachment says text may clip at **larger Dynamic
+Type sizes** and supplies no element. The normal-size screenshot does not establish
+that clipping. Keep this finding for the later enlarged-text pass; do not invent
+an affected label or waive the accessibility audit.
+Selected attachments: `/tmp/phone350950-expiration` on both hosts.
+
+Sharing now explicitly disables autocorrection and spelling underlines while
+retaining its email keyboard and email autofill. This matches identifier entry;
+Apple explains that [autocorrection](https://developer.apple.com/documentation/uikit/uitextinputtraits/autocorrectiontype)
+can automatically replace text and [spell checking](https://developer.apple.com/documentation/uikit/uitextinputtraits/spellcheckingtype)
+underlines words. It is not proof that these traits caused the observed missing
+characters. The existing unchanged native exact-email assertion remains the gate.
+All22 Sharing behavior tests, TypeScript and mobile structural checks pass on paul;
+critic found no blocker. Logs: `/tmp/sharing-email-traits-{test,check,structural}.log`.
