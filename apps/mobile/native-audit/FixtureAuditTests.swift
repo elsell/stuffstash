@@ -1436,8 +1436,10 @@ final class FixtureAuditTests: XCTestCase {
     capture("add-photo-last-removal-returns-to-draft")
     app.buttons["Close Add"].tap()
     XCTAssertTrue(app.textFields["Asset name"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
     let root = app.buttons["Audit Browse filters"]
     XCTAssertTrue(root.waitForExistence(timeout: 5))
+    for _ in 0..<12 where !root.isHittable { app.scrollViews.firstMatch.swipeDown() }
     XCTAssertTrue(root.isHittable)
     XCTAssertEqual(app.state, .runningForeground)
   }
@@ -1462,7 +1464,11 @@ final class FixtureAuditTests: XCTestCase {
     name.tap()
     waitForKeyboard()
     name.typeText("Native draft name")
-    XCTAssertEqual(name.value as? String, "Native draft name")
+    let exactName = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      name.value as? String == "Native draft name"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [exactName], timeout: 5), .completed,
+      "Native input must retain the exact typed name before saving")
     let save = app.buttons["Save item"]
     let close = app.buttons["Close Add"]
     XCTAssertTrue(save.isHittable)

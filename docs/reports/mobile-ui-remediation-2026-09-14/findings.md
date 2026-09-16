@@ -2728,6 +2728,10 @@ invitation cancellation menu after submission recovery. Creation now explicitly
 ends keyboard editing while retaining failed email drafts. The regression test
 failed with zero dismissals before implementation and passes afterward. This is
 a candidate correction; actual keyboard absence and cancellation require retest.
+Run351041 passes exact email and keyboard absence after creation, but opening the
+invitation menu precedes keyboard reappearance and an unhittable Cancel invitation.
+The original creation-only explanation is insufficient; M193 remains open. See
+native-phone-351041.md.
 
 ### M194 — Native ellipsis menu has an undersized hit region
 

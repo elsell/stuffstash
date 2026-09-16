@@ -1,5 +1,20 @@
 # Platform Interaction Review
 
+## Native fixture observation boundaries
+
+Run351041's Add name assertion read Nat immediately after typing, while its
+screenshot0.33 seconds later and hierarchy0.82 seconds later both contain the
+exact full name. The Add presentation journey must wait at most five seconds for
+exact equality before continuing save/recovery; no partial, fuzzy or rewritten
+input is acceptable. This bounded native observation is not a general exemption
+for controlled-field corruption, which remains a failure in diagnostic fixtures.
+
+The Add-photo journey returns to the audit root with its prior scroll position.
+Verify the root navigation bar, then reveal its Browse entry with bounded upward
+scrolling and require it to be hittable. Do not require a returning scroll view to
+reset to its top unless the product explicitly specifies that behavior. Keep all
+photo paging/removal and draft-exit assertions unchanged; native rerun is required.
+
 ## Native search acceptance on iPad
 
 Run351041's static integrated-button search, configured without app query handlers,

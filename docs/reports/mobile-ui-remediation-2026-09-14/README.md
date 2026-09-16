@@ -19,7 +19,7 @@ iPad73/83 fixture passes; see the target reports for failures and evidence limit
 Run35104157358 at14d7e06f finished: iPad77/84 and phone63/84 fixture passes;
 phone onboarding passes with two device-inapplicable skips, iPad onboarding3/3.
 The independent static iPad Clear comparison narrows M232 to a native-pattern test
-expectation; full production rerun remains required. See native-ipad-351041.md.
+expectation; full production rerun remains required. See native-ipad-351041.md and native-phone-351041.md.
 Run35112198520 at1c2f8173 is now active; it must finish undisturbed. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.0GB on paul root and15GB in paul's
