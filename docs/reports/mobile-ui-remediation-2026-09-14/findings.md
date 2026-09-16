@@ -2926,3 +2926,12 @@ when no previous route existed. It now returns Back where possible and replaces
 with Home otherwise, including loading and failure states. Three RED cases precede
 the fix; nine route tests and static checks pass on paul. Critic found no blocker.
 Native direct-entry reachability remains pending; see checkout-history-axis.md.
+
+### M213 — native color well repeats its accessible name
+
+P3 runtime-observed in350504 phone hierarchy: “Choose any color, Choose any color”.
+The candidate keeps ColorPicker's native label and removes the redundant label
+modifier. A separate exact-name native test precedes the adapter edit and preserves
+activation tests unchanged. Fifteen related tests, TypeScript and structural checks
+pass on paul; critic found no blocker. Those checks do not mount SwiftUI; native
+name acceptance remains pending, separately from M51 activation. See tag-color-axis.md.

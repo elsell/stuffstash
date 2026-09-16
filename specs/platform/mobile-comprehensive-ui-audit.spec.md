@@ -1367,6 +1367,12 @@ address comparison. This separates the native field path from React Native text
 input without changing production fields or relaxing any original failing case.
 Passing the comparison does not establish physical typing or prove the cause.
 
+The native tag color well must expose one accessible “Choose any color” name.
+Use the native ColorPicker label as its naming source; do not repeat it through
+an accessibility-label modifier. Retained350504 hierarchy duplicates the name.
+Keep a separate native exact-name assertion so naming acceptance does not mask
+or depend on the currently failing picker-activation journey.
+
 Onboarding's whole-string address check must observe completion with a bounded
 five-second exact-value predicate before retaining its exact equality assertion.
 Run350549 recording shows complete text after the initial partial-value snapshot,

@@ -59,3 +59,12 @@ failed Sliders assertion corresponds to an unopened picker, not merely a changed
 selector. AX bounds alone still do not prove the effective hit region. This
 reproduces the earlier phone observation at source802e4955; no production fix or
 root-cause attribution is claimed.
+
+M213 separately tracks the duplicated accessible name. The candidate removes the
+additional accessibility-label modifier while retaining ColorPicker's native label.
+Apple documents that hidden control labels still serve accessibility:
+[labelsHidden](https://developer.apple.com/documentation/swiftui/view/labelshidden()).
+That guidance supports preserving the native label, not a claim that this edit fixes
+activation. The new independent exact-name native test is queued;15 related remote
+tests and static checks pass, critic found no blocker. Native name/VoiceOver
+verification remains open.

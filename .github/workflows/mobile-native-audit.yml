@@ -87,6 +87,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
               )
               ;;
             text-entry)

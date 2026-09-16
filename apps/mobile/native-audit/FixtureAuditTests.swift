@@ -1726,6 +1726,14 @@ final class FixtureAuditTests: XCTestCase {
     capture("color-visible-well-target")
   }
 
+  func testColorWellHasSingleAccessibleName() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertEqual(picker.label, "Choose any color", "The native color well must not repeat its name")
+    capture("color-well-accessible-name")
+  }
+
   func testExactExpirationUsesCompactNativePicker() {
     openSettingsControls()
     app.buttons["Expiration"].tap()
