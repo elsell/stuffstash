@@ -102,6 +102,13 @@ function FixtureNavigation() {
   </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
+type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'
+  | 'plain-controlled' | 'plain-no-assistance' | 'plain-no-accessory'
+  | 'plain-controlled-no-assistance' | 'plain-controlled-no-accessory';
+
+export { CustomizationCollectionFixture } from './CustomizationCollectionFixture';
+export { CustomizationEditorFixture } from './CustomizationEditorFixture';
+
 export function FixtureMenu() {
   const router = useRouter();
   const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
@@ -111,7 +118,7 @@ export function FixtureMenu() {
   const [settingsControls, setSettingsControls] = useState(false);
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
-  const [inputMode, setInputMode] = useState<'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline'>();
+  const [inputMode, setInputMode] = useState<InputFixtureMode>();
   if (inputMode) return <FixturePage key={`input-${inputMode}`}>
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
@@ -150,11 +157,18 @@ export function FixtureMenu() {
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
+    <Button title="Audit settings collection" onPress={() => router.push('/audit-customization' as Href)} />
+    <Button title="Audit settings editor" onPress={() => router.push('/audit-customization-editor' as Href)} />
     {['direct', 'nested', 'footer', 'direct-footer', 'scroll-footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />
     <Button title="Audit draft photos" onPress={() => setDraftPhotos(true)} />
     <Button title="Audit plain input" onPress={() => setInputMode('plain')} />
+    <Button title="Audit plain-controlled input" onPress={() => setInputMode('plain-controlled')} />
+    <Button title="Audit plain-controlled-no-assistance input" onPress={() => setInputMode('plain-controlled-no-assistance')} />
+    <Button title="Audit plain-controlled-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-controlled-no-accessory'); }} />
+    <Button title="Audit plain-no-assistance input" onPress={() => setInputMode('plain-no-assistance')} />
+    <Button title="Audit plain-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-no-accessory'); }} />
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
@@ -203,10 +217,12 @@ function DraftOptionsFixture() {
     persistedTargetIds={[]} targetIds={[]} onTargets={() => {}} onApplicability={() => {}} onFieldType={() => {}} />;
 }
 
-function InputFixture({ mode }: { readonly mode: 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' }) {
+function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   const [value, setValue] = useState('');
-  if (mode === 'plain' || mode === 'multiline') return <View>
-    <AppTextInput accessibilityLabel={`Audit ${mode} text`} defaultValue="" multiline={mode === 'multiline'}
+  if (mode.startsWith('plain') || mode === 'multiline') return <View>
+    <AppTextInput accessibilityLabel={`Audit ${mode} text`} multiline={mode === 'multiline'}
+      {...(mode.startsWith('plain-controlled') ? { value } : { defaultValue: '' })}
+      {...(mode.endsWith('no-assistance') ? { autoCorrect: false, spellCheck: false, smartInsertDelete: false } : {})}
       onChangeText={setValue} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>
   </View>;

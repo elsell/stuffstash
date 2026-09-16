@@ -209,11 +209,13 @@ export function AssetDetailRouteScreen({
   }
 
   const { refreshing: isRefreshing, refresh: refreshAsset } = usePullRefresh(async () => {
+    const canPresent = captureCommandVisit();
     setWorkspaceStatus(undefined);
 
     try {
       await reloadAsset();
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not refresh asset',
@@ -233,13 +235,12 @@ export function AssetDetailRouteScreen({
 
   function choosePhotos(currentPhotoCount: number): void {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
+    if (!canPresent()) return;
     showPhotoSourceChooser({
-      onCamera: () => {
-        if (scope.active) void addPhotos('camera', currentPhotoCount);
-      },
-      onLibrary: () => {
-        if (scope.active) void addPhotos('library', currentPhotoCount);
-      }
+      isCurrent: () => scope.active && canPresent(),
+      onCamera: () => void addPhotos('camera', currentPhotoCount),
+      onLibrary: () => void addPhotos('library', currentPhotoCount)
     });
   }
 

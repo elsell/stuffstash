@@ -1,10 +1,13 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
+import { Stack } from 'expo-router';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useCustomizationReads } from '../serverState/useCustomizationReads';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ChevronRight, Plus, Search } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import type { CustomizationContextQuery } from '../../application/customization/CustomizationContextQuery';
 import type { CustomizationCollectionQuery } from '../../application/customization/CustomizationQueries';
 import type { CustomizationAccessPolicy } from '../../application/customization/CustomizationAccess';
@@ -19,7 +22,7 @@ import { SettingsLoadingRow, SettingsSection, SettingsSeparator, useSettingsList
 import { DeniedSettingsState } from './ScopedSettingsScreens';
 import { tagColorName } from '../components/TagColorPicker';
 import { SettingsSegmentedControl } from '../components/SettingsSegmentedControl';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 type Row = AssetTagDefinition | CustomDefinition;
 
@@ -104,23 +107,31 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
 
   const { refreshing, refresh } = usePullRefresh(() => load(true));
 
-  const canEdit = context && accessPolicy.canMutate(context, kind, scope);
+  const canEdit = reads.context && accessPolicy.canMutate(reads.context, kind, scope);
   const filtered = useMemo(() => rows.filter((row) => row.displayName.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())), [rows, search]);
   const inherited = scope === 'inventory' && kind !== 'tag' ? filtered.filter((row) => 'scope' in row && row.scope === 'tenant') : [];
   const local = filtered.filter((row) => !inherited.includes(row));
+  const headerEnabled = status === 'ready' && Boolean(reads.context)
+    && context?.tenantId === reads.context?.tenantId && context?.inventoryId === reads.context?.inventoryId
+    && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error)
+    && Boolean(reads.context && accessPolicy.canRead(reads.context, scope));
+  const headerActions = useNativeHeaderActionOptions(headerEnabled && canEdit && lifecycle === 'active'
+    ? [{ kind: 'add', label: `Add ${singular(kind)}`, onPress: onAdd }] : []);
+  const withHeader = (body: ReactNode) => <>
+    <Stack.Screen options={headerActions} />
+    <NativeNavigationSearch enabled={headerEnabled} query={search} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`}
+      onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
+    {body}
+  </>;
 
-  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return <DeniedSettingsState message="You don’t have permission to view these settings." />;
-  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return <SettingsLoadingRow label="Loading settings…" />;
-  if (status === 'loading') return <View style={settings.styles.shell}><View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View></View>;
-  if (status === 'error') return <ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></ScrollView>;
-  if (status === 'denied') return <DeniedSettingsState message="You don’t have permission to view these settings." />;
-  if (!context) return null;
+  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
+  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withHeader(<SettingsLoadingRow label="Loading settings…" />);
+  if (status === 'loading') return withHeader(<View style={settings.styles.shell}><View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View></View>);
+  if (status === 'error') return withHeader(<ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></ScrollView>);
+  if (status === 'denied') return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
+  if (!context) return withHeader(null);
 
-  return <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />} style={settings.styles.shell}>
-    <View style={[styles.toolbar, settings.styles.contentBlock]}>
-      <View style={styles.searchShell}><Search color={colors.textMuted} size={18} /><AppTextInput accessibilityLabel={`Search ${plural(kind)}`} onChangeText={setSearch} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`} placeholderTextColor={colors.textMuted} style={styles.searchInput} value={search} /></View>
-      {canEdit && lifecycle === 'active' ? <Pressable accessibilityLabel={`Add ${singular(kind)}`} accessibilityRole="button" onPress={onAdd} style={styles.addButton}><Plus color={colors.onAction} size={19} /><Text style={styles.addText}>Add</Text></Pressable> : null}
-    </View>
+  return withHeader(<ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />} style={settings.styles.shell}>
     {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value={lifecycle} /></View> : null}
     {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${pendingLifecycle} settings…`} /></View> : null}
     {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>Some settings may be missing</Text><Text style={styles.incompleteText}>Pull to refresh and try loading the complete list.</Text></View> : null}
@@ -130,7 +141,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
         {inherited.length ? <ResourceSection name={`From ${context.tenantName}`} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
         {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? `Only in ${context.inventoryName}` : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
       </>}
-  </ScrollView>;
+  </ScrollView>);
 }
 
 function ResourceSection({ inherited = false, name, onOpen, rows }: { readonly inherited?: boolean; readonly name?: string; readonly onOpen: (row: Row) => void; readonly rows: readonly Row[] }) {
@@ -143,5 +154,5 @@ function singular(kind: CustomizationKind) { return kind === 'tag' ? 'Tag' : kin
 function plural(kind: CustomizationKind) { return `${singular(kind)}s`; }
 function fieldType(value: string) { return value.charAt(0).toUpperCase() + value.slice(1); }
 function createStyles(colors: MobileColorPalette) { return StyleSheet.create({
-  toolbar: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }, searchShell: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: 'row', minHeight: 44, paddingHorizontal: spacing.sm }, searchInput: { color: colors.text, flex: 1, fontSize: 16, minHeight: 44, paddingHorizontal: spacing.xs }, addButton: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flexDirection: 'row', gap: spacing.xs, minHeight: 44, paddingHorizontal: spacing.md }, addText: { color: colors.onAction, fontSize: 16, fontWeight: '700' }, lifecycleControl: { marginTop: spacing.sm }, loadingGroup: { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: spacing.sm, overflow: 'hidden' }, incomplete: { backgroundColor: colors.warningSurface, borderRadius: radius.md, gap: spacing.xs, marginTop: spacing.sm, padding: spacing.md }, incompleteTitle: { color: colors.warning, fontSize: 14, fontWeight: '700' }, incompleteText: { color: colors.text, fontSize: 13 }, row: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 58, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, compactRow: { minHeight: 52, paddingVertical: spacing.xs }, pressed: { backgroundColor: colors.surfaceMuted }, rowBody: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: spacing.sm, minWidth: 0 }, color: { borderColor: colors.border, borderRadius: 12, borderWidth: 1, height: 24, width: 24 }, noColor: { backgroundColor: 'transparent', borderWidth: 2 }, rowText: { flex: 1, gap: 2, minWidth: 0 }, rowTitle: { color: colors.text, fontSize: 16, fontWeight: '600' }, rowMeta: { color: colors.textMuted, fontSize: 13, lineHeight: 18 }
+  lifecycleControl: { marginTop: spacing.sm }, loadingGroup: { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: spacing.sm, overflow: 'hidden' }, incomplete: { backgroundColor: colors.warningSurface, borderRadius: radius.md, gap: spacing.xs, marginTop: spacing.sm, padding: spacing.md }, incompleteTitle: { color: colors.warning, fontSize: 14, fontWeight: '700' }, incompleteText: { color: colors.text, fontSize: 13 }, row: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 58, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, compactRow: { minHeight: 52, paddingVertical: spacing.xs }, pressed: { backgroundColor: colors.surfaceMuted }, rowBody: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: spacing.sm, minWidth: 0 }, color: { borderColor: colors.border, borderRadius: 12, borderWidth: 1, height: 24, width: 24 }, noColor: { backgroundColor: 'transparent', borderWidth: 2 }, rowText: { flex: 1, gap: 2, minWidth: 0 }, rowTitle: { color: colors.text, fontSize: 16, fontWeight: '600' }, rowMeta: { color: colors.textMuted, fontSize: 13, lineHeight: 18 }
 }); }

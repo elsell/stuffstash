@@ -16,6 +16,7 @@ export type CustomizationEditorDraft = {
   readonly fieldType: CustomFieldType;
   readonly applicability: CustomFieldApplicability;
   readonly enumOptions: readonly string[];
+  readonly pendingEnumOption?: string;
   readonly targetIds: readonly string[];
 };
 
@@ -45,7 +46,7 @@ export function customizationEditorValidation(draft: CustomizationEditorDraft, k
     nameValid: draft.name.trim().length > 0,
     keyValid: mode === 'edit' || customizationKeyIsValid(draft.key || suggestedCustomizationKey(draft.name)),
     keyMessage: customizationKeyValidationMessage,
-    optionsValid: kind !== 'field' || draft.fieldType !== 'enum' || draft.enumOptions.length > 0,
+    optionsValid: kind !== 'field' || draft.fieldType !== 'enum' || (draft.enumOptions.length > 0 && !draft.pendingEnumOption?.trim()),
     targetsValid: kind !== 'field' || draft.applicability !== 'custom_asset_types' || draft.targetIds.length > 0
   } as const;
 }
@@ -65,6 +66,7 @@ export function customizationEditorSnapshot(draft: CustomizationEditorDraft): st
     fieldType: draft.fieldType,
     applicability: draft.applicability,
     enumOptions: draft.enumOptions,
+    pendingEnumOption: draft.pendingEnumOption ?? '',
     targetIds: draft.targetIds
   });
 }

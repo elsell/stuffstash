@@ -8,6 +8,7 @@ import { MobileServerStateProvider } from '../navigation/MobileServerStateProvid
 import { InventoryAssetsRouteScreen } from './InventoryAssetsRouteScreen';
 import { LocationAssetsRouteScreen } from './LocationAssetsRouteScreen';
 import { LocationsScreen } from './LocationsScreen';
+import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
 for (const surface of ['inventory', 'location-content', 'locations'] as const) {
   it(`retries an initial ${surface} failure in place without a pull indicator`, async () => {
@@ -27,7 +28,7 @@ for (const surface of ['inventory', 'location-content', 'locations'] as const) {
         : <LocationsScreen locationsQuery={new LocationsQuery({ getLocationsSnapshot: async () => { await read(); return { canAdd: true, tenantName: 'Household', inventoryName: 'Home', locations: [] }; } })} />;
     const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 20)));
     try {
-      await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>{screen}</MobileServerStateProvider>);
+      await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider>{screen}</AppFeedbackProvider></MobileServerStateProvider>);
       await settle(); await settle();
       expect(h.byText('Could not load')).toBeDefined();
       await h.press(h.byLabel('Retry'));
@@ -58,7 +59,7 @@ it('recovers an initial inventory-scope failure before loading resource rows', a
     await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => {
       if (!scopeAvailable) throw new Error('Inventory unavailable');
       return { tenantId: 'tenant', inventoryId: 'inventory' };
-    }}><InventoryAssetsRouteScreen inventoryAssetsQuery={query} /></MobileServerStateProvider>);
+    }}><AppFeedbackProvider><InventoryAssetsRouteScreen inventoryAssetsQuery={query} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(); await settle();
     expect(h.byText('Could not load')).toBeDefined();
     expect(resourceReads).toBe(0);

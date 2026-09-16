@@ -23,6 +23,7 @@ export function CustomizationFieldControls(props: { readonly busy?: boolean; rea
           onPress={() => { if (!disabled) props.onEnumOptions(props.enumOptions.filter(value => value !== option)); }} />)}{props.enumOptions.length === 0 ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Add at least one option.</Text> : null}{props.canMutate ? <View style={styles.enumOptionInput}>
         <AppTextInput editable={!disabled} accessibilityLabel="New enum option" onChangeText={props.onNewOption}
           placeholder="Add option" style={[styles.input, styles.enumDraftInput]} value={props.newOption} />
+        {props.newOption.trim() ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>Add or clear this option before saving.</Text> : null}
         <NativeCommandButton label="Add option" disabled={disabled} onPress={() => {
           if (disabled) return;
           const next = suggestedCustomizationKey(props.newOption);

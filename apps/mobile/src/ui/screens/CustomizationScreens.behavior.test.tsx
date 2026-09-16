@@ -21,6 +21,61 @@ beforeEach(() => { queryClient = createMobileQueryClient(); resetNativeTestState
 afterEach(async () => { await harness?.unmount(); harness = undefined; Reflect.deleteProperty(globalThis, 'expo'); });
 
 describe('rendered mobile customization production states', () => {
+  it('retains dormant enum options while saving only options applicable to the chosen field type', async () => {
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ kind: 'field', manageFields: managerFake({ create: async (...args: unknown[]) => { calls.push(args); return {}; } }) });
+    await screen.changeText(screen.byLabel('Name'), 'Priority');
+    await screen.press(screen.byLabel('Choose Type. Current value Text'));
+    await screen.press(screen.byLabel('Enum'));
+    await screen.changeText(screen.byLabel('New enum option'), 'high');
+    await screen.press(screen.byLabel('Add option'));
+    await screen.press(screen.byLabel('Choose Type. Current value Enum'));
+    await screen.press(screen.byLabel('Text'));
+    expect(screen.byLabel('New enum option')).toBeUndefined();
+    await screen.press(screen.byLabel('Choose Type. Current value Text'));
+    await screen.press(screen.byLabel('Enum'));
+    expect(screen.byLabel('Remove high')).toBeDefined();
+    await screen.press(screen.byLabel('Choose Type. Current value Enum'));
+    await screen.press(screen.byLabel('Text'));
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0][2]).toMatchObject({ type: 'text', enumOptions: [] });
+  });
+  it('protects an unsubmitted field option and requires adding it before Save', async () => {
+    const record = { ...field('priority', 'Priority', 'inventory'), type: 'enum' as const, enumOptions: ['high'] };
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', resourceId: record.id,
+      query: collectionQuery({ fields: [record] }), manageFields: managerFake({ update: async (...args: unknown[]) => { calls.push(args); return record; } }) });
+    await screen.changeText(screen.byLabel('New enum option'), 'low');
+    attemptNavigation({ type: 'BACK' });
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await pressAlertButton('Keep Editing'); await settleQueries(screen);
+    expect(screen.byLabel('New enum option')?.props.value).toBe('low');
+    await screen.changeText(screen.byLabel('Name'), 'Priority level');
+    expect(screen.byLabel('Save')?.props.disabled).toBe(true);
+    expect(screen.allText()).toContain('Add or clear this option before saving.');
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toEqual([]);
+    await screen.press(screen.byLabel('Add option'));
+    expect(screen.byLabel('New enum option')?.props.value).toBe('');
+    expect(screen.byLabel('Save')?.props.disabled).toBe(false);
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0][2]).toMatchObject({ enumOptions: ['high', 'low'] });
+  });
+  it('exposes a named Save command and prevents another save while pending', async () => {
+    const pending = deferred<Record<string, never>>(); let calls = 0;
+    const screen = await renderEditor({ manageTags: managerFake({ create: async () => { calls++; return pending.promise; } }) });
+    expect(screen.byLabel('Save')?.props.disabled).toBe(true);
+    await screen.changeText(screen.byLabel('Name'), 'Tools');
+    await screen.press(screen.byLabel('Save'));
+    expect(calls).toBe(1);
+    expect(screen.byLabel('Saving…')?.props.disabled).toBe(true);
+    await screen.press(screen.byLabel('Saving…'));
+    expect(calls).toBe(1);
+    await screen.run(() => pending.resolve({})); await screen.settle();
+    expect(screen.byText('Saved')).toBeDefined();
+  });
   it.each([false, true])('does not navigate from an old save after leaving, returned=%s', async returned => {
     const pending = deferred<Record<string, never>>(); let done = 0;
     const screen = await renderEditor({ manageTags: managerFake({ create: async () => pending.promise }), onDone: () => { done++; } });
@@ -96,13 +151,35 @@ describe('rendered mobile customization production states', () => {
   it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
     let rows = [tag('one', 'Tools')]; let reads = 0;
     const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });
-    await screen.changeText(screen.byLabel('Search Tags'), 'Tool');
-    rows = [tag('two', 'Toolboxes')];
+    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } }));
+    rows = [tag('two', 'Toolboxes'), tag('three', 'Garden')];
     await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }));
     await settleQueries(screen);
     expect(reads).toBe(2);
     expect(screen.allText()).toContain('Toolboxes');
-    expect(screen.byLabel('Search Tags')?.props.value).toBe('Tool');
+    expect(screen.allText()).not.toContain('Garden');
+    expect(screen.allText()).not.toContain('No matches');
+    expect(screen.allByType('TextInput')).toHaveLength(0);
+    await screen.run(() => collectionSearch().onCancelButtonPress());
+    expect(screen.allText()).toContain('Garden');
+  });
+
+  it('removes Add and disables its retained handler when collection edit permission is revoked', async () => {
+    let editable = true; let added = 0;
+    const screen = await renderCollection({
+      contextQuery: { execute: async () => context([], editable ? ['view', 'edit_asset'] : ['view']) },
+      onAdd: () => { added++; }, query: collectionQuery({ tags: [tag('one', 'Tools')] })
+    });
+    const add = screen.byLabel('Add Tag')!;
+    await screen.press(add);
+    expect(added).toBe(1);
+    editable = false;
+    await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.settingsScope('scope', 'tenant-1', 'inventory-1') }));
+    await settleQueries(screen);
+    expect(screen.byLabel('Add Tag')).toBeUndefined();
+    await screen.run(() => add.props.onPress());
+    expect(added).toBe(1);
+    expect(screen.allText()).toContain('Tools');
   });
 
   it('keeps collection access denied when an older definition request completes late', async () => {
@@ -131,12 +208,13 @@ describe('rendered mobile customization production states', () => {
 
   it('aligns collection chrome and editor actions to the shared 16-point content column', async () => {
     const collection = await renderCollection({ query: collectionQuery({ tags: [tag('tag-1', 'Tools')] }) });
-    expect(collection.byLabel('Search Tags')?.props.style).toMatchObject({ minHeight: 44 });
+    expect(collectionSearch()).toMatchObject({ placement: 'integratedButton', placeholder: 'Search tags' });
     expect(collection.allByType('View').some(hasStyle({ marginHorizontal: 16 }))).toBe(true);
 
     const editor = await renderEditor();
     await editor.changeText(editor.byLabel('Name'), 'Tools');
-    expect(editor.byText('Save')?.parent?.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ marginHorizontal: 16 })]));
+    expect(editor.byLabel('Save')?.props.disabled).toBe(false);
+    expect(editor.allByType('View').some(node => hasStyle({ marginHorizontal: 16 })(node) && node.queryAll(child => child.props.accessibilityLabel === 'Save').length > 0)).toBe(true);
   });
 
   it('refreshes permissions and removes retained rows when a collection load is denied', async () => {
@@ -157,7 +235,8 @@ describe('rendered mobile customization production states', () => {
       contextQuery: { execute: async () => allowed }, kind: 'field', scope: 'inventory',
       query: collectionQuery({ fields: [field('tenant-field', 'Shared field', 'tenant'), field('local-field', 'Local field', 'inventory')] })
     });
-    expect(screen.allText()).toEqual(expect.arrayContaining(['From Home', 'Only in Household', 'Shared field', 'Local field', 'Add']));
+    expect(screen.allText()).toEqual(expect.arrayContaining(['From Home', 'Only in Household', 'Shared field', 'Local field']));
+    expect(screen.byLabel('Add Custom field')).toBeDefined();
   });
 
   it('shows inherited inventory detail read-only with an explicit household management action', async () => {
@@ -221,6 +300,34 @@ describe('rendered mobile customization production states', () => {
     expect(screen.allText()).not.toContain('Inherited from Home. Manage it from household settings.');
   });
 
+  it.each([
+    ['field', 'tenant'], ['field', 'inventory'],
+    ['asset-type', 'tenant'], ['asset-type', 'inventory']
+  ] as const)('shows the loaded owner of %s definitions from %s in Details', async (kind, recordScope) => {
+    const record = kind === 'field'
+      ? field('definition', 'Shared definition', recordScope)
+      : assetType('definition', 'Shared definition', recordScope);
+    const screen = await renderEditor({
+      inherited: recordScope !== 'tenant', kind, mode: 'edit', resourceId: record.id,
+      query: collectionQuery(kind === 'field' ? { fields: [record] } : { assetTypes: [record] })
+    });
+    await screen.press(screen.byText('Show technical details')?.parent ?? undefined);
+    expect(screen.byLabel(`Scope, ${recordScope === 'tenant' ? 'Home' : 'Household'}`)).toBeDefined();
+    expect(screen.byLabel(`Scope, ${recordScope === 'tenant' ? 'Household' : 'Home'}`)).toBeUndefined();
+  });
+
+  it.each([true, false])('shows expiration tracking as a static inherited value: %s', async enabled => {
+    const record = { ...assetType('shared-type', 'Medicine', 'tenant'), expirationEnabled: enabled };
+    const screen = await renderEditor({
+      kind: 'asset-type', mode: 'edit', resourceId: record.id,
+      query: collectionQuery({ assetTypes: [record] })
+    });
+    expect(screen.byLabel('Track expiration dates')).toBeUndefined();
+    expect(screen.allText()).toContain('Track expiration dates');
+    expect(screen.allText()).toContain(enabled ? 'Enabled' : 'Disabled');
+    expect(screen.allText()).not.toContain('Save');
+  });
+
   it('shares a pending definition list and selects the latest editor route', async () => {
     const first = deferred<{ items: readonly ReturnType<typeof field>[]; complete: true }>();
     const resourceA = field('field-a', 'Resource A', 'inventory');
@@ -271,7 +378,7 @@ describe('rendered mobile customization production states', () => {
     await harness?.unmount(); harness = undefined;
     screen = await renderCollection({ query: { tags: async () => ({ items: [tag('tools', 'Tools')], complete: false }) } });
     expect(screen.allText()).toContain('Some settings may be missing');
-    await screen.changeText(screen.byLabel('Search Tags'), 'missing');
+    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } }));
     expect(screen.allText()).toContain('No matches');
     expect(screen.allText()).toContain('No tags match “missing”.');
   });
@@ -395,18 +502,54 @@ describe('rendered mobile customization production states', () => {
   });
 
   it('keeps dirty navigation in place, disables gestures, and dispatches discard exactly once', async () => {
-    const screen = await renderEditor();
+    const action = { type: 'RETURN_COLLECTION' };
+    const screen = await renderEditor({ onDone: () => attemptNavigation(action) });
     await screen.changeText(screen.byLabel('Name'), 'Populated draft');
     expect(navigationOptions().at(-1)).toMatchObject({ gestureEnabled: false, headerBackVisible: false });
-    const action = { type: 'GESTURE_BACK' };
-    attemptNavigation(action);
-    expect(latestAlert()).toMatchObject({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.' });
-    await pressAlertButton('Keep Editing'); await settleQueries(screen);
+    const header = new MobileRenderHarness();
+    const options = navigationOptions().at(-1) as { headerLeft: () => React.ReactElement };
+    await header.render(options.headerLeft());
+    try {
+      await header.press(header.byLabel('Back to settings collection'));
+      expect(latestAlert()).toMatchObject({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.' });
+      await pressAlertButton('Keep Editing'); await settleQueries(screen);
+      expect(dispatchedActions()).toEqual([]);
+      expect(screen.byLabel('Name')?.props.value).toBe('Populated draft');
+      await header.press(header.byLabel('Back to settings collection'));
+      await pressAlertButton('Discard'); await pressAlertButton('Discard'); await settleQueries(screen);
+      expect(dispatchedActions()).toEqual([action]);
+    } finally { await header.unmount(); }
+  });
+
+  it.each([false, true])('ignores a discard confirmation after leaving, returned=%s', async returned => {
+    const screen = await renderEditor();
+    await screen.changeText(screen.byLabel('Name'), 'Keep this draft');
+    attemptNavigation({ type: 'OLD_BACK' });
+    await screen.run(() => setScreenFocused(false));
+    if (returned) await screen.run(() => setScreenFocused(true));
+    await pressAlertButton('Discard'); await settleQueries(screen);
     expect(dispatchedActions()).toEqual([]);
-    expect(screen.byLabel('Name')?.props.value).toBe('Populated draft');
+    expect(screen.byLabel('Name')?.props.value).toBe('Keep this draft');
+    if (!returned) await screen.run(() => setScreenFocused(true));
+    const action = { type: 'FRESH_BACK' };
     attemptNavigation(action);
-    await pressAlertButton('Discard'); await pressAlertButton('Discard'); await settleQueries(screen);
+    await pressAlertButton('Discard'); await settleQueries(screen);
     expect(dispatchedActions()).toEqual([action]);
+  });
+
+  it('ignores discard from a replaced definition and preserves its new draft', async () => {
+    const first = field('first', 'First', 'inventory');
+    const second = field('second', 'Second', 'inventory');
+    const query = collectionQuery({ fields: [first, second] });
+    const screen = await renderEditor({ kind: 'field', mode: 'edit', query, resourceId: first.id });
+    await screen.changeText(screen.byLabel('Name'), 'First draft');
+    attemptNavigation({ type: 'OLD_BACK' });
+    await screen.render(editorElement({ kind: 'field', mode: 'edit', query, resourceId: second.id }));
+    await settleQueries(screen);
+    await screen.changeText(screen.byLabel('Name'), 'Second draft');
+    await pressAlertButton('Discard'); await settleQueries(screen);
+    expect(dispatchedActions()).toEqual([]);
+    expect(screen.byLabel('Name')?.props.value).toBe('Second draft');
   });
 
   it.each(['tag', 'field', 'asset-type'] as const)('disables %s draft controls while saving without removing the fields', async kind => {
@@ -505,6 +648,13 @@ function editorElement(overrides: Record<string, unknown> = {}) {
     manageAssetTypes: inert, manageFields: inert, manageTags: inert, mode: 'create', onDone: () => undefined, query: collectionQuery(), scope: 'inventory', ...overrides
   } as unknown as React.ComponentProps<typeof CustomizationEditorScreen>;
   return withQueries(<AppFeedbackProvider><CustomizationEditorScreen {...props} /></AppFeedbackProvider>);
+}
+
+function collectionSearch() {
+  const options = navigationOptions().filter(value => Object.hasOwn(value as object, 'headerSearchBarOptions')).at(-1) as {
+    headerSearchBarOptions: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
+  };
+  return options?.headerSearchBarOptions;
 }
 
 function collectionQuery(values: { tags?: readonly Record<string, unknown>[]; fields?: readonly Record<string, unknown>[]; assetTypes?: readonly Record<string, unknown>[] } = {}) {

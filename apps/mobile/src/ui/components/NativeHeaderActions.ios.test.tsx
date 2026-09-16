@@ -1,6 +1,14 @@
 import { expect, it } from 'vitest';
 import { nativeHeaderActionOptions } from './NativeHeaderActions.ios';
 
+it('dispatches a native leading Back command with the backward system symbol', () => {
+  let returned = false;
+  const item = nativeHeaderActionOptions([{ kind: 'back', label: 'Back to settings collection', onPress: () => { returned = true; } }], 'left').unstable_headerLeftItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ icon: { type: 'sfSymbol', name: 'chevron.backward' }, accessibilityLabel: 'Back to settings collection' });
+  if (item?.type === 'button') item.onPress?.();
+  expect(returned).toBe(true);
+});
+
 it('installs real native bar items with system symbols, badges and actions', () => {
   const pressed: string[] = [];
   const options = nativeHeaderActionOptions([

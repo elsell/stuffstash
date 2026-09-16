@@ -36,21 +36,151 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The larger PR150 batch remains unreleased. Source `a2ed8342` passes all **1,694
+The requested PR150 checkpoint is released as **TestFlight0.24.23 (112.1)**.
+[Run35028077706](https://github.com/elsell/stuffstash/actions/runs/35028077706)
+uploaded main438bd902 successfully; Apple processing and exact-build changelog
+verification completed September15 at22:20:03 UTC. The changelog verifier waits
+for Apple's VALID processing state and reads back the published notes. This does
+not establish physical-device UI acceptance or external beta review approval.
+
+The release's source `a2ed8342` passed all **1,694
 mobile tests across270 files**, TypeScript and structural checks remotely on paul
 (`/tmp/mobile-batch-a2ed8342.log`), with a clean source checksum comparison. This
 includes item-type failure/search recovery, failed-photo retry, unsupported-format
 feedback, retired session callbacks and the earlier interaction fixes.
-Native acceptance is incomplete: run350037 iPad fixtures passed45/57 and iPhone fixtures38/57.
-The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs passed.
-See [native evidence](native-evidence.md) for actual revisions and test limitations.
+Native acceptance remains incomplete: full run35012949816 passed43/58 phone
+fixtures and47/58 iPad fixtures; both onboarding jobs passed. See
+[latest native follow-up](native-350129-followup.md) for actual revisions and limits.
+The resumed audit continues in draft PR153. Checkpoint81e91f74 passes all1,710 mobile
+tests across270 files, TypeScript and structural checks remotely on paul
+(`/tmp/mobile-batch-81e91f74.log`). Its new native collection journey is pending.
+The subsequent [Home dashboard review](home-dashboard-axis.md) adds M160,
+retiring delayed pull-refresh notices after navigation; focused validation is
+recorded separately and does not change that full-suite checkpoint.
+
+[Inventory/location asset lists](asset-lists-axis.md) now have all24 source axes
+reviewed. M161 provides feedback for explicit refresh failures while retaining
+ordinary cached cards; obsolete-visit failures stay silent. All18 focused cases,
+TypeScript and structural checks pass remotely. Code critic found no blockers.
+Native acceptance is still pending; the retained LocationsScreen is not counted
+as a current shipped route.
+
+Combined post-M161 validation passes **1,722 tests across271 files**, TypeScript
+and mobile structural checks on paul (captured `/tmp/mobile-list-batch.log`).
+This includes M160 and M161; no native result is promoted by the source suite.
+
+[Asset History](history-list-axis.md) now has all24 source axes reviewed. M162
+retires delayed pull notices and separates inline Retry from the native pull
+indicator. Its12 focused tests, TypeScript and structural checks pass remotely;
+code critic found no blockers. Native acceptance remains pending. This follows
+the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,861
-pending,1,097 source-reviewed,306 finding,22 runtime-partial and98 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,290
+pending,1,510 source-reviewed,445 finding,24 runtime-partial and115 not-applicable.
+
+[Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
+includes the visible pending name on approval and blocks blank names;52 focused
+tests and static checks pass. Critic found no implementation blocker, while noting
+that the new provider test does not render the actual proposal/failed-review UI.
+M174 tracks the custom destination panel and missing lookup recovery; M175 tracks
+the narrow custom inline name commands. M175 now uses native commands below a
+full-width field;46 focused tests and static checks pass, with critic review.
+Native acceptance and the M174 destination-panel correction remain open.
+
+[Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
+identifies capture starting after cancellation during native permission/preparation;
+existing readiness coverage did not test that boundary. The candidate adds native
+startup cancellation and serialized cancellation cleanup, with12 regressions and
+98 focused recorder/controller cases passing remotely. Review is complete; physical
+permission/interruption acceptance remains pending.
+
+Combined M172 checkpoint: all1,753 mobile tests across273 files, TypeScript and
+mobile structural checks pass on paul after the final review correction. This
+does not establish native microphone, permission or interruption behavior.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
+
+M163 also retires item-detail pull-error notices after navigation, using the
+existing visit/resource guard in the shared detail screen. Both asset and
+location-context detail routes consume it. All92 focused detail cases, TypeScript
+and structural checks pass on paul; full source-axis and native acceptance work
+for those routes remains open.
+
+[Household/inventory settings](scoped-settings-axis.md) now have all24 source
+axes reviewed. M164 reuses labeled settings progress for both initial loads.
+All59 mounted settings cases, TypeScript and structural checks pass on paul;
+native announcement/layout acceptance remains pending.
+
+[Type/tag editors](type-tag-editors-axis.md) now have all24 source axes reviewed
+across six create/edit routes. M165 moves shared Save to the native primary
+command; all54 customization cases, TypeScript and structural checks pass on paul.
+M166 migrates Back/lifecycle/inherited Manage to native adapters. The full remote
+suite passes (1,734 tests/271 files), with TypeScript and structural checks.
+Native acceptance and M51 color behavior remain open. Field editors receive the
+shared controls but are not certified by this six-route review.
+
+[Run350298 follow-up](native-350298-followup.md) records both onboarding passes
+and iPad49/61, phone42/61 fixtures. Current editor changes are
+newer than this build. No screenshot acceptance is claimed from terminal logs.
+
+Production customization editor journeys now cover native Back (Keep Editing and
+Discard), Save, and Archive cancellation/completion in the isolated runner fixture.
+Fixture installation tests, TypeScript and structural checks pass on paul. Native
+execution is pending; these additions do not close editor acceptance findings.
+
+[Custom-field editors](field-editors-axis.md) now have all24 source axes reviewed
+across four routes. M167 protects unsubmitted option text; M168 prevents hidden
+enum options from breaking non-enum creation after a type change. All77 focused
+tests and static checks pass remotely. Field-specific native acceptance is open.
+
+[Home return details](home-return-axis.md) has all24 source axes reviewed. Its
+cancel/undo and save-error/retry journeys passed on both devices in run35029854251;
+this is partial native interaction evidence, not full visual or persistence acceptance.
+Screenshot review found a partly obscured failed-save heading (M169), still open.
+Its reveal-on-error candidate passes31 focused tests and static checks; a stronger
+native geometry assertion is added, with native rerun pending.
+The combined M169 checkpoint passes1,736 tests across271 files, TypeScript and
+mobile structural checks on paul, including the review correction for iOS offset
+clamping. This remains source validation; native acceptance is not claimed.
+
+The [typed composer](conversation-composer-axis.md) has all24 source axes reviewed;
+its native controls and pending request behavior are distinct from recording and
+plan approval acceptance. M170 tracks remaining custom response/decision commands.
+M170's native command migration passes46 focused tests and static checks. Review
+keeps the taller native decision area flagged for keyboard/short-window acceptance.
+
+The [response surface](conversation-response-axis.md) has all24 source axes
+reviewed;29 focused tests pass. Historical photo retry is plan-owned. M171 records
+an unguarded navigation completion after pausing media. Its candidate now guards
+pending completion and retained handlers across visit/scope replacement, with four
+mounted scenarios passing and code critic review complete; native acceptance remains.
+The combined checkpoint passed1,741 tests across273 files and static checks on paul;
+the subsequent retained-handler correction passed its four focused cases and static
+checks separately. Neither result is native transition verification.
+The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
+nested diagnostic layout from the direct-scroll structure used by production filters.
+
+Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
+The [latest completed native follow-up](native-350129-followup.md) records full
+run35012949816 failures and focused color results. Text-entry isolation is running
+at0f378691 in run35029455242; iPad completed4/5, with reproduced character loss,
+and phone completed3/5: uncontrolled ordinary text lost characters and controlled
+entry failed keyboard readiness. See [text evidence](native-text-350294.md).
+Expanded manual diagnostic35031744887 at81e91f74 is now running. No native fix
+is claimed from its dispatch; newer PR pushes may supersede pending full runs.
+
+Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
+TypeScript and the mobile structural check pass on paul
+(`/tmp/mobile-batch-0c26c3bf.log`). This includes M153–M155; native acceptance
+remains incomplete. Tests/builds were not run on the local host.
+
+The five definition/tag collection routes now have a full source-axis review in
+[customization-collections-axis.md](customization-collections-axis.md). M156 moves
+search/Add to existing native header adapters; M157 updates Add when edit access
+is revoked. Native acceptance remains pending. The code critic's asynchronous
+filter assertion finding was corrected; no production blocker was identified.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in

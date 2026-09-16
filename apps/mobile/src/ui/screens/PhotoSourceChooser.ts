@@ -1,12 +1,16 @@
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 export function showPhotoSourceChooser({
+  isCurrent,
   onCamera,
   onLibrary
 }: {
+  readonly isCurrent: () => boolean;
   readonly onCamera: () => void;
   readonly onLibrary: () => void;
 }) {
+  if (!isCurrent()) return;
+  const choose = (action: () => void) => { if (isCurrent()) action(); };
   if (Platform.OS === 'ios') {
     ActionSheetIOS.showActionSheetWithOptions(
       {
@@ -15,10 +19,10 @@ export function showPhotoSourceChooser({
       },
       (buttonIndex) => {
         if (buttonIndex === 0) {
-          onCamera();
+          choose(onCamera);
         }
         if (buttonIndex === 1) {
-          onLibrary();
+          choose(onLibrary);
         }
       }
     );
@@ -26,8 +30,8 @@ export function showPhotoSourceChooser({
   }
 
   Alert.alert('Add photos', undefined, [
-    { text: 'Take Photo', onPress: onCamera },
-    { text: 'Choose from Library', onPress: onLibrary },
+    { text: 'Take Photo', onPress: () => choose(onCamera) },
+    { text: 'Choose from Library', onPress: () => choose(onLibrary) },
     { text: 'Cancel', style: 'cancel' }
   ]);
 }

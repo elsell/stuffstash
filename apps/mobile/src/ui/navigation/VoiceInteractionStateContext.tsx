@@ -36,6 +36,7 @@ export type VoiceInteractionState =
 type TitleEditor = { readonly commandId: string; readonly value: string } | null;
 type ConversationDraftState = { readonly planId?: string; readonly drafts: VoicePlanCommandDrafts };
 type VoiceInteractionStateContextValue = {
+  readonly scopeIdentity: string;
   readonly titleEditor: TitleEditor;
   readonly setTitleEditor: Dispatch<SetStateAction<TitleEditor>>;
   readonly history: readonly VoiceRealtimeState[];
@@ -152,6 +153,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           : { status: 'loading', stage };
 
     return {
+      scopeIdentity: scopeKey,
       titleEditor, setTitleEditor,
       history: stateOwner === scopeKey ? history : [], composerText: stateOwner === scopeKey ? composerText : '', setComposerText,
       photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, scrollOffset, railOffsets,
@@ -259,10 +261,25 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         }
       },
       approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => {
+        let reviewedEdits = edits;
+        if (titleEditor) {
+          const title = titleEditor.value.replace(/\s+/g, ' ').trim();
+          if (!title) return;
+          const commandId = titleEditor.commandId;
+          const existing = edits ?? [];
+          reviewedEdits = existing.some(edit => edit.commandId === commandId)
+            ? existing.map(edit => edit.commandId === commandId ? { ...edit, title } : edit)
+            : [...existing, { commandId, title }];
+          setCommandDraftState(current => {
+            const drafts = current.planId === planId ? current.drafts : {};
+            return { planId, drafts: { ...drafts, [commandId]: { ...drafts[commandId], title } } };
+          });
+          setTitleEditor(null);
+        }
         const lifetime = interactionLifetime.current;
         setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
         try {
-          await realtimeController.approveActionPlan(planId, photoDrafts, edits);
+          await realtimeController.approveActionPlan(planId, photoDrafts, reviewedEdits);
         } catch (error) {
           if (interactionLifetime.current !== lifetime) return;
           if (isObject(error) && error.code === 'review_validation_failed') {

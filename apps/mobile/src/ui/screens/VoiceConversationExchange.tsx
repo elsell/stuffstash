@@ -3,7 +3,9 @@ import { VoicePlanHistorySummary } from './VoicePlanHistorySummary';
 import { VoicePlanProgress } from './VoicePlanProgress';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { NativeCommandButton } from '../components/NativeCommandButton';
+import { VoiceResultRailNavigation } from './VoiceResultRailNavigation';
 import type { VoiceRealtimeState, VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import { AssetCard } from '../components/AssetCard';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -27,7 +29,7 @@ export function VoiceConversationExchange({ exchange, railKey, onOpen }: { reado
     {exchange.errorMessage ? <Text selectable style={{ color: colors.warning }}>{exchange.errorMessage}</Text> : null}
     {exchange.actionPlan ? <VoicePlanHistorySummary plan={exchange.actionPlan} /> : null}
     {exchange.photoAttachmentStatus ? <VoicePlanProgress state={exchange} /> : null}
-    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <Pressable accessibilityRole="button" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} style={styles.control}><Text style={{ color: colors.action }}>Retry photos</Text></Pressable> : null}
+    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <NativeCommandButton label="Retry photos" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} /> : null}
     <VoiceResultRail references={voiceConversationReferences(exchange)} railKey={railKey} onOpen={onOpen} />
   </View>;
 }
@@ -44,7 +46,6 @@ function VoiceResultRailContent({ references: bounded, identity, onOpen }: { rea
   const [viewportWidth, setViewportWidth] = useState(cardWidth);
   const [position, setPosition] = useState(() => railOffsets.current[identity] ?? 0);
   const scroll = useRef<ScrollView>(null);
-  const colors = useAppearancePalette();
   if (!bounded.length) return null;
   const current = Math.min(position, bounded.length - 1);
   const move = (next: number) => {
@@ -57,11 +58,7 @@ function VoiceResultRailContent({ references: bounded, identity, onOpen }: { rea
       onMomentumScrollEnd={event => { const next = Math.max(0, Math.min(bounded.length - 1, Math.round(event.nativeEvent.contentOffset.x / cardWidth))); railOffsets.current[identity] = next; setPosition(next); }}>
       {bounded.map(reference => <View key={reference.assetId} style={styles.card}><VoiceResultCard reference={reference} onOpen={onOpen} /></View>)}
     </ScrollView>
-    {bounded.length > 1 ? <View style={styles.controls}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Previous asset card" disabled={current === 0} onPress={() => move(current - 1)} style={styles.control}><Text style={{ color: current === 0 ? colors.textMuted : colors.action }}>Previous</Text></Pressable>
-      <Text style={{ color: colors.textMuted }}>{current + 1} of {bounded.length}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="Next asset card" disabled={current === bounded.length - 1} onPress={() => move(current + 1)} style={styles.control}><Text style={{ color: current === bounded.length - 1 ? colors.textMuted : colors.action }}>Next</Text></Pressable>
-    </View> : null}
+    {bounded.length > 1 ? <VoiceResultRailNavigation position={current} count={bounded.length} onMove={move} /> : null}
   </View>;
 }
 function VoiceResultCard({ reference, onOpen }: { readonly reference: VoiceResponseArtifact; readonly onOpen: OpenReference }) {
@@ -76,6 +73,4 @@ const styles = StyleSheet.create({
   user: { alignSelf: 'flex-end', maxWidth: '94%', padding: spacing.sm, borderRadius: radius.lg, gap: spacing.xs },
   rail: { gap: spacing.xs }, card: { width: cardWidth, paddingRight: spacing.sm },
   placeholder: { minHeight: 88, padding: spacing.md, borderRadius: radius.lg },
-  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  control: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.sm }
 });

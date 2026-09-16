@@ -29,8 +29,8 @@ export class ExpoVoiceAudioRecorder implements VoiceAudioRecorder {
     this.core = new ExpoVoiceAudioRecorderCore(nativeAudio, FileSystem);
   }
 
-  start() {
-    return this.core.start();
+  start(options?: { readonly signal?: AbortSignal }) {
+    return this.core.start(options);
   }
 
   stop() {

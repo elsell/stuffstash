@@ -1266,3 +1266,25 @@ Composition ownership ends when sign-out, server change or expiry successfully
 returns to onboarding, including the interval before another sign-in completes.
 Failed push cleanup retains the current composition. Expiry dialogs need only a
 dismiss action, not a callback that mutates the next session’s prompt state.
+
+### Ordinary text entry isolation
+
+The native audit must compare the same ordinary text with the default keyboard:
+uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
+and uncontrolled without the app keyboard accessory. Retain the baseline and exact
+native/observed-value assertions; do not slow typing, disable correction globally,
+or replace product inputs merely to pass automation. Accessory isolation keeps its
+host mounted and uses its enabled flag. These are diagnostic fixtures, not proposed
+product behavior. A fixed `text-entry` workflow selection may run these comparisons
+and the multiline baseline on both devices; full/manual-All/PR acceptance remains
+unchanged. Record failures and their actual build before inferring a root cause.
+
+If the controlled ordinary-input comparison fails, also compare that controlled
+input with assistance disabled and with the accessory disabled. A passing
+uncontrolled variant cannot isolate either variable in a failing controlled field.
+Keep all baseline cases and exact-value assertions in the focused selection.
+
+Definition/tag collection header changes require native search activation, exact
+filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
+collection may exercise the shared screen with real query/policy adapters and a
+controlled repository; this is not production authorization or pagination evidence.

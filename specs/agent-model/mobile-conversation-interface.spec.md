@@ -22,7 +22,13 @@ Responses with authorized asset references show a compact horizontal rail of car
 
 ## Action widgets and accessibility
 
-Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
+Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Approve commits the currently visible inline name along with the other reviewed edits; it must never silently submit a previous name. A blank inline name disables approval with an explanation while cancellation remains available. Committed names remain in the local draft if submission fails. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
+
+The inline proposal name editor uses the shared native text input with native
+Save and Cancel commands below the full-width field. Save and keyboard Done commit
+the normalized nonblank name; Cancel closes editing without changing the committed
+name. Do not squeeze the field between custom narrow icon buttons. Draft ownership
+stays above the sheet so navigation does not discard pending text.
 
 ## Verification and release
 
@@ -52,6 +58,15 @@ Shared asset breadcrumbs initially scroll to their most specific ancestor, inclu
 on layout/width or path changes, while allowing manual scrolling to earlier ancestors.
 Preview row cards use equal inset padding and top-aligned thumbnails. Previous/Next
 card controls animate to the selected card; passive restoration remains unanimated.
+Previous/Next and historical photo retry use the shared native command adapter.
+Keep the position count between flexible command columns and disable movement at
+the ends. Plan Approve/Cancel use native sheet actions with explicit accessible
+names and the existing pending-decision ownership; they must not introduce a
+second submission path or change the plan being approved.
+Opening a response reference may await media shutdown. That navigation belongs
+to the focused visit and inventory scope that initiated it; leaving, leaving and
+returning, or scope replacement retires it. A retired callback must not pause a
+new session or dismiss/navigate another screen. Fresh reference actions remain usable.
 User and assistant message text supports native selection and copy. The native text
 composer continues to support paste. A clearly labelled New conversation control is
 always available in the sheet header; resetting clears local history/drafts and cancels

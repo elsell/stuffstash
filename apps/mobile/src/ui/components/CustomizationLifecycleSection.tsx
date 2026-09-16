@@ -1,5 +1,6 @@
 import type { CustomizationKind, CustomizationLifecycle } from '../../domain/customization/Customization';
-import { SettingsActionRow, SettingsSection, SettingsSeparator } from '../screens/SettingsList';
+import { SettingsSection, SettingsSeparator } from '../screens/SettingsList';
+import { NativeCommandButton } from './NativeCommandButton';
 
 export function CustomizationLifecycleSection({
   busy,
@@ -15,7 +16,7 @@ export function CustomizationLifecycleSection({
   if (kind === 'tag' && lifecycle === 'archived') return null;
   return <SettingsSection title="Lifecycle">
     {lifecycle === 'active'
-      ? <SettingsActionRow destructive disabled={busy} label={busy ? 'Working…' : 'Archive'} onPress={() => onAction('archive')} />
-      : <><SettingsActionRow disabled={busy} label={busy ? 'Working…' : 'Restore'} onPress={() => onAction('restore')} /><SettingsSeparator /><SettingsActionRow destructive disabled={busy} label="Delete permanently" onPress={() => onAction('delete')} /></>}
+      ? <NativeCommandButton role="destructive" disabled={busy} label={busy ? 'Working…' : 'Archive'} onPress={() => onAction('archive')} />
+      : <><NativeCommandButton disabled={busy} label={busy ? 'Working…' : 'Restore'} onPress={() => onAction('restore')} /><SettingsSeparator /><NativeCommandButton role="destructive" disabled={busy} label="Delete permanently" onPress={() => onAction('delete')} /></>}
   </SettingsSection>;
 }

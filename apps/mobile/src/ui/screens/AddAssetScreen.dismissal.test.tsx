@@ -2,7 +2,7 @@ import { scrollCommandsForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
-import { Platform, pressAlertButton } from '../../test-support/react-native';
+import { Platform, pressAlertButton, latestActionSheetCallback } from '../../test-support/react-native';
 import { afterEach, expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
@@ -13,8 +13,33 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
-import { navigationOptions, resetNavigation } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
+
+it.each([0, 1])('rejects an Add photo chooser from a departed visit, source=%s', async source => {
+  resetNavigation(); let selections = 0;
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  const select = async () => { selections++; return []; };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
+      createAssetCommand={{ execute: async () => { throw new Error('Creation not requested'); } }} parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: select, captureFromCamera: select })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    const add = h.byLabel('Add photos');
+    expect(add).toBeDefined();
+    await h.press(add);
+    const choose = latestActionSheetCallback();
+    expect(choose).toBeTypeOf('function');
+    await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true));
+    await h.run(() => choose!(source));
+    expect(selections).toBe(0);
+    await h.press(add); await h.run(() => latestActionSheetCallback()!(source));
+    expect(selections).toBe(1);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); }
+});
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let contextReads = 0; let principals = 0; let dismissed = 0; let tags: readonly [] = []; let submittedTitle = '';

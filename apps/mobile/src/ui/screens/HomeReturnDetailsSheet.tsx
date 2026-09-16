@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View, type TextInputProps } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View, type TextInputProps } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -14,18 +15,20 @@ export function HomeReturnDetailsSheet({ pendingReturn, canReturn, onCancel, onC
   readonly onSave: () => void;
 }) {
   const colors = useAppearanceAwarePalette();
+  const scroll = useRef<ScrollView>(null);
+  const headerHeight = useHeaderHeight();
   if (!pendingReturn) return null;
   const busy = pendingReturn.isSaving;
   const close = () => { if (!busy) { if (canReturn) onCancel(); else onClose(); } };
-  return <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets
+  return <ScrollView ref={scroll} style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets
+        scrollToOverflowEnabled={Platform.OS === 'ios'}
         keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <Text style={[styles.asset, { color: colors.textMuted }]}>{pendingReturn.asset.title}</Text>
         {!canReturn ? <Text accessibilityRole="alert" style={{ color: colors.textMuted }}>
           Your access changed. The item is already returned. You can close this sheet, but cannot save details or cancel the return.
         </Text> : null}
-        {pendingReturn.error ? <Text accessibilityLabel="Return details error" accessibilityRole="alert" style={{ color: colors.danger }}>
-          <Text>{pendingReturn.error.title}</Text>{'\n'}{pendingReturn.error.message}
-        </Text> : null}
+        {pendingReturn.error ? <ReturnDetailsError error={pendingReturn.error} color={colors.danger}
+          onReveal={() => scroll.current?.scrollTo({ y: Platform.OS === 'ios' ? -headerHeight : 0, animated: false })} /> : null}
         {!pendingReturn.undoableOperationId ? <Text style={{ color: colors.textMuted }}>This return cannot be canceled.</Text> : null}
         <Text style={{ color: colors.text }}>Optional return details</Text>
         <ReturnNoteInput key={pendingReturn.sessionId} accessibilityLabel="Optional return details" multiline editable={canReturn && !busy}
@@ -50,4 +53,17 @@ const styles = StyleSheet.create({
 function ReturnNoteInput({ initialValue, ...props }: TextInputProps & { readonly initialValue: string }) {
   const seed = useRef(initialValue);
   return <AppTextInput {...props} defaultValue={seed.current} />;
+}
+
+function ReturnDetailsError({ error, color, onReveal }: {
+  readonly error: NonNullable<PendingHomeReturn['error']>; readonly color: string; readonly onReveal: () => void;
+}) {
+  const revealed = useRef(false);
+  return <View onLayout={() => {
+    if (revealed.current) return;
+    revealed.current = true;
+    onReveal();
+  }}><Text accessibilityLabel="Return details error" accessibilityRole="alert" style={{ color }}>
+    <Text>{error.title}</Text>{'\n'}{error.message}
+  </Text></View>;
 }

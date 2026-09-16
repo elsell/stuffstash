@@ -8,6 +8,20 @@ This spec defines the shared user mental model, navigation, interaction states, 
 
 ## Scope
 
+Unsubmitted custom-field option text belongs to the editor draft. It participates
+in dirty-exit protection, survives Keep Editing, and must be added or cleared
+before saving an enum field. Explain this beside the option entry. Do not silently
+omit visible option text from a successful save.
+Changing a new field's type preserves dormant enum draft options for switching
+back. Non-enum creation submits an empty options list; hidden enum values must
+not cause a validation error for the newly selected type.
+
+For an existing custom field or asset type, the Details scope label must describe
+the loaded definition's owner. A household definition viewed from inventory
+settings still names the household; an inventory-owned definition names its
+inventory. Route hints must not override loaded ownership. New definitions use
+the creation scope until a record exists.
+
 This spec covers:
 
 - One account-oriented Settings entry point on web and mobile.
@@ -83,10 +97,14 @@ Lifecycle view and selected-record subroutes or query state must be canonical an
 
 - Mobile settings screens use one shared 16-point horizontal content inset for collection search, Add, lifecycle controls, notices, grouped rows, form actions, lifecycle actions, and empty or error recovery content. A primary action and the lifecycle group beneath it must align to the same content column and width.
 - Related groups use the shared settings section rhythm rather than screen-specific edge spacing. Controls must retain at least a 44-by-44-point target, allow labels and values to wrap under Dynamic Type, avoid clipping at narrow widths, and keep the final action clear of the bottom safe area and keyboard.
-- A collection's search, Add action, lifecycle selector, progress notice, and rows must read as one aligned surface. None of that collection chrome may touch the viewport edge while its rows are inset.
+- Mobile definition/tag collections use the existing native navigation search entry and native Add header action. Search expands on request, filters loaded rows immediately, and clearing/cancel restores the collection. Add is available only in an authorized active collection. Loading, denied and failed initial loads remove these header controls. Lifecycle selectors, progress notices and rows remain aligned to the shared content inset; search and Add use platform header spacing rather than custom scroll-content controls.
 - The collapsed mobile tag color control must keep `Custom…` visible without horizontal scrolling. Preset colors may wrap or use a bounded grid, but arbitrary-color discovery cannot depend on a horizontally clipped trailing control.
 - The custom-color modal uses the same horizontal inset, bottom safe-area clearance, fixed non-scrolling picker area, and aligned full-width actions. Its Cancel, Done, and Clear controls remain at least 44 points and usable with the keyboard visible.
 - Read-only, inherited, and archived mobile detail uses static labeled values rather than disabled text inputs, color pickers, or other controls that imply mutation.
+- Dirty-editor discard confirmation belongs to the focused resource that opened it. A retained confirmation accepted after blur, return, or resource replacement must not dispatch navigation or discard another draft; a newly opened confirmation may still leave normally.
+- Read-only asset types show expiration tracking as a labeled Enabled or Disabled
+  value. The switch is reserved for editable definitions, including temporarily
+  disabled controls while their save is pending.
 - Mobile create forms identify required values neutrally on first presentation. Field-level errors become assertive only after the user has interacted with the affected control or attempted submission; a blank untouched form must not open by announcing errors.
 - Custom-field type and applicability use the shared native menu-style picker in place. The editor must not render a viewport-tall grid of radio cards for these single-value choices.
 - The custom-color surface may scroll its overall content at large Dynamic Type or while the Android keyboard is visible, but the spectrum and hue controls retain gesture ownership and do not scroll during color gestures.
@@ -135,6 +153,7 @@ Collection requirements:
 - Compact replacement progress must use the shared inline settings-loading component with the activity indicator and label side by side. It must not stack the spinner above its text or replace the last successful collection during a lifecycle transition.
 - Search is required when a collection contains more than twelve records or when more pages are available. Search filters already loaded rows immediately and must use an API search contract before claiming to search unloaded pages. Until such a contract exists, the client must finish loading the collection before treating local search as complete, with visible loading/progress and bounded pagination-loop protection.
 - Empty states must distinguish `No active ...`, `No archived ...`, no search matches, permission denial, and load failure. Add is offered only in the active empty state and only when permitted.
+- Collection mutation affordances use the current permission snapshot even when rows remain cached. A retained native Add handler must stop acting when the action is removed after permission revocation.
 - A stale deep link to an archived or unavailable record must produce a safe not-found or denied state and a route back to the collection.
 - Each row must have one primary selection target. Secondary actions belong in a native menu or accessible overflow menu, not a row of competing icon buttons.
 - Lifecycle state, inherited/local ownership, and availability must not rely on color alone.
@@ -413,8 +432,26 @@ operation workflow; old operations may settle without affecting its state.
 Normally a successful command returns to the collection. If navigation ownership
 changed while it ran, the retained editor instead shows a terminal inline result
 (Saved, Archived, Restored, or Deleted) and a native Return to collection command.
+
+Customization editors use the existing native primary command for Save, preserving
+the shared content inset, validation, pending lock and draft ownership. The command
+has an explicit accessible name and shows Saving while pending. Do not paint a
+separate custom button for tags, asset types or custom fields.
+
+Editor Back uses a native leading bar action while retaining collection replacement
+and dirty-draft interception. Lifecycle and inherited-management commands use native
+command buttons; archive/delete retain destructive presentation and confirmation,
+and restore remains a standard action. Shared native command adapters expose an
+optional destructive role: SwiftUI uses its native role and Android uses the
+semantic danger palette with its native button. Existing callers remain standard.
 Do not keep the submitted form editable or expose repeat save/lifecycle commands:
 that risks duplicate creation and edits hidden by the completed dirty-state flag.
 This is a state of the existing screen, not another modal or navigation step.
 The user can deliberately return when ready. Failed operations keep the existing
 draft and retry behavior; changing resource starts a fresh editor lifecycle.
+
+Native audit fixtures must exercise the production customization editor inside a
+real navigation stack with a synthetic repository. Verify native Back with a dirty
+draft (Keep Editing and Discard), native Save returning to the collection, and
+Archive confirmation cancellation and completion. Fixture data must never reach
+production services. Source tests remain separate from simulator acceptance.

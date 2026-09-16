@@ -8,6 +8,7 @@ const icons = {
   add: require('./android-icons/header-add.xml'),
   account: require('./android-icons/header-account.xml'),
   close: require('./android-icons/header-close.xml'),
+  back: require('./android-icons/header-back.xml'),
   save: require('./android-icons/header-save.xml'),
   settings: require('./android-icons/header-settings.xml'),
   'mark-read': require('./android-icons/header-mark-read.xml')

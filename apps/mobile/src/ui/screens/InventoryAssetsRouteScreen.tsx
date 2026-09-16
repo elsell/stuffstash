@@ -1,5 +1,5 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { usePullRefresh } from '../serverState/usePullRefresh';
+import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { useMemo } from 'react';
 import { router, Stack } from 'expo-router';
 import {
@@ -37,7 +37,7 @@ export function InventoryAssetsRouteScreen({
     query: (signal) => inventoryAssetsQuery.execute({ signal })
   });
 
-  const pullRefresh = usePullRefresh(async () => { await inventoryAssets.refetch(); });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => inventoryAssets.refetch({ throwOnError: true }), resourceKey: inventoryAssets.resourceKey, failureTitle: 'Could not refresh assets' });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
