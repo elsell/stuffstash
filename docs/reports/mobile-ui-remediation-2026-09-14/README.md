@@ -35,6 +35,10 @@ pre-typing readiness timeout despite a visible keyboard in the final capture.
 The follow-up [350465 onboarding run](native-onboarding-350465.md) passes its
 phone case (two device-inapplicable skips) and all three iPad cases. The 350420
 fixture jobs are complete; see `native-phone-350420.md` for failures and limits.
+The [350465 iPad fixture job](native-ipad-350465.md) is now terminal:58/71 cases
+pass, with13 failures. Both paced typing diagnostics pass, while original
+controlled-input comparisons still fail. Phone fixtures remain active; paced
+typing is diagnostic evidence only and does not replace normal acceptance.
 
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing

@@ -678,13 +678,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(field.value as? String, "19")
     XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
-    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
-    XCTAssertTrue(cancel.isHittable)
-    cancel.tap()
-    XCTAssertTrue(field.waitForNonExistence(timeout: 5))
-    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    resetNativeSearch(field)
     XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
-    XCTAssertTrue(searchButton.isHittable)
+    XCTAssertTrue(searchButton.isHittable || (UIDevice.current.userInterfaceIdiom == .pad && field.isHittable))
     XCTAssertTrue(more.isHittable)
     capture("place-search-cancelled")
     let back = app.navigationBars.buttons.firstMatch
@@ -1524,13 +1520,29 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Tools, No color"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Garden, No color"].waitForNonExistence(timeout: 5))
     capture("settings-collection-native-search")
-    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
-    XCTAssertTrue(cancel.isHittable)
-    cancel.tap()
-    XCTAssertTrue(field.waitForNonExistence(timeout: 5))
+    resetNativeSearch(field)
     XCTAssertTrue(app.buttons["Garden, No color"].waitForExistence(timeout: 5))
     XCTAssertTrue(add.isHittable)
     capture("settings-collection-native-header")
+  }
+
+  private func resetNativeSearch(_ field: XCUIElement) {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let clear = field.buttons["Clear text"]
+      XCTAssertTrue(clear.isHittable)
+      clear.tap()
+      if !app.keyboards.firstMatch.waitForNonExistence(timeout: 2) {
+        let dismiss = app.buttons["Dismiss keyboard"]
+        XCTAssertTrue(dismiss.isHittable)
+        dismiss.tap()
+      }
+    } else {
+      let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
+      XCTAssertTrue(cancel.isHittable)
+      cancel.tap()
+      XCTAssertTrue(field.waitForNonExistence(timeout: 5))
+    }
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
   }
 
   private func openCustomizationEditor() {

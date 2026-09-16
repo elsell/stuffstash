@@ -1,5 +1,15 @@
 # Platform Interaction Review
 
+## Native search acceptance on iPad
+
+Integrated toolbar search on iPad can expose Clear text without a separate Cancel
+button. Native audit journeys must verify clearing the query, dismissing the
+keyboard, restoring unfiltered content and reaching navigation/actions through
+that observed platform pattern. They must not require the phone-only Cancel
+affordance or force a particular idle field width. Phone journeys retain Cancel
+and collapse assertions. Record screenshots/hierarchy that justify this distinction;
+an amended test remains unverified until rerun on its native target.
+
 ## Purpose
 
 Choose familiar platform interactions before implementation. Native components alone

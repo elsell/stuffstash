@@ -1,4 +1,4 @@
-# Text-entry timing diagnostic — pending
+# Text-entry timing diagnostic
 
 Prior native runs lose or reorder characters in both controlled and uncontrolled
 ordinary fields. Disabling the accessory does not reliably remove the failure;
@@ -23,3 +23,9 @@ acceptance method. Native compilation/execution remains pending; no production
 input props, correction defaults, strings or baseline assertions are changed.
 Remote structural checks pass (`/tmp/text-pacing-structural.log`) and code critic
 found no confirmed issue. Neither result verifies Swift compilation or typing.
+
+Follow-up: [iPad run350465](native-ipad-350465.md) compiled and executed both paced
+cases successfully while the unchanged controlled whole-string cases still fail.
+The seven original comparisons remain in the suite. This demonstrates cadence
+sensitivity for that run, not a production fix or physical-typing acceptance.
+The phone result remains pending at this checkpoint.
