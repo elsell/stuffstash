@@ -62,7 +62,7 @@ it('exposes tags as independent checkbox selections and applies the remaining dr
 it('clears compact selection search without losing staged tags and resets it on Back', async () => {
  resetNavigation(); const h = new MobileRenderHarness(); const applied: unknown[] = [];
  type Search = { placement: string; onChangeText: (event: { nativeEvent: { text: string } }) => void; onClose: () => void };
- const search = () => navigationOptions().map(value => value as { headerSearchBarOptions?: Search }).filter(value => value.headerSearchBarOptions).at(-1)!.headerSearchBarOptions!;
+ const search = () => (Object.assign({}, ...navigationOptions()) as { headerSearchBarOptions?: Search }).headerSearchBarOptions!;
  try {
   await h.render(<ExpirationFiltersScreen initial={{mode:'all'}} choices={{types:[],locations:[],tags:[{id:'one',label:'Medicine'},{id:'two',label:'Travel'}]}} onApply={value=>applied.push(value)} onCancel={()=>{}} />);
   await h.press(h.byLabel('Choose tags'));
@@ -74,7 +74,9 @@ it('clears compact selection search without losing staged tags and resets it on 
   expect(h.byLabel('Medicine')?.props.accessibilityState.checked).toBe(true);
   await h.run(()=>search().onChangeText({nativeEvent:{text:'missing'}}));
   await h.press(h.byLabel('Cancel or return to filters'));
+  expect(search()).toBeUndefined();
   await h.press(h.byLabel('Choose tags'));
+  expect(search().placement).toBe('integratedButton');
   expect(h.byLabel('Medicine')?.props.accessibilityState.checked).toBe(true);
   expect(h.byLabel('Travel')).toBeDefined();
   expect(applied).toEqual([]);

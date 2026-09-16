@@ -13,6 +13,12 @@ owned by NativeNavigationSearch. The mounted regression now checks merged curren
 options rather than historical handlers; eleven scoped tests pass on paul. The
 new native Browse search/selection/apply journey remains pending.
 
+The same historical-handler blind spot was removed from the expiration filter and
+workspace tests. Their existing behavior passes against current merged options;
+Back removes filter search and reopening restores it with the staged tags. Fifteen
+Browse/expiration tests pass on paul. This establishes a stronger source check,
+not an additional production defect or native acceptance.
+
 
 R016 and S071–S073 reviewed at e303e4f7, September15. Sources: browse-filters
 route, BrowseFiltersScreen, BrowseFilterRouteState, useBrowseFilterNavigation,

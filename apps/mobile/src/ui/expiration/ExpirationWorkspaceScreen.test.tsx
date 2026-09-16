@@ -16,14 +16,14 @@ it('uses compact native search and carries pending text into filters before debo
  resetNavigation(); vi.useFakeTimers(); const h=new MobileRenderHarness(); const queries:string[]=[]; const filters:string[]=[];
  try {
   await h.render(<ExpirationWorkspaceScreen mode="all" items={[]} loading={false} refreshing={false} hasMore={false} onMode={()=>{}} onSearch={value=>queries.push(value)} onFilters={value=>filters.push(value)} onRefresh={()=>{}} onMore={()=>{}} onOpenAsset={()=>{}} />);
-  const options=navigationOptions().map(value=>value as {headerSearchBarOptions?:{placement:string;allowToolbarIntegration:boolean;onChangeText:(event:{nativeEvent:{text:string}})=>void;onClose:()=>void}}).filter(value=>value.headerSearchBarOptions).at(-1)!.headerSearchBarOptions!;
-  expect(options.placement).toBe('integratedButton');
-  expect(options.allowToolbarIntegration).toBe(false);
-  await h.run(()=>options.onChangeText({nativeEvent:{text:' medicine '}}));
+  const options=()=> (Object.assign({}, ...navigationOptions()) as {headerSearchBarOptions?:{placement:string;allowToolbarIntegration:boolean;onChangeText:(event:{nativeEvent:{text:string}})=>void;onClose:()=>void}}).headerSearchBarOptions!;
+  expect(options().placement).toBe('integratedButton');
+  expect(options().allowToolbarIntegration).toBe(false);
+  await h.run(()=>options().onChangeText({nativeEvent:{text:' medicine '}}));
   expect(queries).toEqual([]);
   await h.press(h.byLabel('Filter expiration items'));
   expect(filters).toEqual(['medicine']); expect(queries).toEqual(['medicine']);
-  await h.run(()=>options.onClose());
+  await h.run(()=>options().onClose());
   await h.run(()=>vi.advanceTimersByTime(300));
   expect(queries).toEqual(['medicine','']);
  } finally { await h.unmount(); resetNavigation(); vi.useRealTimers(); }
