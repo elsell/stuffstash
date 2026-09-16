@@ -36,3 +36,28 @@ Existing mounted composer test verifies a single Cancel command during processin
 disabled typing and absence of Send/Cancel during review. Lifecycle coverage checks
 submission-failure restoration and accepted-request protection. These are included
 in the1,736-test checkpoint; none proves native typing, audio or layout acceptance.
+
+
+## Android runtime follow-up, September 16
+
+APK `d2cafbc60c76c60f57526e58075fc5597b27d3e8799cb83ef16b42fe66341a4a`,
+Pixel6 Android16 API36, normal font. This is the selectively patched audit candidate
+described in M238, not a full-HEAD release build.
+
+After resetting the synthetic conversation, entered an exact two-line request:
+“Find the camping tent in the garage” followed by “Include the blue box and all
+camping supplies”. The multiline field and native Send control stayed above the
+software keyboard. Home/launcher warm return retained the exact text. Tapping
+Send while the keyboard was visible displayed that exact request and the fixture's
+synthetic proposal; this verifies activation, not the relevance of model output.
+Close returned to the audit root. Warm deep-link reentry to Conversation retained
+the request and proposed change. System dark appearance retained the review with
+legible native header and decision controls. Restored system light after capture.
+
+Evidence: [keyboard-visible composer](evidence/android-voice-composer-keyboard.png)
+and [dark review after return](evidence/android-voice-review-dark.png). Hierarchies
+on paul: `/tmp/voice-composer{,-return,-sent}.xml`, `/tmp/voice-close-root.xml`,
+`/tmp/voice-route-return.xml`. These observations narrow the keyboard, multiline,
+appearance, gesture and lifecycle gaps for this Android candidate. They do not
+establish iOS/iPad, physical audio, screen-reader, alternate IME, hardware-keyboard,
+process-death, very long input or enlarged-text acceptance.
