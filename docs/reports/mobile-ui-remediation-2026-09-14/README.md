@@ -22,6 +22,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `field-applicability-axis.md`: all24 applicability axes and reversible unsaved expansion (M204).
 - `push-permission-axis.md`: all24 device-setup axes, command naming and physical verification limits.
 - `onboarding-creation-axis.md`: all24 household/inventory/recovery axes and native command migration.
+- `native-search-placement-350465.md`: captured phone bottom-search mismatch and pending static placement comparison.
 - `findings.md`: confirmed findings and remediation evidence.
 - `checkout-history-axis.md`: all24 axes, independent name recovery and access-retry evidence limits.
 - `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.

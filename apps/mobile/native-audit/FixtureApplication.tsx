@@ -3,6 +3,7 @@ import { VoiceProposalFixtureProvider } from './VoiceProposalFixture';
 import { voiceNativeSheetOptions } from '../src/ui/screens/VoiceNativeSheetOptions';
 export { VoiceProposalFixture, VoicePlanLocationFixture } from './VoiceProposalFixture';
 export { NoticePlacementFixture } from './NoticePlacementFixture';
+export { NativeSearchPlacementFixture } from './NativeSearchPlacementFixture';
 export { ProviderEditorFixture } from './ProviderEditorFixture';
 export { AccountConnectionFixture } from './AccountConnectionFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
@@ -86,6 +87,10 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
+      <Stack.Screen name="audit-native-search-placement" options={{ title: 'Search placement', headerSearchBarOptions: {
+        placeholder: 'Search placement probe', placement: 'integratedButton', allowToolbarIntegration: false,
+        hideWhenScrolling: false, hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none'
+      } }} />
       <Stack.Screen name="audit-region-recovery" options={{ title: 'Place' }} />
       <Stack.Screen name="audit-notice" options={{ title: 'Notice placement' }} />
       <Stack.Screen name="audit-notice-sheet" options={{ title: 'Notice placement', presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
@@ -140,6 +145,7 @@ export function FixtureMenu() {
     <Button title="Audit Provider prompt" onPress={() => router.push('/audit-provider-editor?kind=prompt' as Href)} />
     <Button title="Audit Account" onPress={() => router.push('/audit-account' as Href)} />
     <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
+    <Button title="Audit static search placement" onPress={() => router.push('/audit-native-search-placement' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />

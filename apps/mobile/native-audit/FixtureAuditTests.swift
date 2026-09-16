@@ -689,6 +689,28 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testStaticNativeSearchPlacementComparison() {
+    let open = app.buttons["Audit static search placement"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let header = app.navigationBars["Search placement"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let search = header.buttons["Search"].firstMatch
+    let ready = search.waitForExistence(timeout: 10)
+    capture("static-search-placement-idle")
+    XCTAssertTrue(ready, "Registered integrated-button search must appear in the navigation bar")
+    guard ready else { return }
+    XCTAssertTrue(search.isHittable)
+    XCTAssertGreaterThanOrEqual(search.frame.minY, header.frame.minY)
+    XCTAssertLessThanOrEqual(search.frame.maxY, header.frame.maxY)
+    search.tap()
+    let field = app.searchFields["Search placement probe"].firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    capture("static-search-placement-expanded")
+  }
+
   func testAssetRegionRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

@@ -40,6 +40,7 @@ exports = {
     "audit-connection": "AccountConnectionFixture",
     "audit-sharing": "InventorySharingFixture",
     "audit-customization": "CustomizationCollectionFixture",
+    "audit-native-search-placement": "NativeSearchPlacementFixture",
     "audit-customization-editor": "CustomizationEditorFixture",
     "voice": "VoiceProposalFixture",
     "voice-plan-location": "VoicePlanLocationFixture",

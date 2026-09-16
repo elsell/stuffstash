@@ -2860,3 +2860,13 @@ separately named progress. A pending-sign-in RED case preceded the change;40
 related tests and static checks pass on paul. Critic found no production blocker;
 its void-handler test cleanup is applied. Native keyboard/geometry acceptance is
 pending, including all earlier onboarding reachability scenarios.
+
+### M207 — Phone native search appears at bottom despite header configuration
+
+P2 native-confirmed atb6321dcb/run350465. Place and settings tags show bottom native
+SearchFields instead of expanding header buttons. Both captures/hierarchies are
+retained in native-search-placement-350465.md. The tested source requests disabled
+toolbar integration; pinned native bridging forwards the options. Root cause
+remains unknown. A static route-registration comparison is queued without relaxing
+the original production journeys; installer/static checks pass, native execution
+is pending. Shared consumers require investigation, not assumed failure.

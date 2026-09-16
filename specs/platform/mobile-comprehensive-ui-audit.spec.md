@@ -1,5 +1,16 @@
 # Comprehensive mobile UI audit and remediation
 
+## Native search placement comparison
+
+Run350465 phone captures show a bottom search field despite integratedButton and
+allowToolbarIntegration=false. Retain the production Search-button acceptance
+assertions; do not accept the bottom field as equivalent to requested placement.
+Add a runner-only minimal comparison with identical search options supplied at
+route registration before presentation. It must capture idle geometry and verify
+the search button lies in the navigation bar before expanding. This distinguishes
+baseline native configuration from the more complex production mounting path;
+it does not prove a cause or replace production search/result/navigation tests.
+
 ## Onboarding command controls
 
 Connect/sign-in, household/inventory creation and sign-out/start-over reuse the
