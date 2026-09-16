@@ -1367,6 +1367,13 @@ address comparison. This separates the native field path from React Native text
 input without changing production fields or relaxing any original failing case.
 Passing the comparison does not establish physical typing or prove the cause.
 
+Onboarding's whole-string address check must observe completion with a bounded
+five-second exact-value predicate before retaining its exact equality assertion.
+Run350549 recording shows complete text after the initial partial-value snapshot,
+with focus retained; typeText returning is not sufficient completion evidence.
+Do not retry typing, substitute paced injection, accept substrings or suppress a
+timeout. Capture the resulting state whether the predicate succeeds or fails.
+
 The native audit must compare the same ordinary text with the default keyboard:
 uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
 and uncontrolled without the app keyboard accessory. Retain the baseline and exact

@@ -85,6 +85,10 @@ final class OnboardingAuditTests: XCTestCase {
     waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    let completeAddress = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "https://example.invalid"), object: address)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeAddress], timeout: 5), .completed,
+      "Address entry must finish with the complete value within five seconds")
     capture("onboarding-keyboard")
     XCTAssertEqual(address.value as? String, "https://example.invalid", "Typing must preserve the complete server address")
     // Interactive keyboard dismissal follows a downward drag from scroll content.
