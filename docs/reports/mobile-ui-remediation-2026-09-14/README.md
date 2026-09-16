@@ -11,7 +11,8 @@ and Close without losing draft photos; see [photo viewer evidence](photo-viewer-
 This is partial runtime acceptance. Completed run350950 records phone65/83 and
 iPad73/83 fixture passes; see the target reports for failures and evidence limits.
 Run35104157358 at14d7e06f is active: its phone onboarding journey passes, with two
-device-inapplicable skips. The latest source is queued in35105369296. Release
+device-inapplicable skips, and all three iPad onboarding journeys pass. Both fixture
+suites remain running. The latest source is queued in35105369296. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.7GB on paul root and15GB in paul's
 `/tmp` after removing a verified duplicate Android installer extraction.

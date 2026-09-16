@@ -3151,5 +3151,8 @@ Apple's [Photos iOS26 guide](https://support.apple.com/en-sg/guide/iphone/iph3d2
 describes single-tap hide/show. Preserve zoom while revealing commands as a
 project interaction requirement. Separate the command-visibility state from zoom,
 keep double-tap zoom and platform dismissal, and test delayed single-tap cleanup.
-Repair and acceptance remain open; screenshots and observed escape evidence are
-in photo-viewer-axis.md.
+The shared repair is implemented and behavior-tested. APKd9b1a7b5 verifies Android
+single-tap hide/reveal while zoomed, retained zoom after warm return, replacement
+paging and asset-photo removal-failure recovery. Zoomed pan and a long upward
+dismissal also have native evidence. iOS, pinch and assistive acceptance remain
+open; see photo-viewer-axis.md for exact build, scenarios and evidence limits.

@@ -94,4 +94,10 @@ Job104821415253 completed successfully on September16 at source14d7e06f.
 the two iPad-only/landscape cases were skipped by the existing device applicability
 guards. This is one passing phone journey, not three verified interactions or proof
 that earlier intermittent text-entry failures are resolved. Full log retained at
-`/tmp/native351041-onboarding-phone.log`. Other jobs in this run remain separate.
+`/tmp/native351041-onboarding-phone.log`.
+
+The corresponding iPad job104821414888 also completed successfully: help/keyboard,
+keyboard dismissal inside the form column, and landscape adaptation all passed
+(3 tests, no failures). Log: `/tmp/native351041-onboarding-ipad.log`. The phone and
+iPad fixture suites remain separate and running; these onboarding results do not
+close their search, sharing or text-entry findings.

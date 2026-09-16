@@ -17,6 +17,27 @@ the inventory scope and calls `router.dismissTo('/search', params)`; this fixtur
 result does not establish a production navigation defect. Warm-entry Apply retains
 the earlier explicit selected-tag result evidence below.
 
+The same APK was then exercised with Android system night mode enabled. On warm
+entry, typing Tools after the field was ready, selecting its row and tapping Show
+results above the keyboard returned the explicit `Browse selected tags: audit-tools`
+fixture result. The first input command issued during keyboard opening left the
+field empty; this observation is retained rather than counted as successful typing.
+The inspected dark body keeps search, rows and footer labels visible. Hierarchies:
+`/tmp/dark-{tools,result}.xml` on paul; capture `/tmp/dark-tools.png` on both hosts.
+That capture precedes the successful second input command. The fixture's white
+navigation header lacks production `_layout.tsx`'s palette-backed `headerStyle`,
+so it does not prove production dark-header behavior. System night mode was restored
+to light after this check; assistive and production-data acceptance remain open.
+
+TalkBack was subsequently enabled on this emulator; `dumpsys accessibility`
+confirmed its bound service and touch exploration. A green focus outline appeared
+on Filters and then the selected All types menu entry. ADB-injected horizontal
+gestures did not establish traversal, and a single injected tap directly opened
+the menu. These inputs are insufficient to certify TalkBack gesture activation or
+focus order. No spoken-output claim is made. Captures are retained as
+`/tmp/talkback-{focus,next,explore}.png` on both hosts. The originally empty enabled
+service setting and disabled accessibility state were restored and read back.
+
 Android16 Pixel6 emulator on paul, normal text, light appearance. The initial
 Browse filter sheet at detent0.7 lacks its title and both footer commands;
 expanding to1.0 reveals Show results/Cancel. The ADB assertion that Show results
