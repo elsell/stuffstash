@@ -14,6 +14,23 @@ const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((
 const entry = { id: 'activity', principalId: 'person', action: 'asset.updated', category: 'change' as const, source: 'api', occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title' as const, currentValue: 'Cached name' }], technical: {} };
 
 describe('History detail cache', () => {
+  it.each([undefined, '', '   ', '  owner@example.test  '])('presents a readable actor for email %s', async (email) => {
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    client.setQueryData(mobileQueryKeys.assetActivity('scope', 'tenant', 'inventory', 'asset', 'activity'), {
+      ...entry, principalId: 'opaque-principal-123', principal: { id: 'opaque-principal-123', email }
+    });
+    const query = new AssetActivityQuery({ listAssetActivity: async () => { throw new Error('Fresh cache should be used'); } });
+    try {
+      await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryDetailRouteScreen assetActivityQuery={query} revertAssetChangeCommand={new RevertAssetChangeCommand({ reverseAssetOperation: async () => undefined })} activityId="activity" assetId="asset" assetTitle="Item" tenantId="tenant" inventoryId="inventory" /></AppFeedbackProvider>
+      </MobileServerStateProvider>);
+      const text = harness.allText().join(' ');
+      expect(text).toContain(email?.trim() || 'Someone with access');
+      expect(text).not.toContain('opaque-principal-123');
+    } finally { await harness.unmount(); }
+  });
+
   it('reuses a fresh scoped page and cancels an unrelated asset lookup on leaving', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();

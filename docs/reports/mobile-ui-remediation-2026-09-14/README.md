@@ -76,8 +76,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise1,177
-pending,1,615 source-reviewed,463 finding,24 runtime-partial and129 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise1,159
+pending,1,628 source-reviewed,464 finding,24 runtime-partial and133 not-applicable.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
 includes the visible pending name on approval and blocks blank names;52 focused
@@ -142,6 +142,11 @@ and static validation pass remotely. Native feedback presentation remains pendin
 51/67 iPad fixture cases passing; both onboarding jobs passed. The Home Return
 visibility check hit duplicate nested text matches; its selector is corrected
 without relaxing geometry acceptance. Current-head native verification remains open.
+
+[History detail](history-detail-axis.md) now has a complete24-axis source review.
+M182 aligns its missing-actor label with History list. All14 focused cases and
+static checks pass remotely; code review found no blockers. Native acceptance
+remains open.
 
 [Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
 on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size

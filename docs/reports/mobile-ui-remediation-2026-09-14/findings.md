@@ -2605,3 +2605,13 @@ four command cases reject failed, unknown, empty and invented success statuses.
 All82 focused tests, TypeScript and structural checks pass remotely on paul
 (`/tmp/provider-test-result-green.log`). Critic found no blockers. Authorization,
 transport and cache invalidation are unchanged. Native feedback layout remains open.
+
+### M182 — History detail exposes an opaque actor fallback
+
+P3 source-confirmed at953bb1ff. History list uses Someone with access when email
+is unavailable; detail instead shows the internal principal ID in its primary
+actor line. The candidate makes those surfaces consistent, retaining trimmed email
+when supplied. Three mounted RED cases reproduce absent, empty and whitespace
+email; a contrasting real-email case preserves its existing presentation. Audit
+identity, permissions and transport are unchanged. See history-detail-axis.md for
+the complete source review and outstanding native acceptance.

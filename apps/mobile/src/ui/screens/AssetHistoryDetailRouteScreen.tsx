@@ -148,7 +148,7 @@ export function AssetHistoryDetailRouteScreen({
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
         <Text style={styles.timestamp}>{formatHistoryTimestamp(entry.occurredAt, 'exact')}</Text>
-        <Text style={styles.muted}>{entry.principal?.email?.trim() || entry.principalId || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
+        <Text style={styles.muted}>{entry.principal?.email?.trim() || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
       </View>
 
       {entry.changes.length > 0 ? (

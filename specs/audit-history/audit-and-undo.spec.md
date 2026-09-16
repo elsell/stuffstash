@@ -358,6 +358,10 @@ details; the two-value Show menu remains an in-place native choice. Reversal kee
 its native confirmation and explicit pending label with disabled submission.
 Technical details remain an inline disclosure, not another navigation destination.
 
+History list and detail must use the same readable actor fallback: show a trimmed
+email when available, otherwise Someone with access. Do not put an opaque principal
+ID in the primary actor label. This presentation choice does not alter audit identity.
+
 ### Mobile history date presentation
 
 Activity, checkout/return history and exact event details must format timestamps
