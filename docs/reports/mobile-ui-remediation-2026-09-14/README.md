@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest full source checkpoint (a46d7bb3): **1,911 tests across299 files**, TypeScript
+Latest full source checkpoint (5c05f66e): **1,911 tests across299 files**, TypeScript
 and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
 footer dispatch on both platforms; Android current-action smoke checks pass.
 M236 extends that guard to asset actions, with current-payload and asset-replacement
@@ -24,7 +24,7 @@ Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes
 iPad onboarding passes3/3; phone help activation fails (M240). See
 [native phone findings](native-phone-351121.md) and
 [native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
-active and must finish undisturbed. Both onboarding jobs pass their applicable cases with
+partially complete: phone67/85 fixture tests pass, with18 failures; iPad fixtures remain active and must finish undisturbed. See [current phone evidence and acceptance corrections](native-phone-351214.md). Both onboarding jobs pass their applicable cases with
 [inspected help, keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
 c196d527 await native execution: bounded exact Add-tag observation and a managed
 search/header-action coexistence comparison. Neither is production acceptance.
@@ -32,7 +32,12 @@ M242 inbox ownership and M243/M244 Android menu corrections have source checks a
 scoped Android runtime evidence; iOS acceptance remains pending. Release remains
 gated on native review. Stale archive cleanup preserves selected evidence and
 active build environments; last checked free space is11GB local,4.9GB on paul root
-and18GB in paul's `/tmp`.
+and18GB in paul's `/tmp` before downloading the current phone artifact.
+
+M248 preserves Android footer action descriptions through a pinned native Expo
+patch, compiled from source. Native expiration/voice command checks and the full
+1,911-test suite pass;922 mobile/client/patch/lock files match remote validation.
+See [evidence and TalkBack limits](android-action-descriptions.md).
 
 
 Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript

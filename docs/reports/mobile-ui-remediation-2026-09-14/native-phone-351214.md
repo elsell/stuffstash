@@ -1,0 +1,53 @@
+# Phone native audit — run35121454700
+
+Source1a15ca11, tested mergec5b6f1b110135c3d80f1433429c84dcd248d8fdb;
+iPhone17 job104881256251 completes67/85 tests,18 failures in3217.670 seconds.
+Artifact10460153475,1,626,265,069 bytes, is retained on paul as
+`/tmp/native351214-phone.zip`; selected captures are in
+`/tmp/phone351214-selected`. The complete job log is local at
+`/tmp/native351214-phone-complete.log`. Phone onboarding passed separately.
+The iPad fixture job was still active at this inspection; do not restart it.
+
+## Normal-size results
+
+- Sharing recovery now passes, including the direct cancellation command and
+  expected cancellation failure/recovery. Inspected cancellation capture
+  `19E40272-1D65-4CBC-86C2-EC2B63C812CC.png` retains the invitation and retry action.
+- Settings collection search and Add pass in this run. Preconfigured Place search
+  still fails. This variability does not establish a shared search root cause;
+  the managed-search/header-action comparison is newer than this source.
+- Add unfinished-tag retention passes here, before the later exact-value wait.
+  Keep its stronger observation candidate; do not attribute this pass to that change.
+- Add photos complete preview, paging and draft removals, then fail the return
+  test's scroll direction. Final capture shows the audit index; hierarchy places
+  Audit Browse filters at y1116.3 below the visible116–874 scroll frame. The loop
+  swiped downward12 times. Candidate chooses direction geometrically, preserving
+  destination/hittability/foreground assertions. Native rerun remains required.
+- Inbox stops before interaction because the envelope's accessible glyph width is24,
+  below the test's44 requirement. Source declares a48-point host/frame. Neither
+  fact proves delivered touch size. Candidate keeps the workflow and adds actual
+  center/edge/corner toggles across a44-point region. No inbox native pass claimed.
+- Ordinary color opening still fails; the separate target/region probes pass.
+  M51 remains open. Controlled address/name diagnostics continue to corrupt text;
+  these have not been fixed or reclassified as early reads.
+- Voice proposal location/retry/return and native header retention tests pass.
+
+## Deferred enlarged-text and diagnostic cases
+
+Seven explicit enlarged-text workflows fail: asset-region, command height,
+Details commands, Edit metadata, Edit tags, footer appearance and Move Here.
+Expiration accessibility audit again reports Text clipped; retained issue details
+from this run still need inspection before classifying it. Footer-full-sheet and
+nested-full-sheet comparisons fail, while scroll-footer-full-sheet passes; the
+failing comparison configurations are not the shipped route configurations.
+
+The run remains a failed release gate. These results do not verify later Android
+patches or claim whole-app native acceptance.
+
+The test-only candidates pass six fixture-isolation checks and the mobile structural
+check on paul. Critic requested enabled-state waiting before each delivered-target
+probe and precise wording about state transitions rather than request counts; both
+are incorporated. Swift compilation and runtime acceptance await the next native run.
+
+![Add returned to the audit index](evidence/phone351214-add-return.png)
+![Inbox before target assertion](evidence/phone351214-inbox.png)

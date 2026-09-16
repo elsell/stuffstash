@@ -506,3 +506,17 @@ Android autolinking must build the patched `expo-ui` Gradle project from source;
 its bundled precompiled Maven artifact does not contain the registry correction.
 Scope `expo.autolinking.android.buildFromSource` to that project only. An APK
 build that silently reuses the precompiled artifact is not acceptance evidence.
+
+## Native return and delivered-target acceptance
+
+After Add photo dismissal, the audit-index destination must remain usable. Its
+probe must choose scroll direction from the target's position relative to the
+visible scroll frame, not assume a fixed ordering of growing fixture entries.
+Run351214's Browse entry lay below the viewport while the probe swiped downward.
+Retain the destination, hittability and running-foreground requirements.
+
+For notification read commands, distinguish native glyph accessibility frames
+from delivered hit regions. A24-point icon frame alone neither proves nor disproves
+a44-point target. Verify center, four edges and four corners at21-point offsets,
+with each real tap producing the intended read-state transition and retaining
+the same row. Preserve the full inbox read/unread/navigation workflow separately.

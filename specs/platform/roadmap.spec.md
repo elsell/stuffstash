@@ -472,7 +472,17 @@ regressions,20 focused tests, TypeScript/structural checks, critic review and na
 Android drag/adjust/Cancel smoke checks complete. Full mobile suite now passes1,911
 tests/299 files on paul;915 tracked mobile/client files match the current source
 manifest. Log: `/tmp/mobile-audit-a46d7bb3-full.log`. Both onboarding jobs in
-351214 pass their applicable cases with captures inspected. The two fixture jobs
+351214 pass their applicable cases with captures inspected. Phone fixtures subsequently finish67/85 with18 failures; iPad fixtures
 remain active; that older native source does not include the latest managed-search
 comparison, exact Add-tag wait or M245. Preserve normal-size-first sequencing and
 native acceptance before release; the comprehensive goal remains incomplete.
+
+Current source checkpoint5c05f66e also fixes M246/M247 Android target sizes and
+M248 missing native footer descriptions. Native normal-width/320dp target checks
+and expiration/voice command semantics pass; TalkBack remains unverified. All1,911
+mobile tests/299 files pass on paul with922 source/patch/lock files matched.
+Phone351214 narrows Add-photo failure to a wrong-direction fixture scroll and
+inbox failure to an AX-glyph size assumption. The next native candidates use
+geometric scrolling and real delivered-target taps; neither is yet accepted.
+Sharing recovery passes on phone; ordinary color opening, preconfigured Place
+search and controlled-input diagnostics remain unresolved.

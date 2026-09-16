@@ -20,8 +20,9 @@ final class FixtureAuditTests: XCTestCase {
     let markRead = app.buttons["Mark \(title) read"].firstMatch
     XCTAssertTrue(markRead.waitForExistence(timeout: 10))
     XCTAssertTrue(markRead.isHittable)
-    XCTAssertGreaterThanOrEqual(markRead.frame.width, 44)
-    XCTAssertGreaterThanOrEqual(markRead.frame.height, 44)
+    XCTAssertGreaterThan(markRead.frame.width, 0)
+    XCTAssertGreaterThan(markRead.frame.height, 0)
+    XCTAssertTrue(app.frame.contains(markRead.frame))
     capture("notification-inbox-long-row")
     markRead.tap()
     let markUnread = app.buttons["Mark \(title) unread"].firstMatch
@@ -50,6 +51,34 @@ final class FixtureAuditTests: XCTestCase {
     waitForExpectations(timeout: 5); unreadFilter.tap()
     XCTAssertTrue(app.staticTexts["No unread notifications."].waitForExistence(timeout: 5))
     capture("notification-inbox-unread-empty")
+  }
+  func testNotificationReadControlDeliveredTouchRegion() {
+    let entry = app.buttons["Audit Notifications"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable); entry.tap()
+    let title = "Household medicine with a long descriptive label"
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    var read = false
+    for (index, offset) in offsets.enumerated() {
+      let current = app.buttons["Mark \(title) \(read ? "unread" : "read")"].firstMatch
+      XCTAssertTrue(current.waitForExistence(timeout: 5))
+      let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: current)
+      XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+      XCTAssertTrue(current.isHittable)
+      let center = current.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      let changed = app.buttons["Mark \(title) \(read ? "read" : "unread")"].firstMatch
+      guard changed.waitForExistence(timeout: 5) else {
+        capture("notification-read-hit-region-failed-\(index)")
+        XCTFail("Read command did not toggle at probe \(index): \(offset)")
+        return
+      }
+      XCTAssertTrue(current.waitForNonExistence(timeout: 5))
+      XCTAssertTrue(app.navigationBars["Notifications"].exists)
+      read.toggle()
+    }
+    capture("notification-read-delivered-hit-region")
   }
   func testInvitationAcceptanceRetainsAccessAfterOpeningFailure() {
     func openInvitation() {
@@ -1488,7 +1517,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
     let root = app.buttons["Audit Browse filters"]
     XCTAssertTrue(root.waitForExistence(timeout: 5))
-    for _ in 0..<12 where !root.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    for _ in 0..<12 where !root.isHittable {
+      let viewport = app.scrollViews.firstMatch
+      if root.frame.maxY > viewport.frame.maxY { viewport.swipeUp() }
+      else { viewport.swipeDown() }
+    }
     XCTAssertTrue(root.isHittable)
     XCTAssertEqual(app.state, .runningForeground)
   }
