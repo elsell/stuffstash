@@ -46,7 +46,10 @@ are intentional: route coverage and interaction coverage are independent.
 Runtime availability: macOS GitHub runners build and launch the genuine application
 on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`
 for inspected screenshots and the distinction between procedure and app findings.
-Android runtime remains unavailable. No local builds/tests, per session constraint.
+An isolated Android16 emulator now boots on `paul`; the synthetic app build is
+in progress. Android UI acceptance remains unverified; see
+[runtime preparation](android-runtime-preparation.md). No local builds/tests,
+per session constraint.
 
 The [350420 iPad onboarding inspection](native-onboarding-350420.md) records a
 pre-typing readiness timeout despite a visible keyboard in the final capture.

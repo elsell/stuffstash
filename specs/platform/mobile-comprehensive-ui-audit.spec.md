@@ -1499,3 +1499,18 @@ captured implementation directly (version1.0.16261425), verifying SHA-256
 first. Do not rerun the SDK wrapper's automatic CLI download. Record the initial
 bootstrap's unpinned execution as a historical supply-chain gap; capturing a pin
 afterward constrains subsequent use but does not retroactively verify that step.
+
+The disposable Android build uses the pinned React Native0.83.6 catalog's API36,
+build-tools36.0.0 and NDK27.1.12297006. The generated Gradle9.0.0 wrapper must verify
+its distribution against published SHA-256
+`8fad3d78296ca518113f3d29016617c7f9367dc005f932bd9d93bf45ba46072b`.
+Keep build caches outside the source checkout and restrict the emulator build to
+x86_64. A debug-signed audit APK is synthetic evidence only and must never enter
+the distribution pipeline.
+
+Provision the isolated build's Java17 toolchain explicitly rather than relying on
+React Native's incompatible Foojay0.5.0/Gradle9 automatic resolver. Temurin17.0.16+8
+Linux x64 HotSpot archive must pass SHA-256
+`166774efcf0f722f2ee18eba0039de2d685b350ee14d7b69e6f83437dafd2af1`
+before extraction/execution. This is a validation-host toolchain, not a change to
+the app dependency graph.

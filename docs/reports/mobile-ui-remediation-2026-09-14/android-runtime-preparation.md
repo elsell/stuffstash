@@ -14,7 +14,7 @@ The package listing succeeds; this tools version warns that sdkmanager is
 deprecated in favor of its bundled Android CLI.
 
 Google repository metadata identifies these stable packages. Emulator and system
-image are now installed; platform/build tools remain pending. Repository XML is
+image, platform and build tools are now installed. Repository XML is
 retained in the same remote audit directory.
 
 | Package | Revision | Archive | Published SHA-1 |
@@ -72,3 +72,22 @@ remote regression cases pass, including preserving an external checkout reached
 through a symlink; that case failed before the guard correction. Remote mobile
 structural checks pass and critic review has no remaining blocker. This prepares
 safe synthetic app installation; it is not an Android app build or UI result.
+
+The disposable source archive at db8d2bb8 installed its frozen mobile dependencies
+and completed Android-only Expo prebuild on paul. The generated Gradle9.0.0 wrapper
+now has its published distribution SHA-256 configured before execution:
+`8fad3d78296ca518113f3d29016617c7f9367dc005f932bd9d93bf45ba46072b`.
+Source: [Gradle distribution checksum](https://services.gradle.org/distributions/gradle-9.0.0-bin.zip.sha256).
+React Native0.83.6's catalog selects API36, build-tools36.0.0, NDK27.1.12297006
+and Android Gradle plugin8.12.0. The initial build failed before app compilation:
+Foojay0.5.0 attempted to provision Java17 and referenced `IBM_SEMERU`, removed by
+Gradle9. The captured stack trace matches the
+[upstream React Native issue](https://github.com/react/react-native/issues/55781).
+Installed Temurin17.0.16+8 from its numbered Linux x64 HotSpot archive after checking
+published SHA-256 `166774efcf0f722f2ee18eba0039de2d685b350ee14d7b69e6f83437dafd2af1`.
+NDK27.1.12297006 installation also completed. The x86_64 build is now retrying with
+explicit Java17 and automatic Java downloads disabled, with caches outside the
+archive. Its generated release variant uses the debug signing key;
+it is not a distributable release. Prebuild also warns that automatic Android
+appearance needs expo-system-ui; this needs runtime investigation before a finding
+is accepted or a dependency change proposed.
