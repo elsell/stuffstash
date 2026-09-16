@@ -3076,3 +3076,20 @@ bounded return policy that goes back when possible and otherwise returns Home,
 while preserving retained drafts and pending-operation guards. Follow-up now shares
 that policy with filters and passes Android cold/warm Close checks; source tests
 retain draft/busy guards. See android-add-header.md for evidence and remaining gaps.
+
+### M228 — Android inventory/history sheets omit required headers
+
+P1 runtime-confirmed: inventory-switcher Close and checkout-history Close are absent
+in their Android form sheets. Android card presentation restores both. Root inventory
+Close/selection also need the shared Home fallback; mounted checks cover both and
+native root Close passes. See android-header-sheets.md for consumer coverage.
+
+### M229 — Return completion crashes during native header teardown
+
+P1 runtime-confirmed in the unshipped Android card candidate. Clearing a Return task
+and changing native removal protection while popping produced a native header crash.
+Keeping removal protection stable and redispatching authorized completed-task exits
+passes native retry and Cancel journeys with positive Home destination checks. The
+original crash is retained; iOS regression acceptance remains pending. See
+android-header-sheets.md. Negative-only disappearance is never sufficient evidence
+of successful navigation.

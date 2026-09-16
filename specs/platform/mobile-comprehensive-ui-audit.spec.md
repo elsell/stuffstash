@@ -1643,3 +1643,21 @@ root with Home otherwise. Reuse the same navigation-only return policy as filter
 cancellation; callers retain their own draft, cancellation and pending-work guards.
 The isolated Add native fixture must exercise the same policy. A retained Add draft
 must not be cleared merely because Close chooses the Home fallback.
+
+Inventory switching and checkout history require visible native titles and Close
+commands. On Android they use full-screen stack cards because form sheets omit
+those requested headers; iOS retains their existing detents. Share inventory
+switcher presentation between production and the native fixture. Checkout history's
+shared presentation also hosts Home return details, whose pending-return and exit
+guards must remain intact and receive focused regression coverage.
+
+Inventory switcher Close and successful selection must also return Home when no
+back destination exists. Preserve immediate callback retirement and abort handling
+when leaving; failed selection stays open for retry.
+
+Return details must not toggle native removal protection in the same commit that
+clears its task and pops the route. Keep the route's removal guard installed for
+its lifetime: active tasks delegate attempted exits to their existing close policy;
+completed/absent tasks dispatch the original removal action. Native acceptance must
+positively observe the destination screen and surviving app process after Save or
+Cancel; disappearance of the task alone is insufficient and can hide a crash.

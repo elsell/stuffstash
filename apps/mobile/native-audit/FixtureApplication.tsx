@@ -1,3 +1,4 @@
+import { inventorySwitcherNativeOptions } from '../src/ui/screens/InventorySwitcherNativeOptions';
 export { ManagedSearchPlacementFixture } from './ManagedSearchPlacementFixture';
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
 import { returnToPreviousOrHome } from '../src/ui/navigation/returnToPreviousOrHome';
@@ -84,7 +85,7 @@ function FixtureNavigation() {
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
-      <Stack.Screen name="audit-inventory-switcher" options={{ presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.5, 1], sheetCornerRadius: 24, sheetGrabberVisible: true, contentStyle: { backgroundColor: palette.surface } }} />
+      <Stack.Screen name="audit-inventory-switcher" options={inventorySwitcherNativeOptions(palette)} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
       <Stack.Screen name="audit-add-push" options={{ presentation: 'card', headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-add-header" options={sheets.add} />

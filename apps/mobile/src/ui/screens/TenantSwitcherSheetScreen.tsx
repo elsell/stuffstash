@@ -1,3 +1,4 @@
+import { returnToPreviousOrHome } from '../navigation/returnToPreviousOrHome';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
@@ -55,7 +56,7 @@ export function TenantSwitcherSheetScreen({
     setSelecting(true); setSelectionError('');
     try {
       await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
-      if (focused.current && !request.signal.aborted) router.back();
+      if (focused.current && !request.signal.aborted) returnToPreviousOrHome(router);
     } catch {
       if (focused.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
     } finally {
@@ -67,7 +68,7 @@ export function TenantSwitcherSheetScreen({
   const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => {
     if (!visit?.active) return;
     visit.active = false;
-    pending.current?.abort(); router.back();
+    pending.current?.abort(); returnToPreviousOrHome(router);
   } }]);
   const headerOptions = useMemo(() => ({ title: 'Inventories', ...actionOptions }), [actionOptions]);
 

@@ -115,7 +115,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise zero pending
-source-review cells,2,630 source-reviewed,555 finding,25 runtime-partial and198
+source-review cells,2,626 source-reviewed,562 finding,25 runtime-partial and198
 not-applicable. This completes source inventory coverage, not native acceptance or
 finding remediation. The remaining route/server-entry/notice reviews are linked
 in their surface reports; M212 adds direct-entry checkout-history exit recovery.
@@ -536,3 +536,8 @@ retain individual runtime verification gaps.
 shared presentation fix, and native Save/failure/Close acceptance. The separate
 M227 no-history Close fallback and remaining header-dependent Android sheets remain
 open; this sample does not certify all Add workflows.
+
+[Android header-dependent sheets](android-header-sheets.md) records restored
+inventory/history Close controls, root-return handling, and the Return details
+teardown crash found and fixed during shared-consumer verification. Native destination
+checks now require visible Home content and a surviving app, not only dismissal.

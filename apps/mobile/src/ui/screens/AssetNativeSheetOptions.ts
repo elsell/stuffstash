@@ -64,7 +64,10 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
     } : {
       ...baseOptions, sheetAllowedDetents: [0.6, 0.9]
     } satisfies AssetNativeSheetOptions,
-    checkoutHistory: {
+    checkoutHistory: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const,
+      headerShown: true, title: 'Checkout history'
+    } : {
       ...baseOptions,
       headerShown: true,
       title: 'Checkout history',
@@ -87,6 +90,6 @@ export const assetMoveHereNativeSheetOptions = {
   ...defaultOptions.moveHere
 };
 
-export const assetCheckoutHistoryNativeSheetOptions: AssetNativeSheetOptions = {
+export const assetCheckoutHistoryNativeSheetOptions = {
   ...defaultOptions.checkoutHistory
 };

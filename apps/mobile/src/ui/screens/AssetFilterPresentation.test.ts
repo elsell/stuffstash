@@ -33,3 +33,13 @@ it('keeps Add header commands available on Android without changing the iOS shee
     presentation: 'formSheet', headerShown: true, title: 'Add item', sheetAllowedDetents: [1]
   });
 });
+
+it('keeps Android checkout history Close available while retaining the iOS detents', () => {
+  expect(createAssetNativeSheetOptions(colors, 'android').checkoutHistory).toMatchObject({
+    presentation: 'card', headerShown: true, title: 'Checkout history'
+  });
+  expect(createAssetNativeSheetOptions(colors, 'android').checkoutHistory).not.toHaveProperty('sheetAllowedDetents');
+  expect(createAssetNativeSheetOptions(colors, 'ios').checkoutHistory).toMatchObject({
+    presentation: 'formSheet', sheetAllowedDetents: [0.58, 0.92]
+  });
+});

@@ -1613,6 +1613,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(save.isHittable)
     save.tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Return details"])], timeout: 5), .completed)
+    XCTAssertEqual(app.state, .runningForeground, "Completing return details must not exit or crash the app")
+    XCTAssertTrue(app.staticTexts["Recently changed"].waitForExistence(timeout: 5),
+      "Saving must return to Home, not merely remove the details screen")
     capture("home-return-save-complete")
   }
 

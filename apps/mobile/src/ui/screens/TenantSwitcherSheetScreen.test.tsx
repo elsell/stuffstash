@@ -3,7 +3,7 @@ import { HomeDashboardQuery, type HomeDashboardViewModel } from '../../applicati
 import { SelectInventoryCommand } from '../../application/home/SelectInventoryCommand';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileRenderHarness } from '../../test-support/render';
-import { dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
+import { dispatchedActions, resetNavigation, setCanGoBack, setScreenFocused } from '../../test-support/navigation';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { TenantSwitcherSheetScreen } from './TenantSwitcherSheetScreen';
 
@@ -115,4 +115,15 @@ it.each([true, false])('recovers after a departed selection with refocus before 
     expect(calls).toBe(2);
     expect(dispatchedActions()).toHaveLength(1);
   } finally { await h.unmount(); resetNavigation(); }
+});
+
+
+it.each(['close', 'select'])('returns Home after %s from a root inventory switcher', async action => {
+  resetNavigation(); setCanGoBack(false); setScreenFocused(true);
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(fixture(new SelectInventoryCommand({ async selectInventory() {} })));
+    await h.press(h.byLabel(action === 'close' ? 'Close inventory switcher' : 'Switch to inventory Main'));
+    expect(dispatchedActions()).toEqual([{ type: 'replace', href: '/' }]);
+  } finally { await h.unmount(); setCanGoBack(true); resetNavigation(); }
 });

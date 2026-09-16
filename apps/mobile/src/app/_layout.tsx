@@ -1,3 +1,4 @@
+import { inventorySwitcherNativeOptions } from '../ui/screens/InventorySwitcherNativeOptions';
 import { AppNoticeScreenLayout } from '../ui/feedback/AppNoticeScreenLayout';
 import { voiceNativeSheetOptions } from '../ui/screens/VoiceNativeSheetOptions';
 import { HomeReturnTaskProvider } from '../ui/navigation/HomeReturnTaskPresentation';
@@ -120,17 +121,7 @@ function ThemedApp() {
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}
         />
-        <Stack.Screen
-          name="tenant-switcher"
-          options={{
-            contentStyle: { backgroundColor: palette.surface },
-            headerShown: true,
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.5, 1],
-            sheetCornerRadius: 24,
-            sheetGrabberVisible: true
-          }}
-        />
+        <Stack.Screen name="tenant-switcher" options={inventorySwitcherNativeOptions(palette)} />
       </Stack>
       <PushNotificationNavigation />
       <VoiceConversationReturn />
