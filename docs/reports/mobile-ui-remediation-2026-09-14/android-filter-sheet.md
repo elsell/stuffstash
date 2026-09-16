@@ -97,3 +97,10 @@ TypeScript and structural checks on paul. Broader search/clear/last-row retestin
 dark mode, TalkBack and production navigation remain open; iOS search placement
 must still be verified. The earlier native-footer candidate is superseded, not an
 accepted fallback.
+
+Replacement-layout follow-up on the same36fe660b APK: after warm Browse entry,
+Tags keeps search at y317–443 while the list scrolls independently. The final tag
+row is y1812–1949, above Show results y2075–2118. Selecting that row and applying
+returns the explicit fixture result `Browse selected tags: audit-last`. This
+supersedes the earlier sheet-layout last-row evidence for the new implementation.
+Local inspected hierarchies: `/tmp/card-final-row.xml`, `/tmp/card-final-result.xml`.
