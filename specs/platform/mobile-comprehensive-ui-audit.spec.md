@@ -1274,6 +1274,13 @@ dismiss action, not a callback that mutates the next session’s prompt state.
 
 ### Ordinary text entry isolation
 
+For the English URL-keyboard onboarding fixture, readiness may query the observed
+`q` key directly rather than enumerating every key and testing zero-sized padding
+elements. Keep the same keyboard-existence, hittability and timeout requirements.
+This optimizes test observation only; it does not prove keyboard readiness or text
+fidelity until the named native build passes. Other keyboard layouts require their
+own appropriate readiness target rather than inheriting an English key assumption.
+
 Add separate controlled and uncontrolled paced-injection diagnostic cases using
 the same assisted input and string, entering one character per XCTest call. Keep
 all existing whole-string cases and their exact assertions unchanged. This is an

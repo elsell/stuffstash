@@ -30,6 +30,11 @@ on iPhone and iPad simulators. The first native run failed; see `native-evidence
 for inspected screenshots and the distinction between procedure and app findings.
 Android runtime remains unavailable. No local builds/tests, per session constraint.
 
+The [350420 iPad onboarding inspection](native-onboarding-350420.md) records a
+pre-typing readiness timeout despite a visible keyboard in the final capture.
+The candidate narrows observation to an actual URL-keyboard key; native validation
+remains pending. The fixture jobs from this run are still active.
+
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
 coverage to pass. This effort includes fixing findings and TestFlight release.
