@@ -43,3 +43,21 @@ Artifacts10433788455(phone) and10434365601(iPad) retain the evidence. Logs:
 `/tmp/native350633-onboarding-phone.log` and
 `/tmp/native350633-onboarding-ipad.log`. The iPad success resolves this named
 journey's latest failure; the older failure stays recorded above.
+
+## New phone observation failure — run35080602419
+
+Phone onboarding job104756069195 fails the five-second keyboard nonexistence
+expectation after the margin drag (line110); the two iPad-only cases skip.
+The address-entry assertion passed before the gesture. Its inspected
+[final capture](evidence/phone-onboarding-final-350806.png) and accompanying
+hierarchy show no keyboard, the entered address retained, and Connect and sign in
+at (24,463),354×46, within the viewport. This does not prove dismissal completed
+within the required interval: the screenshot was attached about ten seconds after
+the failed expectation. Automation snapshots and event delivery were slow in the
+log. Delayed dismissal and delayed observation remain unresolved alternatives.
+
+Retain the original assertion and this failure; do not relax the timeout or claim
+a production fix from the later screenshot. The iPad onboarding job104756068979
+passes. The two fixture jobs remain running at this checkpoint. Artifact10442577020
+and `/tmp/native350806-onboarding-phone.log` retain the phone evidence. This run
+uses source da1a3e38, tested merge c04b6a5bac882cf50df6a7926e415a421e8c13d7.
