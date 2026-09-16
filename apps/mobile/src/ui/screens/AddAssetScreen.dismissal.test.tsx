@@ -360,6 +360,7 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
     await h.changeText(h.byLabel('Search parent'), 'New parent');
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    expect(h.byText('Not selected yet')).toBeDefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
@@ -369,5 +370,8 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
     expect(h.byLabel('Search parent')?.props.value).toBe('New parent');
+    await h.changeText(h.byLabel('Search parent'), '');
+    expect(h.byText('Not selected yet')).toBeUndefined();
+    expect(h.byText('Top level in this inventory')).toBeDefined();
   } finally { await h.unmount(); }
 });

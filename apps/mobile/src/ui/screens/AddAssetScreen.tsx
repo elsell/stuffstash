@@ -960,7 +960,7 @@ function ParentPicker({
           <Text style={styles.parentMeta}>
             {selectedParent
               ? `${selectedParent.selectionHint} · ${selectedParent.subtitle}`
-              : 'Top level in this inventory'}
+              : query.trim() ? 'Not selected yet' : 'Top level in this inventory'}
           </Text>
         </View>
         {isOpen ? (

@@ -389,6 +389,7 @@ This spec defines camera behavior only for attaching still photos during the Add
 - Clear draft must use the native command adapter with destructive semantics and a complete accessible label. It remains inside More details, is disabled during draft operations, and clears the context-scoped draft including unfinished tag input. Preserve explicit clear behavior and Close's separate resume behavior.
 - After a successful save, Add should keep the most recently created or selected parent preselected for the next asset so batch entry into the same box, shelf, room, or container is low-friction.
 - The parent picker must be labeled with user-facing placement language such as `Put in`, not implementation language such as `Location` or `parent asset ID`.
+- An unresolved nonempty placement search must show `Not selected yet`, rather than claiming top-level placement. Only an empty placement field represents intentional top-level placement; selected destinations retain their kind and location context.
 - `No parent` must be the label for top-level inventory placement. `Inventory root` must not appear in the Add form.
 - The parent picker must search every searchable asset in the selected inventory, including locations, containers, and items. It must not be restricted to locations.
 - Parent search results must render inside a collapsed select-menu style control rather than as a full always-visible list. Empty-query results should show a bounded set of recent and likely parents from current inventory context only after the control is opened.

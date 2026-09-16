@@ -2040,28 +2040,28 @@ S085,Add / kind choice,notifications,System notification entry and state,not-app
 S085,Add / kind choice,media,"Camera, library, files and audio",not-applicable,add-type-axis.md; control absent from current Add; source bc55f271,
 S085,Add / kind choice,lifecycle,"Cold/warm start, blur, background and deep link",not-applicable,add-type-axis.md; control absent from current Add; source bc55f271,
 S086,Add / parent search,task,Task clarity and platform-pattern fit,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S086,Add / parent search,navigation,"Navigation, hierarchy and return",pending,,
-S086,Add / parent search,selection,Value selection and current value,pending,,
-S086,Add / parent search,modality,Presentation and dismissal,pending,,
-S086,Add / parent search,layout,"Safe areas, scroll edges and overlays",pending,,
-S086,Add / parent search,adaptation,Phone/tablet/window reflow,pending,,
-S086,Add / parent search,typography,"Dynamic Type, wrapping and legibility",pending,,
-S086,Add / parent search,appearance,"Light/dark, contrast and materials",pending,,
-S086,Add / parent search,localization,"Locale, timezone, RTL and long strings",pending,,
-S086,Add / parent search,imagery,"Icons, photos and missing media",pending,,
+S086,Add / parent search,navigation,"Navigation, hierarchy and return",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,selection,Value selection and current value,finding,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending; M200 unresolved placement label corrected; 28 remote checks and static validation pass; critic no blocker,M200
+S086,Add / parent search,modality,Presentation and dismissal,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,layout,"Safe areas, scroll edges and overlays",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,adaptation,Phone/tablet/window reflow,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,typography,"Dynamic Type, wrapping and legibility",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,appearance,"Light/dark, contrast and materials",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,localization,"Locale, timezone, RTL and long strings",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,imagery,"Icons, photos and missing media",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,targets,Touch target size and reachability,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S086,Add / parent search,gestures,Gestures and explicit alternatives,pending,,
-S086,Add / parent search,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
+S086,Add / parent search,gestures,Gestures and explicit alternatives,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,keyboard,"Keyboard, text entry and focus",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S086,Add / parent search,motion,Reduced motion and feedback alternatives,pending,,
-S086,Add / parent search,content,"Lists, hierarchy, density and pagination",pending,,
-S086,Add / parent search,search,"Search, scope and filters",pending,,
+S086,Add / parent search,motion,Reduced motion and feedback alternatives,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,content,"Lists, hierarchy, density and pagination",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,search,"Search, scope and filters",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,loading,"Loading, background refresh and progress",finding," M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M92
 S086,Add / parent search,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M21;M92
 S086,Add / parent search,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S086,Add / parent search,privacy,"Account scope, data use and permissions",pending,,
-S086,Add / parent search,notifications,System notification entry and state,pending,,
-S086,Add / parent search,media,"Camera, library, files and audio",pending,,
+S086,Add / parent search,privacy,"Account scope, data use and permissions",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,notifications,System notification entry and state,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
+S086,Add / parent search,media,"Camera, library, files and audio",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
 S087,Add / quick parent creation,task,Task clarity and platform-pattern fit,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
 S087,Add / quick parent creation,navigation,"Navigation, hierarchy and return",pending,,

@@ -2788,3 +2788,12 @@ Code critic found no blocker; the supporting-query case is explicitly a typed
 query failure, not an HTTP-boundary test.
 Native content removal/focus and backend authorization enforcement are separate
 from this UI recovery evidence.
+
+### M200 — Unresolved Add placement claims top-level placement
+
+P2 source/mounted confirmed at716f23b1. Typing a placement clears the selected ID,
+but the disclosure subtitle still said Top level in this inventory. It now says
+Not selected yet until selection or clearing. Existing exact-match resolution on
+Save is unchanged. The search/retry case failed first on the missing unresolved
+status and now verifies both that status and recovery to intentional top-level
+placement when cleared. Native wrapping and screen-reader reading remain open.
