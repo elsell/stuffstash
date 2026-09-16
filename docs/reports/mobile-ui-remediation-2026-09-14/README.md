@@ -2,17 +2,18 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Latest source checkpoint `a66201e5`: **1,898 tests across296 files**, TypeScript
-and mobile structural checks pass on paul. The subsequent `88fe7499` native-test
-selector correction passes fixture preparation and structural checks; its native
-rerun is pending. Android Add-photo native checks verify
+Latest source checkpoint `801dba12`: **1,900 tests across297 files**, TypeScript
+and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
+footer dispatch on both platforms; Android current-action smoke checks pass.
+The `88fe7499` native-test selector correction passes fixture preparation and
+structural checks; its native rerun is pending. Android Add-photo native checks verify
 zoom retention across elapsed time and warm return, control hide/reveal, paging
 and Close without losing draft photos; see [photo viewer evidence](photo-viewer-axis.md).
 This is partial runtime acceptance. Completed run350950 records phone65/83 and
 iPad73/83 fixture passes; see the target reports for failures and evidence limits.
 Run35104157358 at14d7e06f is active: its phone onboarding journey passes, with two
 device-inapplicable skips, and all three iPad onboarding journeys pass. Both fixture
-suites remain running. The latest source is queued in35105369296. Release
+suites remain running. The latest source is queued in35108934622. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.7GB on paul root and15GB in paul's
 `/tmp` after removing a verified duplicate Android installer extraction.

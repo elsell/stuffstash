@@ -52,6 +52,21 @@ content readiness; the retained light capture is after restoring light mode from
 the loaded dark view. This verifies the Android fixture's theme change, not iOS
 appearance or the remaining filter interaction/accessibility checks.
 
+### M235 footer guard runtime check
+
+Rebuilt APK `b611b2e55d743ef517f9c794bd5984058bfef50de92f94c9b1b8989cab028182`
+adds the shared committed/focused footer guard to the preceding Android candidate.
+Cold Filters Cancel returns to Native UI audit. On warm entry, Tags accepts Tools;
+selecting it and pressing the keyboard-visible Back restores Filters with
+`1 selected`. After Home and warm app return, Show results returns the explicit
+`Browse selected tags: audit-tools` result. Hierarchies on paul:
+`/tmp/guard-{filter,cancel,tools,overview,result}.xml`.
+
+This checks that current actions remain usable after the guard change. Rejected
+retained events while blurred/disabled/unmounted are covered by the mounted
+regressions, not this native touch journey. App background/return is not proof of
+navigation-route blur/refocus. iOS acceptance remains pending.
+
 Android16 Pixel6 emulator on paul, normal text, light appearance. The initial
 Browse filter sheet at detent0.7 lacks its title and both footer commands;
 expanding to1.0 reveals Show results/Cancel. The ADB assertion that Show results
