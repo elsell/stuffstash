@@ -38,15 +38,7 @@ export function onboardingStyles(colors: MobileColorPalette) {
     body: { color: colors.textMuted, fontSize: 14, lineHeight: 21 },
     notice: { backgroundColor: colors.surfaceMuted, borderRadius: 10, padding: spacing.md, marginBottom: spacing.lg },
     error: { color: colors.danger, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
-    footer: { paddingTop: spacing.xl },
-    note: { color: colors.textMuted, fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: spacing.md },
-    button: { minHeight: 54, borderRadius: 12, paddingVertical: 12, paddingHorizontal: spacing.md,
-      alignItems: 'center', justifyContent: 'center', backgroundColor: colors.action },
-    buttonPressed: { backgroundColor: colors.actionPressed },
-    buttonDisabled: { opacity: 0.7 },
-    buttonText: { color: colors.onAction, fontSize: 16, fontWeight: '600', textAlign: 'center' },
-    ghost: { backgroundColor: 'transparent', marginTop: spacing.sm },
-    ghostPressed: { backgroundColor: colors.surfaceMuted },
-    ghostText: { color: colors.action }
+    footer: { paddingTop: spacing.xl, gap: spacing.sm },
+    note: { color: colors.textMuted, fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: spacing.md }
   });
 }

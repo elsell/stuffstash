@@ -16,6 +16,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `tag-color-axis.md`: all24 color-selection axes, shared consumers and phone/iPad activation evidence.
 - `field-applicability-axis.md`: all24 applicability axes and reversible unsaved expansion (M204).
 - `push-permission-axis.md`: all24 device-setup axes, command naming and physical verification limits.
+- `onboarding-creation-axis.md`: all24 household/inventory/recovery axes and native command migration.
 - `findings.md`: confirmed findings and remediation evidence.
 - `checkout-history-axis.md`: all24 axes, independent name recovery and access-retry evidence limits.
 - `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.
@@ -90,8 +91,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise292
-pending,2,383 source-reviewed,510 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise243
+pending,2,427 source-reviewed,515 finding,25 runtime-partial and198 not-applicable.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is

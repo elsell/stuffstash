@@ -1,5 +1,15 @@
 # Comprehensive mobile UI audit and remediation
 
+## Onboarding command controls
+
+Connect/sign-in, household/inventory creation and sign-out/start-over reuse the
+shared native command adapter. Primary submission is prominent; start-over is a
+standard command. Keep command labels visible while pending and show separately
+labeled progress. Preserve required-value readiness, keyboard submission,
+synchronous duplicate locking, partial-setup recovery and safe late completion.
+Native phone/iPad keyboard and reachability acceptance must be rerun after this
+migration; prior custom-button captures cannot certify the new control.
+
 ## Push setup command names
 
 When successful device setup changes the action to Open device settings, its

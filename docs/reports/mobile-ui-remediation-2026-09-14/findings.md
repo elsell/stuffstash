@@ -2850,3 +2850,13 @@ new action. Three enabled-path RED cases preceded the change;13 related checks
 verify Settings launch/retry ownership without repeated setup or preference writes.
 TypeScript/structural checks pass remotely; critic found no confirmed blocker.
 Native announcement and external Settings transition remain unverified.
+
+### M206 — Onboarding bypasses shared native commands and hides pending labels
+
+P2 source confirmed at71183281. Connect/Create and Start Over used bespoke styled
+Pressables despite the shared native adapter; submission replaced visible command
+text with only a spinner. They now reuse NativeCommandButton and keep labels with
+separately named progress. A pending-sign-in RED case preceded the change;40
+related tests and static checks pass on paul. Critic found no production blocker;
+its void-handler test cleanup is applied. Native keyboard/geometry acceptance is
+pending, including all earlier onboarding reachability scenarios.
