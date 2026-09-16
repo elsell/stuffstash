@@ -116,3 +116,18 @@ it is not evidence of the production title.
 
 Evidence: `/tmp/android-tag-{editor,custom,custom-bottom,cancel,reopened,done,saved}.xml`
 and `/tmp/android-tag-done.png`. No implementation changed for these checks.
+
+### Hex entry and Clear follow-up
+
+On the same Android build/configuration, entering `123456` updates the color draft.
+The [keyboard covers Cancel/Done](evidence/android-tag-hex-keyboard.png); an outside-
+color-surface scroll gesture dismisses Gboard and exposes both commands. This is
+verified dismissal/reachability, not continuously visible keyboard actions.
+Done followed by reopening shows normalized `#123456`, confirming the staged
+value. Clear color followed by Done restores the original No tag color selection
+and removes Unsaved changes. The parent Save remains unnecessary for that net-zero
+edit. Direct color-surface dragging, invalid hex, rejection recovery and assistive
+technology remain outside the sample.
+
+Evidence: `/tmp/android-tag-hex-{entry,keyboard,scrolled,retained}.xml`,
+`/tmp/android-tag-{cleared,clear-done}.xml`, and keyboard/scrolled PNG captures.
