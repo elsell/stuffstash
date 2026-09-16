@@ -3030,3 +3030,20 @@ Tags search exits the app: ScreenFooter.onParentLayout assumes a stable sheet
 state during keyboard inset transitions. Therefore M219's native footer candidate
 is rejected for release despite successful initial-detent and last-row checks.
 See Android filter evidence for the stack and proposed presentation alternative.
+
+### M223 — Android Move Here hides commands at its initial sheet height
+
+P1 runtime-confirmed on36fe660b: the0.6 form-sheet detent shows search, recovery
+and preview but neither Move here nor Cancel. Edit/Move share the sizing approach.
+Candidate uses full-screen Android native-stack presentation for all three and a
+shared keyboard-resizing frame; iOS detents remain unchanged. Native verification
+is in progress. [Before](evidence/android-move-initial-before.png).
+
+### M224 — Native Edit Back bypasses dirty confirmation in the migration candidate
+
+P1 source/test-confirmed during review of M223. Exposing Android's native header
+created an exit outside Edit's explicit Cancel handler; the operation guard covered
+only pending work. A failing GO_BACK/POP regression now passes through the existing
+discard confirmation, preserving draft/visit guards and the original action.
+Keep editing retains the draft, pending commands prevent removal, and authorized
+Discard/Save can leave. Native header/hardware Back acceptance is pending.

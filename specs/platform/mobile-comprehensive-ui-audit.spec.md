@@ -1603,3 +1603,23 @@ and captures placement again. Record both geometries before requiring header
 placement; do not drop the original production Place/settings assertions. A title
 change is a diagnostic, not a production timing workaround. No speculative native
 library patch is accepted from source inspection alone.
+
+Android Move Here at its initial0.6 detent renders its form without Move/Cancel.
+Edit, Move and Move Here share the same sheet sizing approach. These asset action
+routes must use Android full-screen native-stack presentation with native title
+bars and layout-owned actions, matching the corrected filter approach. Their
+existing dirty/operation guards and commands remain authoritative. Shared action
+forms must resize for the Android keyboard using the actual native header height;
+iOS keeps its existing sheet detents, header visibility and keyboard behavior.
+Verify each consumer before claiming shared runtime acceptance.
+
+The Android asset-action migration must not expose an unguarded Edit exit. Header
+Back, hardware Back and navigator removal must use Edit's existing discard
+confirmation, with current draft/visit ownership, while pending operations block
+removal. Confirmed discard and successful Save authorize exactly one removal;
+Keep editing preserves the draft. Apply this at the navigation boundary, not only
+by hiding the header button.
+
+On Android full-screen asset actions, use the native header for the task title;
+do not repeat Edit/Move task headings in the scroll body. Preserve contextual
+asset names, instructions and previews. iOS headerless sheets retain body titles.

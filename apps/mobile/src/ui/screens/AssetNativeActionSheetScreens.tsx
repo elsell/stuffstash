@@ -95,14 +95,14 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   const types = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => mobileQueryKeys.customization(scope, tenant, inventory, 'inventory', 'asset-type-choices', 'active'), query: (signal) => inventoryAssetTypesQuery.execute(asset.tenantId ?? '', asset.inventoryId ?? '', { signal }) });
   const tags = useMobileInventoryServerQuery({ key: mobileQueryKeys.assetTags, query: (signal) => inventoryAssetTagsQuery.execute({ signal }) });
   const [draft, setDraft] = useState<EditDraft | undefined>(() => ({ title: asset.title, description: asset.description, tagIds: asset.tags?.map((tag) => tag.id) ?? [], newTags: [] }));
-  const operation = useAssetSheetOperation(asset.canEdit);
+  const operation = useAssetSheetOperation(asset.canEdit, leave => close(leave));
   const isSaving = operation.busy;
   const captureDiscard = useTaskPresentation(undefined, JSON.stringify([assetId, draft, isSaving]));
 
-  function close(): void {
+  function close(leave: () => void = returnFromAssetAction): void {
     if (operation.locked()) return;
     if (!hasDirtyEditAssetDraft(asset, draft)) {
-      returnFromAssetAction();
+      operation.leave(leave);
       return;
     }
     const isCurrent = captureDiscard();
@@ -113,7 +113,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       { text: 'Discard', style: 'destructive', onPress: () => {
         if (!isCurrent() || accepted || operation.locked()) return;
         accepted = true;
-        operation.leave(returnFromAssetAction);
+        operation.leave(leave);
       } }
     ]);
   }
@@ -447,7 +447,7 @@ function createStyles(colors: MobileColorPalette) {
 }
 
 /** One mutation owns the sheet draft until it settles. */
-function useAssetSheetOperation(eligible: boolean) {
+function useAssetSheetOperation(eligible: boolean, onRemove?: (leave: () => void) => void) {
   const eligibility = useRef(eligible);
   useLayoutEffect(() => { eligibility.current = eligible; }, [eligible]);
   const capturePresentation = useTaskPresentation();
@@ -457,8 +457,9 @@ function useAssetSheetOperation(eligible: boolean) {
   const [kind, setKind] = useState<'save' | 'create' | null>(null);
   const navigation = useNavigation();
   const completed = useRef(false);
-  usePreventRemove(kind !== null, ({ data }) => {
-    if (completed.current) navigation.dispatch(data.action);
+  usePreventRemove(kind !== null || !!onRemove, ({ data }) => {
+    if (completed.current) { navigation.dispatch(data.action); return; }
+    if (!pending.current) onRemove?.(() => navigation.dispatch(data.action));
   });
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   return {
@@ -475,6 +476,6 @@ function useAssetSheetOperation(eligible: boolean) {
     complete: (leave: () => void) => { if (mounted.current && completionOwner.current?.()) { completed.current = true; leave(); } },
     end: () => { pending.current = false; if (mounted.current) setKind(null); },
     change: (change: () => void) => { if (!pending.current && mounted.current && eligibility.current) change(); },
-    leave: (leave: () => void) => { if (!pending.current && mounted.current) leave(); }
+    leave: (leave: () => void) => { if (!pending.current && mounted.current) { completed.current = true; leave(); } }
   };
 }

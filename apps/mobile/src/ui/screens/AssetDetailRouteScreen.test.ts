@@ -188,6 +188,7 @@ describe('asset native sheet route options', () => {
       assetMoveHereNativeSheetOptions
     ]) {
       expect(options.presentation).toBe('formSheet');
+      if (options.presentation !== 'formSheet') throw new Error('Expected iOS form sheet options');
       expect(options.headerShown).toBe(false);
       expect(options.sheetGrabberVisible).toBe(true);
       expect(options.sheetExpandsWhenScrolledToEdge).toBe(true);
@@ -198,8 +199,8 @@ describe('asset native sheet route options', () => {
 
   it('keeps edit cancellation explicit until dirty native sheet dismissal can be intercepted', () => {
     expect(assetEditNativeSheetOptions.gestureEnabled).toBe(false);
-    expect(assetMoveNativeSheetOptions.gestureEnabled).toBeUndefined();
-    expect(assetMoveHereNativeSheetOptions.gestureEnabled).toBeUndefined();
+    expect(assetMoveNativeSheetOptions).not.toHaveProperty('gestureEnabled');
+    expect(assetMoveHereNativeSheetOptions).not.toHaveProperty('gestureEnabled');
   });
 });
 

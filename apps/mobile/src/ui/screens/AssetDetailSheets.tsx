@@ -1,3 +1,4 @@
+import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -6,7 +7,6 @@ import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
 import { useState, type ReactNode } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -95,9 +95,9 @@ export function EditAssetSheet({
   const disabled = isSaving || readOnly;
   const canSave = canSaveEditAsset(asset, draft) && !disabled;
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+    <AssetActionKeyboardFrame style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <Text style={styles.sheetTitle}>Edit asset</Text>
+        {Platform.OS !== 'android' ? <Text style={styles.sheetTitle}>Edit asset</Text> : null}
         {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
         <View style={styles.readOnlyContextPanel}>
@@ -144,7 +144,7 @@ export function EditAssetSheet({
         onClose={onClose}
         onSave={onSave}
       />
-    </KeyboardAvoidingView>
+    </AssetActionKeyboardFrame>
   );
 }
 
@@ -337,9 +337,9 @@ export function MoveAssetSheet({
       })
     : false;
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+    <AssetActionKeyboardFrame style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <Text accessibilityRole="header" style={styles.moveHeading}>Move</Text>
+        {Platform.OS !== 'android' ? <Text accessibilityRole="header" style={styles.moveHeading}>Move</Text> : null}
         {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.moveSubject}>{asset.title}</Text>
         {placement ? <PlacementPanel preview={placement} /> : null}
@@ -397,7 +397,7 @@ export function MoveAssetSheet({
         onClose={onClose}
         onSave={onSave}
       />
-    </KeyboardAvoidingView>
+    </AssetActionKeyboardFrame>
   );
 }
 
@@ -428,9 +428,9 @@ export function MoveThingsHereSheet({
   const canSave = draft?.selectedAsset !== undefined && !disabled;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheet}>
+    <AssetActionKeyboardFrame style={styles.sheet}>
       <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <Text style={styles.sheetTitle}>Move something here</Text>
+        {Platform.OS !== 'android' ? <Text style={styles.sheetTitle}>Move something here</Text> : null}
         {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
         <Text style={styles.inputLabel}>Find item, box, or place</Text>
@@ -472,7 +472,7 @@ export function MoveThingsHereSheet({
         onClose={onClose}
         onSave={onSave}
       />
-    </KeyboardAvoidingView>
+    </AssetActionKeyboardFrame>
   );
 }
 

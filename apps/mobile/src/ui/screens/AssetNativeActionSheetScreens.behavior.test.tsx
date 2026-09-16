@@ -484,3 +484,26 @@ it.each(['draft', 'visit', 'unmount', 'current'] as const)('owns Edit discard co
     if (change === 'draft') expect(h.byLabel('Asset name')?.props.value).toBe('Later draft');
   } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
+
+it.each(['GO_BACK', 'POP'] as const)('protects a dirty Edit draft from native %s removal', async type => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
+    const action = { type, source: 'edit' };
+    await h.run(() => attemptNavigation(action));
+    expect(dispatchedActions()).toEqual([]);
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await h.run(() => pressAlertButton('Keep editing'));
+    expect(h.byLabel('Asset name')?.props.value).toBe('Keep this draft');
+    await h.run(() => attemptNavigation(action));
+    const discard = latestAlert()?.buttons.find(button => button.text === 'Discard')?.onPress;
+    await h.run(() => discard?.()); await h.run(() => discard?.());
+    expect(dispatchedActions()).toEqual([action]);
+  } finally { await h.unmount(); resetNavigation(); }
+});

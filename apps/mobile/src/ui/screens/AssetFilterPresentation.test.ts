@@ -14,3 +14,13 @@ it('retains the iOS filter sheet', () => {
     presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.7, 1]
   });
 });
+
+it('keeps Android asset actions out of partial sheet geometry', () => {
+  const options = createAssetNativeSheetOptions(colors, 'android');
+  for (const action of [options.edit, options.move, options.moveHere]) {
+    expect(action.presentation).toBe('card');
+    expect(action.headerShown).toBe(true);
+    expect(action).not.toHaveProperty('sheetAllowedDetents');
+  }
+  expect(options.edit.gestureEnabled).toBe(false);
+});
