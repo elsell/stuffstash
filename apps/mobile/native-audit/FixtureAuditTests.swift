@@ -1314,8 +1314,11 @@ final class FixtureAuditTests: XCTestCase {
     if withoutAccessory { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
     input.typeText("https://example.invalid")
     capture("\(mode)-address-entry\(withoutAccessory ? "-without-accessory" : "")")
-    XCTAssertEqual(input.value as? String, "https://example.invalid")
-    XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
+    let enteredValue = input.value as? String
+    let observedExpectedValue = app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5)
+    if mode != "system" { captureInputEvents(mode) }
+    XCTAssertEqual(enteredValue, "https://example.invalid")
+    XCTAssertTrue(observedExpectedValue)
   }
 
   private func revealComparisonInput(_ input: XCUIElement) {
@@ -1349,8 +1352,26 @@ final class FixtureAuditTests: XCTestCase {
       input.typeText("Native draft name")
     }
     capture("\(mode)-ordinary-text-entry\(paced ? "-paced" : "")")
-    XCTAssertEqual(input.value as? String, "Native draft name")
-    XCTAssertTrue(app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5))
+    let enteredValue = input.value as? String
+    let observedExpectedValue = app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5)
+    if mode != "native-default" { captureInputEvents(mode) }
+    XCTAssertEqual(enteredValue, "Native draft name")
+    XCTAssertTrue(observedExpectedValue)
+  }
+
+  private func captureInputEvents(_ mode: String) {
+    let captureEvents = app.buttons["Capture input events"]
+    guard captureEvents.isHittable else {
+      capture("input-event-capture-unreachable-\(mode)")
+      return
+    }
+    captureEvents.tap()
+    let trace = app.staticTexts["audit-input-event-trace"]
+    guard trace.waitForExistence(timeout: 5) else { return }
+    let attachment = XCTAttachment(string: trace.label)
+    attachment.name = "input-events-\(mode)"
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }

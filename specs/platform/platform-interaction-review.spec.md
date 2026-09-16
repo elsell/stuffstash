@@ -542,3 +542,15 @@ podspec itself is unchanged. The Android-only Expo UI patch changes pnpm's direc
 identity on every host, including iOS; its ExpoUI path must follow the frozen
 installation. Preserve `pod install --deployment` as the native lock-consistency
 gate. Run35130374705 demonstrates the failing path contract before this correction.
+
+
+Runner-only text-entry comparisons may retain a bounded in-memory event trace to
+localize observed character loss. Record native change text/event counts, selection
+ranges, and committed React values without scheduling additional renders for each
+trace event. Publish only when XCTest explicitly requests a snapshot after typing.
+The trace uses synthetic fixture text, is not production logging or telemetry, and
+must not change input assistance, value ownership or normal exact-text assertions.
+Capture the input value and expected React-observed state before publishing so the
+trace button cannot turn blur-induced correction into a passing entry result.
+Tracing can affect timing; a trace is diagnostic evidence, not proof of a root cause
+or a substitute for the unchanged production entry workflows.

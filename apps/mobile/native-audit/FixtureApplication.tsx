@@ -1,3 +1,4 @@
+import { useInputEventTrace } from './InputEventTrace';
 export { AndroidHeaderCompositionFixture } from './AndroidHeaderCompositionFixture';
 import { AndroidControlTargetsFixture } from './AndroidControlTargetsFixture';
 import { inventorySwitcherNativeOptions } from '../src/ui/screens/InventorySwitcherNativeOptions';
@@ -262,6 +263,7 @@ function DraftOptionsFixture() {
 
 function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   const [value, setValue] = useState('');
+  const trace = useInputEventTrace(value);
   if (mode === 'native-default') return <View>
     <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
       <TextField defaultValue="" onValueChange={setValue}
@@ -273,8 +275,9 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
     <AppTextInput accessibilityLabel={`Audit ${mode} text`} multiline={mode === 'multiline'}
       {...(mode.startsWith('plain-controlled') ? { value } : { defaultValue: '' })}
       {...(mode.endsWith('no-assistance') ? { autoCorrect: false, spellCheck: false, smartInsertDelete: false } : {})}
-      onChangeText={setValue} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
+      onChangeText={setValue} onChange={trace.onChange} onSelectionChange={trace.onSelectionChange} style={{ minHeight: mode === 'multiline' ? 160 : 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>
+    {trace.controls}
   </View>;
   if (mode === 'system') return <View>
     <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
@@ -285,9 +288,11 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
   </View>;
   return <View><AppTextInput accessibilityLabel={`Audit ${mode} address`} keyboardType="url"
     autoCorrect={false} autoCapitalize="none" onChangeText={setValue}
+    onChange={trace.onChange} onSelectionChange={trace.onSelectionChange}
     {...(mode === 'controlled' ? { value } : { defaultValue: '' })}
     style={{ minHeight: 54, borderWidth: 1, padding: 12 }} />
     <Text>{`Observed ${mode} input: ${value}`}</Text>
+    {trace.controls}
   </View>;
 }
 

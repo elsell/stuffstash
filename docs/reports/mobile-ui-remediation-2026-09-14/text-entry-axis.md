@@ -243,3 +243,13 @@ Neither source justifies a blind dependency upgrade or broad native patch. Compa
 against the actual0.83.6 input implementation and preserve external value/reset
 ownership before adopting a correction. See the latest retained field/mirror values
 and paced-versus-unpaced results in [phone351214](native-phone-351214.md).
+
+
+Runner-only follow-up adds a256-entry ref buffer for native change text/event
+counts, selection ranges and committed React values. Existing text-entry journeys
+request an attachment after saving their exact-value acceptance observations;
+publishing or blur cannot change those saved results. No production field or
+assistance setting changes. TypeScript, six fixture-isolation checks and the mobile
+structural check pass on paul; critic found no blocker. Native attachment capture
+is pending. The existing uninstrumented production journeys remain required;
+tracing changes timing and does not by itself establish a cause or correction.
