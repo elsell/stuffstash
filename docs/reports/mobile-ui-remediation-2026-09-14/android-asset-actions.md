@@ -82,3 +82,8 @@ iOS idle dismissal gestures, Move destination creation, successful Edit and real
 backend persistence remain separate unverified scenarios. No production inventory
 was changed. Build log: `/tmp/android-move-guard-build.log`; source checks:
 `/tmp/asset-removal-guard-{tests,check,structural}.log`.
+
+The same e3735199 Android APK also passes idle hardware Back from Move Here,
+positively returning to the audit index (`/tmp/movehere-idle-native-back.xml`).
+The subsequent combined2bfd3814 source suite passes1,885 tests/293 files,
+TypeScript and structural checks on paul; this does not replace iOS dismissal QA.

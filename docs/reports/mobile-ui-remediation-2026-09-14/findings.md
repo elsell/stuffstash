@@ -3117,3 +3117,12 @@ remains registered and dispatches authorized exits. The same Android native jour
 returns successfully, and38 shared behavior tests pass. iOS gesture/teardown
 acceptance remains pending. See android-asset-actions.md for failing and passing
 native evidence and coverage limits.
+
+### M232 — Focused iPad proposal-location search collapses on clear
+
+P2 runtime-observed investigation at run350806, not a proven product root cause.
+The focused field receives a centered Clear text tap; choices return but the field
+and keyboard disappear. The original fresh-query acceptance stops there. The
+unfocused-collapse exception does not establish this focused behavior is correct.
+Static native focused-clear comparison is queued without weakening production
+acceptance. See native-ipad-350806.md for event/frame evidence and context limits.

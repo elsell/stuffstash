@@ -13,6 +13,11 @@ the final keyboard wrapper; focused tests, TypeScript and structural checks pass
 after it. See `android-filter-sheet.md` for native crash rejection and replacement
 evidence; acceptance remains incomplete.
 
+Combined source checkpoint2bfd3814 passes **1,885 tests across293 files**, TypeScript
+and mobile structural checks on paul. Validation used the tracked HEAD archive in
+the existing remote validation tree. Logs: `/tmp/mobile-audit-2bfd3814-{full,check,structural}.log`.
+This includes the shared asset-action guard; native coverage remains separate.
+
 Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
@@ -21,6 +26,7 @@ are intentional: route coverage and interaction coverage are independent.
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
 - `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
+- `native-ipad-350806.md`: iPad74/81; entry context now clears navigation, focused location-search clear remains under investigation.
 - `native-phone-350806.md`: phone61/81 with inspected passing Conversation/production search and retained color/preconfigured-search failures.
 - `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
 - `native-onboarding-350592.md`: passing main phone/iPad journey and a distinct iPad entry-observation failure.

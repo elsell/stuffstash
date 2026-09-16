@@ -837,6 +837,27 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     capture("static-search-placement-expanded")
+    field.tap()
+    waitForKeyboard()
+    field.typeText("missing")
+    XCTAssertEqual(field.value as? String, "missing")
+    capture("static-search-before-focused-clear")
+    let clear = field.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable)
+    clear.tap()
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      field.isHittable || (!field.exists && search.isHittable)
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+    capture("static-search-after-focused-clear")
+    if !field.exists { search.tap() }
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    field.tap()
+    waitForKeyboard()
+    field.typeText("Garage")
+    XCTAssertEqual(field.value as? String, "Garage")
+    capture("static-search-fresh-query")
   }
 
   func testAssetRegionRecoveryAtAccessibilityTextSize() {

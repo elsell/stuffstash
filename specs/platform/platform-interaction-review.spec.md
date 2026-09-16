@@ -163,6 +163,14 @@ production shared search adapter still supplies current handlers and query state
 This comparison changes initial route configuration only. A passing comparison
 does not certify a production correction or justify weakening the original gate.
 
+When focused proposal-location search collapses after Clear text, compare the
+same focused typing/clear gesture against the static native search fixture with
+no query-state callbacks. Capture both states and whether a field or reachable
+Search button remains, then verify a fresh query can be entered. This is a
+diagnostic of platform behavior, not replacement acceptance for the production
+proposal-location journey; retain its focused-clear assertion until the cause is
+established.
+
 Native text assertions may wait for an exact expected value when a recorded final
 capture and hierarchy establish delayed observation after the immediate read.
 For the Add tag journey's asset-name entry, run350607 records immediate `T` but
