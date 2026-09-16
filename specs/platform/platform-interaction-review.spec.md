@@ -621,3 +621,9 @@ before asking XCTest for hittability. A transient placeholder key must not abort
 the comparison before typing; the existing bounded wait must still fail if no
 visible interactive key becomes available. This is runner readiness, not a text
 entry workaround or a reason to pace ordinary typing.
+
+After staging an Add tag, native acceptance must observe the staged tag, an
+existing cleared entry and an enabled Save action. An existing SwiftUI text field
+may expose its empty value as nil, an empty string, or its placeholder. Never
+treat a nonexistent field as successful clearing; observe the complete staged
+state with a bounded wait before continuing to Clear draft.

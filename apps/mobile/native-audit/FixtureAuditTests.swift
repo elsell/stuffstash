@@ -1508,8 +1508,14 @@ final class FixtureAuditTests: XCTestCase {
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)
     add.tap()
-    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
-    XCTAssertTrue(save.isEnabled)
+    let staged = app.buttons["Remove new tag Camping"].firstMatch
+    let stageComplete = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      guard entry.exists, staged.exists, save.exists else { return false }
+      let value = entry.value
+      return (value == nil || value as? String == "" || value as? String == "New tag") && save.isEnabled
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [stageComplete], timeout: 5), .completed,
+      "Staging must retain the tag, clear the existing entry and enable Save")
     capture("add-tag-staged")
     let clear = app.buttons["Clear draft"].firstMatch
     reveal(clear)
