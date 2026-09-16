@@ -3395,3 +3395,14 @@ host, wrapper and explicit icon sizing; labeled hosts reserve48dp too. Native
 center/edge checks pass exactly once per activation, all three targets126×126px.
 Seven focused tests, TypeScript, structural and six fixture-installer checks pass;
 critic found no blocker. See [native scope and remaining composition checks](android-compact-targets.md).
+
+### M248 — Android sheet actions discard descriptive accessible names
+
+P2; native normal-text semantics observation, with source confirmation that
+NativeSheetActions ignored both supplied descriptions. Expiration and voice
+commands now pass those names through a version-pinned native Compose registry
+patch. Native Material controls, visible labels, role, click and disabled behavior
+are retained. Verified expiration Cancel, disabled blank-name voice approval and
+re-enabled approval/failure recovery; see [native evidence](android-action-descriptions.md).
+TalkBack speech remains unverified. The patch is compiled from source on Android;
+no iOS code or dependency version is changed.

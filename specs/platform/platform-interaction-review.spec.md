@@ -483,3 +483,26 @@ result-tools row and expiration workspace, including its actual native header
 filter slot. Verify48dp targets, commands and absence of clipping at normal text
 on320dp and ordinary phone widths. Isolated adapter evidence cannot replace this
 consumer check. Keep fixture routes out of production builds.
+
+## Android native command descriptions
+
+NativeSheetActions must preserve each caller's explicit accessible action name,
+including expiration filter and voice-review context, while keeping its visible
+label, native button role, enabled state and activation semantics. Android's
+pinned Expo UI55.0.17 does not expose a Compose content-description modifier.
+A reviewed, version-specific pnpm patch may add only that modifier to its native
+registry. The project adapter owns the small serialized modifier mapping; no
+custom button, React Native accessibility overlay, or dependency upgrade is needed.
+Apply Compose semantics without clearing native role/click/disabled semantics.
+Follow https://developer.android.com/develop/ui/compose/accessibility/semantics.
+
+Native regression evidence must first demonstrate the missing caller description,
+then verify the named native buttons, enabled/disabled behavior, and unchanged
+visible labels in expiration and voice/filter consumers. Keep TalkBack speech
+acceptance separate from native accessibility-tree inspection. The patch and lock
+hash must be committed together and installed through frozen-lockfile validation.
+
+Android autolinking must build the patched `expo-ui` Gradle project from source;
+its bundled precompiled Maven artifact does not contain the registry correction.
+Scope `expo.autolinking.android.buildFromSource` to that project only. An APK
+build that silently reuses the precompiled artifact is not acceptance evidence.

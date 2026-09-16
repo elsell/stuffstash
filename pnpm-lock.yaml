@@ -39,6 +39,7 @@ overrides:
   yargs: 17.7.2
 
 patchedDependencies:
+  '@expo/ui@55.0.17': 5aef927b713fa1c2e1397cf4651f32be66e9ce79674a0ff2e73db03586e5542b
   react-native-image-viewing@0.2.2: 3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428
 
 importers:
@@ -52,7 +53,7 @@ importers:
         version: 55.0.11(@expo/dom-webview@55.0.6)(expo@55.0.26)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       '@expo/ui':
         specifier: 55.0.17
-        version: 55.0.17(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
+        version: 55.0.17(patch_hash=5aef927b713fa1c2e1397cf4651f32be66e9ce79674a0ff2e73db03586e5542b)(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       '@react-native-community/datetimepicker':
         specifier: 8.6.0
         version: 8.6.0(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
@@ -5489,7 +5490,7 @@ snapshots:
 
   '@expo/sudo-prompt@9.3.2': {}
 
-  '@expo/ui@55.0.17(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)':
+  '@expo/ui@55.0.17(patch_hash=5aef927b713fa1c2e1397cf4651f32be66e9ce79674a0ff2e73db03586e5542b)(expo@55.0.26)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)':
     dependencies:
       expo: 55.0.26(@babel/core@7.29.7)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(expo-router@55.0.16)(react-dom@19.2.0(react@19.2.0))(react-native-worklets@0.7.4(@babel/core@7.29.7)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)(typescript@5.9.2)
       react: 19.2.0
