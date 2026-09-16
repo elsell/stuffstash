@@ -2,7 +2,7 @@
 
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Inventory: **141 route/layout and nested-task surfaces × 24 axes = 3384 review cells**
+Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
 are intentional: route coverage and interaction coverage are independent.
@@ -76,7 +76,7 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,290
+controls documented as inventory corrections. Its3,408 cells comprise1,314
 pending,1,510 source-reviewed,445 finding,24 runtime-partial and115 not-applicable.
 
 [Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
@@ -86,7 +86,17 @@ that the new provider test does not render the actual proposal/failed-review UI.
 M174 tracks the custom destination panel and missing lookup recovery; M175 tracks
 the narrow custom inline name commands. M175 now uses native commands below a
 full-width field;46 focused tests and static checks pass, with critic review.
-Native acceptance and the M174 destination-panel correction remain open.
+M174 now replaces the panel with a native stack selection route, search, checked
+choices and lookup recovery. The new R142 route adds24 pending axis cells; its
+full axis review and native presentation acceptance remain open.
+
+Combined M174 checkpoint: all1,766 tests across278 files, TypeScript and mobile
+structural checks pass on paul. Code critic reviewed the route and added selection/
+Back/disabled-candidate cases. This remains source/mounted evidence.
+
+[Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
+on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size
+text-entry, search and target findings remain open. This predates current fixes.
 
 [Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
 identifies capture starting after cancellation during native permission/preparation;

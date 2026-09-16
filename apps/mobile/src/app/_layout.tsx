@@ -55,6 +55,7 @@ function ThemedApp() {
         }}
       >
         <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
+        <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
         <Stack.Screen name="browse-filters" options={sheetOptions.filters} />
         <Stack.Screen name="expiration-filters" options={sheetOptions.filters} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -2482,7 +2482,16 @@ bounded loading/error/no-match feedback and retry. Hierarchy, existing/proposed
 destinations and descriptions justify a selection view rather than a flat menu.
 Preserve the proposal, selected destination and name draft across entry/Back;
 scope/plan replacement must retire pending choices. Native layout failure is not
-claimed from source alone. Implementation and runtime acceptance remain open.
+claimed from source alone. The candidate now opens voice-plan-location through
+the native stack with native search and Back. It shows current value, checkmarks,
+eligible earlier proposed parents, existing candidates, disabled reasons and
+loading/error/retry/no-match states. Selection commits once before Back; scope,
+plan, pending approval and command validity gate editing. The old inline panel
+and its layout/styles are removed. Eight tests cover choice modeling, lookup
+states, disabled existing choices, successful Back and obsolete callback rejection
+after scope/plan mismatch or leaving. Back preserves the proposal/name draft.
+The route adds R142 to the audit inventory; full axis and native sheet-to-stack,
+keyboard and assistive-technology acceptance remain pending.
 
 ### M175 — Inline proposal name commands remain custom narrow icons
 

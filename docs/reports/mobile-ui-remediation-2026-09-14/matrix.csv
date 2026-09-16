@@ -3383,3 +3383,27 @@ S141,Settings / retained customization completion,privacy,"Account scope, data u
 S141,Settings / retained customization completion,notifications,System notification entry and state,pending,,
 S141,Settings / retained customization completion,media,"Camera, library, files and audio",pending,,
 S141,Settings / retained customization completion,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,M59 terminal result and explicit native return; remote behavior checks; native presentation pending,M59
+R142,voice-plan-location.tsx,task,Task clarity and platform-pattern fit,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,navigation,"Navigation, hierarchy and return",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,M174
+R142,voice-plan-location.tsx,selection,Value selection and current value,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,M174
+R142,voice-plan-location.tsx,modality,Presentation and dismissal,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,M174
+R142,voice-plan-location.tsx,layout,"Safe areas, scroll edges and overlays",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,adaptation,Phone/tablet/window reflow,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,typography,"Dynamic Type, wrapping and legibility",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,appearance,"Light/dark, contrast and materials",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,localization,"Locale, timezone, RTL and long strings",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,imagery,"Icons, photos and missing media",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,targets,Touch target size and reachability,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,gestures,Gestures and explicit alternatives,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,keyboard,"Keyboard, text entry and focus",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,motion,Reduced motion and feedback alternatives,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,content,"Lists, hierarchy, density and pagination",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,search,"Search, scope and filters",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,M174
+R142,voice-plan-location.tsx,loading,"Loading, background refresh and progress",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,recovery,"Empty, error, denied and retry",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,M174
+R142,voice-plan-location.tsx,editing,"Draft, save, cancel, undo and interruption",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,privacy,"Account scope, data use and permissions",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,notifications,System notification entry and state,pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,media,"Camera, library, files and audio",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,
+R142,voice-plan-location.tsx,lifecycle,"Cold/warm start, blur, background and deep link",pending,M174 candidate; route ownership/search/selection checks; full axis/native review pending,

@@ -8,10 +8,10 @@ native keyboard, selection and approval geometry remain unverified.
 | Axis | Evidence and remaining acceptance |
 | --- | --- |
 | Task | Review proposed inventory changes before explicit approval. Creation names and destinations are editable; other commands stay descriptive. |
-| Navigation | Name edits stay inline. Hierarchical destination lookup justifies a selection surface; M174 addresses its current custom inline panel. |
-| Selection | Root, earlier proposed commands and existing assets are distinct destination choices. Disabled existing parents preserve reasons. Current selection lacks a checkmark (M174). |
-| Modality | Proposal stays in conversation. ParentPicker is a conditional flex sibling, not native sheet/stack navigation (M174). |
-| Layout | Scrolling proposal plus native bottom decision controls. Parent panel competes for the same vertical area; geometry must be tested after M174. |
+| Navigation | Name edits stay inline. M174 opens hierarchical destination lookup in a native stack route; Back retains the draft. |
+| Selection | M174 shows current destination, checkmarks, root, earlier proposed parents and existing candidates with disabled reasons. |
+| Modality | Proposal stays in conversation; the M174 candidate replaces the flex sibling panel with a native stack route. Native sheet-to-stack transition remains unverified. |
+| Layout | Scrolling proposal plus native bottom decision controls. Destination selection now owns a separate viewport; native geometry remains open. |
 | Adaptation | Flexible name text and wrapping descriptions; fixed inline command widths and parent header need native window checks. |
 | Typography | Plain native text/input, bounded200-character name. Long summaries, risks and names require native acceptance. |
 | Appearance | Native Approve/Cancel and staged-photo commands. M175 candidate also uses native inline name Save/Cancel commands. |
@@ -23,7 +23,7 @@ native keyboard, selection and approval geometry remain unverified.
 | Accessibility | Named edit/location/photo commands and disabled parent semantics. Parent state indication and inline name command geometry require corrections/acceptance. |
 | Motion | No explicit proposal animation; parent appearance and keyboard transitions need native acceptance. |
 | Content | Summary, ordered commands, placement, expiration and risks are shown before approval. Proposed IDs are not treated as saved asset links. |
-| Search | Parent lookup debounces and isolates query results. Loading/error/no-match state is discarded by the screen (M174). |
+| Search | Parent lookup debounces and isolates query results. M174 preserves loading/error/no-match states and offers native Retry; search uses the native navigation field. |
 | Loading | Pending review decisions suppress Approve/Cancel through presentation; actual execution progress is separate. |
 | Recovery | Validation returns to review; submission failures retain staged drafts. M173 stores the visible name before attempt; M174 covers lookup recovery. |
 | Editing | Inline drafts live above the sheet. M173 prevents Approve silently using an older committed name; blank visible names block submission. |
@@ -39,4 +39,5 @@ validation does not prove native action visibility, reading order or safe-area f
 M175 adds four mounted name editor cases (Save, Done, Cancel, blank). All46 focused
 editor/approval/presentation tests and static checks pass on paul; code critic
 review is complete. Name ownership remains above the sheet. Native acceptance
-and the M174 destination-selection correction remain open.
+remains open. M174 now has a route candidate with eight choice/recovery/ownership
+checks; the new R142 route's complete axis review is pending.

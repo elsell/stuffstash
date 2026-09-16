@@ -30,6 +30,16 @@ the normalized nonblank name; Cancel closes editing without changing the committ
 name. Do not squeeze the field between custom narrow icon buttons. Draft ownership
 stays above the sheet so navigation does not discard pending text.
 
+Proposal destination selection opens a native stack selection route with native
+search and Back, replacing the inline panel beneath approval controls. The route
+is owned by the current inventory scope, proposed plan and editable command.
+Show the current destination, root, eligible earlier proposed commands and scoped
+existing candidates; show selection checkmarks and disabled reasons. Distinguish
+loading, lookup failure with Retry, and no matching existing locations. Query
+changes do not change the selected draft. Selection commits immediately and
+returns to the proposal; Back preserves the previous value. Invalidated plans or
+scopes must not apply retained selection callbacks. Preserve name/photo drafts.
+
 ## Verification and release
 
 Tests cover typed/audio continuity, invalid text frames, unauthorized and cross-scope access, retained conversation/draft state, entity links and bounded result presentation. Run mobile checks, relevant API security tests, structural checks and code-critic review before merging. Build exclusively in CI for this change. Release through the stable-tag workflow and its TestFlight job, then update the Stuff Stash GitOps image pins in `~/code/infra`. Upload success and Apple processing availability are separate release evidence.

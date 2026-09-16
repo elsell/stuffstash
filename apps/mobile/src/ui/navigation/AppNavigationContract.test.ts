@@ -84,7 +84,8 @@ describe('mobile navigation contract', () => {
     expect(voiceScreenSource).not.toMatch(/onOpenResponseArtifact=\{\(artifact\)\s*=>\s*router\.push/);
     expect(voiceScreenSource).toContain("() => router.push('/settings/voice')");
     expect(voiceScreenSource).not.toContain('<Modal');
-    expect(voiceScreenSource).toContain('automaticallyAdjustKeyboardInsets');
+    expect(voiceScreenSource).toContain('<KeyboardAvoidingView');
+    expect(appSources).toHaveProperty('../../app/voice-plan-location.tsx');
     expect(assetDetailSheetsSource).toContain('automaticallyAdjustKeyboardInsets');
     expect(homeScreenSource).not.toContain('<Modal');
     expect(browseScreenSource).not.toContain('<Modal');

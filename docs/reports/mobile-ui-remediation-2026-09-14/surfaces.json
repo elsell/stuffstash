@@ -1045,5 +1045,16 @@
       "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
       "apps/mobile/src/ui/components/NativeCommandButton.ios.tsx"
     ]
+  },
+  {
+    "id": "R142",
+    "surface": "voice-plan-location.tsx",
+    "source": "apps/mobile/src/app/voice-plan-location.tsx",
+    "sources": [
+      "apps/mobile/src/app/voice-plan-location.tsx",
+      "apps/mobile/src/ui/screens/VoicePlanLocationRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/VoicePlanLocationScreen.tsx",
+      "apps/mobile/src/ui/screens/VoicePlanLocationChoices.ts"
+    ]
   }
 ]

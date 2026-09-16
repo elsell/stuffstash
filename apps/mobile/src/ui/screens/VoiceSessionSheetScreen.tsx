@@ -8,7 +8,6 @@ import { useNewConversation } from './useNewConversation';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
-import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
@@ -27,7 +26,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
@@ -41,7 +40,6 @@ import {
   removeVoicePlanPhotoDraft,
   type VoicePlanPhotoDrafts
 } from './VoicePlanPhotoDraftState';
-import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
 import { assetDetailHref } from './AssetDetailNavigation';
@@ -49,12 +47,11 @@ import { navigateAfterTransientDismissal } from '../navigation/TransientNavigati
 import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
   voicePlanCommandEdits,
-  type VoicePlanCommandDrafts,
-  type VoicePlanParentDraft
+  type VoicePlanCommandDrafts
 } from './VoicePlanEdits';
 
 export function VoiceSessionSheetScreen() {
-  const { parentLookupQuery, photoSelectionQuery } = useAppServices();
+  const { photoSelectionQuery } = useAppServices();
   const {
     photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia, scopeIdentity,
     approveRealtimeActionPlan,
@@ -73,26 +70,11 @@ export function VoiceSessionSheetScreen() {
   pauseMediaRef.current = pauseMedia;
   useFocusEffect(useCallback(() => () => { void pauseMediaRef.current(); }, []));
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
-  const [parentPickerCommandId, setParentPickerCommandId] = useState<string | null>(null);
-  const [parentQuery, setParentQuery] = useState('');
   const safeAreaInsets = useSafeAreaInsets();
   const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
   const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
   const beginPhotoPresentation = useTaskPresentation(photoSelectionQuery, JSON.stringify([activePlanId, activePlanStatus]));
-  const activePlanIdRef = useRef(activePlanId);
-  const activePlanStatusRef = useRef(activePlanStatus);
-  const parentPickerCommandIdRef = useRef<string | null>(null);
-  const candidates = useParentCandidates(parentQuery, parentLookupQuery, parentPickerCommandId !== null && activePlanStatus === 'proposed');
-  const parentMatches = candidates.data ?? [];
   const commandDrafts = commandDraftState.planId === activePlanId ? commandDraftState.drafts : {};
-
-  useEffect(() => {
-    activePlanIdRef.current = activePlanId;
-  }, [activePlanId]);
-
-  useEffect(() => {
-    activePlanStatusRef.current = activePlanStatus;
-  }, [activePlanStatus]);
 
   useEffect(() => {
     if (commandDraftState.planId !== activePlanId) {
@@ -100,8 +82,6 @@ export function VoiceSessionSheetScreen() {
       setPhotoDrafts({});
       setCommandDraftState({ planId: activePlanId, drafts: {} });
     }
-    setParentPickerCommandId(null);
-    parentPickerCommandIdRef.current = null;
   }, [activePlanId, activePlanStatus]);
 
   async function handleSessionMic(): Promise<void> {
@@ -176,25 +156,8 @@ export function VoiceSessionSheetScreen() {
         setCommandDraftState((current) => ({ planId: activePlanId, drafts: { ...(current.planId === activePlanId ? current.drafts : {}), [commandId]: { ...(current.planId === activePlanId ? current.drafts[commandId] : {}), title } } }));
       }}
       onOpenParentPicker={(commandId) => {
-        setParentPickerCommandId(commandId);
-        parentPickerCommandIdRef.current = commandId;
-        setParentQuery('');
+        if (activePlanId && activePlanStatus === 'proposed') router.push({ pathname: '/voice-plan-location', params: { planId: activePlanId, commandId, scope: scopeIdentity } });
       }}
-      onCloseParentPicker={() => {
-            parentPickerCommandIdRef.current = null;
-        setParentPickerCommandId(null);
-          }}
-      onChangeParentQuery={(query) => {
-        setParentQuery(query);
-      }}
-      onSelectParent={(commandId, parent) => {
-        setCommandDraftState((current) => ({ planId: activePlanId, drafts: { ...(current.planId === activePlanId ? current.drafts : {}), [commandId]: { ...(current.planId === activePlanId ? current.drafts[commandId] : {}), parent } } }));
-        parentPickerCommandIdRef.current = null;
-        setParentPickerCommandId(null);
-      }}
-      parentMatches={parentMatches}
-      parentPickerCommandId={parentPickerCommandId}
-      parentQuery={parentQuery}
       onReset={() => {
         reset();
         setDiagnosticsExpanded(false);
@@ -238,12 +201,6 @@ function VoiceSessionSheet({
   commandDrafts,
   onChangeCommandTitle,
   onOpenParentPicker,
-  onCloseParentPicker,
-  onChangeParentQuery,
-  onSelectParent,
-  parentMatches,
-  parentPickerCommandId,
-  parentQuery,
   safeAreaBottom,
   state
 }: {
@@ -265,12 +222,6 @@ function VoiceSessionSheet({
   readonly commandDrafts: VoicePlanCommandDrafts;
   readonly onChangeCommandTitle: (commandId: string, title: string) => void;
   readonly onOpenParentPicker: (commandId: string) => void;
-  readonly onCloseParentPicker: () => void;
-  readonly onChangeParentQuery: (query: string) => void;
-  readonly onSelectParent: (commandId: string, parent: VoicePlanParentDraft) => void;
-  readonly parentMatches: readonly ParentLookupResult[];
-  readonly parentPickerCommandId: string | null;
-  readonly parentQuery: string;
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
@@ -521,16 +472,6 @@ function VoiceSessionSheet({
 
             </View>
           </View>
-          <ParentPicker
-            commands={actionPlan?.commands ?? []}
-            commandDrafts={commandDrafts}
-            commandId={parentPickerCommandId}
-            matches={parentMatches}
-            onChangeQuery={onChangeParentQuery}
-            onClose={onCloseParentPicker}
-            onSelect={onSelectParent}
-            query={parentQuery}
-          />
         </>
       )}
     </SafeAreaView>
@@ -594,97 +535,6 @@ function EditablePlanCommandFields({
         <ChevronDown color={palette.textMuted} size={16} strokeWidth={2.3} />
       </Pressable>
     </View>
-  );
-}
-
-function ParentPicker({
-  commands,
-  commandDrafts,
-  commandId,
-  matches,
-  onChangeQuery,
-  onClose,
-  onSelect,
-  query
-}: {
-  readonly commands: readonly VoiceSessionActionPlanCommand[];
-  readonly commandDrafts: VoicePlanCommandDrafts;
-  readonly commandId: string | null;
-  readonly matches: readonly ParentLookupResult[];
-  readonly onChangeQuery: (query: string) => void;
-  readonly onClose: () => void;
-  readonly onSelect: (commandId: string, parent: VoicePlanParentDraft) => void;
-  readonly query: string;
-}) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  if (commandId === null) {
-    return null;
-  }
-  const currentIndex = commands.findIndex((command) => command.id === commandId);
-  const proposedParents = currentIndex < 0
-    ? []
-    : commands.slice(0, currentIndex).filter((command) => command.editable && command.id);
-  return (
-    <View style={styles.parentPickerSheet}>
-      <View style={styles.parentPickerHeader}>
-        <View>
-          <Text style={styles.parentPickerTitle}>Containing location</Text>
-          <Text style={styles.parentPickerSubtitle}>Choose where this new thing belongs</Text>
-        </View>
-        <Pressable accessibilityLabel="Close location selector" accessibilityRole="button" onPress={onClose} style={styles.iconButton}>
-          <X color={palette.textMuted} size={21} strokeWidth={2.4} />
-        </Pressable>
-      </View>
-      <AppTextInput
-        accessibilityLabel="Search containing locations"
-        autoCapitalize="none"
-        onChangeText={onChangeQuery}
-        placeholder="Search locations, containers, and items"
-        placeholderTextColor={palette.textMuted}
-        style={styles.parentSearchInput}
-        value={query}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <ParentOption
-          label="Inventory root"
-          meta="No containing location"
-          onPress={() => onSelect(commandId, { kind: 'root', label: 'Inventory root' })}
-        />
-        {proposedParents.map((command) => (
-          <ParentOption
-            key={command.id}
-            label={command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}
-            meta="Created by this plan"
-            onPress={() => command.id && onSelect(commandId, { kind: 'command', id: command.id, label: commandDrafts[command.id]?.title ?? command.title })}
-          />
-        ))}
-        {matches.map((match) => (
-          <ParentOption
-            disabled={match.canSelectAsParent === false}
-            key={match.id}
-            label={match.title}
-            meta={match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel)}
-            onPress={() => onSelect(commandId, { kind: 'asset', id: match.id, label: match.pathLabel })}
-          />
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-function ParentOption({ disabled = false, label, meta, onPress }: { readonly disabled?: boolean; readonly label: string; readonly meta: string; readonly onPress: () => void }) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  return (
-    <Pressable accessibilityLabel={`Select ${label}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.parentOption, disabled && styles.parentOptionDisabled]}>
-      <MapPin color={palette.accentStrong} size={18} strokeWidth={2.3} />
-      <View style={styles.parentOptionText}>
-        <Text style={styles.parentOptionTitle}>{label}</Text>
-        <Text numberOfLines={2} style={styles.parentOptionMeta}>{meta}</Text>
-      </View>
-      <ChevronDown color={palette.textMuted} size={17} strokeWidth={2.2} style={styles.parentOptionChevron} />
-    </Pressable>
   );
 }
 
@@ -1138,71 +988,6 @@ function createStyles(colors: MobileColorPalette) {
   },
   editablePlanFields: {
     alignItems: 'stretch'
-  },
-  parentOption: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 64,
-    paddingVertical: spacing.sm
-  },
-  parentOptionChevron: {
-    transform: [{ rotate: '-90deg' }]
-  },
-  parentOptionDisabled: {
-    backgroundColor: colors.surfaceMuted
-  },
-  parentOptionMeta: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 2
-  },
-  parentOptionText: {
-    flex: 1,
-    minWidth: 0
-  },
-  parentOptionTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  parentPickerHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  parentPickerList: {
-    paddingBottom: spacing.xl
-  },
-  parentPickerSheet: {
-    backgroundColor: colors.surface,
-    flex: 1,
-    padding: spacing.lg
-  },
-  parentPickerSubtitle: {
-    color: colors.textMuted,
-    fontSize: 14,
-    marginTop: 2
-  },
-  parentPickerTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '900'
-  },
-  parentSearchInput: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 16,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-    minHeight: 48,
-    paddingHorizontal: spacing.md
   },
   transcriptText: {
     color: colors.text,
