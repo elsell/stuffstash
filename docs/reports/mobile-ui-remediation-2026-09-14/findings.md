@@ -2615,3 +2615,14 @@ when supplied. Three mounted RED cases reproduce absent, empty and whitespace
 email; a contrasting real-email case preserves its existing presentation. Audit
 identity, permissions and transport are unchanged. See history-detail-axis.md for
 the complete source review and outstanding native acceptance.
+
+### M183 — Diagnostics disappears when remote discovery is unavailable
+
+P2 source-confirmed at997bfa50. Diagnostics' shared readiness wrapper hides local
+URL/version behind household loading and errors, and can show an empty principal
+ID before account discovery finishes. That removes useful troubleshooting context.
+The candidate keeps local connection/application sections visible and gives account
+and household identity independent named loading/error/retry states. Access failures
+suppress cached identity; transport text is not shown. Two mounted RED cases
+reproduce the hidden context;68 settings tests and static checks pass remotely.
+See about-diagnostics-axis.md; native geometry and announcements remain open.

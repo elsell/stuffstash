@@ -1,9 +1,11 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerQuery } from '../serverState/useMobileServerQuery';
+import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
+import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { AppearancePicker } from '../components/AppearancePicker';
 import type { SettingsQuery, SettingsViewModel } from '../../application/settings/SettingsQuery';
 import { useAppFeedback } from '../feedback/AppFeedback';
@@ -11,10 +13,10 @@ import {
   SettingsSection,
   SettingsSeparator,
   SettingsValueRow,
+  SettingsLoadingRow,
   useSettingsListStyles
 } from './SettingsList';
 import { serverHostname } from './SettingsScreenPresentation';
-import { useSettingsModel } from './SettingsScreenState';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 
 export function AccountSettingsScreen({
@@ -128,26 +130,31 @@ export function ConnectionSettingsScreen({
 }
 
 export function DiagnosticsSettingsScreen({ settingsQuery }: { readonly settingsQuery: SettingsQuery }) {
+  const { styles } = useSettingsListStyles();
+  const diagnostics = settingsQuery.getDiagnostics();
+  const principal = useMobileServerQuery({ key: mobileQueryKeys.principal, query: signal => settingsQuery.getPrincipal({ signal }) });
+  const scope = useMobileInventoryServerQuery({ key: mobileQueryKeys.settingsScope, query: signal => settingsQuery.getSelectedScope({ signal }) });
   return (
-    <SettingsModelScreen query={settingsQuery}>
-      {(settings) => (
-        <>
-          <SettingsSection title="Connection">
-            <SettingsValueRow label="API URL" value={settings.serverUrl} />
-            <SettingsSeparator />
-            <SettingsValueRow label="Authentication" value={authenticationLabel(settings.authenticationMode)} />
-          </SettingsSection>
-          <SettingsSection title="Identity">
-            <SettingsValueRow label="Principal ID" value={settings.principal.id} />
-            <SettingsSeparator />
-            <SettingsValueRow label="Tenant ID" value={settings.selectedTenant.id} />
-          </SettingsSection>
-          <SettingsSection title="Application">
-            <SettingsValueRow label="Version" value={settings.appVersion} />
-          </SettingsSection>
-        </>
-      )}
-    </SettingsModelScreen>
+    <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
+      <SettingsSection title="Connection">
+        <SettingsValueRow label="API URL" value={diagnostics.apiBaseUrl} />
+        <SettingsSeparator />
+        <SettingsValueRow label="Authentication" value={authenticationLabel(diagnostics.authenticationMode)} />
+      </SettingsSection>
+      <SettingsSection title="Identity">
+        <DiagnosticIdentity label="Principal ID" task="account identity"
+          value={isAccessFailure(principal.error) ? undefined : principal.data?.id}
+          pending={principal.isPending} failed={principal.isError} retrying={principal.isFetching}
+          onRetry={async () => { await principal.refetch({ cancelRefetch: false }); }} />
+        <SettingsSeparator />
+        <DiagnosticIdentity label="Tenant ID" task="household identity" value={scope.data?.tenant.id}
+          pending={scope.isPending} failed={scope.isError} retrying={scope.isFetching}
+          onRetry={async () => { await scope.refetch({ cancelRefetch: false }); }} />
+      </SettingsSection>
+      <SettingsSection title="Application">
+        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+      </SettingsSection>
+    </ScrollView>
   );
 }
 
@@ -167,28 +174,19 @@ export function AboutSettingsScreen({ settingsQuery }: { readonly settingsQuery:
   );
 }
 
-function SettingsModelScreen({
-  children,
-  query
-}: {
-  readonly children: (settings: SettingsViewModel) => ReactNode;
-  readonly query: SettingsQuery;
+function DiagnosticIdentity({ label, task, value, pending, failed, retrying, onRetry }: {
+  readonly label: string; readonly task: string; readonly value?: string;
+  readonly pending: boolean; readonly failed: boolean; readonly retrying: boolean;
+  readonly onRetry: () => Promise<void>;
 }) {
-  const { palette, styles } = useSettingsListStyles();
-  const { load, state, hasRefreshError } = useSettingsModel(query);
-  if (state.status === 'loading') {
-    return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
-  }
-  if (state.status === 'error') {
-    return (
-      <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
-        <Text accessibilityRole="header" style={styles.errorTitle}>Could not load this setting</Text>
-        <Text style={styles.errorMessage}>{state.message}</Text>
-        <NativeCommandButton label="Retry" onPress={() => void load()} />
-      </ScrollView>
-    );
-  }
-  return <ScrollView contentContainerStyle={styles.content} style={styles.shell}><SettingsRefreshNotice visible={hasRefreshError} onRetry={load} />{children(state.settings)}</ScrollView>;
+  const { styles } = useSettingsListStyles();
+  return <View>
+    {pending ? <SettingsLoadingRow label={`Loading ${task}`} /> : <SettingsValueRow label={label} value={value || 'Unavailable'} />}
+    {failed ? <>
+      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? `Could not refresh ${task}. Previously loaded value is shown.` : `Could not load ${task}.`}</Text>
+      <NativeCommandButton label={retrying ? `Retrying ${task}…` : `Retry ${task}`} disabled={retrying} onPress={() => void onRetry()} />
+    </> : null}
+  </View>;
 }
 
 function confirmSignOut(label: string, onSignOut: () => Promise<void>): void {

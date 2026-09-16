@@ -1,4 +1,4 @@
-import { AboutSettingsScreen, ConnectionSettingsScreen } from './SettingsDetailScreens';
+import { AboutSettingsScreen, ConnectionSettingsScreen, DiagnosticsSettingsScreen } from './SettingsDetailScreens';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import { ApiSettingsScopeRepository } from '../../adapters/settings/ApiSettingsScopeRepository';
 import React from 'react';
@@ -11,6 +11,70 @@ import { MobileServerStateProvider } from '../navigation/MobileServerStateProvid
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+it('keeps local diagnostics visible while identity loads, fails and recovers', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let fail!: (error: Error) => void;
+  const pending = new Promise<never>((_, reject) => { fail = reject; });
+  let recovering = false;
+  const query = new SettingsQuery({ getCurrentPrincipal: async () => {
+    if (!recovering) return pending;
+    return { id: 'principal-recovered' };
+  } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://example.test', appVersion: 'local-version', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => {
+    if (!recovering) return pending;
+    return { tenant: { id: 'tenant-recovered', name: 'Home', permissions: [] }, inventory: { id: 'inventory', name: 'Garage', permissions: [] } };
+  } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><DiagnosticsSettingsScreen settingsQuery={query} /></MobileServerStateProvider>);
+    await settle(h);
+    expect(h.allText()).toContain('local-version');
+    expect(h.allText()).toContain('https://example.test');
+    expect(h.allText()).toContain('Loading account identity');
+    expect(h.allText()).toContain('Loading household identity');
+    await h.run(() => fail(new Error('Private transport detail'))); await settle(h);
+    expect(h.allText()).toContain('local-version');
+    expect(h.allText().join(' ')).not.toContain('Private transport detail');
+    recovering = true;
+    await h.press(h.byLabel('Retry account identity')); await settle(h);
+    await h.press(h.byLabel('Retry household identity')); await settle(h);
+    expect(h.allText()).toContain('principal-recovered');
+    expect(h.allText()).toContain('tenant-recovered');
+  } finally { await h.unmount(); }
+});
+
+it('suppresses cached diagnostic identity on access failure while preserving local values', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  let denied = false; let unavailable = false;
+  const query = new SettingsQuery({ getCurrentPrincipal: async () => {
+    if (denied) throw Object.assign(new Error('Denied'), { status: 403 });
+    if (unavailable) throw new Error('Unavailable');
+    return { id: 'private-principal' };
+  } }, { getDiagnostics: () => ({ apiBaseUrl: 'https://example.test', appVersion: 'local-version', authenticationMode: 'oidc-sso' }) }, { getSelectedScope: async () => {
+    if (denied) throw Object.assign(new Error('Denied'), { status: 403 });
+    if (unavailable) throw new Error('Unavailable');
+    return { tenant: { id: 'private-tenant', name: 'Home', permissions: [] }, inventory: { id: 'inventory', name: 'Garage', permissions: [] } };
+  } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><DiagnosticsSettingsScreen settingsQuery={query} /></MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.allText()).toContain('private-principal');
+    denied = true;
+    await h.run(() => client.invalidateQueries()); await settle(h);
+    expect(h.allText()).toContain('local-version');
+    expect(h.allText().join(' ')).not.toContain('private-principal');
+    expect(h.allText().join(' ')).not.toContain('private-tenant');
+    denied = false; unavailable = true;
+    await h.press(h.byLabel('Retry account identity')); await settle(h);
+    await h.press(h.byLabel('Retry household identity')); await settle(h);
+    expect(h.allText().join(' ')).not.toContain('private-principal');
+    expect(h.allText().join(' ')).not.toContain('private-tenant');
+    unavailable = false;
+    await h.press(h.byLabel('Retry account identity')); await settle(h);
+    await h.press(h.byLabel('Retry household identity')); await settle(h);
+    expect(h.allText()).toContain('private-principal');
+    expect(h.allText()).toContain('private-tenant');
+  } finally { await h.unmount(); }
+});
+
 it('shares scope across Settings surfaces without waiting for principal identity', async () => {
   const harness = new MobileRenderHarness();
   const client = createMobileQueryClient();
