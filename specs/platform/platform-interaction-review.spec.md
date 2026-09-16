@@ -615,3 +615,9 @@ the title or selecting a tag must not clear the active search field or its query
 Mounted acceptance must inspect the currently merged navigation options, not a
 previous truthy search configuration that may already have been removed. Returning
 to the overview must remove search through the search owner's disabled state.
+
+Native keyboard readiness must ignore absent, empty or non-finite key frames
+before asking XCTest for hittability. A transient placeholder key must not abort
+the comparison before typing; the existing bounded wait must still fail if no
+visible interactive key becomes available. This is runner readiness, not a text
+entry workaround or a reason to pace ordinary typing.

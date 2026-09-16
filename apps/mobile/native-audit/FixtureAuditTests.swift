@@ -561,7 +561,14 @@ final class FixtureAuditTests: XCTestCase {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      keyboard.keys.allElementsBoundByIndex.contains { $0.isHittable }
+      keyboard.keys.allElementsBoundByIndex.contains { key in
+        guard key.exists else { return false }
+        let bounds = key.frame
+        guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
+              bounds.origin.x.isFinite, bounds.origin.y.isFinite,
+              bounds.width.isFinite, bounds.height.isFinite else { return false }
+        return key.isHittable
+      }
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
   }
