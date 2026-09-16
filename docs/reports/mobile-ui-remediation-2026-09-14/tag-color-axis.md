@@ -131,3 +131,26 @@ technology remain outside the sample.
 
 Evidence: `/tmp/android-tag-hex-{entry,keyboard,scrolled,retained}.xml`,
 `/tmp/android-tag-{cleared,clear-done}.xml`, and keyboard/scrolled PNG captures.
+
+### Invalid hex recovery and direct dragging
+
+September16, Android16 Pixel6, normal text/light, APK
+`b76e227a0c215b08da22f929024514b4b0721f9781e1d209811aaff877d1b4c1`.
+TagColorPicker and FullSpectrumTagColorPicker source hashes match the current
+branch. Using the settings-controls fixture, typing `ZZZZZZ` shows
+[inline validation and disabled Done](evidence/android-color-invalid.png).
+Actually tapping disabled Done leaves the panel and parent `none` unchanged.
+Replacing the input with `123456` removes the error, enables Done, and applying
+produces exact [parent value #123456](evidence/android-color-recovered.png).
+Android Back dismisses the keyboard before these commands are checked.
+
+Reopening and dragging the [saturation/brightness surface](evidence/android-color-drag.png)
+from one-quarter to three-quarters across both axes changes the announced values
+from79%/34% to75%/26%. Its frame stays `[98,1396][984,1816]`, demonstrating that this
+gesture adjusts color rather than scrolling the parent. Cancel preserves the
+previous parent value `#123456`. Evidence XMLs and screenshots are retained as
+`/tmp/android-color-{invalid,recovered,drag}.{xml,png}` on both hosts.
+
+This closes the sampled normal-size Android invalid-hex recovery and direct
+spectrum-drag checks. It does not establish server persistence/rejection recovery,
+TalkBack operation, other layouts, or iOS activation. M51 remains unresolved.
