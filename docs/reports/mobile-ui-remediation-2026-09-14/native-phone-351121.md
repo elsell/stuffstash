@@ -43,8 +43,12 @@ Retained hierarchy files: `5AC7D36B-95E9-498D-B42C-F3E6A3DC5421.txt`,
 `020FCCA6-FD0F-46EA-B13D-C39179393241.txt`, and
 `54C340B1-BCB2-47FB-9058-41A476F6E9E6.txt` in the selected-capture directory.
 The controlled-address final hierarchy has not yet been inspected. Footer-full-sheet and nested-full-sheet comparisons fail but do not represent
-the shipped route configurations. Expiration overview reports Text clipped; retain
-its accessibility audit detail rather than assume which element or size failed.
+the shipped route configurations. Expiration overview's retained issue description specifically says text may be
+clipped at larger Dynamic Type sizes; XCTest supplies no affected element. The
+[issue capture](evidence/phone351121-expiration-accessibility-issue.png) shows the
+normal-size Filters sheet. This does not establish a normal-size clipping defect
+or clear the enlarged-text concern. Keep it in the later Dynamic Type review,
+without suppressing the audit failure or guessing which control caused it.
 
 Seven enlarged-text workflows fail: asset-region recovery, command height, Details
 commands, Edit metadata, Edit tags, footer appearance and Move Here. Address normal
