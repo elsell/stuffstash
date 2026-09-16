@@ -1,5 +1,23 @@
 # Comprehensive mobile UI audit and remediation
 
+## Asset action loading and error exits
+
+Edit, Move and Move-here must expose a native Close command while the asset core
+is loading or unavailable. These states have no draft to discard. Close returns
+to the previous route, or Home when there is no back destination. Retry remains
+available after failure; a slow or failed read must not trap a user in an Edit
+sheet whose swipe dismissal is disabled. Ready-state draft and operation guards
+remain authoritative once editing begins.
+
+## Staged tag removal in Edit
+
+New staged tag chips in Edit perform removal, unlike existing-tag choices that
+toggle assignment. Announce the action as Remove new tag followed by its name;
+do not describe this one-way draft removal as a selected toggle. Preserve other
+staged tags, assigned tags and the item's edited fields. Apply the same command
+semantics already used by Add; native assistive-technology output remains a
+separate verification requirement.
+
 ## Add draft photo removal
 
 Add's photo rail must place a native removal command below each preview, outside

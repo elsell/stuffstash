@@ -209,7 +209,8 @@ function EditTagPicker({
           return (
             <Pressable
               accessibilityRole="button"
-              accessibilityState={{ disabled, selected: true }}
+              accessibilityLabel={`Remove new tag ${tag.displayName}`}
+              accessibilityState={{ disabled }}
               disabled={disabled}
               key={`${tag.displayName}-${index.toString()}`}
               onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}

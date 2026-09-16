@@ -1,7 +1,7 @@
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
-import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -12,6 +12,28 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+it.each([
+  ['loading', false], ['error', false], ['loading', true], ['error', true]
+] as const)('exposes Close from Edit %s without a loaded draft (back=%s)', async (state, canGoBack) => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation(); setCanGoBack(canGoBack);
+  const core = new AssetCoreQuery({ getAssetCore: async () => {
+    if (state === 'error') throw new Error('Unavailable');
+    return new Promise(() => undefined);
+  } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async () => { throw new Error('Must not save'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(state === 'error' ? h.byLabel('Retry asset') : h.byText('Loading asset')).toBeDefined();
+    expect(h.byLabel('Close')).toBeDefined();
+    await h.press(h.byLabel('Close'));
+    expect(dispatchedActions()).toContainEqual(canGoBack ? { type: 'back' } : { type: 'replace', href: '/' });
+  } finally { await h.unmount(); client.clear(); resetNavigation(); setCanGoBack(true); }
+});
+
 it('opens Edit before tags load and preserves a dirty draft after background core refresh', async () => {
   const client = createMobileQueryClient();
   const harness = new MobileRenderHarness();
@@ -336,6 +358,32 @@ it('waits for known Move suggestions before offering destination creation', asyn
     expect(h.byText('Create location "New room"')).toBeDefined();
     expect(h.byLabel('Put in')?.props.value).toBe('New room');
   } finally { await h.unmount(); }
+});
+
+it('names staged Edit tag removal and preserves other tags and edited fields', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Description'), 'Keep my edit');
+    for (const name of ['Camping', 'Outdoors']) {
+      await h.changeText(h.byLabel('New tag name'), name); await h.press(h.byLabel('Add tag'));
+    }
+    const remove = h.byLabel('Remove new tag Camping');
+    expect(remove).toBeDefined();
+    expect(remove?.props.accessibilityState.selected).toBeUndefined();
+    await h.press(remove);
+    expect(h.byLabel('Remove new tag Camping')).toBeUndefined();
+    expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Keep my edit', newTags: [{ displayName: 'Outdoors' }] })]);
+  } finally { await h.unmount(); client.clear(); }
 });
 
 it('explains an overlong Edit tag name and preserves the asset draft through correction', async () => {

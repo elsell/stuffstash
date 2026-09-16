@@ -1,5 +1,20 @@
 # Home return details — 24 source axes
 
+## Cancellation follow-up S139
+
+Reviewed atdc901a08 against all24 axes below: HomeReturnDetailsRouteScreen,
+HomeReturnDetailsSheet and useHomeReturnActions. Cancel return invokes the
+recorded compensating undo operation; it is not a discard-only dismissal. It
+shares the Save lock, preserves the editor after undo failure, and reconciles the
+restored checkout after success. No-undo and revoked-access states offer Close.
+Route Back goes through the same task owner; gesture dismissal remains disabled.
+No additional cancellation defect was established. The existing phone/iPad
+testHomeReturnCancelRestoresCheckout pass remains partial runtime evidence; it
+does not verify permission change, background interruption or all failure states.
+Search, media, notifications and imagery add no cancellation-specific controls.
+Normal-size reachability, busy feedback, localized copy and assistive-technology
+output remain covered by the outstanding native acceptance axes below.
+
 ## Optional details and pending/recovery follow-up S137/S138
 
 Reviewed at5013f1af against all24 axes below. S137 owns optional note entry after

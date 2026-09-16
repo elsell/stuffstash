@@ -65,13 +65,21 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
     query: (signal) => assetPlacementQuery!.execute(core.data!.snapshot, { signal }),
     enabled: Boolean(assetPlacementQuery && core.data)
   });
-  if (!core.data) return core.isError ? <ErrorState message="Could not load asset." onRetry={() => void core.refetch()} /> : <LoadingState label="Loading asset" />;
+  if (!core.data) return <AssetLoadState failed={core.isError} onRetry={() => void core.refetch()} />;
   const asset = placement.data && assetPlacementQuery ? { ...core.data.view, parentLocationTrail: placement.data.parentLocationTrail, parentLocationTrailLabel: placement.data.parentLocationTrailLabel, locationTrailLabel: placement.data.locationTrailLabel, isPlacementLoading: false } : core.data.view;
   return <Fragment key={`${asset.tenantId}:${asset.inventoryId}:${asset.id}`}>
     {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? 'Current placement could not be loaded.' : 'Loading current placement…'}</Text> : null}
     {assetPlacementQuery && placement.isError ? <NativeCommandButton label="Retry placement" onPress={() => void placement.refetch()} /> : null}
     {children(asset)}
   </Fragment>;
+}
+
+function AssetLoadState({ failed, onRetry }: { readonly failed: boolean; readonly onRetry: () => void }) {
+  const styles = useStyles();
+  return <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
+    {failed ? <ErrorState message="Could not load asset." onRetry={onRetry} /> : <LoadingState label="Loading asset" />}
+    <NativeCommandButton label="Close" onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/'); }} />
+  </SafeAreaView>;
 }
 
 type EditProps = ActionAssetQueries & {

@@ -2813,6 +2813,11 @@ the command removes only that staged definition, preserving another staged tag
 and unfinished name before saving. This does not delete persisted inventory tags.
 Actual screen-reader output and visual target acceptance remain native work.
 
+Edit follow-up atdc901a08: the separate Edit staged-tag chip retained the same
+misleading action. It now uses Remove new tag {name} and drops selected state.
+The RED mounted regression verifies another staged tag and edited description
+survive removal and reach Save. Native announcements remain pending.
+
 ### M202 — Browser sign-in errors are reported as user cancellation
 
 P2 source/boundary confirmed atc7b64036. All non-success native auth results threw
@@ -2880,3 +2885,23 @@ with an unconstrained-height shell. A RED mounted regression preceded correction
 label wrapping, rail height, reordered numbering and actual targets remain pending;
 see add-creation-media-axis.md. Earlier M40 work on voice photo commands did not
 establish that Add's separate implementation had been migrated.
+
+### M209 — Asset Edit cannot exit while core loading fails or stalls
+
+P1 source-confirmed atdc901a08. Edit disables swipe dismissal and hides its header,
+but initial loading/error branches previously exposed no Close action. The shared
+Edit/Move/Move-here loading shell now provides a native Close alongside retained
+loading/retry, returning Back or Home when entered directly. Both loading/error
+RED cases preceded correction; additional normal-Back coverage is included.
+Native reachability remains pending; see asset-edit-route-axis.md.
+
+### M210 — Asset action forms ignore current edit eligibility
+
+P2 source-confirmed atdc901a08, not a demonstrated server authorization bypass.
+AssetCoreQuery derives canEdit/canMove from permission and active lifecycle, but
+ActionAsset and its action forms do not consult those capabilities. A readable
+view-only or archived asset can retain editing/move affordances and attempt a
+command after direct entry or refresh. Correction remains pending: retain draft
+and Close, explain unavailable editing, reject stale action callbacks, and cover
+Edit/Move/Move-here with adversarial route tests. Server mutation authorization
+must remain authoritative. See asset-edit-route-axis.md.
