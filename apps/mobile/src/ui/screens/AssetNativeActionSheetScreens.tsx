@@ -457,9 +457,12 @@ function useAssetSheetOperation(eligible: boolean, onRemove?: (leave: () => void
   const [kind, setKind] = useState<'save' | 'create' | null>(null);
   const navigation = useNavigation();
   const completed = useRef(false);
-  usePreventRemove(kind !== null || !!onRemove, ({ data }) => {
+  usePreventRemove(true, ({ data }) => {
     if (completed.current) { navigation.dispatch(data.action); return; }
-    if (!pending.current) onRemove?.(() => navigation.dispatch(data.action));
+    if (!pending.current) {
+      if (onRemove) onRemove(() => navigation.dispatch(data.action));
+      else navigation.dispatch(data.action);
+    }
   });
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   return {

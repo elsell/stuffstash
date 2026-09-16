@@ -145,6 +145,8 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     const submit = save!.props.onPress;
     await h.run(() => { submit(); submit(); });
     expect(submitted).toHaveLength(1);
+    await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
+    expect(dispatchedActions()).toEqual([]);
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
@@ -159,6 +161,11 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     else expect(completion).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    if (outcome === 'failure' && !returned) {
+      const action = { type: 'GO_BACK', source: mode };
+      await h.run(() => attemptNavigation(action));
+      expect(dispatchedActions()).toEqual([action]);
+    }
   } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 

@@ -51,3 +51,34 @@ outside this sample. XML snapshots are retained at
 `/tmp/edit-recovery-android.xml`, `/tmp/edit-retry-android.xml`,
 `/tmp/edit-bottom-android.xml`, `/tmp/edit-save-error-android.xml` and
 `/tmp/edit-recovered-android.xml`.
+
+## Move Here completion teardown (M231)
+
+The September16 normal-text sample recovered suggestions, selected Audit tent,
+rejected the command and preserved the selection/preview and both actions.
+[Retained selection](evidence/android-movehere-rejected-retained.png). Cancel
+returned to the audit index. The fixture previously rejected every command;
+it now checks the expected source/target IDs, rejects once and accepts retry.
+
+That successful retry exposed a real native crash at07:40:21 emulator time,
+PID11572: `ScreenStackFragment added into a non-stack container` from
+`ScreenStackHeaderConfig.onUpdate`. The destination assertion failed and the
+captured hierarchy was the Android launcher. This is a failed candidate, not
+successful navigation. Log: `/tmp/movehere-success-crash.log`.
+
+The shared asset-operation guard now stays registered throughout form lifetime,
+redispatches authorized completions and idle Move exits, preserves Edit discard
+confirmation, and blocks pending writes. Rebuilt APK
+`e37351994c5f6f398188fcdd829cddb499f6d1501afc4e34ccc2c16d29eddd28`
+passes the same failure/retention/retry sequence and returns to Native UI audit;
+app PID11822 remains alive. Hierarchies:
+`/tmp/movehere-fixed-{entry,retry,selected,error,retained,return}.xml`.
+
+All38 shared action behavior tests, TypeScript and structural checks pass on paul.
+Tests include pending native removal and idle removal after rejected Move/Move Here.
+Critic accepted source semantics and required positive destination interaction in
+the new normal-text iOS regression. That Swift test is pending macOS execution;
+iOS idle dismissal gestures, Move destination creation, successful Edit and real
+backend persistence remain separate unverified scenarios. No production inventory
+was changed. Build log: `/tmp/android-move-guard-build.log`; source checks:
+`/tmp/asset-removal-guard-{tests,check,structural}.log`.

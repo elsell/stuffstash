@@ -331,6 +331,32 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForNonExistence(timeout: 5))
   }
 
+  func testMoveHereRejectedCommandRetainsSelectionAndRetryReturns() {
+    let open = app.buttons["Audit Move here recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let retry = app.buttons["Retry suggestions"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    retry.tap()
+    let candidate = app.staticTexts["Audit tent"].firstMatch
+    XCTAssertTrue(candidate.waitForExistence(timeout: 5))
+    candidate.tap()
+    let move = app.buttons["Move here"].firstMatch
+    XCTAssertTrue(move.isEnabled)
+    move.tap()
+    XCTAssertTrue(app.alerts["Could not move asset here"].waitForExistence(timeout: 5))
+    app.alerts.buttons["OK"].tap()
+    XCTAssertTrue(app.staticTexts["Audit tent -> Camping box"].firstMatch.exists)
+    XCTAssertTrue(move.isHittable)
+    move.tap()
+    XCTAssertTrue(app.textFields["Find item, box, or place"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
+    capture("move-here-successful-retry")
+  }
+
   func testMoveHereRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

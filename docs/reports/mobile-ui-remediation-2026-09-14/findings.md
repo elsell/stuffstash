@@ -3099,5 +3099,15 @@ of successful navigation.
 P1 runtime-confirmed: form-sheet header omission hides Conversation's title and
 primary session commands. Android card presentation restores them. Native Close,
 proposal retention, New confirmation/Keep, and location recovery/selection pass.
-Confirmed-reset observation needs fixture seed-lifetime isolation; no empty-state
-claim follows. See android-conversation-header.md.
+Provider-lifetime fixture seeding now verifies confirmed reset to the empty composer
+and initial Home idle state. See android-conversation-header.md.
+
+### M231 — Move Here successful retry crashes during header teardown
+
+P1 runtime-confirmed in the Android card candidate. Normal-text selection and
+rejected-command recovery passed, but successful retry crashed when removal
+protection toggled during route teardown. The shared Edit/Move/Move Here guard now
+remains registered and dispatches authorized exits. The same Android native journey
+returns successfully, and38 shared behavior tests pass. iOS gesture/teardown
+acceptance remains pending. See android-asset-actions.md for failing and passing
+native evidence and coverage limits.

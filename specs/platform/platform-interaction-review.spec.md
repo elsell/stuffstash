@@ -86,6 +86,15 @@ Fixture routes
 must remain runner-only and must not load production services or credentials.
 Simulator results do not establish physical capture or server authorization.
 
+Move Here native acceptance must cover suggestion recovery, selection, rejected
+command draft retention, and successful retry with a positive return destination.
+Its isolated command fake rejects the first valid move and accepts the second;
+it validates the selected asset and target without contacting production services.
+Asset-action removal protection remains registered for the form lifetime, including
+the transition from a completed command to route removal. Dispatch idle Move exits
+and authorized completions through that guard; retain Edit's discard confirmation
+and block pending writes. Do not toggle native removal protection during teardown.
+
 Shared provider-settings loading and failure views must identify the current task
 (voice setup, voice stage, profile list/detail, credentials or prompt guidance).
 Use the shared labeled progress row; do not substitute an unlabeled spinner or
