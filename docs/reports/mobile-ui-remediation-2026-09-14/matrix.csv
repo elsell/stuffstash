@@ -2903,30 +2903,30 @@ S121,Voice / response,privacy,"Account scope, data use and permissions",source-r
 S121,Voice / response,notifications,System notification entry and state,source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
 S121,Voice / response,media,"Camera, library, files and audio",source-reviewed,conversation-response-axis.md; source722ca46c; native acceptance pending,
 S121,Voice / response,lifecycle,"Cold/warm start, blur, background and deep link",finding,conversation-response-axis.md; source722ca46c; native acceptance pending; findings.md M171 delayed media/navigation ownership,M171
-S122,Voice / plan approval edits,task,Task clarity and platform-pattern fit,pending,,
-S122,Voice / plan approval edits,navigation,"Navigation, hierarchy and return",pending,,
-S122,Voice / plan approval edits,selection,Value selection and current value,pending,,
-S122,Voice / plan approval edits,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending,M144
-S122,Voice / plan approval edits,layout,"Safe areas, scroll edges and overlays",pending,,
-S122,Voice / plan approval edits,adaptation,Phone/tablet/window reflow,pending,,
-S122,Voice / plan approval edits,typography,"Dynamic Type, wrapping and legibility",pending,,
-S122,Voice / plan approval edits,appearance,"Light/dark, contrast and materials",pending,,
-S122,Voice / plan approval edits,localization,"Locale, timezone, RTL and long strings",pending,,
-S122,Voice / plan approval edits,imagery,"Icons, photos and missing media",pending,,
-S122,Voice / plan approval edits,targets,Touch target size and reachability,pending,,
-S122,Voice / plan approval edits,gestures,Gestures and explicit alternatives,pending,,
-S122,Voice / plan approval edits,keyboard,"Keyboard, text entry and focus",pending,text-entry-axis.md records ownership/reset review; full native input acceptance still pending,
-S122,Voice / plan approval edits,accessibility,"VoiceOver/TalkBack names, roles, states and order",pending,,
-S122,Voice / plan approval edits,motion,Reduced motion and feedback alternatives,pending,,
-S122,Voice / plan approval edits,content,"Lists, hierarchy, density and pagination",pending,,
-S122,Voice / plan approval edits,search,"Search, scope and filters",pending,,
-S122,Voice / plan approval edits,loading,"Loading, background refresh and progress",pending,,
-S122,Voice / plan approval edits,recovery,"Empty, error, denied and retry",finding,; findings.md M151; native selection acceptance pending,M151
-S122,Voice / plan approval edits,editing,"Draft, save, cancel, undo and interruption",finding,; M144 mounted reset confirmation ownership; native pending,M144
-S122,Voice / plan approval edits,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
-S122,Voice / plan approval edits,notifications,System notification entry and state,pending,,
-S122,Voice / plan approval edits,media,"Camera, library, files and audio",finding,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; findings.md M151; native selection acceptance pending,M63; M151
-S122,Voice / plan approval edits,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending,M144
+S122,Voice / plan approval edits,task,Task clarity and platform-pattern fit,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,navigation,"Navigation, hierarchy and return",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M174
+S122,Voice / plan approval edits,selection,Value selection and current value,finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M174
+S122,Voice / plan approval edits,modality,Presentation and dismissal,finding,; M144 mounted reset confirmation ownership; native pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M144;M174
+S122,Voice / plan approval edits,layout,"Safe areas, scroll edges and overlays",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,adaptation,Phone/tablet/window reflow,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,appearance,"Light/dark, contrast and materials",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M175
+S122,Voice / plan approval edits,localization,"Locale, timezone, RTL and long strings",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,imagery,"Icons, photos and missing media",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,targets,Touch target size and reachability,finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M175
+S122,Voice / plan approval edits,gestures,Gestures and explicit alternatives,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,keyboard,"Keyboard, text entry and focus",source-reviewed,text-entry-axis.md records ownership/reset review; full native input acceptance still pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,accessibility,"VoiceOver/TalkBack names, roles, states and order",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,motion,Reduced motion and feedback alternatives,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,content,"Lists, hierarchy, density and pagination",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,search,"Search, scope and filters",finding,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M174
+S122,Voice / plan approval edits,loading,"Loading, background refresh and progress",source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,recovery,"Empty, error, denied and retry",finding,; findings.md M151; native selection acceptance pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M151;M174
+S122,Voice / plan approval edits,editing,"Draft, save, cancel, undo and interruption",finding,; M144 mounted reset confirmation ownership; native pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M144;M173
+S122,Voice / plan approval edits,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M63
+S122,Voice / plan approval edits,notifications,System notification entry and state,source-reviewed,; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,
+S122,Voice / plan approval edits,media,"Camera, library, files and audio",finding,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; findings.md M151; native selection acceptance pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M63; M151
+S122,Voice / plan approval edits,lifecycle,"Cold/warm start, blur, background and deep link",finding,; M144 mounted reset confirmation ownership; native pending; voice-plan-edit-axis.md; source4b988ab0 with M173 candidate; native acceptance pending,M144
 S123,Voice / plan progress recovery,task,Task clarity and platform-pattern fit,pending,,
 S123,Voice / plan progress recovery,navigation,"Navigation, hierarchy and return",pending,,
 S123,Voice / plan progress recovery,selection,Value selection and current value,pending,,

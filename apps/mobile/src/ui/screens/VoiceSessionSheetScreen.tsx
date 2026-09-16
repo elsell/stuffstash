@@ -273,7 +273,7 @@ function VoiceSessionSheet({
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
-  const { history, scrollOffset } = useVoiceInteractionState();
+  const { history, scrollOffset, titleEditor } = useVoiceInteractionState();
   const conversationScroll = useRef<ScrollView>(null);
   const followingLatest = useRef(scrollOffset.current === 0);
   const palette = useAppearancePalette();
@@ -508,11 +508,14 @@ function VoiceSessionSheet({
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
               {bottomAction.kind === 'review_decision' ? (
+                <>
+                {titleEditor && !titleEditor.value.trim() ? <Text accessibilityLiveRegion="polite" style={styles.progressHint}>Enter a name before approving.</Text> : null}
                 <NativeSheetActions primaryLabel="Approve" primaryAccessibilityLabel="Approve voice change"
                   secondaryLabel="Cancel" secondaryAccessibilityLabel="Cancel voice change"
-                  keyboardAvoidance="container" disabled={false}
+                  keyboardAvoidance="container" disabled={!!titleEditor && !titleEditor.value.trim()}
                   onApply={() => onApproveActionPlan(bottomAction.planId)}
                   onBack={() => onCancelActionPlan(bottomAction.planId)} />
+                </>
               ) : <VoiceConversationComposer onMic={onSessionMic} />}
 
             </View>

@@ -2458,3 +2458,37 @@ active-cleanup cases reproduced a review finding and now pass. All98 focused
 recorder/controller tests, TypeScript and structural checks pass on paul. Critic
 found no remaining blockers in this change. Native permission/interruption
 acceptance remains open; no physical microphone verification is claimed.
+
+### M173 — Approval silently omits a name still being edited
+
+P2 source-confirmed at4b988ab0. Inline name text lives in titleEditor, while Approve
+only serialized commandDraftState. The candidate merges the visible normalized
+name into approval edits, preserving placement and other commands, and stores it
+locally before submission. Blank names block approval with visible guidance;
+Cancel remains available. A mounted real-provider/controller test failed before
+the correction and now verifies blank rejection, latest name and retention after
+transport failure. Native keyboard/decision-area acceptance remains pending.
+
+### M174 — Proposal destination selection uses an incomplete custom panel
+
+P2 source-confirmed at4b988ab0. ParentPicker in VoiceSessionSheetScreen is a flex
+sibling below the conversation and approval footer. It uses custom search/close
+controls and chevrons on immediate value-selection rows, without indicating the
+current destination. The screen passes candidates.data ?? [] and discards lookup
+loading/error state, so failure and empty search are indistinguishable.
+
+Use an existing native searchable selection pattern with current-value indication,
+bounded loading/error/no-match feedback and retry. Hierarchy, existing/proposed
+destinations and descriptions justify a selection view rather than a flat menu.
+Preserve the proposal, selected destination and name draft across entry/Back;
+scope/plan replacement must retire pending choices. Native layout failure is not
+claimed from source alone. Implementation and runtime acceptance remain open.
+
+### M175 — Inline proposal name commands remain custom narrow icons
+
+P2 source pattern finding at4b988ab0. Save/Cancel in EditablePlanCommandFields use
+custom Pressables with36-point widths and44-point heights, with no hitSlop.
+Reuse native command controls and preserve explicit save/cancel semantics alongside
+M173 final approval. Source geometry is not a measured native hit-region result.
+Acceptance includes blank disabling, cancel restoring the committed name, Done,
+keyboard visibility and native targets at normal text size. Correction remains open.

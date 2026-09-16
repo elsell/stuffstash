@@ -22,7 +22,7 @@ Responses with authorized asset references show a compact horizontal rail of car
 
 ## Action widgets and accessibility
 
-Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
+Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Approve commits the currently visible inline name along with the other reviewed edits; it must never silently submit a previous name. A blank inline name disables approval with an explanation while cancellation remains available. Committed names remain in the local draft if submission fails. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
 
 ## Verification and release
 

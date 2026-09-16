@@ -76,8 +76,15 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,308
-pending,1,497 source-reviewed,440 finding,24 runtime-partial and115 not-applicable.
+controls documented as inventory corrections. Its3,384 cells comprise1,290
+pending,1,510 source-reviewed,445 finding,24 runtime-partial and115 not-applicable.
+
+[Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
+includes the visible pending name on approval and blocks blank names;52 focused
+tests and static checks pass. Critic found no implementation blocker, while noting
+that the new provider test does not render the actual proposal/failed-review UI.
+M174 tracks the custom destination panel and missing lookup recovery; M175 tracks
+the narrow custom inline name commands. Both remain to be corrected.
 
 [Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
 identifies capture starting after cancellation during native permission/preparation;
