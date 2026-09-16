@@ -80,3 +80,12 @@ Draft tester notes, to reconcile with final accepted scope:
 - Improved photo preview and draft photo removal.
 - Clearer invitation cancellation and access recovery.
 - More reliable notification navigation and filter interactions.
+
+## Onboarding checkpoint
+
+Run35156794515 iPad passes the standard complete onboarding journey and landscape
+adaptation. Its alternate form-column comparison stops at unchanged help expansion
+(M240), before exercising its keyboard comparison. Keep that intermittent,
+noncritical help issue in audit follow-up; it is not a newly demonstrated batch
+regression. See [evidence and decision](native-onboarding-351567.md). Phone
+onboarding and the remaining required batch checks are still pending.

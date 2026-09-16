@@ -3299,6 +3299,12 @@ address retention and reachable sign-in. See native-onboarding-351121.md. The ot
 jobs remain independent and active; this failure is not an address-entry failure.
 
 
+Run35156794515 repeats the collapsed-help observation on iPad in the alternate
+form-column comparison; the standard onboarding journey passes on the same build.
+The frozen batch leaves this help control/handler unchanged. It remains noncritical
+audit follow-up, not an added release gate; see native-onboarding-351567.md. No fix
+or universal one-tap reliability is claimed.
+
 ### M241 — Sharing access loss uses generic load-failure recovery
 
 P2 source/mounted-confirmed, completing the denial-copy gap recorded in sharing-axis.md.
