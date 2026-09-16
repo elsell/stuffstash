@@ -100,8 +100,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise42
-pending,2,621 source-reviewed,522 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise27
+pending,2,636 source-reviewed,522 finding,25 runtime-partial and198 not-applicable.
 
 Current expiration-entry, gallery and full-viewer follow-ups account for38 more
 source cells. M211 adds gallery preview failure recovery while retaining original
@@ -497,3 +497,7 @@ The [root presentation review](root-presentation-axis.md) covers all24 R006 axes
 and identifies M152, obsolete connection expiry callbacks acting on a new session.
 The ownership correction has mounted evidence; native account and root layering
 acceptance remain open.
+
+Contained-item rows now have a current24-axis source follow-up in
+[contained-items-axis.md](contained-items-axis.md);15 remaining source cells
+were reviewed. Phone/iPad search disagreement remains an open native finding.
