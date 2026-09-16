@@ -1,5 +1,6 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React from 'react';
-import { Badge, BadgedBox, Host, Icon, IconButton, Text } from '@expo/ui/jetpack-compose';
+import { Badge, BadgedBox, Icon, IconButton, Text } from '@expo/ui/jetpack-compose';
 import { View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';

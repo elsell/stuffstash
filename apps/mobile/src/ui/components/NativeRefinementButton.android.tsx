@@ -1,5 +1,6 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React from 'react';
-import { Host, Icon, OutlinedButton, Text as ComposeText } from '@expo/ui/jetpack-compose';
+import { Icon, OutlinedButton, Text as ComposeText } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';

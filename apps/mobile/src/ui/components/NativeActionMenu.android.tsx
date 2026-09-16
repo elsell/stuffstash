@@ -1,5 +1,6 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React, { Fragment, useState } from 'react';
-import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Host, Icon, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Icon, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
 import { selectable, size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';

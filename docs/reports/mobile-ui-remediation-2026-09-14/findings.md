@@ -3047,3 +3047,12 @@ only pending work. A failing GO_BACK/POP regression now passes through the exist
 discard confirmation, preserving draft/visit guards and the original action.
 Keep editing retains the draft, pending commands prevent removal, and authorized
 Discard/Save can leave. Native header/hardware Back acceptance is pending.
+
+### M225 — Android native controls ignore the app appearance override
+
+P1 runtime-confirmed: enabled Cancel has1.97:1 contrast when app dark differs from
+system light. Independent Compose Hosts default to device appearance. The shared
+appearance-aware host now covers all seven adapters. Rebuilt native footer sample
+passes dark10.89:1/light8.96:1 and disabled/enabled command checks; individual
+appearance coverage of other adapter families remains open. See
+[Android appearance evidence](android-compose-appearance.md).

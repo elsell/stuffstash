@@ -115,7 +115,7 @@ the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
 controls documented as inventory corrections. Its3,408 cells comprise zero pending
-source-review cells,2,637 source-reviewed,548 finding,25 runtime-partial and198
+source-review cells,2,634 source-reviewed,551 finding,25 runtime-partial and198
 not-applicable. This completes source inventory coverage, not native acceptance or
 finding remediation. The remaining route/server-entry/notice reviews are linked
 in their surface reports; M212 adds direct-entry checkout-history exit recovery.
@@ -526,3 +526,8 @@ acceptance remain open.
 Contained-item rows now have a current24-axis source follow-up in
 [contained-items-axis.md](contained-items-axis.md);15 remaining source cells
 were reviewed. Phone/iPad search disagreement remains an open native finding.
+
+Android native controls now share the app appearance override. The normal-size
+Cancel contrast regression and rebuilt dark/light evidence are recorded in
+[Android Compose appearance](android-compose-appearance.md); other adapter families
+retain individual runtime verification gaps.

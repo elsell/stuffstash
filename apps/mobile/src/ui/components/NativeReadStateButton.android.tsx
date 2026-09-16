@@ -1,4 +1,5 @@
-import { Host, Icon, IconButton } from '@expo/ui/jetpack-compose';
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
+import { Icon, IconButton } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import type { NativeReadStateButtonProps } from './NativeReadStateButton.types';

@@ -1,5 +1,6 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { Button, Host, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { Button, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type { NativeCommandButtonProps } from './NativeCommandButton.types';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 

@@ -1623,3 +1623,11 @@ by hiding the header button.
 On Android full-screen asset actions, use the native header for the task title;
 do not repeat Edit/Move task headings in the scroll body. Preserve contextual
 asset names, instructions and previews. iOS headerless sheets retain body titles.
+
+Android Compose controls must follow the resolved in-app appearance preference,
+including when it differs from the device theme. All project Compose hosts share
+one appearance-aware adapter; do not rely on each host's system-theme default.
+Preserve Material enabled/disabled colors and existing interaction semantics.
+Acceptance must include switching light/dark while controls remain mounted,
+readable enabled secondary actions, disabled-command non-execution and enabled
+primary execution. Source propagation alone does not prove rendered contrast.

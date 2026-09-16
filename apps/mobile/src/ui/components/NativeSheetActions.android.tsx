@@ -1,5 +1,6 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React from 'react';
-import { Button, Host, OutlinedButton, Text } from '@expo/ui/jetpack-compose';
+import { Button, OutlinedButton, Text } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { View } from 'react-native';
 import type { NativeSheetActionsProps } from './NativeSheetActions.types';
