@@ -2063,30 +2063,30 @@ S086,Add / parent search,privacy,"Account scope, data use and permissions",sourc
 S086,Add / parent search,notifications,System notification entry and state,source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,media,"Camera, library, files and audio",source-reviewed,add-parent-axis.md; source716f23b1; native layout/keyboard acceptance pending,
 S086,Add / parent search,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S087,Add / quick parent creation,task,Task clarity and platform-pattern fit,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S087,Add / quick parent creation,navigation,"Navigation, hierarchy and return",pending,,
-S087,Add / quick parent creation,selection,Value selection and current value,pending,,
-S087,Add / quick parent creation,modality,Presentation and dismissal,pending,,
-S087,Add / quick parent creation,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
-S087,Add / quick parent creation,adaptation,Phone/tablet/window reflow,pending,,
-S087,Add / quick parent creation,typography,"Dynamic Type, wrapping and legibility",pending,,
-S087,Add / quick parent creation,appearance,"Light/dark, contrast and materials",pending,,
-S087,Add / quick parent creation,localization,"Locale, timezone, RTL and long strings",pending,,
-S087,Add / quick parent creation,imagery,"Icons, photos and missing media",pending,,
-S087,Add / quick parent creation,targets,Touch target size and reachability,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S087,Add / quick parent creation,gestures,Gestures and explicit alternatives,pending,,
-S087,Add / quick parent creation,keyboard,"Keyboard, text entry and focus",pending,,
-S087,Add / quick parent creation,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.",M97
-S087,Add / quick parent creation,motion,Reduced motion and feedback alternatives,pending,,
-S087,Add / quick parent creation,content,"Lists, hierarchy, density and pagination",pending,,
-S087,Add / quick parent creation,search,"Search, scope and filters",pending,,
-S087,Add / quick parent creation,loading,"Loading, background refresh and progress",finding," M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M92
-S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md) M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.",M21;M82;M92
-S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
-S087,Add / quick parent creation,privacy,"Account scope, data use and permissions",pending,,
-S087,Add / quick parent creation,notifications,System notification entry and state,pending,,
-S087,Add / quick parent creation,media,"Camera, library, files and audio",pending,,
-S087,Add / quick parent creation,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.,M21
+S087,Add / quick parent creation,task,Task clarity and platform-pattern fit,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.; add-creation-media-axis.md (24-axis source review; native checks pending)",M97
+S087,Add / quick parent creation,navigation,"Navigation, hierarchy and return",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,selection,Value selection and current value,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,modality,Presentation and dismissal,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md); add-creation-media-axis.md (24-axis source review; native checks pending)",M82
+S087,Add / quick parent creation,adaptation,Phone/tablet/window reflow,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,appearance,"Light/dark, contrast and materials",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,localization,"Locale, timezone, RTL and long strings",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,imagery,"Icons, photos and missing media",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,targets,Touch target size and reachability,finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.; add-creation-media-axis.md (24-axis source review; native checks pending)",M97
+S087,Add / quick parent creation,gestures,Gestures and explicit alternatives,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,keyboard,"Keyboard, text entry and focus",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding," M97 native Retry/Create commands candidate, 10 remote Add tests pass; native geometry and assistive technology pending. See findings.md.; add-creation-media-axis.md (24-axis source review; native checks pending)",M97
+S087,Add / quick parent creation,motion,Reduced motion and feedback alternatives,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,content,"Lists, hierarchy, density and pagination",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,search,"Search, scope and filters",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,loading,"Loading, background refresh and progress",finding," M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.; add-creation-media-axis.md (24-axis source review; native checks pending)",M92
+S087,Add / quick parent creation,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md) M92 Add known-suggestions creation gate: 10 remote Add tests, TypeScript and structural checks pass; native pending. See findings.md.; add-creation-media-axis.md (24-axis source review; native checks pending)",M21;M82;M92
+S087,Add / quick parent creation,editing,"Draft, save, cancel, undo and interruption",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; add-creation-media-axis.md (24-axis source review; native checks pending),M21
+S087,Add / quick parent creation,privacy,"Account scope, data use and permissions",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,notifications,System notification entry and state,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,media,"Camera, library, files and audio",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S087,Add / quick parent creation,lifecycle,"Cold/warm start, blur, background and deep link",source-reviewed,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; add-creation-media-axis.md (24-axis source review; native checks pending),M21
 S088,Add / type choice,task,Task clarity and platform-pattern fit,source-reviewed,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
 S088,Add / type choice,navigation,"Navigation, hierarchy and return",source-reviewed,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
 S088,Add / type choice,selection,Value selection and current value,source-reviewed,add-type-axis.md; source bc55f271 plus M149/M150; native acceptance pending,
@@ -2135,30 +2135,30 @@ S089,Add / tags select create,privacy,"Account scope, data use and permissions",
 S089,Add / tags select create,notifications,System notification entry and state,source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,media,"Camera, library, files and audio",source-reviewed,add-tags-axis.md current327391bf follow-through; native acceptance remains open,
 S089,Add / tags select create,lifecycle,"Cold/warm start, blur, background and deep link",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending. M96: unfinished tag name/color are local to a conditionally mounted picker and absent from scoped draft storage; see add-tags-axis.md.,M21;M96
-S090,Add / photo selection,task,Task clarity and platform-pattern fit,pending,,
-S090,Add / photo selection,navigation,"Navigation, hierarchy and return",pending,,
-S090,Add / photo selection,selection,Value selection and current value,pending,,
-S090,Add / photo selection,modality,Presentation and dismissal,finding,; M143 draft-photo confirmation mounted regression/fix; native pending,M143
-S090,Add / photo selection,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md)",M82
-S090,Add / photo selection,adaptation,Phone/tablet/window reflow,pending,,
-S090,Add / photo selection,typography,"Dynamic Type, wrapping and legibility",pending,,
-S090,Add / photo selection,appearance,"Light/dark, contrast and materials",pending,,
-S090,Add / photo selection,localization,"Locale, timezone, RTL and long strings",pending,,
-S090,Add / photo selection,imagery,"Icons, photos and missing media",pending,,
-S090,Add / photo selection,targets,Touch target size and reachability,pending,,
-S090,Add / photo selection,gestures,Gestures and explicit alternatives,pending,,
-S090,Add / photo selection,keyboard,"Keyboard, text entry and focus",pending,,
-S090,Add / photo selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M159
-S090,Add / photo selection,motion,Reduced motion and feedback alternatives,pending,,
-S090,Add / photo selection,content,"Lists, hierarchy, density and pagination",pending,,
-S090,Add / photo selection,search,"Search, scope and filters",pending,,
-S090,Add / photo selection,loading,"Loading, background refresh and progress",pending,,
-S090,Add / photo selection,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md); findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M21; M82; M151;M158
-S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending,M21; M143
-S090,Add / photo selection,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending,M63
-S090,Add / photo selection,notifications,System notification entry and state,pending,,
-S090,Add / photo selection,media,"Camera, library, files and audio",finding,"M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M63; M151;M158
-S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending",M21; M143;M158
+S090,Add / photo selection,task,Task clarity and platform-pattern fit,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,navigation,"Navigation, hierarchy and return",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,selection,Value selection and current value,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,modality,Presentation and dismissal,finding,; M143 draft-photo confirmation mounted regression/fix; native pending; add-creation-media-axis.md (24-axis source review; native checks pending),M143
+S090,Add / photo selection,layout,"Safe areas, scroll edges and overlays",finding,"M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md); add-creation-media-axis.md (24-axis source review; native checks pending)",M82
+S090,Add / photo selection,adaptation,Phone/tablet/window reflow,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,typography,"Dynamic Type, wrapping and legibility",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,appearance,"Light/dark, contrast and materials",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,localization,"Locale, timezone, RTL and long strings",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,imagery,"Icons, photos and missing media",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,targets,Touch target size and reachability,finding,; add-creation-media-axis.md (24-axis source review; native checks pending),M208
+S090,Add / photo selection,gestures,Gestures and explicit alternatives,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,keyboard,"Keyboard, text entry and focus",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,accessibility,"VoiceOver/TalkBack names, roles, states and order",finding,"; confirmation-review.md photo-source follow-up; mounted only, physical picker pending; add-creation-media-axis.md (24-axis source review; native checks pending)",M159
+S090,Add / photo selection,motion,Reduced motion and feedback alternatives,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,content,"Lists, hierarchy, density and pagination",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,search,"Search, scope and filters",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,loading,"Loading, background refresh and progress",source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,recovery,"Empty, error, denied and retry",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M82: root notice hidden by Add sheet; form-owned error correction through cee11dd9, 18 remote Add checks; native visibility pending (findings.md/native-evidence.md); findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending; add-creation-media-axis.md (24-axis source review; native checks pending)",M21; M82; M151;M158
+S090,Add / photo selection,editing,"Draft, save, cancel, undo and interruption",finding,Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending; add-creation-media-axis.md (24-axis source review; native checks pending),M21; M143
+S090,Add / photo selection,privacy,"Account scope, data use and permissions",source-reviewed,M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; add-creation-media-axis.md (24-axis source review; native checks pending),M63
+S090,Add / photo selection,notifications,System notification entry and state,source-reviewed,; add-creation-media-axis.md (24-axis source review; native checks pending),
+S090,Add / photo selection,media,"Camera, library, files and audio",finding,"M63: shared photo picker permission gate corrected; 7 adapter tests on paul; native permission/draft acceptance pending; findings.md M151; native selection acceptance pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending; add-creation-media-axis.md (24-axis source review; native checks pending)",M63; M151;M158
+S090,Add / photo selection,lifecycle,"Cold/warm start, blur, background and deep link",finding,"Add operation ownership guards pending save/parent/photo edits and dismissal; five remote behavior tests pass. Native runtime pending.; M143 draft-photo confirmation mounted regression/fix; native pending; confirmation-review.md photo-source follow-up; mounted only, physical picker pending; add-creation-media-axis.md (24-axis source review; native checks pending)",M21; M143;M158
 S091,Add / custom fields,task,Task clarity and platform-pattern fit,not-applicable,add-type-axis.md; control absent from current Add; source bc55f271,
 S091,Add / custom fields,navigation,"Navigation, hierarchy and return",not-applicable,add-type-axis.md; control absent from current Add; source bc55f271,
 S091,Add / custom fields,selection,Value selection and current value,not-applicable,add-type-axis.md; control absent from current Add; source bc55f271,

@@ -16,6 +16,34 @@ import { MobileServerStateProvider } from '../navigation/MobileServerStateProvid
 import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 
+it('removes the numbered draft photo while preserving the remaining selection and item draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const store = new InMemoryAddAssetDraftStore('scope');
+  const scope = { tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' };
+  const context = { ...scope, tenantName: 'Home', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  store.save(scope, { title: 'Keep this item', description: '', parentQuery: '', showDetails: false,
+    selectedPhotos: ['first', 'second'].map(id => ({ id, uri: `file:///${id}.jpg`, fileName: `${id}.jpg`, contentType: 'image/jpeg' as const, sizeBytes: 100 })) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={store}
+      createAssetCommand={{ execute: async () => { throw new Error('Must not save'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.byLabel('Asset name')).toBeDefined();
+    expect(h.byLabel('Remove photo 1')).toBeDefined();
+    expect(h.byLabel('Remove photo 2')).toBeDefined();
+    await h.press(h.byLabel('Remove photo 1'));
+    expect(store.load(scope)?.selectedPhotos.map(photo => photo.id)).toEqual(['second']);
+    expect(store.load(scope)?.title).toBe('Keep this item');
+    expect(h.byLabel('Remove photo 2')).toBeUndefined();
+    await h.press(h.byLabel('Remove photo 1'));
+    expect(store.load(scope)?.selectedPhotos).toEqual([]);
+    expect(store.load(scope)?.title).toBe('Keep this item');
+  } finally { await h.unmount(); client.clear(); }
+});
+
 it.each([0, 1])('rejects an Add photo chooser from a departed visit, source=%s', async source => {
   resetNavigation(); let selections = 0;
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();

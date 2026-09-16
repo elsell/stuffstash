@@ -13,6 +13,7 @@ This is a review worklist, not a count of completed checks. Overlapping shared t
 are intentional: route coverage and interaction coverage are independent.
 
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
+- `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
 - `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
@@ -97,8 +98,8 @@ code critic found no blockers. Native acceptance remains pending. This follows
 the1,722-test checkpoint above.
 
 The audit ledger retains142 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,408 cells comprise227
-pending,2,443 source-reviewed,515 finding,25 runtime-partial and198 not-applicable.
+controls documented as inventory corrections. Its3,408 cells comprise195
+pending,2,474 source-reviewed,516 finding,25 runtime-partial and198 not-applicable.
 
 Home Return's optional details and pending/recovery now have complete source
 follow-ups. Run350465's phone/iPad captures verify the full failed-save error is

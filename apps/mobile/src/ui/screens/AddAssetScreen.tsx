@@ -895,15 +895,8 @@ function PhotoPreviewItem({
         <Text style={styles.photoOrdinal}>{(index + 1).toString()}</Text>
         <Text style={styles.photoDragHint}>{isDragging ? 'Drag' : 'Hold'}</Text>
       </Pressable>
-      <Pressable
-        accessibilityLabel={`Remove ${photo.fileName}`}
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={() => onRemovePhoto(photo.id)}
-        style={styles.removePhotoButton}
-      >
-        <X color={colors.text} size={16} strokeWidth={2.4} />
-      </Pressable>
+      <NativeCommandButton label={`Remove photo ${index + 1}`}
+        disabled={disabled} onPress={() => onRemovePhoto(photo.id)} />
     </View>
   );
 }
@@ -1491,9 +1484,7 @@ function createStyles(colors: MobileColorPalette) {
     marginBottom: spacing.sm
   },
   photoPreviewShell: {
-    aspectRatio: 1,
     marginRight: spacing.sm,
-    position: 'relative',
     width: 108
   },
   photoPreview: {
@@ -1538,17 +1529,6 @@ function createStyles(colors: MobileColorPalette) {
     paddingHorizontal: 7,
     paddingVertical: 4,
     position: 'absolute'
-  },
-  removePhotoButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 999,
-    height: 28,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 6,
-    top: 6,
-    width: 28
   },
   moreDetailsButton: {
     alignItems: 'center',

@@ -1,5 +1,15 @@
 # Comprehensive mobile UI audit and remediation
 
+## Add draft photo removal
+
+Add's photo rail must place a native removal command below each preview, outside
+the image and its preview/reorder hit region. Name commands by visible photo
+position (Remove photo 1, etc.) and update those positions after removal/reorder.
+Removing a draft photo retains the other photos and unfinished item fields. The
+command shares the draft-operation lock, including while a system picker is open.
+Do not use the existing 28-point overlay as the removal target. Verify native
+phone/iPad layout and activation separately from mounted behavior tests.
+
 ## Native search placement comparison
 
 Run350465 phone captures show a bottom search field despite integratedButton and

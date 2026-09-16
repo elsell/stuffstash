@@ -2870,3 +2870,13 @@ toolbar integration; pinned native bridging forwards the options. Root cause
 remains unknown. A static route-registration comparison is queued without relaxing
 the original production journeys; installer/static checks pass, native execution
 is pending. Shared consumers require investigation, not assumed failure.
+
+### M208 — Add photo removal remains a small custom overlay
+
+P2 source-confirmed at73ed44fb. Add's28-point overlaid X competed with preview and
+reorder content. It now uses a native numbered removal command below each image,
+with an unconstrained-height shell. A RED mounted regression preceded correction;
+41 related tests and static checks pass on paul. Critic found no blocker. Native
+label wrapping, rail height, reordered numbering and actual targets remain pending;
+see add-creation-media-axis.md. Earlier M40 work on voice photo commands did not
+establish that Add's separate implementation had been migrated.
