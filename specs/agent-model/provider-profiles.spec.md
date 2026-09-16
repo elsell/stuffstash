@@ -324,3 +324,13 @@ separate navigation. Selecting the existing value does not submit a command.
 Selection, connection testing and enablement expose distinct progress; disable
 competing controls/navigation until the operation settles. Selection failures
 retain the previous server-confirmed choice.
+
+## Mobile test-result presentation
+
+A fulfilled provider test request is not proof that the provider test succeeded.
+Mobile must inspect the returned status: only `succeeded` permits success feedback.
+`failed`, missing or unknown statuses remain failures with safe configuration and
+credential recovery guidance. Apply this consistently to profile details and voice
+stage setup. Keep actions available for another attempt after failure; do not
+optimistically enable a profile or mark it tested. Test fakes must use the actual
+server status vocabulary rather than an invented `success` status.

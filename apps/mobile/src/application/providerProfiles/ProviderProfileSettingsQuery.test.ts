@@ -175,13 +175,23 @@ describe('ProviderProfileVoiceReadinessCheck', () => {
 });
 
 describe('TestProviderProfileCommand', () => {
+  it.each(['failed', 'success', 'unknown', ''])('rejects %s test outcomes with safe retry guidance', async status => {
+    const repository = new FakeProviderProfileRepository();
+    repository.testResults.set('profile-language', {
+      providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status,
+      message: 'Raw provider credential token and endpoint', testedAt: '2026-06-26T12:01:00Z'
+    });
+    await expect(new TestProviderProfileCommand(repository).execute('profile-language')).rejects.toThrow(
+      'Connection test failed. Check the profile configuration and credential, then try again.'
+    );
+  });
   it('runs a safe profile diagnostic through the repository', async () => {
     const repository = new FakeProviderProfileRepository();
     repository.testResults.set('profile-language', {
       providerProfileId: 'profile-language',
       capability: 'language_inference',
       providerKind: 'gemini',
-      status: 'success',
+      status: 'succeeded',
       message: 'Provider profile test succeeded.',
       testedAt: '2026-06-26T12:01:00Z'
     });
@@ -191,7 +201,7 @@ describe('TestProviderProfileCommand', () => {
       providerProfileId: 'profile-language',
       capability: 'language_inference',
       providerKind: 'gemini',
-      status: 'success',
+      status: 'succeeded',
       message: 'Provider profile test succeeded.',
       testedAt: '2026-06-26T12:01:00Z'
     });

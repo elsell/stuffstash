@@ -216,7 +216,27 @@ function slot(recommendedAction: VoiceProviderRecommendedAction) {
   const readiness: VoiceProviderSlotReadiness = recommendedAction === 'test_profile' ? 'untested' : recommendedAction === 'enable_profile' ? 'disabled' : recommendedAction === 'replace_credential' ? 'credential_missing' : recommendedAction === 'add_profile' ? 'missing' : 'ready';
   return { capability: 'language_inference', label: 'Language inference', selectedProfileId: selected?.id, selectedProfile: selected, selectionSource: selected ? 'explicit' : 'missing', readiness, issues: [], recommendedAction, duplicateProfiles: [] } as const;
 }
-function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'success', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
+function testResult(): ProviderProfileTestResult { return { providerProfileId: 'profile-language', capability: 'language_inference', providerKind: 'gemini', status: 'succeeded', message: 'Succeeded.', testedAt: '2026-07-14T12:00:00Z' }; }
+
+it.each(['stage', 'profile'] as const)('does not show success for a fulfilled failed %s connection test', async surface => {
+  const repository = new FakeProviderRepository(slot('test_profile'));
+  repository.pendingAction = Promise.resolve({ ...testResult(), status: 'failed', message: 'Provider test failed safely.' });
+  const query = new ProviderProfileSettingsQuery(repository);
+  const manageCommand = new ManageProviderProfileCommand(repository);
+  const testCommand = new TestProviderProfileCommand(repository);
+  const { harness, client } = await mount(surface === 'stage'
+    ? <VoiceCapabilityScreen capability="language_inference" query={query} manageCommand={manageCommand} testCommand={testCommand} onAddProfile={() => {}} onEditCredential={() => {}} onEditProfile={() => {}} />
+    : <ProviderProfileDetailScreen profileId="profile-language" query={query} manageCommand={manageCommand} testCommand={testCommand} onEditCredential={() => {}} onEditPrompt={() => {}} />);
+  try {
+    await harness.press(harness.byLabel('Test Connection') ?? textButton(harness, 'Test Connection'));
+    expect(harness.byText('Connection tested')).toBeUndefined();
+    expect(harness.allText()).toContain('Connection test failed. Check the profile configuration and credential, then try again.');
+    expect(repository.lifecycleCalls).toEqual([]);
+    repository.pendingAction = Promise.resolve(testResult());
+    await harness.press(harness.byLabel('Test Connection') ?? textButton(harness, 'Test Connection'));
+    expect(harness.byText('Connection tested')).toBeDefined();
+  } finally { await harness.unmount(); client.clear(); }
+});
 
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (error: Error) => void; const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; }); return { promise, resolve, reject }; }
 

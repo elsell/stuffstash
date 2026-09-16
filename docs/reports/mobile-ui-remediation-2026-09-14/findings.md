@@ -2590,3 +2590,18 @@ permission and Retry behavior is unchanged. Six RED mounted cases reproduced
 missing task text. All110 related checks/static validation pass, plus six final
 copy checks; critic found no blocker. Native announcements/layout remain pending.
 See voice-readiness-axis.md for all24 source axes and affected consumers.
+
+### M181 — Failed provider tests reported as successful
+
+P1 source-confirmed at d39e4233. The API legitimately fulfills a test request with
+status `failed`, but the mobile command previously accepted every fulfilled result.
+Both profile details and voice-stage settings then showed Connection tested.
+Existing success fakes incorrectly used `success` instead of the API's `succeeded`.
+
+The command now accepts only `succeeded`. Other statuses produce safe configuration
+and credential guidance without exposing arbitrary returned text. Two mounted RED
+cases reproduce the false success on both screens and verify successful retry;
+four command cases reject failed, unknown, empty and invented success statuses.
+All82 focused tests, TypeScript and structural checks pass remotely on paul
+(`/tmp/provider-test-result-green.log`). Critic found no blockers. Authorization,
+transport and cache invalidation are unchanged. Native feedback layout remains open.
