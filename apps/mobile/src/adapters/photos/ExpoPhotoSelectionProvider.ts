@@ -20,7 +20,7 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
     const ImagePicker = await import('expo-image-picker');
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      throw new Error('Camera access is required to take a photo.');
+      throw new Error('Camera access is required to take a photo. Allow camera access for Stuff Stash in device settings, then try again. You can also choose a photo from your library.');
     }
 
     const result = await ImagePicker.launchCameraAsync({

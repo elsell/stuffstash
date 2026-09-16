@@ -62,7 +62,7 @@ export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
     const permission = await this.audio.requestRecordingPermissionsAsync();
     checkCancelled();
     if (!permission.granted) {
-      throw new Error('Microphone permission is required for voice control.');
+      throw new Error('Microphone permission is required for voice control. Allow microphone access for Stuff Stash in device settings, then try again. You can still type your message.');
     }
 
     let recorder: NativeAudioRecorder | null = null;

@@ -341,3 +341,10 @@ appear over another route or a later visit. Preserve command completion and
 resource reconciliation; release the pending lock so a fresh removal can be
 attempted on return. Current-visit failures still show the safe error and retain
 the photo for retry. Verify both blur and blur/refocus, in addition to teardown.
+## Camera denial guidance
+
+Camera denial must explain how to allow camera access for Stuff Stash in device
+settings and retain choosing a library photo as an alternative. Do not launch
+Settings or the camera automatically. Recheck permission on the next explicit
+camera attempt; a prior denial must not permanently disable capture. Preserve
+draft photos and the current task while displaying the existing failure UI.

@@ -2684,3 +2684,19 @@ Both cases reproduced before the change. The candidate captures the existing tas
 presentation predicate and gates the error alert; pending cleanup and fresh retry
 remain intact. Current and unmounted cases remain covered. Native alert timing and
 navigation acceptance remain pending; see system-dialog-axis.md.
+### M190 — Camera and microphone denial omit recovery guidance
+
+P2 source-confirmed at 91c22aa3. Errors said access was required without explaining
+how to enable it or use an alternative. Candidate copy describes device Settings
+and library/typed alternatives. Explicit retry rechecks permission; 109 related
+checks plus static validation pass. Direct Settings shortcuts are recommendations,
+not implemented by this copy change. Physical recovery and message fit remain open.
+
+### M191 — Notification Settings opening has no failure recovery
+
+P2 source-confirmed at 91c22aa3; implementation pending. Both device-Settings
+actions discard Linking.openSettings promises. A rejected native launch has no
+handled user feedback or recovery. Add safe failure guidance and a fresh retry,
+owned by the originating focus/foreground context. Verify rejection, successful
+retry and late rejection after leaving; do not assume an OS launch has failed
+merely from the source gap. See permission-recovery-axis.md.

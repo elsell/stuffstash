@@ -69,11 +69,16 @@ describe('ExpoVoiceAudioRecorder', () => {
   });
 
   it('rejects recording when microphone permission is denied', async () => {
-    const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
+    const recorder = new FakeRecorder('file:///recording.m4a');
+    const audio = new FakeAudio(recorder);
     audio.granted = false;
     const voiceRecorder = new ExpoVoiceAudioRecorderCore(audio, new FakeFileSystem({}));
 
-    await expect(voiceRecorder.start()).rejects.toThrow('Microphone permission is required');
+    await expect(voiceRecorder.start()).rejects.toThrow('Allow microphone access for Stuff Stash in device settings');
+    expect(audio.modes).toEqual([]);
+    audio.granted = true;
+    await voiceRecorder.start();
+    await voiceRecorder.cancel();
   });
 
   it('cancels recording without reading or returning audio', async () => {
