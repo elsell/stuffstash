@@ -477,3 +477,9 @@ Labeled hosts also reserve48dp vertically to avoid constraining native targets.
 Keep the iOS adapters unchanged. Verify native bounds and exactly-once center/edge
 activation for refinement, sort and overflow commands; inspect Browse and expiration
 header consumers and labeled choice menus for clipping.
+
+The runner-only Android header composition probe must mount the production Browse
+result-tools row and expiration workspace, including its actual native header
+filter slot. Verify48dp targets, commands and absence of clipping at normal text
+on320dp and ordinary phone widths. Isolated adapter evidence cannot replace this
+consumer check. Keep fixture routes out of production builds.

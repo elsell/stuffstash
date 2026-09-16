@@ -1,3 +1,4 @@
+export { AndroidHeaderCompositionFixture } from './AndroidHeaderCompositionFixture';
 import { AndroidControlTargetsFixture } from './AndroidControlTargetsFixture';
 import { inventorySwitcherNativeOptions } from '../src/ui/screens/InventorySwitcherNativeOptions';
 export { ManagedSearchPlacementFixture } from './ManagedSearchPlacementFixture';

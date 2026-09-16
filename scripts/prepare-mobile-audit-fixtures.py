@@ -62,6 +62,7 @@ exports = {
     "audit-notification-target": "NotificationTargetFixture",
     "audit-customization": "CustomizationCollectionFixture",
     "audit-managed-search": "ManagedSearchPlacementFixture",
+    "audit-android-header-composition": "AndroidHeaderCompositionFixture",
     "audit-native-search-placement": "NativeSearchPlacementFixture",
     "audit-customization-editor": "CustomizationEditorFixture",
     "voice": "VoiceProposalFixture",
