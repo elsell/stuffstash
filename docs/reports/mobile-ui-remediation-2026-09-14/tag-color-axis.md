@@ -48,3 +48,14 @@ No speculative adapter change is justified by that difference alone. Repeat nati
 center activation, selection, close, explicit clear, disabled state, parent draft
 retention and re-entry before closing M51. Source review completes the18 pending
 cells for S108 without turning the three existing M51 finding cells into passes.
+
+Run350504 phone follow-up: inspected artifact10429678833, test
+testColorPickerOpensDirectlyAndClearPreservesParentDraft, final screenshot
+A0767C68-7A0D-4725-9825-E930AC2F94B6.png and hierarchy
+8264F8CC-704E-4162-8ABF-7C216E49F56F.txt. After XCTest taps the color button, the
+parent remains visible with no picker and Color value: none. The hierarchy places
+the button at(346,360.7),28×28 with duplicated Choose any color label. Thus the
+failed Sliders assertion corresponds to an unopened picker, not merely a changed
+selector. AX bounds alone still do not prove the effective hit region. This
+reproduces the earlier phone observation at source802e4955; no production fix or
+root-cause attribution is claimed.
