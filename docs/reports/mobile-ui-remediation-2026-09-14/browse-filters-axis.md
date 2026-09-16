@@ -1,5 +1,13 @@
 # Browse filters review
 
+## Current native review, September 16
+
+[Run351404 filter evidence](native-filters-351404.md) verifies scoped long-list,
+selection and calendar-dismissal behavior, but visual review finds M249: the phone
+keyboard accessory overlaps Back despite a hittability-only test pass. The native
+clearance candidate remains unverified. Earlier source observations follow.
+
+
 R016 and S071–S073 reviewed at e303e4f7, September15. Sources: browse-filters
 route, BrowseFiltersScreen, BrowseFilterRouteState, useBrowseFilterNavigation,
 NativeFilterSheet, NativeNavigationSearch, SettingsPickerRow and sheet options.

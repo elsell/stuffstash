@@ -25,3 +25,26 @@ it('ignores superseded measurements and clears the inset when the keyboard hides
     expect(state.bottomInset).toBe(0);
   } finally { await h.unmount(); }
 });
+
+it('remeasures the settled iOS keyboard and sheet geometry after the anticipated frame', async () => {
+  const h = new MobileRenderHarness();
+  let boundaryY = 844;
+  const boundaryRef: { current: Pick<View, 'measureInWindow'> } = {
+    current: { measureInWindow: callback => callback(0, boundaryY, 390, 0) }
+  };
+  let state!: ReturnType<typeof useSheetKeyboardInset>;
+  function Fixture() { state = useSheetKeyboardInset(boundaryRef); return null; }
+  try {
+    await h.render(<Fixture />);
+    await h.run(() => emitKeyboardEventForTest('keyboardWillChangeFrame', { endCoordinates: { screenX: 0, screenY: 544, width: 390, height: 300 } }));
+    expect(state.bottomInset).toBe(300);
+    boundaryY = 820;
+    await h.run(() => emitKeyboardEventForTest('keyboardDidChangeFrame', { endCoordinates: { screenX: 0, screenY: 490, width: 390, height: 354 } }));
+    expect(state.bottomInset).toBe(330);
+    boundaryY = 800;
+    await h.run(() => emitKeyboardEventForTest('keyboardDidShow', { endCoordinates: { screenX: 0, screenY: 490, width: 390, height: 354 } }));
+    expect(state.bottomInset).toBe(310);
+    await h.run(() => emitKeyboardEventForTest('keyboardDidHide'));
+    expect(state.bottomInset).toBe(0);
+  } finally { await h.unmount(); }
+});

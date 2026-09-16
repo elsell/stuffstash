@@ -1,5 +1,13 @@
 # Expiration filters review
 
+## Current native review, September 16
+
+[Run351404 filter evidence](native-filters-351404.md) verifies scoped long-list,
+selection and calendar-dismissal behavior, but visual review finds M249: the phone
+keyboard accessory overlaps Back despite a hittability-only test pass. The native
+clearance candidate remains unverified. Earlier source observations follow.
+
+
 Source review at b15a38d5, September 15: R017 and S075–S079. Inspected the
 route, ExpirationFiltersScreen, ExpirationDateRange, route serialization,
 NativeFilterSheet and existing component tests. This covers filter tasks only;

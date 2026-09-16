@@ -1234,9 +1234,20 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("expiration-search-keyboard")
-    XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
+    let apply = app.buttons["Apply expiration filters"]
     let back = app.buttons["Cancel or return to filters"]
-    XCTAssertTrue(back.isHittable)
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    let clearAccessory = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let top = dismiss.frame.minY
+      return dismiss.isHittable && [apply, back].allSatisfy { action in
+        action.isHittable && !action.frame.isEmpty &&
+          self.app.frame.contains(action.frame) && action.frame.maxY <= top
+      }
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
+      "Both filter commands must be fully above the keyboard-dismiss accessory")
+    capture("expiration-search-actions-clear-accessory")
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }

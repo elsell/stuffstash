@@ -27,11 +27,21 @@ export function useSheetKeyboardInset(boundaryRef: RefObject<Pick<View, 'measure
       Keyboard.scheduleLayoutAnimation(event);
       measure();
     };
+    const settled = (event: KeyboardEvent) => {
+      keyboardFrame.current = event.endCoordinates;
+      measure();
+    };
     const hidden = () => { keyboardFrame.current = undefined; measure(); };
     const subscriptions = [
       Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow', changed),
       Keyboard.addListener('keyboardDidHide', hidden)
     ];
+    if (Platform.OS === 'ios') {
+      subscriptions.push(
+        Keyboard.addListener('keyboardDidChangeFrame', settled),
+        Keyboard.addListener('keyboardDidShow', settled)
+      );
+    }
     keyboardFrame.current = Keyboard.metrics();
     measure();
     return () => {

@@ -3410,3 +3410,20 @@ are retained. Verified expiration Cancel, disabled blank-name voice approval and
 re-enabled approval/failure recovery; see [native evidence](android-action-descriptions.md).
 TalkBack speech remains unverified. The patch is compiled from source on Android;
 no iOS code or dependency version is changed.
+
+
+### M249 — iPhone filter Back overlaps the keyboard-dismiss accessory
+
+P2 native-confirmed, normal text/light mode in run35140471580 at a1b827e0.
+Expiration tag search places Back at Y491–545 while Dismiss keyboard occupies
+Y485–529. The screenshot shows the Back label beneath the accessory. The existing
+hittability-only test passed and delivered Back; it missed visual occlusion.
+See [filter review and retained evidence](native-filters-351404.md).
+
+A failing mounted case additionally establishes that the shared sheet inset ignores
+settled iOS keyboard notifications. The candidate remeasures on settled frame/show
+updates while retaining stale-measurement and hide guards. Eleven focused tests pass
+on paul. The native assertion now checks complete action clearance above the
+accessory. This is a candidate, not a proven root cause or accepted native fix.
+Browse shares the hook; its corresponding keyboard state requires verification.
+Android's separate IME-aware sheet is unchanged. Native rerun remains required.

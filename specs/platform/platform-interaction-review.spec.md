@@ -579,3 +579,26 @@ character cases. These events are still framework-delivered evidence, not physic
 keystroke proof. Keep the bounded buffer, explicit snapshot command, assistance
 settings and exact-text assertions unchanged. Verify event order, absence of
 trace-induced renders, and bounded retention using the existing render harness.
+
+## Filter footer and keyboard accessory clearance
+
+Native filter commands must remain fully visible above the keyboard and the app's
+keyboard-dismiss accessory, not merely accept a center tap through an overlay.
+Run35140471580's normal-size phone expiration-search capture shows Back at
+Y491–545 while Dismiss keyboard occupies Y485–529. The old hittability-only
+assertion passed despite visible overlap; preserve this as a native finding.
+
+The shared sheet boundary calculation must remeasure on settled iOS keyboard
+frame/show notifications as well as the anticipated frame change. A native sheet
+or input accessory can finish layout after the initial notification. Continue
+measuring the unmoved sheet boundary, reject superseded callbacks, clear on hide,
+and retain nonoverlapping/floating-keyboard behavior. Do not add an assumed fixed
+accessory offset without native geometry evidence. This lifecycle correction is
+a candidate, not proof that all overlap causes are resolved.
+
+Strengthen native filter acceptance to require both entire action frames above
+the delivered Dismiss keyboard control after layout settles, then exercise Back.
+Review Browse and expiration consumers of NativeFilterSheet; Android's separate
+IME-aware adapter must keep its existing behavior. Keep normal-size failures ahead
+of enlarged-text work and retain the failing capture even if an automation tap
+was delivered successfully.
