@@ -710,6 +710,46 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse selected tags: audit-last"].waitForExistence(timeout: 5))
   }
 
+  private func assertFilterActionsClearKeyboard(_ apply: XCUIElement, _ back: XCUIElement) {
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    let clearAccessory = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let top = dismiss.frame.minY
+      return dismiss.isHittable && [apply, back].allSatisfy { action in
+        action.isHittable && !action.frame.isEmpty &&
+          self.app.frame.contains(action.frame) && action.frame.maxY <= top
+      }
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
+      "Both filter commands must be fully above the keyboard-dismiss accessory")
+  }
+
+  func testBrowseTagSearchKeepsActionsAboveKeyboardAccessory() {
+    app.buttons["Audit Browse filters"].tap()
+    let tags = app.buttons["Choose tags"]
+    XCTAssertTrue(tags.waitForExistence(timeout: 5)); tags.tap()
+    let searchButton = app.buttons["Search"].firstMatch
+    XCTAssertTrue(searchButton.waitForExistence(timeout: 5)); searchButton.tap()
+    let search = app.searchFields.firstMatch
+    XCTAssertTrue(search.waitForExistence(timeout: 5)); search.tap()
+    waitForKeyboard()
+    search.typeText("Tools")
+    XCTAssertEqual(search.value as? String, "Tools")
+    let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
+    XCTAssertTrue(tools.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
+    let apply = app.buttons["Show results"]
+    let back = app.buttons["Back to filters"]
+    capture("browse-search-keyboard")
+    assertFilterActionsClearKeyboard(apply, back)
+    tools.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.exists)
+    assertFilterActionsClearKeyboard(apply, back)
+    capture("browse-search-actions-clear-accessory")
+    apply.tap()
+    XCTAssertTrue(app.staticTexts["Browse selected tags: audit-tools"].waitForExistence(timeout: 5))
+  }
+
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
     app.buttons["Audit Browse filters"].tap()
     let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
@@ -1234,19 +1274,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("expiration-search-keyboard")
-    let apply = app.buttons["Apply expiration filters"]
     let back = app.buttons["Cancel or return to filters"]
-    let dismiss = app.buttons["Dismiss keyboard"]
-    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
-    let clearAccessory = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      let top = dismiss.frame.minY
-      return dismiss.isHittable && [apply, back].allSatisfy { action in
-        action.isHittable && !action.frame.isEmpty &&
-          self.app.frame.contains(action.frame) && action.frame.maxY <= top
-      }
-    }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
-      "Both filter commands must be fully above the keyboard-dismiss accessory")
+    assertFilterActionsClearKeyboard(app.buttons["Apply expiration filters"], back)
     capture("expiration-search-actions-clear-accessory")
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))

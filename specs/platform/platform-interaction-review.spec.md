@@ -602,3 +602,10 @@ Review Browse and expiration consumers of NativeFilterSheet; Android's separate
 IME-aware adapter must keep its existing behavior. Keep normal-size failures ahead
 of enlarged-text work and retain the failing capture even if an automation tap
 was delivered successfully.
+
+The focused `filters` native selection must include Browse tag search with a
+visible keyboard, the last-row selection/apply journey, the in-place availability
+menu, expiration date/calendar dismissal, and expiration search with keyboard.
+Both searchable consumers must use the same full-action/accessory clearance
+assertion, preserve the complete query, and exercise the intended draft/result or
+Back behavior. Focused results cannot replace full-suite release acceptance.

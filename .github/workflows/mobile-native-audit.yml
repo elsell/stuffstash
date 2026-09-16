@@ -14,6 +14,7 @@ on:
           - text-entry
           - add-draft
           - home-header
+          - filters
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -110,6 +111,16 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            filters)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationDatePageKeepsBottomActionsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
               )
               ;;
             text-entry)
