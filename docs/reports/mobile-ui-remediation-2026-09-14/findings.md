@@ -3120,12 +3120,19 @@ native evidence and coverage limits.
 
 ### M232 — Focused iPad proposal-location search collapses on clear
 
-P2 runtime-observed investigation at run350806, not a proven product root cause.
-The focused field receives a centered Clear text tap; choices return but the field
-and keyboard disappear. The original fresh-query acceptance stops there. The
-unfocused-collapse exception does not establish this focused behavior is correct.
-Static native focused-clear comparison is queued without weakening production
-acceptance. See native-ipad-350806.md for event/frame evidence and context limits.
+Runtime-observed investigation, narrowed by run351041. The static integrated-button
+fixture has no application query handlers, yet also collapses after focused Clear:
+its retained capture/hierarchy show a hittable Search icon and no field/keyboard.
+That independent journey reopens and types Garage successfully. The production
+flow's collapse is therefore not established as an app defect.
+
+The iPad-only production acceptance now permits that observed native transition,
+requires restored unfiltered locations, a contained/hittable Search button when
+collapsed, exact fresh-query typing, actual selection, draft retention and Back.
+Phone still requires the field. This corrects a test expectation; it does not
+claim the full production journey passed. Native rerun remains required.
+Apple documents inactive integrated search as a button; the focused-clear behavior
+comes from retained runtime evidence. See native-ipad-351041.md.
 
 ### M233 — Photo viewer recovery command and duplicate Close conflict with its canvas
 

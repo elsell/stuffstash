@@ -1961,8 +1961,25 @@ final class FixtureAuditTests: XCTestCase {
     let clear = field.buttons["Clear text"]
     XCTAssertTrue(clear.isHittable); clear.tap()
     let clearedField = app.searchFields.firstMatch
-    XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Clearing a query must keep native search available")
-    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); clearedField.typeText("Garage")
+    let idleSearch = header.buttons["Search"].firstMatch
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        clearedField.isHittable || (!clearedField.exists && idleSearch.isHittable)
+      }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
+        "Clearing must leave a field or the native iPad search button available")
+      XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
+      capture("voice-location-after-focused-clear")
+      if !clearedField.exists {
+        XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
+        XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
+        XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
+        XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
+        idleSearch.tap()
+      }
+    }
+    XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
+    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); waitForKeyboard(); clearedField.typeText("Garage")
     XCTAssertEqual(clearedField.value as? String, "Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()

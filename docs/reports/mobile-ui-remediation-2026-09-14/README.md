@@ -16,10 +16,11 @@ zoom retention across elapsed time and warm return, control hide/reveal, paging
 and Close without losing draft photos; see [photo viewer evidence](photo-viewer-axis.md).
 This is partial runtime acceptance. Completed run350950 records phone65/83 and
 iPad73/83 fixture passes; see the target reports for failures and evidence limits.
-Run35104157358 at14d7e06f is active: its phone onboarding journey passes, with two
-device-inapplicable skips, and all three iPad onboarding journeys pass. Both fixture
-suites remain running. The voice-review source is queued in35111546124; the next push replaces only
-the pending run. Release
+Run35104157358 at14d7e06f finished: iPad77/84 and phone63/84 fixture passes;
+phone onboarding passes with two device-inapplicable skips, iPad onboarding3/3.
+The independent static iPad Clear comparison narrows M232 to a native-pattern test
+expectation; full production rerun remains required. See native-ipad-351041.md.
+Run35112198520 at1c2f8173 is now active; it must finish undisturbed. Release
 remains gated on native review. Disk cleanup preserves selected evidence and active
 build environments; free space is11GB local,5.0GB on paul root and15GB in paul's
 `/tmp` after removing a verified duplicate Android installer extraction.

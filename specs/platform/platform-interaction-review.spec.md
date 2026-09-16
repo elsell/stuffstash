@@ -2,6 +2,20 @@
 
 ## Native search acceptance on iPad
 
+Run351041's static integrated-button search, configured without app query handlers,
+collapses after focused Clear text on iPad; its retained capture shows the Search
+button and no field or keyboard, then the same journey reopens and enters Garage.
+The production location flow may follow this observed platform behavior. Require
+restored unfiltered choices and either a hittable field or, only on iPad, an absent
+field with a hittable Search button contained by its navigation bar. Reopen when
+collapsed and retain exact fresh-query, selection, draft retention and Back checks.
+Do not relax phone behavior or accept unavailable search. This corrects an overly
+specific field-persistence assertion, not an app implementation. A new native run
+must still prove the complete production journey. Apple's
+[integratedButton API](https://developer.apple.com/documentation/uikit/uinavigationitem/searchbarplacement-swift.enum/integratedbutton)
+describes inactive search as a button; the focused-clear transition is observed
+runtime evidence, not an explicit promise in that documentation.
+
 Integrated toolbar search on iPad can expose Clear text without a separate Cancel
 button. Native audit journeys must verify clearing the query, dismissing the
 keyboard, restoring unfiltered content and reaching navigation/actions through
