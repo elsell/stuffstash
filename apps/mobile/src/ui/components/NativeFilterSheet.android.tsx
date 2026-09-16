@@ -5,13 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { NativeSheetActions } from './NativeSheetActions';
 import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
-import { useFilterFooterActions } from './useFilterFooterActions';
+import { useFocusedSheetActions } from './useFocusedSheetActions';
 
 /** A native stack route keeps search and actions outside its flexible scroll body. */
 export function NativeFilterSheet({ title, search, children, actions, footerTestID }: NativeFilterSheetProps) {
   const palette = useAppearancePalette();
   const headerHeight = useHeaderHeight();
-  const footerActions = useFilterFooterActions(actions);
+  const footerActions = useFocusedSheetActions(actions);
   return <KeyboardAvoidingView style={styles.screen} behavior="height" keyboardVerticalOffset={headerHeight}>
     <SafeAreaView edges={['bottom']} style={[styles.screen, { backgroundColor: palette.background }]}>
     {search ? <NativeFilterSearch key={title} {...search} /> : null}

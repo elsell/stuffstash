@@ -21,6 +21,14 @@ screenshots for the live acceptance gate. Use Apple's public
 
 ## Purpose
 
+Asset Edit, Move and Move Here footer events must resolve the current committed
+draft and eligibility within their mounted asset task, reject events while blurred
+or removed, and retain the existing duplicate-operation lock. Changing the scoped
+asset remounts the task: retained events from its predecessor must never submit
+for the replacement. Reuse the focused footer guard with filters rather than
+adding another callback cache. Verify actual route command payloads and cancellation
+through mounted tests; delayed native event delivery remains a separate runtime check.
+
 Filter footer actions on both mobile platforms must read the current committed
 draft and current primary/secondary disabled state. Retained native callbacks
 must not apply an earlier valid range after the user makes it invalid, or cancel

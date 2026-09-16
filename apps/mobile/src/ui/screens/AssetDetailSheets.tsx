@@ -1,3 +1,4 @@
+import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { NativeSheetActions } from '../components/NativeSheetActions';
@@ -559,9 +560,11 @@ function SheetActions({
   readonly primaryLabel: string;
   readonly busy: boolean;
 }) {
-  return <NativeSheetActions keyboardAvoidance="container"
-    primaryLabel={primaryLabel} secondaryLabel="Cancel"
-    disabled={disabled} secondaryDisabled={busy} onApply={onSave} onBack={onClose} />;
+  const actions = useFocusedSheetActions({
+    primaryLabel, secondaryLabel: 'Cancel', disabled, secondaryDisabled: busy,
+    onApply: onSave, onBack: onClose
+  });
+  return <NativeSheetActions keyboardAvoidance="container" {...actions} />;
 }
 
 function useStyles() {

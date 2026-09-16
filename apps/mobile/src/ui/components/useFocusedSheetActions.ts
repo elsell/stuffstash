@@ -1,9 +1,9 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
-import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
+import type { NativeSheetActionsProps } from './NativeSheetActions.types';
 
-/** Native callbacks belong to the focused filter task and its committed draft. */
-export function useFilterFooterActions(actions: NativeFilterSheetProps['actions']) {
+/** Native callbacks belong to the focused mounted task and its committed draft. */
+export function useFocusedSheetActions(actions: NativeSheetActionsProps) {
   const current = useRef<typeof actions | undefined>(undefined);
   const focused = useRef(false);
   useLayoutEffect(() => {

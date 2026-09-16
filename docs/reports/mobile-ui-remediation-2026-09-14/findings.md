@@ -3164,7 +3164,7 @@ event delivery. The iOS filter footer retained an earlier draft and page action;
 both platforms could execute footer actions after blur. Expiration's Apply can
 navigate directly, so downstream navigation did not supply a focus guard.
 
-Both layouts now share `useFilterFooterActions`: dispatch reads committed actions,
+Both layouts now share `useFocusedSheetActions`: dispatch reads committed actions,
 checks current primary/secondary disabled state, rejects blur/removal and resumes
 current actions on refocus. This covers Browse and Expiration, the two production
 consumers. The new cases failed before implementation (old iOS draft/page and
@@ -3172,3 +3172,33 @@ blurred Android dispatch) and pass after it. All1,900 tests across297 files,
 TypeScript and structural checks pass on paul; critic review found no remaining
 source blocker. Logs: `/tmp/filter-actions-{red,green,check,structural}.log`.
 The change does not alter native layout; native acceptance remains separate.
+
+
+### M236 — Asset footer events can submit a superseded draft
+
+P2, reproduced through mounted production-route tests. Retaining Edit Save,
+then clearing the name, submitted the earlier valid name. Move and Move Here
+also forwarded captured selections; their Cancel callbacks could navigate while
+blurred. The existing operation lock prevented duplicates, not stale payloads.
+
+Asset footers now reuse `useFocusedSheetActions` with filters. The guard resolves
+committed callbacks and disabled state, rejects hidden/removed tasks, and leaves
+the existing operation lock intact. The asset-scoped keyed route retires old
+handlers on replacement; a mounted test verifies an old Save cannot target the
+new asset. Edit, Move and Move Here tests verify actual command payloads,
+blur/refocus, cancellation and teardown. Full remote suite: 1,904 tests in297
+files. Native event-delivery acceptance remains separate. Logs on paul:
+`/tmp/asset-footer-{red,green,full,check,structural}.log`.
+
+### M237 — Voice review actions retain obsolete draft callbacks
+
+P2 source finding, still open. `VoiceSessionSheetScreen` forwards callbacks
+capturing the review's plan and current command/photo drafts. Provider lifetime
+checks protect error presentation; controller decision locks prevent concurrent
+submissions but do not establish focused command startup with the latest drafts.
+A retained action could therefore submit obsolete edits or start while hidden.
+
+Add mounted command-payload and plan-replacement tests before fixing. The owning
+review must read current drafts while rejecting retired plan identities, hidden
+starts and removed tasks. Do not make an old plan's event approve a newer plan.
+This is source evidence, not observed delayed native event delivery.
