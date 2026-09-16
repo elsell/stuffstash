@@ -1,11 +1,11 @@
 # Android runtime preparation on paul
 
-September16: ADB is installed, but no devices are connected. No emulator or
+Initial September16 inspection: ADB was installed, but no devices were connected. No emulator or
 sdkmanager was found on PATH or in the inspected common SDK locations. Java21.0.9
 is available, and john has read/write ACL access to `/dev/kvm`. The home filesystem
 has17GiB free; `/tmp` is a memory-backed filesystem and is not the SDK destination.
 
-Installed only the command-line tools under
+Initially installed the command-line tools under
 `~/.cache/stuffstash-android-audit/sdk/cmdline-tools/15859902` on paul. Google's
 numbered archive passed its published SHA-256 check before extraction/execution:
 `4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583`.
@@ -13,8 +13,9 @@ Source: [Android tools download](https://developer.android.com/studio).
 The package listing succeeds; this tools version warns that sdkmanager is
 deprecated in favor of its bundled Android CLI.
 
-Google repository metadata identifies these stable candidates; they are **not yet
-installed**. Repository XML is retained in the same remote audit directory.
+Google repository metadata identifies these stable packages. Emulator and system
+image are now installed; platform/build tools remain pending. Repository XML is
+retained in the same remote audit directory.
 
 | Package | Revision | Archive | Published SHA-1 |
 | --- | --- | --- | --- |
@@ -31,6 +32,35 @@ before provisioning. Verify numbered downloads against the recorded checksums an
 record SHA-256 digests of acquired artifacts. Do not substitute the preview
 emulator37.2.9 also listed in the metadata.
 
-No emulator has booted and no Android app has been built or exercised. The existing
-untracked `apps/mobile/android/` remains untouched. Android UI acceptance remains
-an explicit gap, not a pass inferred from tool installation.
+## Boot evidence
+
+Emulator37.1.11 passes its KVM acceleration check. The API36 revision7 image passed
+its published checksum. Acquired archive SHA-256 digests:
+
+- Emulator: `95771e0ae431897b2a4bd2d97fa095f29a8b0624a7b216baf529f9306161c266`.
+- System image: `b1bb0769d0bed7698e61f203d7dc9bf6e7c37cd01a39d0d8788a11186bc78160`.
+
+Direct emulator extraction did not register the package with avdmanager. The
+bundled Android CLI's exact-version `sdk install emulator@37.1.11` registered it,
+using the same numbered archive. The CLI bootstrap downloaded its implementation
+when help was first requested; independent pinning of that downloaded CLI remains
+a historical supply-chain pinning gap. The downloaded implementation was then
+captured at `~/.android/bin/android-cli`, version1.0.16261425, SHA-256
+`847e24a7d1711561a8739629b59c6e09b5a80dbfd98045d6ce7c661f46ecbc81`.
+Future use must verify and invoke this implementation directly, without the
+automatic-download wrapper. This does not retroactively verify the first execution.
+No CLI dependency is added to repository automation.
+The isolated SDK links paul's existing platform tools (ADB34.0.5-debian).
+
+Created `stuffstash-audit-api36` with Pixel6 dimensions,2GiB memory, two cores and
+a2GiB data partition. It boots headlessly using SwiftShader on port5580. ADB reports
+`sys.boot_completed=1`, Android16 and fingerprint
+`google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys`.
+The inspected initial screenshot shows the system wallpaper/status/navigation
+bars; remote capture is `~/.cache/stuffstash-android-audit/android16-boot.png`.
+Approximately10GiB disk remains after removing the verified archive copies while
+retaining their checksum manifests and installed contents.
+
+No Android app has been built or exercised. The existing untracked
+`apps/mobile/android/` remains untouched. Android UI acceptance remains an explicit
+gap, not a pass inferred from emulator boot.

@@ -1481,3 +1481,10 @@ Record subsequent emulator/system-image package revisions and checksums before
 installing them. Check disk capacity and KVM access before provisioning a virtual
 device. Installing tools or booting an emulator does not establish app acceptance;
 record actual build, device, Android version and exercised interactions separately.
+
+For the isolated Android preparation, any further Android CLI use must invoke the
+captured implementation directly (version1.0.16261425), verifying SHA-256
+`847e24a7d1711561a8739629b59c6e09b5a80dbfd98045d6ce7c661f46ecbc81`
+first. Do not rerun the SDK wrapper's automatic CLI download. Record the initial
+bootstrap's unpinned execution as a historical supply-chain gap; capturing a pin
+afterward constrains subsequent use but does not retroactively verify that step.
