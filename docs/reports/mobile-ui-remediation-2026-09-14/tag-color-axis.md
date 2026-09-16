@@ -76,3 +76,11 @@ show the unchanged parent without a picker. See `native-fixtures-350592.md` and
 name evidence; VoiceOver output remains unverified. M51 activation remains open,
 with different failing devices across runs. No blanket success or source cause
 is inferred from the phone pass.
+
+Follow-up native instrumentation retains both existing activation/frame journeys
+and adds nine delivered-touch probes centered on the visible well. Every probe
+must open and dismiss the system picker without changing the unset parent value;
+failed opening/dismissal captures the state and stops that journey. The focused
+color-picker workflow includes this diagnostic. Remote structural validation and
+critic review pass; execution on phone/iPad is pending. This is evidence-gathering
+for M51, not a production correction or a replacement for color-editing acceptance.

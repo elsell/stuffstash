@@ -125,6 +125,14 @@ The nine points sample the center and near edges/corners of a44-point square;
 they do not measure every point in the region or certify VoiceOver behavior.
 The phone capture failure and pending scroll-layout rerun remain recorded failures.
 
+Apply the same frame-versus-delivered-touch distinction to the native tag color
+well. Retain the existing frame and ordinary activation journeys; add independent
+center and near-edge/corner probes of a44-point square centered on the visible well.
+Each tap must open the system picker, then dismiss through the observed platform
+affordance and retain the unchanged parent value. Capture the failing probe and
+stop that journey to avoid cascading taps into an unexpected presentation. A
+passing sample does not certify every point, VoiceOver or color editing itself.
+
 Search placement diagnostics must isolate registration from screen content. Keep
 the existing Place journey and add a runner-only route to the same production
 Place fixture, with integrated-button search configured before presentation.

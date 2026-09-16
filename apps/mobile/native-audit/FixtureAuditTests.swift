@@ -1922,6 +1922,40 @@ final class FixtureAuditTests: XCTestCase {
     capture("color-well-accessible-name")
   }
 
+  func testColorWellDeliveredTouchRegion() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label == %@", "Choose any color")).firstMatch
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      XCTAssertTrue(picker.waitForExistence(timeout: 5))
+      XCTAssertTrue(picker.isHittable)
+      let center = picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      let sliders = app.buttons["Sliders"]
+      guard sliders.waitForExistence(timeout: 5) else {
+        capture("color-hit-region-failed-probe-\(index)")
+        XCTFail("Color well did not open for probe \(index): \(offset)")
+        return
+      }
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        let dismiss = app.otherElements["PopoverDismissRegion"]
+        XCTAssertTrue(dismiss.exists)
+        dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+      } else {
+        app.buttons["close"].tap()
+      }
+      guard sliders.waitForNonExistence(timeout: 5) else {
+        capture("color-hit-region-dismissal-failed-\(index)")
+        XCTFail("System color picker did not dismiss after probe \(index)")
+        return
+      }
+      XCTAssertTrue(app.staticTexts["Color value: none"].exists,
+                    "Opening the picker must preserve the unset parent value")
+    }
+    capture("color-delivered-hit-region")
+  }
+
   func testExactExpirationUsesCompactNativePicker() {
     openSettingsControls()
     app.buttons["Expiration"].tap()
