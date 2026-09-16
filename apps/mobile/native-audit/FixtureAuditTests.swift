@@ -668,7 +668,15 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testPlaceContentsUseNativeSearchAndKeepNavigation() {
-    let open = app.buttons["Audit place search"]
+    verifyPlaceSearch(openLabel: "Audit place search")
+  }
+
+  func testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation() {
+    verifyPlaceSearch(openLabel: "Audit preconfigured place search")
+  }
+
+  private func verifyPlaceSearch(openLabel: String) {
+    let open = app.buttons[openLabel]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()
@@ -678,6 +686,9 @@ final class FixtureAuditTests: XCTestCase {
     let searchButton = app.buttons["Search"].firstMatch
     XCTAssertTrue(searchButton.waitForExistence(timeout: 10))
     XCTAssertTrue(searchButton.isHittable)
+    let header = app.navigationBars.firstMatch
+    XCTAssertGreaterThanOrEqual(searchButton.frame.minY, header.frame.minY)
+    XCTAssertLessThanOrEqual(searchButton.frame.maxY, header.frame.maxY)
     capture("place-search-collapsed")
     searchButton.tap()
     let field = app.searchFields.firstMatch

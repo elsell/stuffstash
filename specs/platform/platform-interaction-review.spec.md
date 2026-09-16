@@ -121,3 +121,11 @@ https://developer.apple.com/design/human-interface-guidelines/buttons
 The nine points sample the center and near edges/corners of a44-point square;
 they do not measure every point in the region or certify VoiceOver behavior.
 The phone capture failure and pending scroll-layout rerun remain recorded failures.
+
+Search placement diagnostics must isolate registration from screen content. Keep
+the existing Place journey and add a runner-only route to the same production
+Place fixture, with integrated-button search configured before presentation.
+Both routes run the same search, result, clear, cancel and Back assertions; the
+production shared search adapter still supplies current handlers and query state.
+This comparison changes initial route configuration only. A passing comparison
+does not certify a production correction or justify weakening the original gate.

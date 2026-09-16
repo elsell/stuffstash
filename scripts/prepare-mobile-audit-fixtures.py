@@ -33,6 +33,7 @@ exports = {
     "home-return-details": "HomeReturnDetailsRoute",
     "audit-detail-commands": "AssetDetailCommandsFixture",
     "audit-contents-search": "AssetContentsSearchFixture",
+    "audit-contents-search-preconfigured": "AssetContentsSearchFixture",
     "audit-region-recovery": "AssetRegionRecoveryFixture",
     "audit-command-height": "CommandHeightFixture",
     "audit-notice": "NoticePlacementFixture",

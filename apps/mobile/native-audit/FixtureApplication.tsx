@@ -89,6 +89,10 @@ function FixtureNavigation() {
       <Stack.Screen name="audit-add" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true, headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
       <Stack.Screen name="audit-detail-commands" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-contents-search" options={{ title: 'Place' }} />
+      <Stack.Screen name="audit-contents-search-preconfigured" options={{ title: 'Place', headerSearchBarOptions: {
+        placeholder: 'Search this place', placement: 'integratedButton', allowToolbarIntegration: false,
+        hideWhenScrolling: false, hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none'
+      } }} />
       <Stack.Screen name="audit-native-search-placement" options={{ title: 'Search placement', headerSearchBarOptions: {
         placeholder: 'Search placement probe', placement: 'integratedButton', allowToolbarIntegration: false,
         hideWhenScrolling: false, hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none'
@@ -151,6 +155,7 @@ export function FixtureMenu() {
     <Button title="Audit invitation acceptance" onPress={() => router.push('/audit-invitation' as Href)} />
     <Button title="Audit Connection" onPress={() => router.push('/audit-connection' as Href)} />
     <Button title="Audit static search placement" onPress={() => router.push('/audit-native-search-placement' as Href)} />
+    <Button title="Audit preconfigured place search" onPress={() => router.push('/audit-contents-search-preconfigured' as Href)} />
     <Button title="Audit Sharing" onPress={() => router.push('/audit-sharing' as Href)} />
     <Button title="Audit inventory query" onPress={() => router.push('/audit-inventory-query' as Href)} />
     <Button title="Audit inventory switcher" onPress={() => router.push('/audit-inventory-switcher' as Href)} />
