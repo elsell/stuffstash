@@ -433,3 +433,13 @@ finishes8/10 iPad and7/10 phone, with default-assisted SwiftUI passing both. A s
 iOS Add-name candidate retains revision-owned draft resets and runs unchanged Add
 journeys in35058684319. Full350549 phone finishes52/73; iPad remains active. The
 coverage ledger now retains529 finding cells. Continue normal-size native work.
+
+Current normal-size audit checkpoint `460007a9` passes1,896 mobile tests/295 files,
+TypeScript and structural checks on paul. Native Android evidence now verifies
+photo zoom retention through warm return, control toggling, paging, draft escape
+and persisted-photo failure recovery. Older iPhone run350950 finishes65/83: Add
+draft/header and notice placement journeys pass, but Place search still moves to
+the bottom and Sharing retains missing typed characters despite its iOS default-
+value field. Its iPad fixture job remains active. Continue normal-size search,
+text-entry and sheet-body diagnosis; preserve the queued current-source native
+run. These partial results do not satisfy the release gate or complete the audit.

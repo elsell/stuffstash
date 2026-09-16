@@ -244,3 +244,12 @@ Native hierarchy evidence on paul: `/tmp/photo-retain-{swipe,close}.xml`.
 The fixture uses two synthetic draft photos; no asset is saved. This strengthens
 Android Add-preview acceptance but does not verify iOS, asset-viewer consumers,
 pinch/pan, assistive operation or a fresh package-manager install.
+
+The same APK also exercises `AssetPhotoViewerSheet` through the synthetic persisted-
+photo removal fixture. While double-tap zoomed, Remove opens the native confirmation;
+accepting produces the expected fake removal error. After OK, the image remains
+zoomed and both Close and Remove are visible. Close returns to the fixture with
+`Removal attempts: 1` and `Photos remaining: 1`. Inspected screenshot:
+`/tmp/asset-zoom-recovered.png`; hierarchy captures on paul:
+`/tmp/asset-zoom-{confirm,error,closed}.xml`. This verifies the shared viewer's
+failure recovery on Android, not a real service deletion or complete asset flow.
