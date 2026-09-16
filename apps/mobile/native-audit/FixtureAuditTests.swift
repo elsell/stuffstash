@@ -764,6 +764,33 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testManagedSearchPlacementAfterEnableAndHeaderUpdate() {
+    app.open(URL(string: "stuffstash:///audit-managed-search")!)
+    let enable = app.buttons["Enable managed search"]
+    XCTAssertTrue(enable.waitForExistence(timeout: 10))
+    enable.tap()
+    XCTAssertTrue(app.staticTexts["Managed search enabled"].waitForExistence(timeout: 5))
+    func headerSearchIsPresent(_ title: String) -> Bool {
+      let header = app.navigationBars[title]
+      let search = header.buttons["Search"].firstMatch
+      let found = search.waitForExistence(timeout: 5)
+      let field = app.searchFields["Managed search probe"].firstMatch
+      let geometry = XCTAttachment(string: "header=\(header.frame); search=\(found ? String(describing: search.frame) : "absent"); field=\(field.exists ? String(describing: field.frame) : "absent")")
+      geometry.name = title
+      geometry.lifetime = .keepAlways
+      add(geometry)
+      return found && search.isHittable && header.frame.contains(search.frame)
+    }
+    let initialPlacement = headerSearchIsPresent("Managed search")
+    capture("managed-search-after-enable")
+    app.buttons["Reconfigure search header"].tap()
+    XCTAssertTrue(app.navigationBars["Search reconfigured"].waitForExistence(timeout: 5))
+    let updatedPlacement = headerSearchIsPresent("Search reconfigured")
+    capture("managed-search-after-header-update")
+    XCTAssertTrue(initialPlacement, "Delayed native search must initially use the header")
+    XCTAssertTrue(updatedPlacement, "Header updates must retain search placement")
+  }
+
   func testStaticNativeSearchPlacementComparison() {
     let open = app.buttons["Audit static search placement"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

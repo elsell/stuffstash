@@ -1,3 +1,4 @@
+export { ManagedSearchPlacementFixture } from './ManagedSearchPlacementFixture';
 import { AppNoticeScreenLayout } from '../src/ui/feedback/AppNoticeScreenLayout';
 import { returnFromFilterScreen } from '../src/ui/navigation/returnFromFilterScreen';
 import { VoiceProposalFixtureProvider } from './VoiceProposalFixture';
@@ -94,6 +95,7 @@ function FixtureNavigation() {
         placeholder: 'Search this place', placement: 'integratedButton', allowToolbarIntegration: false,
         hideWhenScrolling: false, hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none'
       } }} />
+      <Stack.Screen name="audit-managed-search" options={{ title: 'Managed search' }} />
       <Stack.Screen name="audit-native-search-placement" options={{ title: 'Search placement', headerSearchBarOptions: {
         placeholder: 'Search placement probe', placement: 'integratedButton', allowToolbarIntegration: false,
         hideWhenScrolling: false, hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none'

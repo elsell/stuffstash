@@ -1595,3 +1595,11 @@ and production-configured Add scenarios. Hidden-header Add variants remain
 configuration diagnostics, not evidence that the production preconfigured header
 regressed. Capture color target bounds and pre-tap appearance when investigating
 an ordinary activation failure alongside passing delivered-touch probes.
+
+M207's next native comparison must isolate delayed search registration. A synthetic
+route starts without search, enables the production NativeNavigationSearch adapter
+on an explicit command, captures its placement, then changes only the route title
+and captures placement again. Record both geometries before requiring header
+placement; do not drop the original production Place/settings assertions. A title
+change is a diagnostic, not a production timing workaround. No speculative native
+library patch is accepted from source inspection alone.

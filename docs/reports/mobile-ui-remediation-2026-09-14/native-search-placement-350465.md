@@ -62,3 +62,25 @@ Four Browse tests were corrected to read the latest explicit search-options upda
 rather than assuming unrelated title/action updates always precede search; explicit
 removal still fails the test. Critic found no blocker. Source checks prove stable
 configuration and current callbacks, not corrected native placement. M207 stays open.
+
+## Controlled delayed-registration comparison
+
+At d1f5a4ba, production Place search is disabled while loading and recreated when
+contents become searchable; settings collections also enable it only after ready
+and authorized. The static passing fixture starts with search already registered.
+The existing preconfigured Place comparison still uses the production component,
+which can explicitly remove search while loading, so it does not isolate that
+transition.
+
+The pinned RNSSearchBar initializes automatic placement/toolbar integration, then
+updates its own placement fields from props. RNSScreenStackHeaderConfig later
+copies those fields to UINavigationItem. This confirms separate update steps,
+not a proven ordering bug.
+
+A new isolated fixture starts with the shared adapter disabled, explicitly enables
+it, records placement, and changes only the route title before recording again.
+Both snapshots precede placement assertions, preserving evidence if either fails.
+Original Place/settings tests remain unchanged. No title-toggle workaround or
+native dependency patch is applied to production. The installer test failed first
+for the absent route; all6 installer tests, TypeScript and structural checks pass
+on paul. Swift/native execution remains pending.
