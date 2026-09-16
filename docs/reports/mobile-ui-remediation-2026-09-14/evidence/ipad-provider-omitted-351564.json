@@ -1,0 +1,58 @@
+[
+  {
+    "test": "FixtureAuditTests/testControlledAddressEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testControlledTextEntryWithoutAccessory()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testControlledTextEntryWithoutAssistance()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testNativeDefaultAssistedTextEntryDiagnostic()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryControlledTextEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryMultilineTextEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinarySingleLineTextEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryTextEntryWithoutAccessory()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryTextEntryWithoutAssistance()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testPacedControlledTextEntryDiagnostic()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testPacedUncontrolledTextEntryDiagnostic()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testSeededAddressWithoutKeyboardAccessory()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testSystemAddressEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  },
+  {
+    "test": "FixtureAuditTests/testUncontrolledAddressEntry()",
+    "configuration": "Keyboard provider omitted: true"
+  }
+]
