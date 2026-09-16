@@ -449,3 +449,16 @@ the picker retires mutation delivery, including a drag already in progress. Hand
 retention must not target an earlier parent callback or compute hue/spectrum changes
 from an obsolete value. Verify through the real mounted control with retained
 native callback references, then recheck ordinary native dragging and cancellation.
+
+## Android color target sizing
+
+Android color swatches, clear/custom controls, hex input, hue strip and adjustment
+buttons must provide at least the shared48dp minimum target, following
+https://developer.android.com/guide/topics/ui/accessibility/apps. Existing44dp
+fixed boxes do not acquire expanded hit areas automatically in these React Native
+controls. Preserve iOS swatch sizing. Verify actual native bounds and actionable
+centers at320dp width with normal text, including wrapping and Cancel/Done reachability.
+
+At320dp width, adjustment labels must remain readable without forced mid-word
+splitting beside fixed controls. Present each label above its decrement/value/
+increment row, keeping the targets full size and the whole editor scrollable.

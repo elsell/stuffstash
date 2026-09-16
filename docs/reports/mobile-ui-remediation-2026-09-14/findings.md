@@ -3370,3 +3370,18 @@ Shared consumers inspected: Add new-tag color, Edit new-tag color, and customiza
 tag editor, through TagColorPicker. The normal iOS SwiftUI adapter is unchanged;
 the project spectrum fallback inherits this guard where selected. Native Android
 rechecking of ordinary dragging and cancellation is recorded in tag-color-axis.md.
+
+### M246 — Android color controls use undersized touch targets
+
+P2; native normal-size320dp phone observation. Blue's target measured115x116px at
+2.625 density (43.8x44.2dp); the native48dp minimum assertion failed. These React
+Native controls had fixed44dp bounds without automatic target expansion. Android
+recommends at least48x48dp:
+https://developer.android.com/guide/topics/ui/accessibility/apps.
+
+The candidate uses the existing shared minimumTouchTargetSize for Android swatches,
+clear/custom/hex controls and spectrum hue/adjustment controls. iOS swatch sizing
+and the native SwiftUI picker are preserved. Shared consumers are Add/Edit inline
+tags and customization tag editors. Twenty focused tests, TypeScript and structural
+checks pass; code review found no blocker. Native compact acceptance is recorded in
+tag-color-axis.md. This is normal-size interaction work, not enlarged-text coverage.

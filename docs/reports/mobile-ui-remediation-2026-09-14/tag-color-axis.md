@@ -172,3 +172,26 @@ to219 degrees; Cancel preserves parent `none`. [Drag evidence](evidence/android-
 and `/tmp/android-color-guard-drag.xml` retain the sample. Native retained-handler
 races are covered by the mounted boundary regression, not claimed as manually
 reproduced on the emulator. iOS ColorPicker activation remains a separate open issue.
+
+### M246 Android target size and narrow-label acceptance
+
+Normal-size320dp width (840px at420dpi) exposed44dp swatches without expanded
+hit areas. The native minimum-target assertion failed before correction. The first
+48dp candidate fixed target bounds but its [capture](evidence/android-color-narrow-labels-before.png)
+showed mid-word Saturation/Brightness wrapping; the final layout places each label
+above its adjustment row rather than compressing it beside fixed controls.
+
+Final APK `fc4bf5638380f3ebfc85050cc9b5b1d675de68cd5c8cf48f1d1c1585614142cb`
+passes native bounds checks for every swatch, custom trigger, all six adjustment
+buttons, hex input, Clear, Cancel and Done (minimum126px=48dp). All three labels
+occupy a single51px text line and commands remain reachable after scrolling.
+[Final capture](evidence/android-color-targets-final.png) was visually inspected.
+Actual Blue selection sets#2F80ED; changing hue then Cancel retains that value.
+The emulator was restored to its original display size after checking.
+
+Twenty focused tests, TypeScript, structural checks and critic review pass.
+Native script `/tmp/verify-color-targets.py` and XML
+`/tmp/android-color-targets-final.xml` are retained on paul; the script is also local.
+The initial failure is `/tmp/android-color-target-before.xml` on paul. This closes
+the normal-size Android sizing/label finding in this shared control, not iOS M51,
+TalkBack or enlarged-text acceptance.

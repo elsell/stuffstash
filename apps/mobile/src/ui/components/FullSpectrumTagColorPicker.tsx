@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { minimumTouchTargetSize } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { adjustSpectrumValue, androidSpectrumAccessibility, expoUIColorPickerAvailable, fullSpectrumPickerKind, spectrumGestureOwnership } from './FullSpectrumTagColorPickerPresentation';
 import { NativeTagColorPicker } from './NativeTagColorPicker';
@@ -86,7 +87,18 @@ function AndroidSpectrum({ compact, disabled, onChange, value }: { readonly comp
 
 function Adjustment({ disabled, label, onDecrease, onIncrease, value }: { readonly disabled: boolean; readonly label: string; readonly onDecrease: () => void; readonly onIncrease: () => void; readonly value: string }) {
   const palette = useAppearancePalette();
-  return <View accessibilityLabel={`${label}, ${value}`} style={styles.adjustment}><Text style={[styles.adjustmentLabel, { color: palette.text }]}>{label}</Text><Pressable accessibilityLabel={`Decrease ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}><Text style={[styles.adjustButtonText, { color: palette.action }]}>−</Text></Pressable><Text style={[styles.adjustmentValue, { color: palette.textMuted }]}>{value}</Text><Pressable accessibilityLabel={`Increase ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}><Text style={[styles.adjustButtonText, { color: palette.action }]}>+</Text></Pressable></View>;
+  return <View accessibilityLabel={`${label}, ${value}`} style={styles.adjustment}>
+    <Text style={[styles.adjustmentLabel, { color: palette.text }]}>{label}</Text>
+    <View style={styles.adjustmentControls}>
+      <Pressable accessibilityLabel={`Decrease ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+        <Text style={[styles.adjustButtonText, { color: palette.action }]}>−</Text>
+      </Pressable>
+      <Text style={[styles.adjustmentValue, { color: palette.textMuted }]}>{value}</Text>
+      <Pressable accessibilityLabel={`Increase ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+        <Text style={[styles.adjustButtonText, { color: palette.action }]}>+</Text>
+      </Pressable>
+    </View>
+  </View>;
 }
 
 const spectrumHeight = 160;
@@ -97,4 +109,4 @@ function hexToRgb(value: string) { if (!validColor(value)) return undefined; ret
 function rgbToHex(rgb: { red: number; green: number; blue: number }) { return `#${[rgb.red, rgb.green, rgb.blue].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`.toUpperCase(); }
 function hsvToRgb({ hue, saturation, brightness }: { hue: number; saturation: number; brightness: number }) { const c = brightness * saturation; const x = c * (1 - Math.abs(((hue / 60) % 2) - 1)); const m = brightness - c; const values = hue < 60 ? [c,x,0] : hue < 120 ? [x,c,0] : hue < 180 ? [0,c,x] : hue < 240 ? [0,x,c] : hue < 300 ? [x,0,c] : [c,0,x]; return { red: (values[0] + m) * 255, green: (values[1] + m) * 255, blue: (values[2] + m) * 255 }; }
 function rgbToHsv({ red, green, blue }: { red: number; green: number; blue: number }) { const r = red / 255, g = green / 255, b = blue / 255; const max = Math.max(r,g,b), min = Math.min(r,g,b), delta = max - min; const hue = delta === 0 ? 0 : max === r ? 60 * (((g-b)/delta) % 6) : max === g ? 60 * (((b-r)/delta)+2) : 60 * (((r-g)/delta)+4); return { hue: hue < 0 ? hue + 360 : hue, saturation: max === 0 ? 0 : delta/max, brightness: max }; }
-const styles = StyleSheet.create({ android: { gap: 10 }, disabled: { opacity: 0.55 }, spectrum: { borderRadius: 10, borderWidth: 1, height: spectrumHeight, overflow: 'hidden', position: 'relative', width: '100%' }, compactSpectrum: { height: 112 }, marker: { borderRadius: 10, borderWidth: 3, height: 20, marginLeft: -10, marginTop: -10, position: 'absolute', width: 20 }, hue: { borderRadius: 10, borderWidth: 1, height: 44, overflow: 'hidden', position: 'relative', width: '100%' }, hueMarker: { borderRadius: 3, borderWidth: 3, height: 44, marginLeft: -4, position: 'absolute', width: 8 }, adjustment: { alignItems: 'center', flexDirection: 'row', gap: 8, minHeight: 44 }, adjustmentLabel: { flex: 1, fontSize: 14, fontWeight: '600' }, adjustmentValue: { fontSize: 13, minWidth: 82, textAlign: 'center' }, adjustButton: { alignItems: 'center', borderRadius: 8, borderWidth: 1, height: 44, justifyContent: 'center', width: 44 }, adjustButtonText: { fontSize: 22, fontWeight: '700' } });
+const styles = StyleSheet.create({ android: { gap: 10 }, disabled: { opacity: 0.55 }, spectrum: { borderRadius: 10, borderWidth: 1, height: spectrumHeight, overflow: 'hidden', position: 'relative', width: '100%' }, compactSpectrum: { height: 112 }, marker: { borderRadius: 10, borderWidth: 3, height: 20, marginLeft: -10, marginTop: -10, position: 'absolute', width: 20 }, hue: { borderRadius: 10, borderWidth: 1, height: minimumTouchTargetSize, overflow: 'hidden', position: 'relative', width: '100%' }, hueMarker: { borderRadius: 3, borderWidth: 3, height: minimumTouchTargetSize, marginLeft: -4, position: 'absolute', width: 8 }, adjustment: { gap: 8 }, adjustmentControls: { alignItems: 'center', flexDirection: 'row', gap: 8, minHeight: minimumTouchTargetSize }, adjustmentLabel: { fontSize: 14, fontWeight: '600' }, adjustmentValue: { flex: 1, fontSize: 13, textAlign: 'center' }, adjustButton: { alignItems: 'center', borderRadius: 8, borderWidth: 1, height: minimumTouchTargetSize, justifyContent: 'center', width: minimumTouchTargetSize }, adjustButtonText: { fontSize: 22, fontWeight: '700' } });
