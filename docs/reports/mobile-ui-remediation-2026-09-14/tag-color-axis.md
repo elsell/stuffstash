@@ -212,3 +212,25 @@ incorrect synthesized tap coordinate in this sample. It does not explain why the
 separate target-opening and delivered-region cases passed, prove a framework bug,
 or justify suppressing the failing production interaction. Current run351214
 must complete before choosing the next controlled comparison.
+
+### Android dark-mode normal-text follow-up
+
+September16, Android16 Pixel6,1080×2400 at420dpi, font scale1,
+APK `1bffd472c87354159eb4afd965adf9e533ac6b695f777c4c1e31301fb744c452`.
+With system night mode enabled, the shared color control passes the48dp bounds
+checks for swatches, adjustment buttons, hex input, Clear, Cancel and Done.
+Hue/Saturation/Brightness labels remain single-line. Blue selection produces
+parent#2F80ED; after custom editing, Cancel preserves that exact parent value.
+The [inspected dark capture](evidence/android-color-dark-targets.png) shows readable
+control labels and unobscured actions. This is visual inspection, not measured
+contrast certification. The unthemed black parent-value text below the panel is
+fixture-only diagnostic output, not a shipped component.
+
+The navigation swipe can cross the spectrum, and the captured draft differs from
+the parent. This sample did not isolate the first opening value, so it cannot
+establish whether that difference came from the swipe or from opening.
+This sample establishes target bounds, dark appearance and cancellation only.
+It does not establish scroll/drag disambiguation, TalkBack, keyboard or server
+persistence. Script `/tmp/verify-color-dark.py` and XML/PNG
+`/tmp/android-color-dark-targets.*` are retained on paul. System night mode was
+restored to its original disabled setting in the script's finally block.
