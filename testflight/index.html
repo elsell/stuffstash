@@ -223,6 +223,11 @@ may require TestFlight App Review.</p>
 <p>Each uploaded build gets English <strong>What to Test</strong> notes automatically. The notes
 list features, fixes, and performance changes since the previous release, plus a
 link to the full GitHub changelog. Clear commit titles make these notes useful.</p>
+<p>For a large squash merge, include a <code dir="auto">TestFlight notes:</code> section in the final
+commit body, followed immediately by <code dir="auto">- </code> bullet lines. Those highlights replace
+the generic commit title in the notes. End the section with a blank line; keep
+validation details outside it. Only feature, fix, and performance commits contribute
+notes, and the final text remains limited to 4,000 characters.</p>
 <p>Publication waits for Apple to process the exact version and build, then writes
 and verifies its notes. A notes failure leaves the uploaded binary intact and
 fails the release workflow.</p>
