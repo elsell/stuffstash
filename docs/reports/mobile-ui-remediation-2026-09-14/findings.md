@@ -3444,6 +3444,11 @@ Android's separate IME-aware sheet is unchanged. Focused run35154627907 reproduc
 the same phone overlap despite settled remeasurement; iPad keyboard journeys pass.
 The candidate is not sufficient. See [paired results](native-filters-351546.md).
 
+New completed phone probe351689 confirms boundary812 versus keyboard screenY495,
+with a62-point sheet presentation origin omitted from the measurement. See
+[native coordinate evidence](native-filter-geometry-351689.md). No offset fix is
+implemented; M249 remains open in TestFlight113.1.
+
 ### M250 — Browse tag edits remove the active native search configuration
 
 P2 source/mounted-test confirmed. BrowseFiltersScreen writes an explicit undefined
