@@ -129,3 +129,11 @@ not production Tags. The fixture title and native precondition are corrected. Ke
 its native search journey pending; do not treat the mismatched header as sufficient
 evidence of a production Tags defect. The existing integrated-button requirement
 remains unchanged. See the fidelity section in native-phone-351567.md.
+
+The release-corrections workflow selection reruns nine existing phone/iPad journeys
+for filters, Sharing, Tags Add/Search, Add draft recovery and ordinary color use.
+It uses ordinary fixture layouts and supplements this matrix; it cannot certify the
+whole batch by itself. The selector test executes the actual workflow shell case,
+checks exact membership and uniqueness, and verifies Swift methods exist. It fails
+before the selector is added, then all nine preparation/selection checks and mobile
+structural checks pass on paul. Code critic finds no blocker.

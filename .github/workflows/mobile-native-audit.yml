@@ -16,6 +16,7 @@ on:
           - add-draft
           - home-header
           - filters
+          - release-corrections
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -122,6 +123,20 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationDatePageKeepsBottomActionsReachable'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
+            release-corrections)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationDatePageKeepsBottomActionsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
               )
               ;;
             text-entry|text-entry-no-provider)

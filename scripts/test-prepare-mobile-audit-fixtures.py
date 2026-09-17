@@ -128,5 +128,33 @@ class FixtureRouteIsolationTests(unittest.TestCase):
             self.assertEqual((self.routes / "index.tsx").read_text(), "production route\n")
 
 
+class NativeAuditSelectionTests(unittest.TestCase):
+    def test_release_corrections_selects_named_existing_workflows(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / '.github/workflows/mobile-native-audit.yml').read_text()
+        selection = workflow.split('          audit_test_args=()', 1)[1].split('          printf', 1)[0]
+        result = subprocess.run(['bash', '-c', 'audit_test_args=()\n' + selection + '\nprintf "%s\\n" "${audit_test_args[@]}"'],
+                                env={**os.environ, 'AUDIT_TEST_CASE': 'release-corrections', 'AUDIT_SUITE': 'fixtures'},
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expected = {
+            'testBrowseTagSearchKeepsActionsAboveKeyboardAccessory',
+            'testBrowseLastTagClearsActionFooterAndApplies',
+            'testBrowseUsesInPlaceAvailabilityMenuAndReachableActions',
+            'testExpirationDatePageKeepsBottomActionsReachable',
+            'testExpirationSearchKeepsActionsReachableWithKeyboard',
+            'testSharingRecoveryKeepsHeaderAndCommandsReachable',
+            'testSettingsCollectionUsesNativeSearchAndAdd',
+            'testAddDraftRetainsTextAndRecoversAfterRejectedSave',
+            'testColorPickerOpensDirectlyAndClearPreservesParentDraft',
+        }
+        names = [line.removeprefix('-only-testing:StuffStashAuditTests/FixtureAuditTests/') for line in result.stdout.splitlines()]
+        self.assertEqual(set(names), expected)
+        self.assertEqual(len(names), len(expected))
+        swift = (root / 'apps/mobile/native-audit/FixtureAuditTests.swift').read_text()
+        for name in names:
+            self.assertIn('func ' + name + '()', swift)
+
+
 if __name__ == "__main__":
     unittest.main()

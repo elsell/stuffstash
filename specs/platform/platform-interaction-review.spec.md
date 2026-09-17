@@ -714,3 +714,15 @@ journey before Add/Search and guard fixture/production title parity structurally
 Keep the integrated-button and query/result checks unchanged. This correction does
 not explain other search failures whose titles already match; rerun rather than
 claiming a production fix from the title change alone.
+
+## Focused release-correction verification
+
+The native audit workflow offers a release-corrections selection containing the
+five existing filter journeys, complete Sharing email/rejection recovery, settings
+Add/Search with production title parity, Add draft/rejected-save recovery and
+ordinary color activation/clear. Run it on phone and iPad with ordinary fixture
+layouts; fixture-only geometry probes stay confined to the filters diagnostic.
+This selection accelerates changed-workflow verification but does not replace the
+frozen55-check matrix, onboarding, retained unchanged-workflow evidence or source
+checks. Keep all current native jobs intact. Verify the selector's exact test list
+and that every selected Swift test exists before dispatching it.
