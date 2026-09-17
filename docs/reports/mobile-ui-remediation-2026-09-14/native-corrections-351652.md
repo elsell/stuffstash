@@ -35,3 +35,14 @@ remain. Native rerun is required; source checks do not clear this case.
 Logs: /tmp/native351652-corrections-phone.log and
 /tmp/native351652-corrections-ipad.log. iPad artifact10476625513 remains on paul
 at /tmp/native351652-corrections-ipad.zip. Phone captures are not yet reviewed.
+
+## Phone retained-state reconciliation
+
+Both teardown hierarchies contain Search tags value Tools with keyboard focus and
+the matching result, after the immediate assertion sampled T. Therefore these
+failures do not establish lost query characters. The corrected test waits up to
+five seconds for the exact Tools value, without retyping or weakening the result
+and footer checks. Both retained hierarchies still place Back at y491–545 and
+Dismiss keyboard at y485–529: M249 remains open. Phone artifact10476379059 is
+retained on paul at /tmp/native351652-corrections-phone.zip; selected hierarchies
+are retained alongside this report.

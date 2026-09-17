@@ -757,3 +757,13 @@ target. Calendar dismissal must leave Date range open, with Apply and Back
 reachable, and Back must return through Filters to the launcher. The observed
 XCTest failure is the regression baseline; this automation correction does not
 change product code or establish a native pass until rerun.
+
+### Observe settled native search entry
+
+Phone351652 reports T immediately after typeText(Tools), but both retained
+Browse and Expiration teardown hierarchies contain the full Tools query and
+matching result. Those two journeys must wait up to five seconds for the exact
+native value before checking results and keyboard clearance. Do not retype,
+accept partial text or skip the footer assertions. Keep the original failure and
+settled hierarchy as evidence; this addresses asynchronous observation, not a
+claimed product input fix.

@@ -187,3 +187,8 @@ alternate input diagnostics remain separate audit work. The iPad full-fixture
 keyboard-Go onboarding case fails due unavailable interactive keyboard; paired
 standalone onboarding passes do not silently erase that different journey.
 Neither full-audit completion nor unrelated findings become extra release gates.
+
+Phone351652 teardown evidence subsequently confirms both full Tools queries.
+The immediate-value assertions sampled early; a bounded exact-value wait is
+added. Retained action/accessory frames still overlap, so M249 stays a blocker.
+See the phone reconciliation in correction evidence.
