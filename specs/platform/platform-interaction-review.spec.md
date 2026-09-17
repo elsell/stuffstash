@@ -891,3 +891,15 @@ five-second waiter and full Tools-query/results/command checks. Other keyboard
 journeys retain their existing selection. Failure diagnostics inspect only the
 keyboard and selected key, avoiding an additional exhaustive query that itself
 failed in352409. This is test infrastructure, not a localization product rule.
+
+
+M207 production candidate: pin a minimal react-native-screens4.23.0 patch that
+applies UINavigationItem preferred placement and toolbar-integration settings
+before attaching its searchController. Preserve option values and all platform
+availability guards; do not replace native search or change query state. Native
+352366 accepts the other six journeys on both devices;352442 accepts Browse and
+Expiration typing/filtering/action clearance on both after targeted-key readiness.
+Freeze this correction as a separate release batch, requiring the installed patch
+to pass the eight search workflows, dependency resolution, shared-header tests and
+critical regression checks before TestFlight. Remove the runner-only transform
+from candidate validation so it cannot apply twice or hide packaging mistakes.

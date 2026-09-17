@@ -212,3 +212,15 @@ during controlled edits. Retain the existing Android accessibility patch. No
 Expo SDK upgrade or unrelated upstream changes enter this backport. The macOS
 iOS dependency job runs the installed-expression numeric regression before pod
 resolution; refresh pnpm patch identity and both local ExpoUI pod source paths.
+
+
+## Native search-controller attachment order
+
+Keep react-native-screens pinned to4.23.0 with the project-owned one-line reorder
+in patches/react-native-screens@4.23.0.patch. Configure native search placement and
+toolbar integration before attaching the search controller; retain platform guards
+and existing options. Native paired baseline352224 reproduces bottom phone search,
+while ordering candidates and352442 cover the intended header and filter flows.
+Use pnpm's canonical patch identity and resolved RNScreens pod source paths. The
+production patch replaces the runner-only transformation; verify installed-package
+search workflows and CocoaPods resolution, not a second transformation in CI.
