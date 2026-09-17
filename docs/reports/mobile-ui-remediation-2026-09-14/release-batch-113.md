@@ -168,3 +168,22 @@ valid result bundle. No new phone geometry is available. See the terminal sectio
 in [focused filter evidence](native-filters-351595.md). Release-corrections35165286470
 is now active on phone and iPad. Fresh focused filters35168921441 is queued behind
 it to recover the missing measurements; active jobs remain untouched.
+
+## Latest native evidence reconciliation
+
+Focused351652 is complete: phone7/9 and iPad8/9. Sharing with the new email
+adapter, production-title Tags search, Add draft recovery and ordinary color
+pass on both by assertion. Reviewed iPad captures and limitations are recorded
+in [correction evidence](native-corrections-351652.md). Phone filter query entry
+stops at T instead of Tools; prior footer overlap is not cleared. iPad calendar
+fails in automation target selection; the scoped navigation-bar correction still
+requires a native rerun.
+
+Full351626 completes phone67/87 and iPad80/87. The CSV retains every outcome.
+It predates the new email adapter and Tags fixture correction: its Sharing
+failure does not test the new field. Phone Place search and ordinary color
+failures require reconciliation with other current evidence; enlarged-text and
+alternate input diagnostics remain separate audit work. The iPad full-fixture
+keyboard-Go onboarding case fails due unavailable interactive keyboard; paired
+standalone onboarding passes do not silently erase that different journey.
+Neither full-audit completion nor unrelated findings become extra release gates.
