@@ -144,3 +144,13 @@ structural checks pass on paul. Code critic finds no blocker.
 Current release-corrections dispatch:35165286470 at966158e6 is pending behind the
 active focused run35159542174. Existing active native jobs are preserved. The full
 current-head run35165285932 is also pending. Queued verification is not acceptance.
+
+## Current correction source CI
+
+CI35165285719 passes at966158e6744bc2c71687c5d93c7319dbbd2c94f4, including the
+iOS email adapter, Tags fixture parity and focused selector. Required checks report
+1,917 mobile tests across303 files,1,119 web tests across151 files and67 client
+tests across8 files. Conversation browser journey, search PostgreSQL benchmark,
+iOS dependency lock, web release image and self-host runtime also pass. Log:
+`/tmp/ci351652-required.log`. Native acceptance is still pending; this does not
+clear the phone filter overlap or verify the new iOS field on device.

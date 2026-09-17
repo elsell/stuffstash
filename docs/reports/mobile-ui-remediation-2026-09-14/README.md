@@ -37,8 +37,8 @@ release gates. Actual changed-workflow entry/save remains required. M251 tracks
 low-contrast iOS photo-viewer status content separately from the frozen batch;
 reviewed photo commands remain usable.
 
-CI35162604544 passes the pre-email correction source. Current-head source CI and
-native correction acceptance remain pending. Large archives stay on paul; selected
+CI35165285719 passes the current correction source966158e6, including1,917 mobile
+tests across303 files and all six CI jobs. Native correction acceptance remains pending. Large archives stay on paul; selected
 captures are retained in this report directory. No new TestFlight release is claimed.
 
 ## Earlier checkpoints
