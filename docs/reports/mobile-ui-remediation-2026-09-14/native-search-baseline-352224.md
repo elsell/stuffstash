@@ -2,8 +2,8 @@
 
 Source4420dc30ca90b769e77fa178a68a1bac7833b668, selection search-placement.
 The native ordering transformation is not applied. Phone105205621758 passes6/7;
-iPad105205622240 passes7/7. Phone Settings fails at line2211 waiting for the Search
-button. Exact outcomes are in native-search-baseline-352224-results.csv. Retained
+iPad105205622240 passes7/7. Phone Settings fails at line2211 asserting that the Search
+button is hittable. Exact outcomes are in native-search-baseline-352224-results.csv. Retained
 failure capture review is still needed to distinguish placement from missing UI.
 
 Expiration keyboard/search/clearance passes on both with no redundant field tap
