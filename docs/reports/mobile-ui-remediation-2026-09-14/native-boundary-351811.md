@@ -24,7 +24,7 @@ matrix axis. TestFlight113.1 still contains the old behavior.
 
 The sole phone failure is the existing ordinary color-picker direct-opening
 assertion. Keep it tracked and inspect its retained state rather than treating this
-run as entirely green. M251 photo-status rendering also still needs capture review.
+run as entirely green. M251 photo-status rendering was outside this run; subsequent scoped evidence is recorded in [photo status verification](native-photo-status-351832.md).
 No new release is claimed.
 
 Artifacts: phone10480533028 and iPad10480753114, retained on paul as

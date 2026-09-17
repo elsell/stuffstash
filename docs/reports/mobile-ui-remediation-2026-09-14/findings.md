@@ -3446,8 +3446,7 @@ The candidate is not sufficient. See [paired results](native-filters-351546.md).
 
 New completed phone probe351689 confirms boundary812 versus keyboard screenY495,
 with a62-point sheet presentation origin omitted from the measurement. See
-[native coordinate evidence](native-filter-geometry-351689.md). No offset fix is
-implemented; M249 remains open in TestFlight113.1.
+[native coordinate evidence](native-filter-geometry-351689.md). At that checkpoint no offset fix was implemented; TestFlight113.1 retains the overlap. The subsequent candidate verification follows below.
 
 Run351811 at d8f4b4f0 accepts the corrected normal-text portrait Browse and
 Expiration workflows on phone/iPad. Reviewed phone Back endsY483 before the
@@ -3500,3 +3499,5 @@ Android keeps library behavior. The mounted ownership test failed first, then14
 focused gallery/viewer tests, TypeScript and mobile structural checks passed on
 paul. This verifies ownership wiring, not UIKit status rendering or restoration.
 Saved/draft phone/iPad light/dark capture review remains required; M251 is open.
+
+Run35183213359 at d8f4b4f0 passes all five Add-draft journeys on both devices. Reviewed phone and iPad captures show light status text over the black viewer and dark status text restored after last-photo removal to the light Add screen. See [photo status evidence](native-photo-status-351832.md). This accepts those draft transitions in the candidate; saved-photo, dark-appearance and swipe-dismissal verification remain open. TestFlight113.1 does not include this correction.

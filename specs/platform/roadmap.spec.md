@@ -522,3 +522,16 @@ comprehensive audit. M249 and last-tag application affect required batch workflo
 unrelated existing findings, enlarged-text follow-up and diagnostic-only layouts
 remain separately tracked. Keep ongoing native jobs and credit their evidence where
 production source matches. No unrelated remediation enters this frozen batch.
+
+
+September17 checkpoint: the authorized interim batch shipped as TestFlight0.24.24
+(113.1), release35171759572, with Apple processing and changelog readback verified.
+PR155 carries subsequent M249 keyboard-window measurement and M251 photo-status
+corrections. Native351811 verifies normal-text portrait Browse/Expiration action
+clearance on phone/iPad; native351832 passes five Add-draft journeys on each and
+reviewed captures verify light-draft viewer status contrast and last-removal
+restoration. Neither candidate is in113.1. Keep the existing phone color-picker
+activation failure, broader adaptation and remaining surface findings tracked
+separately; they do not automatically expand the next release gate. The full
+142-by24 audit remains incomplete. See native-boundary-351811.md and
+native-photo-status-351832.md in the remediation report.
