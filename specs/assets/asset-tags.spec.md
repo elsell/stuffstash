@@ -307,3 +307,12 @@ the expression from the actual pinned dependency; do not maintain a second
 implementation that can pass while production still truncates. This isolates
 numeric correctness, not UIKit event delivery, presentation or complete color
 space conversion; native slider/draft acceptance remains necessary for those.
+
+
+Native RGB feedback acceptance starts from a known preset, opens the system
+picker and changes only its Red slider. After each of three distinct adjustments,
+dismiss the picker and verify the parent draft retains the exact original Green
+and Blue bytes while Red changes. Reopen between edits to exercise controlled
+feedback; retain slider and parent captures. Require the explicitly labeled Red
+control rather than assuming a slider order. An opening or labeling failure
+remains a failed/unreached check, not permission to substitute another control.
