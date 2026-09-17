@@ -3449,6 +3449,13 @@ with a62-point sheet presentation origin omitted from the measurement. See
 [native coordinate evidence](native-filter-geometry-351689.md). No offset fix is
 implemented; M249 remains open in TestFlight113.1.
 
+Run351811 at d8f4b4f0 accepts the corrected normal-text portrait Browse and
+Expiration workflows on phone/iPad. Reviewed phone Back endsY483 before the
+accessory atY485; iPad commands also clear the accessory. See
+[native adapter acceptance](native-boundary-351811.md). The original reported
+overlap is resolved in this candidate; broader adaptation checks remain partial
+and the correction is not yet in TestFlight113.1.
+
 ### M250 — Browse tag edits remove the active native search configuration
 
 P2 source/mounted-test confirmed. BrowseFiltersScreen writes an explicit undefined

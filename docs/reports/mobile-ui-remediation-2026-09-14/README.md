@@ -8,10 +8,17 @@ Apple processing and exact changelog readback passed. The user explicitly chose
 this interim release with the known iPhone filter keyboard overlap disclosed.
 The comprehensive audit remains incomplete. See [release evidence](release-batch-113.md).
 
+## Follow-up correction checkpoint
+
+Native351811 accepts the reported normal-text portrait filter overlap correction
+on phone/iPad; see [native boundary evidence](native-boundary-351811.md). Candidate
+PR155 is not released. M251 visual verification and the phone color-picker failure
+remain open, alongside broader adaptation and the comprehensive audit.
+
 ## Pre-release audit checkpoint — September 17
 
 The coverage inventory contains142 surfaces ×24 axes =3,408 unique cells:2,593
-source-reviewed,578 finding,198 not-applicable and39 runtime-partial. These are
+source-reviewed,576 finding,198 not-applicable and41 runtime-partial. These are
 review classifications, not completed native acceptance checks. Normal-size
 findings take priority. Release follows the [frozen batch checklist](release-batch-113.md),
 independently of completing the comprehensive audit.
