@@ -46,3 +46,11 @@ The [expiration issue](evidence/expiration-accessibility-351567.txt) again repor
 possible clipping only at larger Dynamic Type sizes, without identifying an
 element. Keep that issue in enlarged-text follow-up, while normal trait/name/target
 acceptance remains required. This is not evidence of a new default-size blocker.
+
+Sharing candidate: the iOS email field now uses the existing seeded SwiftUI
+TextField pattern, with email keyboard/content type and editing disabled while
+creation is pending. Existing scope/reset revision and command ownership remain.
+The new mounted seed/lock/reset test first fails for the absent adapter;30 scoped
+sharing/guard/adapter tests, TypeScript and structural checks then pass on paul.
+Critic reports no confirmed blocker. These checks do not prove native typing or
+keyboard dismissal; the unchanged native Sharing journey remains required.

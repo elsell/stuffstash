@@ -688,3 +688,18 @@ its delivered tap and before Back/Apply. Run351546 iPad delivers touch down/up a
 372,700.5, inside the row98,674.5,548,52, yet applies no tag. Retain the selected
 state and hierarchy at that boundary to distinguish selection delivery from
 navigation/draft loss. Do not infer a clipping defect from the final result alone.
+
+## Invitation email native editing
+
+Phone351567 reorders the complete invitation email in the real Sharing workflow,
+even with a seeded uncontrolled React Native field. Use the existing iOS SwiftUI
+TextField pattern for this field, with email keyboard/content type, no automatic
+capitalization or correction, and the Invitee email accessibility name. Keep native
+editing state across parent echo renders; remount only for the existing scope/reset
+revision. Failed creation preserves the full email; successful creation resets it.
+Disable edits and ignore stale native changes while creation is pending. Android
+retains its controlled platform field. Preserve invitation permission checks and
+command ownership. Mounted seed/lock/revision tests and existing sharing recovery
+tests precede implementation; the native Sharing journey must still verify exact
+complete entry, rejection recovery and navigation reachability before release.
+This is a field-specific candidate, not a claim to solve all RN input failures.

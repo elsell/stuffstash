@@ -1,3 +1,4 @@
+import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
@@ -7,7 +8,7 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -33,7 +34,7 @@ import type {
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 export function InventorySharingScreen({
   cancelCommand,
@@ -238,15 +239,8 @@ export function InventorySharingScreen({
           <Text style={styles.label}>Email</Text>
           <InvitationEmailInput
             key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            spellCheck={false}
-            accessibilityLabel="Invitee email"
-            keyboardType="email-address"
             editable={!working}
             onChangeText={value => { if (!workingRef.current) setEmail(value); }}
-            placeholder="friend@example.com"
             placeholderTextColor={palette.textMuted}
             style={styles.input}
             email={emailScope.current === scopeKey ? email : ''}
@@ -362,9 +356,4 @@ function createStyles(colors: MobileColorPalette) {
     invitationEmail: { color: colors.text, fontSize: 16, fontWeight: '600' },
     invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 }
   });
-}
-
-function InvitationEmailInput({ email, ...props }: Omit<ComponentProps<typeof AppTextInput>, 'value' | 'defaultValue'> & { readonly email: string }) {
-  const seed = useRef(email);
-  return <AppTextInput {...props} {...(Platform.OS === 'ios' ? { defaultValue: seed.current } : { value: email })} />;
 }
