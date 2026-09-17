@@ -1,0 +1,78 @@
+Attributes: Application, 0x11d83ee40, pid: 62195, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11d83ee40, pid: 62195, label: 'Stuff Stash'
+    Window (Main), 0x11d83ef80, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11d83f0c0, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11d83f200, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x11d83f340, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x11d83f480, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x11d83f5c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x11d83f700, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x11d83f840, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x11d83f980, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x11d83fac0, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x11d83fc00, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x11d83fd40, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Notifications'
+                            Button, 0x11d83fe80, {{10.0, 32.0}, {90.5, 44.0}}, identifier: 'BackButton', label: 'Back'
+                            StaticText, 0x11d83ed00, {{319.5, 43.5}, {104.5, 21.0}}, label: 'Notifications'
+                            Button, 0x11d83d2c0, {{626.0, 36.0}, {44.0, 36.0}}, label: 'Mark all read'
+                            Button, 0x11d83d400, {{686.0, 36.0}, {44.0, 36.0}}, label: 'Reminder settings'
+                          Other, 0x11d83d540, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11d83d680, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x11d83d7c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x11d83d900, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x11d83da40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x11d83db80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x11d83dcc0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x11d83de00, {{0.0, 86.0}, {744.0, 1047.0}}
+                                          Other, 0x11d83df40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                            Other, 0x11d83e080, {{24.0, 110.0}, {696.0, 31.0}}
+                                              Other, 0x11d83e1c0, {{24.0, 110.0}, {696.0, 31.0}}
+                                                Other, 0x11d83e300, {{24.0, 110.0}, {696.0, 31.0}}
+                                                  SegmentedControl, 0x11d83e440, {{24.0, 110.0}, {696.0, 31.0}}
+                                                    Button, 0x11d83e580, {{24.0, 110.0}, {348.0, 32.0}}, label: 'All', Selected
+                                                    Button, 0x11d83e6c0, {{372.0, 110.0}, {348.0, 32.0}}, label: 'Unread'
+                                            Other, 0x11d83e800, {{24.0, 157.0}, {696.0, 125.0}}
+                                            Button, 0x11d83e940, {{24.0, 173.0}, {648.0, 38.5}}, label: 'Open Household medicine with a long descriptive label', value: Expired February 2...
+                                            Other, 0x11d83ea80, {{672.0, 173.0}, {48.0, 48.0}}
+                                              Other, 0x11d83ebc0, {{672.0, 173.0}, {48.0, 48.0}}
+                                                Other, 0x11d837ac0, {{672.0, 173.0}, {48.0, 48.0}}
+                                                  Button, 0x11d837c00, {{684.0, 186.5}, {24.5, 21.5}}, identifier: 'envelope.open', label: 'Mark Household medicine with a long descriptive label read'
+                                            Other, 0x11d837d40, {{24.0, 221.5}, {648.0, 44.0}}, label: 'Location Hall medicine closet, Cold and cough supplies'
+                                              ScrollView, 0x11d837e80, {{24.0, 221.5}, {648.0, 44.0}}
+                                                Other, 0x11d888000, {{24.0, 221.5}, {313.0, 44.0}}
+                                                  Other, 0x11d888140, {{24.0, 221.5}, {313.0, 44.0}}
+                                                    Button, 0x11d888280, {{24.0, 221.5}, {131.0, 44.0}}, label: 'Open location Hall medicine closet'
+                                                    Button, 0x11d8883c0, {{171.0, 221.5}, {160.0, 44.0}}, label: 'Open location Cold and cough supplies'
+                                                    StaticText, 0x11d888500, {{161.0, 236.0}, {4.0, 14.5}}, label: '/'
+                                                      StaticText, 0x11d888640, {{161.0, 236.0}, {4.0, 14.5}}, label: '/'
+                                                Other, 0x11d888780, {{639.0, 221.5}, {30.0, 44.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                  Other, 0x11d8888c0, {{666.0, 224.5}, {3.0, 38.0}}
+                                                Other, 0x11d888a00, {{639.0, 221.5}, {30.0, 44.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                  Other, 0x11d888b40, {{666.0, 224.5}, {3.0, 38.0}}
+                                            Other, 0x11d888c80, {{24.0, 298.0}, {696.0, 71.0}}
+                                            Button, 0x11d888dc0, {{24.0, 314.0}, {648.0, 38.5}}, label: 'Open Emergency batteries', value: Expires April 15, ...
+                                            Other, 0x11d888f00, {{672.0, 314.0}, {48.0, 48.0}}
+                                              Other, 0x11d889040, {{672.0, 314.0}, {48.0, 48.0}}
+                                                Other, 0x11d889180, {{672.0, 314.0}, {48.0, 48.0}}
+                                                  Button, 0x11d8892c0, {{684.0, 330.0}, {24.5, 16.5}}, identifier: 'envelope', label: 'Mark Emergency batteries unread'
+                                        Other, 0x11d889400, {{711.0, 93.0}, {30.0, 1018.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x11d889540, {{738.0, 89.0}, {3.0, 1088.0}}
+                                        Other, 0x11d889680, {{21.5, 1080.0}, {701.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11d8897c0, {{3.0, 1107.0}, {735.0, 3.0}}
+                                        Other, 0x11d889900, {{711.0, 93.0}, {30.0, 1018.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x11d889a40, {{738.0, 89.0}, {3.0, 1088.0}}
+                                        Other, 0x11d889b80, {{21.5, 1080.0}, {701.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11d889cc0, {{3.0, 1107.0}, {735.0, 3.0}}
+                          Other, 0x11d889e00, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11d889f40, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x11d88a080, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11d88a1c0, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11d88a300, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x11d83ee40, pid: 62195, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11d88a440, pid: 62195, label: 'Stuff Stash'
+  }
