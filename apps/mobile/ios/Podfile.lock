@@ -2441,6 +2441,9 @@ PODS:
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
+  - StuffStashSheetBoundary (1.0.0):
+    - ExpoModulesCore
+    - React-Core
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2556,6 +2559,7 @@ DEPENDENCIES:
   - "RNScreens (from `../../../node_modules/.pnpm/react-native-screens@4.23.0_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/react-native-screens`)"
   - "RNSVG (from `../../../node_modules/.pnpm/react-native-svg@15.15.3_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/react-native-svg`)"
   - "RNWorklets (from `../../../node_modules/.pnpm/react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0.83.6_@babel+core@7.29.7_@_7345a8c995851505f53f6791f1174e08/node_modules/react-native-worklets`)"
+  - StuffStashSheetBoundary (from `../modules/sheet-boundary/ios`)
   - "Yoga (from `../../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0/node_modules/react-native/ReactCommon/yoga`)"
 
 SPEC REPOS:
@@ -2792,6 +2796,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/react-native-svg@15.15.3_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/react-native-svg"
   RNWorklets:
     :path: "../../../node_modules/.pnpm/react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0.83.6_@babel+core@7.29.7_@_7345a8c995851505f53f6791f1174e08/node_modules/react-native-worklets"
+  StuffStashSheetBoundary:
+    :path: "../modules/sheet-boundary/ios"
   Yoga:
     :path: "../../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0/node_modules/react-native/ReactCommon/yoga"
 
@@ -2914,6 +2920,7 @@ SPEC CHECKSUMS:
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
+  StuffStashSheetBoundary: 8be8abfdb89e67628101b22112156a49c004833b
   Yoga: e41d64347f52d634dd8c2f6bac33f95081959fd3
 
 PODFILE CHECKSUM: af79748136194353d933118bd140385ffcc1f159

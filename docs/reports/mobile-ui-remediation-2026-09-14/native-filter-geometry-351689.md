@@ -41,3 +41,9 @@ conversion mismatch and cleared the corrected window-identity conversion. Pod
 lock resolution, Swift compilation and native phone/iPad acceptance remain pending.
 The original probe remains historical evidence of the Fabric path, not a measure
 of the new production adapter. M249 stays open.
+
+macOS CI35180945960 resolves the local native module with pinned CocoaPods1.17.0.
+The retained lock adds only StuffStashSheetBoundary1.0.0, its local path, existing
+ExpoModulesCore/React-Core edges and the generated podspec checksum; no existing
+dependency version changes. Swift compilation and native interaction verification
+remain separate requirements.
