@@ -202,3 +202,13 @@ Pin `@tanstack/svelte-query` to `6.1.38`. The npm release dated 2026-07-21 suppo
 The web builder must consume the global `PNPM_VERSION` build argument inside its build stage before using it in a `RUN` instruction. The installed package version must equal the requested pin and the workspace `packageManager` version before dependency installation. An empty or mismatched version must fail instead of installing an npm default or triggering an implicit package-manager download. Docker global arguments are not automatically inherited into stages: https://docs.docker.com/build/building/variables/#scoping.
 
 CI must build the actual web Dockerfile without publishing an image on pull requests, main pushes and manual validation. Ordinary web bundle tests are insufficient to validate the pinned container toolchain. Release run 33992836105 supplies the failing baseline: the out-of-scope pin caused pnpm self-management to invoke a binary requiring an absent `libatomic.so.1`. No local container build is required on disk-constrained development hosts.
+
+
+The @expo/ui55.0.17 reviewed patch also backports the one-line iOS ColorPicker
+rounding correction from upstream commit
+`dc32c26bd016c4187ada75d189c9d81f78a1060a` (Expo PR49356). The pinned source
+truncates normalized channels; nearest-integer rounding prevents color decay
+during controlled edits. Retain the existing Android accessibility patch. No
+Expo SDK upgrade or unrelated upstream changes enter this backport. The macOS
+iOS dependency job runs the installed-expression numeric regression before pod
+resolution; refresh pnpm patch identity and both local ExpoUI pod source paths.

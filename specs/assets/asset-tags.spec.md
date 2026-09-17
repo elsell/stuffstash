@@ -289,3 +289,21 @@ while retaining selected tags. Use the same natural ordering and twelve-option
 disclosure policy for matches. A query with no matches says No matching tags,
 including when selected tags remain visible. Disclosure and search never change
 the draft selection. Share this choice-presentation policy between Add and Edit.
+
+
+### Native RGB conversion stability
+
+The iOS picker must preserve the nearest eight-bit RGB value when converting
+normalized native channels to the parent hex draft. Floating-point representation
+error must not decrement untouched channels or accumulate while editing another
+channel. Clamp channels to0–255 and round to the nearest integer before encoding.
+Opening/closing still must not invent a tag color. The direct-opening failure is
+a separate acceptance concern from numeric conversion.
+
+The macOS CI job compiles the installed native channel-conversion expression in
+a Swift regression harness. Verify all256 channel values, adjacent floating-point
+representations, clamp boundaries and repeated controlled round trips. Extract
+the expression from the actual pinned dependency; do not maintain a second
+implementation that can pass while production still truncates. This isolates
+numeric correctness, not UIKit event delivery, presentation or complete color
+space conversion; native slider/draft acceptance remains necessary for those.
