@@ -564,3 +564,11 @@ change. Retain M51 and other runtime findings independently. Current matrix has
 142 surfaces/3408 cells:2593 source-reviewed,576 finding,198 not-applicable,41
 runtime-partial. Source coverage does not imply native acceptance or audit closure.
 TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
+
+
+Batch116 publication checkpoint: M207 merged in PR159 with16/16 installed native
+search acceptance and passing required CI. Release35258455389 stopped on GitHub
+HTTP502 uploading the self-host checksum after immutable tagv0.24.27 creation.
+No TestFlight upload occurred. Preserve the tag and complete recovery through a
+reviewed existing-tag publication path; do not rerun a publish job that refuses
+existing tags or claim this build delivered. See release-batch-116.md.
