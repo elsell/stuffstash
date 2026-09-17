@@ -106,3 +106,12 @@ launcher after return. It supports the terminal destination, not the appearance 
 the intermediate Move selection/error state. That journey's assertions remain the
 evidence for selection retention and retry; do not describe this capture as a
 visual review of the Move sheet.
+
+## Notification inbox visual review
+
+The [long-row capture](evidence/phone-notifications-long-row-351567.png) shows
+the two-line item name, expiration description, separate read-state control and
+native All/Unread selector without overlap. The [empty unread state](evidence/phone-notifications-unread-empty-351567.png)
+retains Back and settings while disabling the all-read command and explaining that
+there are no unread notifications. The passing native journey supplies interaction
+and return evidence; these captures do not verify physical push delivery.
