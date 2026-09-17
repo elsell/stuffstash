@@ -544,3 +544,12 @@ in TestFlight. Continue normal-text audit findings, including intermittent color
 activation and native search placement; retain remaining saved/dark/swipe and
 window-adaptation verification separately. Release evidence is in
 release-batch-114.md; the full audit remains incomplete.
+
+
+September17 release checkpoint: M252/M253 shipped as TestFlight0.24.26(115.1),
+release35207859105, with Apple processing and exact notes readback verified.
+Native351993 accepts RGB retention and lock/unlock on phone/iPad; full outcomes
+remain73/89 and82/89. Continue normal-text M51 activation and M207 search-placement
+investigation using existing failure evidence. See release-batch-115.md and
+native-full-351993.md. The comprehensive audit remains incomplete; unrelated
+findings do not gate already verified frozen batches.

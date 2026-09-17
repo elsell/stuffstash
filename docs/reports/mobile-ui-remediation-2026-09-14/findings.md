@@ -3544,4 +3544,7 @@ fixture installer checks pass on paul; critic found no production blocker. Share
 Add/Edit/Settings color consumers receive the correction. A native seeded-color
 lock/unlock case requires the well's disabled accessibility state, no presentation
 within a two-second observation after a delivered center tap, preserved draft
-and normal opening after unlock. Native execution remains pending.
+and normal opening after unlock. Native351993 passes this case on phone and iPad;
+locked captures reviewed on both show retained Green and disabled presentation.
+See native-full-351993.md. M252/M253 shipped in TestFlight0.24.26(115.1);
+release-batch-115.md records verified publication. M51 remains open.
