@@ -7,6 +7,7 @@ export default defineConfig({
   test: { setupFiles: ['./native-runtime.setup.ts'], server: { deps: { inline: ['react-native-image-viewing'] } } },
   resolve: {
     alias: [
+      { find: /^expo$/, replacement: support('expo.ts') },
       { find: /^@react-navigation\/elements$/, replacement: support('react-navigation-elements.ts') },
       { find: /^@expo\/ui\/swift-ui$/, replacement: support('expo-swift-ui.ts') },
       { find: /^@expo\/ui\/swift-ui\/modifiers$/, replacement: support('expo-swift-ui-modifiers.ts') },

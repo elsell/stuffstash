@@ -6,6 +6,8 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { NativeSheetActions } from './NativeSheetActions';
 import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
 import { useSheetKeyboardInset } from './useSheetKeyboardInset';
+import { NativeSheetBoundary } from './NativeSheetBoundary';
+import type { SheetBoundaryPort } from './SheetBoundaryPort';
 import { useFocusedSheetActions } from './useFocusedSheetActions';
 
 /** Keep the native scroll body direct; reserve the measured, opaque action area. */
@@ -13,7 +15,7 @@ export function NativeFilterSheet({ title, search, children, actions, footerTest
   const palette = useAppearancePalette();
   const footerActions = useFocusedSheetActions(actions);
   const [footerHeight, setFooterHeight] = useState(0);
-  const boundaryRef = useRef<View>(null);
+  const boundaryRef = useRef<SheetBoundaryPort>(null);
   const keyboard = useSheetKeyboardInset(boundaryRef);
   return <>
     <NativeNavigationSearch key={title} enabled={!!search} query={search?.query ?? ''} placeholder={search?.placeholder ?? 'Search'} onChange={search?.onChange ?? (() => {})} onSubmit={search?.onSubmit ?? (() => {})} onClear={search?.onClear ?? (() => {})} />
@@ -22,7 +24,7 @@ export function NativeFilterSheet({ title, search, children, actions, footerTest
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
       {children}
     </ScrollView>
-    <View ref={boundaryRef} collapsable={false} pointerEvents="none" onLayout={keyboard.measure} style={styles.boundary} />
+    <NativeSheetBoundary ref={boundaryRef} collapsable={false} pointerEvents="none" onLayout={keyboard.measure} style={styles.boundary} />
     <SafeAreaView edges={keyboard.bottomInset > 0 ? [] : ['bottom']}
       onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
       style={[styles.footer, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>

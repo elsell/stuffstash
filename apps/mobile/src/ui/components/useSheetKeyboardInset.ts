@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { Keyboard, Platform, type KeyboardEvent, type KeyboardMetrics, type View } from 'react-native';
+import { Keyboard, Platform, type KeyboardEvent, type KeyboardMetrics } from 'react-native';
 import { keyboardBoundaryInset } from './keyboardBoundaryInset';
+import type { SheetBoundaryPort } from './SheetBoundaryPort';
 
 /** Measure the unmoved sheet edge, never the footer whose position this controls. */
-export function useSheetKeyboardInset(boundaryRef: RefObject<Pick<View, 'measureInWindow'> | null>) {
+export function useSheetKeyboardInset(boundaryRef: RefObject<SheetBoundaryPort | null>) {
   const [bottomInset, setBottomInset] = useState(0);
   const keyboardFrame = useRef<KeyboardMetrics | undefined>(undefined);
   const generation = useRef(0);
@@ -13,10 +14,14 @@ export function useSheetKeyboardInset(boundaryRef: RefObject<Pick<View, 'measure
     const frame = keyboardFrame.current;
     if (!mounted.current) return;
     if (!frame) { setBottomInset(0); return; }
-    boundaryRef.current?.measureInWindow((x, y, width) => {
+    const boundary = boundaryRef.current;
+    if (!boundary) { setBottomInset(0); return; }
+    void boundary.measureInKeyboardWindow().then(measured => {
       if (mounted.current && request === generation.current) {
-        setBottomInset(keyboardBoundaryInset({ x, y, width }, frame));
+        setBottomInset(measured ? keyboardBoundaryInset(measured, frame) : 0);
       }
+    }, () => {
+      if (mounted.current && request === generation.current) setBottomInset(0);
     });
   }, [boundaryRef]);
 

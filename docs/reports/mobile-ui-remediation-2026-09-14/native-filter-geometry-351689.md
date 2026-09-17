@@ -23,3 +23,21 @@ space, or use native keyboard layout ownership. Do not hard-code62: iPad sheet
 position, rotation and resizing differ. Verify actual Browse/Expiration query,
 selection, keyboard accessory clearance and full Apply/Back reachability on both
 devices. M249 remains unresolved after the explicitly authorized113.1 release.
+
+## Follow-up candidate and producer coordinate correction
+
+Pinned RN0.83.6 RCTKeyboardObserver converts notification screen frames into
+RCTKeyWindow before publishing KeyboardMetrics. The earlier screen-space wording
+was misleading: the boundary must match that window coordinate space. The local
+Expo view now converts its bounds into its own window only when that window equals
+RCTKeyWindow; detached/other-window views return unavailable. A typed async port
+keeps the existing generation/hide/settled behavior and clears unavailable or
+rejected measurements. Android's separate adapter is unchanged.
+
+The three port tests failed before implementation; all1,919 mobile tests across
+304 files, TypeScript and structural checks then passed on paul. The native module
+is discovered by pinned Expo autolinking. Code critic caught the initial screen
+conversion mismatch and cleared the corrected window-identity conversion. Pod
+lock resolution, Swift compilation and native phone/iPad acceptance remain pending.
+The original probe remains historical evidence of the Fabric path, not a measure
+of the new production adapter. M249 stays open.
