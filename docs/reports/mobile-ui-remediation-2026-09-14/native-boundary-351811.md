@@ -31,3 +31,12 @@ Artifacts: phone10480533028 and iPad10480753114, retained on paul as
 /tmp/native351811-phone.zip and /tmp/native351811-ipad.zip. Logs are
 /tmp/boundary-native-JOBID.log. A sleeping shell collector waited for terminal
 results without repeated model polling.
+
+Color capture review confirms the settings controls remain visible and no system
+picker appeared after the initial five-second window or the additional15-second
+observation. The recorded target was hittable at(346,397.67,28,28). Retained image:
+[evidence](evidence/phone-color-not-open-351811.png);
+[timing](evidence/phone-color-late-351811.txt). No color fix is inferred.
+The release-corrections selection does not contain photo preview; its Add draft
+pass cannot establish M251. Use the existing add-draft selection's photo paging,
+removal and return journey for those captures.
