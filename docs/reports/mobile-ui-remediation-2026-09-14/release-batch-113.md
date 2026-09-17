@@ -124,7 +124,8 @@ verify this new email adapter. See native-phone-351567.md.
 
 Full351567 iPad completes80/87. All55 required journeys pass by log assertion,
 including settings, sharing, color and filters. Four diagnostic input comparisons
-and three enlarged-text follow-ups fail. iPad capture review remains outstanding.
+and three enlarged-text follow-ups fail. Selected filter, settings and sharing captures are now reviewed; see
+[native iPad evidence](native-ipad-351567.md). This does not certify every capture.
 
 Settings acceptance correction:351567 used the internal audit-customization title,
 not production Tags. The fixture title and native precondition are corrected. Keep

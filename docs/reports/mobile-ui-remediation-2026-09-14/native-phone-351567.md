@@ -67,3 +67,25 @@ A structural parity test fails before correction and passes afterward; remote
 TypeScript, eight fixture-installer checks and structural checks also pass. Critic
 finds no blocker. Native rerun remains required. This does not explain the separate
 Place comparison, whose fixture already uses the short Place title.
+
+## Additional changed-workflow visual review
+
+Four retained phone captures add visual evidence to the passing native journeys:
+
+- [Home after tab return](evidence/phone-home-return-351567.png): Add,
+  Notifications and Profile remain visible in that order over scrolled content.
+  The voice accessory and tab controls remain distinct; no refresh spinner appears.
+  The long inventory name truncates within its own control.
+- [Return details after rejected save](evidence/phone-return-error-351567.png):
+  the entered “Returned clean” draft and inline error remain visible inside the
+  sheet, with Cancel return and Save both unobscured.
+- [Surviving draft photo](evidence/phone-photo-preview-351567.png): the remaining
+  image, 1 of 1 count, Close and Remove controls remain visible after removal.
+  This checks this state only; the dark status glyphs against the dark viewer
+  are tracked as M251 outside this batch, not evidence of blocked photo commands.
+- [Native color picker](evidence/phone-color-picker-351567.png): the system color
+  panel and Close control are visible after ordinary activation.
+
+These are light-appearance simulator captures from the pre-email-correction
+build. They support unchanged workflows; they do not verify the new email adapter,
+all appearance settings, physical assistive technology, or the entire app.

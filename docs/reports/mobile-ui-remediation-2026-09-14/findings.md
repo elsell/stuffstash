@@ -3459,3 +3459,24 @@ paul; selection, query updates, application and overview search removal are cove
 The focused native Browse keyboard journey passes on iPad in run35154627907;
 iPhone stops at M249 before post-selection verification. This does not establish the cause of the separate Place search
 placement issue. Android owns an inline search adapter and is unchanged.
+
+### M251 — Dark photo canvas retains dark status-bar content in light appearance
+
+P3 native-observed in phone run35156794515, normal text/light appearance. The
+[retained viewer capture](evidence/phone-photo-preview-351567.png) shows black
+clock/connectivity glyphs against the fixed near-black photo canvas. Close, Remove
+and photo metadata remain legible and reachable; this is not a blocked task.
+
+FixtureApplication and production _layout both select status-bar foreground from
+the resolved app appearance. FullScreenPhotoViewer uses a fixed dark canvas with
+overFullScreen presentation and no local status-bar override. The pinned viewer
+library's StatusBarManager returns immediately on iOS. This supports a shared
+presentation concern rather than the older Android fixture's missing configuration;
+a production-route reproduction is still needed.
+
+Track in comprehensive audit follow-up, outside the frozen release batch. Intended
+acceptance: readable status content while either draft or saved-photo viewer is
+open, then restore the underlying appearance after Close, swipe dismissal and last
+photo removal. Verify light/dark phone and iPad presentation, including nested
+removal confirmation. Do not add a global imperative status-bar change that leaks
+into other screens. No correction is included in this batch.
