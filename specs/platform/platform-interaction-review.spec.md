@@ -867,3 +867,10 @@ Retain ordinary text-input focus taps and explicit keyboard-dismiss/re-entry
 coverage. When a search field remains usable after Clear, tap it only if no keyboard
 is present; otherwise verify readiness and type. Hidden-field presence is not a
 substitute for usable controls or query correctness.
+
+
+Voice location Clear/re-entry must use the same hittable-input-or-collapsed-button
+contract as Place on both device classes. Retain restored locations, full query,
+selection, navigation return and unchanged timeout. For unresolved keyboard or
+footer checks, attach the individual readiness predicates on failure; screenshots
+of visible controls alone do not prove hit-test availability.

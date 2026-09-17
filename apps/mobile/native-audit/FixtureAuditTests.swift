@@ -575,7 +575,28 @@ final class FixtureAuditTests: XCTestCase {
         return key.isHittable
       }
     }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
+    let result = XCTWaiter.wait(for: [ready], timeout: 5)
+    if result != .completed {
+      recordHitTestState("keyboard-readiness", elements: [keyboard] + keyboard.keys.allElementsBoundByIndex)
+    }
+    XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
+  }
+
+  private func recordHitTestState(_ name: String, elements: [XCUIElement]) {
+    let lines = elements.map { element in
+      guard element.exists else { return "Element no longer exists" }
+      let bounds = element.frame
+      guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
+            bounds.origin.x.isFinite, bounds.origin.y.isFinite,
+            bounds.width.isFinite, bounds.height.isFinite else {
+        return "\(element.label): frame=\(bounds), hittability skipped for invalid bounds"
+      }
+      return "\(element.label): frame=\(bounds), hittable=\(element.isHittable)"
+    }
+    let attachment = XCTAttachment(string: lines.joined(separator: "\n"))
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   private func capture(_ name: String) {
@@ -742,7 +763,11 @@ final class FixtureAuditTests: XCTestCase {
           self.app.frame.contains(action.frame) && action.frame.maxY <= top
       }
     }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
+    let result = XCTWaiter.wait(for: [clearAccessory], timeout: 5)
+    if result != .completed {
+      recordHitTestState("filter-actions-keyboard-clearance", elements: [app, apply, back, dismiss])
+    }
+    XCTAssertEqual(result, .completed,
       "Both filter commands must be fully above the keyboard-dismiss accessory")
   }
 
@@ -2288,24 +2313,24 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clear.isHittable); clear.tap()
     let clearedField = app.searchFields.firstMatch
     let idleSearch = header.buttons["Search"].firstMatch
-    if UIDevice.current.userInterfaceIdiom == .pad {
-      let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-        clearedField.isHittable || (!clearedField.exists && idleSearch.isHittable)
-      }, object: nil)
-      XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
-        "Clearing must leave a field or the native iPad search button available")
-      XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
-      capture("voice-location-after-focused-clear")
-      if !clearedField.exists {
-        XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
-        XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
-        XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
-        XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
-        idleSearch.tap()
-      }
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      (clearedField.exists && clearedField.isHittable) || (idleSearch.exists && idleSearch.isHittable)
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
+      "Clearing must leave a usable field or collapsed Search control")
+    XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
+    capture("voice-location-after-focused-clear")
+    if !clearedField.isHittable {
+      XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
+      XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
+      XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
+      XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
+      idleSearch.tap()
+    } else if !app.keyboards.firstMatch.exists {
+      clearedField.tap()
     }
     XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
-    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); waitForKeyboard(); clearedField.typeText("Garage")
+    XCTAssertTrue(clearedField.isHittable); waitForKeyboard(); clearedField.typeText("Garage")
     XCTAssertEqual(clearedField.value as? String, "Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()
