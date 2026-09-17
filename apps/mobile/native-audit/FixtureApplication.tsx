@@ -164,7 +164,7 @@ export function FixtureMenu() {
   const feedback = useAppFeedback();
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
-  const [settingsControls, setSettingsControls] = useState(false);
+  const [settingsControls, setSettingsControls] = useState<'scroll' | 'fixed'>();
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
   const [inputMode, setInputMode] = useState<InputFixtureMode>();
@@ -175,7 +175,7 @@ export function FixtureMenu() {
   if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
-  if (settingsControls) return <SettingsControlsFixture onBack={() => setSettingsControls(false)} />;
+  if (settingsControls) return <SettingsControlsFixture scrollEnabled={settingsControls === 'scroll'} onBack={() => setSettingsControls(undefined)} />;
   return <FixturePage>
     <Button title="Audit voice proposal" onPress={() => router.push('/voice' as Href)} />
     <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
@@ -211,7 +211,8 @@ export function FixtureMenu() {
     <Button title="Audit Add configured header" onPress={() => router.push('/audit-add-header' as Href)} />
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
-    <Button title="Audit settings controls" onPress={() => setSettingsControls(true)} />
+    <Button title="Audit settings controls" onPress={() => setSettingsControls('scroll')} />
+    <Button title="Audit settings controls without scrolling" onPress={() => setSettingsControls('fixed')} />
     <Button title="Audit settings collection" onPress={() => router.push('/audit-customization' as Href)} />
     <Button title="Audit settings editor" onPress={() => router.push('/audit-customization-editor' as Href)} />
     {['direct', 'nested', 'footer', 'direct-footer', 'scroll-footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
@@ -240,8 +241,8 @@ export function FixtureMenu() {
   </FixturePage>;
 }
 
-function FixturePage({ children, persistHandledTaps = false }: { readonly children: ReactNode; readonly persistHandledTaps?: boolean }) {
-  return <ScrollView keyboardShouldPersistTaps={persistHandledTaps ? 'handled' : 'never'} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>{children}</ScrollView>;
+function FixturePage({ children, persistHandledTaps = false, scrollEnabled = true }: { readonly children: ReactNode; readonly persistHandledTaps?: boolean; readonly scrollEnabled?: boolean }) {
+  return <ScrollView scrollEnabled={scrollEnabled} keyboardShouldPersistTaps={persistHandledTaps ? 'handled' : 'never'} contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>{children}</ScrollView>;
 }
 
 export function BrowseFilterGeometryFixture() { return <BrowseFilterFixture geometry />; }
@@ -313,13 +314,13 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
 }
 
 
-function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
+function SettingsControlsFixture({ onBack, scrollEnabled }: { readonly onBack: () => void; readonly scrollEnabled: boolean }) {
   const { preference } = useAppearance();
   const [color, setColor] = useState('');
   const [colorLocked, setColorLocked] = useState(false);
   const [expiration, setExpiration] = useState('No expiration');
   const [reminder, setReminder] = useState<ExpirationReminderPolicy | null>(null);
-  return <FixturePage>
+  return <FixturePage scrollEnabled={scrollEnabled}>
     <Button title="Back to audit menu" onPress={onBack} />
     <AppearancePicker />
     <Text>{`Appearance value: ${preference}`}</Text>

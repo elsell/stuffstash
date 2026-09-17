@@ -2020,8 +2020,8 @@ final class FixtureAuditTests: XCTestCase {
     }
   }
 
-  private func openSettingsControls() {
-    let button = app.buttons["Audit settings controls"]
+  private func openSettingsControls(scrollEnabled: Bool = true) {
+    let button = app.buttons[scrollEnabled ? "Audit settings controls" : "Audit settings controls without scrolling"]
     for _ in 0..<4 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(button.isHittable)
     button.tap()
@@ -2105,9 +2105,13 @@ final class FixtureAuditTests: XCTestCase {
     assertColorFirstTap(captureBeforeTap: false)
   }
 
-  private func assertColorFirstTap(captureBeforeTap: Bool) {
+  func testColorFirstTapWithoutScrolling() {
+    assertColorFirstTap(captureBeforeTap: false, scrollEnabled: false)
+  }
+
+  private func assertColorFirstTap(captureBeforeTap: Bool, scrollEnabled: Bool = true) {
     // Each test has an independent setUp launch; never retry a missed first tap.
-    openSettingsControls()
+    openSettingsControls(scrollEnabled: scrollEnabled)
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
     XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
@@ -2118,7 +2122,7 @@ final class FixtureAuditTests: XCTestCase {
     if captureBeforeTap { capture("color-comparison-before-tap") }
     picker.tap()
     let opened = app.buttons["Sliders"].waitForExistence(timeout: 5)
-    let evidence = XCTAttachment(string: "Pre-tap capture: \(captureBeforeTap); target before tap: \(before); opened after one tap: \(opened)")
+    let evidence = XCTAttachment(string: "Scrolling: \(scrollEnabled); pre-tap capture: \(captureBeforeTap); target before tap: \(before); opened after one tap: \(opened)")
     evidence.name = "color-first-tap-comparison"
     evidence.lifetime = .keepAlways
     add(evidence)

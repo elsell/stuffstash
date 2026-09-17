@@ -93,6 +93,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithPreTapCapture'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutPreTapCapture'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutScrolling'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'

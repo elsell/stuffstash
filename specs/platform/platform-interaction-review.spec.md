@@ -823,3 +823,11 @@ can produce no application logs after Xcode shuts down a test simulator; an empt
 collection is missing evidence, not proof of no UIKit warnings. Preserve export
 errors as artifacts and report them without replacing the native test result.
 Use the pinned Xcode xcresulttool; no new dependency or simulator restart is needed.
+
+
+M51 scroll-interaction diagnostic: retain the normal ScrollView fixture and add
+an independently entered variant differing only in scrollEnabled=false. Preserve
+content geometry, native picker, initial unset value, ordinary first tap and
+five-second assertion. This isolates scrolling behavior, not all scroll-view
+internals; a pass does not justify disabling scrolling in real editors. Expose
+the variant in the audit launcher only and retain both test outcomes.
