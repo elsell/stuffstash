@@ -1,6 +1,7 @@
 # Frozen release batch after TestFlight 112.1
 
-Production cutoff: `33dfc002`. PR153 targets main; the prior shipped baseline is
+Production cutoff: `223d6d0a` (updated from `33dfc002` only for the required
+iOS invitation email correction). PR153 targets main; the prior shipped baseline is
 TestFlight0.24.23(112.1). The next version/build identifier comes from the release
 workflow, not this document's working batch name. No unrelated product work enters
 this batch. Necessary batch corrections get an explicit updated cutoff.
@@ -107,3 +108,17 @@ calendar dismissal test correction and retained audit reports. Focused native
 run35162612814 is queued behind35159542174; full run35162604601 is queued behind
 35156794515. Production remains identical to the frozen cutoff. This CI result
 does not establish Swift test compilation or clear outstanding native gates.
+
+## Current native decisions
+
+Full351567 phone completes68/87, with50/55 required tests passing. Reviewed
+settings capture confirms the M207 bottom-search placement failure; sharing
+capture confirms reordered email. Expiration audit detail again concerns larger
+text only. The iOS email correction223d6d0a has30 focused tests, TypeScript,
+structural checks and critic review; its native Sharing journey remains pending.
+The earlier native run remains relevant for unchanged workflows but does not
+verify this new email adapter. See native-phone-351567.md.
+
+Full351567 iPad completes80/87. All55 required journeys pass by log assertion,
+including settings, sharing, color and filters. Four diagnostic input comparisons
+and three enlarged-text follow-ups fail. iPad capture review remains outstanding.
