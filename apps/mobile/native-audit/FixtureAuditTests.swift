@@ -1324,7 +1324,7 @@ final class FixtureAuditTests: XCTestCase {
     searchButton.tap()
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
-    search.tap()
+    // Search activation must focus the field; a second tap may open its editing menu.
     waitForKeyboard()
     search.typeText("Tools")
     let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)

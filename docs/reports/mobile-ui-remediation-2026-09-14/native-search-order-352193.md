@@ -24,3 +24,17 @@ Ten fixture installer checks and code critic passed. An in-memory transformation
 check on paul verified exactly one moved line and unchanged line multiset, with
 reapplication rejected. The Bash observer slept120 between checks and did not
 restart jobs. Both complete artifacts remain available from this run.
+
+
+## Capture review
+
+Reviewed phone preconfigured Place and Settings show Search as an icon in the top
+navigation bar; retained images/hierarchies are in evidence/ with352193 suffixes.
+The failed iPad final capture shows an expanded focused header field, visible
+keyboard and an AutoFill editing menu. The hierarchy explicitly marks Search tags
+Keyboard Focused. XCTest taps Search and then taps the field again before waiting
+for a hittable keyboard key. The menu is a plausible consequence of that extra tap,
+not proof that search failed to focus. Correct the acceptance path to require
+keyboard readiness directly after Search activation; keep every typing/filtering/
+clearance assertion. Its outcome remains unverified, and no product keyboard fix
+is claimed from this screenshot.

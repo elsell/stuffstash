@@ -841,3 +841,13 @@ and locks remain unchanged. The transformation must refuse unexpected source and
 be opt-in through a named workflow selection. Test Place, preconfigured Place,
 managed/static placement, settings and filter consumers. A successful sample is
 candidate evidence, not comprehensive acceptance or proof of causation.
+
+
+Native search-button acceptance must verify that tapping Search itself presents
+and focuses a usable keyboard before typing. Do not add an unconditional second
+field tap as preparation: on an already focused field it can open the native
+editing menu and changes the interaction under test. Preserve keyboard readiness,
+complete query, filtering and command-clearance assertions. Retain evidence of
+any failure instead of claiming the extra tap is proven causal. Provide an
+unmodified-adapter selection matching the attachment-order diagnostic journeys
+so the same source/test suite can compare the native dependency variants.
