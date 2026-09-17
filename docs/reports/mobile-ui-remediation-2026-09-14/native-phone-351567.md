@@ -89,3 +89,20 @@ Four retained phone captures add visual evidence to the passing native journeys:
 These are light-appearance simulator captures from the pre-email-correction
 build. They support unchanged workflows; they do not verify the new email adapter,
 all appearance settings, physical assistive technology, or the entire app.
+
+## Draft and proposal visual review
+
+The [rejected Add draft](evidence/phone-add-rejected-351567.png) retains the complete
+“Native draft name” beside the save error, with Close and Save visible in the header.
+The [returned conversation proposal](evidence/phone-voice-return-351567.png) retains
+its item and inventory-root selection, with Approve/Cancel unobscured. After the
+location journey, the [same proposal](evidence/phone-voice-location-351567.png)
+shows Garage / Garage bin with those commands still visible. These captures support
+the passing normal-text draft/recovery tests; they do not establish physical voice
+input or every interrupted-request state.
+
+The Move successful-retry capture was also inspected, but it shows only the fixture
+launcher after return. It supports the terminal destination, not the appearance of
+the intermediate Move selection/error state. That journey's assertions remain the
+evidence for selection retention and retry; do not describe this capture as a
+visual review of the Move sheet.
