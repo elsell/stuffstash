@@ -7,6 +7,11 @@ on:
         description: Exact stable tag created by the release workflow
         required: true
         type: string
+      build_number:
+        description: Explicit build number for recovery; ordinary releases use run numbering
+        required: false
+        type: string
+        default: ""
     secrets:
       BUILD_CERTIFICATE_BASE64:
         required: true
@@ -42,7 +47,7 @@ jobs:
     env:
       NODE_ENV: production
       STUFF_STASH_MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
-      MOBILE_BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
+      MOBILE_BUILD_NUMBER: ${{ inputs.build_number || format('{0}.{1}', github.run_number, github.run_attempt) }}
       STUFF_STASH_MOBILE_PRODUCTION_BUILD: "true"
       STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: "true"
       STUFF_STASH_MOBILE_REQUIRE_INVITATION_LINKS: "false"
@@ -95,7 +100,7 @@ jobs:
         run: |
           node scripts/prepare-mobile-release.mjs \
             --tag "$STUFF_STASH_MOBILE_RELEASE_TAG" \
-            --build-number "$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"
+            --build-number "$MOBILE_BUILD_NUMBER"
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
