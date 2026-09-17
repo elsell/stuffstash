@@ -874,3 +874,11 @@ contract as Place on both device classes. Retain restored locations, full query,
 selection, navigation return and unchanged timeout. For unresolved keyboard or
 footer checks, attach the individual readiness predicates on failure; screenshots
 of visible controls alone do not prove hit-test availability.
+
+
+Native352366 timing diagnostic: retain the five-second keyboard readiness and
+exact-query acceptance deadlines. Record monotonic duration and result for each
+predicate evaluation, then attach observations after the wait. Do not add sleeps,
+retry interaction, alter keyboard settings or convert eventual state into a pass.
+A focused runner-only selection may execute Browse and Expiration filter search
+with the attachment-order candidate to isolate these unresolved checks.

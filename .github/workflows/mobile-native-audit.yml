@@ -12,6 +12,7 @@ on:
           - all
           - color-picker
           - search-placement-order
+          - filter-search-timing
           - search-placement
           - text-entry
           - text-entry-no-provider
@@ -101,6 +102,14 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testStaticNativeSearchPlacementComparison'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
+            filter-search-timing)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              python3 scripts/prepare-native-search-order.py
+              audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
               )

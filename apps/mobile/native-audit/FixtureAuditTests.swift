@@ -565,7 +565,7 @@ final class FixtureAuditTests: XCTestCase {
   private func waitForKeyboard() {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
-    let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+    let ready = NSPredicate { _, _ in
       keyboard.keys.allElementsBoundByIndex.contains { key in
         guard key.exists else { return false }
         let bounds = key.frame
@@ -574,12 +574,31 @@ final class FixtureAuditTests: XCTestCase {
               bounds.width.isFinite, bounds.height.isFinite else { return false }
         return key.isHittable
       }
-    }, object: nil)
-    let result = XCTWaiter.wait(for: [ready], timeout: 5)
+    }
+    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil)
     if result != .completed {
       recordHitTestState("keyboard-readiness", elements: [keyboard] + keyboard.keys.allElementsBoundByIndex)
     }
     XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
+  }
+
+  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?) -> XCTWaiter.Result {
+    let started = ProcessInfo.processInfo.systemUptime
+    var observations: [String] = []
+    let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let before = ProcessInfo.processInfo.systemUptime
+      let matched = predicate.evaluate(with: object)
+      let after = ProcessInfo.processInfo.systemUptime
+      observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
+      return matched
+    }, object: nil)
+    let result = XCTWaiter.wait(for: [expectation], timeout: 5)
+    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
+    let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    return result
   }
 
   private func recordHitTestState(_ name: String, elements: [XCUIElement]) {
@@ -781,8 +800,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     waitForKeyboard()
     search.typeText("Tools")
-    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
+    XCTAssertEqual(observePredicate("search-query-timing",
+      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      .completed, "Native search must retain the complete query")
     let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
@@ -1351,8 +1371,9 @@ final class FixtureAuditTests: XCTestCase {
     // Search activation must focus the field; a second tap may open its editing menu.
     waitForKeyboard()
     search.typeText("Tools")
-    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
+    XCTAssertEqual(observePredicate("search-query-timing",
+      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      .completed, "Native search must retain the complete query")
     XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
