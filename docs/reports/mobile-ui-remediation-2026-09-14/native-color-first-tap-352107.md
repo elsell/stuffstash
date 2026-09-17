@@ -28,3 +28,16 @@ lifecycle signal rather than arbitrary sleeping or selection mutation.
 Ten fixture installer checks passed on paul before dispatch, and code critic
 found no blocker. The observer used sleep120 and collected terminal logs without
 restarting either job. No product code changed in this diagnostic batch.
+
+
+## Application-log coverage gap
+
+Range inspection of both artifact ZIP indexes found no diagnostics/application
+log entries; only xcodebuild.log was present. Existing collection iterates booted
+simulators after XCTest completes, so it cannot establish absence of app warnings
+when no logs were saved. The pinned runner will additionally export diagnostics
+from xcresult, preserving exporter output. This is an evidence-collection fix,
+not an explanation of M51. Native export execution remains to be verified.
+
+The xcresult diagnostic-export command is also used by Chromium's iOS runner:
+https://chromium.googlesource.com/chromium/src/+/HEAD/ios/build/bots/scripts/xcode_log_parser.py

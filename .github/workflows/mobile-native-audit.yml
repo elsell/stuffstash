@@ -186,6 +186,20 @@ jobs:
               --path "$RUNNER_TEMP/native-audit/results.xcresult" \
               --output-path "$RUNNER_TEMP/native-audit/screenshots"
           fi
+      - name: Export result-bundle diagnostics
+        if: always()
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-audit/diagnostics"
+          if [ -d "$RUNNER_TEMP/native-audit/results.xcresult" ]; then
+            xcrun xcresulttool export diagnostics \
+              --path "$RUNNER_TEMP/native-audit/results.xcresult" \
+              --output-path "$RUNNER_TEMP/native-audit/diagnostics/result-bundle" \
+              > "$RUNNER_TEMP/native-audit/diagnostics/export.log" 2>&1
+          else
+            printf '%s\n' 'No xcresult bundle available for diagnostic export.' \
+              > "$RUNNER_TEMP/native-audit/diagnostics/export.log"
+          fi
       - name: Collect application crash evidence
         if: always()
         continue-on-error: true

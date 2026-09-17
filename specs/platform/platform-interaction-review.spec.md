@@ -815,3 +815,11 @@ enabled/hittable state and post-tap presentation. Preserve the original failing
 workflow. Do not add retry taps or relax its timeout to manufacture acceptance.
 These comparisons diagnose observation effects; passing samples alone cannot
 close the intermittent production finding or establish causation.
+
+
+Native runner evidence must export diagnostics directly from an existing xcresult
+bundle as well as screenshots. Post-run collection from only booted simulators
+can produce no application logs after Xcode shuts down a test simulator; an empty
+collection is missing evidence, not proof of no UIKit warnings. Preserve export
+errors as artifacts and report them without replacing the native test result.
+Use the pinned Xcode xcresulttool; no new dependency or simulator restart is needed.
