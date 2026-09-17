@@ -586,14 +586,25 @@ final class FixtureAuditTests: XCTestCase {
   private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?) -> XCTWaiter.Result {
     let started = ProcessInfo.processInfo.systemUptime
     var observations: [String] = []
-    let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+    let deadline = started + 5
+    let evaluate = { () -> Bool in
       let before = ProcessInfo.processInfo.systemUptime
       let matched = predicate.evaluate(with: object)
       let after = ProcessInfo.processInfo.systemUptime
       observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
-      return matched
-    }, object: nil)
-    let result = XCTWaiter.wait(for: [expectation], timeout: 5)
+      return matched && after <= deadline
+    }
+    let immediatelyReady = evaluate()
+    let remaining = deadline - ProcessInfo.processInfo.systemUptime
+    let result: XCTWaiter.Result
+    if immediatelyReady {
+      result = .completed
+    } else if remaining <= 0 {
+      result = .timedOut
+    } else {
+      let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in evaluate() }, object: nil)
+      result = XCTWaiter.wait(for: [expectation], timeout: remaining)
+    }
     observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
     let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
     attachment.name = name
@@ -776,14 +787,14 @@ final class FixtureAuditTests: XCTestCase {
   private func assertFilterActionsClearKeyboard(_ apply: XCUIElement, _ back: XCUIElement) {
     let dismiss = app.buttons["Dismiss keyboard"]
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
-    let clearAccessory = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+    let clearAccessory = NSPredicate { _, _ in
       let top = dismiss.frame.minY
       return dismiss.isHittable && [apply, back].allSatisfy { action in
         action.isHittable && !action.frame.isEmpty &&
           self.app.frame.contains(action.frame) && action.frame.maxY <= top
       }
-    }, object: nil)
-    let result = XCTWaiter.wait(for: [clearAccessory], timeout: 5)
+    }
+    let result = observePredicate("filter-clearance-timing", predicate: clearAccessory, object: nil)
     if result != .completed {
       recordHitTestState("filter-actions-keyboard-clearance", elements: [app, apply, back, dismiss])
     }

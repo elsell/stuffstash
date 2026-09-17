@@ -903,3 +903,12 @@ Freeze this correction as a separate release batch, requiring the installed patc
 to pass the eight search workflows, dependency resolution, shared-header tests and
 critical regression checks before TestFlight. Remove the runner-only transform
 from candidate validation so it cannot apply twice or hide packaging mistakes.
+
+
+Native352470 observes a true keyboard-readiness evaluation taking4.0277 seconds,
+but XCTWaiter reports timeout after its initial1.0397-second scheduling delay.
+Evaluate observation predicates immediately, then spend only the remainder of the
+same five-second budget waiting when false. A matching evaluation completed after
+the total deadline must still time out. Apply this to keyboard/query and filter
+clearance observation; preserve every state/geometry/hit-test condition. Record
+eager and subsequent evaluation durations to expose future observation cost.
