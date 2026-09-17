@@ -3556,3 +3556,14 @@ passes. Phone also misses the standalone target and the seventh delivered-touch
 probe after six successful openings. Capture is not a necessary failure trigger;
 no lifecycle cause is yet established. M252/M253 still pass both devices. See
 native-color-first-tap-352107.md; no production fix or audit closure is claimed.
+
+
+M207 September17 diagnostic checkpoint: attachment-order candidate35236686772
+passes8/8 workflows on phone and6/8 on iPad. Voice clear/re-entry passes both.
+iPad Browse readiness and Expiration exact-query observation time out; later
+diagnostics show hittable keys and final Expiration state contains the complete
+query with the correct filtered result. This is eventual-state evidence, not
+timely acceptance. Preserve runner/automation latency as an alternative hypothesis
+and isolate it before modifying production behavior or promoting the dependency
+patch. See native-search-hit-testing-352366.md and the retained failure captures.
+M207 remains open; the ordering transformation is still runner-only.

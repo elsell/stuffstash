@@ -553,3 +553,14 @@ remain73/89 and82/89. Continue normal-text M51 activation and M207 search-placem
 investigation using existing failure evidence. See release-batch-115.md and
 native-full-351993.md. The comprehensive audit remains incomplete; unrelated
 findings do not gate already verified frozen batches.
+
+
+September17 search checkpoint: candidate352366 passes8/8 phone and6/8 iPad
+workflows. Voice re-entry is accepted on both; iPad filter observation timeouts
+remain. Subsequent captured state satisfies keyboard/query expectations, and
+ordinary automation calls show multi-second stalls. Isolate observation latency
+from product response before another identical run or production dependency
+change. Retain M51 and other runtime findings independently. Current matrix has
+142 surfaces/3408 cells:2593 source-reviewed,576 finding,198 not-applicable,41
+runtime-partial. Source coverage does not imply native acceptance or audit closure.
+TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
