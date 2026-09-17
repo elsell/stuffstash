@@ -37,3 +37,24 @@ through model turns. Logs: /tmp/color-contract-red.log,
 /tmp/color-contract-green.log and /tmp/color-rounding-native-JOBID.log.
 Removed the inactive, regenerable /tmp/stuffstash-expiration-go-cache on paul,
 recovering2.8GB; native evidence and source checkouts were retained.
+
+
+## Integrated RGB acceptance —35191010731
+
+The new native test passes on phone105103362498 and iPad105103362541. The
+artifact revision is PR merge620c9d0648ff496303cd6d238627996a8ee1a9b6 for
+branch headf4c00a408c78641d208187dd622414e050588006. It changes only the labeled
+Red slider three times, closing and reopening between changes. Starting from
+#2E7D32, phone parent values are#687D32,#257D32,#D47D32; iPad values are
+#817D32,#357D32,#FD7D32. The six retained parent hierarchies confirm unchanged
+Green125/Blue50. Reviewed final slider captures on both devices also show125/50.
+Red can continue settling between capture and dismissal; no exact Red target is
+claimed. Each edit must change Red and preserve the other bytes.
+
+![Phone RGB sliders](evidence/phone-color-rgb-after-edit-2-351910.png)
+![iPad RGB sliders](evidence/ipad-color-rgb-after-edit-2-351910.png)
+
+This closes M252's numeric and integrated controlled-edit acceptance in the
+candidate. The fix remains unreleased. Ordinary opening fails separately on
+both devices in this same run, so M51 is not closed by the RGB test's passes.
+Full source CI is green; the comprehensive native suite still has other findings.

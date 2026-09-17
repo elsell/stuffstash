@@ -1,0 +1,83 @@
+Attributes: Application, 0x11f3e3840, pid: 29136, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11f3e3840, pid: 29136, label: 'Stuff Stash'
+    Window (Main), 0x11f3e3340, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11f3e3200, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11f3e35c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11f3e3480, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11f3e3980, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11f3e3700, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11f3e3c00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11f3e3ac0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11f3e1400, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11f3e1f40, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11f3e1040, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Native UI audit'
+                          StaticText, 0x11f3e1b80, {{141.3, 73.7}, {119.3, 20.7}}, label: 'Native UI audit'
+                        Other, 0x11f3e1a40, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11f3e1900, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11f3e17c0, {{0.0, 116.0}, {402.0, 758.0}}
+                              Other, 0x11f3e1680, {{0.0, 116.0}, {402.0, 758.0}}
+                                Other, 0x11f3e1540, {{0.0, 116.0}, {402.0, 758.0}}
+                                  Other, 0x11f3e12c0, {{0.0, 116.0}, {402.0, 758.0}}
+                                    ScrollView, 0x11f3e0f00, {{0.0, 116.0}, {402.0, 758.0}}
+                                      Other, 0x11f3e0dc0, {{0.0, 116.0}, {402.0, 625.3}}
+                                        Other, 0x11f3e2300, {{0.0, 116.0}, {402.0, 625.3}}
+                                          Button, 0x11f3e21c0, {{20.0, 136.0}, {362.0, 37.7}}, label: 'Back to audit menu'
+                                          Other, 0x11f3e2080, {{20.0, 193.7}, {362.0, 48.0}}
+                                            Other, 0x11f3e1cc0, {{20.0, 193.7}, {362.0, 48.0}}
+                                              Other, 0x11f3e1180, {{20.0, 193.7}, {362.0, 48.0}}
+                                                StaticText, 0x11f3e3d40, {{20.0, 207.5}, {92.0, 20.3}}, label: 'Appearance'
+                                                Button, 0x11f3e3e80, {{285.0, 200.7}, {97.0, 34.3}}, label: 'Appearance, Choose appearance'
+                                                  StaticText, 0x11f3e1e00, {{297.0, 207.7}, {56.7, 20.3}}, label: 'System'
+                                          StaticText, 0x11f3afac0, {{20.0, 261.7}, {362.0, 17.0}}, label: 'Appearance value: system'
+                                            StaticText, 0x11f3afc00, {{20.0, 261.7}, {362.0, 17.0}}, label: 'Appearance value: system'
+                                          StaticText, 0x11f3afd40, {{20.0, 298.7}, {362.0, 17.0}}, label: 'Appearance writes: 0'
+                                            StaticText, 0x11f3af340, {{20.0, 298.7}, {362.0, 17.0}}, label: 'Appearance writes: 0'
+                                          Button, 0x11f3af480, {{20.0, 337.7}, {44.0, 44.0}}, label: 'No tag color'
+                                          Button, 0x11f3af5c0, {{70.0, 337.7}, {44.0, 44.0}}, label: 'Choose Blue tag color'
+                                          Button, 0x11f3af980, {{120.0, 337.7}, {44.0, 44.0}}, label: 'Choose Green tag color'
+                                          Button, 0x11f3af700, {{170.0, 337.7}, {44.0, 44.0}}, label: 'Choose Purple tag color'
+                                          Button, 0x11f3af840, {{220.0, 337.7}, {44.0, 44.0}}, label: 'Choose Orange tag color'
+                                          Button, 0x11f3aca00, {{270.0, 337.7}, {44.0, 44.0}}, label: 'Choose Red tag color'
+                                          Button, 0x11f3af0c0, {{320.0, 337.7}, {44.0, 44.0}}, label: 'Choose Teal tag color'
+                                          Other, 0x11f3af200, {{20.0, 389.7}, {362.0, 44.0}}
+                                            Other, 0x11f3aee40, {{20.0, 389.7}, {362.0, 44.0}}
+                                              Other, 0x11f3aef80, {{20.0, 389.7}, {362.0, 44.0}}
+                                                StaticText, 0x11f3aebc0, {{20.0, 401.5}, {132.3, 20.3}}, label: 'Choose any color'
+                                                Button, 0x11f3aed00, {{346.0, 397.7}, {28.0, 28.0}}, label: 'Choose any color', value: orange
+                                          StaticText, 0x11f3ae940, {{20.0, 453.7}, {362.0, 17.0}}, label: 'Color value: #D47D32'
+                                            StaticText, 0x11f3aea80, {{20.0, 453.7}, {362.0, 17.0}}, label: 'Color value: #D47D32'
+                                          Button, 0x11f3acb40, {{20.0, 490.7}, {362.0, 48.0}}, label: 'Expiration', value: Not set
+                                          StaticText, 0x11f3ae580, {{20.0, 558.7}, {362.0, 17.0}}, label: 'Expiration value: No expiration'
+                                            StaticText, 0x11f3ae6c0, {{20.0, 558.7}, {362.0, 17.0}}, label: 'Expiration value: No expiration'
+                                          Other, 0x11f3ae800, {{36.0, 619.7}, {330.0, 54.3}}
+                                            Other, 0x11f3ae080, {{52.0, 621.7}, {298.0, 48.0}}
+                                              Other, 0x11f3ae1c0, {{52.0, 621.7}, {298.0, 48.0}}
+                                                Other, 0x11f3ae440, {{52.0, 621.7}, {298.0, 48.0}}
+                                                  StaticText, 0x11f3ae300, {{52.0, 635.5}, {81.0, 20.3}}, label: 'Reminders'
+                                                  Button, 0x11f3adb80, {{214.3, 628.7}, {135.7, 34.3}}, label: 'Reminders, Choose reminder mode'
+                                                    StaticText, 0x11f3adcc0, {{226.3, 635.7}, {95.3, 20.3}}, label: 'Use defaults'
+                                          StaticText, 0x11f3adf40, {{36.0, 680.0}, {330.0, 18.0}}, label: 'Inventory defaults: 7 days before and when expired.'
+                                            StaticText, 0x11f3ade00, {{36.0, 680.0}, {330.0, 18.0}}, label: 'Inventory defaults: 7 days before and when expired.'
+                                          StaticText, 0x11f3ad680, {{20.0, 718.0}, {362.0, 17.0}}, label: 'Reminder mode: defaults'
+                                            StaticText, 0x11f3ad7c0, {{20.0, 718.0}, {362.0, 17.0}}, label: 'Reminder mode: defaults'
+                                      Other, 0x11f3ada40, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11f3ad900, {{396.0, 245.7}, {3.0, 563.3}}
+                                      Other, 0x11f3ad180, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11f3ad2c0, {{65.0, 868.0}, {272.0, 3.0}}
+                                      Other, 0x11f3ad540, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11f3ad400, {{396.0, 245.7}, {3.0, 563.3}}
+                                      Other, 0x11f3acc80, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11f3acdc0, {{65.0, 868.0}, {272.0, 3.0}}
+                        Other, 0x11f3ad040, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11f3acf00, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x11f3ac8c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11f3ac780, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11f3ac3c0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11f3e3840, pid: 29136, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11f3ac500, pid: 29136, label: 'Stuff Stash'
+  }

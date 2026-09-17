@@ -3524,3 +3524,8 @@ and native dependency resolution. The numeric defect is fixed in candidate
 5e192167. Native35188788934 passes3/4 cases per device; phone center activation
 still fails, and iPad's ordinary case times out before app launch. Individual RGB
 slider edits are outside those tests. See [candidate evidence](native-color-rounding-351887.md).
+
+M252 integrated acceptance: native351910 passes three Red-only edits and parent
+draft round trips on both devices. All six parent values retain Green125/Blue50;
+reviewed native slider captures agree. M252 is corrected and verified in PR157,
+not yet released. M51 still fails independently on both in the same run.
