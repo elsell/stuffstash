@@ -1,0 +1,1 @@
+Opened within five seconds: false; appeared during further observation: false

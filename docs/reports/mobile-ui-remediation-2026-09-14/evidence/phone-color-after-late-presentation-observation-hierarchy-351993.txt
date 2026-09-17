@@ -1,0 +1,84 @@
+Attributes: Application, 0x11d882440, pid: 75405, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11d882440, pid: 75405, label: 'Stuff Stash'
+    Window (Main), 0x11d882580, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11d8826c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11d8821c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11d882300, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11d881f40, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11d882080, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11d881cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11d881e00, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11d881a40, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11d881b80, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11d8817c0, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Native UI audit'
+                          StaticText, 0x11d881900, {{141.3, 73.7}, {119.3, 20.7}}, label: 'Native UI audit'
+                        Other, 0x11d881540, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11d881680, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11d8812c0, {{0.0, 116.0}, {402.0, 758.0}}
+                              Other, 0x11d881400, {{0.0, 116.0}, {402.0, 758.0}}
+                                Other, 0x11d880a00, {{0.0, 116.0}, {402.0, 758.0}}
+                                  Other, 0x11d880b40, {{0.0, 116.0}, {402.0, 758.0}}
+                                    ScrollView, 0x11d880c80, {{0.0, 116.0}, {402.0, 758.0}}
+                                      Other, 0x11d880dc0, {{0.0, 116.0}, {402.0, 683.0}}
+                                        Other, 0x11d881040, {{0.0, 116.0}, {402.0, 683.0}}
+                                          Button, 0x11d881180, {{20.0, 136.0}, {362.0, 37.7}}, label: 'Back to audit menu'
+                                          Other, 0x11d880f00, {{20.0, 193.7}, {362.0, 48.0}}
+                                            Other, 0x11d880780, {{20.0, 193.7}, {362.0, 48.0}}
+                                              Other, 0x11d8808c0, {{20.0, 193.7}, {362.0, 48.0}}
+                                                StaticText, 0x11d880640, {{20.0, 207.5}, {92.0, 20.3}}, label: 'Appearance'
+                                                Button, 0x11d880500, {{285.0, 200.7}, {97.0, 34.3}}, label: 'Appearance, Choose appearance'
+                                                  StaticText, 0x11d880280, {{297.0, 207.7}, {56.7, 20.3}}, label: 'System'
+                                          StaticText, 0x11d8803c0, {{20.0, 261.7}, {362.0, 17.0}}, label: 'Appearance value: system'
+                                            StaticText, 0x11d880140, {{20.0, 261.7}, {362.0, 17.0}}, label: 'Appearance value: system'
+                                          StaticText, 0x11d880000, {{20.0, 298.7}, {362.0, 17.0}}, label: 'Appearance writes: 0'
+                                            StaticText, 0x11d882940, {{20.0, 298.7}, {362.0, 17.0}}, label: 'Appearance writes: 0'
+                                          Button, 0x11d882a80, {{20.0, 337.7}, {44.0, 44.0}}, label: 'No tag color', Selected
+                                          Button, 0x11d882bc0, {{70.0, 337.7}, {44.0, 44.0}}, label: 'Choose Blue tag color'
+                                          Button, 0x11d882d00, {{120.0, 337.7}, {44.0, 44.0}}, label: 'Choose Green tag color'
+                                          Button, 0x11d882e40, {{170.0, 337.7}, {44.0, 44.0}}, label: 'Choose Purple tag color'
+                                          Button, 0x11d882f80, {{220.0, 337.7}, {44.0, 44.0}}, label: 'Choose Orange tag color'
+                                          Button, 0x11d8830c0, {{270.0, 337.7}, {44.0, 44.0}}, label: 'Choose Red tag color'
+                                          Button, 0x11d883200, {{320.0, 337.7}, {44.0, 44.0}}, label: 'Choose Teal tag color'
+                                          Other, 0x11d883340, {{20.0, 389.7}, {362.0, 44.0}}
+                                            Other, 0x11d883480, {{20.0, 389.7}, {362.0, 44.0}}
+                                              Other, 0x11d8835c0, {{20.0, 389.7}, {362.0, 44.0}}
+                                                StaticText, 0x11d883700, {{20.0, 401.5}, {132.3, 20.3}}, label: 'Choose any color'
+                                                Button, 0x11d883840, {{346.0, 397.7}, {28.0, 28.0}}, label: 'Choose any color', value: transparent
+                                          StaticText, 0x11d883980, {{20.0, 453.7}, {362.0, 17.0}}, label: 'Color value: none'
+                                            StaticText, 0x11d883ac0, {{20.0, 453.7}, {362.0, 17.0}}, label: 'Color value: none'
+                                          Button, 0x11d883c00, {{20.0, 490.7}, {362.0, 37.7}}, label: 'Lock color editing'
+                                          Button, 0x11d883d40, {{20.0, 548.3}, {362.0, 48.0}}, label: 'Expiration', value: Not set
+                                          StaticText, 0x11d883e80, {{20.0, 616.3}, {362.0, 17.0}}, label: 'Expiration value: No expiration'
+                                            StaticText, 0x11d643200, {{20.0, 616.3}, {362.0, 17.0}}, label: 'Expiration value: No expiration'
+                                          Other, 0x11d642f80, {{36.0, 677.3}, {330.0, 54.3}}
+                                            Other, 0x11d643480, {{52.0, 679.3}, {298.0, 48.0}}
+                                              Other, 0x11d6430c0, {{52.0, 679.3}, {298.0, 48.0}}
+                                                Other, 0x11d643700, {{52.0, 679.3}, {298.0, 48.0}}
+                                                  StaticText, 0x11d643340, {{52.0, 693.2}, {81.0, 20.3}}, label: 'Reminders'
+                                                  Button, 0x11d643e80, {{214.3, 686.3}, {135.7, 34.3}}, label: 'Reminders, Choose reminder mode'
+                                                    StaticText, 0x11d643d40, {{226.3, 693.3}, {95.3, 20.3}}, label: 'Use defaults'
+                                          StaticText, 0x11d643c00, {{36.0, 737.7}, {330.0, 18.0}}, label: 'Inventory defaults: 7 days before and when expired.'
+                                            StaticText, 0x11d643ac0, {{36.0, 737.7}, {330.0, 18.0}}, label: 'Inventory defaults: 7 days before and when expired.'
+                                          StaticText, 0x11d643840, {{20.0, 775.3}, {362.0, 17.0}}, label: 'Reminder mode: defaults'
+                                            StaticText, 0x11d6435c0, {{20.0, 775.3}, {362.0, 17.0}}, label: 'Reminder mode: defaults'
+                                      Other, 0x11d643980, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11d642e40, {{396.0, 188.0}, {3.0, 621.0}}
+                                      Other, 0x11d66ca00, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11d66cc80, {{65.0, 868.0}, {272.0, 3.0}}
+                                      Other, 0x11d66cdc0, {{369.0, 144.0}, {30.0, 668.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x11d66cf00, {{396.0, 188.0}, {3.0, 621.0}}
+                                      Other, 0x11d66d040, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x11d66d180, {{65.0, 868.0}, {272.0, 3.0}}
+                        Other, 0x11d66d2c0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11d66d400, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x11d66d540, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11d66d680, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11d66d7c0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11d882440, pid: 75405, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11d66db80, pid: 75405, label: 'Stuff Stash'
+  }
