@@ -726,3 +726,22 @@ This selection accelerates changed-workflow verification but does not replace th
 frozen55-check matrix, onboarding, retained unchanged-workflow evidence or source
 checks. Keep all current native jobs intact. Verify the selector's exact test list
 and that every selected Swift test exists before dispatching it.
+
+### Bound individual native audit cases
+
+Enable XCTest test timeouts for all native audit selections and cap each case at
+600 seconds, matching Apple's default enabled allowance. Run35159542174 stalled
+after an app-launch timeout until the120-minute job limit, leaving an incomplete
+result bundle. A stalled case must report failure rather than silently consume the
+whole run. This does not guarantee recovery from an unresponsive Xcode process or
+replace the outer job timeout. Preserve all assertions, case selection and failed
+results; do not retry cases until they pass.
+
+The longest passing case in the retained351567 phone/iPad logs took363.920 seconds,
+so a600-second maximum leaves room for the existing complete journeys. This is an
+execution guard, not a performance requirement. Active/queued runs retain their
+original configuration; do not cancel or restart them to adopt the guard. Verify
+future runner acceptance and result export separately from configuration checks.
+
+Apple documents enabling timeouts with `-test-timeouts-enabled YES` and the maximum
+allowance option in [executionTimeAllowance](https://developer.apple.com/documentation/xctest/xctestcase/executiontimeallowance).

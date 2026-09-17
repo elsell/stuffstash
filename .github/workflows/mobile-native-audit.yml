@@ -164,6 +164,8 @@ jobs:
           xcrun simctl list devices available > "$RUNNER_TEMP/native-audit/simulators.txt"
           git rev-parse HEAD > "$RUNNER_TEMP/native-audit/revision.txt"
           xcodebuild test \
+            -test-timeouts-enabled YES \
+            -maximum-test-execution-time-allowance 600 \
             "${audit_test_args[@]}" \
             -workspace apps/mobile/ios/StuffStash.xcworkspace \
             -scheme StuffStashAudit \

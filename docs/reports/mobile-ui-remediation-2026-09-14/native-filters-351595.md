@@ -51,3 +51,12 @@ Release-corrections35165286470 at966158e6 has now started on both devices. A fre
 focused filter run35168921441 at that same source is queued to recover the missing
 phone probe evidence, including the already-corrected calendar target. The active
 correction and full audit jobs were not cancelled or restarted.
+
+Follow-up verification guard: future workflow invocations enable XCTest test
+timeouts with a600-second maximum per case. The longest passing case in351567
+took363.920 seconds. A command-boundary fake executes the workflow command and
+first fails for missing timeout arguments; all ten preparation/command checks and
+mobile structural checks then pass on paul. Code critic finds no blocker. This
+limits individual test execution when XCTest remains responsive; it does not
+guarantee recovery from a wedged Xcode process or prove artifact finalization.
+The currently active and queued runs retain their original configuration.

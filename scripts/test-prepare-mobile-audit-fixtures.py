@@ -129,6 +129,23 @@ class FixtureRouteIsolationTests(unittest.TestCase):
 
 
 class NativeAuditSelectionTests(unittest.TestCase):
+    def test_native_command_enables_bounded_case_execution(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / '.github/workflows/mobile-native-audit.yml').read_text()
+        command = 'xcodebuild test' + workflow.split('          xcodebuild test', 1)[1].split('      - name: Export screenshots', 1)[0]
+        with tempfile.TemporaryDirectory() as runner:
+            (Path(runner) / 'native-audit').mkdir()
+            # A command-boundary fake records the actual workflow arguments.
+            result = subprocess.run(['bash', '-c',
+                'set -o pipefail\nxcodebuild() { printf "%s\\n" "$@"; }\naudit_test_args=()\n' + command],
+                env={**os.environ, 'RUNNER_TEMP': runner, 'AUDIT_DEVICE': 'iPhone 17'},
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            arguments = (Path(runner) / 'native-audit/xcodebuild.log').read_text().splitlines()
+        for option, expected in [('-test-timeouts-enabled', 'YES'), ('-maximum-test-execution-time-allowance', '600')]:
+            self.assertEqual(arguments.count(option), 1, option)
+            self.assertEqual(arguments[arguments.index(option) + 1], expected)
+
     def test_release_corrections_selects_named_existing_workflows(self):
         root = Path(__file__).resolve().parents[1]
         workflow = (root / '.github/workflows/mobile-native-audit.yml').read_text()
