@@ -43,16 +43,16 @@ does not excuse missing names or unusable controls at the default size.
 
 - M249 remains a batch blocker: required filter actions visibly overlap the phone
   keyboard accessory. Geometry diagnostics are pending; no offset guess is accepted.
-- iPad last-tag application remains a batch blocker pending triage: geometry passes
-  but the required selected-tag result is missing. See native-filters-351546.md.
-- Calendar dismissal in351546 is an automation-target issue under investigation:
-  the full-screen dismissal element's center lies inside the calendar. Correct the
-  target geometrically and verify dismissal before claiming product failure/pass.
+- iPad last-tag acceptance now passes in full351567 and focused351595, including
+  the explicit checked-state observation in the latter. Retain the earlier351546
+  failure as history; do not claim a production fix from the added observation.
+- Calendar dismissal needs native acceptance of the corrected test target. The
+ 351595 outside tap hit the underlying Back command; c40e7965 restricts the target
+  to non-command navigation space and verifies the Date range page remains open.
 - M250 has iPad search-journey evidence and source regression tests; phone acceptance
   stops at M249 and is still required.
-- Ordinary iOS color activation requires scoped triage because the batch changes
-  its accessibility naming. Existing direct-well and delivered-touch passes are
-  relevant evidence, but do not silently waive a contradictory required action.
+- Ordinary color activation passes the original native acceptance in full351567
+  on phone and iPad. The focused correction selection retains this regression check.
 - Raw controlled/seeded text comparisons, provider-free comparisons and alternate
   preconfigured navigation layouts are diagnostic evidence. They are not independent
   release gates. Complete entry/save in the actual changed Add/settings/onboarding
@@ -106,14 +106,16 @@ check log: `/tmp/ci351595-required.log`.
 
 Current correction checkpoint: CI35162604544 succeeds atc40e7965, including the
 calendar dismissal test correction and retained audit reports. Focused native
-run35162612814 is queued behind35159542174; full run35162604601 is queued behind
-35156794515. Production remains identical to the frozen cutoff. This CI result
+run35162612814 was superseded while pending by release-corrections35165286470 at
+966158e6. Full run35162604601 is now active but predates the email correction.
+Its production source matches the original33dfc002 cutoff. This CI result
 does not establish Swift test compilation or clear outstanding native gates.
 
 ## Current native decisions
 
 Full351567 phone completes68/87, with50/55 required tests passing. Reviewed
-settings capture confirms the M207 bottom-search placement failure; sharing
+settings capture shows bottom-search placement with a mismatched fixture title
+(see the fidelity correction below); sharing
 capture confirms reordered email. Expiration audit detail again concerns larger
 text only. The iOS email correction223d6d0a has30 focused tests, TypeScript,
 structural checks and critic review; its native Sharing journey remains pending.
@@ -137,3 +139,7 @@ whole batch by itself. The selector test executes the actual workflow shell case
 checks exact membership and uniqueness, and verifies Swift methods exist. It fails
 before the selector is added, then all nine preparation/selection checks and mobile
 structural checks pass on paul. Code critic finds no blocker.
+
+Current release-corrections dispatch:35165286470 at966158e6 is pending behind the
+active focused run35159542174. Existing active native jobs are preserved. The full
+current-head run35165285932 is also pending. Queued verification is not acceptance.
