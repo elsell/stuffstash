@@ -2097,6 +2097,35 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
   }
 
+  func testColorFirstTapWithPreTapCapture() {
+    assertColorFirstTap(captureBeforeTap: true)
+  }
+
+  func testColorFirstTapWithoutPreTapCapture() {
+    assertColorFirstTap(captureBeforeTap: false)
+  }
+
+  private func assertColorFirstTap(captureBeforeTap: Bool) {
+    // Each test has an independent setUp launch; never retry a missed first tap.
+    openSettingsControls()
+    XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+    XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertTrue(picker.isEnabled)
+    XCTAssertTrue(picker.isHittable)
+    let before = picker.frame
+    if captureBeforeTap { capture("color-comparison-before-tap") }
+    picker.tap()
+    let opened = app.buttons["Sliders"].waitForExistence(timeout: 5)
+    let evidence = XCTAttachment(string: "Pre-tap capture: \(captureBeforeTap); target before tap: \(before); opened after one tap: \(opened)")
+    evidence.name = "color-first-tap-comparison"
+    evidence.lifetime = .keepAlways
+    add(evidence)
+    capture("color-comparison-after-first-tap")
+    XCTAssertTrue(opened, "One ordinary tap must present the system picker")
+  }
+
   func testNativeColorLockDisablesTheWellAndPreservesDraft() {
     openSettingsControls()
     app.buttons["Choose Green tag color"].tap()

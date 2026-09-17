@@ -91,6 +91,8 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithPreTapCapture'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutPreTapCapture'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'

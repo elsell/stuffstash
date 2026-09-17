@@ -802,3 +802,16 @@ runtime success. M249 stays open until native coordinate/interaction checks pass
 
 References: [Expo native view commands](https://docs.expo.dev/modules/module-api/#view)
 and [local native modules](https://docs.expo.dev/workflow/customizing/).
+
+
+## Isolating intermittent native color presentation
+
+M51 ordinary first activation remains intermittently absent despite a hittable,
+enabled well and successful same-build touch-region checks. Diagnostic comparisons
+must use independently launched apps, identical initial unset value, the same
+native element tap and five-second presentation assertion. Compare a capture of
+the pre-tap screen/hierarchy against no pre-tap capture; record target geometry,
+enabled/hittable state and post-tap presentation. Preserve the original failing
+workflow. Do not add retry taps or relax its timeout to manufacture acceptance.
+These comparisons diagnose observation effects; passing samples alone cannot
+close the intermittent production finding or establish causation.
