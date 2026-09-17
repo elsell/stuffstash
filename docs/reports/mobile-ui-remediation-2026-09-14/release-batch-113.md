@@ -159,3 +159,12 @@ The newer run35162604601 also passes all applicable phone/iPad onboarding cases,
 including the alternate iPad form-column journey. Selected iPad captures are
 reviewed in [onboarding regression evidence](native-onboarding-351626.md). The
 intermittent help issue remains tracked; this pass does not establish a fix.
+
+## Focused phone launch failure
+
+Run35159542174 is terminal: the phone job reaches its120-minute limit after an
+Xcode app-launch timeout, without completing the filter journeys or exporting a
+valid result bundle. No new phone geometry is available. See the terminal section
+in [focused filter evidence](native-filters-351595.md). Release-corrections35165286470
+is now active on phone and iPad. Fresh focused filters35168921441 is queued behind
+it to recover the missing measurements; active jobs remain untouched.

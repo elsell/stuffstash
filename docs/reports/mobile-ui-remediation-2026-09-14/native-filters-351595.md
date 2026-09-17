@@ -1,6 +1,6 @@
 # Focused filter evidence — run35159542174
 
-Source624bcf29. iPad job105008548645 completes4/5 cases. Phone remains running.
+Source624bcf29. iPad job105008548645 completes4/5 cases. Phone subsequently reaches the job timeout; see the terminal result below.
 Browse last-tag selection now passes its explicit checked-state observation and
 final applied-tag result. Browse search, availability and expiration search pass.
 This is native assertion evidence; it does not prove the earlier intermittent
@@ -31,3 +31,23 @@ popover dismissal. The native failure above supplies the red case; eight fixture
 preparation checks and mobile structural checks pass remotely. Critic review found
 and corrected missing geometry on the no-candidate path. Swift compilation and
 native acceptance remain pending. Production controls are unchanged.
+
+## Terminal phone result
+
+Job105008548835 is cancelled at the120-minute workflow limit. Its first last-tag
+case fails in setUp at app.launch: Xcode reports an application launch timeout.
+The next Browse keyboard case starts, then the job remains in the test step until
+cancellation. This is not a completed filter journey and gives no new M249 geometry.
+Do not infer a production filter or input failure from this run; launch root cause
+is unknown. The earlier reproduced phone overlap remains valid evidence.
+
+Export fails because results.xcresult has no Info.plist. Artifact10476406134
+(8,761,603 bytes) retains build/test output and a diagnostics log containing only
+a uid lookup message and header. No usable app trace or screenshots are available.
+Local archive: `/tmp/native351595-filters-phone.zip`; complete job log:
+`/tmp/native351595-filters-phone.log`.
+
+Release-corrections35165286470 at966158e6 has now started on both devices. A fresh
+focused filter run35168921441 at that same source is queued to recover the missing
+phone probe evidence, including the already-corrected calendar target. The active
+correction and full audit jobs were not cancelled or restarted.
