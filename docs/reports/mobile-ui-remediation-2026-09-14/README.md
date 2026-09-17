@@ -1,41 +1,45 @@
 # Comprehensive mobile UI audit and remediation
 
-## Current checkpoint — September 16
+## Current checkpoint — September 17
 
 The coverage inventory contains142 surfaces ×24 axes =3,408 cells:2,593
 source-reviewed,577 finding,198 not-applicable and40 runtime-partial. These are
 review classifications, not3,408 completed native acceptance checks. The full
-audit remains open; normal-size findings take priority. Release now follows the
+audit remains open; normal-size findings take priority. Release follows the
 [frozen batch checklist](release-batch-113.md), independently of audit completion.
 
-Latest completed full run35148054814 at a01fc760 records phone69/86 and iPad79/86
-fixture passes. Both onboarding jobs pass their applicable cases. The iPad result
-is currently log-reviewed (`/tmp/native351480-ipad-complete.log`); its screenshots
-have not been reviewed. It retains ordinary color-opening and controlled-input
-failures plus keyboard-readiness and enlarged-text failures. See
-[phone evidence](native-phone-351480.md). This predates the current readiness,
-Add-tag assertion, search-ownership and diagnostic changes.
+Latest completed full run35156794515 at2043abb0 records phone68/87 and iPad80/87
+fixture passes. The named batch mapping has50/55 required phone passes and55/55
+iPad passes. Selected captures are reviewed in [phone evidence](native-phone-351567.md)
+and [iPad evidence](native-ipad-351567.md); these reports distinguish visual review,
+assertions and unresolved fixture fidelity. The phone filter overlap remains M249.
+The expiration accessibility failure concerns enlarged text, not a demonstrated
+normal-size blocker. The ordinary color journey passes on both devices.
 
-[Focused filters35154627907](native-filters-351546.md) at bef2150a confirms M249
-still overlaps Back on phone; iPad keyboard/search journeys pass. The iPad
-last-tag journey passes geometry but applies no selected tag, requiring tap/state
-investigation. It is not footer clipping. M250 has iPad search-journey evidence;
-phone stops at the overlap assertion before post-selection verification.
+Phone Sharing reordered its email in an actual workflow. The bounded correction
+223d6d0a uses the native seeded email field and passes focused source checks; native
+acceptance remains required. The Settings fixture used a longer internal route title
+than production Tags. Its title and acceptance precondition are corrected without
+weakening the expected integrated Search button. Release-corrections35165286470 at
+966158e6 is queued to verify these changes alongside existing filter/Add/color checks.
 
-Provider-free input run35156439952 is complete: phone and iPad each pass11/14
-comparisons, with input loss still reproduced. See [diagnostic results](native-text-entry-351564.md);
-these comparisons are not independent release gates. Full run35156794515 and
-focused filters35159542174 remain live. The focused run adds fixture-only geometry,
-selected-tag state observation and a geometrically corrected calendar-dismissal tap.
-No production inset correction is inferred before measurements arrive.
+Focused filters35159542174 has four iPad passes, including last-tag application and
+both keyboard journeys. Its calendar dismissal tap hit the underlying Back command;
+c40e7965 corrects that test target. Phone remains running. Full35162604601 is also
+active, but predates the email and title corrections. Its phone onboarding job
+105023220045 passes the complete address/help/keyboard/action journey; two iPad-only
+cases skip. Earlier [paired onboarding evidence](native-onboarding-351567.md) remains
+relevant for unchanged code. M240 alternate iPad help remains audit follow-up.
 
-[Current onboarding evidence](native-onboarding-351567.md) verifies the standard
-complete address/help/keyboard/action journey on phone and iPad. The unchanged,
-intermittent iPad help comparison remains M240 audit follow-up. CI35159545733 passes
-at624bcf29, including1,915 mobile tests; see the frozen batch checklist for the
-remaining native gates. Older downloaded full archives were removed after checking
-GitHub retention; selected evidence stays retained. Free space is13GB locally,
-4.9GB on paul root and17GB in its temporary filesystem.
+Provider-free input run35156439952 passes11/14 comparisons on each device while
+still reproducing input loss. Those comparisons are diagnostics, not independent
+release gates. Actual changed-workflow entry/save remains required. M251 tracks
+low-contrast iOS photo-viewer status content separately from the frozen batch;
+reviewed photo commands remain usable.
+
+CI35162604544 passes the pre-email correction source. Current-head source CI and
+native correction acceptance remain pending. Large archives stay on paul; selected
+captures are retained in this report directory. No new TestFlight release is claimed.
 
 ## Earlier checkpoints
 
