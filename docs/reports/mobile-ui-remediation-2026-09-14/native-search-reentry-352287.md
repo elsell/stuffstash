@@ -17,3 +17,13 @@ workflow acceptance, and no production dependency patch has been promoted.
 
 Ten fixture installer checks and critic review passed before dispatch. The
 observer slept between terminal-state checks; no test job was restarted.
+
+
+Capture review confirms AutoFill editing menus in both remaining iPad failures;
+search fields are focused and keyboards visible. Images and hierarchies are
+retained in evidence/ with352287 suffixes. Audit of native search tests found the
+same redundant post-Search field tap in Browse, Place, Settings, static placement
+and voice location. Apply the existing single-activation rule consistently while
+retaining all keyboard/query/results/clear/cancel/navigation assertions. The
+revised paths require native execution; these captures alone are not proof of
+causation or full acceptance.

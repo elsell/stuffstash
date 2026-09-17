@@ -753,7 +753,7 @@ final class FixtureAuditTests: XCTestCase {
     let searchButton = app.buttons["Search"].firstMatch
     XCTAssertTrue(searchButton.waitForExistence(timeout: 5)); searchButton.tap()
     let search = app.searchFields.firstMatch
-    XCTAssertTrue(search.waitForExistence(timeout: 5)); search.tap()
+    XCTAssertTrue(search.waitForExistence(timeout: 5))
     waitForKeyboard()
     search.typeText("Tools")
     let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
@@ -880,7 +880,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     XCTAssertEqual(field.placeholderValue, "Search this place")
-    field.tap()
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
@@ -920,7 +919,7 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(searchButton.isHittable)
       searchButton.tap()
       XCTAssertTrue(field.waitForExistence(timeout: 5))
-    } else {
+    } else if !app.keyboards.firstMatch.exists {
       field.tap()
     }
     XCTAssertTrue(field.isHittable)
@@ -996,7 +995,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     capture("static-search-placement-expanded")
-    field.tap()
     waitForKeyboard()
     field.typeText("missing")
     XCTAssertEqual(field.value as? String, "missing")
@@ -1005,14 +1003,14 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clear.isHittable)
     clear.tap()
     let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      field.isHittable || (!field.exists && search.isHittable)
+      (field.exists && field.isHittable) || (search.exists && search.isHittable)
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
     capture("static-search-after-focused-clear")
-    if !field.exists { search.tap() }
+    if !field.isHittable { search.tap() }
+    else if !app.keyboards.firstMatch.exists { field.tap() }
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
-    field.tap()
     waitForKeyboard()
     field.typeText("Garage")
     XCTAssertEqual(field.value as? String, "Garage")
@@ -2213,7 +2211,6 @@ final class FixtureAuditTests: XCTestCase {
     search.tap()
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    field.tap()
     waitForKeyboard()
     field.typeText("Tools")
     XCTAssertEqual(field.value as? String, "Tools")
@@ -2282,7 +2279,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(search.isHittable); search.tap()
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    field.tap(); waitForKeyboard(); field.typeText("missing")
+    waitForKeyboard(); field.typeText("missing")
     XCTAssertEqual(field.value as? String, "missing")
     XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
     XCTAssertTrue(bin.waitForNonExistence(timeout: 5))

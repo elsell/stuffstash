@@ -98,6 +98,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testManagedSearchPlacementAfterEnableAndHeaderUpdate'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testStaticNativeSearchPlacementComparison'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'

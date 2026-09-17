@@ -858,3 +858,12 @@ collapsed Search control. It must not require UIKit to remove a hidden field fro
 the accessibility tree. Select the hittable route and verify keyboard readiness,
 full re-entered query, filtered results, cancel and navigation return. Do not
 replace interaction checks with screenshot appearance or extend timing limits.
+
+
+Apply the single-activation search acceptance rule consistently to Browse tags,
+Place, Settings, static placement and voice location search. Native352287 captures
+show the same AutoFill editing menu in Browse and Place after redundant field taps.
+Retain ordinary text-input focus taps and explicit keyboard-dismiss/re-entry
+coverage. When a search field remains usable after Clear, tap it only if no keyboard
+is present; otherwise verify readiness and type. Hidden-field presence is not a
+substitute for usable controls or query correctness.
