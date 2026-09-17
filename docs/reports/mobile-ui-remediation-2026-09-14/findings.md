@@ -3518,3 +3518,9 @@ Acceptance requires all256 channel values, adjacent representations, clamp and
 controlled feedback checks, reviewed dependency identity changes and native
 slider/draft behavior. The numeric harness does not verify UIKit presentation
 or color-space extraction. Candidate GREEN and remaining runtime checks pending.
+
+M252 follow-up: CI35188783384 passes all9,472 installed Swift conversion checks
+and native dependency resolution. The numeric defect is fixed in candidate
+5e192167. Native35188788934 passes3/4 cases per device; phone center activation
+still fails, and iPad's ordinary case times out before app launch. Individual RGB
+slider edits are outside those tests. See [candidate evidence](native-color-rounding-351887.md).
