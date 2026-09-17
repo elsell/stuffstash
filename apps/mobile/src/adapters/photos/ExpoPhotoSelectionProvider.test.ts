@@ -25,8 +25,12 @@ describe('ExpoPhotoSelectionProvider', () => {
   });
 
   it('does not launch the camera without permission', async () => {
-    await expect(new ExpoPhotoSelectionProvider().captureFromCamera(0)).rejects.toThrow('Camera access');
+    const provider = new ExpoPhotoSelectionProvider();
+    await expect(provider.captureFromCamera(0)).rejects.toThrow('Allow camera access for Stuff Stash in device settings');
     expect(photoPickerFake.cameraLaunches).toBe(0);
+    photoPickerFake.cameraGranted = true;
+    await expect(provider.captureFromCamera(0)).resolves.toEqual([]);
+    expect(photoPickerFake.cameraLaunches).toBe(1);
   });
 
   it('opens the camera after permission and preserves cancellation', async () => {

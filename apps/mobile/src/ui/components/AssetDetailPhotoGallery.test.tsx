@@ -10,6 +10,40 @@ const photos: readonly AssetPhotoViewModel[] = [
 ];
 
 describe('asset gallery', () => {
+  it('explains a failed preview and keeps opening the original photo available', async () => {
+    const harness = new MobileRenderHarness(); const opened: string[] = [];
+    try {
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos imagePlaceholderLabel="Item" photos={photos}
+        onAddPhotos={() => {}} onPhotoPress={id => opened.push(id)} />);
+      await harness.run(() => harness.allByType('Image')[0]?.props.onError?.({ nativeEvent: { error: 'private URL' } }));
+      expect(harness.allText()).toContain('Preview unavailable');
+      expect(harness.byLabel('Open photo 1 of 2')?.props.accessibilityValue).toEqual({ text: 'Preview unavailable' });
+      expect(harness.allText()).not.toContain('private URL');
+      await harness.press(harness.byLabel('Open photo 1 of 2'));
+      expect(opened).toEqual(['one']);
+      expect(harness.allByType('Image')).toHaveLength(1);
+      expect(harness.byLabel('Add photos')).toBeDefined();
+    } finally { await harness.unmount(); }
+  });
+
+  it('starts fresh for replacement preview credentials and ignores obsolete failure callbacks', async () => {
+    const harness = new MobileRenderHarness();
+    const render = (currentPhotos: readonly AssetPhotoViewModel[]) => harness.render(
+      <AssetDetailPhotoGallery canAddPhotos={false} imagePlaceholderLabel="Item" photos={currentPhotos} />);
+    try {
+      await render(photos);
+      const oldFailure = harness.allByType('Image')[0]?.props.onError;
+      await harness.run(() => oldFailure?.());
+      expect(harness.allText()).toContain('Preview unavailable');
+      await render([{ ...photos[0]!, heroHeaders: { Authorization: 'replacement synthetic' } }, photos[1]!]);
+      await harness.run(() => oldFailure?.());
+      expect(harness.allText()).not.toContain('Preview unavailable');
+      expect(harness.byLabel('Open photo 1 of 2')?.props.accessibilityValue).toBeUndefined();
+      expect(harness.allByType('Image')).toHaveLength(2);
+      expect(harness.allByType('Image')[0]?.props.source.headers.Authorization).toBe('replacement synthetic');
+    } finally { await harness.unmount(); }
+  });
+
   it('names each photo by position and adapts page width to the viewport', () => {
     expect(assetDetailPhotoPages(photos)).toEqual([
       { accessibilityLabel: 'Open photo 1 of 2', positionLabel: '1 of 2' },

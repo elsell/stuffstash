@@ -1,0 +1,88 @@
+test,disposition,reason,phone_351480,ipad_351480,phone_351567,ipad_351567,phone_351626,ipad_351626
+testNotificationInboxReadStateAndNavigationReturn,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testNotificationReadControlDeliveredTouchRegion,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testInvitationAcceptanceRetainsAccessAfterOpeningFailure,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testNoticeKeepsPushedNavigationReachable,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testNoticeKeepsSheetNavigationReachable,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testProviderCredentialNativeSaveRecovery,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testProviderPromptNativeSaveRecovery,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testProviderPromptNativeDiscard,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testSharingRecoveryKeepsHeaderAndCommandsReachable,required,Changed workflow or critical regression in frozen batch,passed,passed,failed,passed,failed,passed
+testFooterAppearanceAndDisabledActions,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testFooterAppearanceAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,passed,failed,passed,failed,passed
+testMoveHereRejectedCommandRetainsSelectionAndRetryReturns,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testMoveHereRecoveryAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,failed,failed,failed,failed,passed
+testCommandHeightComparisonAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,passed,failed,passed,failed,passed
+testColdInventoryQueriesEnableDependentResource,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testInventorySwitcherHouseholdRetryAndClose,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testDirectFullSheetLayout,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testNestedFullSheetLayout,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,passed,failed,passed,failed,passed
+testFooterFullSheetLayout,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,passed,failed,passed,failed,passed
+testDirectFooterFullSheetLayout,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testScrollFooterFullSheetLayout,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testCheckoutHistoryTextBoundsPaginationAndDismissal,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testBrowseLastTagClearsActionFooterAndApplies,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testBrowseTagSearchKeepsActionsAboveKeyboardAccessory,required,Changed workflow or critical regression in frozen batch,not in run,not in run,failed,passed,failed,passed
+testBrowseUsesInPlaceAvailabilityMenuAndReachableActions,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testExpirationSheetBodySurvivesExpansion,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testDetailCommandsRemainReachableAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,passed,failed,passed,failed,passed
+testPlaceContentsUseNativeSearchAndKeepNavigation,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,failed,passed
+testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,passed,failed,passed,failed,passed
+testManagedSearchPlacementAfterEnableAndHeaderUpdate,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testStaticNativeSearchPlacementComparison,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testAssetRegionRecoveryAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,passed,failed,passed,failed,passed
+testEditTagDisclosureAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,failed,failed,failed,failed,failed
+testEditMetadataRecoveryAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,failed,failed,failed,failed,failed,failed
+testNativeChoiceLabelAtAccessibilityTextSize,audit-follow-up,Enlarged text or automated accessibility audit; separate audit workstream,passed,passed,passed,passed,passed,passed
+testExpirationOverviewAccessibility,required,Mixed audit: normal hit regions/descriptions/traits required; larger-Dynamic-Type-only diagnostic is follow-up (see release batch decisions),failed,passed,failed,passed,failed,passed
+testExpirationDatePageKeepsBottomActionsReachable,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,failed
+testExpirationSearchKeepsActionsReachableWithKeyboard,required,Changed workflow or critical regression in frozen batch,passed,passed,failed,passed,failed,passed
+testDraftOptionRemovalPreservesSavedOptions,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testPhotoRemovalFailureAppearsAboveViewer,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testOrdinarySingleLineTextEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,failed,passed,failed,passed
+testNativeDefaultAssistedTextEntryDiagnostic,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testOrdinaryMultilineTextEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testOrdinaryControlledTextEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,failed,failed,failed,failed,failed
+testControlledTextEntryWithoutAssistance,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,failed
+testControlledTextEntryWithoutAccessory,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,passed,passed,failed,failed,failed
+testOrdinaryTextEntryWithoutAssistance,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testOrdinaryTextEntryWithoutAccessory,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testPacedControlledTextEntryDiagnostic,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,failed,passed,passed
+testPacedUncontrolledTextEntryDiagnostic,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testSeededAddressWithoutKeyboardAccessory,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testControlledAddressEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,failed,failed,failed,failed,failed,passed
+testUncontrolledAddressEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,failed,passed,passed,passed
+testSystemAddressEntry,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testAddRetainsUnfinishedTagAcrossDetailsDisclosure,required,Changed workflow or critical regression in frozen batch,failed,passed,passed,passed,passed,passed
+testAddDraftRetainsTextAndRecoversAfterRejectedSave,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testAddDraftInNavigationStack,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,failed,passed,passed,passed,passed
+testAddDraftWithHeaderConfiguredBeforePresentation,diagnostic,Controlled input or alternate composition; actual changed workflow remains required,passed,passed,passed,passed,passed,passed
+testAddPhotoPreviewPagingAndDraftRemoval,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testOnboardingSubmitsTheCompleteNativeAddress,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testOnboardingKeyboardGoSubmitsCompleteAddress,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,failed
+testHomeHeaderKeepsAllActionsAboveScrollingContent,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testHomeNotificationHitRegionBeyondAccessibilityFrame,required,Changed normal-size control semantics; triage audit result against actual workflow,passed,passed,passed,passed,passed,passed
+testHomeAddHitRegionBeyondAccessibilityFrame,required,Changed normal-size control semantics; triage audit result against actual workflow,passed,passed,passed,passed,passed,passed
+testHomeProfileHitRegionBeyondAccessibilityFrame,required,Changed normal-size control semantics; triage audit result against actual workflow,passed,passed,passed,passed,passed,passed
+testHomeReturnCancelRestoresCheckout,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testHomeReturnDetailsRecoverInsideSheet,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testDraftPhotosRemoveTheChosenAttachmentAndRetainReadOnlyPreviews,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testDraftPhotoControlsAccessibility,required,Changed normal-size control semantics; triage audit result against actual workflow,passed,passed,passed,passed,passed,passed
+testAppearanceUsesMenuWithoutNavigation,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testReminderModeUsesMenuWithoutNavigation,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testColorPickerOpensDirectlyAndClearPreservesParentDraft,required,Changed workflow or critical regression in frozen batch,failed,failed,passed,passed,failed,passed
+testSettingsCollectionUsesNativeSearchAndAdd,required,Changed workflow or critical regression in frozen batch,passed,passed,failed,passed,passed,passed
+testVoiceProposalLocationSearchRetryAndReturn,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testSettingsEditorNativeBackProtectsDirtyDraft,required,Changed workflow or critical regression in frozen batch,failed,passed,passed,passed,passed,passed
+testSettingsEditorNativeSaveReturnsToCollection,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testSettingsEditorNativeArchiveConfirmsBeforeReturning,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testColorWellTargetOpensSystemPicker,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testColorWellHasSingleAccessibleName,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testColorWellDeliveredTouchRegion,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testExactExpirationUsesCompactNativePicker,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testActionableFeedbackStaysAvailable,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testAccountNativeCommandCancelAndRecovery,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed
+testConnectionNativeCommandCancelAndRecovery,required,Changed workflow or critical regression in frozen batch,passed,passed,passed,passed,passed,passed

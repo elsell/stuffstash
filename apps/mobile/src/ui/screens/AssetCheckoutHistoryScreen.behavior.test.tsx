@@ -1,5 +1,5 @@
 import React from 'react';
-import { dispatchedActions, resetNavigation } from '../../test-support/navigation';
+import { dispatchedActions, resetNavigation, setCanGoBack } from '../../test-support/navigation';
 import { describe, expect, it } from 'vitest';
 import { AssetCheckoutHistorySheetRouteScreen } from './AssetCheckoutHistoryScreen';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -11,6 +11,30 @@ import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary
 import { AssetCheckoutHistoryQuery } from '../../application/assets/AssetCheckoutHistoryQuery';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+it.each(['loading', 'error', 'ready'] as const)('closes %s history from direct entry or the existing stack', async status => {
+  for (const canGoBack of [false, true]) {
+    resetNavigation(); setCanGoBack(canGoBack);
+    const harness = new MobileRenderHarness();
+    try {
+      await harness.render(<MobileServerStateProvider client={createMobileQueryClient()} scopeId="scope"
+        loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AssetCheckoutHistorySheetRouteScreen assetId="asset"
+          assetCoreQuery={{ execute: () => new Promise(() => undefined) }}
+          assetCheckoutHistoryQuery={{ execute: async () => {
+            if (status === 'loading') return new Promise(() => undefined);
+            if (status === 'error') throw new Error('unavailable');
+            return { assetId: 'asset', records: [], hasMore: false, emptyTitle: 'No checkouts', emptyMessage: 'No checkout history yet.' };
+          } }} />
+      </MobileServerStateProvider>);
+      await settle(harness); await settle(harness);
+      expect(harness.allText()).toContain(status === 'loading' ? 'Loading checkout history'
+        : status === 'error' ? 'Could not load checkout history' : 'No checkouts');
+      await harness.press(harness.byLabel('Close'));
+      expect(dispatchedActions()).toEqual([canGoBack ? { type: 'back' } : { type: 'replace', href: '/' }]);
+    } finally { await harness.unmount(); resetNavigation(); setCanGoBack(true); }
+  }
+});
 
 describe('checkout History server state', () => {
   it('loads cursor pages independently of the title and retains rows when continuation fails', async () => {

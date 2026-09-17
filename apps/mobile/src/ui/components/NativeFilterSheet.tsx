@@ -1,22 +1,22 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { NativeNavigationSearch } from './NativeNavigationSearch';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { NativeSheetActions } from './NativeSheetActions';
-import type { NativeSheetActionsProps } from './NativeSheetActions.types';
+import type { NativeFilterSheetProps } from './NativeFilterSheet.types';
 import { useSheetKeyboardInset } from './useSheetKeyboardInset';
+import { useFocusedSheetActions } from './useFocusedSheetActions';
 
 /** Keep the native scroll body direct; reserve the measured, opaque action area. */
-export function NativeFilterSheet({ children, actions, footerTestID }: {
-  readonly children: ReactNode;
-  readonly actions: Omit<NativeSheetActionsProps, 'keyboardAvoidance'>;
-  readonly footerTestID: string;
-}) {
+export function NativeFilterSheet({ title, search, children, actions, footerTestID }: NativeFilterSheetProps) {
   const palette = useAppearancePalette();
+  const footerActions = useFocusedSheetActions(actions);
   const [footerHeight, setFooterHeight] = useState(0);
   const boundaryRef = useRef<View>(null);
   const keyboard = useSheetKeyboardInset(boundaryRef);
   return <>
+    <NativeNavigationSearch key={title} enabled={!!search} query={search?.query ?? ''} placeholder={search?.placeholder ?? 'Search'} onChange={search?.onChange ?? (() => {})} onSubmit={search?.onSubmit ?? (() => {})} onClear={search?.onClear ?? (() => {})} />
     <ScrollView automaticallyAdjustKeyboardInsets style={[styles.body, { backgroundColor: palette.background }]}
       contentContainerStyle={{ paddingBottom: footerHeight + 20 }} scrollIndicatorInsets={{ bottom: footerHeight }}
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic">
@@ -27,7 +27,7 @@ export function NativeFilterSheet({ children, actions, footerTestID }: {
       onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
       style={[styles.footer, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
       <View testID={footerTestID} style={styles.actions}>
-        <NativeSheetActions {...actions} keyboardAvoidance="container" />
+        <NativeSheetActions {...footerActions} keyboardAvoidance="container" />
       </View>
     </SafeAreaView>
   </>;

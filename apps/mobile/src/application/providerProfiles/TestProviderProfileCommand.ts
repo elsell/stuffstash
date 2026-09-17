@@ -12,6 +12,10 @@ export class TestProviderProfileCommand {
       throw new Error('Choose a provider profile to test.');
     }
 
-    return this.profiles.testProviderProfile(trimmed);
+    const result = await this.profiles.testProviderProfile(trimmed);
+    if (result.status !== 'succeeded') {
+      throw new Error('Connection test failed. Check the profile configuration and credential, then try again.');
+    }
+    return result;
   }
 }

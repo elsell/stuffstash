@@ -840,3 +840,18 @@ Native command selection: use a Google-only flattened command decoding schema af
 The server Google model fallback and newly recommended mobile language profiles use `gemini-2.5-flash`, based on the recorded expiration and audio comparison. The server fallback currently supplies both speech recognition and language inference, as exercised by the recorded-audio corpus. The separate mobile speech-to-text recommendation remains `gemini-2.5-flash-lite`. Explicit environment configuration and existing tenant profile model choices take precedence and are not migrated silently. Release operators must check the selected language profile: Flash-Lite did not meet expiration acceptance in this comparison.
 
 Native Google JSON-schema declarations use the existing provider-only bounded-union-array count translation: remove only the decoding count bound and retain it as guidance, while application validators keep the strict limit. The initial native request was rejected as schema complexity; this translation is evaluated explicitly in the live corpus.
+## Microphone denial guidance
+
+When microphone permission is denied, voice entry must explain how to allow
+microphone access for Stuff Stash in device settings and that typed conversation
+remains available. A later explicit recording attempt rechecks permission.
+Permission denial must not prepare or start a recorder or discard conversation
+content. This guidance does not imply permission was granted on Settings return.
+## Proposal location return command
+
+The containing-location chooser must expose an explicit native header Back action
+even when presented above a conversation sheet, where automatic stack Back may
+be absent. Back returns to the conversation without changing the current location,
+other proposal edits or the pending title draft. Keep it available when the
+proposal has become unavailable; use the conversation route as a direct-entry
+fallback. Native acceptance must tap this command after reopening a selection.

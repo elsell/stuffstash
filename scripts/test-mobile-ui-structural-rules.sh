@@ -172,4 +172,17 @@ cat > "$workdir/apps/mobile/src/BackgroundPull.tsx" <<'CASE'
 export const screen = <FlatList refreshing={pullRefresh.refreshing} />;
 CASE
 "$checker" "$workdir/apps/mobile/src"
+mkdir -p "$workdir/apps/mobile/src/ui/components/android-icons"
+for unsupported in strokeWidth strokeColor fillType; do
+  printf '<vector xmlns:android="http://schemas.android.com/apk/res/android"><path android:%s="2" android:pathData="M1,1L3,3" /></vector>\n' "$unsupported" > "$workdir/apps/mobile/src/ui/components/android-icons/probe.xml"
+  if "$checker" "$workdir/apps/mobile/src" >"$workdir/output" 2>&1; then
+    echo "expected unsupported Android vector $unsupported to fail" >&2
+    exit 1
+  fi
+  grep -F "unsupported Android vector attribute" "$workdir/output" >/dev/null
+done
+cat > "$workdir/apps/mobile/src/ui/components/android-icons/probe.xml" <<'CASE'
+<vector xmlns:android="http://schemas.android.com/apk/res/android"><path android:fillColor="#FF000000" android:pathData="M1,1L3,1L3,3Z" /></vector>
+CASE
+"$checker" "$workdir/apps/mobile/src"
 echo "mobile UI structural rule tests passed"

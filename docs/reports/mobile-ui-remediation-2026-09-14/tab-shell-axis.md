@@ -48,3 +48,25 @@ M113 candidate: both nested stacks now reserve a sibling voice area on unsupport
 platforms through VoiceTabContent. iOS26 keeps its prior direct stack/native
 accessory structure. Real provider/controller behavior and platform rendering
 tests supplement source review; older-iOS/Android native geometry remains open.
+
+## Home composition fixture
+
+The native runner now has a separate `audit-tabs` entry that copies the three
+production tab/nested-stack layouts byte for byte from its preserved route tree.
+Their folder depth is unchanged so relative imports retain the real NativeTabs,
+VoiceBottomAccessory, VoiceTabContent and header options. Home uses the real
+HomeScreen with synthetic inventory data; the Browse destination is explicitly
+a placeholder for tab-transition testing. Existing synthetic voice ports supply
+accessory state without loading a production session or starting audio.
+
+The new normal-size phone/iPad journey checks visible ordered Home actions, voice
+entry, last Return action clearance from tabs and the voice button, scrolling,
+and Home→Browse→Home return without an activity indicator. Diagnostic overlays
+are disabled for this composition fixture. Existing standalone touch-delivery
+probes remain separate. The test does not certify Browse content/search, voice
+capture, Android/older-iOS fallback geometry or the entire accessory hit region.
+
+Runner preparation first failed on the missing copied layout, then both isolation
+tests passed with exact copied-content checks. TypeScript and mobile structural
+checks also pass on paul. Swift compilation and native execution remain pending;
+this closes a coverage omission, not a runtime finding.

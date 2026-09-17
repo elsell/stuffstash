@@ -37,8 +37,8 @@ import {
 } from '../components/AssetDetailView';
 import { AssetPhotoViewerSheet } from './AssetPhotoViewerSheet';
 import {
-  assetHeaderOverflowScreenOptions
-} from './AssetHeaderOverflow';
+  useAssetHeaderOverflowOptions
+} from './useAssetHeaderOverflowOptions';
 import { AssetDetailRouteErrorState } from './AssetDetailRouteErrorState';
 import {
   assetPhotoViewerModel,
@@ -209,11 +209,13 @@ export function AssetDetailRouteScreen({
   }
 
   const { refreshing: isRefreshing, refresh: refreshAsset } = usePullRefresh(async () => {
+    const canPresent = captureCommandVisit();
     setWorkspaceStatus(undefined);
 
     try {
       await reloadAsset();
     } catch (error) {
+      if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: 'Could not refresh asset',
@@ -233,13 +235,12 @@ export function AssetDetailRouteScreen({
 
   function choosePhotos(currentPhotoCount: number): void {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
+    if (!canPresent()) return;
     showPhotoSourceChooser({
-      onCamera: () => {
-        if (scope.active) void addPhotos('camera', currentPhotoCount);
-      },
-      onLibrary: () => {
-        if (scope.active) void addPhotos('library', currentPhotoCount);
-      }
+      isCurrent: () => scope.active && canPresent(),
+      onCamera: () => void addPhotos('camera', currentPhotoCount),
+      onLibrary: () => void addPhotos('library', currentPhotoCount)
     });
   }
 
@@ -262,6 +263,7 @@ export function AssetDetailRouteScreen({
     failureTitle: string
   ): Promise<void> {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setPendingAction('photos');
@@ -283,7 +285,7 @@ export function AssetDetailRouteScreen({
       await assetPhotos.reconcile();
       if (scope.active && result.failedCount === 0) setPhotoUploads([]);
     } catch (error) {
-      if (!scope.active) return;
+      if (!scope.active || !canPresent()) return;
       feedback.showNotice({
         tone: 'error',
         title: failureTitle,
@@ -297,6 +299,7 @@ export function AssetDetailRouteScreen({
 
   async function removePhoto(photoId: string): Promise<void> {
     const scope = assetOperation.current;
+    const canPresent = captureCommandVisit();
     if (!scope.active || scope.assetId !== assetId || scope.pending || pendingAction !== undefined) return;
     scope.pending = true;
     setIsRemovingPhoto(true);
@@ -317,6 +320,7 @@ export function AssetDetailRouteScreen({
       await assetPhotos.reconcile();
     } catch (error) {
       if (!scope.active) return;
+      if (!canPresent()) return;
       feedback.showDialog({
         title: 'Could not remove photo',
         message: readableError(error, 'Photo removal failed.'),
@@ -349,9 +353,10 @@ export function AssetDetailRouteScreen({
     router.push(assetDetailHref(parent.id));
   }
 
-  function confirmLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
+  function requestLifecycleAction(action: AssetLifecycleActionKind, asset: AssetDetailViewModel): void {
     const canPresent = captureCommandVisit();
     if (!canPresent()) return;
+    if (action === 'restore') { void runLifecycleAction(action, asset); return; }
     let confirmed = false;
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
@@ -455,8 +460,9 @@ export function AssetDetailRouteScreen({
     disabled: pendingAction !== undefined,
     onCheckoutHistory: () => router.push(`/assets/${screenState.asset.id}/checkouts`),
     onHistory: () => openHistory(screenState.asset),
-    onLifecycleAction: (action: AssetLifecycleActionKind) => confirmLifecycleAction(action, screenState.asset)
+    onLifecycleAction: (action: AssetLifecycleActionKind) => requestLifecycleAction(action, screenState.asset)
   } : undefined;
+  const headerOverflowOptions = useAssetHeaderOverflowOptions(headerOverflow, JSON.stringify(coreAsset.resourceKey));
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
@@ -464,7 +470,7 @@ export function AssetDetailRouteScreen({
         onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
-        ...(headerOverflow ? assetHeaderOverflowScreenOptions(headerOverflow) : {})
+        ...headerOverflowOptions
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
       {screenState.status === 'error' ? (

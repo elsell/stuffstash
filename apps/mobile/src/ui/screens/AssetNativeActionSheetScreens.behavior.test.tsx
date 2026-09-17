@@ -1,7 +1,7 @@
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
-import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -12,6 +12,28 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
+
+it.each([
+  ['loading', false], ['error', false], ['loading', true], ['error', true]
+] as const)('exposes Close from Edit %s without a loaded draft (back=%s)', async (state, canGoBack) => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation(); setCanGoBack(canGoBack);
+  const core = new AssetCoreQuery({ getAssetCore: async () => {
+    if (state === 'error') throw new Error('Unavailable');
+    return new Promise(() => undefined);
+  } });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async () => { throw new Error('Must not save'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(state === 'error' ? h.byLabel('Retry asset') : h.byText('Loading asset')).toBeDefined();
+    expect(h.byLabel('Close')).toBeDefined();
+    await h.press(h.byLabel('Close'));
+    expect(dispatchedActions()).toContainEqual(canGoBack ? { type: 'back' } : { type: 'replace', href: '/' });
+  } finally { await h.unmount(); client.clear(); resetNavigation(); setCanGoBack(true); }
+});
+
 it('opens Edit before tags load and preserves a dirty draft after background core refresh', async () => {
   const client = createMobileQueryClient();
   const harness = new MobileRenderHarness();
@@ -123,6 +145,8 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     const submit = save!.props.onPress;
     await h.run(() => { submit(); submit(); });
     expect(submitted).toHaveLength(1);
+    await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
+    expect(dispatchedActions()).toEqual([]);
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
@@ -137,6 +161,11 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     else expect(completion).toBeUndefined();
     expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    if (outcome === 'failure' && !returned) {
+      const action = { type: 'GO_BACK', source: mode };
+      await h.run(() => attemptNavigation(action));
+      expect(dispatchedActions()).toEqual([action]);
+    }
   } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
 });
 
@@ -156,10 +185,12 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await settle(h); await settle(h);
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
-    const create = h.byText('Create location "New box"')?.parent;
+    const create = h.byLabel('Create location "New box"');
+    expect(create).toBeDefined();
     const move = h.byLabel('Move');
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
+    expect(h.byLabel('Create location "New box"')?.props.disabled).toBe(true);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.allByType('TextInput')[0], 'Changed');
@@ -336,6 +367,32 @@ it('waits for known Move suggestions before offering destination creation', asyn
   } finally { await h.unmount(); }
 });
 
+it('names staged Edit tag removal and preserves other tags and edited fields', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Description'), 'Keep my edit');
+    for (const name of ['Camping', 'Outdoors']) {
+      await h.changeText(h.byLabel('New tag name'), name); await h.press(h.byLabel('Add tag'));
+    }
+    const remove = h.byLabel('Remove new tag Camping');
+    expect(remove).toBeDefined();
+    expect(remove?.props.accessibilityState.selected).toBeUndefined();
+    await h.press(remove);
+    expect(h.byLabel('Remove new tag Camping')).toBeUndefined();
+    expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Keep my edit', newTags: [{ displayName: 'Outdoors' }] })]);
+  } finally { await h.unmount(); client.clear(); }
+});
+
 it('explains an overlong Edit tag name and preserves the asset draft through correction', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
@@ -433,4 +490,111 @@ it.each(['draft', 'visit', 'unmount', 'current'] as const)('owns Edit discard co
     expect(dispatchedActions().length - before).toBe(change === 'current' ? 1 : 0);
     if (change === 'draft') expect(h.byLabel('Asset name')?.props.value).toBe('Later draft');
   } finally { await h.unmount(); setScreenFocused(true); resetNavigation(); }
+});
+
+it.each(['GO_BACK', 'POP'] as const)('protects a dirty Edit draft from native %s removal', async type => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); resetNavigation();
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }} updateAssetCommand={{ execute: async () => { throw new Error('No save requested'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
+    const action = { type, source: 'edit' };
+    await h.run(() => attemptNavigation(action));
+    expect(dispatchedActions()).toEqual([]);
+    expect(latestAlert()?.title).toBe('Discard changes?');
+    await h.run(() => pressAlertButton('Keep editing'));
+    expect(h.byLabel('Asset name')?.props.value).toBe('Keep this draft');
+    await h.run(() => attemptNavigation(action));
+    const discard = latestAlert()?.buttons.find(button => button.text === 'Discard')?.onPress;
+    await h.run(() => discard?.()); await h.run(() => discard?.());
+    expect(dispatchedActions()).toEqual([action]);
+  } finally { await h.unmount(); resetNavigation(); }
+});
+
+
+it('retained Edit footer reads the latest draft and rejects hidden or removed actions', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  resetNavigation();
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: '', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false } }) });
+  let save!: () => void; let cancel!: () => void;
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: input.title ?? '', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'Earlier name');
+    save = h.byLabel('Save')!.props.onPress; cancel = h.byLabel('Cancel')!.props.onPress;
+    await h.changeText(h.byLabel('Asset name'), '');
+    await h.run(save);
+    expect(saved).toEqual([]);
+    await h.changeText(h.byLabel('Asset name'), 'Current name');
+    await h.run(() => setScreenFocused(false));
+    await h.run(save); await h.run(cancel);
+    expect(saved).toEqual([]); expect(dispatchedActions()).toEqual([]);
+    await h.run(() => setScreenFocused(true));
+    await h.run(save);
+    expect(saved).toEqual([expect.objectContaining({ title: 'Current name' })]);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); setScreenFocused(true); }
+  saved.length = 0;
+  await h.run(save); await h.run(cancel);
+  expect(saved).toEqual([]); expect(dispatchedActions()).toEqual([]);
+});
+
+
+it.each(['move', 'here'] as const)('retained %s footer uses current selection and ignores blurred cancellation', async mode => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const submitted: unknown[] = [];
+  resetNavigation();
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: '', kind: 'container', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false } }) });
+  const candidates = ['First box', 'Second box'].map((title, index) => ({ id: `box-${index}`, title, kind: 'container' as const, subtitle: '', pathLabel: title, selectionHint: 'Container', willPromoteToContainer: false }));
+  const props = { assetId: 'asset', assetCoreQuery: core, parentLookupQuery: { execute: async () => candidates }, moveAssetCommand: { execute: async (input: unknown) => { submitted.push(input); return { id: 'asset', title: 'Tent', message: 'Moved' }; } } };
+  let save!: () => void; let cancel!: () => void;
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No creation requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    await h.press(h.byText('First box')?.parent?.parent?.parent ?? undefined);
+    save = h.byLabel(mode === 'move' ? 'Move' : 'Move here')!.props.onPress;
+    cancel = h.byLabel('Cancel')!.props.onPress;
+    await h.press(h.byText('Second box')?.parent?.parent?.parent ?? undefined);
+    await h.run(() => setScreenFocused(false));
+    await h.run(save); await h.run(cancel);
+    expect(submitted).toEqual([]); expect(dispatchedActions()).toEqual([]);
+    await h.run(() => setScreenFocused(true));
+    await h.run(save);
+    expect(submitted).toEqual([mode === 'move' ? { assetId: 'asset', parentAssetId: 'box-1' } : { assetId: 'box-1', parentAssetId: 'asset' }]);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); setScreenFocused(true); }
+  submitted.length = 0;
+  await h.run(save); await h.run(cancel);
+  expect(submitted).toEqual([]); expect(dispatchedActions()).toEqual([]);
+});
+
+
+it('does not retarget retained Edit commands after switching the scoped asset', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  resetNavigation();
+  const core = new AssetCoreQuery({ getAssetCore: async requestedId => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId(requestedId), title: requestedId, description: '', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false } }) });
+  const render = (id: string) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    <AssetEditSheetRouteScreen assetId={id} assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
+      updateAssetCommand={{ execute: async input => { saved.push(input); return { id: input.assetId, title: input.title ?? '', message: 'Saved' }; } }} />
+  </MobileServerStateProvider>);
+  try {
+    await render('first'); await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'First draft');
+    const oldSave = h.byLabel('Save')!.props.onPress; const oldCancel = h.byLabel('Cancel')!.props.onPress;
+    await render('second'); await settle(h); await settle(h);
+    await h.changeText(h.byLabel('Asset name'), 'Second draft');
+    await h.run(oldSave); await h.run(oldCancel);
+    expect(saved).toEqual([]); expect(dispatchedActions()).toEqual([]);
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ assetId: 'second', title: 'Second draft' })]);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); }
 });

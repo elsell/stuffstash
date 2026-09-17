@@ -301,7 +301,28 @@ overlaid close target. Photo rails can scroll and commands can grow with text.
 Tag creation uses a native Add tag command below its fields/color choice, avoiding
 an undersized inline action squeezed beside text entry.
 
+### Checkout history direct-entry dismissal
+
+Loaded Edit, Move, and Move here sheets also return to the previous route when
+available and replace with Home when entered without a back stack. Apply this to
+Cancel, confirmed Edit discard, and successful submission. Keep dirty Edit
+confirmation, pending-operation navigation locks, and late-completion ownership
+checks intact; a fallback destination must not bypass these guards.
+
+Checkout history must keep native Close available in loading, error and loaded
+states. Close returns to the previous route when one exists; direct entry without
+a back stack replaces the route with Home. A failed or slow history read must not
+trap the user in the sheet.
+
 ### Asset gallery photo command
+
+Gallery preview failures must replace the blank image with “Preview unavailable”.
+When the original photo can be opened, retain that action and label the recovery
+“Open photo”; the full-screen viewer owns original-image retry. Do not nest a
+second button inside the photo button or show raw network errors. Failure state
+belongs to the preview URI and authorization headers: a replacement source must
+start a fresh attempt, and a late event from the old source must not hide it.
+Other photos and the Add photos command remain usable.
 
 The gallery keeps one Add photos command below its empty or populated image area.
 Use the shared native command adapter on iOS and Android; the image itself remains

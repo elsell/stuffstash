@@ -1,5 +1,23 @@
 # Edit tag selection: source review
 
+## Current follow-up atdc901a08
+
+Re-read the production route, EditAssetForm, EditAssetSheet/EditTagPicker and
+operation/draft helpers against all24 axes below. Disclosure is bounded and retains
+selected extras; new-tag input now belongs to the route draft. These supersede
+the historical M94/M95 observations. Existing-tag discovery still uses disclosure
+and normalized-name resolution rather than a dedicated search field; that remains
+an explicit review limitation for large inventories, not an inferred search pass.
+
+M201 also applies to Edit's separate staged-tag implementation: a chip removed a
+draft definition but announced only its name and selected state. The command now
+announces Remove new tag {name}, without a selected trait. Its RED mounted test
+precedes correction and verifies remaining staged tags and description reach Save.
+The native color-picker and controlled-text failures remain open. Native output
+and long-name truncation remain unverified. Shared route access review also found
+M210; the server remains the authorization boundary, but the editor must reflect
+current permission/lifecycle before allowing further draft actions.
+
 Scope: S133, source de5d87b0 (PR146). This reviews all 24 axes; it does not
 establish native acceptance. Tag selection is an in-place multi-selection task
 within an asset edit draft. Color selection is a separate value choice. A new

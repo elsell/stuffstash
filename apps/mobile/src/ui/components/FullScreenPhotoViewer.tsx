@@ -44,6 +44,7 @@ export function FullScreenPhotoViewer({
 
   return (
     <ImageViewing
+      HeaderComponent={PhotoViewerHeader}
       ErrorComponent={PhotoViewerLoadError}
       animationType="fade"
       backgroundColor={viewerColors.background}
@@ -72,10 +73,13 @@ export function FullScreenPhotoViewer({
   );
 }
 
+// The safe-area-aware footer owns Close; omit the library's duplicate header.
+function PhotoViewerHeader() { return null; }
+
 export function PhotoViewerLoadError({ onRetry }: { readonly onRetry: () => void }) {
   return <View style={styles.loadError}>
     <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.loadErrorText}>Photo unavailable</Text>
-    <NativeCommandButton label="Retry photo" onPress={onRetry} />
+    <NativeCommandButton label="Retry photo" prominence="primary" onPress={onRetry} />
   </View>;
 }
 
@@ -192,6 +196,7 @@ const styles = StyleSheet.create({
   loadError: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
   loadErrorText: { color: viewerColors.foreground, fontSize: 20, textAlign: 'center', flexShrink: 1 },
   toolbarOuter: {
+    backgroundColor: viewerColors.background,
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm

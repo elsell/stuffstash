@@ -1,14 +1,18 @@
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
+import type { PhotoSelectionProvider } from '../../application/add/PhotoSelectionQuery';
+import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { VoiceReviewActions } from './VoiceReviewActions';
 import { VoicePlanProgress } from './VoicePlanProgress';
-import { useNewConversation } from './useNewConversation';
+import { VoicePlanNameEditor } from './VoicePlanNameEditor';
+import { VoiceConversationHeader } from './VoiceConversationHeader';
 import { voiceConversationReferences } from './VoiceConversationReferences';
 import { VoiceConversationComposer } from './VoiceConversationComposer';
 import { VoiceConversationExchange, VoiceResultRail } from './VoiceConversationExchange';
-import { useParentCandidates } from '../serverState/useParentCandidates';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, RotateCcw, SendHorizontal, X } from 'lucide-react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { Check, ChevronDown, ChevronUp, MapPin, MessageCircle, Mic, Pencil, SendHorizontal } from 'lucide-react-native';
 import {
   ActivityIndicator,
   Keyboard,
@@ -24,10 +28,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { VoiceLevelMeter } from '../components/VoiceLevelMeter';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 import { useVoiceInteractionState, VoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
 import { buildVoiceSessionPresentation } from '../navigation/VoiceSessionPresentation';
 import { useAppServices } from '../navigation/AppServicesContext';
+import { VoicePreviewRecovery } from './VoicePreviewRecovery';
 import { buildVoiceSessionSheetBodyPresentation } from './VoiceSessionSheetPresentation';
 import {
   showVoicePlanPhotoSourceChooser,
@@ -38,25 +43,24 @@ import {
   removeVoicePlanPhotoDraft,
   type VoicePlanPhotoDrafts
 } from './VoicePlanPhotoDraftState';
-import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 import type { VoiceSessionActionPlanCommand } from '../navigation/VoiceSessionPresentation';
 import { assetDetailHref } from './AssetDetailNavigation';
 import { navigateAfterTransientDismissal } from '../navigation/TransientNavigation';
 import { VoiceResponseEntityText } from './VoiceResponseEntityText';
 import {
-  voicePlanCommandEdits,
-  type VoicePlanCommandDrafts,
-  type VoicePlanParentDraft
+  type VoicePlanCommandDrafts
 } from './VoicePlanEdits';
 
 export function VoiceSessionSheetScreen() {
-  const { parentLookupQuery, photoSelectionQuery } = useAppServices();
+  const { photoSelectionQuery } = useAppServices();
+  return <VoiceSessionWorkspace photoSelectionQuery={photoSelectionQuery} />;
+}
+
+export function VoiceSessionWorkspace({ photoSelectionQuery }: { readonly photoSelectionQuery: PhotoSelectionProvider }) {
   const {
-    photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia,
-    approveRealtimeActionPlan,
+    photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, setTitleEditor, pauseMedia, scopeIdentity,
     cancelRealtime,
-    cancelRealtimeActionPlan,
     diagnosticsEnabled,
     reset,
     retryRealtimeActionPlanPhotos,
@@ -64,30 +68,17 @@ export function VoiceSessionSheetScreen() {
     state,
     stopRealtime
   } = useVoiceInteractionState();
+  const openResponseReference = useVoiceReferenceNavigation({ scopeIdentity, pauseMedia,
+    onOpen: artifact => navigateAfterTransientDismissal(() => router.dismiss(), () => router.push(assetDetailHref(artifact.assetId))) });
   const pauseMediaRef = useRef(pauseMedia);
   pauseMediaRef.current = pauseMedia;
   useFocusEffect(useCallback(() => () => { void pauseMediaRef.current(); }, []));
   const [diagnosticsExpanded, setDiagnosticsExpanded] = useState(false);
-  const [parentPickerCommandId, setParentPickerCommandId] = useState<string | null>(null);
-  const [parentQuery, setParentQuery] = useState('');
   const safeAreaInsets = useSafeAreaInsets();
   const activePlanId = state.status === 'ready' ? state.realtime?.actionPlan?.planId : undefined;
   const activePlanStatus = state.status === 'ready' ? state.realtime?.actionPlan?.status : undefined;
   const beginPhotoPresentation = useTaskPresentation(photoSelectionQuery, JSON.stringify([activePlanId, activePlanStatus]));
-  const activePlanIdRef = useRef(activePlanId);
-  const activePlanStatusRef = useRef(activePlanStatus);
-  const parentPickerCommandIdRef = useRef<string | null>(null);
-  const candidates = useParentCandidates(parentQuery, parentLookupQuery, parentPickerCommandId !== null && activePlanStatus === 'proposed');
-  const parentMatches = candidates.data ?? [];
   const commandDrafts = commandDraftState.planId === activePlanId ? commandDraftState.drafts : {};
-
-  useEffect(() => {
-    activePlanIdRef.current = activePlanId;
-  }, [activePlanId]);
-
-  useEffect(() => {
-    activePlanStatusRef.current = activePlanStatus;
-  }, [activePlanStatus]);
 
   useEffect(() => {
     if (commandDraftState.planId !== activePlanId) {
@@ -95,8 +86,6 @@ export function VoiceSessionSheetScreen() {
       setPhotoDrafts({});
       setCommandDraftState({ planId: activePlanId, drafts: {} });
     }
-    setParentPickerCommandId(null);
-    parentPickerCommandIdRef.current = null;
   }, [activePlanId, activePlanStatus]);
 
   async function handleSessionMic(): Promise<void> {
@@ -128,12 +117,6 @@ export function VoiceSessionSheetScreen() {
       }}
       onCancelSession={() => {
         void cancelRealtime();
-      }}
-      onApproveActionPlan={(planId) => {
-        void approveRealtimeActionPlan(planId, photoDrafts, voicePlanCommandEdits(commandDrafts));
-      }}
-      onCancelActionPlan={(planId) => {
-        void cancelRealtimeActionPlan(planId);
       }}
       onRetryPhotos={(planId) => {
         void retryRealtimeActionPlanPhotos(planId);
@@ -171,25 +154,8 @@ export function VoiceSessionSheetScreen() {
         setCommandDraftState((current) => ({ planId: activePlanId, drafts: { ...(current.planId === activePlanId ? current.drafts : {}), [commandId]: { ...(current.planId === activePlanId ? current.drafts[commandId] : {}), title } } }));
       }}
       onOpenParentPicker={(commandId) => {
-        setParentPickerCommandId(commandId);
-        parentPickerCommandIdRef.current = commandId;
-        setParentQuery('');
+        if (activePlanId && activePlanStatus === 'proposed') router.push({ pathname: '/voice-plan-location', params: { planId: activePlanId, commandId, scope: scopeIdentity } });
       }}
-      onCloseParentPicker={() => {
-            parentPickerCommandIdRef.current = null;
-        setParentPickerCommandId(null);
-          }}
-      onChangeParentQuery={(query) => {
-        setParentQuery(query);
-      }}
-      onSelectParent={(commandId, parent) => {
-        setCommandDraftState((current) => ({ planId: activePlanId, drafts: { ...(current.planId === activePlanId ? current.drafts : {}), [commandId]: { ...(current.planId === activePlanId ? current.drafts[commandId] : {}), parent } } }));
-        parentPickerCommandIdRef.current = null;
-        setParentPickerCommandId(null);
-      }}
-      parentMatches={parentMatches}
-      parentPickerCommandId={parentPickerCommandId}
-      parentQuery={parentQuery}
       onReset={() => {
         reset();
         setDiagnosticsExpanded(false);
@@ -202,14 +168,7 @@ export function VoiceSessionSheetScreen() {
           () => router.push('/settings/voice')
         );
       }}
-      onOpenResponseArtifact={async (artifact) => {
-        Keyboard.dismiss();
-        await pauseMedia();
-        navigateAfterTransientDismissal(
-          () => router.dismiss(),
-          () => router.push(assetDetailHref(artifact.assetId))
-        );
-      }}
+      onOpenResponseArtifact={openResponseReference}
       onSessionMic={() => {
         void handleSessionMic();
       }}
@@ -226,8 +185,6 @@ function VoiceSessionSheet({
   diagnosticsEnabled,
   onClose,
   onCancelSession,
-  onApproveActionPlan,
-  onCancelActionPlan,
   onAddPhotos,
   onRemovePhoto,
   onRetryPhotos,
@@ -240,19 +197,11 @@ function VoiceSessionSheet({
   commandDrafts,
   onChangeCommandTitle,
   onOpenParentPicker,
-  onCloseParentPicker,
-  onChangeParentQuery,
-  onSelectParent,
-  parentMatches,
-  parentPickerCommandId,
-  parentQuery,
   safeAreaBottom,
   state
 }: {
   readonly diagnosticsExpanded: boolean;
   readonly diagnosticsEnabled: boolean;
-  readonly onApproveActionPlan: (planId: string) => void;
-  readonly onCancelActionPlan: (planId: string) => void;
   readonly onAddPhotos: (commandKey: string) => void;
   readonly onRemovePhoto: (commandKey: string, photoId: string) => void;
   readonly onRetryPhotos: (planId: string) => void;
@@ -267,16 +216,11 @@ function VoiceSessionSheet({
   readonly commandDrafts: VoicePlanCommandDrafts;
   readonly onChangeCommandTitle: (commandId: string, title: string) => void;
   readonly onOpenParentPicker: (commandId: string) => void;
-  readonly onCloseParentPicker: () => void;
-  readonly onChangeParentQuery: (query: string) => void;
-  readonly onSelectParent: (commandId: string, parent: VoicePlanParentDraft) => void;
-  readonly parentMatches: readonly ParentLookupResult[];
-  readonly parentPickerCommandId: string | null;
-  readonly parentQuery: string;
   readonly safeAreaBottom: number;
   readonly state: VoiceInteractionState;
 }) {
-  const { history, scrollOffset } = useVoiceInteractionState();
+  const { history, scrollOffset, titleEditor, retryPreview, scopeIdentity } = useVoiceInteractionState();
+  const navigationHeaderHeight = useHeaderHeight();
   const conversationScroll = useRef<ScrollView>(null);
   const followingLatest = useRef(scrollOffset.current === 0);
   const palette = useAppearancePalette();
@@ -291,36 +235,23 @@ function VoiceSessionSheet({
     tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || 'Tenant'
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
-  const startNewConversation = useNewConversation(readyState?.realtime ?? null, photoDrafts, commandDrafts, onReset);
   const bottomAction = session.bottomAction;
   const actionPlan = session.actionPlan;
   const references = voiceConversationReferences(readyState?.realtime ?? null);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <SafeAreaView style={styles.sheet} edges={['left', 'right']}>
-      <View style={styles.sheetHeader}>
-        <View style={styles.sheetTitleGroup}>
-          <Text style={styles.sheetTitle}>Conversation</Text>
-          <Text numberOfLines={1} style={styles.sheetContext}>
-            {session.contextLabel}
-          </Text>
-        </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="New conversation" style={styles.iconButton} onPress={startNewConversation}><RotateCcw color={palette.textMuted} size={20} /></Pressable>
-        <Pressable
-          accessibilityLabel="Close voice session"
-          accessibilityRole="button"
-          onPress={onClose}
-          style={styles.iconButton}
-        >
-          <X color={palette.textMuted} size={21} strokeWidth={2.4} />
-        </Pressable>
-      </View>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'android' ? navigationHeaderHeight : 0}>
+    <SafeAreaView style={[styles.sheet, { paddingTop: Platform.OS === 'ios' ? navigationHeaderHeight : 0 }]}
+      edges={Platform.OS === 'ios' ? ['left', 'right'] : ['top', 'left', 'right']}>
+      <VoiceConversationHeader realtime={readyState?.realtime ?? null} photoDrafts={photoDrafts}
+        commandDrafts={commandDrafts} onReset={onReset} onClose={onClose} />
+      <Text style={styles.sheetContext}>{session.contextLabel}</Text>
 
       {state.status === 'loading' ? (
         <SessionLoadingState />
       ) : state.status === 'error' ? (
-        <SessionErrorState message={state.message} />
+        <VoicePreviewRecovery key={scopeIdentity} message={state.message} identity={scopeIdentity} onRetry={retryPreview} />
       ) : (
         <>
           <ScrollView
@@ -461,13 +392,7 @@ function VoiceSessionSheet({
                 <Text style={styles.sectionLabel}>{state.realtime.progressLabel}</Text>
                 <Text style={styles.errorText}>{state.realtime.errorMessage}</Text>
                 {session.recoveryAction?.target === 'provider_profiles' ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={onOpenProviderProfiles}
-                    style={styles.recoveryButton}
-                  >
-                    <Text style={styles.recoveryButtonText}>{session.recoveryAction.label}</Text>
-                  </Pressable>
+                  <NativeCommandButton label={session.recoveryAction.label} onPress={onOpenProviderProfiles} />
                 ) : null}
               </View>
             ) : null}
@@ -497,12 +422,6 @@ function VoiceSessionSheet({
               </View>
             ) : null}
 
-            {session.canReset ? (
-              <Pressable accessibilityRole="button" onPress={onReset} style={styles.resetButton}>
-                <RotateCcw color={palette.textMuted} size={17} strokeWidth={2.4} />
-                <Text style={styles.resetButtonText}>Reset session</Text>
-              </Pressable>
-            ) : null}
           </ScrollView>
 
           <View style={[styles.bottomActionBar, { paddingBottom: spacing.md + safeAreaBottom }]}>
@@ -511,40 +430,14 @@ function VoiceSessionSheet({
               bottomAction.kind === 'review_decision' && styles.reviewBottomActionContent
             ]}>
               {bottomAction.kind === 'review_decision' ? (
-                <View style={styles.reviewActionGroup}>
-                  <Pressable
-                    accessibilityLabel="Cancel voice change"
-                    accessibilityRole="button"
-                    onPress={() => onCancelActionPlan(bottomAction.planId)}
-                    style={styles.cancelPlanButton}
-                  >
-                    <X color={palette.textMuted} size={17} strokeWidth={2.4} />
-                    <Text style={styles.cancelPlanButtonText}>Cancel</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityLabel="Approve voice change"
-                    accessibilityRole="button"
-                    onPress={() => onApproveActionPlan(bottomAction.planId)}
-                    style={styles.approvePlanButton}
-                  >
-                    <Check color={palette.onAction} size={18} strokeWidth={2.6} />
-                    <Text style={styles.approvePlanButtonText}>Approve</Text>
-                  </Pressable>
-                </View>
+                <>
+                {titleEditor && !titleEditor.value.trim() ? <Text accessibilityLiveRegion="polite" style={styles.progressHint}>Enter a name before approving.</Text> : null}
+                <VoiceReviewActions planId={bottomAction.planId} />
+                </>
               ) : <VoiceConversationComposer onMic={onSessionMic} />}
 
             </View>
           </View>
-          <ParentPicker
-            commands={actionPlan?.commands ?? []}
-            commandDrafts={commandDrafts}
-            commandId={parentPickerCommandId}
-            matches={parentMatches}
-            onChangeQuery={onChangeParentQuery}
-            onClose={onCloseParentPicker}
-            onSelect={onSelectParent}
-            query={parentQuery}
-          />
         </>
       )}
     </SafeAreaView>
@@ -575,49 +468,9 @@ function EditablePlanCommandFields({
 
   if (editing) {
     return (
-      <View style={styles.inlineNameEditor}>
-        <AppTextInput
-          accessibilityLabel="Proposed item name"
-          autoFocus
-          maxLength={200}
-          onChangeText={setValue}
-          onSubmitEditing={() => {
-            if (value.trim()) {
-              onChangeTitle(value.trim());
-              setEditing(false);
-            }
-          }}
-          returnKeyType="done"
-          selectTextOnFocus
-          style={styles.inlineNameInput}
-          value={value}
-        />
-        <Pressable
-          accessibilityLabel="Save proposed name"
-          accessibilityRole="button"
-          disabled={!value.trim()}
-          onPress={() => {
-            if (value.trim()) {
-              onChangeTitle(value.trim());
-              setEditing(false);
-            }
-          }}
-          style={styles.inlineEditorIconButton}
-        >
-          <Check color={palette.accentStrong} size={18} strokeWidth={2.6} />
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Cancel editing proposed name"
-          accessibilityRole="button"
-          onPress={() => {
-            setValue(title);
-            setEditing(false);
-          }}
-          style={styles.inlineEditorIconButton}
-        >
-          <X color={palette.textMuted} size={18} strokeWidth={2.4} />
-        </Pressable>
-      </View>
+      <VoicePlanNameEditor value={value} onChange={setValue}
+        onSave={name => { onChangeTitle(name); setEditing(false); }}
+        onCancel={() => setEditing(false)} />
     );
   }
 
@@ -651,97 +504,6 @@ function EditablePlanCommandFields({
   );
 }
 
-function ParentPicker({
-  commands,
-  commandDrafts,
-  commandId,
-  matches,
-  onChangeQuery,
-  onClose,
-  onSelect,
-  query
-}: {
-  readonly commands: readonly VoiceSessionActionPlanCommand[];
-  readonly commandDrafts: VoicePlanCommandDrafts;
-  readonly commandId: string | null;
-  readonly matches: readonly ParentLookupResult[];
-  readonly onChangeQuery: (query: string) => void;
-  readonly onClose: () => void;
-  readonly onSelect: (commandId: string, parent: VoicePlanParentDraft) => void;
-  readonly query: string;
-}) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  if (commandId === null) {
-    return null;
-  }
-  const currentIndex = commands.findIndex((command) => command.id === commandId);
-  const proposedParents = currentIndex < 0
-    ? []
-    : commands.slice(0, currentIndex).filter((command) => command.editable && command.id);
-  return (
-    <View style={styles.parentPickerSheet}>
-      <View style={styles.parentPickerHeader}>
-        <View>
-          <Text style={styles.parentPickerTitle}>Containing location</Text>
-          <Text style={styles.parentPickerSubtitle}>Choose where this new thing belongs</Text>
-        </View>
-        <Pressable accessibilityLabel="Close location selector" accessibilityRole="button" onPress={onClose} style={styles.iconButton}>
-          <X color={palette.textMuted} size={21} strokeWidth={2.4} />
-        </Pressable>
-      </View>
-      <AppTextInput
-        accessibilityLabel="Search containing locations"
-        autoCapitalize="none"
-        onChangeText={onChangeQuery}
-        placeholder="Search locations, containers, and items"
-        placeholderTextColor={palette.textMuted}
-        style={styles.parentSearchInput}
-        value={query}
-      />
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.parentPickerList} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        <ParentOption
-          label="Inventory root"
-          meta="No containing location"
-          onPress={() => onSelect(commandId, { kind: 'root', label: 'Inventory root' })}
-        />
-        {proposedParents.map((command) => (
-          <ParentOption
-            key={command.id}
-            label={command.id ? commandDrafts[command.id]?.title ?? command.title : command.title}
-            meta="Created by this plan"
-            onPress={() => command.id && onSelect(commandId, { kind: 'command', id: command.id, label: commandDrafts[command.id]?.title ?? command.title })}
-          />
-        ))}
-        {matches.map((match) => (
-          <ParentOption
-            disabled={match.canSelectAsParent === false}
-            key={match.id}
-            label={match.title}
-            meta={match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel)}
-            onPress={() => onSelect(commandId, { kind: 'asset', id: match.id, label: match.pathLabel })}
-          />
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-function ParentOption({ disabled = false, label, meta, onPress }: { readonly disabled?: boolean; readonly label: string; readonly meta: string; readonly onPress: () => void }) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  return (
-    <Pressable accessibilityLabel={`Select ${label}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.parentOption, disabled && styles.parentOptionDisabled]}>
-      <MapPin color={palette.accentStrong} size={18} strokeWidth={2.3} />
-      <View style={styles.parentOptionText}>
-        <Text style={styles.parentOptionTitle}>{label}</Text>
-        <Text numberOfLines={2} style={styles.parentOptionMeta}>{meta}</Text>
-      </View>
-      <ChevronDown color={palette.textMuted} size={17} strokeWidth={2.2} style={styles.parentOptionChevron} />
-    </Pressable>
-  );
-}
-
 function SessionLoadingState() {
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -749,16 +511,6 @@ function SessionLoadingState() {
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
       <Text style={styles.centerStateText}>Loading voice</Text>
-    </View>
-  );
-}
-
-function SessionErrorState({ message }: { readonly message: string }) {
-  const styles = createStyles(useAppearancePalette());
-  return (
-    <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Voice unavailable</Text>
-      <Text style={styles.centerStateText}>{message}</Text>
     </View>
   );
 }
@@ -911,40 +663,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '800',
     lineHeight: 22
   },
-  approvePlanButton: {
-    alignItems: 'center',
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  approvePlanButtonText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900'
-  },
-  cancelPlanButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  cancelPlanButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '900'
-  },
   cancelSessionButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -1009,21 +727,6 @@ function createStyles(colors: MobileColorPalette) {
     lineHeight: 22,
     marginTop: spacing.xs
   },
-  errorTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
-  iconButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: 'center',
-    width: 40
-  },
   progressGroup: {
     flex: 1,
     minWidth: 0
@@ -1070,37 +773,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '700',
     lineHeight: 20
   },
-  resetButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  resetButtonText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800'
-  },
-  recoveryButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.action,
-    borderRadius: radius.md,
-    justifyContent: 'center',
-    marginTop: spacing.md,
-    minHeight: 44,
-    paddingHorizontal: spacing.md
-  },
-  recoveryButtonText: {
-    color: colors.onAction,
-    fontSize: 14,
-    fontWeight: '900'
-  },
   responseIcon: {
     alignItems: 'center',
     backgroundColor: colors.brandDustyBlueSoft,
@@ -1116,10 +788,6 @@ function createStyles(colors: MobileColorPalette) {
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.md
-  },
-  reviewActionGroup: {
-    flexDirection: 'row',
-    gap: spacing.sm
   },
   reviewBottomActionContent: {
     alignItems: 'stretch',
@@ -1183,24 +851,6 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '700',
     marginTop: 2
   },
-  sheetHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm
-  },
-  sheetTitle: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 24
-  },
-  sheetTitleGroup: {
-    flex: 1,
-    minWidth: 0
-  },
   editableNameButton: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -1230,94 +880,6 @@ function createStyles(colors: MobileColorPalette) {
   },
   editablePlanFields: {
     alignItems: 'stretch'
-  },
-  inlineEditorIconButton: {
-    alignItems: 'center',
-    height: 44,
-    justifyContent: 'center',
-    width: 36
-  },
-  inlineNameEditor: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 2
-  },
-  inlineNameInput: {
-    backgroundColor: colors.surface,
-    borderColor: colors.accent,
-    borderRadius: radius.sm,
-    borderWidth: 2,
-    color: colors.text,
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    minHeight: 44,
-    paddingHorizontal: spacing.sm
-  },
-  parentOption: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 64,
-    paddingVertical: spacing.sm
-  },
-  parentOptionChevron: {
-    transform: [{ rotate: '-90deg' }]
-  },
-  parentOptionDisabled: {
-    backgroundColor: colors.surfaceMuted
-  },
-  parentOptionMeta: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 2
-  },
-  parentOptionText: {
-    flex: 1,
-    minWidth: 0
-  },
-  parentOptionTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  parentPickerHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  parentPickerList: {
-    paddingBottom: spacing.xl
-  },
-  parentPickerSheet: {
-    backgroundColor: colors.surface,
-    flex: 1,
-    padding: spacing.lg
-  },
-  parentPickerSubtitle: {
-    color: colors.textMuted,
-    fontSize: 14,
-    marginTop: 2
-  },
-  parentPickerTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '900'
-  },
-  parentSearchInput: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 16,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-    minHeight: 48,
-    paddingHorizontal: spacing.md
   },
   transcriptText: {
     color: colors.text,

@@ -1,0 +1,10 @@
+{
+  "run": 35154627907,
+  "artifact": 10471498466,
+  "test": "testBrowseLastTagClearsActionFooterAndApplies",
+  "source": "NSKeyedArchiver synthesized-event attachments from xcresult",
+  "tagFrame": { "x": 98, "y": 674.5, "width": 548, "height": 52 },
+  "tagTap": { "record": "2026-09-16 22:22:05", "x": 372, "y": 700.5, "downType": 1, "upType": 3, "duration": 0.05 },
+  "backTap": { "record": "2026-09-16 22:22:06", "x": 372, "y": 847.5, "downType": 1, "upType": 3, "duration": 0.05 },
+  "limit": "Synthesized coordinates are inside the exposed row; they do not prove React Native delivered onPress or that selection changed."
+}

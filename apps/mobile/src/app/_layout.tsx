@@ -1,4 +1,6 @@
+import { inventorySwitcherNativeOptions } from '../ui/screens/InventorySwitcherNativeOptions';
 import { AppNoticeScreenLayout } from '../ui/feedback/AppNoticeScreenLayout';
+import { voiceNativeSheetOptions } from '../ui/screens/VoiceNativeSheetOptions';
 import { HomeReturnTaskProvider } from '../ui/navigation/HomeReturnTaskPresentation';
 import { PushNotificationNavigation } from '../ui/navigation/PushNotificationNavigation';
 import { VoiceConversationReturn } from '../ui/navigation/VoiceConversationReturn';
@@ -55,22 +57,13 @@ function ThemedApp() {
         }}
       >
         <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
+        <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
         <Stack.Screen name="browse-filters" options={sheetOptions.filters} />
         <Stack.Screen name="expiration-filters" options={sheetOptions.filters} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="voice"
-          options={{
-            contentStyle: { backgroundColor: palette.surface },
-            headerShown: false,
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.42, 0.88],
-            sheetCornerRadius: 24,
-            sheetExpandsWhenScrolledToEdge: true,
-            sheetGrabberVisible: true,
-            sheetInitialDetentIndex: 0,
-            sheetLargestUndimmedDetentIndex: 'none'
-          }}
+          options={voiceNativeSheetOptions(palette)}
         />
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
         <Stack.Screen name="settings/account" options={{ title: 'Account' }} />
@@ -107,18 +100,7 @@ function ThemedApp() {
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/index" options={{ title: 'Provider Profile' }} />
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/credential" options={{ title: 'Credential' }} />
         <Stack.Screen name="settings/voice/profiles/[providerProfileId]/prompt" options={{ title: 'Prompt Guidance' }} />
-        <Stack.Screen
-          name="add"
-          options={{
-            contentStyle: { backgroundColor: palette.background },
-            headerShown: true,
-            title: 'Add item',
-            presentation: 'formSheet',
-            sheetAllowedDetents: [1],
-            sheetCornerRadius: 24,
-            sheetGrabberVisible: true
-          }}
-        />
+        <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
         <Stack.Screen
           name="assets/[assetId]/edit"
@@ -139,17 +121,7 @@ function ThemedApp() {
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}
         />
-        <Stack.Screen
-          name="tenant-switcher"
-          options={{
-            contentStyle: { backgroundColor: palette.surface },
-            headerShown: true,
-            presentation: 'formSheet',
-            sheetAllowedDetents: [0.5, 1],
-            sheetCornerRadius: 24,
-            sheetGrabberVisible: true
-          }}
-        />
+        <Stack.Screen name="tenant-switcher" options={inventorySwitcherNativeOptions(palette)} />
       </Stack>
       <PushNotificationNavigation />
       <VoiceConversationReturn />

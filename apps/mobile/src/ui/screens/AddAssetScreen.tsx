@@ -1,6 +1,7 @@
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { AddAssetNameField } from './AddAssetNameField';
+import { AddDraftNameField } from './AddDraftNameField';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
@@ -121,6 +122,7 @@ function ScopedAddAssetScreen({
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const feedback = useAppFeedback();
+  const capturePhotoChooserVisit = useTaskPresentation(undefined, principalId);
   const restoredDraft = useRef(false);
   const safeAreaInsets = useSafeAreaInsets();
   const formScrollRef = useRef<ScrollView>(null);
@@ -464,7 +466,10 @@ function ScopedAddAssetScreen({
 
   function choosePhotoSource(): void {
     if (draftOperation.current) return;
+    const canPresent = capturePhotoChooserVisit();
+    if (!canPresent()) return;
     showPhotoSourceChooser({
+      isCurrent: canPresent,
       onCamera: () => void takePhoto(),
       onLibrary: () => void addPhotosFromLibrary()
     });
@@ -593,7 +598,7 @@ function ScopedAddAssetScreen({
                 />
 
                 <Text style={styles.fieldLabel}>Name</Text>
-                <AddAssetNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
+                <AddDraftNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
                   accessibilityLabel="Asset name"
                   editable={!draftBusy}
                   onChangeText={value => editDraft(() => setTitle(value))}
@@ -668,21 +673,15 @@ function ScopedAddAssetScreen({
                       style={[styles.input, styles.textArea]}
                       value={description}
                     />
-                    <AssetTagPicker disabled={draftBusy}
+                    <AssetTagPicker key={nameRevision} disabled={draftBusy}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
                       newTags={newTags}
                       entry={inlineTag}
                       onChange={(ids, tags, entry) => editDraft(() => { setSelectedTagIds(ids); setNewTags(tags); setInlineTag(entry); })}
                     />
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={draftBusy}
-                      onPress={clearDraft}
-                      style={styles.clearDraftButton}
-                    >
-                      <Text style={styles.clearDraftText}>Clear draft</Text>
-                    </Pressable>
+                    <NativeCommandButton label="Clear draft" role="destructive"
+                      disabled={draftBusy} onPress={clearDraft} />
                   </View>
                 ) : null}
 
@@ -741,6 +740,7 @@ function PhotoCapture({
         style={styles.photoStrip}
       >
         <Pressable
+          accessibilityLabel="Add photos"
           accessibilityHint="Choose camera or photo library"
           accessibilityRole="button"
           disabled={disabled}
@@ -895,15 +895,8 @@ function PhotoPreviewItem({
         <Text style={styles.photoOrdinal}>{(index + 1).toString()}</Text>
         <Text style={styles.photoDragHint}>{isDragging ? 'Drag' : 'Hold'}</Text>
       </Pressable>
-      <Pressable
-        accessibilityLabel={`Remove ${photo.fileName}`}
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={() => onRemovePhoto(photo.id)}
-        style={styles.removePhotoButton}
-      >
-        <X color={colors.text} size={16} strokeWidth={2.4} />
-      </Pressable>
+      <NativeCommandButton label={`Remove photo ${index + 1}`}
+        disabled={disabled} onPress={() => onRemovePhoto(photo.id)} />
     </View>
   );
 }
@@ -960,7 +953,7 @@ function ParentPicker({
           <Text style={styles.parentMeta}>
             {selectedParent
               ? `${selectedParent.selectionHint} · ${selectedParent.subtitle}`
-              : 'Top level in this inventory'}
+              : query.trim() ? 'Not selected yet' : 'Top level in this inventory'}
           </Text>
         </View>
         {isOpen ? (
@@ -1057,6 +1050,7 @@ function AssetTagPicker({
   readonly onChange: (tagIds: readonly string[], tags: readonly CreateAssetTagDraft[], entry: NonNullable<AddAssetDraft['inlineTag']>) => void;
 }) {
   const [tagSearch, setTagSearch] = useState('');
+  const [tagNameRevision, setTagNameRevision] = useState(0);
   const [showAllTags, setShowAllTags] = useState(false);
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.displayName, expanded: showAllTags, query: tagSearch });
   const colors = useAppearanceAwarePalette();
@@ -1087,6 +1081,7 @@ function AssetTagPicker({
       pendingTags: newTags
     });
     onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
+    if (transition.shouldClearInputs) setTagNameRevision(value => value + 1);
   }
 
   const resolution = resolveInlineAssetTag({
@@ -1108,6 +1103,8 @@ function AssetTagPicker({
             <Pressable
               disabled={disabled}
               accessibilityRole="button"
+              accessibilityLabel={`Remove new tag ${tag.displayName}`}
+              accessibilityState={{ disabled }}
               key={`${tag.displayName}-${index.toString()}`}
               onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}
               style={[
@@ -1150,7 +1147,7 @@ function AssetTagPicker({
       {choices.noMatches ? <Text accessibilityLiveRegion="polite" style={styles.parentPromotionText}>No matching tags</Text> : null}
       {choices.canDisclose ? <NativeCommandButton label={showAllTags ? 'Show fewer tags' : 'Show all tags'} disabled={disabled} onPress={() => { if (!disabled) setShowAllTags(current => !current); }} /> : null}
       <View style={styles.newTagRow}>
-        <AppTextInput editable={!disabled}
+        <AddDraftNameField key={Platform.OS === 'ios' ? tagNameRevision : 'tag-name'} editable={!disabled}
           accessibilityLabel="New tag name"
           onChangeText={setNewTagName}
           placeholder="New tag"
@@ -1489,9 +1486,7 @@ function createStyles(colors: MobileColorPalette) {
     marginBottom: spacing.sm
   },
   photoPreviewShell: {
-    aspectRatio: 1,
     marginRight: spacing.sm,
-    position: 'relative',
     width: 108
   },
   photoPreview: {
@@ -1536,17 +1531,6 @@ function createStyles(colors: MobileColorPalette) {
     paddingHorizontal: 7,
     paddingVertical: 4,
     position: 'absolute'
-  },
-  removePhotoButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 999,
-    height: 28,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 6,
-    top: 6,
-    width: 28
   },
   moreDetailsButton: {
     alignItems: 'center',
@@ -1622,19 +1606,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  clearDraftButton: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    minHeight: minimumTouchTargetSize,
-    paddingHorizontal: spacing.md
-  },
-  clearDraftText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0
-  },
   savedText: {
     color: colors.accentStrong,
     fontSize: 14,

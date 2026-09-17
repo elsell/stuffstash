@@ -358,6 +358,10 @@ details; the two-value Show menu remains an in-place native choice. Reversal kee
 its native confirmation and explicit pending label with disabled submission.
 Technical details remain an inline disclosure, not another navigation destination.
 
+History list and detail must use the same readable actor fallback: show a trimmed
+email when available, otherwise Someone with access. Do not put an opaque principal
+ID in the primary actor label. This presentation choice does not alter audit identity.
+
 ### Mobile history date presentation
 
 Activity, checkout/return history and exact event details must format timestamps
@@ -368,3 +372,10 @@ year, and event details include seconds and zone. A shared asset-history
 formatter owns these presentation choices. Invalid transport values remain
 visible as the original value rather than crashing the history surface.
 This changes no stored timestamps, ordering, pagination or authorization.
+## Mobile retained reversal confirmation
+
+A History reversal confirmation belongs to the activity snapshot that was shown.
+If that snapshot changes or its refresh fails before confirmation, the retained
+confirmation must not submit a reversal. A later successful refresh may expose a
+new confirmation for the current available operation. Preserve already-started
+commands, pending locks and existing focus-owned completion behavior.

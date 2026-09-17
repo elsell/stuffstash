@@ -51,3 +51,19 @@ checks retained records, retry reachability and name recovery before the existin
 pagination and dismissal checks. Fixture preparation, TypeScript and structural
 checks pass remotely. Execution on iPhone/iPad remains pending; this addition is
 not new runtime acceptance evidence.
+
+## Current route follow-up
+
+Atc08aa31a, the six remaining R008 source axes were rechecked: automatic scroll
+insets and flow footer; responsive wrapping record content; no keyboard input;
+native Close, named loading/error/retry and section heading; no notification
+handler in this route. Actual geometry, assistive traversal and direct-link return
+remain native acceptance. M212 identifies Close calling Back even without a stack.
+The candidate replaces with Home only on direct entry. Loading/error/ready tests
+failed before correction and now cover both entry conditions. Nine route tests,
+TypeScript and structural checks pass on paul; critic found no blocker.
+
+September16 Android normal-text follow-up now verifies independent name recovery,
+older-page append/exhaustion, retained notes, ordinary Close and cold-root Close.
+See android-header-sheets.md for exact APK and retained evidence. Production detail
+focus, failed continuation and assistive reading remain separate acceptance work.

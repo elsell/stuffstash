@@ -2,7 +2,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { Stack, useFocusEffect } from 'expo-router';
-import { Mail, MailOpen } from 'lucide-react-native';
+import { NativeReadStateButton } from '../components/NativeReadStateButton';
 import { AssetBreadcrumbTrail } from '../components/AssetCard';
 import { formatAssetExpiration } from '../presentation/ExpirationPresentation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,24 +31,36 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const focusSession = useRef<object | undefined>(undefined);
+  const initialLoadStarted = useRef(false);
   useFocusEffect(useCallback(() => {
     const session = {}; focusSession.current = session;
+    void Promise.resolve().then(() => {
+      if (focusSession.current !== session || initialLoadStarted.current) return;
+      initialLoadStarted.current = true;
+      void load('all');
+    });
     return () => { if (focusSession.current === session) focusSession.current = undefined; };
   }, []));
   const pending = useRef(false);
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
   useEffect(() => {
-    let active = true; mounted.current = true;
-    void Promise.resolve().then(() => { if (active) void load('all'); });
-    return () => { active = false; mounted.current = false; controller.current?.abort(); };
+    mounted.current = true;
+    return () => { mounted.current = false; controller.current?.abort(); };
   }, []);
   async function run(operation: (signal: AbortSignal) => Promise<void>, fallback: string) {
-    if (pending.current) return;
+    if (!mounted.current || !focusSession.current || pending.current) return;
     pending.current = true; setBusy(true); setError('');
     const request = new AbortController(); controller.current = request;
     try { await operation(request.signal); }
-    catch (caught) { if (mounted.current && !request.signal.aborted) setError(caught instanceof NotificationFailure ? caught.message : fallback); }
+    catch (caught) {
+      if (mounted.current && !request.signal.aborted) {
+        if (caught instanceof NotificationFailure && (caught.kind === 'authentication-required' || caught.kind === 'permission-denied')) {
+          setRows([]); setCursor(null); setLocallyRead(new Set()); setLoaded(false);
+        }
+        setError(caught instanceof NotificationFailure ? caught.message : fallback);
+      }
+    }
     finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
   async function fetchPage(selected: Filter, signal: AbortSignal, after?: string) {
@@ -95,7 +107,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
       { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
-      { kind: 'settings', label: 'Reminder settings', onPress: onSettings }
+      { kind: 'settings', label: 'Reminder settings', onPress: () => { if (mounted.current && focusSession.current) onSettings(); } }
     ]);
   const headerOptions = useMemo(() => ({ title: 'Notifications', ...actionOptions }), [actionOptions]);
   return <>
@@ -113,11 +125,9 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? 'Expired' : 'Expires'} {formatAssetExpiration(row.expiration)}</Text>
 
     </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} style={styles.readAction}>
-        {row.readAt || locallyRead.has(row.id) ? <Mail size={20} color={colors.action} /> : <MailOpen size={20} color={colors.action} />}
-      </Pressable>
+      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} /></View>
       {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? 'Partial location path' : 'Location unavailable'}</Text> : null}
-      <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(!busy)onOpenAsset(entry.id);}} />
+      <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(mounted.current && focusSession.current && !pending.current)onOpenAsset(entry.id);}} />
     </View>)}
     {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}</Text> : null}
     {cursor ? button('Load more notifications', () => void load(filter, cursor)) : null}
@@ -125,6 +135,6 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 }
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: spacing.lg, gap: spacing.md }, heading: { fontSize: 24, fontWeight: '700' }, title: { fontSize: 18, fontWeight: '600' },
-  actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 44, gap: spacing.sm },
-  readAction: { position: 'absolute', right: 0, top: spacing.md, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }
+  actions: { gap: spacing.sm }, card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: spacing.md, paddingRight: 48, gap: spacing.sm },
+  readAction: { position: 'absolute', right: 0, top: spacing.md, width: 48, height: 48 }
 });

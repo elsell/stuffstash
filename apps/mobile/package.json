@@ -52,5 +52,14 @@
     "test-renderer": "1.2.0",
     "typescript": "5.9.2",
     "vitest": "4.1.8"
+  },
+  "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-ui"
+        ]
+      }
+    }
   }
 }

@@ -3,7 +3,7 @@ import { InventoryInvitationLinkUnavailableError } from '../../application/shari
 import { setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
 import React from 'react';
-import { pressAlertButton } from '../../test-support/react-native';
+import { pressAlertButton, keyboardDismissCount } from '../../test-support/react-native';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -14,9 +14,14 @@ import { CreateInventoryInvitationCommand, CancelInventoryInvitationCommand, Lis
 
 const scope: InventorySharingScope = { tenantId: 'tenant', inventoryId: 'inventory', inventoryName: 'Garage', permissions: ['share'] };
 const item: InventoryInvitationSummary = { id: 'one', email: 'old@example.test', relationship: 'viewer', status: 'pending', isExpired: false, expiresAt: '2027-01-01' };
+function cancellationButton(h: MobileRenderHarness, email: string) {
+  const recipient = h.allByType('Text').find(node => node.children.length === 1 && node.children[0] === email);
+  return recipient?.parent?.queryAll(node => node.props.accessibilityLabel === 'Cancel invitation')[0];
+}
 async function openCancellation(h: MobileRenderHarness, email: string) {
-  await h.press(h.byLabel(`Invitation actions for ${email}`));
-  await h.press(h.byText('Cancel invitation')?.parent ?? undefined);
+  const command = cancellationButton(h, email);
+  expect(command, 'cancellation must be directly available beside its recipient').toBeDefined();
+  await h.press(command);
 }
 const settle = async (h: MobileRenderHarness) => { await h.run(() => new Promise(r => setTimeout(r, 10))); };
 it('reuses safe invitation pages and keeps a created secret out of cache', async () => {
@@ -40,7 +45,8 @@ it('reuses safe invitation pages and keeps a created secret out of cache', async
     failRefresh = true;
     await openCancellation(h, 'new@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation')); await settle(h);
-    expect(h.byLabel('Invitation actions for new@example.test')).toBeUndefined();
+    expect(cancellationButton(h, 'new@example.test')).toBeUndefined();
+    expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     failRefresh = false;
     await h.render(view(true, 'replacement')); await settle(h);
     expect(h.allText()).not.toContain('https://example.test/#token=secret');
@@ -49,9 +55,9 @@ it('reuses safe invitation pages and keeps a created secret out of cache', async
 });
 
 it('hides cached invitations after denial and cancels a departed scope read', async () => {
-  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let denied = false; let signal: AbortSignal | undefined;
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let denied = false; let signal: AbortSignal | undefined; let reads = 0;
   const repository: InventoryInvitationManagementRepository = {
-    list: async (selected, request) => { if (selected.inventoryId === 'other') { signal = request?.signal; return new Promise(() => undefined); } if (denied) throw Object.assign(new Error('denied'), { status: 403 }); return { items: [item] }; },
+    list: async (selected, request) => { reads++; if (selected.inventoryId === 'other') { signal = request?.signal; return new Promise(() => undefined); } if (denied) throw Object.assign(new Error('denied'), { status: 403 }); return { items: [item] }; },
     create: async () => ({ ...item, inviteUrl: 'secret' }), cancel: async () => undefined
   };
   const query = new ListInventoryInvitationsQuery(repository);
@@ -60,6 +66,17 @@ it('hides cached invitations after denial and cancels a departed scope read', as
     await h.render(view(scope)); await settle(h); expect(h.allText()).toContain('old@example.test');
     denied = true; await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.invitations('scope', 'tenant', 'inventory') })); await settle(h);
     expect(h.allText()).not.toContain('old@example.test');
+    expect(h.allText()).toContain('Sharing unavailable');
+    expect(h.byLabel('Retry')).toBeUndefined();
+    denied = false; await h.press(h.byLabel('Check Again')); await settle(h);
+    expect(h.allText()).toContain('old@example.test');
+    const readsBeforeDenial = reads;
+    await h.render(view({ ...scope, permissions: [] })); await settle(h);
+    expect(reads).toBe(readsBeforeDenial);
+    expect(h.allText()).not.toContain('old@example.test');
+    expect(h.allText()).toContain('You don’t have permission to manage invitations for Garage.');
+    expect(h.byLabel('Retry')).toBeUndefined();
+    expect(h.byLabel('Check Again')).toBeUndefined();
     await h.render(view({ ...scope, inventoryId: 'other' })); await settle(h); expect(signal?.aborted).toBe(false);
     await h.render(view(scope, false)); expect(signal?.aborted).toBe(true);
   } finally { await h.unmount(); }
@@ -151,6 +168,7 @@ it.each(['copy', 'share', 'cancel'] as const)('suppresses late %s feedback after
 
 it('refreshes safe metadata and shows link-unavailable recovery inside the sharing form', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let creations = 0;
+  const dismissalsBefore = keyboardDismissCount();
   const repository: InventoryInvitationManagementRepository = {
     list: async () => ({ items: creations === 2 ? [{ ...item, id: 'second', email: 'second@example.test' }, item] : creations ? [item] : [] }),
     create: async () => { if (++creations === 1) return { ...item, inviteUrl: 'https://example.test/#token=previous' }; throw new InventoryInvitationLinkUnavailableError(); }, cancel: async () => undefined
@@ -165,6 +183,7 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     await h.changeText(h.byLabel('Invitee email'), 'friend@example.test');
     await h.press(h.byLabel('Create Invitation')); await settle(h);
     const recovery = h.byText('Invitation created, link unavailable');
+    expect(keyboardDismissCount()).toBe(dismissalsBefore + 2);
     expect(recovery).toBeDefined();
     let parent = recovery?.parent;
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
@@ -207,7 +226,7 @@ it.each(['copy', 'share', 'cancel'] as const)('keeps %s recovery beside its task
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
     expect(parent?.type, 'task feedback must scroll with the form, outside the navigation overlay').toBe('ScrollView');
     if (action !== 'cancel') expect(h.byLabel('Complete invitation link')).toBeDefined();
-    else expect(h.byLabel('Invitation actions for old@example.test')).toBeDefined();
+    else expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     fail = false; await perform();
     expect(h.byText(`Could not ${action} invitation`)).toBeUndefined();
     if (action === 'copy') {
@@ -289,19 +308,25 @@ it('keeps each invitation locked independently and rejects duplicate confirmatio
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><AppFeedbackProvider><InventorySharingScreen scope={scope} listQuery={new ListInventoryInvitationsQuery(repository)} createCommand={new CreateInventoryInvitationCommand(repository)} cancelCommand={new CancelInventoryInvitationCommand(repository)} linkActions={{ copy: async () => undefined, share: async () => undefined }} /></AppFeedbackProvider></MobileServerStateProvider>);
     await settle(h);
+    const dismissalsBefore = keyboardDismissCount();
+    await openCancellation(h, 'old@example.test');
+    expect(keyboardDismissCount()).toBe(dismissalsBefore + 1);
+    await h.run(() => pressAlertButton('Keep Invitation'));
+    expect(calls).toEqual([]);
+    expect(cancellationButton(h, 'old@example.test')).toBeDefined();
     await openCancellation(h, 'old@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation'));
     await h.run(() => pressAlertButton('Cancel Invitation'));
     expect(calls).toEqual(['one']);
     await openCancellation(h, 'second@example.test');
     await h.run(() => pressAlertButton('Cancel Invitation'));
-    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(true);
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'old@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(true);
     await h.run(() => finish.get('one')?.(new Error('First cancellation failed')));
-    expect(h.byLabel('Invitation actions for old@example.test')?.props.disabled).toBe(false);
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(true);
+    expect(cancellationButton(h, 'old@example.test')?.props.disabled).toBe(false);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(true);
     await h.run(() => finish.get('two')?.(new Error('Second cancellation failed')));
-    expect(h.byLabel('Invitation actions for second@example.test')?.props.disabled).toBe(false);
+    expect(cancellationButton(h, 'second@example.test')?.props.disabled).toBe(false);
     await h.run(() => pressAlertButton('Cancel Invitation'));
     expect(calls).toEqual(['one', 'two']);
   } finally { await h.unmount(); client.clear(); }

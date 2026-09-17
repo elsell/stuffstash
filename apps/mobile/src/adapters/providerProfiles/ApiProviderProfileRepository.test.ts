@@ -13,7 +13,7 @@ class FakeProviderProfileClient {
     providerProfileId: 'profile-language',
     capability: 'language_inference',
     providerKind: 'gemini',
-    status: 'success',
+    status: 'succeeded',
     message: 'Provider profile test succeeded.',
     testedAt: '2026-06-26T12:01:00Z'
   };

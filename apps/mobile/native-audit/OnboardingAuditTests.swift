@@ -18,9 +18,26 @@ final class OnboardingAuditTests: XCTestCase {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      keyboard.keys.allElementsBoundByIndex.contains { $0.isHittable }
+      // This fixture uses the English URL keyboard. Avoid resolving every key,
+      // including zero-sized padding nodes, during each readiness observation.
+      keyboard.keys["q"].isHittable
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
+  }
+
+  private func captureAddressFailureSnapshot() {
+    func fields(_ node: XCUIElementSnapshot) -> [String] {
+      let current = node.elementType == .textField
+        ? ["label=\(node.label); value=\(String(describing: node.value)); frame=\(node.frame)"] : []
+      return current + node.children.flatMap { fields($0) }
+    }
+    let details: String
+    do { details = fields(try app.snapshot()).joined(separator: "\n") }
+    catch { details = "Snapshot failed: \(error)" }
+    let attachment = XCTAttachment(string: details.isEmpty ? "No text fields in snapshot" : details)
+    attachment.name = "address-failure-full-values"
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   private func capture(_ name: String) {
@@ -83,19 +100,29 @@ final class OnboardingAuditTests: XCTestCase {
     waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    let completeAddress = XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "https://example.invalid"), object: address)
+    let addressResult = XCTWaiter.wait(for: [completeAddress], timeout: 5)
+    if addressResult != .completed { captureAddressFailureSnapshot() }
+    XCTAssertEqual(addressResult, .completed,
+      "Address entry must finish with the complete value within five seconds")
     capture("onboarding-keyboard")
     XCTAssertEqual(address.value as? String, "https://example.invalid", "Typing must preserve the complete server address")
     // Interactive keyboard dismissal follows a downward drag from scroll content.
     let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
     let scroll = app.scrollViews.firstMatch
     XCTAssertTrue(scroll.exists)
-    let startPoint = CGPoint(x: formColumnDrag ? address.frame.midX : scroll.frame.minX + 8, y: min(scroll.frame.maxY, app.keyboards.firstMatch.frame.minY) - 80)
-    XCTAssertTrue(scroll.frame.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
+    // Resolve each frame once: repeated accessibility snapshots can stall on CI.
+    let scrollBounds = scroll.frame
+    let keyboardBounds = app.keyboards.firstMatch.frame
+    let applicationBounds = app.frame
+    let startPoint = CGPoint(x: formColumnDrag ? address.frame.midX : scrollBounds.minX + 8, y: min(scrollBounds.maxY, keyboardBounds.minY) - 80)
+    XCTAssertTrue(scrollBounds.contains(startPoint), "Dismissal drag must begin inside the scroll surface")
     if formColumnDrag {
       XCTAssertGreaterThan(startPoint.y, app.buttons["Connect and sign in"].frame.maxY, "Comparison drag must begin in blank content, not on a command")
     }
     let start = origin.withOffset(CGVector(dx: startPoint.x, dy: startPoint.y))
-    let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(app.frame.maxY - 24, startPoint.y + 300)))
+    let end = origin.withOffset(CGVector(dx: startPoint.x, dy: min(applicationBounds.maxY - 24, startPoint.y + 300)))
     start.press(forDuration: 0.1, thenDragTo: end)
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 5), .completed)
     let connect = app.buttons["Connect and sign in"]

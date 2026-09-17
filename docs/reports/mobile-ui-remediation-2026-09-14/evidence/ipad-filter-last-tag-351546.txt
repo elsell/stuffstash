@@ -1,0 +1,194 @@
+Attributes: Application, 0x1068fb200, pid: 31200, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x1068fb200, pid: 31200, label: 'Stuff Stash'
+    Window (Main), 0x1068fb340, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x1068fb480, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x1068fb700, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x1068fb840, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x1068fb980, {{-744.0, -1133.0}, {2232.0, 3399.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+            Other, 0x1068fbac0, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x1068fbc00, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x1068fbd40, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x1068fbe80, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x106898280, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x1068983c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x106899180, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x10689b980, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Native UI audit'
+                            StaticText, 0x106899a40, {{312.0, 43.5}, {119.5, 21.0}}, label: 'Native UI audit'
+                          Other, 0x106899b80, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x106898dc0, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x10689be80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x106899400, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x106898b40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x106898f00, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x106899040, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x106898640, {{0.0, 86.0}, {744.0, 3392.0}}
+                                          Other, 0x1068992c0, {{0.0, 86.0}, {744.0, 3392.0}}
+                                            Button, 0x106898780, {{20.0, 106.0}, {704.0, 37.5}}, label: 'Audit voice proposal'
+                                            Button, 0x10326bd40, {{20.0, 163.5}, {704.0, 37.5}}, label: 'Audit Notice push'
+                                            Button, 0x10326be80, {{20.0, 221.0}, {704.0, 37.5}}, label: 'Audit Notice sheet'
+                                            Button, 0x10326b5c0, {{20.0, 278.5}, {704.0, 37.5}}, label: 'Audit Provider credential'
+                                            Button, 0x10326b980, {{20.0, 336.0}, {704.0, 37.5}}, label: 'Audit Provider prompt'
+                                            Button, 0x10326bac0, {{20.0, 393.5}, {704.0, 37.5}}, label: 'Audit Account'
+                                            Button, 0x10326bc00, {{20.0, 451.0}, {704.0, 37.5}}, label: 'Audit Home in tabs'
+                                            Button, 0x1068def80, {{20.0, 508.5}, {704.0, 37.5}}, label: 'Audit invitation acceptance'
+                                            Button, 0x1068df5c0, {{20.0, 566.0}, {704.0, 37.5}}, label: 'Audit Connection'
+                                            Button, 0x1068dc140, {{20.0, 623.5}, {704.0, 37.5}}, label: 'Audit static search placement'
+                                            Button, 0x1068dc000, {{20.0, 681.0}, {704.0, 37.5}}, label: 'Audit preconfigured place search'
+                                            Button, 0x1068dde00, {{20.0, 738.5}, {704.0, 37.5}}, label: 'Audit Notifications'
+                                            Button, 0x1068ddf40, {{20.0, 796.0}, {704.0, 37.5}}, label: 'Audit Sharing'
+                                            Button, 0x1068de080, {{20.0, 853.5}, {704.0, 37.5}}, label: 'Audit inventory query'
+                                            Button, 0x1068de1c0, {{20.0, 911.0}, {704.0, 37.5}}, label: 'Audit inventory switcher'
+                                            Button, 0x1068de300, {{20.0, 968.5}, {704.0, 37.5}}, label: 'Audit Home Return'
+                                            Button, 0x1068de440, {{20.0, 1026.0}, {704.0, 37.5}}, label: 'Audit Home header'
+                                            Button, 0x1068de580, {{20.0, 1083.5}, {704.0, 37.5}}, label: 'Audit Browse filters'
+                                            Button, 0x1068de6c0, {{20.0, 1141.0}, {704.0, 37.5}}, label: 'Audit Expiration filters'
+                                            Button, 0x1068de800, {{20.0, 1198.5}, {704.0, 37.5}}, label: 'Audit medium expiration filters'
+                                            Button, 0x1068de940, {{20.0, 1256.0}, {704.0, 37.5}}, label: 'Audit feedback'
+                                            Button, 0x1068dea80, {{20.0, 1313.5}, {704.0, 37.5}}, label: 'Audit draft options'
+                                            Button, 0x1068debc0, {{20.0, 1371.0}, {704.0, 37.5}}, label: 'Audit controlled input'
+                                            Button, 0x1068ded00, {{20.0, 1428.5}, {704.0, 37.5}}, label: 'Audit uncontrolled input'
+                                            Button, 0x1068dee40, {{20.0, 1486.0}, {704.0, 37.5}}, label: 'Audit input without accessory'
+                                            Button, 0x1068ddb80, {{20.0, 1543.5}, {704.0, 37.5}}, label: 'Audit system input'
+                                            Button, 0x1068ddcc0, {{20.0, 1601.0}, {704.0, 37.5}}, label: 'Audit Add navigation draft'
+                                            Button, 0x1068dc280, {{20.0, 1658.5}, {704.0, 37.5}}, label: 'Audit Add configured header'
+                                            Button, 0x1068dc3c0, {{20.0, 1716.0}, {704.0, 37.5}}, label: 'Audit Add draft'
+                                            Button, 0x1068dc500, {{20.0, 1773.5}, {704.0, 37.5}}, label: 'Audit onboarding submission'
+                                            Button, 0x1068dc640, {{20.0, 1831.0}, {704.0, 37.5}}, label: 'Audit settings controls'
+                                            Button, 0x1068dc780, {{20.0, 1888.5}, {704.0, 37.5}}, label: 'Audit settings collection'
+                                            Button, 0x1068dc8c0, {{20.0, 1946.0}, {704.0, 37.5}}, label: 'Audit settings editor'
+                                            Button, 0x1068dca00, {{20.0, 2003.5}, {704.0, 37.5}}, label: 'Audit direct sheet'
+                                            Button, 0x1068dcb40, {{20.0, 2061.0}, {704.0, 37.5}}, label: 'Audit nested sheet'
+                                            Button, 0x1068dcc80, {{20.0, 2118.5}, {704.0, 37.5}}, label: 'Audit footer sheet'
+                                            Button, 0x1068dcdc0, {{20.0, 2176.0}, {704.0, 37.5}}, label: 'Audit direct-footer sheet'
+                                            Button, 0x1068dcf00, {{20.0, 2233.5}, {704.0, 37.5}}, label: 'Audit scroll-footer sheet'
+                                            Button, 0x1068dd040, {{20.0, 2291.0}, {704.0, 37.5}}, label: 'Audit Checkout history'
+                                            Button, 0x1068dd180, {{20.0, 2348.5}, {704.0, 37.5}}, label: 'Audit draft photos'
+                                            Button, 0x1068dd2c0, {{20.0, 2406.0}, {704.0, 37.5}}, label: 'Audit plain input'
+                                            Button, 0x1068dd400, {{20.0, 2463.5}, {704.0, 37.5}}, label: 'Audit native-default input'
+                                            Button, 0x1068dd540, {{20.0, 2521.0}, {704.0, 37.5}}, label: 'Audit plain-controlled input'
+                                            Button, 0x1068dd680, {{20.0, 2578.5}, {704.0, 37.5}}, label: 'Audit plain-controlled-no-assistance input'
+                                            Button, 0x1068dd7c0, {{20.0, 2636.0}, {704.0, 37.5}}, label: 'Audit plain-controlled-no-accessory input'
+                                            Button, 0x1068dd900, {{20.0, 2693.5}, {704.0, 37.5}}, label: 'Audit plain-no-assistance input'
+                                            Button, 0x1068dda40, {{20.0, 2751.0}, {704.0, 37.5}}, label: 'Audit plain-no-accessory input'
+                                            Button, 0x113ef8000, {{20.0, 2808.5}, {704.0, 37.5}}, label: 'Audit multiline input'
+                                            Button, 0x113ef8140, {{20.0, 2866.0}, {704.0, 37.5}}, label: 'Audit photo removal recovery'
+                                            Button, 0x113ef8280, {{20.0, 2923.5}, {704.0, 37.5}}, label: 'Audit unavailable photo'
+                                            Button, 0x113ef83c0, {{20.0, 2981.0}, {704.0, 37.5}}, label: 'Audit footer appearance'
+                                            Button, 0x113ef8500, {{20.0, 3038.5}, {704.0, 37.5}}, label: 'Audit command height'
+                                            Button, 0x113ef8640, {{20.0, 3096.0}, {704.0, 37.5}}, label: 'Audit Move here recovery'
+                                            Button, 0x113ef8780, {{20.0, 3153.5}, {704.0, 37.5}}, label: 'Audit Edit tags'
+                                            Button, 0x113ef88c0, {{20.0, 3211.0}, {704.0, 37.5}}, label: 'Audit Edit recovery'
+                                            Button, 0x113ef8a00, {{20.0, 3268.5}, {704.0, 37.5}}, label: 'Audit contents recovery'
+                                            Button, 0x113ef8b40, {{20.0, 3326.0}, {704.0, 37.5}}, label: 'Audit place search'
+                                            Button, 0x113ef8c80, {{20.0, 3383.5}, {704.0, 37.5}}, label: 'Audit detail commands'
+                                            StaticText, 0x113ef8dc0, {{20.0, 3441.0}, {704.0, 17.0}}
+                                              StaticText, 0x113ef8f00, {{20.0, 3441.0}, {704.0, 17.0}}
+                                        Other, 0x113ef9040, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                                          Other, 0x113ef9180, {{738.0, 89.0}, {3.0, 363.5}}
+                                        Other, 0x113ef92c0, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x113ef9400, {{35.0, 1107.0}, {674.0, 3.0}}
+                                        Other, 0x113ef9540, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                                          Other, 0x113ef9680, {{738.0, 89.0}, {3.0, 363.5}}
+                                        Other, 0x113ef97c0, {{32.0, 1080.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x113ef9900, {{35.0, 1107.0}, {674.0, 3.0}}
+                          Other, 0x113ef9a40, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x113ef9b80, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x113ef9cc0, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x113ef9e00, {{-744.0, -1133.0}, {2232.0, 3399.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x113ef9f40, {{82.0, 236.5}, {580.0, 650.0}}
+          Button, 0x113efa080, {{334.0, 231.5}, {76.0, 25.0}}, label: 'Sheet Grabber', value: Half screen
+          Image, 0x113efa1c0, {{-68.0, 86.5}, {880.0, 950.0}}
+          Other, 0x113efa300, {{82.0, 236.5}, {580.0, 650.0}}
+            Other, 0x113efa440, {{82.0, 236.5}, {580.0, 650.0}}
+              Other, 0x113efa580, {{82.0, 236.5}, {580.0, 650.0}}
+                Other, 0x113efa6c0, {{82.0, 236.5}, {580.0, 650.0}}
+                  Other, 0x113efa800, {{82.0, 236.5}, {580.0, 650.0}}
+                    Other, 0x113efa940, {{82.0, 236.5}, {580.0, 650.0}}
+                      Other, 0x113efaa80, {{82.0, 236.5}, {580.0, 650.0}}
+                        NavigationBar, 0x113efabc0, {{82.0, 246.5}, {580.0, 54.0}}, identifier: 'Tags'
+                          StaticText, 0x113efad00, {{352.5, 258.0}, {39.0, 21.0}}, label: 'Tags'
+                          Button, 0x113efae40, {{612.0, 250.5}, {36.0, 36.0}}, label: 'Search'
+                        Other, 0x113efaf80, {{82.0, 236.5}, {580.0, 650.0}}
+                          Other, 0x113efb0c0, {{82.0, 236.5}, {580.0, 650.0}}
+                            Other, 0x113efb200, {{82.0, 236.5}, {580.0, 650.0}}
+                              Other, 0x113efb340, {{82.0, 236.5}, {580.0, 650.0}}
+                                Other, 0x113efb480, {{82.0, 236.5}, {580.0, 650.0}}
+                                  Other, 0x113efb5c0, {{82.0, 236.5}, {580.0, 650.0}}
+                                    ScrollView, 0x113efb700, {{82.0, 236.5}, {580.0, 650.0}}
+                                      Other, 0x113efb840, {{82.0, -1013.5}, {580.0, 1900.0}}
+                                        Other, 0x113efb980, {{82.0, -1013.5}, {580.0, 1900.0}}
+                                          Other, 0x113efbac0, {{98.0, -989.5}, {548.0, 1716.0}}
+                                            Other, 0x113efbc00, {{98.0, -989.5}, {548.0, 52.0}}, label: 'Filter by tag Holiday supplies', value: checkbox, unchecked
+                                            Other, 0x113efbd40, {{98.0, -937.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 01', value: checkbox, unchecked
+                                            Other, 0x113efbe80, {{98.0, -885.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 02', value: checkbox, unchecked
+                                            Other, 0x113f14000, {{98.0, -833.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 03', value: checkbox, unchecked
+                                            Other, 0x113f14140, {{98.0, -781.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 04', value: checkbox, unchecked
+                                            Other, 0x113f14280, {{98.0, -729.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 05', value: checkbox, unchecked
+                                            Other, 0x113f143c0, {{98.0, -677.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 06', value: checkbox, unchecked
+                                            Other, 0x113f14500, {{98.0, -625.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 07', value: checkbox, unchecked
+                                            Other, 0x113f14640, {{98.0, -573.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 08', value: checkbox, unchecked
+                                            Other, 0x113f14780, {{98.0, -521.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 09', value: checkbox, unchecked
+                                            Other, 0x113f148c0, {{98.0, -469.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 10', value: checkbox, unchecked
+                                            Other, 0x113f14a00, {{98.0, -417.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 11', value: checkbox, unchecked
+                                            Other, 0x113f14b40, {{98.0, -365.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 12', value: checkbox, unchecked
+                                            Other, 0x113f14c80, {{98.0, -313.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 13', value: checkbox, unchecked
+                                            Other, 0x113f14dc0, {{98.0, -261.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 14', value: checkbox, unchecked
+                                            Other, 0x113f14f00, {{98.0, -209.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 15', value: checkbox, unchecked
+                                            Other, 0x113f15040, {{98.0, -157.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 16', value: checkbox, unchecked
+                                            Other, 0x113f15180, {{98.0, -105.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 17', value: checkbox, unchecked
+                                            Other, 0x113f152c0, {{98.0, -53.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 18', value: checkbox, unchecked
+                                            Other, 0x113f15400, {{98.0, -1.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 19', value: checkbox, unchecked
+                                            Other, 0x113f15540, {{98.0, 50.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 20', value: checkbox, unchecked
+                                            Other, 0x113f15680, {{98.0, 102.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 21', value: checkbox, unchecked
+                                            Other, 0x113f157c0, {{98.0, 154.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 22', value: checkbox, unchecked
+                                            Other, 0x113f15900, {{98.0, 206.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 23', value: checkbox, unchecked
+                                            Other, 0x113f15a40, {{98.0, 258.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 24', value: checkbox, unchecked
+                                            Other, 0x113f15b80, {{98.0, 310.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 25', value: checkbox, unchecked
+                                            Other, 0x113f15cc0, {{98.0, 362.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 26', value: checkbox, unchecked
+                                            Other, 0x113f15e00, {{98.0, 414.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 27', value: checkbox, unchecked
+                                            Other, 0x113f15f40, {{98.0, 466.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 28', value: checkbox, unchecked
+                                            Other, 0x113f16080, {{98.0, 518.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 29', value: checkbox, unchecked
+                                            Other, 0x113f161c0, {{98.0, 570.5}, {548.0, 52.0}}, label: 'Filter by tag Long list tag 30', value: checkbox, unchecked
+                                            Other, 0x113f16300, {{98.0, 622.5}, {548.0, 52.0}}, label: 'Filter by tag Tools', value: checkbox, unchecked
+                                            Other, 0x113f16440, {{98.0, 674.5}, {548.0, 52.0}}, label: 'Filter by tag ZZ final tag', value: checkbox, unchecked
+                                      Other, 0x113f16580, {{82.0, 236.5}, {580.0, 650.0}}
+                                        Other, 0x113f166c0, {{82.0, 236.5}, {580.0, 118.8}}
+                                      Other, 0x113f16800, {{82.0, 236.5}, {580.0, 650.0}}
+                                        Other, 0x113f16940, {{82.0, 236.5}, {580.0, 118.8}}
+                                          Image, 0x113f16a80, {{-38.0, 122.5}, {820.0, 228.0}}, identifier: 'AdditionalDimmingOverlay'
+                                          Other, 0x113f16bc0, {{82.0, 236.5}, {580.0, 54.0}}
+                                          Other, 0x113f16d00, {{82.0, 236.5}, {580.0, 118.8}}
+                                            Other, 0x113f16e40, {{82.0, 236.5}, {580.0, 118.8}}
+                                          Other, 0x113f16f80, {{82.0, 236.5}, {580.0, 118.8}}
+                                            Other, 0x113f170c0, {{82.0, 236.5}, {580.0, 118.8}}
+                                          Other, 0x113f17200, {{82.0, 236.5}, {580.0, 118.8}}
+                                            Other, 0x113f17340, {{82.0, 236.5}, {580.0, 118.8}}
+                                            Other, 0x113f17480, {{82.0, 236.5}, {580.0, 118.8}}
+                                      Other, 0x113f175c0, {{629.0, 300.5}, {30.0, 446.0}}, label: 'Vertical scroll bar, 4 pages', value: 100%
+                                        Other, 0x113f17700, {{656.0, 598.0}, {3.0, 145.5}}
+                                      Other, 0x113f17840, {{106.0, 713.5}, {532.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x113f17980, {{109.0, 740.5}, {526.0, 3.0}}
+                                      Other, 0x113f17ac0, {{629.0, 300.5}, {30.0, 446.0}}, label: 'Vertical scroll bar, 4 pages', value: 100%
+                                        Other, 0x113f17c00, {{656.0, 598.0}, {3.0, 145.5}}
+                                      Other, 0x113f17d40, {{106.0, 713.5}, {532.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x113f17e80, {{109.0, 740.5}, {526.0, 3.0}}
+                                  Other, 0x113f24000, {{82.0, 746.5}, {580.0, 140.0}}
+                                    Other, 0x113f24140, {{82.0, 746.5}, {580.0, 140.0}}, identifier: 'browse-filter-footer'
+                                    Other, 0x113f24280, {{102.0, 758.5}, {540.0, 116.0}}
+                                      Other, 0x113f243c0, {{102.0, 758.5}, {540.0, 116.0}}
+                                        Other, 0x113f24500, {{102.0, 758.5}, {540.0, 116.0}}
+                                          Button, 0x113f24640, {{102.0, 758.5}, {540.0, 54.0}}, label: 'Show results'
+                                          Button, 0x113f24780, {{102.0, 820.5}, {540.0, 54.0}}, label: 'Back to filters'
+                        Other, 0x113f248c0, {{82.0, 236.5}, {580.0, 650.0}}
+                          Other, 0x113f24a00, {{82.0, 236.5}, {580.0, 650.0}}
+    Window, 0x113f24b40, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x113f24c80, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x113f24dc0, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x1068fb200, pid: 31200, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x113f24f00, pid: 31200, label: 'Stuff Stash'
+  }

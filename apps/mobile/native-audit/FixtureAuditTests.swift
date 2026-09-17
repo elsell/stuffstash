@@ -7,10 +7,137 @@ final class FixtureAuditTests: XCTestCase {
     continueAfterFailure = false
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
+    let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
+    providerEvidence.name = "keyboard-provider-configuration"
+    providerEvidence.lifetime = .keepAlways
+    add(providerEvidence)
   }
   override func tearDownWithError() throws {
     capture("final-state")
     app.terminate()
+  }
+  func testNotificationInboxReadStateAndNavigationReturn() {
+    let entry = app.buttons["Audit Notifications"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable); entry.tap()
+    let title = "Household medicine with a long descriptive label"
+    let markRead = app.buttons["Mark \(title) read"].firstMatch
+    XCTAssertTrue(markRead.waitForExistence(timeout: 10))
+    XCTAssertTrue(markRead.isHittable)
+    XCTAssertGreaterThan(markRead.frame.width, 0)
+    XCTAssertGreaterThan(markRead.frame.height, 0)
+    XCTAssertTrue(app.frame.contains(markRead.frame))
+    capture("notification-inbox-long-row")
+    markRead.tap()
+    let markUnread = app.buttons["Mark \(title) unread"].firstMatch
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5)); markUnread.tap()
+    XCTAssertTrue(markRead.waitForExistence(timeout: 5))
+    app.buttons["Open location Cold and cough supplies"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: box"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markRead.waitForExistence(timeout: 5))
+    app.buttons["Open \(title)"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: medicine-item"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5))
+    app.buttons["Reminder settings"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Resolved target: Reminder settings"].waitForExistence(timeout: 5))
+    app.navigationBars["Notification destination"].buttons.firstMatch.tap()
+    XCTAssertTrue(markUnread.waitForExistence(timeout: 5))
+    app.buttons["Mark Emergency batteries unread"].firstMatch.tap()
+    let markAll = app.buttons["Mark all read"].firstMatch
+    XCTAssertTrue(app.buttons["Mark Emergency batteries read"].firstMatch.waitForExistence(timeout: 5))
+    expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: markAll)
+    waitForExpectations(timeout: 5); markAll.tap()
+    XCTAssertTrue(app.buttons["Mark Emergency batteries unread"].firstMatch.waitForExistence(timeout: 5))
+    let unreadFilter = app.buttons["Unread"].firstMatch
+    expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: unreadFilter)
+    waitForExpectations(timeout: 5); unreadFilter.tap()
+    XCTAssertTrue(app.staticTexts["No unread notifications."].waitForExistence(timeout: 5))
+    capture("notification-inbox-unread-empty")
+  }
+  func testNotificationReadControlDeliveredTouchRegion() {
+    let entry = app.buttons["Audit Notifications"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable); entry.tap()
+    let title = "Household medicine with a long descriptive label"
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    var read = false
+    for (index, offset) in offsets.enumerated() {
+      let current = app.buttons["Mark \(title) \(read ? "unread" : "read")"].firstMatch
+      XCTAssertTrue(current.waitForExistence(timeout: 5))
+      let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: current)
+      XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+      XCTAssertTrue(current.isHittable)
+      let center = current.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      let changed = app.buttons["Mark \(title) \(read ? "read" : "unread")"].firstMatch
+      guard changed.waitForExistence(timeout: 5) else {
+        capture("notification-read-hit-region-failed-\(index)")
+        XCTFail("Read command did not toggle at probe \(index): \(offset)")
+        return
+      }
+      XCTAssertTrue(current.waitForNonExistence(timeout: 5))
+      XCTAssertTrue(app.navigationBars["Notifications"].exists)
+      read.toggle()
+    }
+    capture("notification-read-delivered-hit-region")
+  }
+  func testInvitationAcceptanceRetainsAccessAfterOpeningFailure() {
+    func openInvitation() {
+      let entry = app.buttons["Audit invitation acceptance"].firstMatch
+      for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(entry.isHittable)
+      entry.tap()
+      XCTAssertTrue(app.navigationBars["Invitation"].waitForExistence(timeout: 10))
+      XCTAssertTrue(app.buttons["Join inventory"].waitForExistence(timeout: 5))
+    }
+    func visible(_ element: XCUIElement) -> Bool {
+      guard element.exists else { return false }
+      let viewport = app.scrollViews.firstMatch.frame.intersection(app.frame)
+      let frame = element.frame
+      return frame.width > 0 && frame.height > 0 &&
+        frame.minY >= max(viewport.minY, app.navigationBars["Invitation"].frame.maxY) &&
+        frame.maxY <= viewport.maxY && frame.minX >= viewport.minX && frame.maxX <= viewport.maxX
+    }
+    func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
+      for _ in 0..<8 where !visible(element) {
+        if element.exists && element.frame.minY < app.navigationBars["Invitation"].frame.maxY {
+          app.scrollViews.firstMatch.swipeDown()
+        } else {
+          app.scrollViews.firstMatch.swipeUp()
+        }
+      }
+      XCTAssertTrue(visible(element), "Invitation content must fit below navigation and within the scroll viewport")
+      if requiresHit { XCTAssertTrue(element.isHittable) }
+    }
+    openInvitation()
+    let name = app.staticTexts["Family camping equipment and seasonal supplies shared with the household"].firstMatch
+    reveal(name, requiresHit: false)
+    reveal(app.staticTexts["Editor"].firstMatch, requiresHit: false)
+    capture("invitation-review-normal")
+    let later = app.buttons["Not now"].firstMatch
+    reveal(later)
+    later.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    openInvitation()
+    let join = app.buttons["Join inventory"].firstMatch
+    reveal(join)
+    join.tap()
+    let open = app.buttons["Open inventory"].firstMatch
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    reveal(open)
+    open.tap()
+    let recovery = app.staticTexts["The inventory could not be opened. Your access was still added."].firstMatch
+    XCTAssertTrue(recovery.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Join inventory"].exists)
+    reveal(recovery, requiresHit: false)
+    capture("invitation-open-recovery")
+    reveal(open)
+    open.tap()
+    XCTAssertTrue(app.staticTexts["Opened invitation inventory; accepted once"].waitForExistence(timeout: 5))
   }
   private func verifyNoticePlacement(_ presentation: String) {
     let open = app.buttons["Audit Notice \(presentation)"]
@@ -26,18 +153,44 @@ final class FixtureAuditTests: XCTestCase {
     let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
     let content = app.descendants(matching: .any).matching(identifier: "notice-placement-content").firstMatch
     XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
-    func belowNavigation(_ control: XCUIElement) -> Bool {
-      let bounds = content.frame.intersection(app.frame)
+    var lastGeometry = "No geometry sample evaluated"
+    func descendants(_ snapshot: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
+      [snapshot] + snapshot.children.flatMap { descendants($0) }
+    }
+    func belowNavigation(_ control: any XCUIElementSnapshot, bounds: CGRect, headerBottom: CGFloat) -> Bool {
       let rect = control.frame
-      return rect.height > 0 && rect.minY >= max(bounds.minY, header.frame.maxY) &&
+      let contained = rect.width > 0 && rect.height > 0 && rect.minY >= max(bounds.minY, headerBottom) &&
         rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
+      lastGeometry += "\n\(control.identifier.isEmpty ? control.label : control.identifier): \(rect), contained=\(contained)"
+      return contained
     }
     let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      belowNavigation(notice) && belowNavigation(dismiss) && belowNavigation(action)
+      do {
+        let snapshot = try self.app.snapshot()
+        let elements = descendants(snapshot)
+        guard let contentSnapshot = elements.first(where: { $0.identifier == "notice-placement-content" }),
+              let headerSnapshot = elements.first(where: { $0.elementType == .navigationBar && $0.identifier == "Notice placement" }),
+              let noticeSnapshot = elements.first(where: { $0.identifier == "app-notice-container" }),
+              let dismissSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Audit notice. A retained action must leave navigation reachable. Dismiss message" }),
+              let actionSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Complete audit action" }) else {
+          lastGeometry = "Required notice geometry element missing from snapshot"
+          return false
+        }
+        let bounds = contentSnapshot.frame.intersection(snapshot.frame)
+        lastGeometry = "app=\(snapshot.frame), content=\(contentSnapshot.frame), header=\(headerSnapshot.frame)"
+        guard !bounds.isEmpty, !bounds.isNull, !headerSnapshot.frame.isEmpty else { return false }
+        let results = [noticeSnapshot, dismissSnapshot, actionSnapshot].map {
+          belowNavigation($0, bounds: bounds, headerBottom: headerSnapshot.frame.maxY)
+        }
+        return results.allSatisfy { $0 }
+      } catch {
+        lastGeometry = "Could not capture notice geometry: \(error)"
+        return false
+      }
     }, object: nil)
     let placement = XCTWaiter.wait(for: [settled], timeout: 5)
     capture("notice-\(presentation)-placement")
-    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation")
+    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation. Last sample: \(lastGeometry)")
     XCTAssertTrue(dismiss.isHittable); XCTAssertTrue(action.isHittable)
     let back = presentation == "sheet" ? header.buttons["Close notice fixture"] : header.buttons["BackButton"].firstMatch
     XCTAssertTrue(back.isHittable)
@@ -155,21 +308,24 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
     let create = app.buttons["Create Invitation"].firstMatch
     reveal(create); create.tap()
-    feedback("Invitation created, link unavailable", message: "Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.", captureName: "sharing-unavailable-link")
+    feedback("Invitation created, link unavailable", message: "If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.", captureName: "sharing-unavailable-link")
     XCTAssertEqual(email.value as? String, "audit@example.invalid")
     XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
 
-    let cancel = app.buttons["Invitation actions for audit@example.invalid"].firstMatch
-    reveal(cancel); cancel.tap()
-    let cancelAction = app.buttons["Cancel invitation"].firstMatch
-    XCTAssertTrue(cancelAction.waitForExistence(timeout: 5)); cancelAction.tap()
+    let cancel = app.buttons["Cancel invitation"].firstMatch
+    reveal(cancel)
+    XCTAssertGreaterThanOrEqual(cancel.frame.width, 44)
+    XCTAssertGreaterThanOrEqual(cancel.frame.height, 44)
+    XCTAssertFalse(app.keyboards.firstMatch.exists, "Submitting an invitation must end keyboard editing")
+    cancel.tap()
     let confirm = app.alerts.buttons["Cancel Invitation"]
     XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
     feedback("Could not cancel invitation", message: "Audit cancellation unavailable. Try again.", captureName: "sharing-cancel-recovery")
     reveal(cancel); cancel.tap()
-    XCTAssertTrue(cancelAction.waitForExistence(timeout: 5)); cancelAction.tap()
     XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)], timeout: 5), .completed)
+    XCTAssertEqual(email.value as? String, "audit@example.invalid")
+    XCTAssertTrue(app.staticTexts["If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again."].exists)
 
     reveal(create); create.tap()
     let link = app.staticTexts["Complete invitation link"].firstMatch
@@ -263,6 +419,35 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForNonExistence(timeout: 5))
   }
 
+  func testMoveHereRejectedCommandRetainsSelectionAndRetryReturns() {
+    let open = app.buttons["Audit Move here recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let retry = app.buttons["Retry suggestions"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    retry.tap()
+    // Native accessibility groups title, kind and location into the candidate button.
+    let candidate = app.buttons["Audit tent, Item, Garage"].firstMatch
+    XCTAssertTrue(candidate.waitForExistence(timeout: 5))
+    XCTAssertTrue(candidate.isEnabled)
+    XCTAssertTrue(candidate.isHittable)
+    candidate.tap()
+    let move = app.buttons["Move here"].firstMatch
+    XCTAssertTrue(move.isEnabled)
+    move.tap()
+    XCTAssertTrue(app.alerts["Could not move asset here"].waitForExistence(timeout: 5))
+    app.alerts.buttons["OK"].tap()
+    XCTAssertTrue(app.staticTexts["Audit tent -> Camping box"].firstMatch.exists)
+    XCTAssertTrue(move.isHittable)
+    move.tap()
+    XCTAssertTrue(app.textFields["Find item, box, or place"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
+    capture("move-here-successful-retry")
+  }
+
   func testMoveHereRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
@@ -304,7 +489,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("move-here-suggestions-error")
     retry.tap()
-    XCTAssertTrue(app.staticTexts["Audit tent"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Audit tent, Item, Garage"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
     capture("move-here-suggestions-recovered")
     app.buttons["Cancel"].firstMatch.tap()
@@ -381,7 +566,14 @@ final class FixtureAuditTests: XCTestCase {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      keyboard.keys.allElementsBoundByIndex.contains { $0.isHittable }
+      keyboard.keys.allElementsBoundByIndex.contains { key in
+        guard key.exists else { return false }
+        let bounds = key.frame
+        guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
+              bounds.origin.x.isFinite, bounds.origin.y.isFinite,
+              bounds.width.isFinite, bounds.height.isFinite else { return false }
+        return key.isHittable
+      }
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
   }
@@ -524,10 +716,61 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(footer.frame.intersection(bounds).contains(action.frame), "Every action must be fully visible")
     }
     last.tap()
+    let selected = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      (last.value as? String) == "checkbox, checked"
+    }, object: nil)
+    let selectionResult = XCTWaiter.wait(for: [selected], timeout: 5)
+    let selectionValue = XCTAttachment(string: "Last tag after tap: \(String(describing: last.value))")
+    selectionValue.name = "browse-last-tag-selection"
+    selectionValue.lifetime = .keepAlways
+    add(selectionValue)
+    capture("browse-last-tag-after-selection")
+    XCTAssertEqual(selectionResult, .completed, "The last tag must be selected before returning to filters")
     app.buttons["Back to filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
     app.buttons["Show results"].tap()
     XCTAssertTrue(app.staticTexts["Browse selected tags: audit-last"].waitForExistence(timeout: 5))
+  }
+
+  private func assertFilterActionsClearKeyboard(_ apply: XCUIElement, _ back: XCUIElement) {
+    let dismiss = app.buttons["Dismiss keyboard"]
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    let clearAccessory = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let top = dismiss.frame.minY
+      return dismiss.isHittable && [apply, back].allSatisfy { action in
+        action.isHittable && !action.frame.isEmpty &&
+          self.app.frame.contains(action.frame) && action.frame.maxY <= top
+      }
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
+      "Both filter commands must be fully above the keyboard-dismiss accessory")
+  }
+
+  func testBrowseTagSearchKeepsActionsAboveKeyboardAccessory() {
+    app.buttons["Audit Browse filters"].tap()
+    let tags = app.buttons["Choose tags"]
+    XCTAssertTrue(tags.waitForExistence(timeout: 5)); tags.tap()
+    let searchButton = app.buttons["Search"].firstMatch
+    XCTAssertTrue(searchButton.waitForExistence(timeout: 5)); searchButton.tap()
+    let search = app.searchFields.firstMatch
+    XCTAssertTrue(search.waitForExistence(timeout: 5)); search.tap()
+    waitForKeyboard()
+    search.typeText("Tools")
+    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
+    let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
+    XCTAssertTrue(tools.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
+    let apply = app.buttons["Show results"]
+    let back = app.buttons["Back to filters"]
+    capture("browse-search-keyboard")
+    assertFilterActionsClearKeyboard(apply, back)
+    tools.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.exists)
+    assertFilterActionsClearKeyboard(apply, back)
+    capture("browse-search-actions-clear-accessory")
+    apply.tap()
+    XCTAssertTrue(app.staticTexts["Browse selected tags: audit-tools"].waitForExistence(timeout: 5))
   }
 
   func testBrowseUsesInPlaceAvailabilityMenuAndReachableActions() throws {
@@ -610,7 +853,15 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testPlaceContentsUseNativeSearchAndKeepNavigation() {
-    let open = app.buttons["Audit place search"]
+    verifyPlaceSearch(openLabel: "Audit place search")
+  }
+
+  func testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation() {
+    verifyPlaceSearch(openLabel: "Audit preconfigured place search")
+  }
+
+  private func verifyPlaceSearch(openLabel: String) {
+    let open = app.buttons[openLabel]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()
@@ -620,6 +871,9 @@ final class FixtureAuditTests: XCTestCase {
     let searchButton = app.buttons["Search"].firstMatch
     XCTAssertTrue(searchButton.waitForExistence(timeout: 10))
     XCTAssertTrue(searchButton.isHittable)
+    let header = app.navigationBars.firstMatch
+    XCTAssertGreaterThanOrEqual(searchButton.frame.minY, header.frame.minY)
+    XCTAssertLessThanOrEqual(searchButton.frame.maxY, header.frame.maxY)
     capture("place-search-collapsed")
     searchButton.tap()
     let field = app.searchFields.firstMatch
@@ -674,19 +928,94 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(field.value as? String, "19")
     XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Open asset Tool 0. Item"].exists)
-    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
-    XCTAssertTrue(cancel.isHittable)
-    cancel.tap()
-    XCTAssertTrue(field.waitForNonExistence(timeout: 5))
-    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    resetNativeSearch(field)
     XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
-    XCTAssertTrue(searchButton.isHittable)
+    XCTAssertTrue(searchButton.isHittable || (UIDevice.current.userInterfaceIdiom == .pad && field.isHittable))
     XCTAssertTrue(more.isHittable)
     capture("place-search-cancelled")
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
     back.tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
+  func testManagedSearchPlacementAfterEnableAndHeaderUpdate() {
+    guard openFixtureURL("audit-managed-search") else { return }
+    let enable = app.buttons["Enable managed search"]
+    XCTAssertTrue(enable.waitForExistence(timeout: 10))
+    enable.tap()
+    XCTAssertTrue(app.staticTexts["Managed search enabled"].waitForExistence(timeout: 5))
+    func headerSearchIsPresent(_ title: String) -> Bool {
+      let header = app.navigationBars[title]
+      let search = header.buttons["Search"].firstMatch
+      let found = search.waitForExistence(timeout: 5)
+      let field = app.searchFields["Managed search probe"].firstMatch
+      let geometry = XCTAttachment(string: "header=\(header.frame); search=\(found ? String(describing: search.frame) : "absent"); field=\(field.exists ? String(describing: field.frame) : "absent")")
+      geometry.name = title
+      geometry.lifetime = .keepAlways
+      add(geometry)
+      return found && search.isHittable && header.frame.contains(search.frame)
+    }
+    let initialPlacement = headerSearchIsPresent("Managed search")
+    capture("managed-search-after-enable")
+    app.buttons["Reconfigure search header"].tap()
+    XCTAssertTrue(app.navigationBars["Search reconfigured"].waitForExistence(timeout: 5))
+    let updatedPlacement = headerSearchIsPresent("Search reconfigured")
+    capture("managed-search-after-header-update")
+    app.buttons["Add native header action"].tap()
+    let action = app.navigationBars["Search reconfigured"].buttons["Probe action"].firstMatch
+    XCTAssertTrue(action.waitForExistence(timeout: 5))
+    let actionPlacement = headerSearchIsPresent("Search reconfigured")
+    capture("managed-search-with-native-action")
+    XCTAssertTrue(action.isHittable)
+    if action.isHittable { action.tap() }
+    XCTAssertTrue(app.staticTexts["Action activations: 1"].waitForExistence(timeout: 5))
+    XCTAssertTrue(actionPlacement, "Native header actions must coexist with header search")
+    XCTAssertTrue(initialPlacement, "Delayed native search must initially use the header")
+    XCTAssertTrue(updatedPlacement, "Header updates must retain search placement")
+  }
+
+  func testStaticNativeSearchPlacementComparison() {
+    let open = app.buttons["Audit static search placement"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let header = app.navigationBars["Search placement"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let search = header.buttons["Search"].firstMatch
+    let ready = search.waitForExistence(timeout: 10)
+    capture("static-search-placement-idle")
+    XCTAssertTrue(ready, "Registered integrated-button search must appear in the navigation bar")
+    guard ready else { return }
+    XCTAssertTrue(search.isHittable)
+    XCTAssertGreaterThanOrEqual(search.frame.minY, header.frame.minY)
+    XCTAssertLessThanOrEqual(search.frame.maxY, header.frame.maxY)
+    search.tap()
+    let field = app.searchFields["Search placement probe"].firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    capture("static-search-placement-expanded")
+    field.tap()
+    waitForKeyboard()
+    field.typeText("missing")
+    XCTAssertEqual(field.value as? String, "missing")
+    capture("static-search-before-focused-clear")
+    let clear = field.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable)
+    clear.tap()
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      field.isHittable || (!field.exists && search.isHittable)
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+    capture("static-search-after-focused-clear")
+    if !field.exists { search.tap() }
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    XCTAssertTrue(field.isHittable)
+    field.tap()
+    waitForKeyboard()
+    field.typeText("Garage")
+    XCTAssertEqual(field.value as? String, "Garage")
+    capture("static-search-fresh-query")
   }
 
   func testAssetRegionRecoveryAtAccessibilityTextSize() {
@@ -935,9 +1264,44 @@ final class FixtureAuditTests: XCTestCase {
     capture("expiration-native-calendar")
     let dismiss = app.buttons["PopoverDismissRegion"]
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
-    dismiss.tap()
+    let calendar = app.datePickers.containing(.button, identifier: "DatePicker.NextMonth").firstMatch
+    XCTAssertTrue(calendar.waitForExistence(timeout: 5))
+    let visible = dismiss.frame.intersection(app.frame)
+    let popup = calendar.frame.intersection(visible)
+    XCTAssertFalse(popup.isEmpty)
+    let navigation = app.navigationBars["Date range"]
+    XCTAssertTrue(navigation.exists)
+    let navigationFrame = navigation.frame.intersection(visible)
+    let outside = [
+      CGRect(x: visible.minX, y: visible.minY, width: popup.minX - visible.minX, height: visible.height),
+      CGRect(x: popup.maxX, y: visible.minY, width: visible.maxX - popup.maxX, height: visible.height),
+      CGRect(x: visible.minX, y: visible.minY, width: visible.width, height: popup.minY - visible.minY),
+      CGRect(x: visible.minX, y: popup.maxY, width: visible.width, height: visible.maxY - popup.maxY)
+    ].map { $0.intersection(navigationFrame) }
+      .filter { !$0.isEmpty && !$0.isInfinite && !$0.isNull }
+    let commands = navigation.buttons.allElementsBoundByIndex.map { $0.frame }
+    let titles = navigation.staticTexts.allElementsBoundByIndex.map { $0.frame }
+    let candidates = outside.flatMap { region in
+      [0.25, 0.5, 0.75].map { fraction in
+        CGPoint(x: region.minX + region.width * fraction, y: region.midY)
+      }
+    }
+    let selectedPoint = candidates.first { point in
+      !commands.contains { $0.contains(point) } && !titles.contains { $0.contains(point) }
+    }
+    let geometry = XCTAttachment(string: "dismiss=\(visible); calendar=\(popup); navigation=\(navigationFrame); commands=\(commands); titles=\(titles); candidates=\(candidates); tap=\(String(describing: selectedPoint))")
+    geometry.name = "calendar-dismissal-geometry"
+    geometry.lifetime = .keepAlways
+    add(geometry)
+    let point = try XCTUnwrap(selectedPoint, "No non-command calendar dismissal target in the navigation bar")
+    XCTAssertTrue(visible.contains(point))
+    XCTAssertTrue(navigationFrame.contains(point))
+    XCTAssertFalse(popup.contains(point))
+    app.coordinate(withNormalizedOffset: .zero)
+      .withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: dismiss)], timeout: 5), .completed)
     capture("expiration-calendar-dismissed")
+    XCTAssertTrue(navigation.exists, "Dismissing the calendar must leave the Date range page open")
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     let back = app.buttons["Cancel or return to filters"]
     XCTAssertTrue(back.isHittable)
@@ -963,14 +1327,15 @@ final class FixtureAuditTests: XCTestCase {
     search.tap()
     waitForKeyboard()
     search.typeText("Tools")
-    XCTAssertEqual(search.value as? String, "Tools")
+    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
     XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     capture("expiration-search-keyboard")
-    XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
     let back = app.buttons["Cancel or return to filters"]
-    XCTAssertTrue(back.isHittable)
+    assertFilterActionsClearKeyboard(app.buttons["Apply expiration filters"], back)
+    capture("expiration-search-actions-clear-accessory")
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }
@@ -1048,8 +1413,11 @@ final class FixtureAuditTests: XCTestCase {
     if withoutAccessory { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
     input.typeText("https://example.invalid")
     capture("\(mode)-address-entry\(withoutAccessory ? "-without-accessory" : "")")
-    XCTAssertEqual(input.value as? String, "https://example.invalid")
-    XCTAssertTrue(app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5))
+    let enteredValue = input.value as? String
+    let observedExpectedValue = app.staticTexts["Observed \(mode) input: https://example.invalid"].waitForExistence(timeout: 5)
+    if mode != "system" { captureInputEvents(mode) }
+    XCTAssertEqual(enteredValue, "https://example.invalid")
+    XCTAssertTrue(observedExpectedValue)
   }
 
   private func revealComparisonInput(_ input: XCUIElement) {
@@ -1065,7 +1433,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTFail("Comparison input must be fully visible before typing")
   }
 
-  private func verifyOrdinaryTextEntry(_ mode: String) {
+  private func verifyOrdinaryTextEntry(_ mode: String, paced: Bool = false) {
     let open = app.buttons["Audit \(mode) input"]
     for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -1076,14 +1444,48 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(input.isHittable)
     input.tap()
     waitForKeyboard()
-    input.typeText("Native draft name")
-    capture("\(mode)-ordinary-text-entry")
-    XCTAssertEqual(input.value as? String, "Native draft name")
-    XCTAssertTrue(app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5))
+    if mode.hasSuffix("no-accessory") { XCTAssertFalse(app.buttons["Dismiss keyboard"].exists) }
+    if paced {
+      for character in "Native draft name" { input.typeText(String(character)) }
+    } else {
+      input.typeText("Native draft name")
+    }
+    capture("\(mode)-ordinary-text-entry\(paced ? "-paced" : "")")
+    let enteredValue = input.value as? String
+    let observedExpectedValue = app.staticTexts["Observed \(mode) input: Native draft name"].waitForExistence(timeout: 5)
+    if mode != "native-default" { captureInputEvents(mode) }
+    XCTAssertEqual(enteredValue, "Native draft name")
+    XCTAssertTrue(observedExpectedValue)
+  }
+
+  private func captureInputEvents(_ mode: String) {
+    let captureEvents = app.buttons["Capture input events"]
+    guard captureEvents.isHittable else {
+      capture("input-event-capture-unreachable-\(mode)")
+      return
+    }
+    captureEvents.tap()
+    let trace = app.staticTexts["audit-input-event-trace"]
+    guard trace.waitForExistence(timeout: 5) else {
+      XCTFail("The input trace command must publish its recorded events")
+      return
+    }
+    let attachment = XCTAttachment(string: trace.label)
+    attachment.name = "input-events-\(mode)"
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   func testOrdinarySingleLineTextEntry() { verifyOrdinaryTextEntry("plain") }
+  func testNativeDefaultAssistedTextEntryDiagnostic() { verifyOrdinaryTextEntry("native-default") }
   func testOrdinaryMultilineTextEntry() { verifyOrdinaryTextEntry("multiline") }
+  func testOrdinaryControlledTextEntry() { verifyOrdinaryTextEntry("plain-controlled") }
+  func testControlledTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-controlled-no-assistance") }
+  func testControlledTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-controlled-no-accessory") }
+  func testOrdinaryTextEntryWithoutAssistance() { verifyOrdinaryTextEntry("plain-no-assistance") }
+  func testOrdinaryTextEntryWithoutAccessory() { verifyOrdinaryTextEntry("plain-no-accessory") }
+  func testPacedControlledTextEntryDiagnostic() { verifyOrdinaryTextEntry("plain-controlled", paced: true) }
+  func testPacedUncontrolledTextEntryDiagnostic() { verifyOrdinaryTextEntry("plain", paced: true) }
 
   func testSeededAddressWithoutKeyboardAccessory() { verifyAddressEntry("uncontrolled", withoutAccessory: true) }
 
@@ -1124,6 +1526,8 @@ final class FixtureAuditTests: XCTestCase {
     name.tap()
     waitForKeyboard()
     name.typeText("Tent")
+    let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
     XCTAssertEqual(name.value as? String, "Tent")
     dismissKeyboard()
     let save = app.buttons["Save item"].firstMatch
@@ -1136,24 +1540,34 @@ final class FixtureAuditTests: XCTestCase {
     entry.tap()
     waitForKeyboard()
     entry.typeText("Camping")
+    let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
+    XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)
     XCTAssertEqual(entry.value as? String, "Camping")
     dismissKeyboard()
     XCTAssertFalse(save.isEnabled)
     reveal(details)
     details.tap()
-    XCTAssertFalse(entry.exists)
+    XCTAssertTrue(entry.waitForNonExistence(timeout: 5))
     let guidance = app.staticTexts["Open More details to add or clear the unfinished tag before saving."].firstMatch
-    XCTAssertTrue(guidance.exists)
+    XCTAssertTrue(guidance.waitForExistence(timeout: 5))
     reveal(guidance, requiresHit: false)
     capture("add-unstaged-tag-collapsed")
     reveal(details)
     details.tap()
+    let retainedTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND value == %@", "Camping"), object: entry)
+    XCTAssertEqual(XCTWaiter.wait(for: [retainedTag], timeout: 5), .completed)
     XCTAssertEqual(entry.value as? String, "Camping")
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)
     add.tap()
-    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
-    XCTAssertTrue(save.isEnabled)
+    let staged = app.buttons["Remove new tag Camping"].firstMatch
+    let stageComplete = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      guard entry.exists, staged.exists, save.exists else { return false }
+      let value = entry.value
+      return (value == nil || value as? String == "" || value as? String == "New tag") && save.isEnabled
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [stageComplete], timeout: 5), .completed,
+      "Staging must retain the tag, clear the existing entry and enable Save")
     capture("add-tag-staged")
     let clear = app.buttons["Clear draft"].firstMatch
     reveal(clear)
@@ -1166,22 +1580,96 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testAddDraftRetainsTextAndRecoversAfterRejectedSave() {
-    verifyAddDraft(entry: "Audit Add draft")
+    verifyAddDraft(route: "audit-add")
   }
 
   func testAddDraftInNavigationStack() {
-    verifyAddDraft(entry: "Audit Add navigation draft")
+    verifyAddDraft(route: "audit-add-push")
   }
 
   func testAddDraftWithHeaderConfiguredBeforePresentation() {
-    verifyAddDraft(entry: "Audit Add configured header")
+    verifyAddDraft(route: "audit-add-header")
   }
 
-  private func verifyAddDraft(entry: String) {
-    let open = app.buttons[entry]
-    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+  func testAddPhotoPreviewPagingAndDraftRemoval() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let add = app.buttons["Add photos"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(add.isHittable)
+    add.tap()
+    let library = app.buttons["Choose from Library"].firstMatch
+    XCTAssertTrue(library.waitForExistence(timeout: 5))
+    library.tap()
+    let secondThumbnail = app.buttons["Remove photo 2"].firstMatch
+    XCTAssertTrue(secondThumbnail.waitForExistence(timeout: 5))
+    func openFirstPhoto(count: Int) {
+      let preview = app.descendants(matching: .any).matching(
+        NSPredicate(format: "value == %@", "1 of \(count)")).firstMatch
+      XCTAssertTrue(preview.waitForExistence(timeout: 5))
+      XCTAssertTrue(preview.isHittable)
+      preview.tap()
+      XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
+      XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].exists)
+    }
+    func confirmRemoval() {
+      let remove = app.buttons["Remove photo"]
+      XCTAssertTrue(remove.isHittable)
+      remove.tap()
+      XCTAssertTrue(app.alerts["Remove photo?"].waitForExistence(timeout: 5))
+    }
+    openFirstPhoto(count: 2)
+    let next = app.buttons["Next photo"]
+    XCTAssertTrue(next.isHittable)
+    next.tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].waitForExistence(timeout: 5))
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Cancel"].tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].exists)
+    XCTAssertTrue(app.staticTexts["2 of 2"].exists)
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Remove"].tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["1 of 1"].exists)
+    XCTAssertFalse(next.exists)
+    capture("add-photo-preview-surviving-draft")
+    app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.buttons["Remove photo 1"].waitForExistence(timeout: 5))
+    XCTAssertFalse(secondThumbnail.exists)
+    openFirstPhoto(count: 1)
+    confirmRemoval()
+    app.alerts["Remove photo?"].buttons["Remove"].tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable)
+    XCTAssertTrue(app.textFields["Asset name"].exists)
+    XCTAssertFalse(app.buttons["Remove photo 1"].exists)
+    capture("add-photo-last-removal-returns-to-draft")
+    app.buttons["Close Add"].tap()
+    XCTAssertTrue(app.textFields["Asset name"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    let root = app.buttons["Audit Browse filters"]
+    XCTAssertTrue(root.waitForExistence(timeout: 5))
+    for _ in 0..<12 where !root.isHittable {
+      let viewport = app.scrollViews.firstMatch
+      if root.frame.maxY > viewport.frame.maxY { viewport.swipeUp() }
+      else { viewport.swipeDown() }
+    }
+    XCTAssertTrue(root.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
+  }
+
+  private func openFixtureURL(_ route: String) -> Bool {
+    if #available(iOS 16.4, *) {
+      app.open(URL(string: "stuffstash:///\(route)")!)
+      return true
+    }
+    XCTFail("Native fixture URL entry requires iOS 16.4 or later")
+    return false
+  }
+
+  private func verifyAddDraft(route: String) {
+    // Synthetic menu scrolling previously delivered a tap to an unrelated fixture.
+    // Production Home entry has its own tests; isolate this presentation comparison.
+    guard openFixtureURL(route) else { return }
     let name = app.textFields["Asset name"]
     XCTAssertTrue(name.waitForExistence(timeout: 10))
     XCTAssertTrue(app.navigationBars["Add item"].exists)
@@ -1189,7 +1677,11 @@ final class FixtureAuditTests: XCTestCase {
     name.tap()
     waitForKeyboard()
     name.typeText("Native draft name")
-    XCTAssertEqual(name.value as? String, "Native draft name")
+    let exactName = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      name.value as? String == "Native draft name"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [exactName], timeout: 5), .completed,
+      "Native input must retain the exact typed name before saving")
     let save = app.buttons["Save item"]
     let close = app.buttons["Close Add"]
     XCTAssertTrue(save.isHittable)
@@ -1269,8 +1761,10 @@ final class FixtureAuditTests: XCTestCase {
     func verifyActions() {
       for action in actions {
         XCTAssertTrue(action.isHittable)
-        XCTAssertGreaterThanOrEqual(action.frame.width, 44)
-        XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+        // AX bounds describe layout, not UIKit's delivered touch region.
+        // The three independent action probes retain near-edge touch checks.
+        XCTAssertGreaterThan(action.frame.width, 0)
+        XCTAssertGreaterThan(action.frame.height, 0)
         XCTAssertTrue(app.frame.contains(action.frame))
       }
       XCTAssertTrue(selector.isHittable)
@@ -1280,7 +1774,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     verifyActions()
     let headerTop = add.frame.minY
-    let recent = app.staticTexts["Recently changed"]
+    let recent = app.staticTexts["Recently changed"].firstMatch
     XCTAssertTrue(recent.exists)
     let contentTop = recent.frame.minY
     capture("home-header-before-scroll")
@@ -1289,6 +1783,129 @@ final class FixtureAuditTests: XCTestCase {
     verifyActions()
     XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
     capture("home-header-after-scroll")
+  }
+
+  func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {
+    let entry = app.buttons["Audit Home in tabs"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable)
+    entry.tap()
+    let add = app.buttons["Add an asset"].firstMatch
+    let notifications = app.buttons["Notifications, 2 unread"].firstMatch
+    let profile = app.buttons["Open account and settings"].firstMatch
+    let voice = app.buttons["Start voice interaction"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(voice.waitForExistence(timeout: 10))
+    let tabs: XCUIElement
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // iPad's top strip is an Other containing nested Home/Browse buttons.
+      let containers = app.otherElements.containing(.button, identifier: "Home")
+        .containing(.button, identifier: "Browse").allElementsBoundByIndex
+      guard let strip = containers.filter({ $0.frame.height > 0 })
+        .min(by: { $0.frame.height < $1.frame.height }) else {
+        XCTFail("Native Home/Browse tab strip is missing")
+        return
+      }
+      tabs = strip
+    } else {
+      tabs = app.tabBars.firstMatch
+    }
+    XCTAssertTrue(tabs.exists)
+    for label in ["Home", "Browse"] {
+      let tab = tabs.buttons[label].firstMatch
+      XCTAssertTrue(tab.isHittable)
+      XCTAssertTrue(app.frame.contains(tab.frame))
+      XCTAssertTrue(tabs.frame.contains(tab.frame))
+    }
+    func verifyActions() {
+      for action in [add, notifications, profile, voice] {
+        XCTAssertTrue(action.isHittable)
+        XCTAssertTrue(app.frame.contains(action.frame))
+      }
+      XCTAssertLessThanOrEqual(add.frame.maxX, notifications.frame.minX)
+      XCTAssertLessThanOrEqual(notifications.frame.maxX, profile.frame.minX)
+    }
+    verifyActions()
+    capture("home-tab-shell-entry")
+    let headerTop = add.frame.minY
+    let lastReturn = app.buttons["Return Audit garden tools"].firstMatch
+    let scroll = app.scrollViews.containing(.staticText, identifier: "Recently changed").firstMatch
+    func clearOfChrome() -> Bool {
+      lastReturn.exists && lastReturn.isHittable && app.frame.contains(lastReturn.frame) &&
+        !lastReturn.frame.intersects(voice.frame) && !lastReturn.frame.intersects(tabs.frame)
+    }
+    for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
+    XCTAssertTrue(clearOfChrome(), "Last Home action must remain reachable clear of native tabs and voice entry")
+    verifyActions()
+    XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
+    capture("home-tab-shell-scrolled")
+    let browseTab = tabs.buttons["Browse"].firstMatch
+    XCTAssertTrue(browseTab.isHittable)
+    browseTab.tap()
+    XCTAssertTrue(app.staticTexts["Tab shell Browse placeholder"].waitForExistence(timeout: 5))
+    let homeTab = tabs.buttons["Home"].firstMatch
+    XCTAssertTrue(homeTab.isHittable)
+    homeTab.tap()
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.activityIndicators.firstMatch.waitForNonExistence(timeout: 5), "Tab return must not leave a pull indicator active")
+    verifyActions()
+    capture("home-tab-shell-return")
+  }
+
+  func testHomeNotificationHitRegionBeyondAccessibilityFrame() {
+    let open = app.buttons["Audit Home header"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    let menu = app.scrollViews.containing(.button, identifier: "Audit Home header").firstMatch
+    for _ in 0..<6 where !open.isHittable { menu.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let action = app.buttons["Notifications, 2 unread"]
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    XCTAssertTrue(action.isHittable)
+    // Probe inside each edge of a centered 44-point square, independently of
+    // the AX frame. Each tap must reach this action exactly once.
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      let center = action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      XCTAssertTrue(app.staticTexts["Header notification activations: \(index + 1)"].waitForExistence(timeout: 5),
+                    "Notification did not receive edge probe \(index): \(offset)")
+    }
+    capture("home-notification-hit-region")
+  }
+
+  func testHomeAddHitRegionBeyondAccessibilityFrame() {
+    verifyHomeNavigationHitRegion(label: "Add an asset", destination: "Header Add destination", captureName: "home-add-hit-region")
+  }
+
+  func testHomeProfileHitRegionBeyondAccessibilityFrame() {
+    verifyHomeNavigationHitRegion(label: "Open account and settings", destination: "Header Profile destination", captureName: "home-profile-hit-region")
+  }
+
+  private func verifyHomeNavigationHitRegion(label: String, destination: String, captureName: String) {
+    let open = app.buttons["Audit Home header"]
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    let menu = app.scrollViews.containing(.button, identifier: "Audit Home header").firstMatch
+    for _ in 0..<6 where !open.isHittable { menu.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    let action = app.buttons[label]
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      XCTAssertTrue(action.waitForExistence(timeout: 10))
+      XCTAssertTrue(action.isHittable)
+      let center = action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      XCTAssertTrue(app.staticTexts[destination].waitForExistence(timeout: 5),
+                    "\(label) did not reach its destination for edge probe \(index): \(offset)")
+      let back = app.navigationBars.buttons["BackButton"].firstMatch
+      XCTAssertTrue(back.isHittable)
+      back.tap()
+    }
+    XCTAssertTrue(action.waitForExistence(timeout: 10))
+    capture(captureName)
   }
 
   private func openHomeReturn() {
@@ -1335,10 +1952,24 @@ final class FixtureAuditTests: XCTestCase {
     save.tap()
     XCTAssertTrue(app.staticTexts["Return details error"].waitForExistence(timeout: 5))
     XCTAssertEqual(details.value as? String, "Returned clean")
+    // UIKit exposes this nested alert text as both a container and its child.
+    // Select the containing text without weakening the complete-frame check.
+    let error = app.staticTexts.matching(identifier: "Return details error").firstMatch
+    let errorVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let rect = error.frame
+      let header = self.app.navigationBars["Return details"].frame
+      return error.exists && rect.height > 0 && rect.minY >= header.maxY &&
+        rect.maxY <= self.app.frame.maxY && rect.minX >= self.app.frame.minX && rect.maxX <= self.app.frame.maxX
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [errorVisible], timeout: 5), .completed,
+      "The complete failure message must be visible below the native header")
     capture("home-return-save-error-retained")
     XCTAssertTrue(save.isHittable)
     save.tap()
     XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.navigationBars["Return details"])], timeout: 5), .completed)
+    XCTAssertEqual(app.state, .runningForeground, "Completing return details must not exit or crash the app")
+    XCTAssertTrue(app.staticTexts["Recently changed"].waitForExistence(timeout: 5),
+      "Saving must return to Home, not merely remove the details screen")
     capture("home-return-save-complete")
   }
 
@@ -1430,9 +2061,24 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    let target = XCTAttachment(string: "Color target before ordinary tap: \(picker.frame); hittable=\(picker.isHittable)")
+    target.name = "color-ordinary-tap-target"
+    target.lifetime = .keepAlways
+    add(target)
+    capture("color-before-ordinary-tap")
     picker.tap()
     let sliders = app.buttons["Sliders"]
-    XCTAssertTrue(sliders.waitForExistence(timeout: 5), "The system color picker should open directly")
+    let openedDirectly = sliders.waitForExistence(timeout: 5)
+    if !openedDirectly {
+      capture("color-not-open-after-five-seconds")
+      let appearedLater = sliders.waitForExistence(timeout: 15)
+      let timing = XCTAttachment(string: "Opened within five seconds: false; appeared during further observation: \(appearedLater)")
+      timing.name = "color-late-presentation"
+      timing.lifetime = .keepAlways
+      add(timing)
+      capture("color-after-late-presentation-observation")
+    }
+    XCTAssertTrue(openedDirectly, "The system color picker should open directly")
     capture("native-color-picker")
     if UIDevice.current.userInterfaceIdiom == .pad {
       // The retained iPad hierarchy exposes the system popover dismiss region;
@@ -1451,18 +2097,311 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
   }
 
+  func testSettingsCollectionUsesNativeSearchAndAdd() {
+    let open = app.buttons["Audit settings collection"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.navigationBars["Tags"].waitForExistence(timeout: 5), "Match the production route title before evaluating native header placement")
+    let add = app.buttons["Add Tag"]
+    XCTAssertTrue(add.waitForExistence(timeout: 10))
+    XCTAssertTrue(add.isHittable)
+    add.tap()
+    XCTAssertTrue(app.staticTexts["Add tag requested"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.textFields.count, 0)
+    let search = app.buttons["Search"].firstMatch
+    XCTAssertTrue(search.isHittable)
+    search.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    waitForKeyboard()
+    field.typeText("Tools")
+    XCTAssertEqual(field.value as? String, "Tools")
+    XCTAssertTrue(app.buttons["Tools, No color"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Garden, No color"].waitForNonExistence(timeout: 5))
+    capture("settings-collection-native-search")
+    resetNativeSearch(field)
+    XCTAssertTrue(app.buttons["Garden, No color"].waitForExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable)
+    capture("settings-collection-native-header")
+  }
+
+  private func resetNativeSearch(_ field: XCUIElement) {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let clear = field.buttons["Clear text"]
+      XCTAssertTrue(clear.isHittable)
+      clear.tap()
+      if !app.keyboards.firstMatch.waitForNonExistence(timeout: 2) {
+        let dismiss = app.buttons["Dismiss keyboard"]
+        XCTAssertTrue(dismiss.isHittable)
+        dismiss.tap()
+      }
+    } else {
+      let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close search", "Close"])).firstMatch
+      XCTAssertTrue(cancel.isHittable)
+      cancel.tap()
+      XCTAssertTrue(field.waitForNonExistence(timeout: 5))
+    }
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+  }
+
+  private func openCustomizationEditor() {
+    let open = app.buttons["Audit settings editor"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    open.tap()
+    XCTAssertTrue(app.textFields["Name"].waitForExistence(timeout: 10))
+    XCTAssertEqual(app.textFields["Name"].value as? String, "Tools")
+  }
+
+  func testVoiceProposalLocationSearchRetryAndReturn() {
+    let open = app.buttons["Audit voice proposal"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let original = app.buttons["Change containing location, currently Inventory root"]
+    XCTAssertTrue(original.waitForExistence(timeout: 15))
+    let context = app.staticTexts["Audit inventory · Audit home"].firstMatch
+    XCTAssertTrue(context.exists)
+    let conversationHeader = app.navigationBars["Conversation"]
+    XCTAssertGreaterThanOrEqual(context.frame.minY, conversationHeader.frame.maxY,
+      "The inventory context must be fully below native navigation chrome")
+    XCTAssertLessThanOrEqual(context.frame.maxY, app.frame.maxY)
+    capture("voice-proposal-entry-context")
+    revealVoiceProposalLocation(original)
+    original.tap()
+    let header = app.navigationBars["Containing location"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let retry = app.buttons["Retry locations"]
+    XCTAssertTrue(retry.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Could not load locations."].exists)
+    XCTAssertTrue(retry.isHittable)
+    capture("voice-location-retry"); retry.tap()
+    let bin = app.descendants(matching: .any).matching(identifier: "Select Garage bin, Garage / Garage bin").firstMatch
+    XCTAssertTrue(bin.waitForExistence(timeout: 10))
+    let search = app.buttons["Search"].firstMatch
+    XCTAssertTrue(search.isHittable); search.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap(); waitForKeyboard(); field.typeText("missing")
+    XCTAssertEqual(field.value as? String, "missing")
+    XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
+    XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
+    capture("voice-location-empty-search")
+    let clear = field.buttons["Clear text"]
+    XCTAssertTrue(clear.isHittable); clear.tap()
+    let clearedField = app.searchFields.firstMatch
+    let idleSearch = header.buttons["Search"].firstMatch
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        clearedField.isHittable || (!clearedField.exists && idleSearch.isHittable)
+      }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
+        "Clearing must leave a field or the native iPad search button available")
+      XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
+      capture("voice-location-after-focused-clear")
+      if !clearedField.exists {
+        XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
+        XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
+        XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
+        XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
+        idleSearch.tap()
+      }
+    }
+    XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
+    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); waitForKeyboard(); clearedField.typeText("Garage")
+    XCTAssertEqual(clearedField.value as? String, "Garage")
+    XCTAssertTrue(bin.waitForExistence(timeout: 10))
+    XCTAssertTrue(bin.isHittable); bin.tap()
+    let changed = app.buttons["Change containing location, currently Garage / Garage bin"]
+    XCTAssertTrue(changed.waitForExistence(timeout: 10))
+    revealVoiceProposalLocation(changed)
+    capture("voice-proposal-selected-location"); changed.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
+    let back = header.buttons["Back to conversation"].firstMatch
+    XCTAssertTrue(back.isHittable); back.tap()
+    XCTAssertTrue(changed.waitForExistence(timeout: 10))
+    XCTAssertFalse(original.exists)
+    revealVoiceProposalLocation(changed)
+    capture("voice-proposal-location-back")
+  }
+
+  private func revealVoiceProposalLocation(_ control: XCUIElement) {
+    let scroll = app.scrollViews.containing(.button, identifier: control.label).firstMatch
+    XCTAssertTrue(scroll.exists, "The proposal location must belong to the conversation scroll view")
+    let header = app.navigationBars["Conversation"]
+    func visibleViewport() -> CGRect {
+      let bounds = scroll.frame.intersection(app.frame)
+      let top = max(bounds.minY, header.frame.maxY)
+      return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bounds.maxY - top))
+    }
+    func visible() -> Bool {
+      let viewport = visibleViewport()
+      return control.isHittable && control.frame.minY >= viewport.minY &&
+        control.frame.maxY <= viewport.maxY && control.frame.minX >= viewport.minX &&
+        control.frame.maxX <= viewport.maxX
+    }
+    for _ in 0..<18 where !visible() {
+      let viewport = visibleViewport()
+      guard viewport.height > 0 else { break }
+      let above = control.frame.minY < viewport.minY
+      let origin = app.coordinate(withNormalizedOffset: .zero)
+      func point(_ fraction: CGFloat) -> XCUICoordinate {
+        origin.withOffset(CGVector(dx: viewport.midX - app.frame.minX,
+          dy: viewport.minY + viewport.height * fraction - app.frame.minY))
+      }
+      let start = point(above ? 0.25 : 0.75)
+      let end = point(above ? 0.75 : 0.25)
+      start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    XCTAssertTrue(visible(), "The complete proposal location control must be reachable within its sheet")
+  }
+
+  func testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset() {
+    let open = app.buttons["Audit voice proposal"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Conversation"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let proposal = app.buttons["Change containing location, currently Inventory root"]
+    XCTAssertTrue(proposal.waitForExistence(timeout: 15))
+    let newConversation = header.buttons["New conversation"]
+    let close = header.buttons["Close voice session"]
+    XCTAssertTrue(newConversation.isHittable); XCTAssertTrue(close.isHittable)
+    newConversation.tap()
+    let confirmation = app.alerts["Start a new conversation?"]
+    XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+    confirmation.buttons["Keep conversation"].tap()
+    XCTAssertTrue(proposal.exists)
+    capture("voice-native-header-protected-proposal")
+    XCTAssertTrue(close.isHittable); close.tap()
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(proposal.waitForExistence(timeout: 10))
+    capture("voice-native-header-returned-proposal")
+  }
+
+  func testSettingsEditorNativeBackProtectsDirtyDraft() {
+    openCustomizationEditor()
+    let name = app.textFields["Name"]
+    name.tap(); waitForKeyboard(); name.typeText("x")
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    let back = app.buttons["Back to settings collection"]
+    XCTAssertTrue(back.isHittable)
+    back.tap()
+    let alert = app.alerts["Discard changes?"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons["Keep Editing"].tap()
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    back.tap()
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    capture("settings-editor-native-discard")
+    alert.buttons["Discard"].tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    XCTAssertFalse(name.exists)
+  }
+
+  func testSettingsEditorNativeSaveReturnsToCollection() {
+    openCustomizationEditor()
+    let name = app.textFields["Name"]
+    name.tap(); waitForKeyboard(); name.typeText("x")
+    XCTAssertEqual(name.value as? String, "Toolsx")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable)
+    dismiss.tap()
+    let save = app.buttons["Save"].firstMatch
+    for _ in 0..<6 where !save.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(save.isHittable)
+    XCTAssertTrue(save.isEnabled)
+    capture("settings-editor-native-save")
+    save.tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    assertCustomizationNotice("Tag saved")
+  }
+
+  func testSettingsEditorNativeArchiveConfirmsBeforeReturning() {
+    openCustomizationEditor()
+    let archive = app.buttons["Archive"].firstMatch
+    for _ in 0..<6 where !archive.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(archive.isHittable)
+    archive.tap()
+    let alert = app.alerts["Archive Tools?"]
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    alert.buttons["Cancel"].tap()
+    XCTAssertTrue(archive.isEnabled)
+    archive.tap()
+    XCTAssertTrue(alert.waitForExistence(timeout: 5))
+    capture("settings-editor-native-archive")
+    alert.buttons["Archive"].tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    assertCustomizationNotice("Tag archived")
+  }
+
+  private func assertCustomizationNotice(_ title: String) {
+    let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
+    let expected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", title), object: notice)
+    XCTAssertEqual(XCTWaiter.wait(for: [expected], timeout: 5), .completed)
+  }
+
   func testColorWellTargetOpensSystemPicker() {
     openSettingsControls()
     let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     XCTAssertTrue(picker.isHittable)
-    XCTAssertGreaterThanOrEqual(picker.frame.width, 44)
-    XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+    // The system well's AX frame is smaller than its delivered touch region.
+    // testColorWellDeliveredTouchRegion independently probes the surrounding area.
+    XCTAssertGreaterThan(picker.frame.width, 0)
+    XCTAssertGreaterThan(picker.frame.height, 0)
+    XCTAssertTrue(app.frame.contains(picker.frame), "The complete visible well must remain onscreen")
     XCTAssertLessThanOrEqual(picker.frame.width, picker.frame.height + 1,
       "The accessible target must be the well, not a wide inactive label row")
     picker.tap()
     XCTAssertTrue(app.buttons["Sliders"].waitForExistence(timeout: 5))
     capture("color-visible-well-target")
+  }
+
+  func testColorWellHasSingleAccessibleName() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertEqual(picker.label, "Choose any color", "The native color well must not repeat its name")
+    capture("color-well-accessible-name")
+  }
+
+  func testColorWellDeliveredTouchRegion() {
+    openSettingsControls()
+    let picker = app.buttons.matching(NSPredicate(format: "label == %@", "Choose any color")).firstMatch
+    let offsets: [(CGFloat, CGFloat)] = [(0, 0), (0, -21), (0, 21), (-21, 0), (21, 0),
+                                          (-21, -21), (21, -21), (-21, 21), (21, 21)]
+    for (index, offset) in offsets.enumerated() {
+      XCTAssertTrue(picker.waitForExistence(timeout: 5))
+      XCTAssertTrue(picker.isHittable)
+      let center = picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+      center.withOffset(CGVector(dx: offset.0, dy: offset.1)).tap()
+      let sliders = app.buttons["Sliders"]
+      guard sliders.waitForExistence(timeout: 5) else {
+        capture("color-hit-region-failed-probe-\(index)")
+        XCTFail("Color well did not open for probe \(index): \(offset)")
+        return
+      }
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        let dismiss = app.otherElements["PopoverDismissRegion"]
+        XCTAssertTrue(dismiss.exists)
+        dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+      } else {
+        app.buttons["close"].tap()
+      }
+      guard sliders.waitForNonExistence(timeout: 5) else {
+        capture("color-hit-region-dismissal-failed-\(index)")
+        XCTFail("System color picker did not dismiss after probe \(index)")
+        return
+      }
+      XCTAssertTrue(app.staticTexts["Color value: none"].exists,
+                    "Opening the picker must preserve the unset parent value")
+    }
+    capture("color-delivered-hit-region")
   }
 
   func testExactExpirationUsesCompactNativePicker() {

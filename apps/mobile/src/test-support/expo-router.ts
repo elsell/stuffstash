@@ -1,7 +1,7 @@
 import { fakeNavigation, getCanGoBack, getScreenFocused, subscribeScreenFocus } from './navigation';
 import { createElement, Fragment, useEffect, useSyncExternalStore } from 'react';
 export function useNavigation() { return fakeNavigation; }
-export const Stack = { Screen: ({ options }: { options?: { headerRight?: () => import('react').ReactNode; headerLeft?: () => import('react').ReactNode } }) => { useEffect(() => { fakeNavigation.setOptions(options); }, [options]); return createElement(Fragment, null, options?.headerLeft?.(), options?.headerRight?.()); } };
+export const Stack = { Screen: ({ options }: { options?: { headerRight?: () => import('react').ReactNode; headerLeft?: () => import('react').ReactNode; unstable_sheetFooter?: () => import('react').ReactNode } }) => { useEffect(() => { fakeNavigation.setOptions(options); }, [options]); return createElement(Fragment, null, options?.headerLeft?.(), options?.headerRight?.(), options?.unstable_sheetFooter?.()); } };
 export function useFocusEffect(effect: () => void | (() => void)) {
   const focused = useSyncExternalStore(subscribeScreenFocus, getScreenFocused);
   useEffect(() => focused ? effect() : undefined, [effect, focused]);
@@ -14,6 +14,7 @@ export const router = {
   replace: (href: unknown) => fakeNavigation.dispatch({ type: 'replace', href }),
   setParams: (params: unknown) => fakeNavigation.dispatch({ type: 'setParams', params })
 };
+export function useRouter() { return router; }
 
 let pathname = '/';
 const pathnameListeners = new Set<() => void>();

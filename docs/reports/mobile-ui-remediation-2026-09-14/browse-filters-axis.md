@@ -1,5 +1,25 @@
 # Browse filters review
 
+## Current native review, September 16
+
+[Run351404 filter evidence](native-filters-351404.md) verifies scoped long-list,
+selection and calendar-dismissal behavior, but visual review finds M249: the phone
+keyboard accessory overlaps Back despite a hittability-only test pass. The native
+clearance candidate remains unverified. Earlier source observations follow.
+
+M250 adds a separate source-confirmed search ownership fix: selecting a tag removed
+the current native search configuration. The parent no longer clears options
+owned by NativeNavigationSearch. The mounted regression now checks merged current
+options rather than historical handlers; eleven scoped tests pass on paul. The
+new native Browse search/selection/apply journey remains pending.
+
+The same historical-handler blind spot was removed from the expiration filter and
+workspace tests. Their existing behavior passes against current merged options;
+Back removes filter search and reopening restores it with the staged tags. Fifteen
+Browse/expiration tests pass on paul. This establishes a stronger source check,
+not an additional production defect or native acceptance.
+
+
 R016 and S071–S073 reviewed at e303e4f7, September15. Sources: browse-filters
 route, BrowseFiltersScreen, BrowseFilterRouteState, useBrowseFilterNavigation,
 NativeFilterSheet, NativeNavigationSearch, SettingsPickerRow and sheet options.

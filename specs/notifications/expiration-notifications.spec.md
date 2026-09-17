@@ -424,6 +424,33 @@ platform-native command adapter for Retry and Load more, including the route's
 inventory-load failure. Preserve the existing loading guard, error recovery,
 pagination merge and scoped query behavior; do not substitute an extra screen.
 
+## Inbox read-state accessory
+
+The per-row read/unread action uses an actual native icon button: a borderless
+SwiftUI button on iOS and a Compose IconButton on Android. Keep it separate from
+opening the item, use the appropriate envelope symbol, expose the full action name,
+and prevent callbacks when disabled. Reserve at least 48 points for the accessory;
+the preview renderer is not evidence of native geometry.
+
+## Inbox access-loss recovery
+
+Reminder settings must also retire displayed preferences, type names and editable
+controls after an authentication-required or permission-denied read or save.
+Access loss while loading the supporting type collection has the same effect.
+Retained callbacks cannot submit another write until a successful authorized
+settings load. Retry remains available; a failed retry must not restore cached
+preferences. Ordinary transient failures without prior access loss may retain
+the current editor and retry draft. Verify through the mobile screen and actual
+client/notification adapter against controlled HTTP denial and recovery responses.
+
+An authentication-required or permission-denied result from any inbox read or
+command must discard loaded rows, continuation cursor and local read markers.
+Show the safe failure and retain explicit retry; do not present an empty inbox as
+an authorized result. A later transport failure must not restore denied data.
+Only a successful current-scope list read may repopulate the inbox. Ordinary
+transport failures without prior access loss may retain usable rows. Verify this
+through the mobile HTTP adapter for refresh, opening, read-state and mark-all.
+
 ## Device setup feedback lifetime
 
 Permission/registration feedback describes the last explicit setup attempt, not a
@@ -437,3 +464,19 @@ Invalidate feedback ownership on navigation departure and backgrounding so a del
 setup result cannot restore stale feedback. Allow setup persistence to complete.
 Transient inactive states, including the native permission prompt, retain the
 attempt's feedback ownership so granting or denying permission can show its result.
+## Device Settings launch recovery
+
+Explicit device-Settings commands must handle native launch rejection with safe
+manual guidance and a retry. Do not expose native exception text or change push
+preferences. Prevent duplicate launches while pending. Retire pending presentation
+on blur or background; a late failure must not appear on a new visit or clear a
+newer attempt's busy state. Successful launch does not prove permission was granted.
+
+## Inbox retained action ownership
+
+Retained inbox callbacks must not start read-state mutations, loads, settings
+navigation or breadcrumb navigation while the inbox is unfocused or unmounted.
+The focused screen retains all existing commands after returning. Already-started
+read mutations may reconcile mounted state and counts, preserving the separate
+focus-session restriction on delayed item navigation. Verify retained callbacks
+after blur and teardown as well as successful current focused actions.

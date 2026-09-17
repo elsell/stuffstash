@@ -2,12 +2,12 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileInventoryServerQuery } from '../serverState/useMobileInventoryServerQuery';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import type {
   ProviderProfileSettingsQuery,
   ProviderProfileSettingsViewModel
 } from '../../application/providerProfiles/ProviderProfileSettingsQuery';
-import { useSettingsListStyles } from './SettingsList';
+import { SettingsLoadingRow, useSettingsListStyles } from './SettingsList';
 
 export type ProviderState =
   | { readonly status: 'loading' }
@@ -39,19 +39,21 @@ export function useProviderSettings(query: ProviderProfileSettingsQuery) {
 }
 
 export function ProviderStateView({
+  taskLabel,
   state,
   onRetry
 }: {
+  readonly taskLabel: string;
   readonly state: Exclude<ProviderState, { status: 'ready' }>;
   readonly onRetry: () => Promise<void>;
 }) {
-  const { palette, styles } = useSettingsListStyles();
+  const { styles } = useSettingsListStyles();
   if (state.status === 'loading') {
-    return <View style={[styles.shell, styles.errorContainer]}><ActivityIndicator color={palette.action} /></View>;
+    return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={`Loading ${taskLabel}`} /></View>;
   }
   return (
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
-      <Text accessibilityRole="header" style={styles.errorTitle}>Could not load Voice Setup</Text>
+      <Text accessibilityRole="header" style={styles.errorTitle}>{`Could not load ${taskLabel}`}</Text>
       <Text style={styles.errorMessage}>{state.message}</Text>
       <NativeCommandButton label="Retry" onPress={() => void onRetry()} />
     </ScrollView>

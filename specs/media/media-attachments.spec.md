@@ -333,3 +333,27 @@ selection and do not start an upload. Already-started uploads may finish for the
 original asset, but their progress, result, error, and cleanup cannot mutate the
 replacement screen. Failed photo drafts belong to that asset and reset on change.
 Native chooser dismissal and cancellation retain the current asset context.
+## Mobile removal failure presentation
+
+A photo-removal command may finish after navigating away from the asset. Its
+failure alert belongs to the focused visit that started removal and must not
+appear over another route or a later visit. Preserve command completion and
+resource reconciliation; release the pending lock so a fresh removal can be
+attempted on return. Current-visit failures still show the safe error and retain
+the photo for retry. Verify both blur and blur/refocus, in addition to teardown.
+## Camera denial guidance
+
+Camera denial must explain how to allow camera access for Stuff Stash in device
+settings and retain choosing a library photo as an alternative. Do not launch
+Settings or the camera automatically. Recheck permission on the next explicit
+camera attempt; a prior denial must not permanently disable capture. Preserve
+draft photos and the current task while displaying the existing failure UI.
+
+## Mobile photo acquisition failure ownership
+
+Photo picker and upload exception notices belong to the focused asset visit that
+started acquisition. A retained Details route must not publish that failure over
+another route or a later visit. Keep already-started command completion, current
+asset photo results and failed-photo retry state intact, and always release its
+pending lock. Current-visit failures retain their safe notice and permit a fresh
+attempt. Cover both picker rejection and upload rejection across blur/refocus.

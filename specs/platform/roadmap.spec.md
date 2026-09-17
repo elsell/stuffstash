@@ -364,3 +364,161 @@ Native6076e824 verifies onboarding margin dismissal and switcher recovery, while
 Add typing/loading and other recorded findings remain unresolved. Continue the
 full 141-surface/24-axis audit after this authorized release checkpoint. Detailed
 evidence and remaining limitations live in the mobile remediation report.
+
+The subsequent requested PR150 cutoff shipped as TestFlight0.24.23 (112.1),
+release35028077706 at main438bd902. Apple VALID processing and exact-build
+changelog read-back completed September15 at22:20:03 UTC. The comprehensive audit
+is resumed in draft PR153: inherited definition ownership, read-only tracking,
+stale discard confirmation, native collection search/Add, and current Add
+permission handling are corrected in source. All1,704 mobile tests plus static
+checks pass remotely atfcc2f9b8. Native acceptance remains incomplete; focused
+text-entry diagnostics35029455242 and subsequent full collection/header
+verification remain required. Normal-size findings still precede enlarged text.
+
+PR153 source71d54bb6 now passes1,824 mobile tests across285 files plus static checks
+on paul. Audit inventory is142 surfaces/24 axes; source coverage is not native
+acceptance. Full native run35046586497 at olderb6321dcb completed49/71 phone and
+58/71 iPad fixtures, with onboarding passing its applicable cases. Paced typing
+diagnostics pass while original controlled typing still fails. The iPad search
+reset procedure now follows captured platform controls; rerun verification is
+pending. Normal-size text entry, color activation/targets and header/search
+behavior remain priorities. Newer native run35050407693 is active; preserve its
+execution while continuing source work. Release remains pending native review,
+with detailed evidence in the mobile remediation report.
+
+The next source follow-up reaches292 pending cells after tag color, field
+applicability, push setup and Home Return details/recovery review. Unsaved field
+applicability is reversible in place; successful push setup announces its new
+Settings action accurately. Their targeted/static checks and critic reviews pass
+on paul. Inspected350465 phone/iPad Home Return captures verify M169's error
+overlap correction in normal-size light appearance; they do not close wider
+lifecycle or native acceptance. Continue remaining source coverage and the active
+native collection/header/text-input investigation before release.
+
+At2edf4dbd, the full remote suite passes1,830 tests/285 files plus type and mobile
+structural checks. Household/first-inventory/partial-recovery and the inventory
+reminder route now have complete source follow-ups;227 review cells remain pending.
+Onboarding commands reuse native controls and retain visible pending labels (M206).
+Native350504 onboarding passes applicable phone/iPad cases at older802e4955; the
+new command migration still needs its own keyboard/geometry verification. The
+active fixture jobs and unresolved normal-size failures continue to gate release.
+
+The source inventory now covers all142 surfaces ×24 axes, with zero unreviewed
+cells. This is a coverage milestone, not completion:522 cells retain findings and
+25 partial runtime evidence. M208–M212 add native Add-photo removal, safe asset
+action exits/eligibility, gallery preview recovery and checkout-history direct-entry
+exit. The last full remote checkpoint is1,849 tests/286 files; subsequent gallery
+and checkout changes pass focused tests plus static checks and critic review.
+Run350504 completed50/72 phone and58/72 iPad fixture cases; current350549 remains
+active at8a256a2a. Prioritize normal-size typing, native menu/keyboard coexistence,
+color activation and search placement before enlarged-text acceptance. Preserve
+live native runs and carry this larger batch through review and TestFlight with
+changelog after the runtime gate is satisfied.
+
+Remote validation atebdd3090 now passes1,854 tests/286 files plus TypeScript and
+structural checks with no tracked mobile source/configuration drift. Focused
+text-entry35056372549 atfdbf30bf is active alongside the retained full run350549.
+Onboarding350549 artifacts show eventual complete address entry and keyboard
+dismissal despite observation failures; bounded exact-value observation and
+per-gesture geometry reads are queued without weakening end-state assertions.
+Separate retained ordinary controlled input still contains reordered text. Do not
+generalize the onboarding timing diagnosis or close the native gate prematurely.
+
+The current checkpoint (348e5fe8 plus M215) passes1,869 tests/288 files, TypeScript
+and structural checks on paul. Source/configuration checksum comparison is clean.
+M214 extends direct-entry return to loaded Edit/Move actions. M215 stabilizes shared
+native search options while preserving current handlers and presentation changes;
+the captured bottom-search mismatch remains a separate native gate. Focused350563
+finishes8/10 iPad and7/10 phone, with default-assisted SwiftUI passing both. A scoped
+iOS Add-name candidate retains revision-owned draft resets and runs unchanged Add
+journeys in35058684319. Full350549 phone finishes52/73; iPad remains active. The
+coverage ledger now retains529 finding cells. Continue normal-size native work.
+
+Current normal-size audit checkpoint `460007a9` passes1,896 mobile tests/295 files,
+TypeScript and structural checks on paul. Native Android evidence now verifies
+photo zoom retention through warm return, control toggling, paging, draft escape
+and persisted-photo failure recovery. Older iPhone run350950 finishes65/83: Add
+draft/header and notice placement journeys pass, but Place search still moves to
+the bottom and Sharing retains missing typed characters despite its iOS default-
+value field. Its iPad fixture job remains active. Continue normal-size search,
+text-entry and sheet-body diagnosis; preserve the queued current-source native
+run. These partial results do not satisfy the release gate or complete the audit.
+
+Current checkpoint `c31199a3` passes1,910 mobile tests/298 files on paul. All914
+tracked mobile/client files match the source manifest after syncing the new Swift
+journey; Swift is not compiled by these Linux checks. Latest TypeScript, structural
+and six fixture-installer checks pass. M242 guards departed inbox actions and
+initial focus loading. Native Android normal/compact dark evidence covers inbox
+read-state, navigation return and denial recovery. M243/M244 fix native menu target
+bounds and selectable-item activation, with actual appearance/reminder selection
+and exactly-once preference writes verified in APKb76e227a.
+
+Run351121 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes;
+iPad onboarding passes3/3, while phone onboarding fails help activation (M240).
+Run35121454700 at1a15ca11 is active. The older run does not validate later Sharing,
+inbox or Android-menu corrections. Its phone Add-tag final capture retains Camping,
+so f54eec01 adds bounded exact-value observation. Incorrect controlled-name values
+persist in final hierarchies and remain a separate diagnostic concern. Candidate
+c196d527 adds native action registration to the passing managed-search comparison;
+no production search workaround is inferred. Continue native
+normal-size acceptance before enlarged text, then release the complete reviewed
+batch with the explicit TestFlight notes section and Apple readback. The full audit
+and release gate remain open.
+
+
+September16 follow-up: a46d7bb3 fixes M245 retained Android color gestures,
+accessibility adjustments and +/- callbacks targeting obsolete state. Mounted RED
+regressions,20 focused tests, TypeScript/structural checks, critic review and native
+Android drag/adjust/Cancel smoke checks complete. Full mobile suite now passes1,911
+tests/299 files on paul;915 tracked mobile/client files match the current source
+manifest. Log: `/tmp/mobile-audit-a46d7bb3-full.log`. Both onboarding jobs in
+351214 pass their applicable cases with captures inspected. Phone fixtures subsequently finish67/85 with18 failures; iPad logs79/85, but the90-minute budget cancels result finalization and prevents artifact retention; that older native source does not include the latest managed-search
+comparison, exact Add-tag wait or M245. Preserve normal-size-first sequencing and
+native acceptance before release; the comprehensive goal remains incomplete.
+
+Current source checkpoint5c05f66e also fixes M246/M247 Android target sizes and
+M248 missing native footer descriptions. Native normal-width/320dp target checks
+and expiration/voice command semantics pass; TalkBack remains unverified. All1,911
+mobile tests/299 files pass on paul with922 source/patch/lock files matched.
+Phone351214 narrows Add-photo failure to a wrong-direction fixture scroll and
+inbox failure to an AX-glyph size assumption. The next native candidates use
+geometric scrolling and real delivered-target taps; neither is yet accepted.
+Sharing recovery passes on phone; ordinary color opening, preconfigured Place
+search and controlled-input diagnostics remain unresolved.
+
+Run35130374705 at0586f845 is now active; preserve its original execution. Future
+full audit jobs receive120 minutes after the confirmed351214 evidence-loss timeout.
+The iPad result is log-only, with no visual acceptance claim. Remote YAML parsing
+and critic review pass; result export under the revised budget remains to verify.
+
+Run35130374705 fails all four jobs before tests: `pod install --deployment` detects
+ExpoUI's changed path after the Android patch altered pnpm's package identity.
+Both Podfile.lock source entries now follow the frozen-installed patched path;
+remote resolution checks pass and the podspec is byte-identical. No pod version
+or checksum changes. Critic found no blocker; macOS deployment validation remains
+required. Input-event diagnostics are deferred until this integration gate clears.
+
+
+September16 current UI audit checkpoint: full35148054814 completes with phone69/86
+and iPad79/86 fixture passes; both onboarding jobs pass applicable cases. iPad
+fixture evidence is log-reviewed, not visually accepted. Normal-size color and
+controlled-input failures remain. Focused filters35154627907 establishes that M249
+persists on phone despite settled-keyboard remeasurement; iPad keyboard journeys
+pass, while last-tag application fails after geometry checks succeed. M250 removes
+competing Browse search-option ownership and has scoped source tests and iPad
+search-journey evidence. A fixture-only coordinate probe at6128c8f5 now compares
+sheet boundary measurements with keyboard frames; no production offset guess is
+accepted. Provider-free input35156439952 and full35156794515 are active; focused
+geometry35158457674 is pending. Keep these executions, normal-text-first sequencing,
+and the complete native/release gate. The coverage inventory remains142 surfaces
+by24 axes (3,408 cells); source review does not substitute for native acceptance.
+
+
+Release sequencing correction (user-directed): freeze production cutoff33dfc002
+for the batch after112.1 and verify its changed workflows plus critical regressions.
+Use `docs/reports/mobile-ui-remediation-2026-09-14/release-batch-113.md` as the bounded
+acceptance record. Ship once those checks pass; do not require completion of the
+comprehensive audit. M249 and last-tag application affect required batch workflows;
+unrelated existing findings, enlarged-text follow-up and diagnostic-only layouts
+remain separately tracked. Keep ongoing native jobs and credit their evidence where
+production source matches. No unrelated remediation enters this frozen batch.

@@ -1,22 +1,26 @@
 # Findings and remediation tracker
 
+Runtime totals and named test results below are scoped evidence. In run351214,
+iPad results are log-only because result export was interrupted; they do not imply
+inspected screenshots or whole-surface acceptance. See [iPad evidence limit](native-ipad-351214.md).
+
 | ID | Finding | Status | Evidence / next verification |
 | --- | --- | --- | --- |
-| M01 | Short filter choices cause unnecessary drilldown | Implemented; runtime pending | Existing audit F01; in-place choices, draft/apply/cancel tests and iOS/Android adapter contracts pass remotely; full suite 1319 plus 3 added adapter tests; critic found no draft/navigation blocker |
+| M01 | Short filter choices cause unnecessary drilldown | Implemented; scoped native passes | Run351214 phone/iPad logs pass testBrowseUsesInPlaceAvailabilityMenuAndReachableActions: choose Available in place, retain Filters, reachable Apply/Cancel, apply value. This samples Availability, not every short-choice consumer or assistive mode. |
 | M02 | Custom field short choices use bespoke disclosure radios | Implemented; runtime pending | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
-| M03 | Redundant exact-date staging | Implemented; native pending | Compact iOS picker edits parent draft directly; explicit Add initializes absent date; Android cancel remains non-mutating; 5 focused tests/check/structural, critic no blockers |
+| M03 | Redundant exact-date staging | Implemented; scoped native passes | Run351214 phone/iPad logs pass testExactExpirationUsesCompactNativePicker: Add date, native picker, no redundant Use date, dismiss and Clear. Android cancellation, arbitrary date edits and wider adaptation retain their separate evidence requirements. |
 | M04 | Standard header actions remain custom on some screens | Implemented; native pending | Add, inbox and reminder timing use shared native bar items with disabled guards; 29 focused tests/check/structural; critic copy mismatch corrected |
 | M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |
 | M06 | Notice motion/timing/targets need accessibility adaptation | Implemented; runtime pending | Persistent actions/warnings/errors and screen-reader notices; live Reduce Motion, readable labels, 48-point controls and enlarged-text stacking; 8 focused tests/typecheck green; critic requested motion regression, added and passed |
-| M07 | Switcher lacks bounded scroll/explicit dismissal and identifies households by name | Implemented; runtime pending | Bounded sheet/native Close; identity collision, safe retry, duplicate and late navigation tests; full1329 tests/check/structural green; critic found no blockers |
-| M08 | Adaptive/assistive-tech runtime matrix unverified | Investigating access | F09; phone/iPad/Android runtime needed |
+| M07 | Switcher lacks bounded scroll/explicit dismissal and identifies households by name | Implemented; scoped native passes | Run351214 phone/iPad logs pass testInventorySwitcherHouseholdRetryAndClose: household selection, failed switch, retry return, reopen and native Close. Full long-list bounds and identity-collision behavior are not established by this scenario alone. |
+| M08 | Adaptive/assistive-tech runtime matrix unverified | Runtime access established; coverage partial | macOS iPhone/iPad runners and Android API36 emulator are available. Native device/state coverage remains partial; VoiceOver and TalkBack acceptance remain open. See native-ipad-351214.md and android-action-descriptions.md for result-export and screen-reader limitations. |
 | M09 | Expiration location labels omit ancestry | Implemented; runtime pending | Authorized active-tree path labels, partial paths and duplicate-name fixture; full1331 tests/structural plus typecheck green; critic found no blockers |
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
 | M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; runtime pending | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Implemented; native pending | Scoped Retry in both routed lists and legacy unrouted LocationsScreen; repeat-failure and scope-recovery tests; full1349/check/structural green; critic found no blocker |
-| M14 | Native onboarding run shows a shortened typed server address | Named native scenarios pass; broad acceptance pending | Run34920888328 system-address button and Go submission pass on phone/iPad; production phone onboarding passes. Production iPad launch failed before UI assertions. Older input comparison failures remain distinct from the new adapter |
-| M15 | Unsaved enum options cannot be removed before saving | Implemented; native rerun pending | Saved/draft distinction with native Remove command; 43 focused tests/check/structural green, critic found no blockers; native removal fixture added |
+| M14 | Native onboarding run shows a shortened typed server address | Named native scenarios pass; broad acceptance pending | Run351214 onboarding passes applicable phone/iPad cases, with help, complete address entry, keyboard reachability and iPad landscape captures inspected; see native-onboarding-351214.md. Historical controlled-input failures remain a separate unresolved family. |
+| M15 | Unsaved enum options cannot be removed before saving | Implemented; scoped native passes | Run351214 phone/iPad logs pass testDraftOptionRemovalPreservesSavedOptions: actual draft removal disappears, saved Existing option remains, and saved removal is unavailable. This does not establish every enum-editor layout or assistive mode. |
 | M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
 | M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
@@ -2082,7 +2086,6 @@ checks pass on paul. Critic confirmed the added assertions cover those branches.
 This closes the per-branch mounted success coverage gap above; native lifecycle
 acceptance remains open.
 
-
 ### M148 — Provider screens blur navigation and command controls
 
 P2 source pattern finding, R052/R054/R055. Provider screens used the same custom
@@ -2208,3 +2211,1272 @@ failed push cleanup retains the current composition.
 M152 final focused validation:39 cases across5 files passed remotely, followed
 by TypeScript and structural checks. Critic confirmed retirement now covers the
 previously missed interval and found no remaining confirmed blocker in this fix.
+
+### M153 — Inherited definition shows the inventory as its owner
+
+P2 source/mounted finding at438bd902. Details used the screen scope instead of
+loaded ownership, contradicting the inheritance explanation. The label now uses
+effective inherited ownership. Four cases cover fields/types and household/local
+ownership with misleading route hints; the inherited cases failed before correction.
+
+### M154 — Read-only asset type presents an inactive tracking switch
+
+P2 source/mounted pattern finding at438bd902. Inherited/viewer/archived detail used
+a disabled mutation control even though the settings spec requires static values.
+Read-only tracking now displays Enabled or Disabled. Editable types retain their
+switch and pending-operation behavior. Both inherited values failed before the
+correction.49 related tests and static checks pass remotely; native presentation
+and assistive reading order remain pending. See inherited-definition-axis.md.
+
+### Native follow-up: M51 and text-entry isolation
+
+See [native-350129-followup.md](native-350129-followup.md) for final phone/iPad
+results at22a4a80d, the focused color-picker failures, and the next ordinary-input
+comparisons. These findings remain open; no production workaround or native
+acceptance is claimed by adding diagnostic fixtures.
+
+### M155 — Stale settings Discard can navigate after return
+
+P2 mounted recovery finding at0f378691. The customization Discard callback used
+the current workflow without capturing the focused resource that opened the alert.
+Both blur and blur/return regressions dispatched OLD_BACK before correction.
+The callback now checks captured focus/resource identity and authorizes only its
+original workflow. Current confirmations still dispatch once. A replacement-resource
+case verifies the new draft remains. Native alert/focus acceptance is pending;
+see [settings-exit-axis.md](settings-exit-axis.md).
+
+### M156 — Settings collections retain custom search/Add chrome
+
+P2 source pattern finding atd458d896, affecting R029/R032/R037/R040/R046.
+The custom permanent input and scroll-content Add diverged from the accepted
+native-header pattern. The shared collection now uses NativeNavigationSearch and
+stable native header actions; lifecycle controls and grouped results remain in
+content. Initial loading/error/denial removes header controls. Native phone/iPad
+acceptance is pending; see customization-collections-axis.md.
+
+### M157 — Cached collection permissions retain Add after revocation
+
+P2 mounted interaction finding discovered during M156. Rows can remain cached while
+the permission query changes; Add used the older context state. The new regression
+reproduced the stale action. Mutation affordances now use the current permission
+snapshot and removed native handlers do nothing. Read-only rows stay visible when
+view permission remains. This is an affordance fix, not a server-authorization change.
+
+### M158 — Retained photo-source choice survives a departed visit
+
+P2 mounted finding at39a846d6. Add and asset detail accepted old camera/library
+choices after blur/return. All four iOS regression cases opened selection before
+correction. Source choosers now capture their opening visit; the shared adapter
+requires and checks current ownership before presentation/acceptance. Fresh
+choosers still work after return, with both Android choices also covered. Voice
+retains its existing ownership guard. See confirmation-review.md; physical picker
+acceptance remains pending, and already-started pickers are outside this correction.
+
+### M159 — Add photo tile has no accessible action name
+
+P2 source/mounted finding at39a846d6. The icon-only tile exposed a hint but no
+action label. The semantic-label regression failed before adding Add photos.
+Selection/geometry is unchanged. VoiceOver naming/order remains a native check.
+
+### M160 — Home pull failure outlives its focused visit
+
+P2 mounted finding at81e91f74. The pull hook retired its spinner on blur, but Home
+passed a default always-true predicate to error feedback. A late failure displayed
+Could not refresh Home after leaving or returning. Both navigation cases failed
+before correction; the current-visit failure case passed and remains supported.
+Home now captures focused visit/resource ownership through useTaskPresentation
+when a pull starts. Return-command reconciliation keeps its existing predicate.
+All28 Home and2 pull-hook cases pass on paul. Native navigation/error presentation
+acceptance remains pending; this does not claim to solve every historical spinner
+or inset symptom. See home-dashboard-axis.md for the full route review.
+
+### M161 — Asset lists silently swallow explicit refresh failures
+
+P2 source/mounted atfc3bb7a3. Inventory assets, location contents and the retained
+LocationsScreen awaited non-throwing refetch results and rendered errors only
+without cached data. A failed pull therefore stopped spinning without explaining
+that visible results were unchanged. Three current-visit cases failed before the
+fix. The shared usePullRefreshFeedback hook now catches throwing reads, keeps
+notices scoped to visit/resource and preserves ordinary cached cards. Initial-load
+recovery and access suppression still belong to the query adapter. All18 focused
+cases pass remotely; native notice placement/reachability remains pending. The
+legacy LocationsScreen has no current route consumer and is not claimed as a
+third shipped route. See asset-lists-axis.md.
+
+### M162 — History refresh feedback and Retry have the wrong owner
+
+P2 mounted at153a6be3. A delayed failed pull reported over a departed/returned
+visit, while inline cached-error Retry activated the pull indicator. Two visit
+tests and one Retry test failed before correction. History now uses shared scoped
+pull feedback, including history-view identity, and Retry refetches directly with
+pending controls disabled. Existing inline failure context, cached pages and
+access suppression remain. All12 focused History cases pass remotely; native
+acceptance remains pending. See history-list-axis.md.
+
+### M163 — Item-detail pull failure reports after navigation
+
+P2 mounted ata7180e13. AssetDetailRouteScreen's progressive refresh caught an
+error and displayed a global notice without checking its original visit. Both
+departed and returned cases failed before adding the existing captureCommandVisit
+guard. Current-visit feedback keeps the original useful error detail; cached core
+content remains visible. The two production imports are asset detail (R012) and
+location-context asset detail (R020); both use this component unchanged. All92
+focused detail cases, TypeScript and structural checks pass on paul. This is a
+targeted loading/recovery/lifecycle review, not a full24-axis detail pass or native
+navigation acceptance. Progressive section-specific errors remain independently
+owned by their query state.
+
+### M164 — Scoped settings loading does not identify its task
+
+P2 source/mounted at53975079. Household and inventory settings displayed only an
+unlabeled spinner while resolving scope. Both mounted task-label expectations
+failed before reuse of SettingsLoadingRow with scope-specific copy. The shared
+control supplies progress semantics and visible text, then disappears when rows
+load. Native announcements/layout remain unverified. See scoped-settings-axis.md
+for the full source review and its remaining acceptance limits.
+
+### M165 — Customization Save bypasses the native command adapter
+
+P2 source/mounted at9e61709c. Tag/type/field editors painted a primary Pressable
+despite an existing native primary command adapter. They now use NativeCommandButton
+with explicit Save/Saving names, existing validation and pending lock, and a wrapper
+preserving content insets. The named-command regression failed before correction;
+all54 mounted customization cases and static checks pass remotely. Native sizing,
+keyboard and reachability remain pending; this does not close M51 color behavior.
+
+### M166 — Customization editor Back and lifecycle actions remain custom
+
+P2 source-confirmed pattern gap at9e61709c. CustomizationEditorScreen installs a
+Pressable/Chevron Back and CustomizationLifecycleSection uses custom action rows.
+These are commands, not category navigation. No concrete native limitation is
+documented for them. Replace with native adapters while preserving collection
+replacement, dirty-exit interception, destructive semantics and operation locks.
+Inherited Manage action also needs the command/navigation distinction reviewed.
+Implemented candidate after M165: native leading Back uses the existing stable
+header adapter; lifecycle and inherited Manage commands use NativeCommandButton.
+Destructive role is native SwiftUI on iOS and semantic native-button colors on
+Android. Collection replacement, Keep Editing/Discard, confirmation and pending
+locks remain intact. New adapter assertions failed before implementation. The
+mounted Back test renders the installed navigation header and verifies Keep
+Editing and exactly-once Discard. Remote full suite: 1,734 tests/271 files, type
+check and mobile structural checks passed. Code critic found no blockers.
+Native geometry, appearance and interaction acceptance remain open.
+
+### M167 — Unsubmitted custom-field option can be lost on exit or Save
+
+P1 source/mounted confirmed at0065b1f7. The New enum option input was excluded
+from editor snapshots and validation. Typing only an option then leaving skipped
+the discard prompt; Save could silently omit it after another edit.
+
+Candidate fix includes pending option text in dirty detection, keeps it through
+Keep Editing, and blocks enum Save with inline add-or-clear guidance. Adding the
+option clears the pending input and saves the complete options list. The mounted
+regression failed before implementation; all76 customization tests, TypeScript
+and structural checks pass on paul. Code critic found no blockers. Native input,
+announcement and exit acceptance remain pending.
+
+### M168 — Switching away from Enum leaves hidden options in the create payload
+
+P2 source-confirmed in the field editor audit at0065b1f7. Changing field Type from
+Enum to Text hides the option editor but retains enumOptions. The create command
+passes those to ManageCustomFields, whose validation rejects options on non-enum
+fields. The user sees an enabled Save followed by an avoidable validation failure.
+Candidate fix preserves dormant option draft for switching back, but submits an
+empty options list for non-enum creation. Mounted regression first reproduced the
+hidden options in the outgoing payload; it now verifies switching-back retention
+and the corrected payload. All77 customization cases, TypeScript and structural
+checks pass on paul; critic found no blockers. Native acceptance remains pending.
+
+### M169 — Return-details error heading is obscured after failed Save
+
+Verification follow-up: native35046586497 atb6321dcb passes the complete error-frame
+and retained-note/retry checks on iPhone17 and iPad mini. Both failed-save screenshots
+were inspected: the entire error is below the header and commands are unobscured.
+The named overlap is corrected for these normal-size light states. See
+home-return-axis.md and the retained350465 captures; wider acceptance stays open.
+
+P2 screenshot-confirmed on iPhone17 run35029854251 at
+e8b3d42dccf3f13428fb26bbb1cfd85ea8b0dd9e. In
+[the failed-save capture](phone-return-error-350298.png), the retained note and
+buttons are visible, but the error heading sits partly under the navigation blur.
+Initial presentation is readable. The XCTest asserts error existence and retry,
+not the complete error's position, so its passing outcome does not close this.
+Candidate fix reveals each mounted operation error after layout using the native
+header inset; repeat layouts do not reset user scrolling. The native-owned note
+is retained. The mounted regression failed before implementation and now verifies
+one reveal and unchanged retry details. All31 Home/presentation tests, TypeScript
+and structural checks pass on paul. XCTest now checks the complete error frame
+below navigation, rather than existence alone. Native verification must repeat
+the failed-save/retry sequence before this finding closes.
+Review identified pinned React Native's scroll-offset clamping: iOS also needs
+scrollToOverflowEnabled, as already used by Add. This was added after a failing
+regression assertion. The final full remote suite passes1,736 tests/271 files,
+TypeScript and structural checks. This does not replace the pending native rerun.
+
+### M170 — Conversation response and decision commands bypass native adapters
+
+P2 source-confirmed at6edc7e85. VoiceConversationExchange paints Previous/Next and
+Retry photos as text Pressables; VoiceSessionSheetScreen paints Approve/Cancel
+decision buttons. They issue commands rather than select values or navigate to
+settings. The composer already uses native controls, so the surrounding command
+styling is inconsistent. Candidate now uses NativeCommandButton for rail and photo
+retry, and NativeSheetActions for approval/cancellation. Rail bounds/count are in a
+small presentation component; position retention and reduced-motion scrolling stay
+in the parent. Plan IDs and pending-decision presentation are unchanged. All46
+focused rail/presentation/composer/lifecycle tests, TypeScript and structural checks
+pass on paul; code critic found no blockers. Native review actions are taller than
+the former custom row: short windows, keyboard and reading order need acceptance.
+Native layout verification remains open; this is not a full conversation audit.
+
+### M171 — Response navigation can outlive its originating conversation visit
+
+P2 source-confirmed at722ca46c. VoiceSessionSheetScreen's response-link handler
+awaits pauseMedia and then unconditionally dismisses/pushes asset details. If the
+user leaves or changes scope while pausing, completion can navigate from another
+screen. Capture visit and scope ownership before awaiting and check before
+navigation. Verify current completion, leave/return, and scope replacement with
+a delayed media fake. The candidate now binds handlers to a focused visit and
+scope, retires that visit on cleanup, and checks again after media shutdown.
+Four mounted scenarios cover current, departed, returned and replaced scope;
+retained old callbacks cannot pause a new session, while fresh actions work.
+Tests reproduced three late-navigation failures before correction and a retained
+callback failure during review. All four now pass on paul with TypeScript and
+structural checks. Code critic found no remaining blockers. Native transition
+acceptance remains open.
+
+### M172 — Pending native recorder startup can outlive capture cancellation
+
+P2 source-confirmed at3f601d5d. RealtimeVoiceSessionController.pauseMedia only calls
+recorder.cancel when recordingStarted is true. ExpoVoiceAudioRecorderCore.start
+awaits permission, audio mode and preparation before calling record; it has no
+startup cancellation check. Leaving during those waits therefore allows record()
+before the controller notices its obsolete generation and cancels. This is a
+brief unintended capture, not evidence that audio is sent or capture persists.
+The existing test named permission readiness delays the provider readiness port,
+before recorder.start, and does not cover native permission/preparation.
+
+Make startup cancellation reach the native adapter before capture begins, retaining
+fresh-start behavior and preventing an obsolete start from cancelling a new one.
+Acceptance needs delayed permission/mode/preparation fakes, fresh restart and
+normal stop/cancel, plus native permission dismissal/return. The candidate passes
+an AbortSignal through the recorder port and checks cancellation before capture at
+each native startup boundary. Prepared resources are stopped/deleted and audio
+mode restored. Controller startup and cancellation cleanup share a queue; old
+cleanup cannot disable a fresh recording. Nine startup cases cover the three native
+boundaries plus initial/follow-up pause/cancel/disposal. Three additional delayed
+active-cleanup cases reproduced a review finding and now pass. All98 focused
+recorder/controller tests, TypeScript and structural checks pass on paul. Critic
+found no remaining blockers in this change. Native permission/interruption
+acceptance remains open; no physical microphone verification is claimed.
+
+### M173 — Approval silently omits a name still being edited
+
+P2 source-confirmed at4b988ab0. Inline name text lives in titleEditor, while Approve
+only serialized commandDraftState. The candidate merges the visible normalized
+name into approval edits, preserving placement and other commands, and stores it
+locally before submission. Blank names block approval with visible guidance;
+Cancel remains available. A mounted real-provider/controller test failed before
+the correction and now verifies blank rejection, latest name and retention after
+transport failure. Native keyboard/decision-area acceptance remains pending.
+
+### M174 — Proposal destination selection uses an incomplete custom panel
+
+P2 source-confirmed at4b988ab0. ParentPicker in VoiceSessionSheetScreen is a flex
+sibling below the conversation and approval footer. It uses custom search/close
+controls and chevrons on immediate value-selection rows, without indicating the
+current destination. The screen passes candidates.data ?? [] and discards lookup
+loading/error state, so failure and empty search are indistinguishable.
+
+Use an existing native searchable selection pattern with current-value indication,
+bounded loading/error/no-match feedback and retry. Hierarchy, existing/proposed
+destinations and descriptions justify a selection view rather than a flat menu.
+Preserve the proposal, selected destination and name draft across entry/Back;
+scope/plan replacement must retire pending choices. Native layout failure is not
+claimed from source alone. The candidate now opens voice-plan-location through
+the native stack with native search and Back. It shows current value, checkmarks,
+eligible earlier proposed parents, existing candidates, disabled reasons and
+loading/error/retry/no-match states. Selection commits once before Back; scope,
+plan, pending approval and command validity gate editing. The old inline panel
+and its layout/styles are removed. Eight tests cover choice modeling, lookup
+states, disabled existing choices, successful Back and obsolete callback rejection
+after scope/plan mismatch or leaving. Back preserves the proposal/name draft.
+The route adds R142 to the audit inventory; its full source-axis review is in
+voice-location-axis.md. Native sheet-to-stack, keyboard and assistive-technology
+acceptance remain pending.
+
+### M175 — Inline proposal name commands remain custom narrow icons
+
+P2 source pattern finding at4b988ab0. Save/Cancel in EditablePlanCommandFields use
+custom Pressables with36-point widths and44-point heights, with no hitSlop.
+Reuse native command controls and preserve explicit save/cancel semantics alongside
+M173 final approval. Source geometry is not a measured native hit-region result.
+Acceptance includes blank disabling, cancel restoring the committed name, Done,
+keyboard visibility and native targets at normal text size. The candidate extracts
+VoicePlanNameEditor with a full-width field and native Cancel/Save commands below.
+Save and keyboard Done share normalized nonblank validation; Cancel only closes
+the editor, preserving the committed draft. Four mounted callback cases and42
+related proposal checks pass on paul, with TypeScript and structural checks.
+Code critic found no blocker. The initial test failed because the extracted
+component did not yet exist; it is not a reproduction of native target geometry.
+Native keyboard/targets and parent integration acceptance remain pending.
+
+### M176 — Partial photo failure drops its recovery detail
+
+P2 source-confirmed atcd353ee2. The controller replaces safe upload failure reasons
+with a count-only message when at least one attachment succeeds. The shared
+progress presentation also appends reasons only for total failure and shows a
+success checkmark for either terminal failure. Users can see incomplete counts
+without the available explanation, in both the active proposal and history.
+
+The candidate preserves the existing allowlisted reason for partial failure,
+renders it alongside counts, and uses a warning symbol while keeping the inventory
+change marked saved. Two controller regressions verify safe detail/redaction and
+retrying only the failed photo; a mounted shared-progress test verifies visible
+and accessible detail. All three failed before implementation. No server boundary
+or authorization behavior changes. Native reason visibility, contrast and
+announcements remain pending; see voice-progress-axis.md for all24 source axes.
+
+### M177 — Initial conversation failure has no in-place retry
+
+P2 source-confirmed at9e11dfe1. SessionErrorState renders Voice unavailable and
+the failure message without a retry command. The underlying scoped query already
+supports context and inventory-scope recovery, but the conversation does not
+expose it. Users must leave the task or depend on background refetch.
+
+The candidate exposes that existing scoped refetch through the interaction
+provider and uses a scrollable failure view with native Retry conversation.
+Pending retries reject duplicates; visit ownership rejects retained callbacks
+after leaving or returning. Errors stay available if retry fails again. Two real
+provider/recovery tests cover scope/context failure and recovery, and a component
+test covers lock/visit ownership. Whole-workspace runtime, compact detents and
+VoiceOver remain pending. See voice-processing-axis.md for24 source axes.
+
+### M178 — Conversation header is custom and duplicate reset bypasses protection
+
+P2 source-confirmed at828b87ba. Close and New conversation are custom40-point
+Pressables despite an available native header adapter. A second Reset session
+command calls onReset directly in terminal states, bypassing the confirmation
+used by New conversation when photo retries remain. Source dimensions are not
+native hit-region measurements; the bypass is visible in callback wiring.
+
+The candidate enables the native sheet header with Close and a system compose
+action. Inventory context remains body text. The duplicate inline reset is removed;
+the sole reset entry retains the existing plan/photo confirmation policy. A
+mounted header case verifies retryable-photo confirmation and independent Close.
+An iOS adapter case verifies compose semantics; navigation-feedback coverage
+verifies current committed handlers. Composed options are memoized after critic
+review; the feedback harness passed before memoization, so no reproduced loop is
+claimed. All existing header mappings remain unchanged; shared consumers inspected
+include Home, Browse, Add, notifications, settings editors/collections, reminder
+timing, checkout history, provider editors and inventory switcher.
+
+All1,774 tests across280 files and static checks pass on paul before final options
+memoization (`/tmp/mobile-m178-full.log`). Nine focused cases and static checks pass
+after it (`/tmp/voice-header-reviewed.log`). The new native fixture covers header
+reachability, declining reset, closing and reopening the proposal; its compilation
+and execution are pending. Compact detents, keyboard layout and destination Back
+must be rechecked on the changed native header before claiming runtime acceptance.
+
+### M179 — Provider recovery uses an unnecessary custom button
+
+P2 source pattern finding at63d17e79. The conversation's provider recovery command
+is a styled Pressable with its own fill/font/shape despite the shared native command
+adapter. The candidate uses NativeCommandButton with the same label and navigation
+callback and removes unused styles. Existing failure-presentation, native-command
+and navigation-contract checks verify retained semantics; native geometry remains
+pending. See voice-route-axis.md for the consolidated24-axis route review.
+
+### M180 — Shared provider states lose the current task identity
+
+P3 source-confirmed at684c54d5. ProviderStateView shows an unlabeled full-screen
+spinner and labels profile/credential/prompt failures Could not load Voice Setup.
+The household-context bridge also omits loading text. This is a task clarity/copy
+finding, not a claim that Apple requires a label on every spinner.
+
+The candidate requires a taskLabel at every shared consumer, reuses the labeled
+settings progress row, and identifies the task in error headings. Credential
+settings text refers to metadata; secrets are not read back. Existing query,
+permission and Retry behavior is unchanged. Six RED mounted cases reproduced
+missing task text. All110 related checks/static validation pass, plus six final
+copy checks; critic found no blocker. Native announcements/layout remain pending.
+See voice-readiness-axis.md for all24 source axes and affected consumers.
+
+### M181 — Failed provider tests reported as successful
+
+P1 source-confirmed at d39e4233. The API legitimately fulfills a test request with
+status `failed`, but the mobile command previously accepted every fulfilled result.
+Both profile details and voice-stage settings then showed Connection tested.
+Existing success fakes incorrectly used `success` instead of the API's `succeeded`.
+
+The command now accepts only `succeeded`. Other statuses produce safe configuration
+and credential guidance without exposing arbitrary returned text. Two mounted RED
+cases reproduce the false success on both screens and verify successful retry;
+four command cases reject failed, unknown, empty and invented success statuses.
+All82 focused tests, TypeScript and structural checks pass remotely on paul
+(`/tmp/provider-test-result-green.log`). Critic found no blockers. Authorization,
+transport and cache invalidation are unchanged. Native feedback layout remains open.
+
+### M182 — History detail exposes an opaque actor fallback
+
+P3 source-confirmed at953bb1ff. History list uses Someone with access when email
+is unavailable; detail instead shows the internal principal ID in its primary
+actor line. The candidate makes those surfaces consistent, retaining trimmed email
+when supplied. Three mounted RED cases reproduce absent, empty and whitespace
+email; a contrasting real-email case preserves its existing presentation. Audit
+identity, permissions and transport are unchanged. See history-detail-axis.md for
+the complete source review and outstanding native acceptance.
+
+### M183 — Diagnostics disappears when remote discovery is unavailable
+
+P2 source-confirmed at997bfa50. Diagnostics' shared readiness wrapper hides local
+URL/version behind household loading and errors, and can show an empty principal
+ID before account discovery finishes. That removes useful troubleshooting context.
+The candidate keeps local connection/application sections visible and gives account
+and household identity independent named loading/error/retry states. Access failures
+suppress cached identity; transport text is not shown. Two mounted RED cases
+reproduce the hidden context;68 settings tests and static checks pass remotely.
+See about-diagnostics-axis.md; native geometry and announcements remain open.
+
+### M184 — Departed switcher callbacks can still change inventory
+
+P2 source-confirmed atfc93c151. Selection completion was guarded, but a retained
+selection callback could begin a new command after blur, including after return.
+The candidate binds rendered selection callbacks to the active visit and retires
+that visit on blur, session/command replacement and Close. The pending request lock
+and existing cancellation behavior remain. A mounted RED case proves the unwanted
+post-blur command; coverage also verifies fresh return actions and immediate Close.
+See inventory-switcher-axis.md for all24 source axes and remaining native gates.
+
+### M185 — Browse continuation uses a bespoke command control
+
+P3 source-confirmed at2f861b25. Sparse-page continuation is a custom Pressable while
+pagination Retry and other result commands already use NativeCommandButton. The
+candidate uses that adapter with the same label/callback and footer position.
+The existing mounted sparse-page journey still reaches the matching second page;
+all13 related tests and static checks pass remotely. Native geometry remains open.
+See browse-route-axis.md for the full route/list/search source review.
+
+### M186 — Inbox retains private rows after access is denied
+
+P1 source-confirmed at17f9e2b7. Inbox uses local row state outside the shared query
+cache. Its error handler kept loaded titles/paging after authentication or permission
+failure. The candidate clears rows, cursor, read markers and loaded state on typed
+access loss while retaining safe error/Retry. Ordinary failures retain useful data;
+failed retries after denial cannot restore it. Eight mounted HTTP-adapter RED cases
+cover401/403 across refresh/open/read-state/mark-all. All31 related checks/static
+validation pass remotely; critic found no blocker. Native presentation remains open.
+
+### M187 — Inbox read-state accessory still uses a custom command
+
+P3 source-confirmed at17f9e2b7. Per-row read/unread used a
+Pressable plus Lucide envelope while surrounding inbox commands use platform
+controls. No concrete native limitation was documented. The candidate adds a
+SwiftUI borderless icon button and Compose IconButton, preserving independent
+row-open behavior, spoken action, disabled state and read-state reversal. It
+reserves 48 points for the accessory. Twenty focused tests plus TypeScript and
+structural checks pass remotely. Native hit bounds, row fit and assistive grouping
+still require verification; the preview Pressable is only the non-native fallback.
+### M188 — Rejected enum option entry disappears
+
+P2 source-confirmed at 9c2c7246. Add option cleared the draft even when normalization
+produced no usable value or the option already existed. Two mounted RED cases
+reproduced the loss. The candidate preserves rejected input, explains the reason
+inline, and clears obsolete feedback on editing or successful addition. Existing
+pending-option Save validation and immutable saved values remain intact. All 70
+related checks plus TypeScript/structural validation pass remotely; critic found
+no blocker. Native keyboard and feedback presentation remain pending. See
+[custom field options](custom-field-options-axis.md) for the 24-axis review.
+### M189 — Photo-removal failure alert crosses navigation visits
+
+P2 source-confirmed at 53e3915c. A still-mounted Details route checked the asset
+lifetime but could show a failed-removal alert after leaving or leaving/returning.
+Both cases reproduced before the change. The candidate captures the existing task
+presentation predicate and gates the error alert; pending cleanup and fresh retry
+remain intact. Current and unmounted cases remain covered. Native alert timing and
+navigation acceptance remain pending; see system-dialog-axis.md.
+### M190 — Camera and microphone denial omit recovery guidance
+
+P2 source-confirmed at 91c22aa3. Errors said access was required without explaining
+how to enable it or use an alternative. Candidate copy describes device Settings
+and library/typed alternatives. Explicit retry rechecks permission; 109 related
+checks plus static validation pass. Direct Settings shortcuts are recommendations,
+not implemented by this copy change. Physical recovery and message fit remain open.
+
+### M191 — Notification Settings opening has no failure recovery
+
+P2 source-confirmed at 91c22aa3. Both device-Settings actions discarded
+Linking.openSettings promises. The candidate catches rejection, shows safe manual
+guidance and permits retry without changing preferences. Launch identity and
+foreground/focus generation reject late errors and keep an old completion from
+unlocking a newer attempt. Ten focused checks plus TypeScript/structural validation
+pass remotely; critic found no blocker. The RED run reproduced unhandled rejection;
+physical Settings launch/return and visual feedback remain pending. See
+permission-recovery-axis.md.
+### M192 — Proposal location chooser has no explicit Back control
+
+P2 runtime-observed on iPhone 17, run35042066124/source d39e4233. After selecting
+and reopening a proposal location, the sheet navigation bar has title/Search but
+no Back. Screenshot and hierarchy are retained in native-phone-350420.md. The
+candidate installs an explicit native left Back using the existing stable header
+adapter; Back preserves proposal/title drafts and direct entry falls back to Voice.
+Ten related checks plus static validation pass; critic found no production blocker.
+The unavailable-route mounted case also has a body Back button, so its label check
+does not uniquely certify the header. The valid-route test does, and native
+hittability/return assertions remain required on the next build. No Swift/runtime
+pass is inferred from Linux validation.
+
+### M193 — Sharing keyboard obscures cancellation recovery
+
+P2 runtime-observed on phone run35042066124. The keyboard remains over the
+invitation cancellation menu after submission recovery. Creation now explicitly
+ends keyboard editing while retaining failed email drafts. The regression test
+failed with zero dismissals before implementation and passes afterward. This is
+a candidate correction; actual keyboard absence and cancellation require retest.
+Run351041 passes exact email and keyboard absence after creation, but opening the
+invitation menu precedes keyboard reappearance and an unhittable Cancel invitation.
+The original creation-only explanation is insufficient; M193 remains open. See
+native-phone-351041.md.
+
+Follow-up source correction replaces the one-item overflow with a visible native
+Cancel invitation command below its recipient/status. Confirmation still names the
+recipient and requires explicit destructive approval; Keep Invitation does nothing.
+Keyboard editing ends before confirmation. Mounted tests preserve independent locks,
+scope/visit ownership, duplicate rejection, failure retry and terminal removal.
+The first direct-command test run failed six cases before implementation. All1,905
+mobile tests, TypeScript, six fixture-preparation tests and structural checks pass
+on paul; the final22 sharing tests include cancelled/pending row discrimination.
+Code critic identified and verified correction of a row-lookup false positive.
+Phone/iPad native confirmation, cancellation failure/retry and keyboard reachability
+remain required; neither this substitution nor mounted tests proves the shared
+menu keyboard cause. M193 stays open pending native evidence.
+
+### M194 — Native ellipsis menu has an undersized hit region
+
+P2 runtime-observed in the same Sharing capture: native button bounds are
+21.7 by 6.7 points despite a 44-point React Native host. The native image label
+now owns a 44-point frame and rectangular content shape. Sharing and Asset
+overflow are affected; label and sort-icon variants remain unchanged. Native
+bounds and menu interaction assertions must pass before closing this finding.
+
+### M195 — Photo acquisition errors outlive their Details visit
+
+P2 source/mounted confirmed at fa504041. Picker and upload exceptions could
+publish a global failure notice while Details remained mounted behind another
+route or after returning to a new visit. Both rejection cases failed first.
+The candidate gates only the exception notice with the existing focused-visit
+predicate; results, failed-photo state, reconciliation and pending cleanup are
+preserved. Current failure plus fresh retry remain covered. All112 related
+Details checks, TypeScript and structural validation pass remotely. Critic found
+no blocker. Native picker navigation focus and notice placement remain pending;
+the guard is not an AppState/background policy.
+
+### M196 — Move destination creation uses a custom selection-like row
+
+P2 source-confirmed at bba8c1e3. Creating a destination is a command, but its
+custom Pressable looked like the surrounding parent rows and combined action/help
+text. It now uses NativeCommandButton with a complete action label and separate
+help explaining automatic selection. Existing creation/move locking remains.
+Three named-command cases failed before implementation; all82 related checks,
+TypeScript and structural validation pass remotely. Critic found no blocker.
+Native long-label wrapping, disabled appearance and keyboard reachability remain
+pending. This does not migrate parent selection rows or change creation semantics.
+
+### M197 — Add Clear draft remains a custom command
+
+P2 source-confirmed at eac9c3ac. A custom muted text Pressable bypassed the shared
+native command adapter for explicit draft removal. The candidate uses the native
+destructive command inside More details, retaining the pending guard and scoped
+reset. The named-command test failed first; recovery checks now clear a stored
+title and unfinished tag/color before creating a new draft. Native appearance,
+target bounds and focus remain pending. No confirmation or Close semantics changed.
+
+### M198 — Retained History confirmation can submit an obsolete operation
+
+P2 source/mounted confirmed at f80a4b7e. After opening Revert, a failed refresh or
+replacement operation on the same activity did not invalidate the dialog callback.
+Both regression cases submitted the old operation before the fix. Confirmation
+now captures activity-snapshot ownership through useTaskPresentation; a fresh
+record needs a new confirmation. Started reversals retain their existing completion
+behavior. Fresh recovery and old-callback retirement pass. Critic identified a
+nullable entry type mismatch, corrected with entry ?? undefined. Native dialog
+timing, focus and reachability remain pending.
+
+### M199 — Reminder settings retain editable data after access loss
+
+P1 source/mounted confirmed at6729c57f. NotificationSettingsScreen retained its
+preferences and editor after authentication/permission denial during refresh or
+save, including denial of the supporting type collection. The candidate clears
+displayed preferences/type data and locks save entry until an authorized reload.
+Ordinary transient failures preserve drafts; failed retries after denial cannot
+restore revoked data. Five adversarial recovery cases exercise the real client
+and notification adapter against controlled HTTP responses, plus typed collection
+denial. All36 related checks, TypeScript and structural validation pass remotely.
+Code critic found no blocker; the supporting-query case is explicitly a typed
+query failure, not an HTTP-boundary test.
+Native content removal/focus and backend authorization enforcement are separate
+from this UI recovery evidence.
+
+### M200 — Unresolved Add placement claims top-level placement
+
+P2 source/mounted confirmed at716f23b1. Typing a placement clears the selected ID,
+but the disclosure subtitle still said Top level in this inventory. It now says
+Not selected yet until selection or clearing. Existing exact-match resolution on
+Save is unchanged. The search/retry case failed first on the missing unresolved
+status and now verifies both that status and recovery to intentional top-level
+placement when cleared. Native wrapping and screen-reader reading remain open.
+
+### M201 — Staged Add tag removal has no explicit action name
+
+P2 source/mounted confirmed at327391bf. A staged new-tag chip's inferred accessible
+name was only its tag text, concealing its remove action. It now names Remove new
+tag {name} and exposes disabled state. The draft workflow verifies that invoking
+the command removes only that staged definition, preserving another staged tag
+and unfinished name before saving. This does not delete persisted inventory tags.
+Actual screen-reader output and visual target acceptance remain native work.
+
+Edit follow-up atdc901a08: the separate Edit staged-tag chip retained the same
+misleading action. It now uses Remove new tag {name} and drops selected state.
+The RED mounted regression verifies another staged tag and edited description
+survive removal and reach Save. Native announcements remain pending.
+
+### M202 — Browser sign-in errors are reported as user cancellation
+
+P2 source/boundary confirmed atc7b64036. All non-success native auth results threw
+Sign-in was cancelled, including error, locked and unknown results. Only explicit
+cancel/dismiss now get cancellation feedback; other outcomes get safe retry
+guidance without provider parameters. Three composed onboarding/OIDC cases failed
+first and now verify rejection without session/tenant discovery and a valid fresh
+retry. Cancel/dismiss checks remain. Live OS browser-return acceptance is pending.
+
+### M203 — Restore interrupts a routine reversible command with confirmation
+
+P2 design/source confirmed at46f23136. Restore from archived Details asked users
+to confirm returning the item to active work. It now dispatches directly from the
+native menu, retaining synchronous locking, current-visit feedback and retry.
+Archive/Delete confirmations remain. Three RED cases reproduced the required
+extra alert; all115 related tests pass with direct Restore and departed outcomes.
+Critic found no blocker. Native menu activation/status/focus remains pending.
+
+### M204 — Unsaved field expansion cannot be reversed in place
+
+P2 source confirmed at1695cab3. Expand to all assets removed the targeted choice
+from an edited field before Save, forcing users to discard other edits to recover.
+The shared native applicability picker now permits a draft roundtrip when the
+persisted field targets selected types. Saved all-assets fields remain static;
+immutable targets and unsaved additions survive the roundtrip. Two RED cases
+preceded implementation;68 related tests and static checks pass remotely. Code
+critic found no confirmed blocker.
+Native acceptance remains pending. See field-applicability-axis.md.
+
+### M205 — Successful push setup keeps an obsolete accessible action name
+
+P2 source confirmed at6a4f9221. After setup, the visible Open device settings action
+still announced Set up alerts on this device. Its accessible name now matches the
+new action. Three enabled-path RED cases preceded the change;13 related checks
+verify Settings launch/retry ownership without repeated setup or preference writes.
+TypeScript/structural checks pass remotely; critic found no confirmed blocker.
+Native announcement and external Settings transition remain unverified.
+
+### M206 — Onboarding bypasses shared native commands and hides pending labels
+
+P2 source confirmed at71183281. Connect/Create and Start Over used bespoke styled
+Pressables despite the shared native adapter; submission replaced visible command
+text with only a spinner. They now reuse NativeCommandButton and keep labels with
+separately named progress. A pending-sign-in RED case preceded the change;40
+related tests and static checks pass on paul. Critic found no production blocker;
+its void-handler test cleanup is applied. Native keyboard/geometry acceptance is
+pending, including all earlier onboarding reachability scenarios.
+
+### M207 — Phone native search appears at bottom despite header configuration
+
+P2 native-confirmed atb6321dcb/run350465. Place and settings tags show bottom native
+SearchFields instead of expanding header buttons. Both captures/hierarchies are
+retained in native-search-placement-350465.md. The tested source requests disabled
+toolbar integration; pinned native bridging forwards the options. Root cause
+remains unknown. A static route-registration comparison is queued without relaxing
+the original production journeys; installer/static checks pass, native execution
+is pending. Shared consumers require investigation, not assumed failure.
+
+Follow-up run350806 passes the production Place/settings journeys. Inspected phone
+Place has header Search, while its preconfigured comparison retains bottom search.
+See native-phone-350806.md; M207 remains open for consistency and shared consumers.
+
+Run35156794515 extends the observed placement failure to the required settings
+collection journey: Add succeeds, then Search tags is a persistent bottom field
+instead of the requested header button. The native adapter still requests
+`integratedButton` and disables toolbar integration. See
+[native phone review](native-phone-351567.md). Source options alone do not establish
+correct native placement; this workflow remains pending release acceptance.
+
+
+### M208 — Add photo removal remains a small custom overlay
+
+P2 source-confirmed at73ed44fb. Add's28-point overlaid X competed with preview and
+reorder content. It now uses a native numbered removal command below each image,
+with an unconstrained-height shell. A RED mounted regression preceded correction;
+41 related tests and static checks pass on paul. Critic found no blocker. Native
+label wrapping, rail height, reordered numbering and actual targets remain pending;
+see add-creation-media-axis.md. Earlier M40 work on voice photo commands did not
+establish that Add's separate implementation had been migrated.
+
+### M209 — Asset Edit cannot exit while core loading fails or stalls
+
+P1 source-confirmed atdc901a08. Edit disables swipe dismissal and hides its header,
+but initial loading/error branches previously exposed no Close action. The shared
+Edit/Move/Move-here loading shell now provides a native Close alongside retained
+loading/retry, returning Back or Home when entered directly. Both loading/error
+RED cases preceded correction; additional normal-Back coverage is included.
+Native reachability remains pending; see asset-edit-route-axis.md.
+
+### M210 — Asset action forms ignore current edit eligibility
+
+P2 source-confirmed atdc901a08, not a demonstrated server authorization bypass.
+AssetCoreQuery derives canEdit/canMove from permission and active lifecycle, but
+the action forms did not consult those capabilities. A readable view-only or
+archived asset could retain editing/move affordances and attempt a command.
+The candidate preserves a read-only draft and Cancel, explains unavailability,
+and rejects retained mutation/change callbacks using committed eligibility.
+Edit rechecks after asynchronous tag reconciliation. Thirteen adversarial route
+cases cover direct denial, revocation/archive, recovery and reconciliation;
+49 related tests and static checks pass on paul. Critic found no blocker.
+Server mutation authorization remains authoritative; native acceptance is pending.
+See asset-edit-route-axis.md.
+
+### M211 — failed gallery previews leave a blank image area
+
+P2 source-confirmed at8a256a2a. AssetDetailPhotoGallery handled neither image errors
+nor a visible fallback. The candidate shows Preview unavailable and preserves
+opening the original photo, where existing viewer recovery applies. It introduces
+no extra modal or nested command. Replacement URI/headers start fresh; old image
+events cannot hide the replacement. Two failing regressions preceded correction;
+8 gallery tests and static checks pass on paul. Native rendering and assistive
+acceptance remain pending. See gallery-axis.md.
+
+### M212 — checkout history Close cannot leave direct entry
+
+P2 source-confirmed atc08aa31a. The native Close handler always called Back, even
+when no previous route existed. It now returns Back where possible and replaces
+with Home otherwise, including loading and failure states. Three RED cases precede
+the fix; nine route tests and static checks pass on paul. Critic found no blocker.
+Native direct-entry reachability remains pending; see checkout-history-axis.md.
+
+### M213 — native color well repeats its accessible name
+
+P3 runtime-observed in350504 phone hierarchy: “Choose any color, Choose any color”.
+The candidate keeps ColorPicker's native label and removes the redundant label
+modifier. A separate exact-name native test precedes the adapter edit and preserves
+activation tests unchanged. Fifteen related tests, TypeScript and structural checks
+pass on paul; critic found no blocker. Those checks do not mount SwiftUI; native
+name acceptance remains pending, separately from M51 activation. See tag-color-axis.md.
+
+### M214 — loaded asset action sheets cannot return from direct entry
+
+P2 source-confirmed at f92a2274. Edit, Move and Move here unconditionally called
+Back for Cancel and successful mutation; confirmed Edit discard did the same.
+Without a back stack these paths could not leave. They now share Back-or-Home
+return with loading/error Close. Existing pending, focus and discard guards remain.
+Seven direct-entry RED cases preceded the fix; six back-stack counterparts passed.
+All62 related tests pass on paul, plus TypeScript and the structural check after a
+test-only nullable-target correction. Critic found no blocker. Native direct-entry
+navigation remains pending. See asset-actions-axis.md.
+
+### M215 — shared native search repeatedly reconfigures navigation
+
+P2 source/test-confirmed at348e5fe8. Shared search creates fresh native header
+options for every render, including navigation-context feedback. A bounded mounted
+regression exceeds25 updates before the fix. Stable presentation now uses current
+committed handlers and preserves enabled/placeholder updates, query synchronization,
+focus and teardown guards. All1,869 remote tests and static checks pass; critic found
+no blocker. Native placement remains unverified and M207 remains open. Eight shared
+consumers and the static-versus-Place captures are recorded in
+native-search-placement-350465.md.
+
+### M216 — iPad conversation review is crowded beneath the native header
+
+P2 runtime-observed at79c32758/run350592. The captured medium Conversation sheet
+draws its inventory context beneath native navigation chrome and leaves40.5 points
+of unobscured review viewport for a44-point destination control. The original
+location test scrolls the background and never opens the selector; its correction
+now targets the sheet and retains full-frame reachability. Do not conflate that
+test-procedure defect with the visible header overlap. Inspect top safe-area
+ownership and review-stage detent sizing in VoiceSessionSheetScreen and
+VoiceNativeSheetOptions. Acceptance must show context below the header and allow
+complete review/location editing with reachable approval controls on entry,
+scrolling, expansion and navigation return. Production correction remains open;
+see native-fixtures-350592.md and its retained iPad screenshot.
+
+Candidate: the shared production/fixture sheet now opens at its existing larger
+detent, retaining both detents for user resizing. Its body respects the top safe
+area; footer bottom/keyboard ownership is unchanged. The native journey now checks
+the full context line below the header before exercising location editing.
+The recorded hierarchy supplies failing geometry (context625.5 versus header
+bottom677.5); the new assertion has not yet executed. Twenty related tests,
+TypeScript and mobile structural checks pass on paul. Critic found no source
+blocker. Phone/iPad native entry, spacing, resize and navigation remain required;
+M216 is not closed. Run350806 now passes the phone context geometry and complete
+location-editing journey; the inspected context clears the header and actions are
+visible. See native-phone-350806.md. iPad and resized-detent acceptance remain open.
+
+### M217 — Android vectors depend on unsupported strokes
+
+P1 runtime/source-confirmed on Android16, initial APK db8d2bb8. Add is invisible,
+Profile becomes a filled disk, and thirteen shared assets use strokes ignored by
+Expo UI55.0.17. Filled Material contours correct the Home symbols on the patched
+native APK; Add/Profile center taps and system Back pass. The new structural guard
+rejects unsupported vector attributes. Remaining consumer/adaptation acceptance is
+tracked in [Android evidence](android-native-icons.md).
+
+### M218 — Android unbadged actions show notification dots
+
+P2 runtime/source-confirmed on the same APK. The unconditional BadgedBox defaults
+to a red dot when no badge slot exists. It now wraps only positive counts. Native
+Home shows count2 only on Notifications and no dots on Add/Profile. Zero-count
+transition and wider Android acceptance remain pending; see the same evidence.
+
+### M219 — Android filter sheets hide title and actions at their initial height
+
+P1 runtime-observed on Android16 at normal text size. Initial Browse sheet lacks
+Show results/Cancel until expanded; Android form sheets also omit native headers.
+The native footer/body-title candidate renders at initial height. Cold-root and
+remaining interaction checks are still in progress; see
+[Android filter evidence](android-filter-sheet.md). Do not mark this closed.
+
+### M220 — Direct-entry filter cancellation assumes a back destination
+
+P2 source-confirmed in Browse and Expiration filter routes: loading, error and
+ready Cancel callbacks ultimately call router.back without a no-history fallback.
+Both routes now cancel through a shared Back-or-Home helper. Its regression test
+failed first and passes with the fix. Android synthetic cold-root Cancel returns
+to the fixture index. Production authentication/scope recovery is not certified
+by that fixture; see the filter evidence report.
+
+### M221 — Android filter selection pages lose search
+
+P1 runtime-confirmed for Browse Tags on the patched Android16 fixture: the page
+renders its choices and footer but no search field or command. Native header search
+cannot render in Android form sheets, whose headers are unsupported. Expiration
+uses the same pattern for types/tags/locations and requires acceptance too. Provide
+an appropriate in-sheet native search input while preserving iOS navigation search.
+
+### M222 — Android filter native footer crashes during keyboard resize
+
+P1 runtime-confirmed in the unshipped Android filter candidate. Focusing the new
+Tags search exits the app: ScreenFooter.onParentLayout assumes a stable sheet
+state during keyboard inset transitions. Therefore M219's native footer candidate
+is rejected for release despite successful initial-detent and last-row checks.
+See Android filter evidence for the stack and proposed presentation alternative.
+
+### M223 — Android Move Here hides commands at its initial sheet height
+
+P1 runtime-confirmed on36fe660b: the0.6 form-sheet detent shows search, recovery
+and preview but neither Move here nor Cancel. Edit/Move share the sizing approach.
+Candidate uses full-screen Android native-stack presentation for all three and a
+shared keyboard-resizing frame; iOS detents remain unchanged. The rebuilt Android Move Here sample exposes both actions, including with the
+keyboard open; Move destination/create coverage remains pending. See
+android-asset-actions.md. [Before](evidence/android-move-initial-before.png).
+
+### M224 — Native Edit Back bypasses dirty confirmation in the migration candidate
+
+P1 source/test-confirmed during review of M223. Exposing Android's native header
+created an exit outside Edit's explicit Cancel handler; the operation guard covered
+only pending work. A failing GO_BACK/POP regression now passes through the existing
+discard confirmation, preserving draft/visit guards and the original action.
+Keep editing retains the draft, pending commands prevent removal, and authorized
+Discard/Save can leave. Android native header/hardware Back now verify the
+confirmation, Keep editing draft retention, and Discard return; see
+android-asset-actions.md for build evidence and remaining coverage.
+
+### M225 — Android native controls ignore the app appearance override
+
+P1 runtime-confirmed: enabled Cancel has1.97:1 contrast when app dark differs from
+system light. Independent Compose Hosts default to device appearance. The shared
+appearance-aware host now covers all seven adapters. Rebuilt native footer sample
+passes dark10.89:1/light8.96:1 and disabled/enabled command checks; individual
+appearance coverage of other adapter families remains open. See
+[Android appearance evidence](android-compose-appearance.md).
+
+### M226 — Android Add sheet omits Close and Save
+
+P1 runtime-confirmed. Android does not render the requested native sheet header,
+leaving Add without its commands. The shared Android card/iOS sheet option now
+passes native Save-current-draft/rejection-retention and ordinary Close return.
+See [Android Add evidence](android-add-header.md); successful persistence and root
+entry remain outside that sample.
+
+### M227 — Direct-entry Add Close has no return fallback
+
+P2 source-confirmed during M226 review: `src/app/add.tsx` dismisses only through
+`router.back()`. With no back destination, Close cannot ensure an escape. Reuse a
+bounded return policy that goes back when possible and otherwise returns Home,
+while preserving retained drafts and pending-operation guards. Follow-up now shares
+that policy with filters and passes Android cold/warm Close checks; source tests
+retain draft/busy guards. See android-add-header.md for evidence and remaining gaps.
+
+### M228 — Android inventory/history sheets omit required headers
+
+P1 runtime-confirmed: inventory-switcher Close and checkout-history Close are absent
+in their Android form sheets. Android card presentation restores both. Root inventory
+Close/selection also need the shared Home fallback; mounted checks cover both and
+native root Close passes. See android-header-sheets.md for consumer coverage.
+
+### M229 — Return completion crashes during native header teardown
+
+P1 runtime-confirmed in the unshipped Android card candidate. Clearing a Return task
+and changing native removal protection while popping produced a native header crash.
+Keeping removal protection stable and redispatching authorized completed-task exits
+passes native retry and Cancel journeys with positive Home destination checks. The
+original crash is retained; iOS regression acceptance remains pending. See
+android-header-sheets.md. Negative-only disappearance is never sufficient evidence
+of successful navigation.
+
+### M230 — Android Conversation lacks native Close and New actions
+
+P1 runtime-confirmed: form-sheet header omission hides Conversation's title and
+primary session commands. Android card presentation restores them. Native Close,
+proposal retention, New confirmation/Keep, and location recovery/selection pass.
+Provider-lifetime fixture seeding now verifies confirmed reset to the empty composer
+and initial Home idle state. See android-conversation-header.md.
+
+### M231 — Move Here successful retry crashes during header teardown
+
+P1 runtime-confirmed in the Android card candidate. Normal-text selection and
+rejected-command recovery passed, but successful retry crashed when removal
+protection toggled during route teardown. The shared Edit/Move/Move Here guard now
+remains registered and dispatches authorized exits. The same Android native journey
+returns successfully, and38 shared behavior tests pass. iOS gesture/teardown
+acceptance remains pending. See android-asset-actions.md for failing and passing
+native evidence and coverage limits.
+
+### M232 — Focused iPad proposal-location search collapses on clear
+
+Runtime-observed investigation, narrowed by run351041. The static integrated-button
+fixture has no application query handlers, yet also collapses after focused Clear:
+its retained capture/hierarchy show a hittable Search icon and no field/keyboard.
+That independent journey reopens and types Garage successfully. The production
+flow's collapse is therefore not established as an app defect.
+
+The iPad-only production acceptance now permits that observed native transition,
+requires restored unfiltered locations, a contained/hittable Search button when
+collapsed, exact fresh-query typing, actual selection, draft retention and Back.
+Phone still requires the field. This corrects a test expectation; it does not
+claim the full production journey passed. Native rerun remains required.
+Apple documents inactive integrated search as a button; the focused-clear behavior
+comes from retained runtime evidence. See native-ipad-351041.md.
+
+### M233 — Photo viewer recovery command and duplicate Close conflict with its canvas
+
+P2 Android runtime-confirmed at normal text/light appearance: the fixed-black
+photo viewer renders Retry using dark Material text, and the library's duplicate
+upper Close overlaps status icons. The shared candidate uses a filled native Retry
+and suppresses the default header in favor of the existing safe-area footer Close.
+Both asset and draft-photo consumers retain their removal, paging and dismissal
+behavior. Android rebuilt unavailable-photo Retry/Close passes; iOS/zoom/assistive coverage remains
+open. Evidence: photo-viewer-axis.md.
+
+### M234 — Photo commands cannot be revealed without resetting zoom
+
+P2, Android runtime and shared dependency source confirmed. On5660fb54, a double
+tap enlarges the Add draft image and hides commands; a single tap does nothing.
+Only resetting zoom restores the footer. Android system Back exits with both
+photos retained, so this is command discoverability/access, not a proven trap.
+`react-native-image-viewing/dist/ImageViewing.js` calls
+`toggleBarsVisible(!isScaled)` in `onZoom`; both platform gesture adapters lack a
+single-tap control toggle. Native iOS behavior remains unverified.
+
+Apple's [Photos iOS26 guide](https://support.apple.com/en-sg/guide/iphone/iph3d267610/26/ios/26)
+describes single-tap hide/show. Preserve zoom while revealing commands as a
+project interaction requirement. Separate the command-visibility state from zoom,
+keep double-tap zoom and platform dismissal, and test delayed single-tap cleanup.
+The shared repair is implemented and behavior-tested. APKd9b1a7b5 verifies Android
+single-tap hide/reveal while zoomed, retained zoom after warm return, replacement
+paging and asset-photo removal-failure recovery. Zoomed pan and a long upward
+dismissal also have native evidence. iOS, pinch and assistive acceptance remain
+open; see photo-viewer-axis.md for exact build, scenarios and evidence limits.
+
+### M235 — Filter footer callbacks outlive their draft or focused route
+
+P2 source-confirmed through mounted retained-callback tests, not observed native
+event delivery. The iOS filter footer retained an earlier draft and page action;
+both platforms could execute footer actions after blur. Expiration's Apply can
+navigate directly, so downstream navigation did not supply a focus guard.
+
+Both layouts now share `useFocusedSheetActions`: dispatch reads committed actions,
+checks current primary/secondary disabled state, rejects blur/removal and resumes
+current actions on refocus. This covers Browse and Expiration, the two production
+consumers. The new cases failed before implementation (old iOS draft/page and
+blurred Android dispatch) and pass after it. All1,900 tests across297 files,
+TypeScript and structural checks pass on paul; critic review found no remaining
+source blocker. Logs: `/tmp/filter-actions-{red,green,check,structural}.log`.
+The change does not alter native layout; native acceptance remains separate.
+
+
+### M236 — Asset footer events can submit a superseded draft
+
+P2, reproduced through mounted production-route tests. Retaining Edit Save,
+then clearing the name, submitted the earlier valid name. Move and Move Here
+also forwarded captured selections; their Cancel callbacks could navigate while
+blurred. The existing operation lock prevented duplicates, not stale payloads.
+
+Asset footers now reuse `useFocusedSheetActions` with filters. The guard resolves
+committed callbacks and disabled state, rejects hidden/removed tasks, and leaves
+the existing operation lock intact. The asset-scoped keyed route retires old
+handlers on replacement; a mounted test verifies an old Save cannot target the
+new asset. Edit, Move and Move Here tests verify actual command payloads,
+blur/refocus, cancellation and teardown. Full remote suite: 1,904 tests in297
+files. Native event-delivery acceptance remains separate. Logs on paul:
+`/tmp/asset-footer-{red,green,full,check,structural}.log`.
+
+### M237 — Voice review actions retain obsolete draft callbacks
+
+P2, reproduced with the real voice provider/controller and a controlled transport.
+Retained Approve submitted an earlier title after the visible editor became blank.
+A separate review owner now reads current committed command/photo drafts, checks
+focus and current validity, and unmounts outside proposed/nonpending review.
+The owner is keyed by scope and plan so old events cannot act on a replacement.
+
+The production decision component is mounted with the actual provider and
+controller. Tests cover a blank pending name, updated name/placement/photo payload,
+blur/refocus, reset, direct incoming plan replacement, current Cancel and teardown.
+All1,905 tests across298 files pass on paul, as do TypeScript and structural
+checks. Code review found no source blocker. Explicit scope-replacement and
+concurrent-decision tests are not added here; existing provider/controller guards
+remain. Native event-delivery acceptance is still open. Logs on paul:
+`/tmp/voice-review-{red,green,full,check,structural}.log`.
+
+
+### M238 — Android voice review footer stays underneath the keyboard
+
+P2 native-confirmed at normal text on APKab6f52ed. Editing a proposed name showed
+the software keyboard over Approve/Cancel. UIAutomator still exposed their old
+bounds; a tap at the reported Approve position entered a keyboard character.
+The retained screenshot, not the accessibility bounds, established the obstruction.
+
+Android conversation now uses height-based keyboard avoidance with the native
+header offset, matching the existing filter/asset stack form pattern. iOS keeps
+its padding behavior. APKd2cafbc6 verifies visible footer commands above the
+keyboard, a blank-name hint and disabled Approve, and actual Approve activation
+with an edited name. The synthetic transport rejects approval; the failure view
+retains `Native audit drill`. This is command activation/recovery evidence, not a
+successful backend mutation. Code critic and remote TypeScript/structural checks
+pass. Existing1,905 tests passed before this two-line layout correction; no
+prop-mirroring test was added. Native iOS and enlarged-text checks remain separate.
+
+Build: `/tmp/voice-keyboard-build.log` on paul; full APK SHA256:
+`d2cafbc60c76c60f57526e58075fc5597b27d3e8799cb83ef16b42fe66341a4a`.
+Pixel6 Android16 API36, normal font, light appearance. Selectively patched Android
+audit tree based ondb8d2bb8, including183e6de6 and this keyboard correction; not a
+full-HEAD release build. Captures:
+[evidence/android-voice-keyboard-blank.png](evidence/android-voice-keyboard-blank.png),
+[evidence/android-voice-keyboard-result.png](evidence/android-voice-keyboard-result.png).
+Original obstruction: `/tmp/voice-review-failed.png` on both hosts.
+
+
+### M239 — Invitation recovery still requests an already completed cancellation
+
+P2 normal-text runtime-confirmed on Android APKab28e3ef, source1a373d0b Sharing.
+After successful cancellation, the row reads Cancelled and loses its action, but
+creationError still says Cancel the invitation below before trying again.
+Source: InventorySharingScreen create catch and cancel success retain independent
+notice state. Guidance must stay accurate after successful recovery, while preserving
+unrelated/newer errors and scope ownership. Acceptance: missing-link creation,
+failed cancellation, successful retry, current guidance and retained email; include
+unrelated invitation cancellation and a newer creation attempt during cancellation.
+See sharing-axis.md and evidence/android-sharing-direct-complete.png. Open.
+
+
+M239 correction: missing-link errors contain no created invitation ID, so cancellation
+must not clear a notice by inferred email/row identity. Guidance now explicitly covers
+both still-pending and already-cancelled states. The historical creation notice and
+email remain; a new attempt still resets it. No cancellation state or ownership change.
+Android APKde9ebc9e verifies missing-link creation, deliberate cancellation failure,
+successful retry, Cancelled row without command, retained email and accurate conditional
+guidance. See evidence/android-sharing-guidance-complete.png. Twenty-two sharing
+behavior tests, six fixture-preparation tests and structural checks pass on paul;
+critic found no blocker. iOS copy/layout acceptance remains pending in the updated
+journey; unrelated/newer errors cannot be cleared by this copy-only change.
+
+
+### M240 — Connection help fails to open after native phone activation
+
+P2 normal-text runtime-observed in run35112198520 phone onboarding. After one
+hittable-button tap, both screenshot and hierarchy retain collapsed help. Native
+bounds are152.3×44 with no keyboard/overlay. Local functional state toggling has
+no identified source failure; previous run351041 passed. Keep open, without timeout
+or double-tap workarounds, until a named native revision verifies one-tap open/close,
+address retention and reachable sign-in. See native-onboarding-351121.md. The other
+jobs remain independent and active; this failure is not an address-entry failure.
+
+
+Run35156794515 repeats the collapsed-help observation on iPad in the alternate
+form-column comparison; the standard onboarding journey passes on the same build.
+The frozen batch leaves this help control/handler unchanged. It remains noncritical
+audit follow-up, not an added release gate; see native-onboarding-351567.md. No fix
+or universal one-tap reliability is claimed.
+
+### M241 — Sharing access loss uses generic load-failure recovery
+
+P2 source/mounted-confirmed, completing the denial-copy gap recorded in sharing-axis.md.
+The screen used generic load failure and Retry even when its supplied scope lacked
+share permission. It now renders Sharing unavailable, explains missing permission,
+hides cached rows and omits the ineffective list retry. The route guard owns fresh
+scope discovery. With share permission still present, server access failures retain
+Check Again through the existing authorized read;401/403/404 are not misrepresented
+as one specific cause. Ordinary load failures retain Retry.
+The mounted regression failed first; all1,905 mobile tests, TypeScript and structural
+checks pass on paul. Final focused check verifies no additional repository reads
+on permission loss, metadata hiding, restored-access recovery and departed-read
+cancellation. Native denied-state appearance remains unverified; no authorization
+service or transport enforcement changed.
+
+
+M241 Android follow-up: APK89402571 cold-launch scenarios verify permissionless
+presentation, visible Check Again and actual allowed recovery after a rejected
+access read, and Retry recovery after an ordinary read failure. See sharing-axis.md
+and its retained captures. iOS denied-state appearance remains pending.
+
+### M242 — Retained inbox actions still execute after departure
+
+P2 mounted-confirmed. Four RED cases reproduced read-state changes, mark-all,
+settings navigation and breadcrumb navigation while the inbox was unfocused.
+Commands now require mounted, focused ownership before starting; already-started
+operations retain their existing reconciliation and delayed-navigation rules.
+Review identified a first-load edge case introduced by the new guard. An additional
+RED case covers mounting behind another screen; initialization now starts once
+on the first usable focus instead of discarding that load permanently.
+All24 focused inbox checks, TypeScript and mobile structural validation pass on
+paul. Native interruption and actual accessory hit geometry remain unverified.
+
+### M243 — Android menu trigger advertises noninteractive blank space
+
+P2 native-confirmed at APK31457c4d, normal text, Pixel6/API36. Choose appearance,
+System had accessible bounds[53,473][1028,599] but its visible Compose button ended
+near448. Tapping the declared target center did not open the menu. Its React Native
+accessible wrapper stretched across its parent. Candidate aligns that wrapper to
+the start around its measured native child; APK0d8dca23 reports[53,473][448,599].
+[Missed trigger](evidence/android-appearance-missed-trigger.png).
+
+### M244 — Android selectable menu rows omit native click dispatch
+
+P1 native-confirmed in the same build: tapping the visible appearance trigger opens
+System/Light/Dark, but tapping Dark leaves System selected and the menu open.
+[Stuck selection](evidence/android-appearance-selection-stuck.png). The pinned
+ExpoUI DropdownMenuItem.kt always dispatches its own onItemPressed event; the shared
+adapter omitted onClick for rows carrying isSelected, relying on selectable instead.
+Candidate preserves native onClick for every item and retains selectable semantics
+and disabled guards. This affects shared Android choice menus, not only appearance.
+Native candidate selection and exactly-once save verification are tracked in
+appearance-settings-axis.md; do not infer TalkBack verification from pointer taps.
+
+M243/M244 native follow-up: APKb76e227a verifies target-center opening, actual
+Dark/Light/System selection and menu closure, exactly one store save per selection,
+dismissal preserving choice, and open-menu system-theme adaptation. See
+appearance-settings-axis.md. Native TalkBack and other platform checks remain open.
+
+### M245 — Retained Android color controls dispatch obsolete edits
+
+P2; confirmed by mounted control regression. A retained spectrum movement callback
+still dispatched red to the old parent after the picker changed to green with a
+new parent callback. Retained adjustment buttons likewise dispatched an old color
+while disabled. This is a source/runtime-boundary test finding, not a captured
+physical-device incident. Native responders now use the latest layout-committed
+enabled owner, retired on disable and unmount; accessibility and all six adjustment
+buttons share that owner. The regression verifies current color/callback delivery,
+disable and teardown. Twenty focused tests, TypeScript and structural checks pass
+on paul; critic's adjustment-button finding was reproduced and corrected.
+
+Shared consumers inspected: Add new-tag color, Edit new-tag color, and customization
+tag editor, through TagColorPicker. The normal iOS SwiftUI adapter is unchanged;
+the project spectrum fallback inherits this guard where selected. Native Android
+rechecking of ordinary dragging and cancellation is recorded in tag-color-axis.md.
+
+### M246 — Android color controls use undersized touch targets
+
+P2; native normal-size320dp phone observation. Blue's target measured115x116px at
+2.625 density (43.8x44.2dp); the native48dp minimum assertion failed. These React
+Native controls had fixed44dp bounds without automatic target expansion. Android
+recommends at least48x48dp:
+https://developer.android.com/guide/topics/ui/accessibility/apps.
+
+The candidate uses the existing shared minimumTouchTargetSize for Android swatches,
+clear/custom/hex controls and spectrum hue/adjustment controls. iOS swatch sizing
+and the native SwiftUI picker are preserved. Shared consumers are Add/Edit inline
+tags and customization tag editors. Twenty focused tests, TypeScript and structural
+checks pass; code review found no blocker. Native compact acceptance is recorded in
+tag-color-axis.md. This is normal-size interaction work, not enlarged-text coverage.
+
+### M247 — Android compact menu and filter targets are undersized
+
+P2; native normal-size observation. Real refinement, sort and overflow adapters
+exposed115–116px targets at420dpi, about44dp. A filter tap outside those bounds
+was not delivered. Shared Android adapters now use the existing48dp token for
+host, wrapper and explicit icon sizing; labeled hosts reserve48dp too. Native
+center/edge checks pass exactly once per activation, all three targets126×126px.
+Seven focused tests, TypeScript, structural and six fixture-installer checks pass;
+critic found no blocker. See [native scope and remaining composition checks](android-compact-targets.md).
+
+### M248 — Android sheet actions discard descriptive accessible names
+
+P2; native normal-text semantics observation, with source confirmation that
+NativeSheetActions ignored both supplied descriptions. Expiration and voice
+commands now pass those names through a version-pinned native Compose registry
+patch. Native Material controls, visible labels, role, click and disabled behavior
+are retained. Verified expiration Cancel, disabled blank-name voice approval and
+re-enabled approval/failure recovery; see [native evidence](android-action-descriptions.md).
+TalkBack speech remains unverified. The patch is compiled from source on Android;
+no iOS code or dependency version is changed.
+
+
+### M249 — iPhone filter Back overlaps the keyboard-dismiss accessory
+
+P2 native-confirmed, normal text/light mode in run35140471580 at a1b827e0.
+Expiration tag search places Back at Y491–545 while Dismiss keyboard occupies
+Y485–529. The screenshot shows the Back label beneath the accessory. The existing
+hittability-only test passed and delivered Back; it missed visual occlusion.
+See [filter review and retained evidence](native-filters-351404.md).
+
+A failing mounted case additionally establishes that the shared sheet inset ignores
+settled iOS keyboard notifications. The candidate remeasures on settled frame/show
+updates while retaining stale-measurement and hide guards. Eleven focused tests pass
+on paul. The native assertion now checks complete action clearance above the
+accessory. This is a candidate, not a proven root cause or accepted native fix.
+Browse shares the hook; its corresponding keyboard state requires verification.
+Android's separate IME-aware sheet is unchanged. Focused run35154627907 reproduces
+the same phone overlap despite settled remeasurement; iPad keyboard journeys pass.
+The candidate is not sufficient. See [paired results](native-filters-351546.md).
+
+### M250 — Browse tag edits remove the active native search configuration
+
+P2 source/mounted-test confirmed. BrowseFiltersScreen writes an explicit undefined
+search option on each draft render while NativeNavigationSearch retains its stable
+options object. Selecting a tag therefore removes the merged current search
+configuration. The earlier test reused the last historical truthy configuration,
+so it could exercise an event handler that was no longer installed.
+
+The regression now reads the currently merged options and fails after selecting a
+tag. Removing the parent's search reset leaves enable/disable ownership with the
+search adapter. Eleven focused tests, TypeScript and structural checks pass on
+paul; selection, query updates, application and overview search removal are covered.
+The focused native Browse keyboard journey passes on iPad in run35154627907;
+iPhone stops at M249 before post-selection verification. This does not establish the cause of the separate Place search
+placement issue. Android owns an inline search adapter and is unchanged.
+
+### M251 — Dark photo canvas retains dark status-bar content in light appearance
+
+P3 native-observed in phone run35156794515, normal text/light appearance. The
+[retained viewer capture](evidence/phone-photo-preview-351567.png) shows black
+clock/connectivity glyphs against the fixed near-black photo canvas. Close, Remove
+and photo metadata remain legible and reachable; this is not a blocked task.
+
+FixtureApplication and production _layout both select status-bar foreground from
+the resolved app appearance. FullScreenPhotoViewer uses a fixed dark canvas with
+overFullScreen presentation and no local status-bar override. The pinned viewer
+library's StatusBarManager returns immediately on iOS. This supports a shared
+presentation concern rather than the older Android fixture's missing configuration;
+a production-route reproduction is still needed.
+
+Track in comprehensive audit follow-up, outside the frozen release batch. Intended
+acceptance: readable status content while either draft or saved-photo viewer is
+open, then restore the underlying appearance after Close, swipe dismissal and last
+photo removal. Verify light/dark phone and iPad presentation, including nested
+removal confirmation. Do not add a global imperative status-bar change that leaks
+into other screens. No correction is included in this batch.

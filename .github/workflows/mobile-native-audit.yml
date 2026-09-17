@@ -11,6 +11,12 @@ on:
         options:
           - all
           - color-picker
+          - text-entry
+          - text-entry-no-provider
+          - add-draft
+          - home-header
+          - filters
+          - release-corrections
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -33,14 +39,14 @@ env:
 
 jobs:
   ios:
-    name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case == 'color-picker' && ' [color-picker]' || '' }}
+    name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         device: ['iPhone 17', 'iPad mini (A17 Pro)']
-        suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case == 'color-picker' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
+        suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case != 'all' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
     env:
       NODE_ENV: production
       AUDIT_SUITE: ${{ matrix.suite }}
@@ -86,6 +92,70 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
+              )
+              ;;
+            home-header)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeHeaderKeepsAllActionsAboveScrollingContent'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeProfileHitRegionBeyondAccessibilityFrame'
+              )
+              ;;
+            add-draft)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftInNavigationStack'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            filters)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationDatePageKeepsBottomActionsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
+            release-corrections)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationDatePageKeepsBottomActionsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
+              )
+              ;;
+            text-entry|text-entry-no-provider)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledAddressEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testUncontrolledAddressEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSeededAddressWithoutKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSystemAddressEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinarySingleLineTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeDefaultAssistedTextEntryDiagnostic'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryMultilineTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryControlledTextEntry'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledTextEntryWithoutAssistance'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testControlledTextEntryWithoutAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPacedControlledTextEntryDiagnostic'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPacedUncontrolledTextEntryDiagnostic'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAssistance'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOrdinaryTextEntryWithoutAccessory'
               )
               ;;
             *) exit 1 ;;
@@ -94,6 +164,8 @@ jobs:
           xcrun simctl list devices available > "$RUNNER_TEMP/native-audit/simulators.txt"
           git rev-parse HEAD > "$RUNNER_TEMP/native-audit/revision.txt"
           xcodebuild test \
+            -test-timeouts-enabled YES \
+            -maximum-test-execution-time-allowance 600 \
             "${audit_test_args[@]}" \
             -workspace apps/mobile/ios/StuffStash.xcworkspace \
             -scheme StuffStashAudit \

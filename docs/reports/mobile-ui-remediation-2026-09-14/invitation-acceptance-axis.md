@@ -1,5 +1,10 @@
 # Invitation acceptance review
 
+Current follow-up: the destination now uses NativeCommandButton (M133 candidate
+implemented). Historical custom-control descriptions below describe the reviewed
+source checkpoint. External intake now has its own [24-axis review](invitation-link-axis.md);
+physical entry and destination visual acceptance remain pending.
+
 R019, source review at6f45c031, normal text first. Entrypoint:
 `app/invitations/accept.tsx` → `InventoryInvitationScreen`; system-link intake
 S131 is related but is not certified by this route review. The route delegates
@@ -48,3 +53,53 @@ Join/Open pending feedback and disabled semantics, explicit acceptance, account
 switch, start-over recovery and accepted-access explanation after failed opening.
 Verify normal phone and iPad entry, long inventory name, pending states, failure,
 retry and dismissal. Do not infer runtime acceptance from adapter tests.
+
+## Current remaining-axis follow-up
+
+Atc08aa31a, R019 layout/typography/imagery/gestures/keyboard/motion/notifications
+were rechecked in InventoryInvitationScreen. The scrollable520-point maximum card
+uses wrapping text and stacked access/expiry values; native commands now replace
+historical custom commands. Decorative invitation/success icons supplement named
+states. No mandatory gesture, local input, notification handler or custom transition
+is introduced. System Back, inherited keyboard dismissal, icon traversal, spinner
+motion and phone/iPad clearance remain native checks, not source-certified passes.
+The dedicated invitation review remains appropriate; no new normal-size source
+defect was established in this follow-up.
+
+## Native journey added
+
+`InvitationAcceptanceFixture` renders the real screen under the production
+Invitation header, using synthetic ports only. The new normal-size phone/iPad
+journey reviews a long inventory name and Editor access, dismisses without joining,
+reopens and explicitly joins, then verifies that a failed Open retains accepted
+access and that retry opens the correct inventory without accepting twice.
+The fixture preserves the optional start-over command's production layout.
+
+The isolated-route preparation test first failed because the route was absent;
+both preparation tests, TypeScript and mobile structural checks pass on paul.
+Native Swift compilation, rendering and interaction are pending the next full run.
+This adds coverage, not a native pass. External link intake, real authentication,
+authorization, pending-operation timing and account-switch/start-over execution
+remain separate checks.
+
+## Android acceptance and opening recovery
+
+September16, Android16 Pixel6, normal text/light appearance, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+entry shows the long inventory name, Editor access, expiry and reachable Join,
+Sign out and start over, and Not now commands. Not now positively returns to the
+audit index before any acceptance. Reopening and joining displays You’re in and
+Open inventory. The first open fails independently of acceptance; the screen
+[explicitly retains access and offers Open inventory again](evidence/android-invitation-open-recovery.png).
+The long name, explanatory failure text and retry button fit without truncation.
+Retry positively displays the fixture’s “Opened invitation inventory; accepted
+once” result, proving the selected inventory and one acceptance command in this
+isolated journey. It is not evidence of a production inventory dashboard transition.
+
+No invitation was sent and no server authorization changed. Invalid, expired,
+wrong-account, offline and denied invitations, sign-out/start-over, real deep-link
+handoff, TalkBack and enlarged text remain outside this native sample. No
+implementation changed in this follow-up.
+
+Evidence: `/tmp/android-invitation-{entry,dismissed,accepted,error,opened}.xml`,
+`/tmp/android-invitation-{entry,accepted,error}.png`.

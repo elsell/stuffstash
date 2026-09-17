@@ -54,21 +54,40 @@ export class ExpoVoiceAudioRecorderCore implements VoiceAudioRecorder {
     private readonly fileSystem: ExpoVoiceFileSystem
   ) {}
 
-  async start(): Promise<void> {
+  async start(options?: { readonly signal?: AbortSignal }): Promise<void> {
+    const checkCancelled = () => {
+      if (options?.signal?.aborted) throw new Error('Voice recording cancelled.');
+    };
+    checkCancelled();
     const permission = await this.audio.requestRecordingPermissionsAsync();
+    checkCancelled();
     if (!permission.granted) {
-      throw new Error('Microphone permission is required for voice control.');
+      throw new Error('Microphone permission is required for voice control. Allow microphone access for Stuff Stash in device settings, then try again. You can still type your message.');
     }
 
-    await this.audio.setAudioModeAsync({
-      allowsRecording: true,
-      playsInSilentMode: true
-    });
-
-    const recorder = this.audio.createRecorder();
-    await recorder.prepareToRecordAsync();
-    recorder.record();
-    this.recorder = recorder;
+    let recorder: NativeAudioRecorder | null = null;
+    let prepared = false;
+    try {
+      await this.audio.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      checkCancelled();
+      recorder = this.audio.createRecorder();
+      await recorder.prepareToRecordAsync();
+      prepared = true;
+      checkCancelled();
+      recorder.record();
+      this.recorder = recorder;
+    } catch (error) {
+      try {
+        if (prepared) await recorder?.stop();
+      } finally {
+        try {
+          await this.audio.setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+        } finally {
+          if (recorder?.uri) await this.fileSystem.deleteAsync?.(recorder.uri, { idempotent: true });
+        }
+      }
+      throw error;
+    }
   }
 
   async stop(): Promise<RecordedVoiceAudio> {

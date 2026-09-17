@@ -49,6 +49,25 @@ describe('onboarding screen', () => {
     expect(api.inventoryWrites).toBe(1);
     await harness.unmount();
   });
+
+  it('keeps the connection command identifiable and locked while sign-in is pending', async () => {
+    const { harness, auth } = await fixture();
+    let finish!: () => void;
+    auth.beforeSignIn = () => new Promise<void>(resolve => { finish = resolve; });
+    await harness.changeText(harness.byLabel('Server address'), onboardingServer);
+    const press = harness.byLabel('Connect and sign in')!.props.onPress;
+    await harness.run(() => { press(); });
+    await harness.settle();
+    expect(harness.allText()).toContain('Connect and sign in');
+    expect(harness.byLabel('Setup in progress')).toBeDefined();
+    expect(harness.byLabel('Connect and sign in')?.props.disabled).toBe(true);
+    await harness.run(() => { void press(); });
+    expect(auth.signIns).toEqual([onboardingServer]);
+    await harness.run(() => finish()); await harness.settle();
+    expect(harness.byText('Set up your household')).toBeDefined();
+    expect(harness.byLabel('Setup in progress')).toBeUndefined();
+    await harness.unmount();
+  });
   it('shows inventory-only recovery after household creation and keeps the entered inventory name', async () => {
     const { harness, api } = await fixture();
     await harness.changeText(harness.byLabel('Server address'), onboardingServer);
@@ -82,11 +101,9 @@ describe('onboarding screen', () => {
     await harness.render(<OnboardingScreen command={command}
       initialState={{ step: 'tenant' }} onStateChange={() => callbacks.push('state')}
       onStartOver={() => callbacks.push('start-over')} onComplete={() => callbacks.push('complete')} />);
-    let pending!: Promise<void>;
-    await harness.run(() => { pending = harness.byLabel('Sign out and start over')!.props.onPress(); });
+    await harness.run(() => { harness.byLabel('Sign out and start over')!.props.onPress(); });
     await harness.unmount();
-    finish();
-    await pending;
+    await harness.run(() => finish()); await harness.settle();
     expect(auth.signOuts).toBe(1);
     expect(callbacks).toEqual([]);
   });

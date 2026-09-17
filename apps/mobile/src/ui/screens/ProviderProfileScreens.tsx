@@ -41,7 +41,7 @@ export function ProviderProfileListScreen({
   const { styles } = useSettingsListStyles();
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="provider profiles" state={providers.state} onRetry={providers.retry} />;
   }
 
   return (
@@ -161,12 +161,13 @@ export function ProviderProfileDetailScreen({
   const workingRef = useRef(false);
   const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="provider profile" state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
     return (
       <ProviderStateView
+        taskLabel="provider profile"
         state={{ status: 'error', message: 'This provider profile is no longer available.' }}
         onRetry={providers.retry}
       />

@@ -1,0 +1,145 @@
+Attributes: Application, 0x11cbc8140, pid: 26747, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11cbc8140, pid: 26747, label: 'Stuff Stash'
+    Window (Main), 0x11cbc8280, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11cbc83c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11cbc8000, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11cbc8640, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11cbc8780, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11cbc88c0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11cbc8a00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11cbc8b40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11cbc8c80, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11cbc8dc0, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11cbc8f00, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Place'
+                          Button, 0x11cbc9040, {{16.0, 62.0}, {90.0, 44.0}}, identifier: 'BackButton', label: 'Back'
+                          StaticText, 0x11cbc9180, {{179.0, 73.7}, {43.7, 20.7}}, label: 'Place'
+                          Button, 0x11cbc92c0, {{346.0, 66.0}, {36.0, 36.0}}, label: 'More actions for Audit place'
+                        Other, 0x11cbc9400, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11cbc9540, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11cbc9680, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x11cbc97c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x11cbc9900, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x11cbc9a40, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x11cbc9b80, {{0.0, 0.0}, {402.0, 874.0}}
+                                      ScrollView, 0x11cbc9cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x11cbc9e00, {{0.0, 0.0}, {402.0, 874.0}}
+                                          Other, 0x11cbc9f40, {{0.0, 0.0}, {402.0, 170.8}}
+                                          Other, 0x11cbca080, {{0.0, 733.2}, {402.0, 140.8}}
+                                        Other, 0x11cbca1c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                          Other, 0x11cbca300, {{0.0, 0.0}, {402.0, 170.8}}
+                                            Image, 0x11cbca440, {{-120.0, -166.0}, {642.0, 332.0}}, identifier: 'AdditionalDimmingOverlay'
+                                            Other, 0x11cbca580, {{0.0, 0.0}, {402.0, 106.0}}
+                                            Other, 0x11cbca6c0, {{0.0, 0.0}, {402.0, 170.8}}
+                                              Other, 0x11cbca800, {{0.0, 0.0}, {402.0, 170.8}}
+                                            Other, 0x11cbca940, {{0.0, 0.0}, {402.0, 170.8}}
+                                              Other, 0x11cbcaa80, {{0.0, 0.0}, {402.0, 170.8}}
+                                            Other, 0x11cbcabc0, {{0.0, 0.0}, {402.0, 170.8}}
+                                              Other, 0x11cbcad00, {{0.0, 0.0}, {402.0, 170.8}}
+                                              Other, 0x11cbcae40, {{0.0, 0.0}, {402.0, 170.8}}
+                                          Other, 0x11cbcaf80, {{0.0, 733.2}, {402.0, 140.8}}
+                                            Image, 0x11cbcb0c0, {{-120.0, 738.0}, {642.0, 272.0}}, identifier: 'AdditionalDimmingOverlay'
+                                            Other, 0x11cbcb200, {{0.0, 733.2}, {402.0, 140.8}}
+                                              Other, 0x11cbcb340, {{0.0, 733.2}, {402.0, 140.8}}
+                                            Other, 0x11cbcb480, {{0.0, 733.2}, {402.0, 140.8}}
+                                              Other, 0x11cbcb5c0, {{0.0, 733.2}, {402.0, 140.8}}
+                                              Other, 0x11cbcb700, {{0.0, 733.2}, {402.0, 140.8}}
+                                        Other, 0x11cbcb840, {{0.0, 0.0}, {402.0, 2497.3}}
+                                          Other, 0x11cbcb980, {{0.0, 0.0}, {402.0, 2497.3}}
+                                            Other, 0x11cbcbac0, {{16.0, 24.0}, {370.0, 372.0}}
+                                              Other, 0x11cbcbc00, {{16.0, 24.0}, {370.0, 240.0}}, label: 'No photos'
+                                              Other, 0x11cbcbd40, {{187.0, 103.0}, {28.0, 28.0}}
+                                                Other, 0x11cbcbe80, {{188.2, 106.5}, {25.7, 21.0}}
+                                                  Other, 0x11cbb3ac0, {{188.2, 106.5}, {25.7, 21.0}}
+                                                  Other, 0x11cbb3c00, {{196.3, 113.5}, {9.3, 9.3}}
+                                              StaticText, 0x11cbb3d40, {{175.7, 137.0}, {50.3, 24.0}}, label: 'Place'
+                                                StaticText, 0x11cbb3700, {{175.7, 137.0}, {50.3, 24.0}}, label: 'Place'
+                                              StaticText, 0x11cbb2a80, {{165.3, 167.0}, {71.3, 18.0}}, label: 'No photos'
+                                                StaticText, 0x11cbb35c0, {{165.3, 167.0}, {71.3, 18.0}}, label: 'No photos'
+                                              StaticText, 0x11cbb2800, {{16.0, 288.0}, {370.0, 36.0}}, label: 'Audit place'
+                                                StaticText, 0x11cbb2e40, {{16.0, 288.0}, {370.0, 36.0}}, label: 'Audit place'
+                                              StaticText, 0x11cbb2d00, {{16.0, 330.0}, {370.0, 18.0}}, label: 'Place'
+                                                StaticText, 0x11cbb3e80, {{16.0, 330.0}, {370.0, 18.0}}, label: 'Place'
+                                            StaticText, 0x11cbb2f80, {{16.0, 420.0}, {370.0, 26.3}}, label: 'Spaces in Audit place'
+                                              StaticText, 0x11cbb3480, {{16.0, 420.0}, {370.0, 26.3}}, label: 'Spaces in Audit place'
+                                            StaticText, 0x11cbb30c0, {{16.0, 449.3}, {370.0, 17.0}}, label: '0 spaces'
+                                              StaticText, 0x11cbb3340, {{16.0, 449.3}, {370.0, 17.0}}, label: '0 spaces'
+                                            StaticText, 0x11cb96e40, {{16.0, 486.3}, {370.0, 20.3}}, label: 'No spaces here yet'
+                                              StaticText, 0x11cb96f80, {{16.0, 486.3}, {370.0, 20.3}}, label: 'No spaces here yet'
+                                            StaticText, 0x11cb970c0, {{16.0, 512.7}, {370.0, 18.0}}, label: 'Containers and nested places will appear here.'
+                                              StaticText, 0x11cb97200, {{16.0, 512.7}, {370.0, 18.0}}, label: 'Containers and nested places will appear here.'
+                                            StaticText, 0x11cb97340, {{16.0, 570.7}, {370.0, 26.3}}, label: 'Items in Audit place'
+                                              StaticText, 0x11cb94780, {{16.0, 570.7}, {370.0, 26.3}}, label: 'Items in Audit place'
+                                            StaticText, 0x11cb94000, {{16.0, 600.0}, {370.0, 17.0}}, label: '20 items'
+                                              StaticText, 0x11cb94140, {{16.0, 600.0}, {370.0, 17.0}}, label: '20 items'
+                                            Button, 0x11cb94280, {{16.0, 627.0}, {370.0, 88.0}}, label: 'Open asset Tool 0. Item'
+                                            Button, 0x11cb943c0, {{16.0, 715.3}, {370.0, 88.0}}, label: 'Open asset Tool 1. Item'
+                                            Other, 0x11cb94500, {{92.0, 715.0}, {294.0, 0.3}}
+                                            Button, 0x11cb97e80, {{16.0, 803.7}, {370.0, 88.0}}, label: 'Open asset Tool 10. Item'
+                                            Other, 0x11cb94640, {{92.0, 803.3}, {294.0, 0.3}}
+                                            Button, 0x11cb97d40, {{16.0, 892.0}, {370.0, 88.0}}, label: 'Open asset Tool 11. Item'
+                                            Other, 0x11cb97c00, {{92.0, 891.7}, {294.0, 0.3}}
+                                            Button, 0x11cb97ac0, {{16.0, 980.3}, {370.0, 88.0}}, label: 'Open asset Tool 12. Item'
+                                            Other, 0x11cbb8000, {{92.0, 980.0}, {294.0, 0.3}}
+                                            Button, 0x11cbb8140, {{16.0, 1068.7}, {370.0, 88.0}}, label: 'Open asset Tool 13. Item'
+                                            Other, 0x11cbb8280, {{92.0, 1068.3}, {294.0, 0.3}}
+                                            Button, 0x11cbb83c0, {{16.0, 1157.0}, {370.0, 88.0}}, label: 'Open asset Tool 14. Item'
+                                            Other, 0x11cbb8500, {{92.0, 1156.7}, {294.0, 0.3}}
+                                            Button, 0x11cbb8640, {{16.0, 1245.3}, {370.0, 88.0}}, label: 'Open asset Tool 15. Item'
+                                            Other, 0x11cbb8780, {{92.0, 1245.0}, {294.0, 0.3}}
+                                            Button, 0x11cbb88c0, {{16.0, 1333.7}, {370.0, 88.0}}, label: 'Open asset Tool 16. Item'
+                                            Other, 0x11cbb8a00, {{92.0, 1333.3}, {294.0, 0.3}}
+                                            Button, 0x11cbb8b40, {{16.0, 1422.0}, {370.0, 88.0}}, label: 'Open asset Tool 17. Item'
+                                            Other, 0x11cbb8c80, {{92.0, 1421.7}, {294.0, 0.3}}
+                                            Button, 0x11cbb8dc0, {{16.0, 1510.3}, {370.0, 88.0}}, label: 'Open asset Tool 18. Item'
+                                            Other, 0x11cbb8f00, {{92.0, 1510.0}, {294.0, 0.3}}
+                                            Button, 0x11cbb9040, {{16.0, 1598.7}, {370.0, 88.0}}, label: 'Open asset Tool 19. Item'
+                                            Other, 0x11cbb9180, {{92.0, 1598.3}, {294.0, 0.3}}
+                                            Button, 0x11cbb92c0, {{16.0, 1687.0}, {370.0, 88.0}}, label: 'Open asset Tool 2. Item'
+                                            Other, 0x11cbb9400, {{92.0, 1686.7}, {294.0, 0.3}}
+                                            Button, 0x11cbb9540, {{16.0, 1775.3}, {370.0, 88.0}}, label: 'Open asset Tool 3. Item'
+                                            Other, 0x11cbb9680, {{92.0, 1775.0}, {294.0, 0.3}}
+                                            Button, 0x11cbb97c0, {{16.0, 1863.7}, {370.0, 88.0}}, label: 'Open asset Tool 4. Item'
+                                            Other, 0x11cbb9900, {{92.0, 1863.3}, {294.0, 0.3}}
+                                            Button, 0x11cbb9a40, {{16.0, 1952.0}, {370.0, 88.0}}, label: 'Open asset Tool 5. Item'
+                                            Other, 0x11cbb9b80, {{92.0, 1951.7}, {294.0, 0.3}}
+                                            Button, 0x11cbb9cc0, {{16.0, 2040.3}, {370.0, 88.0}}, label: 'Open asset Tool 6. Item'
+                                            Other, 0x11cbb9e00, {{92.0, 2040.0}, {294.0, 0.3}}
+                                            Button, 0x11cbb9f40, {{16.0, 2128.7}, {370.0, 88.0}}, label: 'Open asset Tool 7. Item'
+                                            Other, 0x11cbba080, {{92.0, 2128.3}, {294.0, 0.3}}
+                                            Button, 0x11cbba1c0, {{16.0, 2217.0}, {370.0, 88.0}}, label: 'Open asset Tool 8. Item'
+                                            Other, 0x11cbba300, {{92.0, 2216.7}, {294.0, 0.3}}
+                                            Button, 0x11cbba440, {{16.0, 2305.3}, {370.0, 88.0}}, label: 'Open asset Tool 9. Item'
+                                            Other, 0x11cbba580, {{92.0, 2305.0}, {294.0, 0.3}}
+                                            Other, 0x11cbba6c0, {{92.0, 2393.3}, {294.0, 0.3}}
+                                            StaticText, 0x11cbba800, {{16.0, 2417.7}, {370.0, 15.7}}
+                                              StaticText, 0x11cbba940, {{16.0, 2417.7}, {370.0, 15.7}}
+                                        Other, 0x11cbbaa80, {{369.0, 116.0}, {30.0, 672.0}}, label: 'Vertical scroll bar, 3 pages', value: 0%
+                                          Other, 0x11cbbabc0, {{396.0, 119.0}, {3.0, 233.0}}
+                                        Other, 0x11cbbad00, {{62.0, 755.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11cbbae40, {{65.0, 782.0}, {272.0, 3.0}}
+                                        Other, 0x11cbbaf80, {{369.0, 116.0}, {30.0, 672.0}}, label: 'Vertical scroll bar, 3 pages', value: 0%
+                                          Other, 0x11cbbb0c0, {{396.0, 119.0}, {3.0, 233.0}}
+                                        Other, 0x11cbbb200, {{62.0, 755.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11cbbb340, {{65.0, 782.0}, {272.0, 3.0}}
+                        Other, 0x11cbbb480, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11cbbb5c0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11cbbb700, {{0.0, 788.0}, {402.0, 86.0}}
+                              Other, 0x11cbbb840, {{28.0, 798.0}, {346.0, 48.0}}
+                                Other, 0x11cbbb980, {{28.0, 798.0}, {346.0, 48.0}}
+                                  Other, 0x11cbbbac0, {{28.0, 798.0}, {0.0, 0.0}}
+                                    Other, 0x11cbbbc00, {{28.0, 798.0}, {346.0, 48.0}}
+                                      Other, 0x11cbbbd40, {{28.0, 798.0}, {346.0, 48.0}}
+                                        Other, 0x11cbbbe80, {{33.0, 803.0}, {336.0, 38.0}}
+                                          SearchField, 0x11cbbc000, {{33.0, 803.0}, {336.0, 38.0}}, label: 'Search this place', placeholderValue: 'Search this place'
+                                            Image, 0x11cbbc140, {{46.0, 812.0}, {20.7, 19.3}}, identifier: 'magnifyingglass', label: 'Search'
+    Window, 0x11cbbc280, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11cbbc3c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11cbbc500, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11cbc8140, pid: 26747, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11cbbc640, pid: 26747, label: 'Stuff Stash'
+  }

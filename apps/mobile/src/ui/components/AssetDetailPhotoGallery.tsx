@@ -1,4 +1,5 @@
 import { NativeCommandButton } from './NativeCommandButton';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -109,37 +110,8 @@ export function AssetDetailPhotoGallery({
       >
         {photos.map((photo, index) => {
           const presentation = pages[index] as AssetDetailPhotoPagePresentation;
-          const canOpenPhoto = photo.id !== undefined && onPhotoPress !== undefined;
-          return (
-            <Pressable
-              accessibilityLabel={presentation.accessibilityLabel}
-              accessibilityRole="imagebutton"
-              accessibilityState={{ disabled: !canOpenPhoto }}
-              disabled={!canOpenPhoto}
-              key={photo.id ?? photo.uri}
-              onPress={() => photo.id && onPhotoPress ? onPhotoPress(photo.id) : undefined}
-              style={[styles.mediaFrame, styles.photoMediaFrame, { backgroundColor: palette.surfaceMuted, width: photoWidth }]}
-            >
-              <Image
-                accessibilityIgnoresInvertColors
-                accessible={false}
-                resizeMode="cover"
-                source={{
-                  uri: photo.heroUri ?? photo.uri,
-                  headers: photo.heroHeaders ?? photo.headers
-                }}
-                style={styles.photo}
-              />
-              <View
-                accessible={false}
-                style={[styles.positionBadge, { backgroundColor: palette.scrim }]}
-              >
-                <Text style={[styles.positionText, { color: palette.onScrim }]}>
-                  {presentation.positionLabel}
-                </Text>
-              </View>
-            </Pressable>
-          );
+          return <GalleryPreview key={photo.id ?? photo.uri} photo={photo} palette={palette}
+            presentation={presentation} width={photoWidth} onPhotoPress={onPhotoPress} />;
         })}
       </ScrollView>
 
@@ -150,7 +122,44 @@ export function AssetDetailPhotoGallery({
   );
 }
 
+function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
+  readonly photo: AssetPhotoViewModel;
+  readonly palette: MobileColorPalette;
+  readonly presentation: AssetDetailPhotoPagePresentation;
+  readonly width: number;
+  readonly onPhotoPress?: (photoId: string) => void;
+}) {
+  const canOpen = photo.id !== undefined && onPhotoPress !== undefined;
+  const uri = photo.heroUri ?? photo.uri;
+  const headers = photo.heroHeaders ?? photo.headers;
+  const source = useMemo(() => ({ uri, headers }), [uri, headers]);
+  const currentSource = useRef<typeof source | undefined>(source);
+  const [failedSource, setFailedSource] = useState<typeof source>();
+  useLayoutEffect(() => {
+    currentSource.current = source;
+    return () => { currentSource.current = undefined; };
+  }, [source]);
+  const failed = failedSource === source;
+  return <Pressable accessibilityLabel={presentation.accessibilityLabel}
+    accessibilityValue={failed ? { text: 'Preview unavailable' } : undefined}
+    accessibilityHint={canOpen ? 'Opens the original photo' : undefined}
+    accessibilityRole="imagebutton" accessibilityState={{ disabled: !canOpen }} disabled={!canOpen}
+    onPress={() => { if (photo.id && onPhotoPress) onPhotoPress(photo.id); }}
+    style={[styles.mediaFrame, styles.photoMediaFrame, { backgroundColor: palette.surfaceMuted, width }]}>
+    {failed ? <View style={styles.previewFailure}>
+      <Text style={[styles.emptySupporting, { color: palette.text }]}>Preview unavailable</Text>
+      {canOpen ? <Text style={[styles.emptySupporting, { color: palette.text }]}>Open photo</Text> : null}
+    </View> : <Image accessibilityIgnoresInvertColors accessible={false} resizeMode="cover"
+    source={source} style={styles.photo}
+    onError={() => { if (currentSource.current === source) setFailedSource(source); }} />}
+    <View accessible={false} style={[styles.positionBadge, { backgroundColor: palette.scrim }]}>
+      <Text style={[styles.positionText, { color: palette.onScrim }]}>{presentation.positionLabel}</Text>
+    </View>
+  </Pressable>;
+}
+
 const styles = StyleSheet.create({
+  previewFailure: { padding: spacing.lg, gap: spacing.sm },
   gallery: {
     alignItems: 'flex-start',
     gap: spacing.sm

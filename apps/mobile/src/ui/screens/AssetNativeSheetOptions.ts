@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { colors, type MobileColorPalette } from '../theme/tokens';
 
 type AssetNativeSheetOptions = {
@@ -27,29 +28,46 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
   } as const;
 }
 
-export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
+export function createAssetNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
-    filters: {
+    add: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'card' as const, headerShown: true, title: 'Add item'
+    } : {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'formSheet' as const, headerShown: true, title: 'Add item',
+      sheetAllowedDetents: [1], sheetCornerRadius: 24, sheetGrabberVisible: true
+    },
+    filters: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.background },
+      presentation: 'card' as const, headerShown: true, title: 'Filters'
+    } : {
       ...baseOptions,
       headerShown: true,
       sheetAllowedDetents: [0.7, 1],
       title: 'Filters'
     },
-    edit: {
-      ...baseOptions,
-      gestureEnabled: false,
-      sheetAllowedDetents: [0.56, 0.9]
+    edit: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const,
+      headerShown: true, gestureEnabled: false
+    } : {
+      ...baseOptions, gestureEnabled: false, sheetAllowedDetents: [0.56, 0.9]
     } satisfies AssetNativeSheetOptions,
-    move: {
-      ...baseOptions,
-      sheetAllowedDetents: [0.62, 0.92]
+    move: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
+    } : {
+      ...baseOptions, sheetAllowedDetents: [0.62, 0.92]
     } satisfies AssetNativeSheetOptions,
-    moveHere: {
-      ...baseOptions,
-      sheetAllowedDetents: [0.6, 0.9]
+    moveHere: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
+    } : {
+      ...baseOptions, sheetAllowedDetents: [0.6, 0.9]
     } satisfies AssetNativeSheetOptions,
-    checkoutHistory: {
+    checkoutHistory: platform === 'android' ? {
+      contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const,
+      headerShown: true, title: 'Checkout history'
+    } : {
       ...baseOptions,
       headerShown: true,
       title: 'Checkout history',
@@ -60,18 +78,18 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette) {
 
 const defaultOptions = createAssetNativeSheetOptions(colors);
 
-export const assetEditNativeSheetOptions: AssetNativeSheetOptions = {
+export const assetEditNativeSheetOptions = {
   ...defaultOptions.edit
 };
 
-export const assetMoveNativeSheetOptions: AssetNativeSheetOptions = {
+export const assetMoveNativeSheetOptions = {
   ...defaultOptions.move
 };
 
-export const assetMoveHereNativeSheetOptions: AssetNativeSheetOptions = {
+export const assetMoveHereNativeSheetOptions = {
   ...defaultOptions.moveHere
 };
 
-export const assetCheckoutHistoryNativeSheetOptions: AssetNativeSheetOptions = {
+export const assetCheckoutHistoryNativeSheetOptions = {
   ...defaultOptions.checkoutHistory
 };

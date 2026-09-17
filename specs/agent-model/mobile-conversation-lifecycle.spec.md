@@ -3,6 +3,14 @@
 This complements `mobile-conversation-interface.spec.md` and governs native
 interaction transitions across the provider, controller, and socket adapter.
 
+Capture startup is cancellable across native permission, audio-mode setup and
+recorder preparation. The recorder port receives an optional AbortSignal; native
+adapters check it before starting capture and clean up prepared resources when
+cancelled. Pause, cancel and disposal abort outstanding startup. Initial and
+follow-up starts share serialized capture startup/cleanup so obsolete work cannot
+start capture or cancel a newer recording. Permission prompts themselves remain
+OS-owned; cancellation prevents capture after their eventual completion.
+
 | Phase | Allowed user actions | Required outcome |
 | --- | --- | --- |
 | Ready or completed | Type, record, reset, inspect history | One active turn; no duplicate history on startup failure |

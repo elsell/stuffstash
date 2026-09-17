@@ -2,7 +2,7 @@ import { scrollCommandsForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
-import { Platform, pressAlertButton } from '../../test-support/react-native';
+import { Platform, pressAlertButton, latestActionSheetCallback } from '../../test-support/react-native';
 import { afterEach, expect, it } from 'vitest';
 import { AddAssetScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
@@ -13,8 +13,61 @@ import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { MobileRenderHarness } from '../../test-support/render';
 import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
-import { navigationOptions, resetNavigation } from '../../test-support/navigation';
+import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
+
+it('removes the numbered draft photo while preserving the remaining selection and item draft', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const store = new InMemoryAddAssetDraftStore('scope');
+  const scope = { tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' };
+  const context = { ...scope, tenantName: 'Home', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  store.save(scope, { title: 'Keep this item', description: '', parentQuery: '', showDetails: false,
+    selectedPhotos: ['first', 'second'].map(id => ({ id, uri: `file:///${id}.jpg`, fileName: `${id}.jpg`, contentType: 'image/jpeg' as const, sizeBytes: 100 })) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={store}
+      createAssetCommand={{ execute: async () => { throw new Error('Must not save'); } }}
+      parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    expect(h.byLabel('Asset name')).toBeDefined();
+    expect(h.byLabel('Remove photo 1')).toBeDefined();
+    expect(h.byLabel('Remove photo 2')).toBeDefined();
+    await h.press(h.byLabel('Remove photo 1'));
+    expect(store.load(scope)?.selectedPhotos.map(photo => photo.id)).toEqual(['second']);
+    expect(store.load(scope)?.title).toBe('Keep this item');
+    expect(h.byLabel('Remove photo 2')).toBeUndefined();
+    await h.press(h.byLabel('Remove photo 1'));
+    expect(store.load(scope)?.selectedPhotos).toEqual([]);
+    expect(store.load(scope)?.title).toBe('Keep this item');
+  } finally { await h.unmount(); client.clear(); }
+});
+
+it.each([0, 1])('rejects an Add photo chooser from a departed visit, source=%s', async source => {
+  resetNavigation(); let selections = 0;
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: [] };
+  const select = async () => { selections++; return []; };
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+      inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
+      addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={new InMemoryAddAssetDraftStore('scope')}
+      createAssetCommand={{ execute: async () => { throw new Error('Creation not requested'); } }} parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })}
+      photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: select, captureFromCamera: select })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
+    const add = h.byLabel('Add photos');
+    expect(add).toBeDefined();
+    await h.press(add);
+    const choose = latestActionSheetCallback();
+    expect(choose).toBeTypeOf('function');
+    await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true));
+    await h.run(() => choose!(source));
+    expect(selections).toBe(0);
+    await h.press(add); await h.run(() => latestActionSheetCallback()!(source));
+    expect(selections).toBe(1);
+  } finally { await h.unmount(); client.clear(); resetNavigation(); }
+});
 
 it('keeps dirty Add parent/title across metadata refresh and exposes dismissal', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); let contextReads = 0; let principals = 0; let dismissed = 0; let tags: readonly [] = []; let submittedTitle = '';
@@ -287,29 +340,47 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await h.changeText(h.byLabel('New tag name'), overlongName);
     expect(h.byText('Use a shorter tag name.')).toBeDefined();
     await h.press(h.byLabel('Add tag'));
-    expect(h.byLabel('New tag name')?.props.value).toBe(overlongName);
+    expect(store.load(draftContext)?.inlineTag?.name).toBe(overlongName);
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    const tagField = () => h.allByType('TextInput').find(node => node.props.accessibilityLabel === 'New tag name');
+    expect(tagField()?.props.defaultValue).toBe('');
+    expect(tagField()?.props.value).toBeUndefined();
     await h.press(h.byText('More details')?.parent ?? undefined);
     expect(h.byText('Open More details to add or clear the unfinished tag before saving.')).toBeDefined();
     await h.press(h.byText('More details')?.parent ?? undefined);
-    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
+    expect(store.load(draftContext)?.inlineTag?.name).toBe('Camping');
+    expect(tagField()?.props.defaultValue).toBe('Camping');
     expect(store.load(draftContext)).toMatchObject({ inlineTag: { name: 'Camping', color: '' } });
     expect(store.load({ ...draftContext, inventoryId: 'other' })).toBeUndefined();
     await h.press(h.byLabel('Save item')); expect(saved).toEqual([]);
     expect(h.byText('Add this tag or clear its name and color before saving.')).toBeDefined();
     await h.unmount(); h = new MobileRenderHarness(); await render(h); await settle();
-    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
+    expect(store.load(draftContext)?.inlineTag?.name).toBe('Camping');
     await h.press(h.byLabel('Choose Blue tag color'));
     expect(store.load(draftContext)?.inlineTag?.color).toBe('#2F80ED');
-    await h.press(h.byText('Clear draft')?.parent ?? undefined);
+    await h.changeText(h.byLabel('Asset name'), 'Draft to clear');
+    expect(store.load(draftContext)?.title).toBe('Draft to clear');
+    expect(h.byLabel('Clear draft')).toBeDefined();
+    await h.press(h.byLabel('Clear draft'));
+    expect(store.load(draftContext)?.title).toBe('');
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
     expect(store.load(draftContext)?.inlineTag?.color ?? '').toBe('');
     await h.changeText(h.byLabel('Asset name'), 'Tent');
     await h.press(h.byText('More details')?.parent ?? undefined);
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     await h.press(h.byLabel('Add tag'));
-    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    expect(store.load(draftContext)?.inlineTag?.name).toBe('');
+    expect(tagField()?.props.defaultValue).toBe('');
+    await h.changeText(h.byLabel('New tag name'), 'Other');
+    await h.press(h.byLabel('Add tag'));
+    await h.changeText(h.byLabel('New tag name'), 'Unfinished');
+    expect(h.byLabel('Remove new tag Other')).toBeDefined();
+    await h.press(h.byLabel('Remove new tag Other'));
+    expect(store.load(draftContext)?.newTags).toEqual([{ displayName: 'Camping' }]);
+    expect(store.load(draftContext)?.inlineTag?.name).toBe('Unfinished');
+    expect(tagField()?.props.defaultValue).toBe('');
+    await h.changeText(h.byLabel('New tag name'), '');
     await h.press(h.byLabel('Save item')); await settle();
     expect(saved).toEqual([expect.objectContaining({ title: 'Tent', newTags: [{ displayName: 'Camping' }] })]);
     expect(store.load(draftContext)?.inlineTag?.name ?? '').toBe('');
@@ -331,6 +402,7 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
     await h.changeText(h.byLabel('Search parent'), 'New parent');
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    expect(h.byText('Not selected yet')).toBeDefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
@@ -340,5 +412,8 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
     expect(h.byLabel('Search parent')?.props.value).toBe('New parent');
+    await h.changeText(h.byLabel('Search parent'), '');
+    expect(h.byText('Not selected yet')).toBeUndefined();
+    expect(h.byText('Top level in this inventory')).toBeDefined();
   } finally { await h.unmount(); }
 });

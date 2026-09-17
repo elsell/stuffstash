@@ -12,6 +12,27 @@ test('renders concise release changes without plumbing, duplicates or prefixes',
   assert.ok(renderNotes('v1.0.0', '1.1', ['fix: ' + 'x'.repeat(5000)]).length <= 4000);
 });
 
+test('renders reviewed squash highlights while excluding surrounding engineering detail', () => {
+  const notes = renderNotes('v0.24.24', '113.1', [
+    'fix(mobile): Broad audit batch\n\nInternal validation details\n\nTestFlight notes:\n- Keep search and filters reachable.\n- Preserve drafts during recovery.\n\nValidation: internal runner details\n- Not a release highlight',
+    'fix: Keep search and filters reachable.',
+    'docs: Report\n\nTestFlight notes:\n- Not a product change'
+  ]);
+  assert.match(notes, /- Keep search and filters reachable.\n- Preserve drafts during recovery./);
+  assert.equal(notes.split('Keep search and filters reachable.').length, 2);
+  assert.doesNotMatch(notes, /Broad audit|Internal|Validation|Not a release|Not a product/);
+});
+
+test('falls back to the subject for absent or empty reviewed sections', () => {
+  const notes = renderNotes('v1.0.0', '1.1', [
+    'fix: First fix\n\nBody text',
+    'fix: Second fix\n\nTestFlight notes:\n\nNo bullets',
+    'fix: Third fix\n\nTestFlight notes:\n-   '
+  ]);
+  assert.match(notes, /- First fix\n- Second fix\n- Third fix/);
+  assert.doesNotMatch(notes, /Body text|No bullets|TestFlight notes/);
+});
+
 const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const credentials = { key: privateKey, keyId: 'ABCDEFGHIJ', issuerId: 'issuer' };
 test('signs short-lived Apple JWTs with ES256 P1363 signatures', () => {

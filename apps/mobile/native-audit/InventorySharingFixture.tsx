@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { createMobileQueryClient } from '../src/adapters/serverState/MobileQueryClient';
 import { QueryClientInvitationMutationObserver } from '../src/adapters/serverState/QueryClientInvitationMutationObserver';
 import {
@@ -15,12 +16,23 @@ const scope: InventorySharingScope = {
 
 /** Runner-only controlled ports: no remote invitations, system clipboard, or real share action. */
 export function InventorySharingFixture() {
+  const { access } = useLocalSearchParams<{ access?: string }>();
+  const scenario = access === 'permissionless' || access === 'denied' || access === 'unavailable' ? access : 'normal';
+  return <SharingScenario key={scenario} scenario={scenario} />;
+}
+
+function SharingScenario({ scenario }: { readonly scenario: 'normal' | 'permissionless' | 'denied' | 'unavailable' }) {
+  const selectedScope = scenario === 'permissionless' ? { ...scope, permissions: [] } : scope;
   const [fixture] = useState(() => {
     const client = createMobileQueryClient();
-    let creations = 0; let copies = 0; let cancellations = 0;
+    let creations = 0; let copies = 0; let cancellations = 0; let reads = 0;
     let items: InventoryInvitationSummary[] = [];
     const repository: InventoryInvitationManagementRepository = {
-      list: async () => ({ items }),
+      list: async () => {
+        if (++reads === 1 && scenario === 'denied') throw Object.assign(new Error('Audit access unavailable'), { status: 403 });
+        if (reads === 1 && scenario === 'unavailable') throw new Error('Audit invitation read unavailable');
+        return { items };
+      },
       create: async (_scope, input) => {
         const invitation: InventoryInvitationSummary = {
           id: `audit-invitation-${++creations}`, email: input.email, relationship: input.relationship,
@@ -46,8 +58,8 @@ export function InventorySharingFixture() {
     };
   });
   useEffect(() => () => fixture.client.clear(), [fixture]);
-  return <MobileServerStateProvider client={fixture.client} scopeId="audit-sharing" loadInventoryScope={async () => scope}>
-    <InventorySharingScreen scope={scope} listQuery={fixture.listQuery} createCommand={fixture.createCommand}
+  return <MobileServerStateProvider client={fixture.client} scopeId="audit-sharing" loadInventoryScope={async () => selectedScope}>
+    <InventorySharingScreen scope={selectedScope} listQuery={fixture.listQuery} createCommand={fixture.createCommand}
       cancelCommand={fixture.cancelCommand} linkActions={fixture.linkActions} />
   </MobileServerStateProvider>;
 }

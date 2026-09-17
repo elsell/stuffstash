@@ -2,6 +2,35 @@ import { describe, expect, it } from 'vitest';
 import { ExpoVoiceAudioPlayerCore, ExpoVoiceAudioRecorderCore, normalizeDbfsLevel } from './ExpoVoiceAudioCore';
 
 describe('ExpoVoiceAudioRecorder', () => {
+  it.each(['permission', 'mode', 'prepare'] as const)('never captures after cancellation during %s', async boundary => {
+    const recorder = new FakeRecorder('file:///recording.m4a');
+    const audio = new FakeAudio(recorder);
+    const files = new FakeFileSystem({ 'file:///recording.m4a': 'unused' });
+    let release!: () => void; let entered!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const waiting = new Promise<void>(resolve => { entered = resolve; });
+    const delay = async () => { entered(); await gate; };
+    if (boundary === 'permission') audio.requestRecordingPermissionsAsync = async () => { await delay(); return { granted: true }; };
+    if (boundary === 'mode') audio.setAudioModeAsync = async mode => { audio.modes.push(mode); if (mode.allowsRecording) await delay(); };
+    if (boundary === 'prepare') recorder.prepareToRecordAsync = async () => { await delay(); recorder.prepared = true; };
+    let captures = 0;
+    recorder.record = () => { captures++; recorder.recording = true; };
+    const core = new ExpoVoiceAudioRecorderCore(audio, files);
+    const cancellation = new AbortController();
+    const started = core.start({ signal: cancellation.signal });
+    const result = started.then(() => 'started', () => 'cancelled');
+    await waiting; cancellation.abort(); release();
+    expect(await result).toBe('cancelled');
+    expect(captures).toBe(0);
+    expect(files.reads).toEqual([]);
+    if (boundary !== 'permission') expect(audio.modes.at(-1)?.allowsRecording).toBe(false);
+    if (boundary === 'prepare') expect(files.deleted).toContain('file:///recording.m4a');
+    await core.start();
+    expect(captures).toBe(1);
+    await core.cancel();
+    expect(recorder.recording).toBe(false);
+  });
+
   it('records through Expo Audio and returns a base64 mp4 chunk', async () => {
     const recorder = new FakeRecorder('file:///recording.m4a');
     const audio = new FakeAudio(recorder);
@@ -40,11 +69,16 @@ describe('ExpoVoiceAudioRecorder', () => {
   });
 
   it('rejects recording when microphone permission is denied', async () => {
-    const audio = new FakeAudio(new FakeRecorder('file:///recording.m4a'));
+    const recorder = new FakeRecorder('file:///recording.m4a');
+    const audio = new FakeAudio(recorder);
     audio.granted = false;
     const voiceRecorder = new ExpoVoiceAudioRecorderCore(audio, new FakeFileSystem({}));
 
-    await expect(voiceRecorder.start()).rejects.toThrow('Microphone permission is required');
+    await expect(voiceRecorder.start()).rejects.toThrow('Allow microphone access for Stuff Stash in device settings');
+    expect(audio.modes).toEqual([]);
+    audio.granted = true;
+    await voiceRecorder.start();
+    await voiceRecorder.cancel();
   });
 
   it('cancels recording without reading or returning audio', async () => {

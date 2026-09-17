@@ -188,6 +188,7 @@ describe('asset native sheet route options', () => {
       assetMoveHereNativeSheetOptions
     ]) {
       expect(options.presentation).toBe('formSheet');
+      if (options.presentation !== 'formSheet') throw new Error('Expected iOS form sheet options');
       expect(options.headerShown).toBe(false);
       expect(options.sheetGrabberVisible).toBe(true);
       expect(options.sheetExpandsWhenScrolledToEdge).toBe(true);
@@ -198,8 +199,8 @@ describe('asset native sheet route options', () => {
 
   it('keeps edit cancellation explicit until dirty native sheet dismissal can be intercepted', () => {
     expect(assetEditNativeSheetOptions.gestureEnabled).toBe(false);
-    expect(assetMoveNativeSheetOptions.gestureEnabled).toBeUndefined();
-    expect(assetMoveHereNativeSheetOptions.gestureEnabled).toBeUndefined();
+    expect(assetMoveNativeSheetOptions).not.toHaveProperty('gestureEnabled');
+    expect(assetMoveHereNativeSheetOptions).not.toHaveProperty('gestureEnabled');
   });
 });
 
@@ -818,7 +819,7 @@ describe('asset lifecycle presentation helpers', () => {
     });
   });
 
-  it('explains archive and restore without treating them like permanent delete', () => {
+  it('explains archive without treating it like permanent delete', () => {
     expect(assetLifecycleConfirmation('archive', {
       title: 'Water bottle',
       photos: [],
@@ -828,17 +829,6 @@ describe('asset lifecycle presentation helpers', () => {
       title: 'Archive Water bottle?',
       message: 'Water bottle will be hidden from normal inventory work. You can restore it later from archived asset views.',
       confirmLabel: 'Archive',
-      isDestructive: false
-    });
-    expect(assetLifecycleConfirmation('restore', {
-      title: 'Water bottle',
-      photos: [],
-      containedAssetsLabel: '0 things inside',
-      canContainAssets: false
-    })).toEqual({
-      title: 'Restore Water bottle?',
-      message: 'Water bottle will return to active inventory work.',
-      confirmLabel: 'Restore',
       isDestructive: false
     });
   });

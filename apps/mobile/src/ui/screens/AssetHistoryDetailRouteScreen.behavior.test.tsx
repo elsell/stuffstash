@@ -14,6 +14,23 @@ const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((
 const entry = { id: 'activity', principalId: 'person', action: 'asset.updated', category: 'change' as const, source: 'api', occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title' as const, currentValue: 'Cached name' }], technical: {} };
 
 describe('History detail cache', () => {
+  it.each([undefined, '', '   ', '  owner@example.test  '])('presents a readable actor for email %s', async (email) => {
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    client.setQueryData(mobileQueryKeys.assetActivity('scope', 'tenant', 'inventory', 'asset', 'activity'), {
+      ...entry, principalId: 'opaque-principal-123', principal: { id: 'opaque-principal-123', email }
+    });
+    const query = new AssetActivityQuery({ listAssetActivity: async () => { throw new Error('Fresh cache should be used'); } });
+    try {
+      await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryDetailRouteScreen assetActivityQuery={query} revertAssetChangeCommand={new RevertAssetChangeCommand({ reverseAssetOperation: async () => undefined })} activityId="activity" assetId="asset" assetTitle="Item" tenantId="tenant" inventoryId="inventory" /></AppFeedbackProvider>
+      </MobileServerStateProvider>);
+      const text = harness.allText().join(' ');
+      expect(text).toContain(email?.trim() || 'Someone with access');
+      expect(text).not.toContain('opaque-principal-123');
+    } finally { await harness.unmount(); }
+  });
+
   it('reuses a fresh scoped page and cancels an unrelated asset lookup on leaving', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();
@@ -94,6 +111,30 @@ async function reversalFixture() {
 }
 
 describe('History reversal presentation ownership', () => {
+  it.each(['refresh failure', 'changed operation'] as const)('retires retained confirmation after %s', async change => {
+    const f = await reversalFixture();
+    const queryKey = mobileQueryKeys.assetActivity('scope', 'tenant', 'inventory', 'asset', 'one');
+    try {
+      const stale = await f.confirm();
+      if (change === 'refresh failure') {
+        await f.harness.run(() => f.client.invalidateQueries({ queryKey, exact: true }));
+      } else {
+        await f.harness.run(() => f.client.setQueryData(queryKey, { ...entry, id: 'one', undo: { status: 'available', operationId: 'new-operation' } }));
+      }
+      await settle(f.harness);
+      await f.harness.run(stale);
+      expect(f.operations).toEqual([]);
+      await f.harness.run(() => f.client.setQueryData(queryKey, { ...entry, id: 'one', undo: { status: 'available', operationId: 'fresh-operation' } }));
+      await settle(f.harness);
+      await f.harness.run(stale);
+      expect(f.operations).toEqual([]);
+      await f.harness.run(await f.confirm());
+      expect(f.operations).toEqual(['fresh-operation']);
+      await f.harness.run(() => f.pending[0]!.resolve());
+      expect(dispatchedActions()).toEqual([{ type: 'back' }]);
+    } finally { await f.close(); }
+  });
+
   it('submits once, retains failed activity for retry, and returns after successful retry', async () => {
     const f = await reversalFixture();
     try {

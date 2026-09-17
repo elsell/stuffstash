@@ -20,6 +20,7 @@ let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
+export const Button = 'Button';
 export const Switch = 'Switch';
 type ImageSizeRequest = {
   readonly uri: string;
@@ -54,6 +55,14 @@ export function SectionList(props: Record<string, unknown>) {
     props.ListFooterComponent as ReactNode);
 }
 const appStateListeners = new Set<(state: string) => void>();
+export const deviceSettingsFake = {
+  attempts: 0,
+  completion: undefined as Promise<void> | undefined,
+  reset() { this.attempts = 0; this.completion = undefined; }
+};
+export const Linking = {
+  async openSettings() { deviceSettingsFake.attempts++; await deviceSettingsFake.completion; }
+};
 export const AppState = {
   currentState: 'active',
   addEventListener(_event: string, callback: (state: string) => void) {
@@ -125,6 +134,7 @@ export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 }
 export const findNodeHandle = () => 1;
 let windowFontScale = 1;
 export function setWindowFontScaleForTest(value: number) { windowFontScale = value; }
+export const Dimensions = { get: () => ({ fontScale: windowFontScale, height: 844, width: 390, scale: 1 }) };
 export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: 390 });
 export const useColorScheme = () => systemColorScheme;
 class AnimatedValue {
@@ -134,6 +144,7 @@ class AnimatedValue {
   setValue(value: number) { this.value = value; for (const listener of this.listeners.values()) listener({ value }); }
   addListener(listener: (event: { value: number }) => void) { const id = String(this.listeners.size); this.listeners.set(id, listener); return id; }
   removeListener(id: string) { this.listeners.delete(id); }
+  removeAllListeners() { this.listeners.clear(); }
   __getValue() { return this.value; }
   stopAnimation() {}
   interpolate() { return this.value; }
@@ -164,6 +175,7 @@ export const Animated = { ValueXY: AnimatedValueXY, Value: AnimatedValue, View: 
 export const PanResponder = { create: (handlers: Record<string, unknown>) => ({ panHandlers: handlers }) };
 
 export function resetNativeTestState() {
+  deviceSettingsFake.reset();
   scrollCommands.length = 0;
   imageSizeRequests.length = 0;
   reducedMotionSnapshot = undefined;

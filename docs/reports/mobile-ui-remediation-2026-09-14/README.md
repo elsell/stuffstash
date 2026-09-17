@@ -1,18 +1,149 @@
 # Comprehensive mobile UI audit and remediation
 
+## Current checkpoint — September 17
+
+The coverage inventory contains142 surfaces ×24 axes =3,408 cells:2,593
+source-reviewed,577 finding,198 not-applicable and40 runtime-partial. These are
+review classifications, not3,408 completed native acceptance checks. The full
+audit remains open; normal-size findings take priority. Release follows the
+[frozen batch checklist](release-batch-113.md), independently of audit completion.
+
+Latest completed full run35156794515 at2043abb0 records phone68/87 and iPad80/87
+fixture passes. The named batch mapping has50/55 required phone passes and55/55
+iPad passes. Selected captures are reviewed in [phone evidence](native-phone-351567.md)
+and [iPad evidence](native-ipad-351567.md); these reports distinguish visual review,
+assertions and unresolved fixture fidelity. The phone filter overlap remains M249.
+The expiration accessibility failure concerns enlarged text, not a demonstrated
+normal-size blocker. The ordinary color journey passes on both devices.
+
+Phone Sharing reordered its email in an actual workflow. The bounded correction
+223d6d0a uses the native seeded email field and passes focused source checks; native
+acceptance remains required. The Settings fixture used a longer internal route title
+than production Tags. Its title and acceptance precondition are corrected without
+weakening the expected integrated Search button. Release-corrections35165286470 at
+966158e6 is queued to verify these changes alongside existing filter/Add/color checks.
+
+Focused filters35159542174 has four iPad passes, including last-tag application and
+both keyboard journeys. Its calendar dismissal tap hit the underlying Back command;
+c40e7965 corrects that test target. Phone remains running. Full35162604601 is also
+active, but predates the email and title corrections. Its phone onboarding job
+105023220045 passes the complete address/help/keyboard/action journey; two iPad-only
+cases skip. Earlier [paired onboarding evidence](native-onboarding-351567.md) remains
+relevant for unchanged code. M240 alternate iPad help remains audit follow-up.
+
+Provider-free input run35156439952 passes11/14 comparisons on each device while
+still reproducing input loss. Those comparisons are diagnostics, not independent
+release gates. Actual changed-workflow entry/save remains required. M251 tracks
+low-contrast iOS photo-viewer status content separately from the frozen batch;
+reviewed photo commands remain usable.
+
+CI35165285719 passes the current correction source966158e6, including1,917 mobile
+tests across303 files and all six CI jobs. Native correction acceptance remains pending. Large archives stay on paul; selected
+captures are retained in this report directory. No new TestFlight release is claimed.
+
+## Earlier checkpoints
+
+New [key-event evidence](native-text-entry-351529.md) from focused run35152978881
+records phone9/14 and iPad11/14 passes. Failed inputs receive the complete requested
+key sequence before text-change values lose or reorder letters. A separate phone
+keyboard-readiness failure prevents one comparison from typing. No input fix is
+claimed from this diagnostic evidence.
+
+Earlier completed native run35140471580: phone69/86 and iPad79/86 fixture tests
+pass, with unresolved normal-size text entry, color opening and phone preconfigured
+Place search failures. Both onboarding jobs pass. See [phone results](native-phone-351404.md),
+[iPad results](native-ipad-351404.md) and [onboarding evidence](native-onboarding-351404.md).
+Input tracing produced no output because the fixture consumed the capture tap to
+dismiss the keyboard. The runner-only correction at a01fc760 now exports all expected traces in
+[focused run35148050909](native-text-entry-351480.md): phone10/14 and iPad11/14
+comparisons pass. Character-loss failures remain; full run35148054814 subsequently completed as noted above.
+No full native acceptance is claimed.
+
 Active goal, started 2026-09-14 at source revision 12b5cb5a.
 
-Inventory: **141 route/layout and nested-task surfaces × 24 axes = 3384 review cells**
+Latest full source checkpoint (5c05f66e): **1,911 tests across299 files**, TypeScript
+and mobile structural checks pass on paul. M235 prevents obsolete/hidden filter
+footer dispatch on both platforms; Android current-action smoke checks pass.
+M236 extends that guard to asset actions, with current-payload and asset-replacement
+tests. M237 voice decisions now read current drafts and retire with their plan;
+provider-to-transport tests cover names, placement, photos and plan replacement.
+M238 fixes Android voice review controls obscured by the keyboard: APKd2cafbc6
+verifies blank-name validation and actual approval-failure recovery while typing.
+The `88fe7499` native-test selector correction passes fixture preparation and
+structural checks; its native rerun is pending. Android Add-photo native checks verify
+zoom retention across elapsed time and warm return, control hide/reveal, paging
+and Close without losing draft photos; see [photo viewer evidence](photo-viewer-axis.md).
+This is partial runtime acceptance. Completed run350950 records phone65/83 and
+iPad73/83 fixture passes; see the target reports for failures and evidence limits.
+Run35104157358 at14d7e06f finished: iPad77/84 and phone63/84 fixture passes;
+phone onboarding passes with two device-inapplicable skips, iPad onboarding3/3.
+The independent static iPad Clear comparison narrows M232 to a native-pattern test
+expectation; full production rerun remains required. See native-ipad-351041.md and native-phone-351041.md.
+Run35112198520 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes.
+iPad onboarding passes3/3; phone help activation fails (M240). See
+[native phone findings](native-phone-351121.md) and
+[native iPad findings](native-ipad-351121.md). Newer run35121454700 at1a15ca11 is
+terminal: phone67/85 fixture tests pass, with18 failures; iPad logs79/85 before the job budget cancels result finalization and loses its artifact. See [iPad log results and evidence limit](native-ipad-351214.md). Run35130374705 at0586f845 failed before tests because the ExpoUI Podfile.lock path did not follow the patched pnpm package. Both path entries are corrected; remote resolution checks and unchanged podspec comparison pass. Native deployment verification remains pending. See [current phone evidence and acceptance corrections](native-phone-351214.md). Both onboarding jobs pass their applicable cases with
+[inspected help, keyboard and landscape evidence](native-onboarding-351214.md). Subsequent test-only candidates f54eec01 and
+c196d527 await native execution: bounded exact Add-tag observation and a managed
+search/header-action coexistence comparison. Neither is production acceptance.
+M242 inbox ownership and M243/M244 Android menu corrections have source checks and
+scoped Android runtime evidence; iOS acceptance remains pending. Release remains
+gated on native review. Stale archive cleanup preserves selected evidence and
+active build environments; last checked free space is12GB local,4.9GB on paul root
+and18GB in paul's `/tmp` before downloading the current phone artifact.
+
+M248 preserves Android footer action descriptions through a pinned native Expo
+patch, compiled from source. Native expiration/voice command checks and the full
+1,911-test suite pass;922 mobile/client/patch/lock files match remote validation.
+See [evidence and TalkBack limits](android-action-descriptions.md).
+
+
+Earlier full source checkpoint:3d20d0ff passes1,869 tests across288 files, TypeScript
+and mobile structural checks on paul. Tracked mobile source/config/native fixture
+content matches the remote tree by checksum. React act warnings remain. Log:
+`/tmp/mobile-audit-3d20-full.log`. This includes the native Add/tag fields and M216
+conversation layout candidate. This does not establish native acceptance.
+
+Latest Android filter candidate:1,876 tests across291 files passed on paul before
+the final keyboard wrapper; focused tests, TypeScript and structural checks passed
+after it. See `android-filter-sheet.md` for native crash rejection and replacement
+evidence; acceptance remains incomplete.
+
+Combined source checkpoint2bfd3814 passes **1,885 tests across293 files**, TypeScript
+and mobile structural checks on paul. Validation used the tracked HEAD archive in
+the existing remote validation tree. Logs: `/tmp/mobile-audit-2bfd3814-{full,check,structural}.log`.
+This includes the shared asset-action guard; native coverage remains separate.
+
+Current ledger reconciliation: 3,408 unique surface/axis pairs; all primary source paths exist. Source review covers the full inventory, while native acceptance remains partial. Recent Sharing and onboarding findings are reconciled in the matrix; source review is not runtime clearance.
+
+Inventory: **142 route/layout and nested-task surfaces × 24 axes = 3408 review cells**
 (retained customization completion added September 15; initial inventory: 132 surfaces; four asset editing/moving and three Home return subtasks added during source inspection).
 This is a review worklist, not a count of completed checks. Overlapping shared tasks
 are intentional: route coverage and interaction coverage are independent.
 
 - `invitation-acceptance-axis.md`: invitation review across24 axes, command migration and native gaps.
+- `add-creation-media-axis.md`: quick place creation and photo selection across24 axes; native removal correction and remaining device checks.
+- `asset-edit-route-axis.md`: Edit route review, loading exits and outstanding action-eligibility finding.
+- `native-phone-350950.md`: phone65/83; Add and notice journeys pass, bottom Place search and missing Sharing characters remain.
+- `native-ipad-350950.md`: complete iPad73/83 log despite cancelled job status; ordinary color activation, text entry and focused search clear remain unresolved.
+- `native-ipad-350806.md`: iPad74/81; entry context now clears navigation, focused location-search clear remains under investigation.
+- `native-phone-350806.md`: phone61/81 with inspected passing Conversation/production search and retained color/preconfigured-search failures.
+- `native-phone-350504.md`: terminal phone fixture results, notification hit probes and unresolved failures.
+- `native-onboarding-350592.md`: passing main phone/iPad journey and a distinct iPad entry-observation failure.
+- `native-fixtures-350592.md`: phone56/75 and iPad64/75, confirmed phone bottom search, and paired production Place diagnostic.
+- `native-fixtures-350633.md`: phone57/79 and iPad67/79; passing action probes/invitation acceptance on both, phone Home tab return, and unresolved iPad tab-container selection. Inspected Account notice contradicts its phone geometry timeout.
+- `native-fixtures-350695.md`: phone59/81 and iPad71/81; Add tag journey, Home header and color touch probes pass on both. Phone captures retain bottom Place search and keyboard-obscured Sharing cancellation, while those journeys pass on iPad. Conversation overlap remains on both.
 - `expiration-entry-axis.md`: exact-date and month/year entry, draft validity and native gaps.
 - `confirmation-scope.md` and `confirmation-call-sites.csv`: native-dialog caller inventory and review boundaries.
 - `surfaces.json`: route and nested task enumeration.
 - `axes.json`: named review dimensions.
 - `matrix.csv`: per-cell state/evidence/finding tracking; initially pending.
+- `tag-color-axis.md`: all24 color-selection axes, shared consumers and phone/iPad activation evidence.
+- `field-applicability-axis.md`: all24 applicability axes and reversible unsaved expansion (M204).
+- `push-permission-axis.md`: all24 device-setup axes, command naming and physical verification limits.
+- `onboarding-creation-axis.md`: all24 household/inventory/recovery axes and native command migration.
+- `native-search-placement-350465.md`: captured phone bottom-search mismatch and pending static placement comparison.
 - `findings.md`: confirmed findings and remediation evidence.
 - `checkout-history-axis.md`: all24 axes, independent name recovery and access-retry evidence limits.
 - `provider-editors-axis.md`: all24 axes for credential/prompt editing, native commands and draft protection.
@@ -28,7 +159,22 @@ are intentional: route coverage and interaction coverage are independent.
 Runtime availability: macOS GitHub runners build and launch the genuine application
 on iPhone and iPad simulators. The first native run failed; see `native-evidence.md`
 for inspected screenshots and the distinction between procedure and app findings.
-Android runtime remains unavailable. No local builds/tests, per session constraint.
+An isolated Android16 emulator now runs the synthetic app on `paul`.
+[Initial Home icon findings and verification](android-native-icons.md) record the
+first native Android checks; broader Android acceptance remains pending. See also
+[runtime preparation](android-runtime-preparation.md). No local builds/tests,
+per session constraint.
+
+The [350420 iPad onboarding inspection](native-onboarding-350420.md) records a
+pre-typing readiness timeout despite a visible keyboard in the final capture.
+The follow-up [350465 onboarding run](native-onboarding-350465.md) passes its
+phone case (two device-inapplicable skips) and all three iPad cases. The 350420
+fixture jobs are complete; see `native-phone-350420.md` for failures and limits.
+The [350465 iPad fixture job](native-ipad-350465.md) is now terminal:58/71 cases
+pass, with13 failures. The [phone fixture result](native-phone-350465.md) is49/71
+with22 failures. Both targets pass paced typing diagnostics while original
+controlled-input comparisons still fail. Paced typing is diagnostic evidence only
+and does not replace normal acceptance. Newer run35050407693 is active.
 
 A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
@@ -36,21 +182,307 @@ coverage to pass. This effort includes fixing findings and TestFlight release.
 
 ## Current checkpoint — September 15
 
-The larger PR150 batch remains unreleased. Source `a2ed8342` passes all **1,694
+The requested PR150 checkpoint is released as **TestFlight0.24.23 (112.1)**.
+[Run35028077706](https://github.com/elsell/stuffstash/actions/runs/35028077706)
+uploaded main438bd902 successfully; Apple processing and exact-build changelog
+verification completed September15 at22:20:03 UTC. The changelog verifier waits
+for Apple's VALID processing state and reads back the published notes. This does
+not establish physical-device UI acceptance or external beta review approval.
+
+The release's source `a2ed8342` passed all **1,694
 mobile tests across270 files**, TypeScript and structural checks remotely on paul
 (`/tmp/mobile-batch-a2ed8342.log`), with a clean source checksum comparison. This
 includes item-type failure/search recovery, failed-photo retry, unsupported-format
 feedback, retired session callbacks and the earlier interaction fixes.
-Native acceptance is incomplete: run350037 iPad fixtures passed45/57 and iPhone fixtures38/57.
-The newer full run35010077082 is active at PR headff7fbc74. Both onboarding jobs passed.
-See [native evidence](native-evidence.md) for actual revisions and test limitations.
+Native acceptance remains incomplete: full run35012949816 passed43/58 phone
+fixtures and47/58 iPad fixtures; both onboarding jobs passed. See
+[latest native follow-up](native-350129-followup.md) for actual revisions and limits.
+The resumed audit continues in draft PR153. Checkpoint81e91f74 passes all1,710 mobile
+tests across270 files, TypeScript and structural checks remotely on paul
+(`/tmp/mobile-batch-81e91f74.log`). Its new native collection journey is pending.
+The subsequent [Home dashboard review](home-dashboard-axis.md) adds M160,
+retiring delayed pull-refresh notices after navigation; focused validation is
+recorded separately and does not change that full-suite checkpoint.
 
-The audit ledger retains141 surface IDs ×24 axes, including two absent Add
-controls documented as inventory corrections. Its3,384 cells comprise1,861
-pending,1,097 source-reviewed,306 finding,22 runtime-partial and98 not-applicable.
+[Inventory/location asset lists](asset-lists-axis.md) now have all24 source axes
+reviewed. M161 provides feedback for explicit refresh failures while retaining
+ordinary cached cards; obsolete-visit failures stay silent. All18 focused cases,
+TypeScript and structural checks pass remotely. Code critic found no blockers.
+Native acceptance is still pending; the retained LocationsScreen is not counted
+as a current shipped route.
+
+Combined post-M161 validation passes **1,722 tests across271 files**, TypeScript
+and mobile structural checks on paul (captured `/tmp/mobile-list-batch.log`).
+This includes M160 and M161; no native result is promoted by the source suite.
+
+[Asset History](history-list-axis.md) now has all24 source axes reviewed. M162
+retires delayed pull notices and separates inline Retry from the native pull
+indicator. Its12 focused tests, TypeScript and structural checks pass remotely;
+code critic found no blockers. Native acceptance remains pending. This follows
+the1,722-test checkpoint above.
+
+The audit ledger retains142 surface IDs ×24 axes, including two absent Add
+controls documented as inventory corrections. Its3,408 cells comprise zero pending
+source-review cells,2,624 source-reviewed,564 finding,22 runtime-partial and198
+not-applicable. This completes source inventory coverage, not native acceptance or
+finding remediation. The remaining route/server-entry/notice reviews are linked
+in their surface reports; M212 adds direct-entry checkout-history exit recovery.
+
+At ebdd3090, a checksum comparison confirmed the tracked mobile source, fixture
+and test configuration matched paul's validation tree. All1,854 tests across286
+files, TypeScript and mobile structural checks pass (`/tmp/audit-batch-ebdd-full.log`).
+This includes gallery preview and direct-entry checkout-history fixes; it does
+not establish native rendering. Text-entry diagnostic35056372549 runs separately
+atfdbf30bf while the full350549 fixtures continue. Release remains gated by the
+recorded normal-size runtime failures, not by incomplete source enumeration.
+
+Current expiration-entry, gallery and full-viewer follow-ups account for38 more
+source cells. M211 adds gallery preview failure recovery while retaining original
+photo opening;8 remote tests and static checks pass. Native visual acceptance
+remains pending. Run350504's iPad job finished58/72 with14 failures; see
+[iPad results](native-ipad-350504.md). Passing source checks do not close these
+native failures.
+
+Home Return's optional details and pending/recovery now have complete source
+follow-ups. Run350465's phone/iPad captures verify the full failed-save error is
+below the native header with the note and commands retained; named overlap M169
+is corrected for these normal-size light states. Wider native acceptance remains
+open. See [Home Return evidence](home-return-axis.md).
+
+[Retained customization completion](retained-completion-axis.md) and Home's
+checked-out Return entry now have source follow-ups across24 axes. Their combined
+89-case validation passes remotely; native interaction acceptance remains open.
+
+Appearance selection, History reversal and asset overflow now have complete
+source follow-ups in their surface reports. M198 rejects retained confirmations
+after an activity changes or refresh fails;34 combined History/appearance checks
+and static validation pass. Native confirmation timing remains pending.
+
+[Add and draft recovery](add-draft-axis.md) now cover three surfaces across24
+axes. M197 migrates Clear draft to a native destructive command;23 Add checks
+and static validation pass. Native text entry and recovery remain open.
+
+The [Move route review](move-route-axis.md) covers both routes, selection and
+creation across24 axes. M196 makes creation a native command;82 related checks
+and static validation pass. The preceding bba8c1e3 full suite passed1,815 tests
+across284 files remotely; native acceptance remains incomplete.
+
+Both [Details routes](asset-detail-route-axis.md) now have a shared24-axis source
+review and112 passing related checks. M195 fixes late picker/upload exception
+notices crossing navigation visits; native focus and placement remain pending.
+
+[Invitation link intake](invitation-link-axis.md) now covers S131 across all24
+axes, with64 remote checks. Physical cold/warm handoff remains pending. Sharing's
+native keyboard/menu findings and Home's separate tap-delivery diagnostic are
+recorded in their surface reports; source fixes are not runtime acceptance.
+
+[Permission recovery](permission-recovery-axis.md) now has all 24 source axes
+reviewed. M190 adds camera/microphone recovery guidance; 109 related checks/static
+validation pass. M191 adds notification Settings launch-failure recovery with
+10 related checks and static validation passing remotely.
+Physical permission, Settings return and native feedback verification remain open.
+
+[Push entry](push-entry-axis.md) now has all 24 source axes reviewed. Eighteen
+adapter/application checks pass; mounted root navigation and physical cold/warm
+notification journeys remain explicit acceptance gaps. This adds source coverage,
+not new runtime verification or a production change.
+
+[System dialogs](system-dialog-axis.md) now has all 24 source axes reviewed, with
+caller-specific ownership evidence retained. M189 prevents late photo-removal
+alerts crossing navigation visits; 101 related checks/static validation pass.
+Native alert activation, interruption and focus return remain open.
+
+[Phone run350420 follow-up](native-phone-350420.md): the completed phone job
+passed46/69 cases. Text/target/footer failures remain; the voice location journey
+now reaches its final Back command. Artifact inspection confirms the sheet has
+no Back; M192 adds an explicit native header action, with retest pending.
+The iPad fixture job remains active at this checkpoint. This older
+source revision does not verify current-head candidates.
+
+Combined checkpoint at a2ad3163: all 1,808 mobile tests across 283 files,
+TypeScript and mobile structural checks pass on paul
+(`/tmp/mobile-audit-a2ad3163-full.log`). A checksum dry-run confirms tracked mobile
+source, native fixtures and listed package/test configuration match the validation
+tree; timestamp/permission differences were excluded. The suite emits React act
+warnings. This is source/mounted validation, not current-build native acceptance.
+
+[Custom field type/options](custom-field-options-axis.md) now has all 24 source
+axes reviewed for both nested controls. M188 preserves rejected option drafts;
+70 related checks and static validation pass remotely. Its new editing finding
+supersedes a runtime-partial classification while preserving the earlier evidence.
+Normal-size native typing and feedback acceptance remain open.
+
+[Proposal editing](voice-plan-edit-axis.md) now covers all24 source axes. M173
+includes the visible pending name on approval and blocks blank names;52 focused
+tests and static checks pass. Critic found no implementation blocker, while noting
+that the new provider test does not render the actual proposal/failed-review UI.
+M174 tracks the custom destination panel and missing lookup recovery; M175 tracks
+the narrow custom inline name commands. M175 now uses native commands below a
+full-width field;46 focused tests and static checks pass, with critic review.
+M174 now replaces the panel with a native stack selection route, search, checked
+choices and lookup recovery. The new R142 route now has a full
+[24-axis source review](voice-location-axis.md). Its runner-only native journey
+uses the real proposal and destination screens to exercise retry, search, selection
+and Back. Fixture isolation,20 focused cases and static checks pass remotely;
+Swift compilation and native presentation acceptance remain open.
+
+Combined M174 checkpoint: all1,766 tests across278 files, TypeScript and mobile
+structural checks pass on paul. Code critic reviewed the route and added selection/
+Back/disabled-candidate cases. This remains source/mounted evidence.
+
+[Progress and photo recovery](voice-progress-axis.md) now has all24 source axes
+reviewed. M176 preserves safe partial-upload failure reasons in both active/history
+progress and replaces the terminal failure checkmark with a warning. Three new
+regressions reproduced the lost reason and verify safe text plus retry ownership.
+Combined validation passes all1,769 tests across278 files, TypeScript and structural
+checks on paul (`/tmp/mobile-m176-full.log`). Critic found no blockers; native
+visibility, contrast and announcements remain pending.
+
+[Conversation loading/processing](voice-processing-axis.md) now has all24 source
+axes reviewed. M177 adds native in-place Retry for initial context failure, with
+duplicate suppression and focused-visit ownership. All45 focused cases, TypeScript
+and structural checks pass remotely (`/tmp/voice-preview-green.log`). Critic found
+no blocker. Query/provider/component evidence does not establish whole-workspace
+native recovery; compact-sheet geometry and announcements remain pending.
+
+M178 replaces custom conversation header buttons with native Close/New conversation
+and removes the duplicate Reset path that bypassed retryable-photo confirmation.
+Shared header consumers retain their mappings. Combined validation passes1,774
+tests across280 files and static checks; nine focused cases/static checks pass
+after reviewer-requested options stabilization. The native proposal fixture adds
+Close/reopen and declined-reset journeys; execution remains pending.
+
+The [conversation route review](voice-route-axis.md) consolidates all24 source
+axes across its nested tasks without promoting native gaps to passes. M179 replaces
+the remaining custom provider-recovery button with the shared native command.
+All49 relevant presentation/adapter/navigation tests, TypeScript and structural
+checks pass remotely (`/tmp/voice-recovery-command.log`). Native acceptance remains
+open, including header/keyboard geometry and physical media interruptions.
+
+[Voice setup/readiness](voice-readiness-axis.md) now covers all24 source axes for
+the overview, capability route and nested readiness surface. M180 identifies each
+provider task in shared loading/error views rather than labeling unrelated editor
+errors Voice Setup. All110 relevant tests and static checks pass remotely, plus
+six final copy checks. This is a project task-clarity choice, not a blanket Apple
+requirement to label spinners. Critic found no blockers; native acceptance remains
+open.
+
+M181 fixes false success feedback when a completed provider connection test returns
+`failed`. Profile and stage settings now accept only `succeeded`; 82 focused checks
+and static validation pass remotely. Native feedback presentation remains pending.
+
+[Native run35038625270](native-350386-followup.md) finished with43/67 phone and
+51/67 iPad fixture cases passing; both onboarding jobs passed. The Home Return
+visibility check hit duplicate nested text matches; its selector is corrected
+without relaxing geometry acceptance. Current-head native verification remains open.
+
+[History detail](history-detail-axis.md) now has a complete24-axis source review.
+M182 aligns its missing-actor label with History list. All14 focused cases and
+static checks pass remotely; code review found no blockers. Native acceptance
+remains open.
+
+[About and Diagnostics](about-diagnostics-axis.md) now have complete source-axis
+reviews. M183 keeps local diagnostics available during remote identity failures,
+with independent named loading and native Retry controls. Native layout remains
+unverified.
+
+[Native run35034075257](native-350340-followup.md) is terminal: onboarding passed
+on both devices; fixture suites passed45/64 on phone and52/64 on iPad. Normal-size
+text-entry, search and target findings remain open. This predates current fixes.
+
+[Recording](voice-recording-axis.md) now has all24 source axes reviewed. M172
+identifies capture starting after cancellation during native permission/preparation;
+existing readiness coverage did not test that boundary. The candidate adds native
+startup cancellation and serialized cancellation cleanup, with12 regressions and
+98 focused recorder/controller cases passing remotely. Review is complete; physical
+permission/interruption acceptance remains pending.
+
+Combined M172 checkpoint: all1,753 mobile tests across273 files, TypeScript and
+mobile structural checks pass on paul after the final review correction. This
+does not establish native microphone, permission or interruption behavior.
 These are evidence states, not a compliance score. Finding cells can include
 implemented corrections whose native acceptance remains open. Absent controls
 are not native passes or claims of product feature parity.
+
+M163 also retires item-detail pull-error notices after navigation, using the
+existing visit/resource guard in the shared detail screen. Both asset and
+location-context detail routes consume it. All92 focused detail cases, TypeScript
+and structural checks pass on paul; full source-axis and native acceptance work
+for those routes remains open.
+
+[Household/inventory settings](scoped-settings-axis.md) now have all24 source
+axes reviewed. M164 reuses labeled settings progress for both initial loads.
+All59 mounted settings cases, TypeScript and structural checks pass on paul;
+native announcement/layout acceptance remains pending.
+
+[Type/tag editors](type-tag-editors-axis.md) now have all24 source axes reviewed
+across six create/edit routes. M165 moves shared Save to the native primary
+command; all54 customization cases, TypeScript and structural checks pass on paul.
+M166 migrates Back/lifecycle/inherited Manage to native adapters. The full remote
+suite passes (1,734 tests/271 files), with TypeScript and structural checks.
+Native acceptance and M51 color behavior remain open. Field editors receive the
+shared controls but are not certified by this six-route review.
+
+[Run350298 follow-up](native-350298-followup.md) records both onboarding passes
+and iPad49/61, phone42/61 fixtures. Current editor changes are
+newer than this build. No screenshot acceptance is claimed from terminal logs.
+
+Production customization editor journeys now cover native Back (Keep Editing and
+Discard), Save, and Archive cancellation/completion in the isolated runner fixture.
+Fixture installation tests, TypeScript and structural checks pass on paul. Native
+execution is pending; these additions do not close editor acceptance findings.
+
+[Custom-field editors](field-editors-axis.md) now have all24 source axes reviewed
+across four routes. M167 protects unsubmitted option text; M168 prevents hidden
+enum options from breaking non-enum creation after a type change. All77 focused
+tests and static checks pass remotely. Field-specific native acceptance is open.
+
+[Home return details](home-return-axis.md) has all24 source axes reviewed. Its
+cancel/undo and save-error/retry journeys passed on both devices in run35029854251;
+this is partial native interaction evidence, not full visual or persistence acceptance.
+Screenshot review found a partly obscured failed-save heading (M169), still open.
+Its reveal-on-error candidate passes31 focused tests and static checks; a stronger
+native geometry assertion is added, with native rerun pending.
+The combined M169 checkpoint passes1,736 tests across271 files, TypeScript and
+mobile structural checks on paul, including the review correction for iOS offset
+clamping. This remains source validation; native acceptance is not claimed.
+
+The [typed composer](conversation-composer-axis.md) has all24 source axes reviewed;
+its native controls and pending request behavior are distinct from recording and
+plan approval acceptance. M170 tracks remaining custom response/decision commands.
+M170's native command migration passes46 focused tests and static checks. Review
+keeps the taller native decision area flagged for keyboard/short-window acceptance.
+
+The [response surface](conversation-response-axis.md) has all24 source axes
+reviewed;29 focused tests pass. Historical photo retry is plan-owned. M171 records
+an unguarded navigation completion after pausing media. Its candidate now guards
+pending completion and retained handlers across visit/scope replacement, with four
+mounted scenarios passing and code critic review complete; native acceptance remains.
+The combined checkpoint passed1,741 tests across273 files and static checks on paul;
+the subsequent retained-handler correction passed its four focused cases and static
+checks separately. Neither result is native transition verification.
+The [sheet comparison](phone-sheet-comparison-350298.md) distinguishes a blank
+nested diagnostic layout from the direct-scroll structure used by production filters.
+
+Post-PR150 review adds [settings exit ownership](settings-exit-axis.md) and M155.
+The [latest completed native follow-up](native-350129-followup.md) records full
+run35012949816 failures and focused color results. Text-entry isolation is running
+at0f378691 in run35029455242; iPad completed4/5, with reproduced character loss,
+and phone completed3/5: uncontrolled ordinary text lost characters and controlled
+entry failed keyboard readiness. See [text evidence](native-text-350294.md).
+Expanded manual diagnostic35031744887 at81e91f74 is now running. No native fix
+is claimed from its dispatch; newer PR pushes may supersede pending full runs.
+
+Combined post-PR150 checkpoint0c26c3bf: all1,703 mobile tests across270 files,
+TypeScript and the mobile structural check pass on paul
+(`/tmp/mobile-batch-0c26c3bf.log`). This includes M153–M155; native acceptance
+remains incomplete. Tests/builds were not run on the local host.
+
+The five definition/tag collection routes now have a full source-axis review in
+[customization-collections-axis.md](customization-collections-axis.md). M156 moves
+search/Add to existing native header adapters; M157 updates Add when edit access
+is revoked. Native acceptance remains pending. The code critic's asynchronous
+filter assertion finding was corrected; no production blocker was identified.
 
 Previous delivered TestFlight checkpoint: **0.24.16 (104.1)** from5775da93.
 Apple processing and the exact-build changelog were verified at05:10:25UTC in
@@ -198,3 +630,37 @@ The [root presentation review](root-presentation-axis.md) covers all24 R006 axes
 and identifies M152, obsolete connection expiry callbacks acting on a new session.
 The ownership correction has mounted evidence; native account and root layering
 acceptance remain open.
+
+Contained-item rows now have a current24-axis source follow-up in
+[contained-items-axis.md](contained-items-axis.md);15 remaining source cells
+were reviewed. Phone/iPad search disagreement remains an open native finding.
+
+Android native controls now share the app appearance override. The normal-size
+Cancel contrast regression and rebuilt dark/light evidence are recorded in
+[Android Compose appearance](android-compose-appearance.md); other adapter families
+retain individual runtime verification gaps.
+
+[Android Add header](android-add-header.md) records M226's missing native commands,
+shared presentation fix, and native Save/failure/Close acceptance. The separate
+M227 no-history Close fallback now has source and Android runtime evidence in that
+report; broader Add workflows retain their individual verification gaps.
+
+[Android header-dependent sheets](android-header-sheets.md) records restored
+inventory/history Close controls, root-return handling, and the Return details
+teardown crash found and fixed during shared-consumer verification. Native destination
+checks now require visible Home content and a surviving app, not only dismissal.
+
+[Android Conversation header](android-conversation-header.md) verifies restored
+Close/New controls and retained proposal/location flows. Provider-lifetime fixture seeding now permits a verified confirmed reset to the
+empty composer; physical audio and broader device coverage remain open.
+
+[Run350919 build failures](native-build-350919.md) distinguish unavailable React
+Native prebuilt dependencies from two XCTest API availability compile errors.
+The URL-entry compatibility correction preserves the native acceptance scenarios;
+its macOS rerun remains pending.
+
+Combined source validation at `92cfadc4` on paul passed all 1,888 tests in
+293 files, TypeScript, and mobile structural checks. This includes the shared
+photo-viewer correction and Add photo fixture; it does not establish native iOS
+acceptance. Run350950 remains active, with iPad onboarding passing and phone
+onboarding failing its existing address wait; see the onboarding report.

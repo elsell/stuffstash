@@ -3,6 +3,7 @@ import { type ReactNode } from 'react';
 import { useHomeReturnActions } from './useHomeReturnActions';
 import { router } from 'expo-router';
 import { usePullRefresh } from '../serverState/usePullRefresh';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHomeReturnTaskPresentation } from '../navigation/HomeReturnTaskPresentation';
 import { HomeReturnDetailsSheet } from './HomeReturnDetailsSheet';
 import { HomeNavigationHeader } from './HomeNavigationHeader';
@@ -47,7 +48,9 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
     query: (signal) => dashboardQuery.execute({ signal })
   });
 
-  async function refreshDashboard(shouldNotify: () => boolean = () => true): Promise<void> {
+  const captureRefreshVisit = useTaskPresentation(undefined, JSON.stringify(dashboardState.resourceKey));
+
+  async function refreshDashboard(shouldNotify: () => boolean): Promise<void> {
     try {
       await Promise.all([dashboardState.refetch({ throwOnError: true }), onRefreshAdditional?.()]);
     } catch (error) {
@@ -60,7 +63,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
     }
   }
 
-  const pullRefresh = usePullRefresh(refreshDashboard);
+  const pullRefresh = usePullRefresh(() => refreshDashboard(captureRefreshVisit()));
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>

@@ -87,7 +87,7 @@ export function assetLifecycleActionRows(
 }
 
 export function assetLifecycleConfirmation(
-  action: AssetLifecycleActionKind,
+  action: Exclude<AssetLifecycleActionKind, 'restore'>,
   asset: Pick<AssetDetailViewModel, 'title' | 'photos' | 'containedAssetsLabel' | 'canContainAssets'>
 ): AssetLifecycleConfirmation {
   switch (action) {
@@ -96,13 +96,6 @@ export function assetLifecycleConfirmation(
         title: `Archive ${asset.title}?`,
         message: `${asset.title} will be hidden from normal inventory work. You can restore it later from archived asset views.`,
         confirmLabel: 'Archive',
-        isDestructive: false
-      };
-    case 'restore':
-      return {
-        title: `Restore ${asset.title}?`,
-        message: `${asset.title} will return to active inventory work.`,
-        confirmLabel: 'Restore',
         isDestructive: false
       };
     case 'delete':

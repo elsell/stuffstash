@@ -15,6 +15,38 @@ comparisons pass. This is evidence of risk in the current runtime, not proof tha
 all controlled fields are broken. M65 is a Return-note candidate pending rerun.
 No generic AppTextInput rewrite is justified without preserving external changes.
 
+Current follow-up at c27a8eab: focused350563 completes8/10 iPad and7/10 phone.
+Default-assisted SwiftUI passes both, while RN failures cross controlled and seeded
+ordinary inputs. Full350549 phone reproduces Add name loss (`Nft name`) in the
+navigation-stack case. A scoped iOS Add name candidate now uses SwiftUI TextField,
+retaining ordinary assistance and the existing nameRevision reset ownership. It
+does not change Android or other field families. The adapter test covers seed
+retention, clear/resource remount, disabled edits and retry;25 related source tests,
+TypeScript and structural checks pass on paul. Critic found no blocker. Focused
+`add-draft` runs the four existing product journeys unchanged; native sizing,
+appearance, keyboard, full-string entry and draft recovery remain acceptance gates.
+
+Focused35058684319 at348e5fe8 completes2/4 phone Add journeys: stack entry and
+the preconfigured-header route both preserve full text and pass. The latter
+matches production's registered header. The old hidden-header diagnostic fails
+before reaching the field; it is not evidence of current production typing loss.
+The unfinished-tag journey now reaches the separate tag field and visibly retains
+`Cing` instead of `Camping`. iPad completes3/4: both name journeys and the existing
+tag journey pass; only the hidden-header pre-field diagnostic fails. That does not
+erase the observed phone failure or imply all iPad fields are verified.
+The inspected [phone rejected-save capture](evidence/phone-add-native-name-350586.png)
+shows the complete name in both the field and rejection message, with keyboard
+closed, commands visible and no clipping in this normal-size light state.
+
+The scoped adapter is now named AddDraftNameField and also serves the inline tag
+name. Successful staging advances its local reset revision; clear/restoration uses
+the parent draft revision. Disclosure restores the persisted unfinished name.
+The extended workflow test failed before implementation on paul, then25 related
+tests, TypeScript and the mobile structural check passed. Assertions use persisted
+draft values plus native seed ownership, rather than assuming a controlled field.
+Critic found no blocker. This remains a native typing/layout candidate until the
+unchanged tag journey passes on phone and iPad; no global text-input change is made.
+
 ## Reviewed task families and required ownership
 
 | Family / source | Text task | External changes that must survive any fix | Next native acceptance |
@@ -158,3 +190,75 @@ and timezone choice. Full1,619-test validation passes; this does not establish
 caller debounce/request cancellation or native return behavior. Expiration filter
 selections now use the shared adapter; its results screen retains its separate
 debounced hook with M120 focus handling.
+
+### Focused Add run35060706395 — native tag adapter
+
+At f7b09835, phone completes2/4 and iPad3/4. Both stack and
+production-equivalent preconfigured-header Add recovery journeys pass; the older
+hidden-header diagnostic still fails before field readiness. The full tag
+disclosure/staging journey passes on iPad.
+
+Phone stops before reaching the tag field: the immediate asset-name assertion
+reads `T` after typing `Tent`. Its [final capture](evidence/phone-add-name-settled-350607.png)
+and inspected final hierarchy both show `Tent`. This supports delayed observation
+for this assertion, not an inference that all prior text failures were timing.
+The test now waits at most5 seconds for exact `Tent`, then retains the equality
+and all following draft/save checks. No paced typing, prefixes or disabled text
+assistance. Phone tag acceptance remains unverified until that journey completes.
+
+Phone job104685220242/artifact10433691877; iPad job104685220604/artifact10433966175.
+Mobile structural check passes on paul; Swift/native execution of the corrected
+assertion remains pending. Both original failures remain recorded.
+
+### Native search enable transition
+
+A shared adapter regression reproduced a blank native field when a mounted search
+starts disabled and is later enabled with a retained, unchanged query. The prior
+mount-only initialization had already run with no native field; its query-change
+synchronizer saw no changed text. Enabling now seeds the current query, disabled
+states receive no native writes, and native edit echoes still avoid text writeback.
+
+The fake native command port regression fails before the correction and passes
+afterward, including disable/change/re-enable and native typing echoes. Fifty
+focused search/asset/location checks, TypeScript and structural checks pass on
+paul; critic found no blocker. Consumer inspection includes Browse list, containment
+Map, timezone, voice location and asset contents. Asset contents currently remounts
+its search on enabled changes, so this is an adapter transition defect, not proof
+of a previously shipped asset-contents failure. Native ref attachment timing and
+M232's clear-collapse remain unverified. Logs: `/tmp/native-search-enable-*`.
+Combined remote validation passes1,898 tests across296 files after this change
+(`/tmp/native-search-enable-full.log`). This is source evidence, not native QA.
+
+
+## Upstream comparison — September16
+
+The installed React Native version is0.83.6. The historical
+[cursor/prediction issue44157](https://github.com/react/react-native/issues/44157)
+is marked fixed and describes controlled-only behavior on0.75.4. It is not a
+confirmed explanation for this audit's failures, which also include a native-seeded
+RN name field. The open [CJK composition proposal56082](https://github.com/react/react-native/pull/56082)
+addresses marked-text preservation in Fabric; the current retained English/address
+captures do not establish that marked-text corruption caused these failures.
+Neither source justifies a blind dependency upgrade or broad native patch. Compare
+against the actual0.83.6 input implementation and preserve external value/reset
+ownership before adopting a correction. See the latest retained field/mirror values
+and paced-versus-unpaced results in [phone351214](native-phone-351214.md).
+
+
+Runner-only follow-up adds a256-entry ref buffer for native change text/event
+counts, selection ranges and committed React values. Existing text-entry journeys
+request an attachment after saving their exact-value acceptance observations;
+publishing or blur cannot change those saved results. No production field or
+assistance setting changes. TypeScript, six fixture-isolation checks and the mobile
+structural check pass on paul; critic found no blocker. Native attachment capture
+is pending. The existing uninstrumented production journeys remain required;
+tracing changes timing and does not by itself establish a cause or correction.
+
+
+## Focused event traces, September 16
+
+[Run35148050909](native-text-entry-351480.md) exports all24 expected React Native
+traces across both targets. Missing/reordered characters occur in received native
+change events with contiguous counts, including no-accessory comparisons. This
+narrows the observation boundary without proving a root cause or clearing real
+product workflows. Phone10/14 and iPad11/14 comparisons pass.

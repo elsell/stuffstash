@@ -1,0 +1,122 @@
+Attributes: Application, 0x11748b0c0, pid: 10584, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11748b0c0, pid: 10584, label: 'Stuff Stash'
+    Window (Main), 0x11748b200, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11748b340, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x117489540, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x117488000, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x117488140, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x117488280, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1174883c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x117488500, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x117488640, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x117488780, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x1174888c0, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'RNSScreen'
+                          Button, 0x11748bac0, {{20.0, 62.0}, {166.0, 44.0}}, label: 'Current inventory Main inventory with a long household name, tenant Audit home. Switch inventory'
+                          Button, 0x11748bc00, {{218.0, 66.0}, {44.0, 36.0}}, label: 'Add an asset'
+                          Button, 0x11748bd40, {{278.0, 66.0}, {44.0, 36.0}}, label: 'Notifications, 2 unread'
+                          StaticText, 0x11748be80, {{308.5, 59.8}, {13.0, 17.0}}, label: '2'
+                          Button, 0x1175421c0, {{338.0, 66.0}, {44.0, 36.0}}, label: 'Open account and settings'
+                        Other, 0x117543d40, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x117543e80, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x117542300, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x117542440, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x117542580, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1175426c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x117542800, {{0.0, 0.0}, {402.0, 874.0}}
+                                      ScrollView, 0x117542940, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x117542a80, {{0.0, 0.0}, {402.0, 874.0}}
+                                          Other, 0x117542bc0, {{0.0, 0.0}, {402.0, 170.8}}
+                                        Other, 0x117542d00, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x117542e40, {{0.0, 116.0}, {402.0, 1158.0}}
+                                          Other, 0x117542f80, {{0.0, 116.0}, {402.0, 1158.0}}
+                                            Button, 0x1175430c0, {{317.3, 138.0}, {60.7, 44.0}}, label: 'View all expiration dates'
+                                            StaticText, 0x117543200, {{24.0, 148.3}, {92.0, 23.0}}, label: 'Expiration'
+                                              StaticText, 0x117543340, {{24.0, 148.3}, {92.0, 23.0}}, label: 'Expiration'
+                                            Button, 0x117543480, {{24.0, 192.0}, {354.0, 48.0}}, label: 'View 3 expired items', value: 3
+                                            Button, 0x1175435c0, {{24.0, 240.0}, {354.0, 48.0}}, label: 'View 0 items expiring soon', value: 0
+                                            Other, 0x117543700, {{24.0, 288.0}, {354.0, 88.0}}
+                                            Other, 0x117543840, {{24.0, 300.0}, {64.0, 64.0}}
+                                              Other, 0x117543980, {{24.0, 300.0}, {64.0, 64.0}}
+                                                StaticText, 0x117543ac0, {{34.7, 320.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x117543c00, {{34.7, 320.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755c000, {{98.0, 311.3}, {270.0, 41.0}}, label: 'Open asset Audit drill'
+                                            Other, 0x11755c140, {{24.0, 376.0}, {354.0, 88.0}}
+                                            Other, 0x11755c280, {{24.0, 388.0}, {64.0, 64.0}}
+                                              Other, 0x11755c3c0, {{24.0, 388.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755c500, {{34.7, 408.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755c640, {{34.7, 408.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755c780, {{98.0, 399.3}, {270.0, 41.0}}, label: 'Open asset Audit camping equipment'
+                                            Other, 0x11755c8c0, {{24.0, 464.0}, {354.0, 88.0}}
+                                            Other, 0x11755ca00, {{24.0, 476.0}, {64.0, 64.0}}
+                                              Other, 0x11755cb40, {{24.0, 476.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755cc80, {{34.7, 496.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755cdc0, {{34.7, 496.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755cf00, {{98.0, 487.3}, {270.0, 41.0}}, label: 'Open asset Audit garden tools'
+                                            Button, 0x11755d040, {{317.3, 552.0}, {60.7, 44.0}}, label: 'View all recently changed assets'
+                                            StaticText, 0x11755d180, {{24.0, 562.3}, {162.7, 23.0}}, label: 'Recently changed'
+                                              StaticText, 0x11755d2c0, {{24.0, 562.3}, {162.7, 23.0}}, label: 'Recently changed'
+                                            Other, 0x11755d400, {{24.0, 606.0}, {354.0, 88.0}}
+                                            Other, 0x11755d540, {{24.0, 618.0}, {64.0, 64.0}}
+                                              Other, 0x11755d680, {{24.0, 618.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755d7c0, {{34.7, 638.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755d900, {{34.7, 638.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755da40, {{98.0, 618.7}, {270.0, 62.7}}, label: 'Open asset Audit drill'
+                                            Other, 0x11755db80, {{24.0, 694.0}, {354.0, 88.0}}
+                                            Other, 0x11755dcc0, {{24.0, 706.0}, {64.0, 64.0}}
+                                              Other, 0x11755de00, {{24.0, 706.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755df40, {{34.7, 726.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755e080, {{34.7, 726.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755e1c0, {{98.0, 706.7}, {270.0, 62.7}}, label: 'Open asset Audit camping equipment'
+                                            Other, 0x11755e300, {{24.0, 782.0}, {354.0, 88.0}}
+                                            Other, 0x11755e440, {{24.0, 794.0}, {64.0, 64.0}}
+                                              Other, 0x11755e580, {{24.0, 794.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755e6c0, {{34.7, 814.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755e800, {{34.7, 814.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755e940, {{98.0, 794.7}, {270.0, 62.7}}, label: 'Open asset Audit garden tools'
+                                            Button, 0x11755ea80, {{310.0, 900.0}, {68.0, 44.0}}, label: 'View all checked-out assets'
+                                            StaticText, 0x11755ebc0, {{24.0, 910.3}, {114.7, 23.0}}, label: 'Checked out'
+                                              StaticText, 0x11755ed00, {{24.0, 910.3}, {114.7, 23.0}}, label: 'Checked out'
+                                            Other, 0x11755ee40, {{24.0, 954.0}, {354.0, 88.0}}
+                                            Other, 0x11755ef80, {{24.0, 966.0}, {64.0, 64.0}}
+                                              Other, 0x11755f0c0, {{24.0, 966.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755f200, {{34.7, 986.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755f340, {{34.7, 986.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755f480, {{98.0, 977.3}, {197.3, 41.0}}, label: 'Open asset Audit drill'
+                                            Button, 0x11755f5c0, {{311.3, 976.0}, {66.7, 44.0}}, label: 'Return Audit drill'
+                                            Other, 0x11755f700, {{24.0, 1042.0}, {354.0, 88.0}}
+                                            Other, 0x11755f840, {{24.0, 1054.0}, {64.0, 64.0}}
+                                              Other, 0x11755f980, {{24.0, 1054.0}, {64.0, 64.0}}
+                                                StaticText, 0x11755fac0, {{34.7, 1074.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x11755fc00, {{34.7, 1074.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x11755fd40, {{98.0, 1065.3}, {197.3, 41.0}}, label: 'Open asset Audit camping equipment'
+                                            Button, 0x11755fe80, {{311.3, 1064.0}, {66.7, 44.0}}, label: 'Return Audit camping equipment'
+                                            Other, 0x117564000, {{24.0, 1130.0}, {354.0, 88.0}}
+                                            Other, 0x117564140, {{24.0, 1142.0}, {64.0, 64.0}}
+                                              Other, 0x117564280, {{24.0, 1142.0}, {64.0, 64.0}}
+                                                StaticText, 0x1175643c0, {{34.7, 1162.0}, {42.7, 24.0}}, label: 'Item'
+                                                  StaticText, 0x117564500, {{34.7, 1162.0}, {42.7, 24.0}}, label: 'Item'
+                                            Button, 0x117564640, {{98.0, 1153.3}, {197.3, 41.0}}, label: 'Open asset Audit garden tools'
+                                            Button, 0x117564780, {{311.3, 1152.0}, {66.7, 44.0}}, label: 'Return Audit garden tools'
+                                        Other, 0x1175648c0, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x117564a00, {{396.0, 119.0}, {3.0, 479.7}}
+                                        Other, 0x117564b40, {{62.0, 807.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x117564c80, {{3.0, 834.0}, {393.0, 3.0}}
+                                        Other, 0x117564dc0, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x117564f00, {{396.0, 119.0}, {3.0, 479.7}}
+                                        Other, 0x117565040, {{62.0, 807.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x117565180, {{3.0, 834.0}, {393.0, 3.0}}
+                                  StaticText, 0x1175652c0, {{8.0, 854.0}, {100.0, 16.0}}, identifier: 'audit-query-readiness', label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","home"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","home"],"status":"success","fetch":"idle","data":true,"observers":1}]}', value: {"online":true,"fo...
+                                    StaticText, 0x117565400, {{8.0, 854.0}, {100.0, 16.0}}, label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","home"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","home"],"status":"success","fetch":"idle","data":true,"observers":1}]}'
+                        Other, 0x117565540, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x117565680, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x1175657c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x117565900, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x117565a40, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11748b0c0, pid: 10584, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x117565b80, pid: 10584, label: 'Stuff Stash'
+  }

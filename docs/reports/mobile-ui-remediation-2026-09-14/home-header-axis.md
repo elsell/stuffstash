@@ -1,5 +1,13 @@
 # Home action header — all 24 axes
 
+## Current native evidence, September 16
+
+[Run351404 Home review](native-home-351404.md) records seven passing Home scenarios
+on each iOS target and inspected header/tab-return captures. It also links the
+existing Android header checks. Remaining gaps and fixture limits are explicit
+there; the earlier source-checkpoint observations below are historical.
+
+
 S066, source checkpoint `3d61163d`. Reviewed HomeNavigationHeader,
 HomeHeaderLayout, HomeScreen, NotificationHomeEntry/Bell, the platform header
 adapters and Home stack options. The inventory switcher destination and dashboard
@@ -80,3 +88,27 @@ Remote TypeScript, both fixture-isolation tests and the structural check pass.
 Critic confirmed the fixture limits and requested explicit menu-item reveal plus
 scroll-view lookup by Home content; both procedure corrections are included.
 Swift compilation and runtime assertions remain for macOS CI.
+
+## Run35042066124: frame failure and hit-delivery diagnostic
+
+The normal-size phone capture shows the requested Add/Notifications/Profile order
+and no overflow. All three native bar items expose 44-by-36 accessibility frames;
+the selector is 166-by-44. The existing 44-point height assertion fails before
+scrolling, so this run does not establish the scroll result. Retained
+[screenshot](home-header-frame-350420.png) and [hierarchy](home-header-frame-350420.txt)
+show these exact bounds. iPad's log reports the same 36-point height failure.
+
+[Apple's Buttons guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+describes a 44-point minimum hit region. Accessibility bounds alone do not measure
+delivered taps outside those bounds. Keep this acceptance failure open; do not
+replace standard bar items with custom controls solely from that measurement.
+
+A separate diagnostic now probes the actual notification callback at its center
+and eight positions 21 points from the center along edges/corners. A runner-only
+counter requires each tap to arrive exactly once. The production header adapter,
+three-action layout and original geometry assertions remain unchanged. This
+diagnostic is pending native execution; it will distinguish one control's touch
+delivery from its AX bounds, not certify all Home controls or full tab composition.
+
+Remote TypeScript, both fixture isolation tests and mobile structural checks pass.
+Critic found no blocker. Swift compilation and all nine tap probes remain pending.

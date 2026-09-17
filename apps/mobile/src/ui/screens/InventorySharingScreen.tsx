@@ -1,5 +1,5 @@
+import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
-import { NativeActionMenu } from '../components/NativeActionMenu';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -8,10 +8,11 @@ import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
-import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
+  Keyboard,
   Platform,
   Alert,
   RefreshControl,
@@ -33,7 +34,7 @@ import type {
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
-import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
+import { appKeyboardDismissMode } from '../components/AppTextInput';
 
 export function InventorySharingScreen({
   cancelCommand,
@@ -110,6 +111,7 @@ export function InventorySharingScreen({
 
   async function create(): Promise<void> {
     if (workingRef.current) return;
+    Keyboard.dismiss();
     workingRef.current = true;
     setWorking(true);
     setCreationError(undefined);
@@ -130,7 +132,7 @@ export function InventorySharingScreen({
       setEmailRevision(value => value + 1);
     } catch (error) {
       if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
-        ? { title: 'Invitation created, link unavailable', message: 'Cancel the invitation below before trying again. If this keeps happening, contact your server administrator.' }
+        ? { title: 'Invitation created, link unavailable', message: 'If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.' }
         : { title: 'Could not create invitation', message: readableError(error) });
     } finally {
       workingRef.current = false;
@@ -189,6 +191,7 @@ export function InventorySharingScreen({
   function requestCancellation(invitation: InventoryInvitationSummary): void {
     const ownsConfirmation = captureFeedbackOwner();
     if (!ownsConfirmation() || pendingCancellations.current.has(cancellationKey(invitation.id))) return;
+    Keyboard.dismiss();
     let confirmed = false;
     confirmCancel(invitation, async value => {
       if (confirmed || !ownsConfirmation()) return;
@@ -203,9 +206,12 @@ export function InventorySharingScreen({
   if (denied || (list.isError && !list.data)) {
     return (
       <ScrollView style={settingsStyles.shell} contentContainerStyle={settingsStyles.errorContainer}>
-        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>Could not load invitations</Text>
-        <Text style={settingsStyles.errorMessage}>Your invitation settings are still safe. Try again.</Text>
-        <NativeCommandButton label="Retry" onPress={() => { void list.refetch({ cancelRefetch: false }); }} />
+        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>{denied ? 'Sharing unavailable' : 'Could not load invitations'}</Text>
+        <Text style={settingsStyles.errorMessage}>{!canShare
+          ? `You don’t have permission to manage invitations for ${scope.inventoryName}.`
+          : denied ? 'Your access to this inventory could not be confirmed. Check again or return to your inventories.'
+          : 'Your invitations could not be loaded. Try again.'}</Text>
+        {canShare ? <NativeCommandButton label={denied ? 'Check Again' : 'Retry'} onPress={() => { void list.refetch({ cancelRefetch: false }); }} /> : null}
       </ScrollView>
     );
   }
@@ -233,13 +239,8 @@ export function InventorySharingScreen({
           <Text style={styles.label}>Email</Text>
           <InvitationEmailInput
             key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
-            autoCapitalize="none"
-            autoComplete="email"
-            accessibilityLabel="Invitee email"
-            keyboardType="email-address"
             editable={!working}
             onChangeText={value => { if (!workingRef.current) setEmail(value); }}
-            placeholder="friend@example.com"
             placeholderTextColor={palette.textMuted}
             style={styles.input}
             email={emailScope.current === scopeKey ? email : ''}
@@ -294,13 +295,12 @@ export function InventorySharingScreen({
                   <Text style={styles.successTitle}>Could not cancel invitation</Text>
                   <Text style={settingsStyles.errorMessage}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
+                {invitation.status === 'pending' && !invitation.isExpired ? (
+                  <NativeCommandButton label="Cancel invitation" role="destructive"
+                    disabled={cancellingKeys.has(cancellationKey(invitation.id))}
+                    onPress={() => requestCancellation(invitation)} />
+                ) : null}
               </View>
-              {invitation.status === 'pending' && !invitation.isExpired ? (
-                <NativeActionMenu accessibilityLabel={`Invitation actions for ${invitation.email}`}
-                  disabled={cancellingKeys.has(cancellationKey(invitation.id))}
-                  groups={[{ id: 'invitation', items: [{ id: 'cancel', label: 'Cancel invitation',
-                    isDestructive: true, systemImage: 'xmark.circle', onPress: () => requestCancellation(invitation) }] }]} />
-              ) : null}
             </View>
           </View>
         ))}
@@ -356,9 +356,4 @@ function createStyles(colors: MobileColorPalette) {
     invitationEmail: { color: colors.text, fontSize: 16, fontWeight: '600' },
     invitationMetadata: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 2 }
   });
-}
-
-function InvitationEmailInput({ email, ...props }: Omit<ComponentProps<typeof AppTextInput>, 'value' | 'defaultValue'> & { readonly email: string }) {
-  const seed = useRef(email);
-  return <AppTextInput {...props} {...(Platform.OS === 'ios' ? { defaultValue: seed.current } : { value: email })} />;
 }

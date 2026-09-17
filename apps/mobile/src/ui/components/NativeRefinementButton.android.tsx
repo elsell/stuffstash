@@ -1,8 +1,10 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React from 'react';
-import { Host, Icon, OutlinedButton, Text as ComposeText } from '@expo/ui/jetpack-compose';
+import { Icon, OutlinedButton, Text as ComposeText } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { minimumTouchTargetSize } from '../theme/tokens';
 import { RefinementCountBadge } from './RefinementCountBadge';
 import type { NativeRefinementButtonProps } from './NativeRefinementButton.types';
 
@@ -34,7 +36,7 @@ export function NativeRefinementButton({
         colors={{ contentColor: palette.action, disabledContentColor: palette.textMuted }}
         contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
         enabled={!disabled}
-        modifiers={iconOnly ? [size(44, 44)] : undefined}
+        modifiers={iconOnly ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
         onClick={onPress}
       >
         {iconOnly
@@ -47,7 +49,7 @@ export function NativeRefinementButton({
 }
 
 const styles = StyleSheet.create({
-  host: { height: 44, minWidth: 44 },
-  iconHost: { width: 44 },
-  iconRoot: { height: 44, position: 'relative', width: 44 }
+  host: { height: minimumTouchTargetSize, minWidth: minimumTouchTargetSize },
+  iconHost: { width: minimumTouchTargetSize },
+  iconRoot: { height: minimumTouchTargetSize, position: 'relative', width: minimumTouchTargetSize }
 });

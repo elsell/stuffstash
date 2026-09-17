@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Check, Palette, X } from 'lucide-react-native';
-import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { expoUIColorPickerAvailable } from './FullSpectrumTagColorPickerPresentation';
 import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
@@ -152,6 +152,7 @@ function normalizeColor(value: string): string | undefined {
 }
 
 function createStyles(colors: MobileColorPalette) {
+  const targetSize = Platform.OS === 'android' ? minimumTouchTargetSize : 44;
   return StyleSheet.create({
   shell: {
     gap: spacing.xs,
@@ -169,9 +170,9 @@ function createStyles(colors: MobileColorPalette) {
     borderColor: colors.border,
     borderRadius: radius.lg,
     borderWidth: 1,
-    height: 44,
+    height: targetSize,
     justifyContent: 'center',
-    width: 44
+    width: targetSize
   },
   clearSwatch: {
     alignItems: 'center',
@@ -179,9 +180,9 @@ function createStyles(colors: MobileColorPalette) {
     borderColor: colors.border,
     borderRadius: radius.lg,
     borderWidth: 1,
-    height: 44,
+    height: targetSize,
     justifyContent: 'center',
-    width: 44
+    width: targetSize
   },
   selectedSwatch: {
     borderColor: colors.action,
@@ -196,14 +197,14 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '800',
     letterSpacing: 0
   },
-  customButton: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.sm },
+  customButton: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: targetSize, paddingHorizontal: spacing.sm },
   customIndicator: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 11, borderWidth: 1, height: 22, justifyContent: 'center', width: 22 },
   customLabel: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
   customPanel: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, marginTop: spacing.sm, padding: spacing.md },
   modalHeader: { minHeight: 48, justifyContent: 'center' }, modalTitle: { color: colors.text, fontSize: 24, fontWeight: '800' }, modalSubtitle: { color: colors.textMuted, fontSize: 14, marginTop: spacing.xs },
   pickerSurface: { flexShrink: 0, marginTop: spacing.md }, supplementaryScroll: { marginTop: spacing.md, maxHeight: 180 }, supplementaryContent: { gap: spacing.md, paddingBottom: spacing.md }, inputLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  hexInput: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 44, paddingHorizontal: spacing.sm },
-  clearAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', minHeight: 44 }, clearActionText: { color: colors.warning, fontSize: 16, fontWeight: '700' },
+  hexInput: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: targetSize, paddingHorizontal: spacing.sm },
+  clearAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, justifyContent: 'center', minHeight: targetSize }, clearActionText: { color: colors.warning, fontSize: 16, fontWeight: '700' },
   modalActions: { flexDirection: 'row', gap: spacing.sm, paddingBottom: spacing.md, paddingTop: spacing.sm }, cancelAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 48 }, cancelActionText: { color: colors.text, fontSize: 16, fontWeight: '700' }, doneAction: { alignItems: 'center', backgroundColor: colors.action, borderRadius: radius.md, flex: 1, justifyContent: 'center', minHeight: 48 }, doneActionText: { color: colors.onAction, fontSize: 16, fontWeight: '800' }
   });
 }

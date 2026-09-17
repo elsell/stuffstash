@@ -1,6 +1,14 @@
 import { expect, it } from 'vitest';
 import { nativeHeaderActionOptions } from './NativeHeaderActions.ios';
 
+it('dispatches a native leading Back command with the backward system symbol', () => {
+  let returned = false;
+  const item = nativeHeaderActionOptions([{ kind: 'back', label: 'Back to settings collection', onPress: () => { returned = true; } }], 'left').unstable_headerLeftItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ icon: { type: 'sfSymbol', name: 'chevron.backward' }, accessibilityLabel: 'Back to settings collection' });
+  if (item?.type === 'button') item.onPress?.();
+  expect(returned).toBe(true);
+});
+
 it('installs real native bar items with system symbols, badges and actions', () => {
   const pressed: string[] = [];
   const options = nativeHeaderActionOptions([
@@ -27,6 +35,14 @@ it('provides a system close action for native sheets', () => {
   expect(item).toMatchObject({ accessibilityLabel: 'Close inventory switcher', icon: { type: 'sfSymbol', name: 'xmark' } });
   if (item?.type === 'button') item.onPress?.();
   expect(closed).toBe(true);
+});
+
+it('uses the system compose action for a new conversation', () => {
+  let started = false;
+  const item = nativeHeaderActionOptions([{ kind: 'compose', label: 'New conversation', onPress: () => { started = true; } }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ accessibilityLabel: 'New conversation', icon: { type: 'sfSymbol', name: 'square.and.pencil' } });
+  if (item?.type === 'button') item.onPress?.();
+  expect(started).toBe(true);
 });
 
 

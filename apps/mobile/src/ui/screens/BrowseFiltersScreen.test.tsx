@@ -67,19 +67,24 @@ it('explains an empty tag inventory while retaining Back and Show results', asyn
 });
 
 it('explains unmatched tag search and restores the selected tag when search is cleared', async () => {
+  resetNavigation();
   const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
   try {
     await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[{ id: 'tag', key: 'tools', label: 'Tools' }]} onApply={value => applied.push(value)} onCancel={() => {}} onExpiration={() => {}} />);
     await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('Filter by tag Tools'));
-    const options = () => navigationOptions().map(value => value as { headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void } }).filter(value => value.headerSearchBarOptions).at(-1)!.headerSearchBarOptions!;
-    await h.run(() => options().onChangeText({ nativeEvent: { text: 'unmatched' } }));
+    const options = () => (Object.assign({}, ...navigationOptions()) as { headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
+    expect(options()).toBeDefined();
+    await h.run(() => options()!.onChangeText({ nativeEvent: { text: 'unmatched' } }));
     expect(h.allText()).toContain('No matching tags');
-    await h.run(() => options().onChangeText({ nativeEvent: { text: '' } }));
+    expect(options()).toBeDefined();
+    await h.run(() => options()!.onChangeText({ nativeEvent: { text: '' } }));
     expect(h.allText()).not.toContain('No matching tags');
     expect(h.byLabel('Filter by tag Tools')?.props.accessibilityState.checked).toBe(true);
     await h.press(h.byLabel('Show results'));
     expect(applied[0].tagIds).toEqual(['tag']);
+    await h.press(h.byLabel('Back to filters'));
+    expect(options()).toBeUndefined();
   } finally { await h.unmount(); resetNavigation(); }
 });
 

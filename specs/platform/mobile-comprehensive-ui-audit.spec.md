@@ -1,5 +1,101 @@
 # Comprehensive mobile UI audit and remediation
 
+## Invitation native acceptance coverage
+
+The runner-only native suite must render the real invitation acceptance screen
+with synthetic preview/acceptance ports and the production Invitation header.
+At normal text size on phone and iPad, verify a long inventory name, visible
+access, reachable Join and Not now, dismissal without accepting, explicit joining,
+and retained accepted access when opening fails. Retrying Open must not accept the
+invitation again. Keep production routes untouched outside the isolated runner.
+This fixture does not certify external link intake, authentication, authorization,
+or physical-device transitions; those retain their separate acceptance boundaries.
+
+## Home within the production tab shell
+
+Standalone header probes do not establish composition with the native tabs and
+voice accessory. The isolated runner must also reuse the three production tab
+layouts unchanged from its saved route tree, supplying synthetic Home data and a
+clearly identified Browse placeholder. Mount them at a distinct `audit-tabs` path
+with the same folder depth, avoiding an ambiguous second root index while keeping
+relative imports intact. Verify normal-size Home action order,
+voice entry reachability, bottom-row clearance, scrolling and Home→Browse→Home
+return without a stuck pull indicator on phone and iPad. The placeholder verifies
+tab transitions only, not Browse content/search. Do not replace the existing
+standalone action probes or claim real audio/provider/device coverage from this
+composition fixture. Runner diagnostics must not overlay the content being checked.
+
+## Asset action eligibility and retained drafts
+
+Edit and both Move forms must honor the current core view's edit/move capability,
+including read-only access and archived lifecycle, on direct entry and refresh.
+When unavailable, retain the draft in the mounted form, disable fields/choices
+and mutation commands, and explain why no action can be submitted. Cancel remains
+available and keeps existing discard protection. Restored eligibility may resume
+the retained draft. Previously captured mutation and draft-change callbacks must
+consult current committed eligibility, not the permission captured when rendered.
+Already-submitted mutations remain authorized by the server; this UI guard is not
+an authorization substitute. Edit must recheck eligibility after asynchronous tag
+reconciliation and before submitting the update. Shared route tests must exercise
+denied direct entry, revocation, archive, retained draft recovery and stale callbacks.
+
+## Asset action loading and error exits
+
+Edit, Move and Move-here must expose a native Close command while the asset core
+is loading or unavailable. These states have no draft to discard. Close returns
+to the previous route, or Home when there is no back destination. Retry remains
+available after failure; a slow or failed read must not trap a user in an Edit
+sheet whose swipe dismissal is disabled. Ready-state draft and operation guards
+remain authoritative once editing begins.
+
+## Staged tag removal in Edit
+
+New staged tag chips in Edit perform removal, unlike existing-tag choices that
+toggle assignment. Announce the action as Remove new tag followed by its name;
+do not describe this one-way draft removal as a selected toggle. Preserve other
+staged tags, assigned tags and the item's edited fields. Apply the same command
+semantics already used by Add; native assistive-technology output remains a
+separate verification requirement.
+
+## Add draft photo removal
+
+Add's photo rail must place a native removal command below each preview, outside
+the image and its preview/reorder hit region. Name commands by visible photo
+position (Remove photo 1, etc.) and update those positions after removal/reorder.
+Removing a draft photo retains the other photos and unfinished item fields. The
+command shares the draft-operation lock, including while a system picker is open.
+Do not use the existing 28-point overlay as the removal target. Verify native
+phone/iPad layout and activation separately from mounted behavior tests.
+
+## Native search placement comparison
+
+Run350465 phone captures show a bottom search field despite integratedButton and
+allowToolbarIntegration=false. Retain the production Search-button acceptance
+assertions; do not accept the bottom field as equivalent to requested placement.
+Add a runner-only minimal comparison with identical search options supplied at
+route registration before presentation. It must capture idle geometry and verify
+the search button lies in the navigation bar before expanding. This distinguishes
+baseline native configuration from the more complex production mounting path;
+it does not prove a cause or replace production search/result/navigation tests.
+
+## Onboarding command controls
+
+Connect/sign-in, household/inventory creation and sign-out/start-over reuse the
+shared native command adapter. Primary submission is prominent; start-over is a
+standard command. Keep command labels visible while pending and show separately
+labeled progress. Preserve required-value readiness, keyboard submission,
+synchronous duplicate locking, partial-setup recovery and safe late completion.
+Native phone/iPad keyboard and reachability acceptance must be rerun after this
+migration; prior custom-button captures cannot certify the new control.
+
+## Push setup command names
+
+When successful device setup changes the action to Open device settings, its
+accessible name must identify that new action too. It must not continue announcing
+setup while opening Settings. Activation must open Settings without re-registering
+the device or changing inventory preferences; launch failure/retry retains the
+existing visit-owned recovery behavior.
+
 ## Scope and completion
 
 The user authorizes a long-running audit and remediation of every mobile surface,
@@ -114,7 +210,9 @@ current household by tenant identity, never its display name. Preserve the
 household/inventory hierarchy and current selection. Empty households explain that
 no inventories are available. Prevent duplicate selection requests, report a failed
 switch in place, and retain the sheet for retry. Dismiss only after a successful
-selection; suppress late navigation after the sheet has unmounted.
+selection; suppress late navigation after the sheet has unmounted. Household rows
+show the count of inventories belonging to that household, using “1 inventory”
+and “0 inventories” or plural counts as appropriate.
 
 ## Multiple tag selection
 
@@ -530,6 +628,11 @@ initial list and explicit valid-zone fallback when the runtime list is unavailab
 Typing/searching alone never changes the saved time zone.
 
 ### Inventory switcher focus ownership
+
+Selection callbacks belong to the focused visit that rendered them. Retained
+callbacks must not start a selection after departure, including after returning
+to the same switcher. A fresh visit provides fresh selections. Close must ignore
+inactive visits and retire its current visit immediately before navigation.
 
 Selection completion belongs to the switcher's uninterrupted focus session.
 When the sheet loses focus, abort its request signal and suppress late navigation
@@ -1228,10 +1331,15 @@ assertions; a locator correction must not remove the behavior being verified.
 
 The compact iOS tag color well must retain a44-point minimum actionable target.
 Use the platform's larger control size and minimum frame constraints rather than
-scaling its drawing or widening an inactive label. Keep native target-size and
-center-activation assertions; if the framework does not honor this sizing, record
-the failed runtime evidence and investigate the adapter rather than certifying
-the React wrapper's dimensions.
+scaling its drawing or widening an inactive label. Verify touch delivery independently
+of the accessibility frame: the system color well exposes28/36-point AX bounds
+while run350695 opens and dismisses it from all nine center/edge/corner probes
+on both devices. Retain nonempty, onscreen, compact AX bounds and ordinary activation
+checks, plus all nine delivered-touch probes. Record the smaller AX frames rather
+than failing touch acceptance solely from their size. Sampled probes do not prove
+every point in a44-point square, VoiceOver operation, or color editing; retain
+those evidence limits and the earlier activation failures. React wrapper dimensions
+alone never establish native touch acceptance.
 
 ### Focused native diagnosis
 
@@ -1266,3 +1374,316 @@ Composition ownership ends when sign-out, server change or expiry successfully
 returns to onboarding, including the interval before another sign-in completes.
 Failed push cleanup retains the current composition. Expiry dialogs need only a
 dismiss action, not a callback that mutates the next session’s prompt state.
+
+### Ordinary text entry isolation
+
+For the English URL-keyboard onboarding fixture, readiness may query the observed
+`q` key directly rather than enumerating every key and testing zero-sized padding
+elements. Keep the same keyboard-existence, hittability and timeout requirements.
+This optimizes test observation only; it does not prove keyboard readiness or text
+fidelity until the named native build passes. Other keyboard layouts require their
+own appropriate readiness target rather than inheriting an English key assumption.
+
+Add separate controlled and uncontrolled paced-injection diagnostic cases using
+the same assisted input and string, entering one character per XCTest call. Keep
+all existing whole-string cases and their exact assertions unchanged. This is an
+explicit timing comparison, never a replacement acceptance test: a paced pass
+cannot close a failed whole-string case or justify slowing production entry.
+Record its distinct screenshot names and include it in the text-entry diagnostic
+workflow. Do not infer that an upstream issue matches without the same conditions.
+
+Include a runner-only SwiftUI TextField comparison with default text assistance,
+the same whole-string injection and native/application-value assertions. It must
+not inherit URL keyboard or autocorrection-disabling modifiers from the existing
+address comparison. This separates the native field path from React Native text
+input without changing production fields or relaxing any original failing case.
+Passing the comparison does not establish physical typing or prove the cause.
+
+The iOS Add name field may use the already-pinned SwiftUI TextField as a scoped
+candidate after the default-assisted comparison passes on phone and iPad. Keep
+ordinary text assistance, its visible Name label and accessible Asset name. Seed
+once per existing name revision; restored drafts and Clear draft deliberately
+remount the field, while typing, metadata refresh and rejected saves do not. Keep
+application state as the save/validation owner and disable changes while busy.
+Android retains its current field. Do not generalize this migration to multiline,
+search, generated-key or externally controlled fields. Unchanged Add whole-string
+typing, failed-save recovery, clear and restored-draft native journeys must pass
+before claiming the candidate solves product text entry.
+The focused `add-draft` workflow selection runs the existing Add typing/recovery,
+navigation-stack, preconfigured-header and unfinished-tag journeys unchanged on
+phone and tablet. It is a diagnostic subset, not full native acceptance.
+
+The same scoped native name adapter may serve Add's inline new-tag name after
+run35058684319 passed phone asset-name entry but visibly truncated `Camping` to
+`Cing` in the separate tag field. Preserve its normal text assistance. Native
+editing owns its mount seed; application state still owns validation, draft
+persistence and staged tags. Staging a valid tag explicitly resets the field;
+invalid staging, color changes and removing another staged tag must not reset it.
+Collapsing/reopening details restores the unfinished name. Clear draft and scope
+restoration replace the seed deliberately. Keep the unchanged native unfinished-tag
+journey as acceptance; adapter tests alone cannot establish typing fidelity.
+
+Shared native navigation search options must settle across navigation-context
+updates. Query and caller callback changes update current committed handlers and
+native text, without reconstructing unchanged header presentation. Enabled state
+and placeholder changes still update presentation. Old events after disabling or
+unmount must do nothing; return to a focused enabled route restores interaction.
+This prevents repeated header reconfiguration; it does not by itself prove the
+dynamic search placement failure is resolved. Retain native placement acceptance.
+
+The native tag color well must expose one accessible “Choose any color” name.
+Use the native ColorPicker label as its naming source; do not repeat it through
+an accessibility-label modifier. Retained350504 hierarchy duplicates the name.
+Keep a separate native exact-name assertion so naming acceptance does not mask
+or depend on the currently failing picker-activation journey.
+
+Onboarding's whole-string address check must observe completion with a bounded
+five-second exact-value predicate before retaining its exact equality assertion.
+Run350549 recording shows complete text after the initial partial-value snapshot,
+with focus retained; typeText returning is not sufficient completion evidence.
+Do not retry typing, substitute paced injection, accept substrings or suppress a
+timeout. Capture the resulting state whether the predicate succeeds or fails.
+
+The onboarding dismissal gesture must read each required frame once per gesture
+and use those local bounds for its origin, containment assertion and destination.
+Repeated XCUI frame resolution can stall for tens of seconds on the retained
+350549 phone run. Keep the gesture coordinates, keyboard-disappearance deadline
+and following action/draft assertions unchanged; do not cache across gestures or
+silently treat delayed teardown screenshots as passing acceptance.
+
+The native audit must compare the same ordinary text with the default keyboard:
+uncontrolled baseline, controlled value, uncontrolled without keyboard assistance,
+and uncontrolled without the app keyboard accessory. Retain the baseline and exact
+native/observed-value assertions; do not slow typing, disable correction globally,
+or replace product inputs merely to pass automation. Accessory isolation keeps its
+host mounted and uses its enabled flag. These are diagnostic fixtures, not proposed
+product behavior. A fixed `text-entry` workflow selection may run these comparisons
+and the multiline baseline on both devices; full/manual-All/PR acceptance remains
+unchanged. Record failures and their actual build before inferring a root cause.
+
+If the controlled ordinary-input comparison fails, also compare that controlled
+input with assistance disabled and with the accessory disabled. A passing
+uncontrolled variant cannot isolate either variable in a failing controlled field.
+Keep all baseline cases and exact-value assertions in the focused selection.
+
+Definition/tag collection header changes require native search activation, exact
+filtering, clear/return, and Add reachability on phone and iPad. A synthetic tag
+collection may exercise the shared screen with real query/policy adapters and a
+controlled repository; this is not production authorization or pagination evidence.
+
+### Android filter sheet geometry
+
+Browse and Expiration filters must expose their current page title and both commit
+and return/cancel commands at every allowed Android sheet detent. The pinned native
+stack does not display headers inside Android form sheets, and an absolute JS
+footer tracks the expanded content height. Use its Android `unstable_sheetFooter`
+adapter for these commands and an accessible title inside the scroll body. Keep
+footer space reserved for the last selectable row. Footer presentation must settle
+across navigation renders while callbacks read the latest committed draft, disabled
+state and teardown; do not freeze the initial draft. Preserve the existing iOS
+direct-scroll layout. Native acceptance covers initial/expanded detents, nested
+tags, apply/cancel, last-row scrolling, keyboard and system Back.
+If filters are the first route after a cold link, Android presents them as a root
+screen rather than a sheet. In that case reserve a normal full-screen footer;
+do not rely on the sheet-only footer slot. Hide native header chrome in this
+Android adapter so the accessible body title remains singular in both cases.
+Cold-root content must reserve the top system inset. Route bodies must not reapply
+headerShown=true over the Android sheet adapter on query/page rerenders; iOS gets
+its native header from the root stack registration.
+
+Browse and Expiration filter Cancel must work in loading, failure and ready states.
+With history, return Back without applying the draft. Without history, replace
+the root Home route (`/`) rather than leaving an inert Cancel. Browse must cancel
+its pending navigation operation before leaving; neither fallback applies filters
+or trusts a stale inventory identity.
+
+### Android native header and vector compatibility
+
+Android header actions retain native Compose IconButton controls, accessible names,
+48dp hosts and the requested Add/Notifications/Profile order. Only a positive unread
+count may instantiate BadgedBox; its native fallback otherwise draws an unintended
+dot. Zero/absent counts must render the icon directly.
+
+The pinned Expo UI55.0.17 XML vector loader supports pathData and fillColor but
+ignores stroke properties and fillType. Shared Android vectors must therefore use
+filled contours supported by this adapter. Guard these assets mechanically against
+unsupported stroke/fillType attributes, with rejecting and accepting fixtures.
+The mobile structural pre-commit hook also runs for XML asset edits.
+Review every consumer (headers, conversation commands, notification read state,
+filter/sort). Native acceptance requires recognizable icons, correct badges and
+working actions on normal-size Android, not merely a successful APK build.
+Use Google's filled Material24px icon contours from reviewed repository revision
+`40a7a292a79d9394157e1ea24f83d52d5e17c556`; retain source mapping and Apache2.0
+license alongside the local vectors. Convert only opaque path contours to Android
+XML, omitting SVG canvas paths marked fill=none; no runtime asset download.
+
+### Notice geometry diagnostics
+
+Notice placement acceptance must retain its full-rectangle containment requirement.
+When timed geometry checks disagree with final captures, record the last sampled
+header, content, app and control rectangles and each control's containment result
+in the failure message. Do not infer a corrected product layout from a later
+screenshot or relax the bounds to make an intermittent observation pass.
+
+### Isolated Android runtime preparation
+
+Fixture installation outside GitHub Actions requires an explicitly disposable
+source archive: `MOBILE_AUDIT_ARCHIVE_ROOT` must resolve to the installer's root,
+which must contain a regular, non-symlink `.mobile-audit-archive` marker with exact
+content `disposable-mobile-audit` plus newline. Refuse any `.git` file/directory
+in that root or an ancestor, and require `RUNNER_TEMP` outside the archive for
+the production-route backup. Retain the explicit fixtures suite requirement and
+refusal to overwrite a previous backup. A marked archive is never a distributable
+release checkout. Ordinary local checkouts remain rejected without modifying routes.
+Before any route backup or deletion, reject symlinks in every route-path component
+below the archive root so an archive cannot redirect mutation into another checkout.
+
+Android simulator preparation may run on the authorized remote validation host,
+outside the repository and existing generated Android directories. Bootstrap the
+Linux command-line SDK tools from Google's numbered15859902 archive, verifying
+SHA-256 `4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583`
+before extraction or execution. The `_latest` filename suffix is part of that
+numbered, checksum-pinned artifact; do not resolve an unversioned latest download.
+Record subsequent emulator/system-image package revisions and checksums before
+installing them. Check disk capacity and KVM access before provisioning a virtual
+device. Installing tools or booting an emulator does not establish app acceptance;
+record actual build, device, Android version and exercised interactions separately.
+
+For the isolated Android preparation, any further Android CLI use must invoke the
+captured implementation directly (version1.0.16261425), verifying SHA-256
+`847e24a7d1711561a8739629b59c6e09b5a80dbfd98045d6ce7c661f46ecbc81`
+first. Do not rerun the SDK wrapper's automatic CLI download. Record the initial
+bootstrap's unpinned execution as a historical supply-chain gap; capturing a pin
+afterward constrains subsequent use but does not retroactively verify that step.
+
+The disposable Android build uses the pinned React Native0.83.6 catalog's API36,
+build-tools36.0.0 and NDK27.1.12297006. The generated Gradle9.0.0 wrapper must verify
+its distribution against published SHA-256
+`8fad3d78296ca518113f3d29016617c7f9367dc005f932bd9d93bf45ba46072b`.
+Keep build caches outside the source checkout and restrict the emulator build to
+x86_64. A debug-signed audit APK is synthetic evidence only and must never enter
+the distribution pipeline.
+
+Provision the isolated build's Java17 toolchain explicitly rather than relying on
+React Native's incompatible Foojay0.5.0/Gradle9 automatic resolver. Temurin17.0.16+8
+Linux x64 HotSpot archive must pass SHA-256
+`166774efcf0f722f2ee18eba0039de2d685b350ee14d7b69e6f83437dafd2af1`
+before extraction/execution. This is a validation-host toolchain, not a change to
+the app dependency graph.
+
+Android filter selection pages must expose search inside the sheet body: native
+navigation headers are unsupported for Android form sheets. Reuse AppTextInput
+(the platform TextInput/EditText adapter) as a labelled single-line search field
+with the search IME action, no automatic capitalization or correction, and live
+filtering. iOS keeps native navigation search. The shared sheet owns placement;
+searchable callers supply query handlers, not platform-specific layout. Leaving a
+selection page removes search and preserves existing draft/Back semantics.
+
+The keyboard acceptance run rejects the Android native sheet-footer candidate:
+react-native-screens 4.23.0 calls a stable-state footer calculation during keyboard
+settling and crashes. Android filters therefore use a full-screen native stack
+route with its normal title bar, an in-body search field, and a layout-owned bottom
+action region. A flexible scroll body reserves that region without overlaying
+choices. This preserves all filter functionality and draft semantics; iOS retains
+its current detented sheet. Do not patch or upgrade dependencies to hide this
+failure without a separately reviewed dependency change.
+
+Native fixture setup must distinguish the synthetic audit menu from production
+navigation. Run350702's Add test tapped an audit-menu label but opened the unrelated
+inventory-query fixture. Isolated Add comparisons must enter their explicitly named
+fixture URLs with XCUIApplication.open, then assert Add content before interacting.
+This does not establish Home-to-Add navigation; retain the separate Home header
+and production-configured Add scenarios. Hidden-header Add variants remain
+configuration diagnostics, not evidence that the production preconfigured header
+regressed. Capture color target bounds and pre-tap appearance when investigating
+an ordinary activation failure alongside passing delivered-touch probes.
+
+M207's next native comparison must isolate delayed search registration. A synthetic
+route starts without search, enables the production NativeNavigationSearch adapter
+on an explicit command, captures its placement, then changes only the route title
+and captures placement again. Record both geometries before requiring header
+placement; do not drop the original production Place/settings assertions. A title
+change is a diagnostic, not a production timing workaround. No speculative native
+library patch is accepted from source inspection alone.
+
+Android Move Here at its initial0.6 detent renders its form without Move/Cancel.
+Edit, Move and Move Here share the same sheet sizing approach. These asset action
+routes must use Android full-screen native-stack presentation with native title
+bars and layout-owned actions, matching the corrected filter approach. Their
+existing dirty/operation guards and commands remain authoritative. Shared action
+forms must resize for the Android keyboard using the actual native header height;
+iOS keeps its existing sheet detents, header visibility and keyboard behavior.
+Verify each consumer before claiming shared runtime acceptance.
+
+The Android asset-action migration must not expose an unguarded Edit exit. Header
+Back, hardware Back and navigator removal must use Edit's existing discard
+confirmation, with current draft/visit ownership, while pending operations block
+removal. Confirmed discard and successful Save authorize exactly one removal;
+Keep editing preserves the draft. Apply this at the navigation boundary, not only
+by hiding the header button.
+
+On Android full-screen asset actions, use the native header for the task title;
+do not repeat Edit/Move task headings in the scroll body. Preserve contextual
+asset names, instructions and previews. iOS headerless sheets retain body titles.
+
+Android Compose controls must follow the resolved in-app appearance preference,
+including when it differs from the device theme. All project Compose hosts share
+one appearance-aware adapter; do not rely on each host's system-theme default.
+Preserve Material enabled/disabled colors and existing interaction semantics.
+Acceptance must include switching light/dark while controls remain mounted,
+readable enabled secondary actions, disabled-command non-execution and enabled
+primary execution. Source propagation alone does not prove rendered contrast.
+
+Android Add must use a full-screen native-stack card so its Close and Save header
+commands remain visible. Android form sheets do not render the requested header.
+Keep the existing retained-draft and busy-operation guards, save eligibility and
+return behavior; iOS keeps the full-height native Add sheet. Production route and
+the production-equivalent native audit fixture must share these options.
+
+Closing Add must return to the previous route when history exists and replace the
+root with Home otherwise. Reuse the same navigation-only return policy as filter
+cancellation; callers retain their own draft, cancellation and pending-work guards.
+The isolated Add native fixture must exercise the same policy. A retained Add draft
+must not be cleared merely because Close chooses the Home fallback.
+
+Inventory switching and checkout history require visible native titles and Close
+commands. On Android they use full-screen stack cards because form sheets omit
+those requested headers; iOS retains their existing detents. Share inventory
+switcher presentation between production and the native fixture. Checkout history's
+shared presentation also hosts Home return details, whose pending-return and exit
+guards must remain intact and receive focused regression coverage.
+
+Inventory switcher Close and successful selection must also return Home when no
+back destination exists. Preserve immediate callback retirement and abort handling
+when leaving; failed selection stays open for retry.
+
+Return details must not toggle native removal protection in the same commit that
+clears its task and pops the route. Keep the route's removal guard installed for
+its lifetime: active tasks delegate attempted exits to their existing close policy;
+completed/absent tasks dispatch the original removal action. Native acceptance must
+positively observe the destination screen and surviving app process after Save or
+Cancel; disappearance of the task alone is insufficient and can hide a crash.
+
+Android Conversation requires its native Close and New conversation header actions.
+Use a full-screen native-stack card rather than an Android form sheet, which omits
+that header. Preserve iOS detents, retained conversation state, media pause on Close,
+and confirmation before discarding an unfinished proposal through New conversation.
+Verify context placement and proposal actions after the presentation change.
+
+## Full-screen photo viewer command visibility
+
+The fixed black photo canvas requires a self-contained native filled Retry command
+so the app's light appearance cannot put dark text directly on black. Retain the
+same retry callback and unavailable-photo state. Use the existing safe-area-aware
+viewer toolbar as the single explicit Close affordance; suppress the image library's
+redundant default header, which overlaps Android status icons. Preserve swipe/system
+Back dismissal and removal/paging controls. Verify both asset and draft-photo consumers.
+
+### Invitation email keyboard semantics
+
+Sharing email entry uses the email keyboard and email autofill, without automatic
+capitalization, spelling correction or spell-check underlining. Email local parts
+are identifiers, not prose. Keep native draft ownership and successful-create/scope
+reset behavior. Run350950's unchanged exact-email native assertion fails visibly;
+changing keyboard traits is a candidate correction, not proof that missing typed
+characters are resolved. Preserve that native gate and submission/retry checks.

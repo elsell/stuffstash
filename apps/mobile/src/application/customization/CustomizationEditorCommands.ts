@@ -33,7 +33,7 @@ export async function saveCustomizationEditor(input: {
     return;
   }
   if (mode === 'create') {
-    await managers.fields.create(context, scope, { key: draft.key, displayName: draft.name, type: draft.fieldType, enumOptions: draft.enumOptions, applicability: draft.applicability, customAssetTypeIds: draft.targetIds });
+    await managers.fields.create(context, scope, { key: draft.key, displayName: draft.name, type: draft.fieldType, enumOptions: draft.fieldType === 'enum' ? draft.enumOptions : [], applicability: draft.applicability, customAssetTypeIds: draft.targetIds });
   } else {
     await managers.fields.update(address(context, scope, requiredId(resourceId)), input.record as CustomFieldDefinition, { displayName: draft.name.trim(), enumOptions: draft.enumOptions, applicability: draft.applicability, customAssetTypeIds: draft.targetIds });
   }

@@ -1,5 +1,6 @@
 import { formatHistoryTimestamp } from '../../application/assets/AssetHistoryTimestamp';
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -51,6 +52,7 @@ export function AssetHistoryDetailRouteScreen({
   });
   const entry = isAccessFailure(detail.error) ? undefined : detail.data;
   const isLoading = detail.isPending;
+  const captureRevertSnapshot = useTaskPresentation(entry ?? undefined, String(detail.isRefetchError));
   const loadFailure = detail.isError && !entry ? historyLoadError(detail.error) : undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -101,14 +103,15 @@ export function AssetHistoryDetailRouteScreen({
 
   function confirmRevert(): void {
     const session = presentation.current;
-    if (!entry?.undo || entry.undo.status !== 'available' || !operationScope.active || operationScope.pending || operationScope.unavailable || !session?.active) return;
+    const ownsSnapshot = captureRevertSnapshot();
+    if (detail.isRefetchError || !ownsSnapshot() || !entry?.undo || entry.undo.status !== 'available' || !operationScope.active || operationScope.pending || operationScope.unavailable || !session?.active) return;
     requestHistoryRevertConfirmation(
       entry,
       (confirmation, confirm) => Alert.alert(confirmation.title, confirmation.message, [
         { text: 'Cancel', style: 'cancel' },
         { text: confirmation.confirmLabel, onPress: confirm }
       ]),
-      () => void revertChange(session)
+      () => { if (ownsSnapshot()) void revertChange(session); }
     );
   }
 
@@ -148,7 +151,7 @@ export function AssetHistoryDetailRouteScreen({
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
         <Text style={styles.timestamp}>{formatHistoryTimestamp(entry.occurredAt, 'exact')}</Text>
-        <Text style={styles.muted}>{entry.principal?.email?.trim() || entry.principalId || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
+        <Text style={styles.muted}>{entry.principal?.email?.trim() || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
       </View>
 
       {entry.changes.length > 0 ? (

@@ -36,6 +36,8 @@ export type VoiceInteractionState =
 type TitleEditor = { readonly commandId: string; readonly value: string } | null;
 type ConversationDraftState = { readonly planId?: string; readonly drafts: VoicePlanCommandDrafts };
 type VoiceInteractionStateContextValue = {
+  readonly retryPreview: () => Promise<void>;
+  readonly scopeIdentity: string;
   readonly titleEditor: TitleEditor;
   readonly setTitleEditor: Dispatch<SetStateAction<TitleEditor>>;
   readonly history: readonly VoiceRealtimeState[];
@@ -78,12 +80,13 @@ type VoiceInteractionStateProviderProps = {
 export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
   const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
   const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, 'Voice preview is not available.') } : { status: 'loading' };
-  return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState} />;
+  return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState}
+    retryPreview={async () => { await preview.refetch({ cancelRefetch: false }); }} />;
 }
 
 type PreviewState = { readonly status: 'loading' } | { readonly status: 'error'; readonly message: string } | { readonly status: 'ready'; readonly preview: VoiceInteractionPreviewViewModel };
 
-function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string }) {
+function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = false, realtimeController, previewState, scopeKey, retryPreview }: VoiceInteractionStateProviderProps & { readonly previewState: PreviewState; readonly scopeKey: string; readonly retryPreview: () => Promise<void> }) {
   const [titleEditor, setTitleEditor] = useState<TitleEditor>(null);
   const [history, setHistory] = useState<readonly VoiceRealtimeState[]>([]);
   const [composerText, setComposerText] = useState('');
@@ -152,6 +155,8 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           : { status: 'loading', stage };
 
     return {
+      scopeIdentity: scopeKey,
+      retryPreview,
       titleEditor, setTitleEditor,
       history: stateOwner === scopeKey ? history : [], composerText: stateOwner === scopeKey ? composerText : '', setComposerText,
       photoDrafts, setPhotoDrafts, commandDraftState, setCommandDraftState, scrollOffset, railOffsets,
@@ -259,10 +264,25 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         }
       },
       approveRealtimeActionPlan: async (planId: string, photoDrafts?: VoiceActionPlanPhotoDrafts, edits?: readonly VoiceActionPlanCommandEdit[]) => {
+        let reviewedEdits = edits;
+        if (titleEditor) {
+          const title = titleEditor.value.replace(/\s+/g, ' ').trim();
+          if (!title) return;
+          const commandId = titleEditor.commandId;
+          const existing = edits ?? [];
+          reviewedEdits = existing.some(edit => edit.commandId === commandId)
+            ? existing.map(edit => edit.commandId === commandId ? { ...edit, title } : edit)
+            : [...existing, { commandId, title }];
+          setCommandDraftState(current => {
+            const drafts = current.planId === planId ? current.drafts : {};
+            return { planId, drafts: { ...drafts, [commandId]: { ...drafts[commandId], title } } };
+          });
+          setTitleEditor(null);
+        }
         const lifetime = interactionLifetime.current;
         setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
         try {
-          await realtimeController.approveActionPlan(planId, photoDrafts, edits);
+          await realtimeController.approveActionPlan(planId, photoDrafts, reviewedEdits);
         } catch (error) {
           if (interactionLifetime.current !== lifetime) return;
           if (isObject(error) && error.code === 'review_validation_failed') {
@@ -333,7 +353,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         setStage('ready');
       }
     };
-  }, [titleEditor, history, composerText, photoDrafts, commandDraftState, diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey]);
+  }, [titleEditor, history, composerText, photoDrafts, commandDraftState, diagnosticsEnabled, previewState, realtime, realtimeController, stage, stateOwner, scopeKey, retryPreview]);
 
   return (
     <VoiceInteractionStateContext.Provider value={value}>

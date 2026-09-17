@@ -181,3 +181,40 @@ it('ignores an inbox open callback while another screen is focused', async () =>
     expect(reads).toBe(0);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
+
+
+it.each(['read-state', 'mark-all', 'settings', 'breadcrumb'] as const)('rejects retained %s callbacks after leaving the inbox', async operation => {
+  const h = new MobileRenderHarness(); const events: string[] = [];
+  const queries = {
+    async list() { return { items: [{ ...alert, parentTrail: [{ assetId: 'bin', title: 'Bin 8', kind: 'container' as const }] }], pagination: { limit: 20, hasMore: false, nextCursor: null } }; },
+    async open() { return 'item'; }, async setRead() { events.push('read-state'); }, async markAllRead() { events.push('mark-all'); }
+  };
+  const label = { 'read-state': 'Mark Tylenol read', 'mark-all': 'Mark all read', settings: 'Reminder settings', breadcrumb: 'Open location Bin 8' }[operation];
+  try {
+    await h.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => events.push('breadcrumb')} onChanged={() => {}} onSettings={() => events.push('settings')} />);
+    await h.settle();
+    const retained = h.byLabel(label)!.props.onPress;
+    await h.run(() => setScreenFocused(false));
+    await h.run(() => retained()); await h.settle();
+    expect(events).toEqual([]);
+    await h.run(() => setScreenFocused(true));
+    await h.press(h.byLabel(label)); await h.settle();
+    expect(events).toEqual([operation]);
+    const departing = h.byLabel(operation === 'read-state' ? 'Mark Tylenol read' : label)?.props.onPress ?? retained;
+    await h.unmount();
+    await h.run(() => departing());
+    expect(events).toEqual([operation]);
+  } finally { await h.unmount(); setScreenFocused(true); }
+});
+
+it('loads an inbox first mounted behind another screen when it gains focus', async () => {
+ const h = new MobileRenderHarness(); let reads = 0;
+ const queries = { async list() { reads++; return { items: [alert], pagination: { limit: 20, hasMore: false, nextCursor: null } }; }, async open() { return 'item'; }, async setRead() {}, async markAllRead() {} };
+ try {
+  setScreenFocused(false);
+  await h.render(<NotificationInboxScreen tenantId="tenant" inventoryId="inventory" queries={queries} onOpenAsset={() => {}} onChanged={() => {}} onSettings={() => {}} />);
+  await h.settle(); expect(reads).toBe(0);
+  await h.run(() => setScreenFocused(true)); await h.settle();
+  expect(reads).toBe(1); expect(h.byLabel('Open Tylenol')).toBeDefined();
+ } finally { await h.unmount(); setScreenFocused(true); }
+});

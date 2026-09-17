@@ -6,9 +6,52 @@ import { AssetActivityQuery } from '../../application/assets/AssetActivityQuery'
 import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
+import { setScreenFocused } from '../../test-support/navigation';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
 describe('History query pages', () => {
+  it('retries cached failure from its button without starting a pull indicator', async () => {
+    const client = createMobileQueryClient(); const h = new MobileRenderHarness();
+    let mode: 'ready' | 'fail' | 'retry' = 'ready'; let finish!: () => void;
+    const query = new AssetActivityQuery({ listAssetActivity: async () => {
+      if (mode === 'fail') throw new Error('Unavailable');
+      if (mode === 'retry') await new Promise<void>(resolve => { finish = resolve; });
+      return { entries: [], hasMore: false };
+    } });
+    try {
+      await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryRouteScreen assetActivityQuery={query} tenantId="tenant" inventoryId="inventory" assetId="asset" assetTitle="Item" /></AppFeedbackProvider>
+      </MobileServerStateProvider>); await settle(h);
+      mode = 'fail'; await h.run(() => client.invalidateQueries()); await settle(h);
+      mode = 'retry'; await h.press(h.byLabel('Try refreshing again')); await settle(h);
+      expect(h.byType('RefreshControl')!.props.refreshing).toBe(false);
+      expect(h.byLabel('Try refreshing again')?.props.disabled).toBe(true);
+      await h.run(() => finish()); await settle(h);
+      expect(h.byLabel('Try refreshing again')).toBeUndefined();
+    } finally { await h.unmount(); client.clear(); }
+  });
+  it.each(['current', 'departed', 'returned'])('owns delayed pull failure in the %s visit', async visit => {
+    const client = createMobileQueryClient(); const h = new MobileRenderHarness();
+    let fail = false; let finish!: () => void;
+    const query = new AssetActivityQuery({ listAssetActivity: async () => {
+      if (fail) { await new Promise<void>(resolve => { finish = resolve; }); throw new Error('Unavailable'); }
+      return { entries: [{ id: 'one', principalId: 'person', action: 'asset.updated', category: 'change', source: 'api', occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title', currentValue: 'Retained history' }], technical: {} }], hasMore: false };
+    } });
+    try {
+      setScreenFocused(true);
+      await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryRouteScreen assetActivityQuery={query} tenantId="tenant" inventoryId="inventory" assetId="asset" assetTitle="Item" /></AppFeedbackProvider>
+      </MobileServerStateProvider>); await settle(h);
+      fail = true;
+      await h.run(() => h.byType('RefreshControl')!.props.onRefresh()); await settle(h);
+      if (visit !== 'current') await h.run(() => setScreenFocused(false));
+      if (visit === 'returned') await h.run(() => setScreenFocused(true));
+      await h.run(() => finish()); await settle(h);
+      expect(Boolean(h.byText('Could not refresh History'))).toBe(visit === 'current');
+      expect(h.allText().join(' ')).toContain('Retained history');
+      expect(h.byType('RefreshControl')!.props.refreshing).toBe(false);
+    } finally { await h.unmount(); client.clear(); setScreenFocused(true); }
+  });
   it('shares warm pages on reopening and preserves them after a failed refresh', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();

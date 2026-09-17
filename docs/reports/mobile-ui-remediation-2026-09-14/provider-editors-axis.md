@@ -1,5 +1,37 @@
 # Provider credential and prompt editors — all 24 axes
 
+## Current route and editor follow-up at8599d4b3
+
+Re-read both production route wrappers, ProviderProfileEditorScreens,
+ProviderSettingsSupport, VoiceAdminGuard and useProviderEditorExit against every
+axis below. R051/R053 and S125/S126 now share this current coverage. Historical
+M105/M106/M107 observations below are superseded by their implemented follow-up,
+not repeated as new defects. No additional source defect was established.
+
+Routes normalize an array-valued profile ID, receive services through the app
+context, and place the editor behind VoiceAdminGuard. Provider data is independently
+scoped and removes the form after an access failure; profile identity/scope key
+remounts local sensitive state. A missing credential purpose or missing prompt
+profile shows explicit recovery rather than an empty editable form. Native stack
+Back remains the exit from loading/error states; these are not the headerless
+asset sheets involved in M209.
+
+Current forms use native Save actions and draft-aware removal protection. Pending
+saves disable input, hide Back and disable swipe. Empty replacement is not valid;
+server ADC explicitly has no secret entry. Credential disables correction and
+capitalization and uses secure entry; prompt is multiline. A successful replacement
+clears the local value even if presentation departed. Failed completion only
+presents in its original visit. Dirty discard callbacks cannot exit a new visit.
+
+Errors are in the form, announce on iOS and use a polite live region elsewhere.
+They do not reveal existing hidden values. The form is scrollable, but source
+inspection does not establish keyboard clearance, secure-entry behavior, long
+prompt performance, actual native Save hit regions or VoiceOver focus. These
+normal-size device checks remain pending, together with alternate appearance,
+RTL, assistive technology and enlarged-text axes. No new media, selection or
+notification task is introduced. The1,849-test full checkpoint includes existing
+provider behavior and access tests, but does not prove native editor acceptance.
+
 Source checkpoint: da14195c. Surfaces R051/S125 (credential) and R053/S126
 (prompt), including their route wrappers and shared provider query/guard. This is
 source inspection; no current native editor capture has been verified.
@@ -81,3 +113,27 @@ These are source/mounted results, not native keyboard, toolbar or gesture proof.
 Normal-size native acceptance above remains open.
 
 The additional server-ADC journey confirms Save is enabled without a secret, the repository receives no credential value, and synchronous Save/Back cannot leave before settlement.
+
+## Android normal-text editor recovery
+
+September16, Android16 Pixel6, light appearance/font scale1.0, synthetic APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+credential entry masks the synthetic key and exposes native Save above Gboard
+([keyboard capture](evidence/android-provider-credential-keyboard.png)). The first
+Save fails inline, retaining the masked draft and available Save. Native header
+Back opens Discard changes with Keep Editing/Discard. Keep Editing retains all17
+masked characters. Retrying Save positively returns to the audit index and its
+credential entry. The fixture never contacts a provider or stores real secrets.
+
+Prompt guidance retains the exact entered “Keep answers concise” draft after its
+first rejected Save; [inline feedback and native Save remain
+visible](evidence/android-provider-guidance-recovery.png). Retrying Save positively
+returns to the audit index and its prompt entry. The error screenshot is after
+keyboard dismissal and does not establish multiline keyboard reachability.
+
+Evidence: `/tmp/android-provider-{entry,keyboard,error,discard,kept,return}.xml`,
+`/tmp/android-provider-keyboard.png`, `/tmp/android-prompt-{entry,error,return}.xml`
+and `/tmp/android-prompt-error.png`. These extend the earlier mounted evidence;
+accepted Discard, pending-removal blocking, server ADC, long multiline input,
+TalkBack, large text and real authorization/session behavior remain outside this
+native sample. No implementation changed for these checks.

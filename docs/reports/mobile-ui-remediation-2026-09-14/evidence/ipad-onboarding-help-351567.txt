@@ -1,0 +1,57 @@
+Attributes: Application, 0x113ed0c80, pid: 38362, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x113ed0c80, pid: 38362, label: 'Stuff Stash'
+    Window (Main), 0x113ed0dc0, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x113ed0f00, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x113ed0a00, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x113ed0b40, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x113ed0780, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x113ed08c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x113ed0500, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x113ed0640, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x113ed0280, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x113ed03c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x113ed0000, {{0.0, 32.0}, {744.0, 1081.0}}
+                        Other, 0x113ed0140, {{0.0, 32.0}, {744.0, 1081.0}}
+                          ScrollView, 0x113ed12c0, {{0.0, 32.0}, {744.0, 1081.0}}
+                            Other, 0x113ed1400, {{0.0, 32.0}, {744.0, 1081.0}}
+                              Other, 0x113ed1540, {{0.0, 32.0}, {744.0, 1081.0}}
+                                Other, 0x113ed1680, {{96.0, 56.0}, {36.0, 36.0}}
+                                  Image, 0x113ed17c0, {{96.0, 56.0}, {36.0, 36.0}}, identifier: 'assets/assets/brand/stuff-stash-glyph.png'
+                                StaticText, 0x113ed1900, {{142.0, 63.5}, {89.0, 20.5}}, label: 'Stuff Stash'
+                                  StaticText, 0x113ed1a40, {{142.0, 63.5}, {89.0, 20.5}}, label: 'Stuff Stash'
+                                StaticText, 0x113ed1b80, {{96.0, 146.0}, {552.0, 36.0}}, label: 'Connect to Stuff Stash'
+                                  StaticText, 0x113ed1cc0, {{96.0, 146.0}, {552.0, 36.0}}, label: 'Connect to Stuff Stash'
+                                StaticText, 0x113ed1e00, {{96.0, 210.0}, {552.0, 17.0}}, label: 'Server address'
+                                  StaticText, 0x113ed1f40, {{96.0, 210.0}, {552.0, 17.0}}, label: 'Server address'
+                                Other, 0x113ed2080, {{96.0, 236.0}, {552.0, 54.0}}
+                                  Other, 0x113ed21c0, {{96.0, 236.0}, {552.0, 54.0}}
+                                    Other, 0x113ed2300, {{96.0, 236.0}, {552.0, 54.0}}
+                                      TextField, 0x113ed2440, {{96.0, 246.0}, {552.0, 34.0}}, label: 'Server address', placeholderValue: 'https://stash.example.com'
+                                Button, 0x113ed2580, {{96.0, 292.0}, {152.5, 44.0}}, label: 'Need help connecting?'
+                                StaticText, 0x113ed26c0, {{96.0, 368.0}, {552.0, 19.0}}, label: 'Enter a server address to continue.'
+                                  StaticText, 0x113ed2800, {{96.0, 368.0}, {552.0, 19.0}}, label: 'Enter a server address to continue.'
+                                StaticText, 0x113ed2940, {{96.0, 413.0}, {552.0, 19.0}}, label: 'Your browser will open for sign-in, then bring you back here.'
+                                  StaticText, 0x113ed2a80, {{96.0, 413.0}, {552.0, 19.0}}, label: 'Your browser will open for sign-in, then bring you back here.'
+                                Other, 0x113ed2bc0, {{96.0, 458.0}, {552.0, 48.0}}
+                                  Other, 0x113ed2d00, {{96.0, 458.0}, {552.0, 48.0}}
+                                    Other, 0x113ed2e40, {{96.0, 458.0}, {552.0, 48.0}}
+                                      Button, 0x113ed2f80, {{96.0, 459.0}, {552.0, 46.0}}, label: 'Connect and sign in', Disabled
+                            Other, 0x113ed30c0, {{711.0, 32.0}, {30.0, 1079.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                              Other, 0x113ed3200, {{738.0, 56.5}, {3.0, 1032.0}}
+                            Other, 0x113ed3340, {{1.5, 1080.0}, {741.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                              Other, 0x113ed3480, {{24.5, 1107.0}, {695.0, 3.0}}
+                            Other, 0x113ed35c0, {{711.0, 32.0}, {30.0, 1079.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                              Other, 0x113ed3700, {{738.0, 56.5}, {3.0, 1032.0}}
+                            Other, 0x113ed3840, {{1.5, 1080.0}, {741.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                              Other, 0x113ed3980, {{24.5, 1107.0}, {695.0, 3.0}}
+    Window, 0x113ed3ac0, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x113ed3c00, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x113ed3d40, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x113ed0c80, pid: 38362, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x113ed1180, pid: 38362, label: 'Stuff Stash'
+  }

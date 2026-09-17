@@ -32,11 +32,11 @@ export function ProviderCredentialScreen({
 }: ProviderEditorProps) {
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="credential settings" state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile?.credentialPurpose) {
-    return <ProviderStateView state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="credential settings" state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.retry} />;
   }
   return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><CredentialForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} /></>;
 }
@@ -49,11 +49,11 @@ export function ProviderPromptScreen({
 }: ProviderEditorProps) {
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="prompt guidance" state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
-    return <ProviderStateView state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel="prompt guidance" state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.retry} />;
   }
   return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><PromptForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={profile} /></>;
 }

@@ -1,6 +1,6 @@
 import type { VoicePlanCommandDrafts } from './VoicePlanEdits';
 import type { VoiceRealtimeState } from '../../application/voice/RealtimeVoiceSession';
-export type VoicePlanProgressModel = { readonly title: string; readonly detail: string; readonly busy: boolean; readonly percent?: number };
+export type VoicePlanProgressModel = { readonly title: string; readonly detail: string; readonly busy: boolean; readonly needsAttention?: boolean; readonly percent?: number };
 export function voicePlanProgress(state: VoiceRealtimeState | null, drafts: VoicePlanCommandDrafts = {}): VoicePlanProgressModel | null {
   const plan = state?.actionPlan;
   if (!state || !plan) return null;
@@ -14,12 +14,14 @@ export function voicePlanProgress(state: VoiceRealtimeState | null, drafts: Voic
   if (!photos) return { title: 'Saved', detail: 'Your inventory is up to date', busy: false };
   const busy = photos.status === 'uploading';
   const complete = photos.status === 'attached';
+  const needsAttention = photos.status === 'failed' || photos.status === 'partial_failed';
   const counts = photos.totalCount !== undefined && photos.attachedCount !== undefined;
   const failed = photos.failedCount ?? 0;
   return {
     title: busy ? 'Saved · adding photos' : complete ? 'Saved' : 'Saved · photos need attention',
-    detail: counts ? `${photos.attachedCount} of ${photos.totalCount} photos attached${failed ? ` · ${failed} ${failed === 1 ? 'needs' : 'need'} attention` : ''}${photos.status === 'failed' ? `. ${photos.message}` : ''}` : photos.message,
+    detail: counts ? `${photos.attachedCount} of ${photos.totalCount} photos attached${failed ? ` · ${failed} ${failed === 1 ? 'needs' : 'need'} attention` : ''}${needsAttention ? `. ${photos.message}` : ''}` : photos.message,
     busy,
+    needsAttention,
     ...(counts && photos.totalCount! > 0 ? { percent: Math.min(100, Math.max(0, Math.round(100 * photos.attachedCount! / photos.totalCount!))) } : {})
   };
 }

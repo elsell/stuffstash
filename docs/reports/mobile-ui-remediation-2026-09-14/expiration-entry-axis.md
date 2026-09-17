@@ -1,5 +1,25 @@
 # Exact-date and month/year entry
 
+## Current Add/Edit follow-up at8a256a2a
+
+Re-read ExpirationField and AssetExpirationEditor for S092/S093 across all24 axes
+below. The shared field retains separate precision drafts, reports incomplete
+month/year as invalid, and publishes local civil dates rather than UTC-shifted
+timestamps. iOS offers Add expiration date before exposing its compact picker;
+Android opens the system date dialog. Explicit Clear resets both precision drafts.
+The four-digit year field now rejects changes while disabled (M134), as do the
+date and precision handlers; shared native adapters guard disabled commands.
+
+Type changes clear expiration only through the owned confirmation when needed.
+The parent controls Save, permission and busy state; the field does not mutate
+assets or schedule notifications itself. M210 supplies current Edit eligibility
+to this shared editor. No new source defect was established in date/month entry.
+This does not close the separate system-menu keyboard issue or certify compact
+picker presentation, month menu access, locale display, year entry and scrolling
+on phone/iPad. Those remain native acceptance scenarios, including parent Save
+pending, Clear and cancellation. The1,849-test checkpoint includes existing date
+field behavior tests; no new runtime pass follows from this review.
+
 S092–S093, inspected atcd6f6556 plus M134 candidate. Shared ExpirationField is
 consumed by AssetExpirationEditor in Add and Edit. Native runtime acceptance is
 pending; these source checks do not establish keyboard or picker geometry.

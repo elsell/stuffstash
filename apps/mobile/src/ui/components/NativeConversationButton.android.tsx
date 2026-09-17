@@ -1,4 +1,5 @@
-import { Host, Icon, IconButton } from '@expo/ui/jetpack-compose';
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
+import { Icon, IconButton } from '@expo/ui/jetpack-compose';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import type { NativeConversationButtonProps } from './NativeConversationButton.types';
 const icons = {

@@ -1,8 +1,10 @@
+import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React, { Fragment, useState } from 'react';
-import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Host, Icon, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Icon, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
 import { selectable, size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
+import { minimumTouchTargetSize } from '../theme/tokens';
 import { actionableMenuGroups, nativeMenuItemPresentation, pressNativeMenuItem } from './NativeActionMenuPresentation';
 import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
@@ -25,7 +27,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
       if (!menuDisabled) setExpanded(true);
     }}
     pointerEvents={menuDisabled ? 'none' : 'auto'}
-    style={menuDisabled && styles.disabled}
+    style={[styles.wrapper, menuDisabled && styles.disabled]}
   >
     <Host matchContents={!compactTrigger} style={compactTrigger ? styles.compactHost : styles.labelHost}>
       <DropdownMenu expanded={expanded} onDismissRequest={() => setExpanded(false)}>
@@ -34,7 +36,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
             colors={{ contentColor: palette.action, disabledContentColor: palette.textMuted }}
             contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
             enabled={!menuDisabled}
-            modifiers={trigger.kind === 'icon' ? [size(44, 44)] : undefined}
+            modifiers={trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
             onClick={() => setExpanded(true)}
           >
             {trigger.kind === 'icon'
@@ -60,7 +62,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
                 modifiers={item.isSelected === undefined
                   ? undefined
                   : [selectable(item.isSelected, chooseItem, 'radioButton')]}
-                onClick={item.isSelected === undefined ? chooseItem : undefined}
+                onClick={chooseItem}
               >
                 <DropdownMenuItem.Text><Text>{item.label}</Text></DropdownMenuItem.Text>
                 {item.isSelected ? <DropdownMenuItem.TrailingIcon><Text color={palette.action}>✓</Text></DropdownMenuItem.TrailingIcon> : null}
@@ -74,7 +76,8 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
 }
 
 const styles = StyleSheet.create({
+  wrapper: { alignSelf: 'flex-start' },
   disabled: { opacity: 0.5 },
-  compactHost: { height: 44, width: 44 },
-  labelHost: { height: 44, minWidth: 44 }
+  compactHost: { height: minimumTouchTargetSize, width: minimumTouchTargetSize },
+  labelHost: { height: minimumTouchTargetSize, minWidth: minimumTouchTargetSize }
 });

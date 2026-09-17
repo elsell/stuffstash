@@ -10,6 +10,7 @@ import { OnboardingCommand, OnboardingSupersededError, type OnboardingStartState
 import { MobileAuthenticationRequiredError } from '../../application/auth/MobileAuthSession';
 import { OnboardingAddressInput } from './OnboardingAddressInput';
 import { BrandMark } from '../components/BrandMark';
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { initialInventoryName, onboardingError, onboardingStyles } from './OnboardingPresentation';
@@ -144,14 +145,9 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
           <View style={styles.footer}>
             {requiredMessage ? <Text style={styles.note}>{requiredMessage}</Text> : null}
             {connection ? <Text style={styles.note}>Your browser will open for sign-in, then bring you back here.</Text> : null}
-            <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} accessibilityState={{ disabled: actionDisabled, busy: submitting }}
-              disabled={actionDisabled} onPress={proceed} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, actionDisabled && styles.buttonDisabled]}>
-              {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.onAction} /> : <Text style={styles.buttonText}>{actionLabel}</Text>}
-            </Pressable>
-            {!connection ? <Pressable accessibilityRole="button" accessibilityLabel="Sign out and start over" disabled={submitting}
-              onPress={startOver} style={({ pressed }) => [styles.button, styles.ghost, pressed && styles.ghostPressed, submitting && styles.buttonDisabled]}>
-              <Text style={[styles.buttonText, styles.ghostText]}>Sign out and start over</Text>
-            </Pressable> : null}
+            {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.action} /> : null}
+            <NativeCommandButton label={actionLabel} prominence="primary" disabled={actionDisabled} onPress={() => void proceed()} />
+            {!connection ? <NativeCommandButton label="Sign out and start over" disabled={submitting} onPress={() => void startOver()} /> : null}
           </View>
         </View>
       </ScrollView>

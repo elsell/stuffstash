@@ -1,6 +1,7 @@
 # Provider management — all 24 axes
 
-Source checkpoint: `5501152d`. R052 is provider detail, R054 creates a recommended
+Initial source checkpoint: `5501152d`; result-handling follow-up at `d39e4233`.
+R052 is provider detail, R054 creates a recommended
 profile, and R055 lists profiles. Reviewed their route wrappers,
 `ProviderProfileScreens`, `ProviderSettingsSupport`, `VoiceAdminGuard`, and the
 shared settings rows/styles. Credential and prompt editing remain covered in
@@ -36,8 +37,8 @@ every settings action needs a separate screen.
 | Motion | No custom animation is defined by these screens. Native navigation, progress and shared feedback still need reduced-motion acceptance; do not add screen-specific animation machinery without evidence. |
 | Content | List shows profile name, stage/provider and lifecycle. Detail exposes model, status, credential status and last test without secret values. Empty list offers Add Profile. All returned profiles are rendered; large collections are a scale question requiring evidence, not justification for unsolicited search. |
 | Search | N/A for the current setup task: no search/filter requirement is established for the profile collection. Reassess with observed collection size and findability. This does not certify unbounded-list performance. |
-| Loading | Initial query uses a spinner; transient refresh retains data with SettingsRefreshNotice. Creation and detail commands use synchronous locks plus operation-specific pending labels. A blocked command cannot start a second operation. Native pending-state presentation remains open. |
-| Recovery | Query failure offers Retry; missing detail names the unavailable profile condition; empty list remains actionable. Shared failure heading says Voice Setup even in provider subroutes, so it supplies broad context rather than a profile-specific title. Command failure keeps the screen and permits retry. Review actual error presentation and focus before treating its copy/layout as accepted. |
+| Loading | M180 labels initial loading by task; transient refresh retains data with SettingsRefreshNotice. Creation and detail commands use synchronous locks plus operation-specific pending labels. A blocked command cannot start a second operation. Native pending-state presentation remains open. |
+| Recovery | M180 corrects the shared Voice Setup failure heading to the current task. Query failure offers Retry; missing detail names the unavailable profile condition; empty list remains actionable. M181 rejects fulfilled failed test results instead of falsely showing Connection tested. Mounted cases cover failure and successful retry on both detail and stage settings. Native feedback presentation and focus remain unverified. |
 | Editing | These screens contain no text draft. Creation first stores a disabled profile; the editor owns later secrets. Archive is a deliberate mutation with confirmation. M146 protects single-use acceptance. Partial setup remains accessible from the profile list. |
 | Privacy | Route wrappers require configure permission through VoiceAdminGuard. Query access failure suppresses cached profiles. Displayed credential status is not the secret. UI inspection does not verify server authorization; backend boundary evidence is separate. |
 | Notifications | N/A for OS notification entry/scheduling. In-app feedback belongs to recovery and lifecycle. |

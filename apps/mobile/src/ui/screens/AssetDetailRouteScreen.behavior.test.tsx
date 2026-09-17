@@ -13,7 +13,7 @@ import { AddAssetPhotosCommand } from '../../application/assets/AddAssetPhotosCo
 import { PhotoSelectionQuery } from '../../application/add/PhotoSelectionQuery';
 import { assetId, type AssetPhoto } from '../../domain/assets/AssetSummary';
 import { QueryClientInventoryMutationObserver } from '../../adapters/serverState/QueryClientInventoryMutationObserver';
-import { latestAlert, latestActionSheetCallback } from '../../test-support/react-native';
+import { latestAlert, latestActionSheetCallback, Platform } from '../../test-support/react-native';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
 
 function deferred<T>() {
@@ -69,6 +69,29 @@ function setup(overrides: Partial<React.ComponentProps<typeof AssetDetailRouteSc
 }
 
 describe('progressive asset detail route', () => {
+  it.each(['current', 'departed', 'returned'])('scopes pull failure feedback to its %s visit', async visit => {
+    let fail = false;
+    const pending = deferred<void>();
+    const test = setup({ assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => {
+      if (fail) { await pending.promise; throw new Error('Refresh unavailable'); }
+      return snapshot();
+    } }) });
+    try {
+      setScreenFocused(true);
+      test.contents.resolve({ asset: snapshot().asset, allAssets: [] }); test.photos.resolve([]);
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      fail = true;
+      let finished!: Promise<void>;
+      await test.harness.run(() => { finished = test.harness.byType('RefreshControl')!.props.onRefresh(); });
+      await settle(test.harness);
+      if (visit !== 'current') await test.harness.run(() => setScreenFocused(false));
+      if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
+      await test.harness.run(async () => { pending.resolve(); await finished; }); await settle(test.harness);
+      expect(Boolean(test.harness.byText('Could not refresh asset'))).toBe(visit === 'current');
+      expect(test.harness.allText()).toContain('Family tent');
+      expect(test.harness.byType('RefreshControl')!.props.refreshing).toBe(false);
+    } finally { await test.harness.unmount(); test.client.clear(); setScreenFocused(true); }
+  });
   it('renders core and independent photo actions before delayed contents', async () => {
     const test = setup();
     try {
@@ -147,7 +170,7 @@ describe('pending photo removal', () => {
 });
 
 
-it.each([false, true])('handles photo-removal failure while mounted or after route teardown', async leaveRoute => {
+it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal failure in the %s visit', async visit => {
   const firstRemoval = deferred<{ message: string }>(); let calls = 0;
   const test = setup({ deleteAssetPhotoCommand: { execute: async () => {
     calls++; return calls === 1 ? firstRemoval.promise : { message: 'Removed' };
@@ -159,11 +182,21 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
     await test.harness.press(test.harness.byLabel('Open photo 1 of 1'));
     await test.harness.press(test.harness.byLabel('Remove photo'));
     await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
-    if (leaveRoute) { test.hide(); await test.render(); }
+    if (visit === 'unmounted') { test.hide(); await test.render(); }
+    if (visit === 'departed' || visit === 'returned') await test.harness.run(() => setScreenFocused(false));
+    if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
     await test.harness.run(() => firstRemoval.reject(new Error('Connection failed')));
     await settle(test.harness);
-    if (leaveRoute) {
+    if (visit !== 'current') {
       expect(latestAlert()?.title).not.toBe('Could not remove photo');
+      if (visit !== 'unmounted') {
+        if (visit === 'departed') await test.harness.run(() => setScreenFocused(true));
+        expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
+        await test.harness.press(test.harness.byLabel('Remove photo'));
+        await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
+        await settle(test.harness);
+        expect(calls).toBe(2);
+      }
     } else {
       expect(latestAlert()?.title).toBe('Could not remove photo');
       expect(latestAlert()?.message).toBe('Connection failed');
@@ -178,7 +211,7 @@ it.each([false, true])('handles photo-removal failure while mounted or after rou
       expect(calls).toBe(2);
       expect(test.harness.byType('ImageViewing')).toBeUndefined();
     }
-  } finally { await test.harness.unmount(); }
+  } finally { await test.harness.unmount(); setScreenFocused(true); }
 });
 
 
@@ -265,6 +298,48 @@ it('rejects duplicate source callbacks and hides old upload failures after chang
 });
 
 
+it.each(['picker', 'upload'] as const)('owns %s failure notices by the starting visit', async stage => {
+  for (const visit of ['current', 'departed', 'returned']) {
+    const failure = deferred<never>();
+    let selections = 0; let uploads = 0;
+    const test = setup({
+      photoSelectionQuery: new PhotoSelectionQuery({
+        selectFromLibrary: async () => {
+          selections++;
+          if (stage === 'picker' && selections === 1) return failure.promise;
+          return [selectedPhoto];
+        }, captureFromCamera: async () => []
+      }),
+      addAssetPhotosCommand: { execute: async () => {
+        uploads++;
+        if (stage === 'upload' && uploads === 1) return failure.promise;
+        return { attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'Fresh photo added', canRetry: false };
+      } }
+    });
+    try {
+      setScreenFocused(true);
+      test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+      await test.render(); await settle(test.harness); await settle(test.harness);
+      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.run(() => latestActionSheetCallback()?.(1));
+      await settle(test.harness);
+      if (visit !== 'current') await test.harness.run(() => setScreenFocused(false));
+      if (visit === 'returned') await test.harness.run(() => setScreenFocused(true));
+      await test.harness.run(() => failure.reject(new Error('Acquisition failed')));
+      await settle(test.harness);
+      expect(Boolean(test.harness.byText('Could not add photos'))).toBe(visit === 'current');
+      expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+      await test.harness.run(() => setScreenFocused(true));
+      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.run(() => latestActionSheetCallback()?.(1));
+      await settle(test.harness);
+      expect(selections).toBe(2);
+      expect(uploads).toBe(stage === 'picker' ? 1 : 2);
+      expect(test.harness.allText()).toContain('Fresh photo added');
+    } finally { await test.harness.unmount(); test.client.clear(); setScreenFocused(true); }
+  }
+});
+
 it('keeps the new asset upload pending when the previous upload finishes', async () => {
   type UploadResult = Awaited<ReturnType<React.ComponentProps<typeof AssetDetailRouteScreen>['addAssetPhotosCommand']['execute']>>;
   const oldUpload = deferred<UploadResult>(); const newUpload = deferred<UploadResult>();
@@ -314,7 +389,7 @@ it('submits checkout once and suppresses its late failure after leaving the rout
   } finally { await test.harness.unmount(); }
 });
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('owns %s confirmation and suppresses late navigation after teardown', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('owns %s confirmation and suppresses late navigation after teardown', async label => {
   const command = deferred<void>(); let calls = 0;
   const core = snapshot();
   const test = setup({
@@ -336,6 +411,33 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('owns %s confirma
     await test.harness.run(() => confirm!());
     expect(calls).toBe(1);
   } finally { await test.harness.unmount(); }
+});
+
+it('restores directly, rejects duplicate dispatch and supports retry after failure', async () => {
+  const command = deferred<void>(); let calls = 0;
+  const core = snapshot();
+  const test = setup({
+    assetCoreQuery: new AssetCoreQuery({ getAssetCore: async () => ({ ...core, asset: { ...core.asset, lifecycleState: 'archived' } }) }),
+    assetLifecycleCommand: { execute: async () => { if (++calls === 1) await command.promise; } }
+  });
+  try {
+    await test.render(); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    const restore = test.harness.byText('Restore')?.parent;
+    expect(restore).toBeDefined();
+    const alertBefore = latestAlert();
+    await test.harness.run(() => { restore!.props.onPress(); restore!.props.onPress(); });
+    expect(latestAlert()).toBe(alertBefore);
+    expect(calls).toBe(1);
+    await test.harness.run(() => command.reject(new Error('Restore unavailable')));
+    await settle(test.harness);
+    expect(test.harness.allText().join(' ')).toContain('Restore unavailable');
+    await test.harness.press(test.harness.byLabel('More actions for Family tent'));
+    await test.harness.press(test.harness.byText('Restore')?.parent ?? undefined);
+    await settle(test.harness);
+    expect(calls).toBe(2);
+    expect(test.harness.allText().join(' ')).toContain('Restored Family tent.');
+  } finally { await test.harness.unmount(); test.client.clear(); }
 });
 
 it('does not let old checkout completion unlock the replacement asset operation', async () => {
@@ -500,9 +602,11 @@ it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ l
       else {
         await test.harness.press(test.harness.byLabel('More actions for Family tent'));
         await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
-        const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
-        expect(confirm).toBeTypeOf('function');
-        await test.harness.run(() => confirm!());
+        if (label !== 'Restore') {
+          const confirm = latestAlert()?.buttons.find(button => button.text === label)?.onPress;
+          expect(confirm).toBeTypeOf('function');
+          await test.harness.run(() => confirm!());
+        }
       }
     }
     try {
@@ -523,7 +627,7 @@ it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ l
   }
 );
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('rejects %s confirmation from an earlier visit', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('rejects %s confirmation from an earlier visit', async label => {
   resetNavigation(); let calls = 0;
   const base = snapshot();
   const test = setup({
@@ -543,7 +647,7 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('rejects %s confi
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
 });
 
-it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s confirmation once even after completion', async label => {
+it.each(['Archive', 'Delete permanently'] as const)('consumes %s confirmation once even after completion', async label => {
   resetNavigation(); let calls = 0;
   const base = snapshot();
   const test = setup({
@@ -568,6 +672,28 @@ it.each(['Archive', 'Restore', 'Delete permanently'] as const)('consumes %s conf
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); }
 });
 
+
+it.each(['ios', 'android'].flatMap(platform => [0, 1].map(source => ({ platform, source }))))('ignores a stale photo-source choice after returning, $platform/$source', async ({ platform, source }) => {
+  resetNavigation(); let selections = 0;
+  const originalPlatform = Platform.OS; Platform.OS = platform;
+  const select = async () => { selections++; return []; };
+  const test = setup({ photoSelectionQuery: new PhotoSelectionQuery({ selectFromLibrary: select, captureFromCamera: select }) });
+  try {
+    test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
+    await test.render(); await settle(test.harness); await settle(test.harness);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    const chooserAlert = latestAlert();
+    const choose = platform === 'ios' ? latestActionSheetCallback() : (index: number) => chooserAlert?.buttons[index].onPress?.();
+    expect(choose).toBeTypeOf('function');
+    await test.harness.run(() => setScreenFocused(false));
+    await test.harness.run(() => setScreenFocused(true));
+    await test.harness.run(() => choose!(source));
+    expect(selections).toBe(0);
+    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.run(() => platform === 'ios' ? latestActionSheetCallback()!(source) : latestAlert()?.buttons[source].onPress?.());
+    expect(selections).toBe(1);
+  } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); Platform.OS = originalPlatform; }
+});
 
 it('retries only failed photos from the workspace without reopening selection', async () => {
   const attempts: string[] = [];

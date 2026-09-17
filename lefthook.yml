@@ -24,7 +24,7 @@ pre-commit:
       glob: "apps/web/**"
       run: make web-test web-check
     mobile-ui-structural-check:
-      glob: "apps/mobile/src/**/*.{ts,tsx}"
+      glob: "apps/mobile/src/**/*.{ts,tsx,xml}"
       run: make mobile-ui-structural-check
     docs-build:
       glob: "docs/**"

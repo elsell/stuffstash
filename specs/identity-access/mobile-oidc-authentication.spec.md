@@ -5,6 +5,12 @@
 Stuff Stash mobile must use the same production SSO boundary as the API and web
 app while preserving a low-friction native onboarding experience.
 
+Native browser return feedback must distinguish an explicit cancel/dismiss from
+an error, locked session or unrecognized result. Only cancel/dismiss may claim
+the user canceled. Other unsuccessful results produce safe retry guidance without
+provider details, exchanging a code or creating a session. Retrying after either
+outcome must still permit a valid PKCE/state callback and authorized onboarding.
+
 ## Scope
 
 This spec covers the first production-shaped mobile authentication flow:

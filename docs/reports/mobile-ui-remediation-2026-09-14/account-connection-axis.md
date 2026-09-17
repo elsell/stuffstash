@@ -89,6 +89,22 @@ Do not mark global lifecycle axes N/A merely because their content is read-only.
 
 ## Follow-up review at 570b804c
 
+Current follow-up at8599d4b3 covers R024/R026 across every axis below. Re-read both
+route wrappers, AccountSettingsScreen/ConnectionSettingsScreen and confirmation
+ownership helpers. The historical custom-command observations below are superseded:
+Sign Out and Change Server now use NativeCommandButton. Native route Back remains
+available; neither task needs a value-selection menu or a draft editor. Both
+commands explain their effect in a native confirmation with Cancel, reject reused
+or departed acceptance, and prevent duplicate execution while working. Failure
+restores command availability and only reports in its originating visit.
+
+Account continues to offer sign-out independently of inventory availability;
+Connection reads the injected server diagnostics without a network prerequisite.
+The displayed values remain read-only and selectable. These routes add no media,
+notification, search or editable-selection task. Current source establishes no
+new defect. The table's native layout, long-value, focus, contrast and lifecycle
+gaps remain; the full1,849-test checkpoint is not native session-transition proof.
+
 
 R024/R026, source570b804c plus M141. Inspected route wiring, both screens,
 SettingsQuery, SettingsList, SettingsRefreshNotice and shared styles. This is a
@@ -126,3 +142,32 @@ copy is shown, sign-out remains present, retry loads principal and removes error
 61 settings tests, TypeScript and structural checks pass remotely. Native acceptance
 is not inferred from these tests. The shared refresh notice's other callers keep
 the same default message and behavior.
+
+## Android normal-text session-command sample
+
+September16, Android16 Pixel6, light appearance and font scale1.0, isolated APK
+`d3fc5d55763fc45cb8f6e5c93cd116440570d1613b0646c884c2fad636e0bd32`:
+Account entry shows the synthetic principal and Sign Out. Activating Sign Out opens
+Android's native confirmation with the principal and saved-server consequence.
+The first accepted command fails; [feedback and Sign Out remain
+reachable](evidence/android-account-recovery.png). Dismissing feedback and retrying
+confirmation positively returns to the fixture index, with its Account entry.
+
+Connection entry shows the synthetic server host and complete address. Its native
+confirmation explains sign-out, forgetting the local server/household and retaining
+server data. Cancel returns to the unchanged Connection content. Accepting the next
+confirmation fails, leaves Change Server reachable and shows the appropriate error.
+Dismissing feedback and accepting retry positively returns to the fixture index,
+including its Connection entry. These are fake session actions: no real credentials,
+server settings or household selection are changed. Production session teardown,
+initial identity-read errors, background departure and assistive technology remain
+outside this sample.
+
+The transient error banner overlays the principal row while present; the screenshot
+does not establish unobstructed content during feedback. Its duplicate accessibility
+containers also require the shared notice traversal review. This sample establishes
+command recovery, not full notice layout or accessibility acceptance.
+
+Evidence: `/tmp/android-account-{entry,confirm,error,return}.xml`,
+`/tmp/android-connection-{entry,confirm,cancel,error,return}.xml`, and
+`/tmp/android-account-error.png`. No implementation changed in this follow-up.

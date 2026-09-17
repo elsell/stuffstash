@@ -22,7 +22,23 @@ Responses with authorized asset references show a compact horizontal rail of car
 
 ## Action widgets and accessibility
 
-Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
+Proposals retain editable titles, parent selection, photos, risk disclosure, explicit approval/cancellation, execution outcomes and attachment retry. Keep them compact and inline with the assistant exchange. Review decisions remain reachable above the keyboard. Approve commits the currently visible inline name along with the other reviewed edits; it must never silently submit a previous name. A blank inline name disables approval with an explanation while cancellation remains available. Committed names remain in the local draft if submission fails. Saving must disable duplicate submission and must not imply completion until the API confirms execution. Use native accessibility roles, labels, dynamic text, reduced-motion behavior, light/dark theme, and sufficiently large touch targets.
+
+The inline proposal name editor uses the shared native text input with native
+Save and Cancel commands below the full-width field. Save and keyboard Done commit
+the normalized nonblank name; Cancel closes editing without changing the committed
+name. Do not squeeze the field between custom narrow icon buttons. Draft ownership
+stays above the sheet so navigation does not discard pending text.
+
+Proposal destination selection opens a native stack selection route with native
+search and Back, replacing the inline panel beneath approval controls. The route
+is owned by the current inventory scope, proposed plan and editable command.
+Show the current destination, root, eligible earlier proposed commands and scoped
+existing candidates; show selection checkmarks and disabled reasons. Distinguish
+loading, lookup failure with Retry, and no matching existing locations. Query
+changes do not change the selected draft. Selection commits immediately and
+returns to the proposal; Back preserves the previous value. Invalidated plans or
+scopes must not apply retained selection callbacks. Preserve name/photo drafts.
 
 ## Verification and release
 
@@ -35,6 +51,20 @@ The conversation list has a bounded, flexible viewport between the fixed header
 and composer; long answers and result rails remain reachable by scrolling.
 Only the viewport owns vertical scrolling. Response text beside an icon gets its
 width from that row, without imposing vertical growth on text used in bubbles.
+
+The conversation sheet opens at its existing larger native detent, retaining the
+smaller detent for user resizing. Conversation history, proposal editing and fixed
+decision controls need usable space immediately; do not start them in the former
+compact voice-only presentation. On iOS the sheet body reserves the current native
+navigation header height, and owns left/right safe areas. Top safe-area padding
+alone does not reserve the overlaid form-sheet header (observed in run350695).
+Do not combine a second top safe-area inset with that measured header reservation.
+Android retains native top safe-area handling. The existing footer continues to own bottom/keyboard clearance; do not
+double-apply bottom insets. Opening, resize, keyboard and location-picker return
+must preserve drafts and allow every review control to be reached.
+This starting-size choice follows observed iPad review crowding (M216), rather
+than an Apple-mandated detent fraction. Retain native sheet gestures and dismissal:
+https://developer.apple.com/design/human-interface-guidelines/sheets
 User messages link only asset names actually mentioned, without adding answer
 result buttons to the user's bubble. Assistant messages retain fallback controls
 for ambiguous or otherwise unplaced resolved references.
@@ -52,6 +82,15 @@ Shared asset breadcrumbs initially scroll to their most specific ancestor, inclu
 on layout/width or path changes, while allowing manual scrolling to earlier ancestors.
 Preview row cards use equal inset padding and top-aligned thumbnails. Previous/Next
 card controls animate to the selected card; passive restoration remains unanimated.
+Previous/Next and historical photo retry use the shared native command adapter.
+Keep the position count between flexible command columns and disable movement at
+the ends. Plan Approve/Cancel use native sheet actions with explicit accessible
+names and the existing pending-decision ownership; they must not introduce a
+second submission path or change the plan being approved.
+Opening a response reference may await media shutdown. That navigation belongs
+to the focused visit and inventory scope that initiated it; leaving, leaving and
+returning, or scope replacement retires it. A retired callback must not pause a
+new session or dismiss/navigate another screen. Fresh reference actions remain usable.
 User and assistant message text supports native selection and copy. The native text
 composer continues to support paste. A clearly labelled New conversation control is
 always available in the sheet header; resetting clears local history/drafts and cancels
@@ -91,6 +130,30 @@ breadcrumb adjacent without a reserved empty title row. Preserve native touch
 targets using hit slop where necessary. Horizontal rails do not stretch vertically.
 Show a single applying-change indicator, and distinguish saved changes from
 pending or failed photo attachments.
+
+Partial photo failure must retain the same safe, stage-specific failure reason as
+total failure, alongside cumulative attachment counts. Both the current exchange
+and retained history must show that reason. Do not substitute a success checkmark
+for a terminal attachment warning; the inventory change remains saved and only
+unsuccessful attachments are retried. Never expose arbitrary upload exception text.
+
+If the initial conversation context cannot load, show an in-place native Retry
+command that retries the scoped context query (including failed inventory scope
+resolution). Disable duplicate retry while it is running, retain the error on
+another failure, and restore the composer when context loads. A retry command
+retained after leaving or replacing the context must not start a new request.
+
+Conversation Close and New conversation belong in the native navigation header,
+using the existing platform header action adapter. Retain inventory context as
+body text. New conversation is the sole reset entry and always follows the same
+draft/photo confirmation policy; a second inline Reset must not bypass protection
+for a saved change with retryable photo attachments. Close retains its existing
+media-pause and dismissal behavior. Native compact-sheet and destination-return
+acceptance must cover the changed header.
+
+Provider-configuration recovery uses the shared native command control to open
+Voice setup. Keep its failure-specific label and existing navigation destination;
+do not introduce a custom button style for this ordinary command.
 
 Photo finalization validates uploaded bytes and may take longer than ordinary
 queries while thumbnails are being generated. Mobile API transport allows 60
