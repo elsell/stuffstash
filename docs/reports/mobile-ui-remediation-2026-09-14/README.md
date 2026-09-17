@@ -1,6 +1,14 @@
 # Comprehensive mobile UI audit and remediation
 
-## Current checkpoint — September 17
+## Released checkpoint — September 17
+
+TestFlight **0.24.24 (113.1)** is published through successful
+[release35171759572](https://github.com/elsell/stuffstash/actions/runs/35171759572).
+Apple processing and exact changelog readback passed. The user explicitly chose
+this interim release with the known iPhone filter keyboard overlap disclosed.
+The comprehensive audit remains incomplete. See [release evidence](release-batch-113.md).
+
+## Pre-release audit checkpoint — September 17
 
 The coverage inventory contains142 surfaces ×24 axes =3,408 unique cells:2,593
 source-reviewed,578 finding,198 not-applicable and39 runtime-partial. These are

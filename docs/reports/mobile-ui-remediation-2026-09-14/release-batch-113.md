@@ -192,3 +192,19 @@ Phone351652 teardown evidence subsequently confirms both full Tools queries.
 The immediate-value assertions sampled early; a bounded exact-value wait is
 added. Retained action/accessory frames still overlap, so M249 stays a blocker.
 See the phone reconciliation in correction evidence.
+
+## Released at the user's explicit interim cutoff
+
+The user requested shipping the current fixed batch before account usage runs out,
+without further conversational polling. Required source CI35170728765 passed.
+PR153 merged as f6afec8d0ccbb1e415fe5ba4acbe041fa4952129. Release35171759572
+completed successfully: v0.24.24, TestFlight113.1. Upload job105046387080 and
+changelog job105049505214 passed. At2026-09-17T02:11:53Z the publisher verified
+the exact TestFlight changelog; its implementation requires Apple VALID before
+writing and reading back the notes.
+
+The notes explicitly disclose the iPhone filter keyboard/accessory overlap and
+advise dismissing the keyboard before using those actions. This is an authorized
+interim release, not full native acceptance or completion of the comprehensive
+audit. M249 and the other remaining findings stay open. A sleeping Bash script
+handled CI, exact-head merge and release completion without model polling.
