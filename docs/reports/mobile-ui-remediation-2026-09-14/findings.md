@@ -3501,3 +3501,20 @@ paul. This verifies ownership wiring, not UIKit status rendering or restoration.
 Saved/draft phone/iPad light/dark capture review remains required; M251 is open.
 
 Run35183213359 at d8f4b4f0 passes all five Add-draft journeys on both devices. Reviewed phone and iPad captures show light status text over the black viewer and dark status text restored after last-photo removal to the light Add screen. See [photo status evidence](native-photo-status-351832.md). This accepts those draft transitions in the candidate; saved-photo, dark-appearance and swipe-dismissal verification remain open. TestFlight113.1 does not include this correction.
+
+### M252 — Native color conversion decrements untouched RGB channels
+
+P2 source and compiled-native-expression confirmed. The pinned Expo55.0.17
+ColorPicker converts normalized CGFloat components with truncation. Adjacent
+floating-point representations of an eight-bit value can produce the preceding
+byte, so controlled edits can accumulate drift in untouched channels. This is
+independent of M51's intermittent presentation failure.
+
+macOS CI35188426003/job105095410817 compiles the installed conversion expression
+and fails: expected1, got0 for0.0039215686274509795. The candidate backports only
+nearest-integer rounding from upstream commit
+[dc32c26b](https://github.com/expo/expo/commit/dc32c26bd016c4187ada75d189c9d81f78a1060a).
+Acceptance requires all256 channel values, adjacent representations, clamp and
+controlled feedback checks, reviewed dependency identity changes and native
+slider/draft behavior. The numeric harness does not verify UIKit presentation
+or color-space extraction. Candidate GREEN and remaining runtime checks pending.

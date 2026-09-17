@@ -250,3 +250,14 @@ capture from acceptance of scroll-only behavior. Dark hierarchy and capture are
 retained on paul as `/tmp/android-color-dark-outside-scroll.{xml,png}`. No product
 change was needed. The first direct query failed because the hex field was below
 the viewport; the outside scroll made it visible without changing its value.
+
+
+### Native channel-conversion defect (M252)
+
+Installed-source inspection matches Expo's reviewed upstream PR49356: the picker
+truncates normalized RGB channels. The macOS installed-expression regression
+fails on an adjacent representation of byte1, reporting0. This is a concrete
+numeric defect; it does not explain M51 activation or M207 search placement.
+The focused backport adds rounding without upgrading Expo or altering the native
+control/presentation pattern. Follow-up regression and native evidence must be
+recorded before acceptance.
