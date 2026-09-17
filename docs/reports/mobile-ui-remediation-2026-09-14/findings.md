@@ -3529,3 +3529,19 @@ M252 integrated acceptance: native351910 passes three Red-only edits and parent
 draft round trips on both devices. All six parent values retain Green125/Blue50;
 reviewed native slider captures agree. M252 is corrected and verified in PR157,
 not yet released. M51 still fails independently on both in the same run.
+
+### M253 — Locked iOS color editor leaves the native well enabled
+
+P2 source/mounted-state confirmed. NativeTagColorPicker disabled its React Native
+wrapper's pointer events and removed the change callback, but never supplied
+SwiftUI's disabled modifier. Thus the native control did not receive the locked
+state; wrapper opacity/semantics are not proof of native activation semantics.
+No claim of persisted unauthorized mutation is made: the callback guard remains.
+
+The regression fails for the missing native state, then passes after adding the
+standard disabled modifier. Sixteen scoped tests, TypeScript, structural and ten
+fixture installer checks pass on paul; critic found no production blocker. Shared
+Add/Edit/Settings color consumers receive the correction. A native seeded-color
+lock/unlock case requires the well's disabled accessibility state, no presentation
+within a two-second observation after a delivered center tap, preserved draft
+and normal opening after unlock. Native execution remains pending.

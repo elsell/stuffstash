@@ -2097,6 +2097,30 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
   }
 
+  func testNativeColorLockDisablesTheWellAndPreservesDraft() {
+    openSettingsControls()
+    app.buttons["Choose Green tag color"].tap()
+    XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].waitForExistence(timeout: 5))
+    app.buttons["Lock color editing"].tap()
+    let picker = app.buttons["Choose any color"].firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    let locked = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: picker)
+    XCTAssertEqual(XCTWaiter.wait(for: [locked], timeout: 5), .completed)
+    capture("native-color-locked")
+    picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    let opening = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true"), object: app.buttons["Sliders"])
+    opening.isInverted = true
+    XCTAssertEqual(XCTWaiter.wait(for: [opening], timeout: 2), .completed, "A disabled native well must not present the picker")
+    XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
+    app.buttons["Unlock color editing"].tap()
+    let unlocked = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: picker)
+    XCTAssertEqual(XCTWaiter.wait(for: [unlocked], timeout: 5), .completed)
+    XCTAssertTrue(picker.isHittable)
+    picker.tap()
+    XCTAssertTrue(app.buttons["Sliders"].waitForExistence(timeout: 5))
+    capture("native-color-unlocked")
+  }
+
   func testNativeColorRedEditsPreserveOtherChannelsInDraft() {
     openSettingsControls()
     app.buttons["Choose Green tag color"].tap()
