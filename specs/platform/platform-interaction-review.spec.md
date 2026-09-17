@@ -767,3 +767,37 @@ native value before checking results and keyboard clearance. Do not retype,
 accept partial text or skip the footer assertions. Keep the original failure and
 settled hierarchy as evidence; this addresses asynchronous observation, not a
 claimed product input fix.
+
+## Native screen-space sheet boundary adapter
+
+M249 probe351689 confirms that Fabric's measurement omits the sheet presentation
+origin while keyboard metrics use screen coordinates. The iPhone sheet boundary
+reports812 instead of874; the resulting317-point inset leaves Back overlapping
+the keyboard accessory. This is a concrete limitation justifying a narrow native
+measurement adapter, not a custom replacement for platform controls.
+
+Use a local iOS Expo module to expose the actual native boundary view's frame in
+its owning screen's coordinate space. Convert through that view's window and
+screen; never choose a global key window or add a device-specific offset. Expose
+a typed asynchronous measurement port with an explicit unavailable result for a
+detached view. The existing sheet keyboard policy remains responsible for overlap
+and preserves generation guards, hide handling and settled remeasurement. Keep
+the measuring view fixed at the unmoved sheet boundary. Do not measure the footer
+whose position depends on the result. Android retains its existing adapter.
+
+The implementation uses the pinned Expo55 module API already provided by the app,
+not a new remote runtime dependency. Local native modules must be autolinked and
+represented in the reviewed iOS pod lock before release. A native view command
+runs on the UI thread and returns screen-space coordinates; JS must not silently
+fall back to the known incorrect Fabric coordinates when unavailable.
+
+Acceptance covers translated phone sheets, floating/centered iPad sheets,
+rotation/resizing, keyboard hide/show and late measurement after unmount. Tests
+must verify stale responses cannot restore an inset and the unavailable result
+cannot leave stale geometry. Native Browse/Expiration queries, selection and full
+Apply/Back frames must clear the keyboard accessory. Do not infer runtime success
+from the pure overlap calculation or mounted adapter tests. M249 remains open
+until the native coordinate and interaction checks pass.
+
+References: [Expo native view commands](https://docs.expo.dev/modules/module-api/#view)
+and [local native modules](https://docs.expo.dev/workflow/customizing/).
