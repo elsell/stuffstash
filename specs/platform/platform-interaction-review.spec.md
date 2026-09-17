@@ -831,3 +831,13 @@ content geometry, native picker, initial unset value, ordinary first tap and
 five-second assertion. This isolates scrolling behavior, not all scroll-view
 internals; a pass does not justify disabling scrolling in real editors. Expose
 the variant in the audit launcher only and retain both test outcomes.
+
+
+M207 search attachment diagnostic: compare the pinned adapter with a runner-only
+transformation that applies preferred search placement and toolbar integration
+before assigning UINavigationItem.searchController. Retain all source option
+values and existing search/navigation assertions. The production dependency patch
+and locks remain unchanged. The transformation must refuse unexpected source and
+be opt-in through a named workflow selection. Test Place, preconfigured Place,
+managed/static placement, settings and filter consumers. A successful sample is
+candidate evidence, not comprehensive acceptance or proof of causation.

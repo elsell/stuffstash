@@ -11,6 +11,7 @@ on:
         options:
           - all
           - color-picker
+          - search-placement-order
           - text-entry
           - text-entry-no-provider
           - add-draft
@@ -87,6 +88,19 @@ jobs:
           audit_test_args=()
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            search-placement-order)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              python3 scripts/prepare-native-search-order.py
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testManagedSearchPlacementAfterEnableAndHeaderUpdate'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testStaticNativeSearchPlacementComparison'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
             color-picker)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
