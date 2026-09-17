@@ -745,3 +745,15 @@ future runner acceptance and result export separately from configuration checks.
 
 Apple documents enabling timeouts with `-test-timeouts-enabled YES` and the maximum
 allowance option in [executionTimeAllowance](https://developer.apple.com/documentation/xctest/xctestcase/executiontimeallowance).
+
+### Calendar dismissal uses the presented navigation bar
+
+Run351652 iPad retains a visible calendar and Date range page, but the dismissal
+target calculation rejects every blank navigation-bar point because it includes
+fixture-launcher buttons behind the modal. Scope command exclusions to the Date
+range navigation bar, whose bounds already constrain every candidate. Continue
+excluding the calendar and navigation title; retain geometry before unwrapping a
+target. Calendar dismissal must leave Date range open, with Apply and Back
+reachable, and Back must return through Filters to the launcher. The observed
+XCTest failure is the regression baseline; this automation correction does not
+change product code or establish a native pass until rerun.

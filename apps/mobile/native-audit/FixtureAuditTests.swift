@@ -1278,8 +1278,7 @@ final class FixtureAuditTests: XCTestCase {
       CGRect(x: visible.minX, y: popup.maxY, width: visible.width, height: visible.maxY - popup.maxY)
     ].map { $0.intersection(navigationFrame) }
       .filter { !$0.isEmpty && !$0.isInfinite && !$0.isNull }
-    let commands = app.buttons.allElementsBoundByIndex
-      .filter { $0.identifier != "PopoverDismissRegion" }.map { $0.frame }
+    let commands = navigation.buttons.allElementsBoundByIndex.map { $0.frame }
     let titles = navigation.staticTexts.allElementsBoundByIndex.map { $0.frame }
     let candidates = outside.flatMap { region in
       [0.25, 0.5, 0.75].map { fraction in
