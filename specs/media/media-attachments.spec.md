@@ -357,3 +357,14 @@ another route or a later visit. Keep already-started command completion, current
 asset photo results and failed-photo retry state intact, and always release its
 pending lock. Current-visit failures retain their safe notice and permit a fresh
 attempt. Cover both picker rejection and upload rejection across blur/refocus.
+
+## Photo viewer status appearance
+
+The fixed black photo canvas must use light iOS status-bar content regardless of
+app appearance. Mount the native status-bar override only while a valid photo
+index is visible; closing, swiping away, deleting the last photo, invalidating the
+selection or unmounting must release that override and restore the underlying
+app's current appearance. Keep Android's existing library-owned status behavior.
+The shared viewer covers saved and draft photos. Verify visibility transitions
+with mounted tests and inspect native light/dark opening, removal and return
+captures on phone/iPad before claiming M251 runtime acceptance.

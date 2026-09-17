@@ -767,3 +767,38 @@ native value before checking results and keyboard clearance. Do not retype,
 accept partial text or skip the footer assertions. Keep the original failure and
 settled hierarchy as evidence; this addresses asynchronous observation, not a
 claimed product input fix.
+
+## Native keyboard-window sheet boundary adapter
+
+M249 probe351689 confirms that Fabric's measurement omits the sheet presentation
+origin. The iPhone boundary reports812 instead of874 and the317-point inset leaves
+Back overlapping the keyboard accessory. This concrete limitation justifies a
+narrow native measurement adapter, not custom platform controls.
+
+The pinned RN0.83.6 RCTKeyboardObserver converts native keyboard frames from screen
+space into RCTKeyWindow coordinates before publishing KeyboardMetrics. The names
+screenX/screenY do not establish screen coordinates. Return the actual boundary
+view's frame in its own UIKit window only when that window is RCTKeyWindow. Return
+unavailable for detached or other-window views; do not measure a different global
+window as a substitute. Never add a device-specific presentation offset. This
+window-identity check is necessary to match the producer's coordinate contract.
+
+Expose a typed asynchronous measurement port with an explicit unavailable result.
+The existing sheet overlap policy preserves generation guards, hide handling and
+settled remeasurement. Keep the measurement view fixed at the unmoved boundary,
+not the footer whose position depends on its result. Unavailable or rejected
+measurements clear stale insets. Android retains its existing adapter.
+
+Use a local iOS Expo module with the pinned Expo55 and ReactNative dependencies
+already provided by the app. Native modules must be autolinked and represented in
+the reviewed pod lock before release. The view command executes on the UI thread.
+Do not silently fall back to the known incorrect Fabric coordinates.
+
+Acceptance covers translated phone sheets, centered/windowed iPad sheets,
+rotation/resizing, keyboard hide/show and late completion after unmount. Native
+Browse/Expiration queries, selection and full Apply/Back frames must clear the
+keyboard accessory. Pure overlap and mounted adapter tests do not establish
+runtime success. M249 stays open until native coordinate/interaction checks pass.
+
+References: [Expo native view commands](https://docs.expo.dev/modules/module-api/#view)
+and [local native modules](https://docs.expo.dev/workflow/customizing/).
