@@ -7,8 +7,9 @@ workflow, not this document's working batch name. No unrelated product work ente
 this batch. Necessary batch corrections get an explicit updated cutoff.
 
 Full native run35156794515 tests2043abb0, whose production mobile source, packages,
-patches and app configuration match this cutoff. Later changes are diagnostics and
-reports. Focused run35159542174 at624bcf29 adds geometry observations, selected-tag
+patches and app configuration match the original33dfc002 cutoff. The subsequent
+223d6d0a email adapter requires new native acceptance; other later changes are
+diagnostics and reports. Focused run35159542174 at624bcf29 adds geometry observations, selected-tag
 checks and a corrected calendar dismissal target, not a product fix. Ongoing full audit coverage is not the release gate.
 
 ## Changed workflows and acceptance
