@@ -912,17 +912,18 @@ final class FixtureAuditTests: XCTestCase {
     clear.tap()
     XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
     let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      field.isHittable || (!field.exists && searchButton.isHittable)
+      (field.exists && field.isHittable) || (searchButton.exists && searchButton.isHittable)
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
     capture("place-search-cleared")
-    if !field.exists {
+    if !field.isHittable {
       XCTAssertTrue(searchButton.isHittable)
       searchButton.tap()
       XCTAssertTrue(field.waitForExistence(timeout: 5))
+    } else {
+      field.tap()
     }
     XCTAssertTrue(field.isHittable)
-    field.tap()
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")

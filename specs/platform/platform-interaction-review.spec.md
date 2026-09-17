@@ -851,3 +851,10 @@ complete query, filtering and command-clearance assertions. Retain evidence of
 any failure instead of claiming the extra tap is proven causal. Provide an
 unmodified-adapter selection matching the attachment-order diagnostic journeys
 so the same source/test suite can compare the native dependency variants.
+
+
+After clearing native search, acceptance follows a hittable input or a hittable
+collapsed Search control. It must not require UIKit to remove a hidden field from
+the accessibility tree. Select the hittable route and verify keyboard readiness,
+full re-entered query, filtered results, cancel and navigation return. Do not
+replace interaction checks with screenshot appearance or extend timing limits.
