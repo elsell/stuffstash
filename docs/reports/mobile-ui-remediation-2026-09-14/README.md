@@ -2,44 +2,50 @@
 
 ## Current checkpoint — September 17
 
-The coverage inventory contains142 surfaces ×24 axes =3,408 cells:2,593
-source-reviewed,577 finding,198 not-applicable and40 runtime-partial. These are
-review classifications, not3,408 completed native acceptance checks. The full
-audit remains open; normal-size findings take priority. Release follows the
-[frozen batch checklist](release-batch-113.md), independently of audit completion.
+The coverage inventory contains142 surfaces ×24 axes =3,408 unique cells:2,593
+source-reviewed,578 finding,198 not-applicable and39 runtime-partial. These are
+review classifications, not completed native acceptance checks. Normal-size
+findings take priority. Release follows the [frozen batch checklist](release-batch-113.md),
+independently of completing the comprehensive audit.
 
-Latest completed full run35156794515 at2043abb0 records phone68/87 and iPad80/87
-fixture passes. The named batch mapping has50/55 required phone passes and55/55
-iPad passes. Selected captures are reviewed in [phone evidence](native-phone-351567.md)
-and [iPad evidence](native-ipad-351567.md); these reports distinguish visual review,
-assertions and unresolved fixture fidelity. The phone filter overlap remains M249.
-The expiration accessibility failure concerns enlarged text, not a demonstrated
-normal-size blocker. The ordinary color journey passes on both devices.
+Production cutoff223d6d0a includes the required iOS invitation email correction.
+Subsequent changes concern fixtures, execution guards and evidence; no unrelated
+product work has entered this release. CI35165285719 passes966158e6, including
+1,917 mobile tests across303 files and all six CI jobs. Source checks for later
+calendar/search observation corrections and timeout configuration pass on paul;
+new head8bd07cc2 is awaiting CI and native verification.
 
-Phone Sharing reordered its email in an actual workflow. The bounded correction
-223d6d0a uses the native seeded email field and passes focused source checks; native
-acceptance remains required. The Settings fixture used a longer internal route title
-than production Tags. Its title and acceptance precondition are corrected without
-weakening the expected integrated Search button. Release-corrections35165286470 at
-966158e6 is queued to verify these changes alongside existing filter/Add/color checks.
+Focused35165286470 completes phone7/9 and iPad8/9. Both devices pass the new email
+field's Sharing journey, production-title Tags Add/Search, Add draft recovery and
+ordinary color activation. Selected iPad captures are reviewed in
+[correction evidence](native-corrections-351652.md). The phone's immediate search
+assertions sampled T, but both retained hierarchies contain the complete Tools
+query. Tests now wait for that exact value before checking results and footer
+clearance. Retained phone frames still show action/accessory overlap: M249 remains
+a release blocker. The iPad calendar test excluded launcher buttons behind its
+modal; navigation-scoped targeting preserves all dismissal/return assertions and
+requires a native rerun.
 
-Focused filters35159542174 has four iPad passes, including last-tag application and
-both keyboard journeys. Its calendar dismissal tap hit the underlying Back command;
-c40e7965 corrects that test target. Phone remains running. Full35162604601 is also
-active, but predates the email and title corrections. Its phone onboarding job
-105023220045 passes the complete address/help/keyboard/action journey; two iPad-only
-cases skip. Earlier [paired onboarding evidence](native-onboarding-351567.md) remains
-relevant for unchanged code. M240 alternate iPad help remains audit follow-up.
+Latest completed full35162604601 records phone67/87 and iPad80/87, including49/55
+and53/55 required fixture checks respectively. It predates the email/title
+corrections. [Named checks](release-batch-checks.csv) retain each outcome alongside
+earlier351567 results, rather than treating a later pass as erasing an earlier
+failure. Diagnostic comparisons and enlarged-text findings remain separate from
+batch acceptance. Place search, color timing and full-fixture keyboard-Go entry
+need reconciliation against the relevant journey and newer evidence. Paired
+standalone onboarding351626 passes all applicable cases; selected iPad captures
+are reviewed in [onboarding evidence](native-onboarding-351626.md). This does not
+certify live OIDC sign-in or every alternate input journey.
 
-Provider-free input run35156439952 passes11/14 comparisons on each device while
-still reproducing input loss. Those comparisons are diagnostics, not independent
-release gates. Actual changed-workflow entry/save remains required. M251 tracks
-low-contrast iOS photo-viewer status content separately from the frozen batch;
-reviewed photo commands remain usable.
+Full35165285932 and focused geometry35168921441 are active; existing jobs are
+preserved. Earlier focused351595 ended with a phone launch timeout and no usable
+phone geometry; its iPad last-tag and keyboard checks passed. Latest source
+changes enable bounded per-case XCTest timeouts without modifying those active
+runs. Large archives remain on paul; selected evidence is retained here.
 
-CI35165285719 passes the current correction source966158e6, including1,917 mobile
-tests across303 files and all six CI jobs. Native correction acceptance remains pending. Large archives stay on paul; selected
-captures are retained in this report directory. No new TestFlight release is claimed.
+M251, the low-contrast status content in the iOS photo viewer, stays tracked
+outside this frozen batch. Reviewed photo commands remain usable. The audit and
+release acceptance remain incomplete; no new TestFlight release is claimed.
 
 ## Earlier checkpoints
 
