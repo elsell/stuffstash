@@ -882,3 +882,12 @@ predicate evaluation, then attach observations after the wait. Do not add sleeps
 retry interaction, alter keyboard settings or convert eventual state into a pass.
 A focused runner-only selection may execute Browse and Expiration filter search
 with the attachment-order candidate to isolate these unresolved checks.
+
+
+Filter-search readiness uses the known English fixture keyboard's t key rather
+than enumerating every key: native352409 proved a single enumeration could consume
+the entire observation interval. Retain finite/nonempty bounds, hittability, the
+five-second waiter and full Tools-query/results/command checks. Other keyboard
+journeys retain their existing selection. Failure diagnostics inspect only the
+keyboard and selected key, avoiding an additional exhaustive query that itself
+failed in352409. This is test infrastructure, not a localization product rule.

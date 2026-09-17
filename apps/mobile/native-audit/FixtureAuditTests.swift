@@ -562,11 +562,12 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard() {
+  private func waitForKeyboard(keyLabel: String? = nil) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = NSPredicate { _, _ in
-      keyboard.keys.allElementsBoundByIndex.contains { key in
+      let keys = keyLabel.map { [keyboard.keys[$0]] } ?? keyboard.keys.allElementsBoundByIndex
+      return keys.contains { key in
         guard key.exists else { return false }
         let bounds = key.frame
         guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
@@ -577,7 +578,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil)
     if result != .completed {
-      recordHitTestState("keyboard-readiness", elements: [keyboard] + keyboard.keys.allElementsBoundByIndex)
+      recordHitTestState("keyboard-readiness", elements: [keyboard] + (keyLabel.map { [keyboard.keys[$0]] } ?? []))
     }
     XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
   }
@@ -798,7 +799,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(searchButton.waitForExistence(timeout: 5)); searchButton.tap()
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
     XCTAssertEqual(observePredicate("search-query-timing",
       predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
@@ -1369,7 +1370,7 @@ final class FixtureAuditTests: XCTestCase {
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     // Search activation must focus the field; a second tap may open its editing menu.
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
     XCTAssertEqual(observePredicate("search-query-timing",
       predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
