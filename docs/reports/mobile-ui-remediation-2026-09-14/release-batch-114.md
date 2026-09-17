@@ -37,3 +37,13 @@ adaptation states. No unrelated findings enter its release gate.
 The version/build is assigned by the release workflow. TestFlight113.1 excludes
 these corrections. This document records the next authorized batch, not a claim
 that it has shipped.
+
+## Released
+
+Exact-head CI35185926029 passed; PR155 merged as
+9c02cb48e4f4c42db053a98b582588c185f39335. Release35186356231 completed
+successfully, including iOS upload105090973280 and changelog105093759613.
+At2026-09-17T06:01:11Z the publisher verified TestFlight0.24.25(114.1)
+notes after Apple processing. The frozen M249/M251 corrections are now released.
+The sleeping Bash observer completed without model polling or job restarts.
+Broader audit and adaptation findings remain open.

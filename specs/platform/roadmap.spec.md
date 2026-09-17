@@ -535,3 +535,12 @@ activation failure, broader adaptation and remaining surface findings tracked
 separately; they do not automatically expand the next release gate. The full
 142-by24 audit remains incomplete. See native-boundary-351811.md and
 native-photo-status-351832.md in the remediation report.
+
+
+September17 release checkpoint: PR155 shipped as TestFlight0.24.25(114.1),
+release35186356231, with processing and exact changelog verification. The M249
+normal-text portrait filter correction and M251 photo status candidate are now
+in TestFlight. Continue normal-text audit findings, including intermittent color
+activation and native search placement; retain remaining saved/dark/swipe and
+window-adaptation verification separately. Release evidence is in
+release-batch-114.md; the full audit remains incomplete.
