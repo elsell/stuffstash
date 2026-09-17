@@ -68,7 +68,8 @@ if grep -q '\$MOBILE_RELEASE_TAG' "$workflow"; then
   echo 'TestFlight workflow references the obsolete release-tag environment name' >&2
   exit 1
 fi
-grep -q 'GITHUB_RUN_NUMBER.*GITHUB_RUN_ATTEMPT' "$workflow"
+grep -q 'MOBILE_BUILD_NUMBER:.*inputs.build_number.*github.run_number.*github.run_attempt' "$workflow"
+grep -Fq -- '--build-number "$MOBILE_BUILD_NUMBER"' "$workflow"
 grep -q 'xcodebuild archive' "$workflow"
 grep -q 'xcodebuild -exportArchive' "$workflow"
 grep -q -- '-authenticationKeyPath' "$workflow"
@@ -152,3 +153,5 @@ grep -q 'needs: publish' "$workflow"
 grep -q 'uses: ./.github/workflows/testflight-notes.yml' "$workflow"
 grep -q 'build_number: ${{ needs.publish.outputs.build_number }}' "$workflow"
 grep -q 'build_number: ${{ steps.uploaded_build.outputs.build_number }}' "$workflow"
+
+python3 "$repo_root/scripts/test-testflight-recovery.py"

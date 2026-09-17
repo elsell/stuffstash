@@ -242,3 +242,20 @@ profiles, disable other capabilities, or silently change signing secrets.
 - The upload job exposes its exact uploaded build number as a job output. Notes
   consume that output, not the retrying workflow attempt, so re-running failed
   notes jobs still updates the already uploaded build.
+
+## Interrupted upload recovery
+
+A main-only manual recovery workflow may publish an existing stable release tag
+with an explicitly chosen unused Apple build number. It must not create, move or
+delete tags or rebuild a different product revision. Validate stable SemVer,
+Apple build-number syntax, tag existence and ancestry in trusted origin/main before
+passing signing secrets to the reusable upload workflow. Require a published GitHub
+release with the self-host archive and checksum before upload. Restore missing
+public release assets from the exact tag and already published image digests first.
+
+Reuse the existing TestFlight signing, tagged checkout, archive validation, upload
+and exact-build changelog readback. The reusable workflow accepts an optional build
+number; ordinary releases retain run-number/run-attempt numbering. Recovery must
+use that chosen number consistently for generated metadata, archive validation,
+outputs and notes. Git-backed tests reject wrong ref, malformed inputs, absent tags
+and tags outside main; no credentials or arbitrary executable ref are accepted.

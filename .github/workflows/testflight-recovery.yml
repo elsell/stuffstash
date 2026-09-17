@@ -1,0 +1,56 @@
+name: Recover tagged TestFlight release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing published stable release tag
+        required: true
+        type: string
+      build_number:
+        description: Unused Apple build number (for example 116.2)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-recovery-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Validate immutable published release
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash scripts/validate-testflight-recovery.sh "$RELEASE_TAG" "$BUILD_NUMBER"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/recovery-release.json"
+          jq -e --arg tag "$RELEASE_TAG" '
+            .tag_name == $tag and .draft == false and .prerelease == false and
+            ([.assets[] | select(.state == "uploaded" and .size > 0) | .name] |
+             contains(["stuffstash-selfhost.tar.gz", "stuffstash-selfhost.tar.gz.sha256"]))
+          ' "$RUNNER_TEMP/recovery-release.json"
+  upload:
+    needs: validate
+    uses: ./.github/workflows/testflight.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+      build_number: ${{ inputs.build_number }}
+    secrets:
+      BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
