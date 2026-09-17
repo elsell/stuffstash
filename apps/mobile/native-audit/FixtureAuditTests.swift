@@ -2101,6 +2101,7 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()
+    XCTAssertTrue(app.navigationBars["Tags"].waitForExistence(timeout: 5), "Match the production route title before evaluating native header placement")
     let add = app.buttons["Add Tag"]
     XCTAssertTrue(add.waitForExistence(timeout: 10))
     XCTAssertTrue(add.isHittable)

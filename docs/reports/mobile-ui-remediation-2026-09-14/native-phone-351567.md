@@ -54,3 +54,16 @@ The new mounted seed/lock/reset test first fails for the absent adapter;30 scope
 sharing/guard/adapter tests, TypeScript and structural checks then pass on paul.
 Critic reports no confirmed blocker. These checks do not prove native typing or
 keyboard dismissal; the unchanged native Sharing journey remains required.
+
+## Settings fixture fidelity correction
+
+Further inspection found the capture title is the unregistered fixture route
+`audit-customization`, while production registers this collection as `Tags` in
+`src/app/_layout.tsx`. Header width therefore differs materially. The bottom field
+is observed, but this run alone does not prove that production Tags has the same
+placement failure. FixtureLayout now registers Tags, and the native journey asserts
+that title before Add/Search. The integrated-button and result checks are unchanged.
+A structural parity test fails before correction and passes afterward; remote
+TypeScript, eight fixture-installer checks and structural checks also pass. Critic
+finds no blocker. Native rerun remains required. This does not explain the separate
+Place comparison, whose fixture already uses the short Place title.

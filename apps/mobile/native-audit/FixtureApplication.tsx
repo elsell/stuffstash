@@ -135,6 +135,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-connection" options={{ title: 'Connection' }} />
       <Stack.Screen name="audit-notifications" options={{ title: 'Notifications' }} />
       <Stack.Screen name="audit-notification-target" options={{ title: 'Notification destination' }} />
+      <Stack.Screen name="audit-customization" options={{ title: 'Tags' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />

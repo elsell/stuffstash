@@ -123,3 +123,9 @@ verify this new email adapter. See native-phone-351567.md.
 Full351567 iPad completes80/87. All55 required journeys pass by log assertion,
 including settings, sharing, color and filters. Four diagnostic input comparisons
 and three enlarged-text follow-ups fail. iPad capture review remains outstanding.
+
+Settings acceptance correction:351567 used the internal audit-customization title,
+not production Tags. The fixture title and native precondition are corrected. Keep
+its native search journey pending; do not treat the mismatched header as sufficient
+evidence of a production Tags defect. The existing integrated-button requirement
+remains unchanged. See the fidelity section in native-phone-351567.md.

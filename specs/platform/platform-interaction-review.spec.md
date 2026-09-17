@@ -703,3 +703,14 @@ command ownership. Mounted seed/lock/revision tests and existing sharing recover
 tests precede implementation; the native Sharing journey must still verify exact
 complete entry, rejection recovery and navigation reachability before release.
 This is a field-specific candidate, not a claim to solve all RN input failures.
+
+## Native fixture title parity
+
+The settings collection audit route must use the production Tags navigation title,
+not its internal audit-customization route name. Navigation title width competes
+with native header controls; a placement failure with different header content is
+not sufficient evidence of a production regression. Assert the title in the native
+journey before Add/Search and guard fixture/production title parity structurally.
+Keep the integrated-button and query/result checks unchanged. This correction does
+not explain other search failures whose titles already match; rerun rather than
+claiming a production fix from the title change alone.
