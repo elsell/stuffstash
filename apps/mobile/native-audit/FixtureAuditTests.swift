@@ -562,11 +562,12 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard() {
+  private func waitForKeyboard(keyLabel: String? = nil) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
-    let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      keyboard.keys.allElementsBoundByIndex.contains { key in
+    let ready = NSPredicate { _, _ in
+      let keys = keyLabel.map { [keyboard.keys[$0]] } ?? keyboard.keys.allElementsBoundByIndex
+      return keys.contains { key in
         guard key.exists else { return false }
         let bounds = key.frame
         guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
@@ -574,8 +575,48 @@ final class FixtureAuditTests: XCTestCase {
               bounds.width.isFinite, bounds.height.isFinite else { return false }
         return key.isHittable
       }
+    }
+    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil)
+    if result != .completed {
+      recordHitTestState("keyboard-readiness", elements: [keyboard] + (keyLabel.map { [keyboard.keys[$0]] } ?? []))
+    }
+    XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
+  }
+
+  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?) -> XCTWaiter.Result {
+    let started = ProcessInfo.processInfo.systemUptime
+    var observations: [String] = []
+    let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      let before = ProcessInfo.processInfo.systemUptime
+      let matched = predicate.evaluate(with: object)
+      let after = ProcessInfo.processInfo.systemUptime
+      observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
+      return matched
     }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Typing requires an interactive keyboard")
+    let result = XCTWaiter.wait(for: [expectation], timeout: 5)
+    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
+    let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
+    return result
+  }
+
+  private func recordHitTestState(_ name: String, elements: [XCUIElement]) {
+    let lines = elements.map { element in
+      guard element.exists else { return "Element no longer exists" }
+      let bounds = element.frame
+      guard !bounds.isEmpty, !bounds.isNull, !bounds.isInfinite,
+            bounds.origin.x.isFinite, bounds.origin.y.isFinite,
+            bounds.width.isFinite, bounds.height.isFinite else {
+        return "\(element.label): frame=\(bounds), hittability skipped for invalid bounds"
+      }
+      return "\(element.label): frame=\(bounds), hittable=\(element.isHittable)"
+    }
+    let attachment = XCTAttachment(string: lines.joined(separator: "\n"))
+    attachment.name = name
+    attachment.lifetime = .keepAlways
+    add(attachment)
   }
 
   private func capture(_ name: String) {
@@ -742,7 +783,11 @@ final class FixtureAuditTests: XCTestCase {
           self.app.frame.contains(action.frame) && action.frame.maxY <= top
       }
     }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [clearAccessory], timeout: 5), .completed,
+    let result = XCTWaiter.wait(for: [clearAccessory], timeout: 5)
+    if result != .completed {
+      recordHitTestState("filter-actions-keyboard-clearance", elements: [app, apply, back, dismiss])
+    }
+    XCTAssertEqual(result, .completed,
       "Both filter commands must be fully above the keyboard-dismiss accessory")
   }
 
@@ -753,11 +798,12 @@ final class FixtureAuditTests: XCTestCase {
     let searchButton = app.buttons["Search"].firstMatch
     XCTAssertTrue(searchButton.waitForExistence(timeout: 5)); searchButton.tap()
     let search = app.searchFields.firstMatch
-    XCTAssertTrue(search.waitForExistence(timeout: 5)); search.tap()
-    waitForKeyboard()
+    XCTAssertTrue(search.waitForExistence(timeout: 5))
+    waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
-    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
+    XCTAssertEqual(observePredicate("search-query-timing",
+      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      .completed, "Native search must retain the complete query")
     let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
@@ -880,7 +926,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     XCTAssertEqual(field.placeholderValue, "Search this place")
-    field.tap()
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
@@ -912,17 +957,18 @@ final class FixtureAuditTests: XCTestCase {
     clear.tap()
     XCTAssertTrue(app.buttons["Open asset Tool 0. Item"].firstMatch.waitForExistence(timeout: 5))
     let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      field.isHittable || (!field.exists && searchButton.isHittable)
+      (field.exists && field.isHittable) || (searchButton.exists && searchButton.isHittable)
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
     capture("place-search-cleared")
-    if !field.exists {
+    if !field.isHittable {
       XCTAssertTrue(searchButton.isHittable)
       searchButton.tap()
       XCTAssertTrue(field.waitForExistence(timeout: 5))
+    } else if !app.keyboards.firstMatch.exists {
+      field.tap()
     }
     XCTAssertTrue(field.isHittable)
-    field.tap()
     waitForKeyboard()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
@@ -995,7 +1041,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     capture("static-search-placement-expanded")
-    field.tap()
     waitForKeyboard()
     field.typeText("missing")
     XCTAssertEqual(field.value as? String, "missing")
@@ -1004,14 +1049,14 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clear.isHittable)
     clear.tap()
     let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      field.isHittable || (!field.exists && search.isHittable)
+      (field.exists && field.isHittable) || (search.exists && search.isHittable)
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
     capture("static-search-after-focused-clear")
-    if !field.exists { search.tap() }
+    if !field.isHittable { search.tap() }
+    else if !app.keyboards.firstMatch.exists { field.tap() }
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
-    field.tap()
     waitForKeyboard()
     field.typeText("Garage")
     XCTAssertEqual(field.value as? String, "Garage")
@@ -1324,11 +1369,12 @@ final class FixtureAuditTests: XCTestCase {
     searchButton.tap()
     let search = app.searchFields.firstMatch
     XCTAssertTrue(search.waitForExistence(timeout: 5))
-    search.tap()
-    waitForKeyboard()
+    // Search activation must focus the field; a second tap may open its editing menu.
+    waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
-    let completeQuery = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tools"), object: search)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeQuery], timeout: 5), .completed, "Native search must retain the complete query")
+    XCTAssertEqual(observePredicate("search-query-timing",
+      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      .completed, "Native search must retain the complete query")
     XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
@@ -2020,8 +2066,8 @@ final class FixtureAuditTests: XCTestCase {
     }
   }
 
-  private func openSettingsControls() {
-    let button = app.buttons["Audit settings controls"]
+  private func openSettingsControls(scrollEnabled: Bool = true) {
+    let button = app.buttons[scrollEnabled ? "Audit settings controls" : "Audit settings controls without scrolling"]
     for _ in 0..<4 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(button.isHittable)
     button.tap()
@@ -2095,6 +2141,39 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Color value: #2E7D32"].exists)
     app.buttons["No tag color"].tap()
     XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+  }
+
+  func testColorFirstTapWithPreTapCapture() {
+    assertColorFirstTap(captureBeforeTap: true)
+  }
+
+  func testColorFirstTapWithoutPreTapCapture() {
+    assertColorFirstTap(captureBeforeTap: false)
+  }
+
+  func testColorFirstTapWithoutScrolling() {
+    assertColorFirstTap(captureBeforeTap: false, scrollEnabled: false)
+  }
+
+  private func assertColorFirstTap(captureBeforeTap: Bool, scrollEnabled: Bool = true) {
+    // Each test has an independent setUp launch; never retry a missed first tap.
+    openSettingsControls(scrollEnabled: scrollEnabled)
+    XCTAssertTrue(app.staticTexts["Color value: none"].exists)
+    XCTAssertFalse(app.buttons["Choose a custom tag color"].exists)
+    let picker = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose any color")).firstMatch
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    XCTAssertTrue(picker.isEnabled)
+    XCTAssertTrue(picker.isHittable)
+    let before = picker.frame
+    if captureBeforeTap { capture("color-comparison-before-tap") }
+    picker.tap()
+    let opened = app.buttons["Sliders"].waitForExistence(timeout: 5)
+    let evidence = XCTAttachment(string: "Scrolling: \(scrollEnabled); pre-tap capture: \(captureBeforeTap); target before tap: \(before); opened after one tap: \(opened)")
+    evidence.name = "color-first-tap-comparison"
+    evidence.lifetime = .keepAlways
+    add(evidence)
+    capture("color-comparison-after-first-tap")
+    XCTAssertTrue(opened, "One ordinary tap must present the system picker")
   }
 
   func testNativeColorLockDisablesTheWellAndPreservesDraft() {
@@ -2179,7 +2258,6 @@ final class FixtureAuditTests: XCTestCase {
     search.tap()
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    field.tap()
     waitForKeyboard()
     field.typeText("Tools")
     XCTAssertEqual(field.value as? String, "Tools")
@@ -2248,7 +2326,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(search.isHittable); search.tap()
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
-    field.tap(); waitForKeyboard(); field.typeText("missing")
+    waitForKeyboard(); field.typeText("missing")
     XCTAssertEqual(field.value as? String, "missing")
     XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
     XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
@@ -2257,24 +2335,24 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clear.isHittable); clear.tap()
     let clearedField = app.searchFields.firstMatch
     let idleSearch = header.buttons["Search"].firstMatch
-    if UIDevice.current.userInterfaceIdiom == .pad {
-      let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-        clearedField.isHittable || (!clearedField.exists && idleSearch.isHittable)
-      }, object: nil)
-      XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
-        "Clearing must leave a field or the native iPad search button available")
-      XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
-      capture("voice-location-after-focused-clear")
-      if !clearedField.exists {
-        XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
-        XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
-        XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
-        XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
-        idleSearch.tap()
-      }
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      (clearedField.exists && clearedField.isHittable) || (idleSearch.exists && idleSearch.isHittable)
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed,
+      "Clearing must leave a usable field or collapsed Search control")
+    XCTAssertTrue(bin.waitForExistence(timeout: 10), "Clearing must restore unfiltered locations")
+    capture("voice-location-after-focused-clear")
+    if !clearedField.isHittable {
+      XCTAssertGreaterThanOrEqual(idleSearch.frame.minX, header.frame.minX)
+      XCTAssertLessThanOrEqual(idleSearch.frame.maxX, header.frame.maxX)
+      XCTAssertGreaterThanOrEqual(idleSearch.frame.minY, header.frame.minY)
+      XCTAssertLessThanOrEqual(idleSearch.frame.maxY, header.frame.maxY)
+      idleSearch.tap()
+    } else if !app.keyboards.firstMatch.exists {
+      clearedField.tap()
     }
     XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
-    XCTAssertTrue(clearedField.isHittable); clearedField.tap(); waitForKeyboard(); clearedField.typeText("Garage")
+    XCTAssertTrue(clearedField.isHittable); waitForKeyboard(); clearedField.typeText("Garage")
     XCTAssertEqual(clearedField.value as? String, "Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()

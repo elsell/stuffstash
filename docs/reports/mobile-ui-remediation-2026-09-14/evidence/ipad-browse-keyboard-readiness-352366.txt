@@ -1,0 +1,38 @@
+: frame=(0.0, 848.0, 744.0, 282.0), hittable=true
+Padding-Left: frame=(0.0, 848.0, 0.0, 0.0), hittability skipped for invalid bounds
+q: frame=(3.0, 855.0, 66.5, 64.5), hittable=true
+w: frame=(69.5, 855.0, 66.5, 64.5), hittable=true
+e: frame=(136.0, 855.0, 66.5, 64.5), hittable=true
+r: frame=(202.5, 855.0, 66.0, 64.5), hittable=true
+t: frame=(268.5, 855.0, 66.5, 64.5), hittable=true
+y: frame=(335.0, 855.0, 66.5, 64.5), hittable=true
+u: frame=(401.5, 855.0, 66.5, 64.5), hittable=true
+i: frame=(468.0, 855.0, 66.5, 64.5), hittable=true
+o: frame=(534.5, 855.0, 66.5, 64.5), hittable=true
+p: frame=(601.0, 855.0, 66.5, 64.5), hittable=true
+Padding-Right: frame=(0.0, 848.0, 0.0, 0.0), hittability skipped for invalid bounds
+delete: frame=(667.5, 855.0, 79.5, 64.5), hittable=true
+Padding-Left: frame=(0.0, 848.0, 0.0, 0.0), hittability skipped for invalid bounds
+a: frame=(29.5, 919.5, 66.5, 64.5), hittable=true
+s: frame=(96.0, 919.5, 66.5, 64.5), hittable=true
+d: frame=(162.5, 919.5, 66.5, 64.5), hittable=true
+f: frame=(229.0, 919.5, 66.5, 64.5), hittable=true
+g: frame=(295.5, 919.5, 66.0, 64.5), hittable=true
+h: frame=(361.5, 919.5, 66.5, 64.5), hittable=true
+j: frame=(428.0, 919.5, 66.5, 64.5), hittable=true
+k: frame=(494.5, 919.5, 66.5, 64.5), hittable=true
+l: frame=(561.0, 919.5, 66.5, 64.5), hittable=true
+Padding-Right: frame=(0.0, 848.0, 0.0, 0.0), hittability skipped for invalid bounds
+z: frame=(69.5, 984.0, 66.5, 64.5), hittable=true
+x: frame=(136.0, 984.0, 66.5, 64.5), hittable=true
+c: frame=(202.5, 984.0, 66.0, 64.5), hittable=true
+v: frame=(268.5, 984.0, 66.5, 64.5), hittable=true
+b: frame=(335.0, 984.0, 66.5, 64.5), hittable=true
+n: frame=(401.5, 984.0, 66.5, 64.5), hittable=true
+m: frame=(468.0, 984.0, 66.5, 64.5), hittable=true
+,: frame=(534.5, 984.0, 66.5, 64.5), hittable=true
+.: frame=(601.0, 984.0, 66.5, 64.5), hittable=true
+shift: frame=(667.5, 984.0, 79.5, 64.5), hittable=true
+numbers: frame=(72.0, 1048.5, 69.0, 64.5), hittable=true
+ : frame=(210.0, 1048.5, 330.0, 64.5), hittable=true
+numbers: frame=(540.0, 1048.5, 103.5, 64.5), hittable=true

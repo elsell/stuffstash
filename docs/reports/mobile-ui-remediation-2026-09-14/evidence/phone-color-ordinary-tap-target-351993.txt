@@ -1,0 +1,1 @@
+Color target before ordinary tap: (346.0, 397.6666717529297, 28.0, 28.0); hittable=true

@@ -11,6 +11,8 @@ on:
         options:
           - all
           - color-picker
+          - filter-search-timing
+          - search-placement
           - text-entry
           - text-entry-no-provider
           - add-draft
@@ -87,10 +89,33 @@ jobs:
           audit_test_args=()
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            search-placement)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPreconfiguredPlaceSearchKeepsProductionHandlersAndNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testManagedSearchPlacementAfterEnableAndHeaderUpdate'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testStaticNativeSearchPlacementComparison'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
+            filter-search-timing)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
             color-picker)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithPreTapCapture'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutPreTapCapture'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutScrolling'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
@@ -183,6 +208,20 @@ jobs:
             xcrun xcresulttool export attachments \
               --path "$RUNNER_TEMP/native-audit/results.xcresult" \
               --output-path "$RUNNER_TEMP/native-audit/screenshots"
+          fi
+      - name: Export result-bundle diagnostics
+        if: always()
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-audit/diagnostics"
+          if [ -d "$RUNNER_TEMP/native-audit/results.xcresult" ]; then
+            xcrun xcresulttool export diagnostics \
+              --path "$RUNNER_TEMP/native-audit/results.xcresult" \
+              --output-path "$RUNNER_TEMP/native-audit/diagnostics/result-bundle" \
+              > "$RUNNER_TEMP/native-audit/diagnostics/export.log" 2>&1
+          else
+            printf '%s\n' 'No xcresult bundle available for diagnostic export.' \
+              > "$RUNNER_TEMP/native-audit/diagnostics/export.log"
           fi
       - name: Collect application crash evidence
         if: always()

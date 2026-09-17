@@ -802,3 +802,104 @@ runtime success. M249 stays open until native coordinate/interaction checks pass
 
 References: [Expo native view commands](https://docs.expo.dev/modules/module-api/#view)
 and [local native modules](https://docs.expo.dev/workflow/customizing/).
+
+
+## Isolating intermittent native color presentation
+
+M51 ordinary first activation remains intermittently absent despite a hittable,
+enabled well and successful same-build touch-region checks. Diagnostic comparisons
+must use independently launched apps, identical initial unset value, the same
+native element tap and five-second presentation assertion. Compare a capture of
+the pre-tap screen/hierarchy against no pre-tap capture; record target geometry,
+enabled/hittable state and post-tap presentation. Preserve the original failing
+workflow. Do not add retry taps or relax its timeout to manufacture acceptance.
+These comparisons diagnose observation effects; passing samples alone cannot
+close the intermittent production finding or establish causation.
+
+
+Native runner evidence must export diagnostics directly from an existing xcresult
+bundle as well as screenshots. Post-run collection from only booted simulators
+can produce no application logs after Xcode shuts down a test simulator; an empty
+collection is missing evidence, not proof of no UIKit warnings. Preserve export
+errors as artifacts and report them without replacing the native test result.
+Use the pinned Xcode xcresulttool; no new dependency or simulator restart is needed.
+
+
+M51 scroll-interaction diagnostic: retain the normal ScrollView fixture and add
+an independently entered variant differing only in scrollEnabled=false. Preserve
+content geometry, native picker, initial unset value, ordinary first tap and
+five-second assertion. This isolates scrolling behavior, not all scroll-view
+internals; a pass does not justify disabling scrolling in real editors. Expose
+the variant in the audit launcher only and retain both test outcomes.
+
+
+M207 search attachment diagnostic: compare the pinned adapter with a runner-only
+transformation that applies preferred search placement and toolbar integration
+before assigning UINavigationItem.searchController. Retain all source option
+values and existing search/navigation assertions. The production dependency patch
+and locks remain unchanged. The transformation must refuse unexpected source and
+be opt-in through a named workflow selection. Test Place, preconfigured Place,
+managed/static placement, settings and filter consumers. A successful sample is
+candidate evidence, not comprehensive acceptance or proof of causation.
+
+
+Native search-button acceptance must verify that tapping Search itself presents
+and focuses a usable keyboard before typing. Do not add an unconditional second
+field tap as preparation: on an already focused field it can open the native
+editing menu and changes the interaction under test. Preserve keyboard readiness,
+complete query, filtering and command-clearance assertions. Retain evidence of
+any failure instead of claiming the extra tap is proven causal. Provide an
+unmodified-adapter selection matching the attachment-order diagnostic journeys
+so the same source/test suite can compare the native dependency variants.
+
+
+After clearing native search, acceptance follows a hittable input or a hittable
+collapsed Search control. It must not require UIKit to remove a hidden field from
+the accessibility tree. Select the hittable route and verify keyboard readiness,
+full re-entered query, filtered results, cancel and navigation return. Do not
+replace interaction checks with screenshot appearance or extend timing limits.
+
+
+Apply the single-activation search acceptance rule consistently to Browse tags,
+Place, Settings, static placement and voice location search. Native352287 captures
+show the same AutoFill editing menu in Browse and Place after redundant field taps.
+Retain ordinary text-input focus taps and explicit keyboard-dismiss/re-entry
+coverage. When a search field remains usable after Clear, tap it only if no keyboard
+is present; otherwise verify readiness and type. Hidden-field presence is not a
+substitute for usable controls or query correctness.
+
+
+Voice location Clear/re-entry must use the same hittable-input-or-collapsed-button
+contract as Place on both device classes. Retain restored locations, full query,
+selection, navigation return and unchanged timeout. For unresolved keyboard or
+footer checks, attach the individual readiness predicates on failure; screenshots
+of visible controls alone do not prove hit-test availability.
+
+
+Native352366 timing diagnostic: retain the five-second keyboard readiness and
+exact-query acceptance deadlines. Record monotonic duration and result for each
+predicate evaluation, then attach observations after the wait. Do not add sleeps,
+retry interaction, alter keyboard settings or convert eventual state into a pass.
+A focused runner-only selection may execute Browse and Expiration filter search
+with the attachment-order candidate to isolate these unresolved checks.
+
+
+Filter-search readiness uses the known English fixture keyboard's t key rather
+than enumerating every key: native352409 proved a single enumeration could consume
+the entire observation interval. Retain finite/nonempty bounds, hittability, the
+five-second waiter and full Tools-query/results/command checks. Other keyboard
+journeys retain their existing selection. Failure diagnostics inspect only the
+keyboard and selected key, avoiding an additional exhaustive query that itself
+failed in352409. This is test infrastructure, not a localization product rule.
+
+
+M207 production candidate: pin a minimal react-native-screens4.23.0 patch that
+applies UINavigationItem preferred placement and toolbar-integration settings
+before attaching its searchController. Preserve option values and all platform
+availability guards; do not replace native search or change query state. Native
+352366 accepts the other six journeys on both devices;352442 accepts Browse and
+Expiration typing/filtering/action clearance on both after targeted-key readiness.
+Freeze this correction as a separate release batch, requiring the installed patch
+to pass the eight search workflows, dependency resolution, shared-header tests and
+critical regression checks before TestFlight. Remove the runner-only transform
+from candidate validation so it cannot apply twice or hide packaging mistakes.

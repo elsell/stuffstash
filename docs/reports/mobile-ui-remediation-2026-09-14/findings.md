@@ -3544,4 +3544,26 @@ fixture installer checks pass on paul; critic found no production blocker. Share
 Add/Edit/Settings color consumers receive the correction. A native seeded-color
 lock/unlock case requires the well's disabled accessibility state, no presentation
 within a two-second observation after a delivered center tap, preserved draft
-and normal opening after unlock. Native execution remains pending.
+and normal opening after unlock. Native351993 passes this case on phone and iPad;
+locked captures reviewed on both show retained Green and disabled presentation.
+See native-full-351993.md. M252/M253 shipped in TestFlight0.24.26(115.1);
+release-batch-115.md records verified publication. M51 remains open.
+
+
+M51 September17 diagnostic update: focused35210761064 reproduces missed native
+opening without pre-tap capture on both phone/iPad, while the capture variant
+passes. Phone also misses the standalone target and the seventh delivered-touch
+probe after six successful openings. Capture is not a necessary failure trigger;
+no lifecycle cause is yet established. M252/M253 still pass both devices. See
+native-color-first-tap-352107.md; no production fix or audit closure is claimed.
+
+
+M207 September17 diagnostic checkpoint: attachment-order candidate35236686772
+passes8/8 workflows on phone and6/8 on iPad. Voice clear/re-entry passes both.
+iPad Browse readiness and Expiration exact-query observation time out; later
+diagnostics show hittable keys and final Expiration state contains the complete
+query with the correct filtered result. This is eventual-state evidence, not
+timely acceptance. Preserve runner/automation latency as an alternative hypothesis
+and isolate it before modifying production behavior or promoting the dependency
+patch. See native-search-hit-testing-352366.md and the retained failure captures.
+M207 remains open; the ordering transformation is still runner-only.
