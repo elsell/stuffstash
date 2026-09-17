@@ -154,3 +154,8 @@ tests across8 files. Conversation browser journey, search PostgreSQL benchmark,
 iOS dependency lock, web release image and self-host runtime also pass. Log:
 `/tmp/ci351652-required.log`. Native acceptance is still pending; this does not
 clear the phone filter overlap or verify the new iOS field on device.
+
+The newer run35162604601 also passes all applicable phone/iPad onboarding cases,
+including the alternate iPad form-column journey. Selected iPad captures are
+reviewed in [onboarding regression evidence](native-onboarding-351626.md). The
+intermittent help issue remains tracked; this pass does not establish a fix.
