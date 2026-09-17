@@ -20,6 +20,7 @@ let highTextContrastEnabled = false;
 let systemColorScheme: 'light' | 'dark' = 'light';
 
 export const View = 'View';
+export const StatusBar = 'StatusBar';
 export const Button = 'Button';
 export const Switch = 'Switch';
 type ImageSizeRequest = {

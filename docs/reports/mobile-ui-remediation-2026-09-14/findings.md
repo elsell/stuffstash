@@ -3485,3 +3485,11 @@ open, then restore the underlying appearance after Close, swipe dismissal and la
 photo removal. Verify light/dark phone and iPad presentation, including nested
 removal confirmation. Do not add a global imperative status-bar change that leaks
 into other screens. No correction is included in this batch.
+
+Follow-up candidate on codex/mobile-audit-after-113 mounts an iOS native
+StatusBar light-content override only while the shared viewer has a valid visible
+photo. Hidden, invalid selection and last-photo removal release ownership;
+Android keeps library behavior. The mounted ownership test failed first, then14
+focused gallery/viewer tests, TypeScript and mobile structural checks passed on
+paul. This verifies ownership wiring, not UIKit status rendering or restoration.
+Saved/draft phone/iPad light/dark capture review remains required; M251 is open.

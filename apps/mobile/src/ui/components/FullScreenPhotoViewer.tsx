@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NativeCommandButton } from './NativeCommandButton';
 import ImageViewing from 'react-native-image-viewing';
 import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react-native';
@@ -43,6 +43,8 @@ export function FullScreenPhotoViewer({
   const images = useMemo(() => photos.map(photo => ({ uri: photo.uri, headers: photo.headers })), [photos]);
 
   return (
+    <>
+    {visible && Platform.OS === 'ios' ? <StatusBar barStyle="light-content" /> : null}
     <ImageViewing
       HeaderComponent={PhotoViewerHeader}
       ErrorComponent={PhotoViewerLoadError}
@@ -70,6 +72,7 @@ export function FullScreenPhotoViewer({
       swipeToCloseEnabled
       visible={visible}
     />
+    </>
   );
 }
 
