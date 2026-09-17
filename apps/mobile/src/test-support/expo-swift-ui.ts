@@ -7,3 +7,4 @@ export const Text='Text';
 export const Picker='SwiftUIPicker';
 export const LabeledContent='SwiftUILabeledContent';
 export const TextField='SwiftUITextField';
+export const ColorPicker='SwiftUIColorPicker';

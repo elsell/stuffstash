@@ -316,6 +316,7 @@ function InputFixture({ mode }: { readonly mode: InputFixtureMode }) {
 function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
   const { preference } = useAppearance();
   const [color, setColor] = useState('');
+  const [colorLocked, setColorLocked] = useState(false);
   const [expiration, setExpiration] = useState('No expiration');
   const [reminder, setReminder] = useState<ExpirationReminderPolicy | null>(null);
   return <FixturePage>
@@ -323,8 +324,9 @@ function SettingsControlsFixture({ onBack }: { readonly onBack: () => void }) {
     <AppearancePicker />
     <Text>{`Appearance value: ${preference}`}</Text>
     <Text>{`Appearance writes: ${useContext(AppearanceWriteCount)}`}</Text>
-    <TagColorPicker value={color} onChange={setColor} />
+    <TagColorPicker disabled={colorLocked} value={color} onChange={setColor} />
     <Text>{`Color value: ${color || 'none'}`}</Text>
+    <Button title={colorLocked ? 'Unlock color editing' : 'Lock color editing'} onPress={() => setColorLocked(locked => !locked)} />
     <ExpirationField initialPickerDate={new Date(2026, 8, 14, 12)} onChange={value => setExpiration(value?.date ?? 'No expiration')} />
     <Text>{`Expiration value: ${expiration}`}</Text>
     <ExpirationReminderEditor initialPolicy={reminder}

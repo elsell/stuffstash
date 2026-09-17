@@ -289,3 +289,39 @@ while retaining selected tags. Use the same natural ordering and twelve-option
 disclosure policy for matches. A query with no matches says No matching tags,
 including when selected tags remain visible. Disclosure and search never change
 the draft selection. Share this choice-presentation policy between Add and Edit.
+
+
+### Native RGB conversion stability
+
+The iOS picker must preserve the nearest eight-bit RGB value when converting
+normalized native channels to the parent hex draft. Floating-point representation
+error must not decrement untouched channels or accumulate while editing another
+channel. Clamp channels to0–255 and round to the nearest integer before encoding.
+Opening/closing still must not invent a tag color. The direct-opening failure is
+a separate acceptance concern from numeric conversion.
+
+The macOS CI job compiles the installed native channel-conversion expression in
+a Swift regression harness. Verify all256 channel values, adjacent floating-point
+representations, clamp boundaries and repeated controlled round trips. Extract
+the expression from the actual pinned dependency; do not maintain a second
+implementation that can pass while production still truncates. This isolates
+numeric correctness, not UIKit event delivery, presentation or complete color
+space conversion; native slider/draft acceptance remains necessary for those.
+
+
+Native RGB feedback acceptance starts from a known preset, opens the system
+picker and changes only its Red slider. After each of three distinct adjustments,
+dismiss the picker and verify the parent draft retains the exact original Green
+and Blue bytes while Red changes. Reopen between edits to exercise controlled
+feedback; retain slider and parent captures. Require the explicitly labeled Red
+control rather than assuming a slider order. An opening or labeling failure
+remains a failed/unreached check, not permission to substitute another control.
+
+
+The iOS full-color well must receive the native disabled state while its parent
+editor is locked. Wrapper opacity, pointer blocking and ignoring change callbacks
+are complementary safeguards, not substitutes for disabling the SwiftUI control.
+The native accessibility element must remain labeled and report disabled; a
+locked well must not open the system picker or mutate the draft. Unlock restores
+the same current color and normal editing. Verify lock/unlock with a seeded
+color on phone/iPad, in addition to mounted native-state wiring tests.

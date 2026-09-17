@@ -94,6 +94,8 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellTargetOpensSystemPicker'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorRedEditsPreserveOtherChannelsInDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
               )
               ;;
             home-header)
