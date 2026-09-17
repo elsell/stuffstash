@@ -572,3 +572,12 @@ HTTP502 uploading the self-host checksum after immutable tagv0.24.27 creation.
 No TestFlight upload occurred. Preserve the tag and complete recovery through a
 reviewed existing-tag publication path; do not rerun a publish job that refuses
 existing tags or claim this build delivered. See release-batch-116.md.
+
+
+Batch116 recovery complete: TestFlight0.24.27(116.2) publishes the original M207
+tagged fix, with processing and exact notes readback verified2026-09-17T19:09:34Z
+(run35261115108). PR160 adds guarded existing-tag recovery without moving tags.
+All16 changed native search cases and required CI passed before release. Continue
+normal-text color activation/text-entry and other remaining findings; full audit
+remains incomplete. The later eager-observation test refinement is not released
+and still requires native verification. See release-batch-116.md.

@@ -3567,3 +3567,12 @@ timely acceptance. Preserve runner/automation latency as an alternative hypothes
 and isolate it before modifying production behavior or promoting the dependency
 patch. See native-search-hit-testing-352366.md and the retained failure captures.
 M207 remains open; the ordering transformation is still runner-only.
+
+
+M207 released checkpoint: installed-patch native352471 accepts all eight search
+journeys on both phone/iPad. Required CI352471 passed, including pod resolution;
+reviewed captures confirm header search. PR159 shipped as TestFlight0.24.27(116.2)
+through verified recovery35261115108 after GitHub502 interrupted ordinary release.
+Apple processing and changelog readback verified2026-09-17T19:09:34Z. This closes
+the recorded placement defect for those workflows; unrelated audit findings and
+remaining configuration coverage are not implied passes. See release-batch-116.md.
