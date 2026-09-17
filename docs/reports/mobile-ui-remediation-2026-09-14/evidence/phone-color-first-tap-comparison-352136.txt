@@ -1,0 +1,1 @@
+Pre-tap capture: false; target before tap: (346.0, 397.6666717529297, 28.0, 28.0); opened after one tap: false

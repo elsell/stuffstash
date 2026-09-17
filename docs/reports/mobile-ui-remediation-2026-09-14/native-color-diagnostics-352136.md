@@ -29,3 +29,20 @@ this run's screenshots have not been reviewed.
 
 The observer slept120 seconds between terminal-state checks; jobs were not
 restarted. The broader142-by24 audit and normal-text-first priorities remain.
+
+
+## Recorded touch targeting
+
+The failed phone no-capture case has now been visually reviewed: the well remains
+visible, enabled and unset after the tap; no picker is shown. The attached target
+frame before tapping is (346,397.6667,28,28). Decoding the XCTest synthesized-event
+binary plist records pointer down/up at (360,411.6667), the exact center, with a
+0.05-second separation and app process32605. This excludes an off-center generated
+coordinate in this sample, but does not prove UIKit delivered the touch to the well.
+The decoded event, pre-tap record and reviewed screenshot are retained in evidence/.
+
+SettingsControlsFixture hosts this control inside FixturePage's React Native
+ScrollView. Further investigation should compare native UIColorWell/SwiftUI touch
+receipt within that host before changing shared production controls. Preserve
+real scroll/keyboard behavior; a blanket touch-delay or keyboard-tap policy change
+would affect other workflows and is not supported by the current evidence.
