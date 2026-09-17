@@ -1,0 +1,4 @@
+Stuff Stash: frame=(0.0, 0.0, 402.0, 874.0), hittable=true
+Show results: frame=(20.0, 367.0, 362.0, 54.0), hittable=true
+Back to filters: frame=(20.0, 429.0, 362.0, 54.0), hittable=true
+Dismiss keyboard: frame=(338.0, 485.0, 44.0, 44.0), hittable=true

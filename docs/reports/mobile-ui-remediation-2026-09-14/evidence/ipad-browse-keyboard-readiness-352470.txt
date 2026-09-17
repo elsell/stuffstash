@@ -1,0 +1,2 @@
+: frame=(0.0, 848.0, 744.0, 282.0), hittable=true
+t: frame=(268.5, 855.0, 66.5, 64.5), hittable=true
