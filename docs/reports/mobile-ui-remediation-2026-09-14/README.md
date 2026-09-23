@@ -74,7 +74,12 @@ invalidation guard to pinned4.23; the picker width itself was correct. The share
 native command measurement and sheet-lifecycle changes justify one combined
 follow-up run of the12 existing connected cases, now including full viewport,
 three-mode reachability and invitation form containment. Preserve the passed connected
-journeys; add coverage for these actual layout failures.
+journeys; add coverage for these actual layout failures. Run35929273167 stopped
+before compilation because the Podfile.lock still referenced the old patched
+Screens and ExpoRouter directories. c8f18ce3 updates only their four source paths
+to the frozen installation; versions, checksums and deployment enforcement remain
+unchanged. The corrected native run is the next acceptance gate, not evidence of
+another product failure.
 
 ## Separate unresolved decisions
 
