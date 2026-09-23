@@ -113,3 +113,8 @@ Android follows its platform list/search/action conventions and the same informa
 hierarchy; do not inject SwiftUI or copy iOS appearance into Android. Acceptance
 requires retained functional scenarios plus matching normal-text screenshots of
 entry, search, selected destination, creation and recovery judged as a whole.
+
+Android subject summary uses the asset name above its secondary current-location
+text, aligned with the choice text. It is descriptive context, not a setting's
+label/value row; long names and paths must wrap independently without competing
+for horizontal space. Android runtime review of bca78c94 exposed this distinction.
