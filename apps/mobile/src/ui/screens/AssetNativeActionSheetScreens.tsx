@@ -1,3 +1,4 @@
+import type { MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
@@ -276,7 +277,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
         <MoveAssetSheet
           readOnly={!asset.canMove}
           candidatesAvailable={candidates.data !== undefined}
-          candidateStatus={candidates.isError || !candidates.data ? <CandidateStatus candidates={candidates} /> : undefined}
+          candidateStatus={candidateSelectionStatus(candidates)}
           creationCandidatesAvailable={creationCandidates.data !== undefined && !creationCandidates.isError}
           creationMatches={creationMatches}
           creationStatus={<CandidateStatus candidates={creationCandidates} />}
@@ -340,7 +341,7 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
         <MoveThingsHereSheet
           readOnly={!asset.canMove || !asset.canContainAssets}
           candidatesAvailable={candidates.data !== undefined}
-          candidateStatus={candidates.isError || !candidates.data ? <CandidateStatus candidates={candidates} /> : undefined}
+          candidateStatus={candidateSelectionStatus(candidates)}
           draft={shownDraft}
           isSaving={isSaving}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
@@ -405,6 +406,13 @@ function InlineQueryError({ message, retryLabel, onRetry }: {
     <Text accessibilityRole="alert" style={styles.inlineErrorText}>{message}</Text>
     <NativeCommandButton label={retryLabel} onPress={onRetry} />
   </View>;
+}
+
+function candidateSelectionStatus(candidates: ReturnType<typeof useParentCandidates>): MoveSelectionStatus | undefined {
+  if (candidates.isError) return { message: 'Suggestions could not be loaded.',
+    retry: { label: 'Retry suggestions', onPress: () => { void candidates.refetch(); } } };
+  if (!candidates.data) return { message: 'Loading suggestions…' };
+  return undefined;
 }
 
 function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {

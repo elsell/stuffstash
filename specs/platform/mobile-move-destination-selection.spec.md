@@ -128,15 +128,31 @@ system List alone owns grouped-list margins. Keep form padding only for creation
 and the Android editor. Specify a readable icon/text gap and a smaller title/path
 gap rather than relying on the bridge's zero-spacing defaults.
 
-Render existing React Native recovery content in its own width-constrained sibling
-above the native list, with one standard horizontal inset. Do not use an
-intrinsically measured RNHostView inside a SwiftUI cell: its unconstrained Yoga
-width can exceed the cell and clip messages. Preserve retry focus guards and
-command behavior. Capture phone and iPad recovery as well as idle selection before
-claiming this correction verified.
+Render typed recovery content inside the native list using native text/buttons.
+Do not use a React Native sibling above the list or an intrinsically measured
+RNHostView inside its cells: the former falls behind native headers and the latter
+can exceed the cell width. Preserve retry focus guards and command behavior.
+Capture phone and iPad recovery as well as idle selection before acceptance.
 
 The entire candidate row, including empty space between its text and checkmark,
 must select the candidate. The pinned SwiftUI plain button needs an explicit
 rectangular content shape on its label stack. The iPad center-row taps in the
 existing connected native scenarios are the regression check; do not move those
 taps onto the text to hide a deficient touch target.
+
+## Status ownership correction
+
+Run35907123046 phone captures confirm the React Native status sibling renders
+under the native header; Retry suggestions has no hittable point. Replace the
+arbitrary ReactNode status slot with typed message/retry data rendered inside
+the platform list. On iOS use SwiftUI text and buttons so List owns width, safe
+area, scrolling and hit testing. Android retains inline recovery in its scroll
+body. Preserve current retry handlers, lock/focus guards and read-only/busy/empty
+messages. Do not add header-height padding or another unconstrained RNHostView.
+The connected move/detail/reopen case passes; creation search shows exact Audit
+in the failure capture, so its five-second observation timeout is separate from
+this demonstrated status-placement defect.
+
+Reuse the existing bounded 30-second exact-text observation, with elapsed timing,
+for the demonstrated Move creation-search observation timeout. Retain exact Audit
+and all subsequent creation/retry assertions; do not retype or change providers.

@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { MoveSelectionList } from '../components/MoveSelectionList';
-import type { MoveSelectionRowModel } from '../components/MoveSelectionList.types';
+import type { MoveSelectionRowModel, MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { NativeFilterSearch } from '../components/NativeFilterSearch.android';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
@@ -305,7 +305,7 @@ export function MoveAssetSheet({
   readonly onBeginCreation: () => void;
   readonly onCancelCreation: () => void;
   readonly onChangeCreationName: (name: string) => void;
-  readonly candidateStatus?: ReactNode;
+  readonly candidateStatus?: MoveSelectionStatus;
   readonly isSaving: boolean;
   readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
@@ -370,8 +370,7 @@ export function MoveAssetSheet({
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
       {!creationExpanded ? <MoveSelectionList subjectLabel="Moving" subject={asset.title}
         context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title="Destinations"
-        status={readOnly || candidateStatus || isSaving ? <>{readOnly ? <ActionEligibilityNotice /> : null}{candidateStatus}
-          {isSaving ? <Text accessibilityLiveRegion="polite">Moving…</Text> : null}</> : undefined}
+        statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
         rows={[{ id: 'inventory-root', label: 'Inventory root', context: 'Top level', kind: 'root',
           selected: draft?.selectedParent === null, disabled, accessibilityLabel: 'Choose inventory root', onPress: onSelectRoot },
           ...(draft?.matches ?? []).map(toRow)]}
@@ -416,7 +415,7 @@ export function MoveThingsHereSheet({
   readonly readOnly?: boolean;
   readonly draft: MoveIntoDraft | undefined;
   readonly candidatesAvailable?: boolean;
-  readonly candidateStatus?: ReactNode;
+  readonly candidateStatus?: MoveSelectionStatus;
   readonly isSaving: boolean;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -452,9 +451,8 @@ export function MoveThingsHereSheet({
         : !disabled ? <NativeFilterSearch {...search} /> : null}
       <MoveSelectionList subjectLabel="Destination" subject={draft?.target.title ?? 'This place'}
         context="Choose an item to move here." title="Items"
-        status={readOnly || candidateStatus || isSaving || (candidatesAvailable && draft?.matches.length === 0) ? <>{readOnly ? <ActionEligibilityNotice /> : null}{candidateStatus}
-          {isSaving ? <Text accessibilityLiveRegion="polite">Moving…</Text> : null}
-          {candidatesAvailable && draft?.matches.length === 0 ? <><Text>{emptyState.title}</Text><Text>{emptyState.message}</Text></> : null}</> : undefined}
+        statuses={[...moveSelectionStatuses(readOnly, isSaving, candidateStatus),
+          ...(candidatesAvailable && draft?.matches.length === 0 ? [{ title: emptyState.title, message: emptyState.message }] : [])]}
         rows={(draft?.matches ?? []).map(toRow)}
         retainedSelection={draft?.selectedAsset && !draft.matches.some(match => match.id === draft.selectedAsset?.id)
           ? toRow(draft.selectedAsset) : undefined} />
@@ -596,4 +594,12 @@ function createStyles(colors: MobileColorPalette) {
     opacity: 0.55
   }
   });
+}
+
+function moveSelectionStatuses(readOnly: boolean, isSaving: boolean, candidate?: MoveSelectionStatus): readonly MoveSelectionStatus[] {
+  return [
+    ...(readOnly ? [{ message: 'This item cannot be changed here. Your draft is kept while this screen is open.' }] : []),
+    ...(candidate ? [{ ...candidate, retry: candidate.retry ? { ...candidate.retry, disabled: readOnly || isSaving } : undefined }] : []),
+    ...(isSaving ? [{ message: 'Moving…' }] : [])
+  ];
 }

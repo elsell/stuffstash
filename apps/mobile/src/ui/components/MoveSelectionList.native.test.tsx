@@ -21,3 +21,21 @@ it('keeps subject, selection and destination context distinct and rejects stale 
     await h.unmount(); await h.run(press); expect(calls).toEqual(['current']);
   } finally { await h.unmount(); }
 });
+
+it('keeps recovery inside the native list and retires removed retry actions', async () => {
+  const h = new MobileRenderHarness(); const calls: string[] = [];
+  const render = (owner?: string) => h.render(<MoveSelectionList subjectLabel="Destination" subject="Garage"
+    context="Choose an item" title="Items" rows={[]} statuses={owner ? [{ message: 'Suggestions unavailable',
+      retry: { label: 'Retry suggestions', onPress: () => calls.push(owner) } }] : []} />);
+  try {
+    await render('first');
+    const retry = h.byType('SwiftUIButton'); expect(retry).toBeDefined();
+    let parent = retry!.parent;
+    while (parent && parent.type !== 'SwiftUIList') parent = parent.parent;
+    expect(parent).toBeDefined();
+    expect(h.allText()).toContain('Suggestions unavailable');
+    const press = retry!.props.onPress;
+    await render('current'); await h.run(press); expect(calls).toEqual(['current']);
+    await render(); await h.run(press); expect(calls).toEqual(['current']);
+  } finally { await h.unmount(); }
+});

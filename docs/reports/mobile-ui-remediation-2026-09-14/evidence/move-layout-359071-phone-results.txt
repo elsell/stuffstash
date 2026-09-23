@@ -1,0 +1,15 @@
+Run35907123046 phone job107337474501 at ebd1ef66: connected move/detail/reopen
+passes. Both Move Here cases fail because Retry suggestions renders behind the
+native header, with no hit point. AX exposes the button, but screenshots hide it.
+Correction: typed status rows inside SwiftUI List, no cross-framework status slot.
+Creation stops at five-second exact Audit observation; both final screenshot and
+AX show Audit. Reuse bounded exact-value observation with timing, preserving all
+remaining creation checks. iPad result and corrected native acceptance pending.
+
+Correction validation: 51 focused tests, TypeScript, structural checks, fixture
+preparation, docs build and critic review pass. Android rebuilt with the changed
+MoveSelectionList/AssetDetailSheets/AssetNativeActionSheetScreens overlay passes
+lookup failure/retry, checked selection, search retention, move rejection and
+explicit retry/return. Its status screenshot was inspected. The reused script's
+printed b58ee297 source label is stale; the build includes this correction.
+Corrected iPhone/iPad status visibility is not yet verified.

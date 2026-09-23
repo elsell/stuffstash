@@ -474,9 +474,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("move-selection-idle")
     query.tap(); waitForKeyboard(keyLabel: "t")
     query.typeText("Audit")
-    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "value == %@", "Audit"), object: query
-    )], timeout: 5), .completed)
+    waitForExactEnteredText("Audit", in: query)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
     let newDestination = app.buttons["New destination"].firstMatch

@@ -1,18 +1,15 @@
 import { Button, Host, HStack, Image, List, Section, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import { accessibilityLabel, accessibilityValue, buttonStyle, contentShape, shapes, disabled, font, foregroundStyle, frame, listStyle } from '@expo/ui/swift-ui/modifiers';
-import { View } from 'react-native';
 import { spacing } from '../theme/tokens';
 import { useFocusedSheetActions } from './useFocusedSheetActions';
-import type { MoveSelectionListProps, MoveSelectionRowModel } from './MoveSelectionList.types';
+import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus } from './MoveSelectionList.types';
 
 const symbols = { root: 'tray', location: 'house', container: 'shippingbox', item: 'cube' } as const;
 const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
 
 /** System List owns scrolling, section spacing, separators and row insets. */
 export function MoveSelectionList(props: MoveSelectionListProps) {
-  return <View style={{ flex: 1 }}>
-    {props.status ? <View style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}>{props.status}</View> : null}
-    <Host style={{ flex: 1 }}>
+  return <Host style={{ flex: 1 }}>
     <List modifiers={[listStyle('insetGrouped')]}>
       <Section title={props.subjectLabel}>
         <VStack alignment="leading" spacing={spacing.xs}>
@@ -22,11 +19,11 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
       </Section>
       {props.retainedSelection ? <Section title="Selected"><Choice row={props.retainedSelection} /></Section> : null}
       <Section title={props.title}>
+        {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
         {props.rows.map(row => <Choice key={row.id} row={row} />)}
       </Section>
     </List>
-    </Host>
-  </View>;
+    </Host>;
 }
 function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
   const actions = useFocusedSheetActions({ primaryLabel: row.accessibilityLabel, secondaryLabel: '',
@@ -43,4 +40,14 @@ function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
       {row.selected ? <Image systemName="checkmark" /> : null}
     </HStack>
   </Button>;
+}
+
+function Status({ status }: { readonly status: MoveSelectionStatus }) {
+  const actions = useFocusedSheetActions({ primaryLabel: status.retry?.label ?? '', secondaryLabel: '',
+    disabled: !status.retry || !!status.retry.disabled, onApply: () => status.retry?.onPress(), onBack: () => {} });
+  return <VStack alignment="leading" spacing={spacing.md}>
+    <>{status.title ? <Text modifiers={[font({ weight: 'semibold' })]}>{status.title}</Text> : null}<Text modifiers={[secondary]}>{status.message}</Text></>
+    {status.retry ? <Button onPress={actions.onApply} modifiers={[buttonStyle('bordered'),
+      disabled(actions.disabled), accessibilityLabel(status.retry.label)]}><Text>{status.retry.label}</Text></Button> : null}
+  </VStack>;
 }
