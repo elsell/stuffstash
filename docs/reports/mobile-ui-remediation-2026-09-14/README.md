@@ -4,6 +4,13 @@ The comprehensive audit is **incomplete**. Prioritize stable screen structure,
 connected everyday tasks, visual coherence, then detailed states. Normal text comes
 first. The surface/axis inventory checks omissions; it is not a separate test queue.
 
+## Design acceptance hold
+
+User review rejected Move’s visual hierarchy, indentation and text-only creation
+action. Native35895924050 passes functionality only. M265–M273 is held pending
+whole-layout redesign and matching phone/iPad visual review; do not equate green
+workflow checks with product acceptance.
+
 ## Delivery and frozen batch
 
 Latest verified TestFlight: **0.24.32 (123.1)** — M260–M264, with Apple processing

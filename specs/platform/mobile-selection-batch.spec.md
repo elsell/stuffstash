@@ -29,3 +29,20 @@ corrected Move/Move Here native run. Their current specs retain exact acceptance
 requirements and known diagnoses. Do not merge this batch until its changed native
 workflows and required CI pass. Real backend, physical-device and Android-tablet
 evidence remains distinct from fixture/simulator checks.
+
+## Design acceptance hold
+
+User review rejects the Move visual experience despite functional native passes.
+Run35895924050 establishes operation and recovery only; it does not close visual
+or whole-task acceptance. Hold this batch until the Move/Move Here layout has a
+coherent hierarchy and normal-text phone/iPad review. Do not weaken acceptance or
+ship the rejected design on the strength of green automation.
+
+Review priorities: compact subject/current-location context, clearly grouped
+and aligned destination list, identifiable places/containers, discoverable native
+search, distinct selection/commit semantics, and a deliberate secondary creation
+action. Avoid stacked ungrouped status paragraphs, unexplained cumulative insets,
+and floating centered text commands. Native search is currently collapsed behind
+an iPhone toolbar icon and expanded in the reviewed iPad capture; compare matching
+states before claiming platform consistency. Reuse native list/toolbar patterns;
+SettingsChoiceRow is a custom React Native row, not a system-native list.
