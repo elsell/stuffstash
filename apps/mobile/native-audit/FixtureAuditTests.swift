@@ -1298,7 +1298,10 @@ final class FixtureAuditTests: XCTestCase {
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)
     add.tap()
-    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    // A cleared SwiftUI field can expose no value while retaining its placeholder.
+    let clearedEntry = app.textFields["New tag name"].firstMatch
+    XCTAssertTrue(clearedEntry.exists)
+    XCTAssertTrue(clearedEntry.value == nil || ["", "New tag"].contains(clearedEntry.value as? String ?? "unexpected"))
     XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
     let expand = app.buttons["Show all tags"].firstMatch
