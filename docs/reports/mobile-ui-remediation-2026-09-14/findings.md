@@ -7,7 +7,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 | ID | Finding | Status | Evidence / next verification |
 | --- | --- | --- | --- |
 | M01 | Short filter choices cause unnecessary drilldown | Implemented; scoped native passes | Run351214 phone/iPad logs pass testBrowseUsesInPlaceAvailabilityMenuAndReachableActions: choose Available in place, retain Filters, reachable Apply/Cancel, apply value. This samples Availability, not every short-choice consumer or assistive mode. |
-| M02 | Custom field short choices use bespoke disclosure radios | Implemented; runtime pending | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
+| M02 | Custom field short choices use bespoke disclosure radios | Implemented; scoped native choices pass | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
 | M03 | Redundant exact-date staging | Implemented; scoped native passes | Run351214 phone/iPad logs pass testExactExpirationUsesCompactNativePicker: Add date, native picker, no redundant Use date, dismiss and Clear. Android cancellation, arbitrary date edits and wider adaptation retain their separate evidence requirements. |
 | M04 | Standard header actions remain custom on some screens | Implemented; native pending | Add, inbox and reminder timing use shared native bar items with disabled guards; 29 focused tests/check/structural; critic copy mismatch corrected |
 | M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |
@@ -16,7 +16,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Runtime access established; coverage partial | macOS iPhone/iPad runners and Android API36 emulator are available. Native device/state coverage remains partial; VoiceOver and TalkBack acceptance remain open. See native-ipad-351214.md and android-action-descriptions.md for result-export and screen-reader limitations. |
 | M09 | Expiration location labels omit ancestry | Implemented; runtime pending | Authorized active-tree path labels, partial paths and duplicate-name fixture; full1331 tests/structural plus typecheck green; critic found no blockers |
 | M10 | Expiration tag multi-selection is exposed as radio buttons | Implemented; runtime pending | Checkbox semantics with select2/remove1/apply regression; 4 focused tests/check green; critic found no blockers |
-| M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; runtime pending | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
+| M11 | Newly selected custom-field applicability targets cannot be removed before saving | Implemented; scoped native draft choices pass | Saved targets stay immutable; draft checkbox choices can be deselected, including safe unavailable-draft removal; create/edit/scoped-name tests, 37 focused tests/check/structural green; critic found no further blocker |
 | M12 | Replacement notices inherit the prior timer/animation lifecycle | Implemented; runtime pending | Monotonic identity, keyed lifecycle and originating-ID dismissal; two rendered regression tests/check green; critic found no blockers |
 | M13 | Initial asset/location list load errors have no in-place retry | Implemented; native pending | Scoped Retry in both routed lists and legacy unrouted LocationsScreen; repeat-failure and scope-recovery tests; full1349/check/structural green; critic found no blocker |
 | M14 | Native onboarding run shows a shortened typed server address | Named native scenarios pass; broad acceptance pending | Run351214 onboarding passes applicable phone/iPad cases, with help, complete address entry, keyboard reachability and iPad landscape captures inspected; see native-onboarding-351214.md. Historical controlled-input failures remain a separate unresolved family. |
@@ -3645,3 +3645,24 @@ The mounted regression reproduced the duplicate offer before the fix;90 focused
 tests, TypeScript and structural checks now pass remotely. Query changes, casing,
 server deduplication and rejected-move retention are covered. Critic found no
 source blocker. Corrected native acceptance remains pending.
+
+
+### M255 — Move destination query loses typed characters on iOS
+
+P1 runtime-confirmed on phone and iPad, native35828644735 atbcbb83ed. One attempt
+to enter Audit crate leaves Ae on phone and A on iPad. Exact-value assertions
+stop before creation; [retained outcomes](evidence/native-move-field-358286-results.txt).
+This is a real form workflow, distinct from earlier isolated RN input comparisons.
+
+Budget exhausted; decision: reuse the established SwiftUI draft-field adapter from
+Add for iOS Move query. Ordinary rerenders preserve its native text buffer. Only
+successful destination creation advances a query revision to apply the canonical
+returned title. Android remains controlled through its existing input. The adapter
+extraction preserves Add's native behavior and tests. New Move coverage verifies
+same field through typing/creation failure and new field with canonical name after
+success. No provider removal, pacing or key-delivery experiments. Acceptance remains
+exact one-attempt typing, creation recovery, no duplicate offer, selection retention
+and successful Move retry, plus representative Add native regression.
+
+M02/M11 native create-form choices now pass both devices in35828644735 (Android
+previously passed); field persistence and assistive behavior retain separate scope.

@@ -116,60 +116,46 @@ The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
 
-## Next acceptance batch — destination and custom-field choices
+## Frozen next release batch — Move destination recovery
 
-Move destination selection/creation remains a distinct gap from accepted Move-here
-recovery (M231). The runner-only real Move form now has exact-payload synthetic
-ports for existing selection, new Container creation, rejected creation with query
-and kind retained, created selection, rejected move and successful retry return.
-Remote fixture installation (10 tests), TypeScript and structural checks pass.
-Android APK41b83db4 completed this recovery journey, but exposed M254: the form
-still offers duplicate creation after selecting its newly created destination.
-The retained final hierarchy confirms successful return despite an offscreen
-launcher assertion. M254 correction now merges confirmed local creations with current search results,
-filters by query and prefers server records by ID. The mounted regression failed
-before the fix;90 focused tests, TypeScript and structural checks pass remotely.
-Code critic found no blocker. Corrected Android APKc62b07ae passes existing
-selection, native Container choice, rejected creation/retry, no duplicate creation
-offer, selected new row, rejected Move retention and successful exact-payload retry.
-[Reviewed capture](evidence/android-m254-retained.png) and
-[returned hierarchy](evidence/android-m254-returned.xml) retain evidence.
-CI35826356314 passes all six jobs atcdba3261. Native35826352235 passes the full
-field-choice sequence on iPad; phone fails both scenarios during Xcode launch,
-before task execution. iPad Move stops before typing: one key-enumeration readiness
-sample is false and exhausts the waiter; the later capture shows the focused field
-and keyboard. Retain those failures. The reviewed scoped correction requires field
-hittability, keyboard existence, one typing attempt and unchanged exact text,
-without independently enumerating keyboard keys. One corrected Move acceptance
-attempt remains; no input/provider changes or renewed field-choice investigation. iOS execution
-is pending. Budget: one source pass, at most two discriminating
-native experiments. First acceptance distinguishes correct in-place choices and
-retained drafts from a specific command/layout failure; a failed gate determines
-the only follow-up correction. Run this with the held field-choice observer fix,
-not as another isolated field investigation. No production fix is claimed.
+PR165 fixes M254: confirmed creations are merged with current search results by
+ID, filtered by query and retained as the selected destination. The failing mounted
+regression,90 focused tests, TypeScript, structural checks and critic establish the
+source correction. Android APKc62b07ae passes existing selection, native Container
+choice, rejected creation/retry, no duplicate creation offer, selected new row,
+rejected Move retention and successful exact-payload retry. [Reviewed capture](evidence/android-m254-retained.png)
+and [returned hierarchy](evidence/android-m254-returned.xml) retain evidence.
 
-### Custom-field choices
+Native35826352235 stopped phone scenarios during Xcode launch and iPad Move in a
+key-enumeration precheck. Its scoped observer correction preserved field hittability,
+keyboard presence, one typing attempt and exact text. Native35828644735 then exposed
+M255 in the real Move journey: Audit crate became Ae on phone and A on iPad before
+creation. [Exact outcomes](evidence/native-move-field-358286-results.txt). CI atbcbb83ed
+passes. These are failed acceptance runs, not release evidence.
 
-M02/M11 retain a distinct native gap: Type/Applies to menus and scroll-separated
-applicability selections in the real CustomizationFieldControls. A runner-only
-create-form fixture now checks enum disclosure, in-place applicability choice,
-selecting first/last targets and removing the first while retaining the last.
-Android APKbe77f1faa79bebf423b28a41e15defa518c1cf0e2ab8a56341795c096c2d5aee
-passes every selection transition; [final capture](evidence/android-field-choices-retained.png)
-and [hierarchy](evidence/android-field-choices-retained.xml) retain the result.
-Native35821158725 stopped before selection because its prefix-only matcher omitted
-the visible field label that SwiftUI prepends. Both retained hierarchies show the
-expected controls. Follow the existing Browse semantic-label substring matcher;
-keep visible-label and intermediate selection assertions. No production correction
-is justified by this harness failure. Corrected run35822973764 reaches both menu
-choices and selects the first target on both devices. Its [phone capture](evidence/phone-field-choice-first-selected-358229.png)
-and retained hierarchies show the exact selected ID and checked row. The passive
-observer is visible but not hittable; use exact text plus visible bounds, keeping
-all intermediate assertions. The two-run investigation budget is exhausted: retain
-this correction for the next broader acceptance batch. PR165 stays draft; iOS
-last-target selection and removal remain unverified. No isolated rerun is planned. Existing shared
-Save/Back acceptance is not being repeated; field persistence and assistive modes
-are outside this specific check.
+Current decision: the investigation budget is exhausted. Reuse Add's proven
+SwiftUI draft field for iOS Move query; do not repeat input/provider/timing
+comparisons. The shared adapter preserves native editing state; Move advances a
+query revision only after successful creation to apply the returned canonical
+name. Android keeps its existing input. Review requested an actual Move regression
+for canonical naming, unchanged field through typing/rejection and reset after
+success; it is added and its negative control fails without revision advancement.
+All1,925 remote tests (306 files), TypeScript and structural checks pass. Native
+implementation acceptance must verify exact
+one-attempt text plus creation/movement recovery, with Add as the shared-adapter
+regression. No further field-choice rerun is needed.
+
+### Custom-field choices — scoped acceptance complete
+
+M02/M11's real create-form composition passes all intermediate selections on both
+phone and iPad in35828644735: Type/Applies to choices, first/last target selection,
+removing the first and retaining the last. [Reviewed phone capture](evidence/phone-field-retained-target-358286.png). Android APKbe77f1fa passed the same
+sequence; [capture](evidence/android-field-choices-retained.png) and
+[hierarchy](evidence/android-field-choices-retained.xml) retain evidence. Earlier
+label and passive-observer failures remain recorded in commits984cba79/2f421bf4
+and their retained evidence. Field persistence, saved-target immutability and
+assistive modes were not part of this scenario; existing source tests retain those
+boundaries. Do not rerun this accepted shared-control composition unchanged.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad

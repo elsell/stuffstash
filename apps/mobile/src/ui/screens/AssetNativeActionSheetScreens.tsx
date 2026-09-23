@@ -235,6 +235,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
       setDraft({
         createKind,
         query: created.title,
+        queryRevision: (draft.queryRevision ?? 0) + 1,
         matches: [createdParent, ...draft.matches.filter((match) => match.id !== createdParent.id)],
         selectedParent: createdParent
       });

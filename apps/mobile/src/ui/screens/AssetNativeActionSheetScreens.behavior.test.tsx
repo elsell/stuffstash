@@ -102,16 +102,24 @@ it('creates the move destination with the kind selected in the native menu', asy
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
-        createAssetCommand={{ execute: async input => { created.push(input); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
+        createAssetCommand={{ execute: async input => { created.push(input); if (created.length === 1) throw new Error('Create temporarily unavailable'); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
         moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => lookupResults }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.allByType('TextInput').find(input => input.props.placeholder === 'Search places, boxes, shelves'), 'Camping box');
+    const originalField = h.byLabel('Put in');
+    await h.changeText(originalField, 'camping box');
+    expect(h.byLabel('Put in')).toBe(originalField);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
-    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "Camping box"')?.parent;
+    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
     await h.press(create ?? undefined);
-    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'Camping box' })]);
+    expect(latestAlert()?.title).toBe('Could not create destination');
+    expect(h.byLabel('Put in')).toBe(originalField);
+    expect(h.byLabel('Put in')?.props.value).toBe('camping box');
+    await h.press(create ?? undefined);
+    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'camping box' }), expect.objectContaining({ kind: 'container', title: 'camping box' })]);
+    expect(h.byLabel('Put in')).not.toBe(originalField);
+    expect(h.byLabel('Put in')?.props.value).toBe('Camping box');
     expect(h.allText().join(' ')).toContain('Camping box');
     expect(h.byLabel('Create container "Camping box"')).toBeUndefined();
     const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.selected === true);

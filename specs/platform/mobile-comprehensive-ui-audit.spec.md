@@ -24,6 +24,18 @@ consumer checks. Keep spec-first development, meaningful regressions, code criti
 review and native verification. Sleeping scripts own terminal-state collection;
 manual status polling must not duplicate a healthy collector.
 
+## Move destination text entry
+
+The real Move journey reproduced lost query characters on phone and iPad after
+one complete typing attempt. Reuse the proven SwiftUI draft text-field adapter
+used by Add on iOS; keep the existing Android text input. Native text owns its
+editing buffer so ordinary query updates do not echo stale JavaScript values back
+into it. A successful creation can replace the query with the canonical returned
+name: advance an explicit draft query revision to reset the native field then.
+Pending/denied operations remain noneditable and late changes remain guarded.
+Do not change providers, typing speed or keyboard assistance to hide the failure.
+Retain exact one-attempt typing and creation/movement recovery acceptance.
+
 ## Newly created Move destinations
 
 During a Move form visit, successful destination creation must immediately add

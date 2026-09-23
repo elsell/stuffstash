@@ -1,0 +1,6 @@
+phone 2026-09-23T07:14:38.8153150Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testCustomFieldChoicesStayInPlaceAndRetainTargets]' passed (122.337 seconds).
+phone 2026-09-23T07:15:35.9015120Z /Users/runner/work/stuffstash/stuffstash/apps/mobile/native-audit/FixtureAuditTests.swift:473: error: -[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries] : XCTAssertEqual failed: ("Optional("Ae")") is not equal to ("Optional("Audit crate")")
+phone 2026-09-23T07:15:39.5608900Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries]' failed (61.372 seconds).
+ipad 2026-09-23T07:09:49.7984560Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testCustomFieldChoicesStayInPlaceAndRetainTargets]' passed (85.752 seconds).
+ipad 2026-09-23T07:11:30.7627060Z /Users/runner/work/stuffstash/stuffstash/apps/mobile/native-audit/FixtureAuditTests.swift:473: error: -[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries] : XCTAssertEqual failed: ("Optional("A")") is not equal to ("Optional("Audit crate")")
+ipad 2026-09-23T07:11:41.2161110Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries]' failed (111.149 seconds).
