@@ -24,7 +24,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 | M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
 | M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
-| M19 | Expiration filter sheet loses body/actions during native presentation | Expansion passes; phone keyboard actions unresolved | Run34920888328 direct-root candidate survives expansion on phone and iPad. Search keyboard action reachability passes on iPad but fails on phone. Large-text label finding tracked separately as M53 |
+| M19 | Expiration filter sheet loses body/actions during native presentation | Scoped native passes on phone/iPad | Run35247151136 passes testExpirationSheetBodySurvivesExpansion and testExpirationSearchKeepsActionsReachableWithKeyboard on both devices: body/Apply remain reachable after expansion; full query filters tags, actions clear the keyboard/accessory, and Back returns to Filters. Earlier keyboard failures below are historical. Large-text label finding remains separate as M53. |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
 | M21 | Add fields can change while the submitted item is being saved | Implemented; source tests pass; native pending | Exclusive save/parent/photo operation ownership guards draft edits, duplicate submission and dismissal. Five remote tests cover save failure, parent failure and photo cancellation with draft retention and editing recovery; native verification remains pending |
 | M22 | Appearance uses navigation for three flat choices | Implemented; native menu scenario passes both devices | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
@@ -100,7 +100,14 @@ in that snapshot.
 
 ### M47 — Home return details uses an inline panel instead of its specified sheet
 
-Source-confirmed, open. `HomeScreen.tsx` renders `ReturnDetailsSheet` as a `View`
+Current status: implemented; run35247151136 passes the normal-text Home return
+cancel and recovery workflows on phone/iPad. The tests verify complete details
+entry, keyboard dismissal, failed-save draft retention, visible error, successful
+retry to Home, and cancel restoration. Long details, enlarged text and modal
+assistive focus remain unverified; these are not reasons to repeat the already
+passed normal-text workflows without a relevant change.
+
+Original source finding: `HomeScreen.tsx` rendered `ReturnDetailsSheet` as a `View`
 at the end of dashboard content, with bespoke buttons and a placeholder-only
 input. The asset checkout spec explicitly calls for a native sheet. The follow-up
 may be offscreen after Return, has no modal focus boundary, and lacks a persistent
