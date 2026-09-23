@@ -2002,7 +2002,14 @@ final class FixtureAuditTests: XCTestCase {
     waitForExactEnteredText("Tent", in: name)
     app.buttons["Dismiss keyboard"].firstMatch.tap()
     let choose = app.buttons["Choose destination"].firstMatch
-    reveal(choose, in: form); choose.tap(); search("Shelf 14")
+    reveal(choose, in: form); choose.tap()
+    let topLevel = app.buttons["Choose inventory top level"].firstMatch
+    XCTAssertTrue(topLevel.waitForExistence(timeout: 5))
+    XCTAssertTrue(topLevel.isHittable)
+    let pickerHeader = app.navigationBars["Put in"]
+    XCTAssertGreaterThanOrEqual(topLevel.frame.minY, pickerHeader.frame.maxY)
+    capture("add-destination-entry")
+    search("Shelf 14")
     let shelf = app.descendants(matching: .any)["Choose destination Shelf 14"].firstMatch
     XCTAssertTrue(shelf.waitForExistence(timeout: 5))
     let closeSearch = app.navigationBars.buttons["Close"].firstMatch
@@ -2030,6 +2037,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.navigationBars["New place"].exists)
     let cancelCreation = app.navigationBars["New place"].buttons["Cancel new place"].firstMatch
     XCTAssertTrue(cancelCreation.isHittable)
+    let creationName = app.textFields["New place name"].firstMatch
+    XCTAssertTrue(creationName.isHittable)
+    XCTAssertGreaterThanOrEqual(creationName.frame.minY, app.navigationBars["New place"].frame.maxY)
     capture("add-destination-creation-entry")
     cancelCreation.tap()
     XCTAssertTrue(app.navigationBars["Put in"].waitForExistence(timeout: 5))

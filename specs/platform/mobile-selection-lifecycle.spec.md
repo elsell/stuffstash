@@ -106,3 +106,20 @@ search and the secondary creation action are both discoverable. The system heade
 owns command spacing and hit targets; do not stack intrinsic SwiftUI command hosts
 inside a clipped React Native group. Retain keyboard ownership and busy guards.
 Verify matching phone/iPad creation entry, error/retry, cancellation, and return.
+
+## Destination entry and native scroll ownership
+
+Run35914746387 phone stops before entering a search query: the expanded search
+field has no keyboard and the final capture begins at Shelf 1, hiding the current
+destination and top-level choice. iPad passes the four selection workflows. Do not
+replace this evidence with another keyboard timeout increase.
+
+On iOS, the destination task must expose one directly rooted scrolling surface,
+with native automatic header adjustment during selection. Remove the redundant
+keyboard-avoidance and safe-area wrappers on iOS; preserve Android keyboard
+avoidance. Creation uses measured header clearance with automatic top adjustment
+disabled, matching the focused Move creation form. Keep bottom safe-area clearance.
+Verify initial current/top-level context below the header, search entry, creation
+name clearance, cancellation and retry on phone and iPad. Keyboard focus remains
+unverified until the same native journey completes; this layout correction alone
+does not establish its cause or resolution.

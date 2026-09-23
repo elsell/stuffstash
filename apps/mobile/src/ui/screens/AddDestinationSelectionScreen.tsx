@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useFocusEffect } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ParentSelection } from './AddAssetResolution';
 import { SettingsChoiceRow, SettingsLoadingRow, SettingsSection, useSettingsListStyles } from './SettingsList';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -32,6 +32,7 @@ export type AddDestinationSelectionProps = {
 export function AddDestinationSelectionScreen(props: AddDestinationSelectionProps) {
   const { palette, styles } = useSettingsListStyles();
   const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
   const [creationOpen, setCreationOpen] = useState(false);
   const current = useRef<(AddDestinationSelectionProps & { readonly creationOpen: boolean }) | undefined>(undefined);
   const focused = useRef(false);
@@ -64,11 +65,12 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
     {props.loading ? <SettingsSection><SettingsLoadingRow label="Loading suggestions…" /></SettingsSection> : null}
     {props.failed ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>Suggestions could not be loaded.</Text></View><NativeCommandButton label="Retry suggestions" disabled={props.disabled} onPress={openCreation.onBack} /></SettingsSection> : null}
   </>;
-  return <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'android' ? 'height' : undefined} keyboardVerticalOffset={headerHeight}>
-    <Stack.Screen options={headerOptions} />
-    {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!creationOpen && !props.disabled} /> : !creationOpen && !props.disabled ? <NativeFilterSearch {...search} /> : null}
-    <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: palette.background }}>
-      <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 20 }}>
+  const content = <ScrollView style={{ flex: 1, backgroundColor: palette.background }}
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+      contentInsetAdjustmentBehavior={Platform.OS === 'ios' && creationOpen ? 'never' : 'automatic'}
+      keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
+      contentContainerStyle={{ paddingBottom: 20 + (Platform.OS === 'ios' ? insets.bottom : 0),
+        paddingTop: Platform.OS === 'ios' && creationOpen ? headerHeight : 0 }}>
         {creationOpen ? <>
           <SettingsSection title="Name" footer="A new place is saved immediately, even if you cancel adding the item later.">
             <View style={styles.navigationRow}>
@@ -91,7 +93,12 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
             accessibilityLabel={`Choose destination ${parent.title}`} selected={props.selected?.id === parent.id} disabled={props.disabled || parent.canSelectAsParent === false} onPress={() => select(parent.id)} />)}
         </SettingsSection>
         </>}
-      </ScrollView>
-    </SafeAreaView>
-  </KeyboardAvoidingView>;
+      </ScrollView>;
+  return <>
+    <Stack.Screen options={headerOptions} />
+    {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!creationOpen && !props.disabled} /> : !creationOpen && !props.disabled ? <NativeFilterSearch {...search} /> : null}
+    {Platform.OS === 'ios' ? content : <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" keyboardVerticalOffset={headerHeight}>
+      <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: palette.background }}>{content}</SafeAreaView>
+    </KeyboardAvoidingView>}
+  </>;
 }
