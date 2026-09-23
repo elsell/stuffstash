@@ -262,3 +262,17 @@ traces across both targets. Missing/reordered characters occur in received nativ
 change events with contiguous counts, including no-accessory comparisons. This
 narrows the observation boundary without proving a root cause or clearing real
 product workflows. Phone10/14 and iPad11/14 comparisons pass.
+
+## September 23 continuation
+
+Focused native run35803226783 tests source253414943d3549ff581dd8e8c39872e189cf5ea9
+on iPhone17 and iPad mini. It includes the prepared key-event recorder and retains
+the ordinary typing/exact-value requirements. Both jobs were confirmed running;
+results and trace interpretation are pending. The observer sleeps120 seconds
+between checks and collects terminal job logs under `/tmp/native358032-*`.
+Do not dispatch a replacement merely because an observation session expires.
+
+Removed only the downloaded351910 phone/iPad ZIP copies from paul after verifying
+their upstream artifacts10486187408/10486118042 remain available until October1.
+Selected reviewed evidence remains in this report directory. This reclaimed about
+3GB; paul's `/tmp` has17GB free. The untracked Android project is untouched.
