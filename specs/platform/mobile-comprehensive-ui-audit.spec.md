@@ -2108,3 +2108,13 @@ Verify latest-owner and removed
 header callbacks in source tests. Native screenshots and connected task checks
 are both required; passing tests alone do not close M277. This follow-up is not a
 prerequisite for releasing independently accepted M265–M273 fixes.
+
+
+M277 representative native detail fixtures reuse the real detail route and
+controlled read ports for an item with a bundled image, a checked-out container,
+a read-only checked-out container, and an editable place with searchable contents.
+Fixture images establish occupied-gallery layout, not real-photo crop quality.
+They do not perform server mutations or establish authorization enforcement.
+The route variant remounts its query owner so one case cannot inherit another's
+permissions or state. Capture entry and the relevant contextual commands; keep
+whole-layout acceptance separate from assertions about command presence.

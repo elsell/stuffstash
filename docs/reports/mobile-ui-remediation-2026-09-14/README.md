@@ -119,5 +119,13 @@ mobile structural check pass on paul. Critic found duplicate checked-out metadat
 that is corrected with a regression test. Android's first render prompted aligned,
 bounded context rows. The revised Android item render has aligned context rows;
 native header Edit opens the current asset and Cancel returns with commands intact.
-[Android render](evidence/android-detail-contextual-actions.png). Populated-photo,
-container/place native comparisons and iPhone/iPad acceptance remain open. This is a follow-up, not a new gate on the frozen selection batch.
+[Android render](evidence/android-detail-contextual-actions.png). Representative Android photo, checked-out/read-only container and editable Place
+checks pass; Edit/More/Search coexist on Place, and read-only status retains no
+mutation controls. The [photo](evidence/android-detail-photo.png),
+[container](evidence/android-detail-checked-out.png),
+[read-only](evidence/android-detail-read-only.png) and
+[Place](evidence/android-detail-place.png) renders keep M277 visually open:
+photo actions still interrupt identity reading, and empty sections/actions push
+actual contents too far down. The bundled image proves gallery layout only.
+iPhone/iPad acceptance remains open. The corrected native reachability helper
+checks Edit inside its header, not below the header with scroll content. This is a follow-up, not a new gate on the frozen selection batch.

@@ -1084,6 +1084,43 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testDetailContextVariantsKeepNativeCommandsAndStatus() {
+    for (variant, title) in [("photo", "Camping tent"), ("checked-out", "Camping gear"),
+                             ("read-only", "Spare camping gear"), ("place", "Garage")] {
+      guard openFixtureURL("audit-detail-commands?variant=" + variant) else { return }
+      let heading = app.staticTexts[title].firstMatch
+      XCTAssertTrue(heading.waitForExistence(timeout: 10))
+      let edit = app.navigationBars.buttons["Edit"].firstMatch
+      if variant == "read-only" {
+        XCTAssertTrue(edit.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Move"].exists)
+        XCTAssertFalse(app.buttons["Return"].exists)
+      } else {
+        XCTAssertTrue(edit.waitForExistence(timeout: 5)); XCTAssertTrue(edit.isHittable)
+      }
+      if variant == "photo" {
+        XCTAssertTrue(app.buttons["Open photo 1 of 1"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["No photos"].exists)
+      }
+      if variant == "place" {
+        XCTAssertTrue(app.buttons["Search"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
+        XCTAssertTrue(app.buttons["Move place"].firstMatch.isHittable)
+        XCTAssertFalse(app.staticTexts["Availability"].exists)
+      }
+      capture("detail-context-" + variant + "-entry")
+      if variant == "checked-out" || variant == "read-only" {
+        let status = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Checked out ")).firstMatch
+        let scroll = app.scrollViews.firstMatch
+        for _ in 0..<6 where !status.isHittable { scroll.swipeUp() }
+        XCTAssertTrue(status.isHittable)
+        XCTAssertEqual(app.staticTexts["Availability"].count, 1)
+        if variant == "checked-out" { XCTAssertTrue(app.buttons["Return"].firstMatch.isHittable) }
+        capture("detail-context-" + variant + "-availability")
+      }
+    }
+  }
+
   func testDetailCommandsRemainReachableAtNormalTextSize() {
     verifyDetailCommandReachability(captureSuffix: "normal-size")
   }
@@ -1104,10 +1141,13 @@ final class FixtureAuditTests: XCTestCase {
     let add = app.buttons["Add item here"].firstMatch
     XCTAssertTrue(add.waitForExistence(timeout: 10))
     for label in ["Add item here", "Move items here", "Check out", "Edit", "Move"] {
-      let command = app.buttons[label].firstMatch
+      let command = label == "Edit" ? app.navigationBars.buttons["Edit"].firstMatch : app.buttons[label].firstMatch
       XCTAssertTrue(command.exists)
       let scroll = app.scrollViews.firstMatch
       func fullyVisible() -> Bool {
+        if label == "Edit" {
+          return command.isHittable && app.navigationBars.firstMatch.frame.contains(command.frame)
+        }
         let visible = scroll.frame.intersection(app.frame)
         let top = max(visible.minY, app.navigationBars.firstMatch.frame.maxY)
         return command.isHittable && command.frame.minY >= top && command.frame.maxY <= visible.maxY

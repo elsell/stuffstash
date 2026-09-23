@@ -204,6 +204,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailContextVariantsKeepNativeCommandsAndStatus'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
               )
