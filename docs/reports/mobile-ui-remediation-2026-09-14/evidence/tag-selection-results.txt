@@ -1,0 +1,19 @@
+M268 — shared Add/Edit tag selection
+Source: 533ac9bd (native Android fixture APK built remotely on paul).
+Remote checks: 67 focused tests across selection, ownership, Add and Edit;
+TypeScript and mobile structural checks; 10 fixture-preparation checks.
+Code critic: startup focus guard corrected after failing retained-callback test;
+route-specific native scroll observation and dismissal waits corrected.
+
+Android emulator, normal text, Edit tags fixture:
+- Compact Choose tags entry, existing Tag 14 retained.
+- Selected Tag 13 beyond initial viewport; Cancel discarded that visit.
+- Reopened and selected Tag 13; Done applied it to Edit draft.
+- Reopened selection: Tag 13 and Tag 14 checked.
+- Hardware Back returned to Edit; reopening retained the committed selection.
+- Reviewed summary and retained-selection screenshots: final options above
+  fixed Done/Cancel actions, reachable native back, readable labels.
+
+Limits: controlled fixture, no backend write claim. Native search/Selected
+review, Add workflow, iPhone/iPad and save/reopen acceptance remain pending.
+This does not close M268 or belong to the frozen M260–M264 release.
