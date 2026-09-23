@@ -1,3 +1,5 @@
+import { Stack } from 'expo-router';
+import { BrowseSurfaceHeader } from '../src/ui/screens/BrowseSurfaceHeader';
 import { useState } from 'react';
 import { Button, Text, View } from 'react-native';
 import { SearchHeader } from '../src/ui/screens/BrowseHeader';
@@ -16,14 +18,15 @@ export function AndroidHeaderCompositionFixture() {
   return <View style={{ flex: 1, backgroundColor: palette.background }}>
     <Button title="Show expiration workspace" onPress={() => setExpiration(true)} />
     <Text style={{ color: palette.text }}>Composition filter activations: {filters}</Text>
+    {expiration ? <Stack.Screen options={{ headerTitle: undefined }} /> : <BrowseSurfaceHeader surface={surface} onChange={setSurface} />}
     {expiration ? <ExpirationWorkspaceScreen mode={mode} items={[]} loading={false}
       refreshing={false} hasMore={false} onMode={setMode} onSearch={() => {}}
       onFilters={() => setFilters(value => value + 1)} onRefresh={() => {}}
       onMore={() => {}} onOpenAsset={() => {}} />
       : <View style={{ paddingHorizontal: 20 }}><SearchHeader isLoading={false}
         lifecycleState="active" checkoutState="any" palette={palette} resultCount={20}
-        scope="all" selectedSurface={surface} selectedTagIds={[]} sort="updated_desc"
-        submittedQuery="" onChangeSurface={setSurface} onClearFilters={() => {}}
+        scope="all" selectedTagIds={[]} sort="updated_desc"
+        submittedQuery="" onClearFilters={() => {}}
         onRemoveFilter={() => {}} onToggleFilters={() => setFilters(value => value + 1)} />
         <Text style={{ color: palette.text }}>Selected surface: {surface}</Text>
       </View>}

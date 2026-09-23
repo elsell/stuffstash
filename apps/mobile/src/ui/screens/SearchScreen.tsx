@@ -1,3 +1,4 @@
+import { BrowseSurfaceHeader } from './BrowseSurfaceHeader';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { BrowseAddHeader } from './BrowseAddHeader';
@@ -377,8 +378,7 @@ export function SearchScreen({
   const isInitialError = state.status === 'error' && state.phase === 'initial';
   const isPaginationError = state.status === 'error' && state.phase === 'pagination';
 
-  if (surface === 'map') {
-    return (
+  const content = surface === 'map' ? (
       <SafeAreaView testID="browse-map-frame" style={[styles.shell, { paddingTop: Platform.OS === 'ios' ? navigationHeaderHeight : 0 }]} edges={['left', 'right']}>
         <InventoryMapScreen
           key={scopeIdentity}
@@ -387,15 +387,10 @@ export function SearchScreen({
           searchQuery={query}
           onChangeSearchQuery={setQuery}
           pathStore={mapPathStore}
-          selectedSurface={surface}
           onAdd={() => router.navigate('/add')}
-          onChangeSurface={updateSurface}
         />
       </SafeAreaView>
-    );
-  }
-
-  return (
+  ) : (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
       <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
@@ -421,7 +416,6 @@ export function SearchScreen({
             palette={palette}
             resultCount={listItems.length}
             scope={scope}
-            selectedSurface={surface}
             selectedTagIds={selectedTagIds}
             sort={sort}
             statusMessage={state.status === 'error' && state.phase === 'replacement'
@@ -429,7 +423,6 @@ export function SearchScreen({
               : scope === 'places' && places.isError ? 'Place summaries could not load. Your places are still available.' : undefined}
             submittedQuery={state.results.query}
             tagFilters={tagFilters}
-            onChangeSurface={updateSurface}
             onClearFilters={clearFilters}
             onRemoveFilter={removeFilter}
             onRetryResults={retryResults}
@@ -484,6 +477,7 @@ export function SearchScreen({
       />
     </SafeAreaView>
   );
+  return <><BrowseSurfaceHeader surface={surface} onChange={updateSurface} />{content}</>;
 }
 
 function toBrowseListItems(results: BrowseResults): readonly BrowseListItem[] {

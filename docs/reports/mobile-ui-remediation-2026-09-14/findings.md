@@ -3778,3 +3778,20 @@ discards only its unstaged entry; existing selections, staged tags and other edi
 remain. Large tag-set selection still needs its own interaction review.
 Focused tests cover opt-in creation, cancellation, staging and existing rejection/
 dirty-draft guards; native normal-text verification is still required.
+### M260 — Browse relocates its peer-view switcher between List and Map
+
+P1 structural consistency defect reported by the user and confirmed in source:
+List puts the segmented control first in its scrolling results header, while Map
+places it after a flexible summary in a separate fixed header. Users must relocate
+the same command after using it; sharing the control component did not preserve
+its placement or scroll ownership.
+
+Decision: one persistent native navigation-title owner for the Browse switcher,
+independent of view content. Preserve existing Add/search controls and applied
+query/filter state. Remove the duplicate content-owned switchers. The native
+header retains its compact scroll-edge behavior without adding a content row.
+The mounted ownership regression failed first;32 focused checks, TypeScript,
+structural checks and10 fixture preparation tests pass. Native phone/iPad header
+fit and the List→scroll→Map→List experience require capture review before release.
+The Browse fixture does not certify asset/edit/move/filter navigation; the broader
+connected workflow review remains open.

@@ -25,7 +25,7 @@ describe('Map server state', () => {
       return mapSnapshot;
     } });
     const props: React.ComponentProps<typeof InventoryMapScreen> = {
-      canAdd: false, inventoryMapQuery: query, pathStore: { current: new Map() }, selectedSurface: 'map', onAdd: () => undefined, onChangeSurface: () => undefined
+      canAdd: false, inventoryMapQuery: query, pathStore: { current: new Map() }, onAdd: () => undefined
     };
     const render = (visible: boolean) => harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AppFeedbackProvider>{visible ? <InventoryMapScreen {...props} /> : null}</AppFeedbackProvider>
@@ -54,7 +54,7 @@ it.each(['pending', 'late-read', 'failed-read'] as const)('keeps Map still with 
   const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => mapSnapshot });
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
-      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} onAdd={() => undefined} /></AppFeedbackProvider>
     </MobileServerStateProvider>);
     if (mode === 'late-read') {
       await h.run(() => setReduceMotionEnabledForTest(true));
@@ -80,7 +80,7 @@ it('disables Map retry while pending and restores results without a pull indicat
   } });
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
-      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} onAdd={() => undefined} /></AppFeedbackProvider>
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     const retry = h.byLabel('Retry map');
@@ -102,7 +102,7 @@ it('explains unsuccessful path search and clears stale feedback when criteria ch
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
   const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => mapSnapshot });
   const render = (text: string) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
-    <AppFeedbackProvider><InventoryMapScreen searchQuery={text} canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} selectedSurface="map" onAdd={() => undefined} onChangeSurface={() => undefined} /></AppFeedbackProvider>
+    <AppFeedbackProvider><InventoryMapScreen searchQuery={text} canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} onAdd={() => undefined} /></AppFeedbackProvider>
   </MobileServerStateProvider>);
   try {
     await render('missing'); await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));

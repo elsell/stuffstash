@@ -2002,3 +2002,19 @@ creation/cancel, staging and Save natively before release.
 Creation commands must use the focused, committed current draft and enabled
 state. A callback retained before another edit or tag change must not restore
 obsolete fields; removal of the creation form retires its Cancel command.
+### Stable Browse peer-view control (M260)
+
+List and Map are peer presentations of the same inventory. Give their segmented
+control one persistent owner in Browse's native navigation header, independent of
+the changing content. Do not render a second switcher in either result or map
+headers. Keep existing native Add/search behavior, inventory choice on Home,
+query/refinement state and Map path retention. Switching views must not change the
+control's anchor, dimensions or scroll ownership. Native header handlers must
+settle across navigation feedback, observe current committed state and retire on
+unmount. Shared header placement preserves content space and scroll-edge behavior.
+
+Acceptance: walk List → Map → List, search/refine and open/return from an asset at
+normal text; judge stability and content hierarchy, then verify exact state
+retention and one reachable switcher. Mounted checks establish ownership/state,
+not native geometry. Native phone/iPad review must verify the header's Add/search
+commands and switcher fit together before release.

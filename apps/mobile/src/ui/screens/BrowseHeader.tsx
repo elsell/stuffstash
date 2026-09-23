@@ -20,8 +20,6 @@ import {
   searchResultSummaryLabel
 } from './SearchScreenPresentation';
 import type { BrowseFilterToken, BrowseScope } from './SearchScreenPresentation';
-import { BrowseSurfaceControl } from './BrowseSurfaceControl';
-import type { InventoryMapSurface } from './InventoryMapPresentation';
 import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
 import { NativeRefinementButton } from '../components/NativeRefinementButton';
@@ -34,13 +32,11 @@ export type SearchHeaderProps = {
   readonly palette: MobileColorPalette;
   readonly resultCount: number;
   readonly scope: BrowseScope;
-  readonly selectedSurface: InventoryMapSurface;
   readonly selectedTagIds: readonly string[];
   readonly sort: AssetBrowseSort;
   readonly statusMessage?: string;
   readonly submittedQuery: string;
   readonly tagFilters?: readonly AssetTagOptionViewModel[];
-  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
   readonly onClearFilters: () => void;
   readonly onRemoveFilter: (token: BrowseFilterToken) => void;
   readonly onRetryResults?: () => void;
@@ -54,13 +50,11 @@ export function SearchHeader({
   palette,
   resultCount,
   scope,
-  selectedSurface,
   selectedTagIds,
   sort,
   statusMessage,
   submittedQuery,
   tagFilters = [],
-  onChangeSurface,
   onClearFilters,
   onRemoveFilter,
   onRetryResults,
@@ -85,7 +79,6 @@ export function SearchHeader({
   return (
     <View style={baseStyles.header}>
       <View style={styles.resultToolsRow}>
-        <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
         {isLoading ? <ActivityIndicator accessibilityLabel="Searching inventory" color={palette.accent} size="small" /> : null}
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}

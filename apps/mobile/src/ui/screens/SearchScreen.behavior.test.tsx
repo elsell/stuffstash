@@ -206,8 +206,11 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
  try{
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);
   await settle(h);await settle(h);
+  expect(navigationOptions().some(options => typeof (options as {headerTitle?: unknown}).headerTitle === 'function')).toBe(true);
+  const switcher = h.allByType('NativeSegmentedControl').find(node => node.props.values?.includes('Map'));
   await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
   await switchTo('Map');await settle(h);
+  expect(h.allByType('NativeSegmentedControl').filter(node => node.props.values?.includes('Map'))).toEqual([switcher]);
   expect(nativeSearch().placeholder).toBe('Find and expand path');
   expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 144 });
   await h.run(() => setNativeHeaderHeight(210));
@@ -216,6 +219,7 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,320)));
   expect(dispatchedActions().filter(action=>action.type==='setParams').at(-1)).toMatchObject({params:{surface:'map',query:'Tent',tagId:['tag']}});
   await switchTo('List');await settle(h);
+  expect(h.allByType('NativeSegmentedControl').filter(node => node.props.values?.includes('Map'))).toEqual([switcher]);
   expect(nativeSearch().placeholder).toBe('Search names, places, or tags');
   expect(h.byLabel('Filters, 1 applied')).toBeDefined();
   await h.run(()=>nativeSearch().onCancelButtonPress());await settle(h);

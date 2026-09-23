@@ -1,5 +1,6 @@
 import { AssetEditJourneyProvider } from './AssetEditJourneyFixture';
 export { AssetEditJourneyDetailFixture, AssetEditJourneyEditorFixture, AssetEditJourneyMoveFixture } from './AssetEditJourneyFixture';
+export { BrowseJourneyFixture } from './BrowseJourneyFixture';
 import { CustomFieldChoicesFixture } from './CustomFieldChoicesFixture';
 export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
@@ -109,6 +110,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
     }}>
       <Stack.Screen name="voice" options={voiceNativeSheetOptions(palette)} />
       <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
+      <Stack.Screen name="audit-browse-journey" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
