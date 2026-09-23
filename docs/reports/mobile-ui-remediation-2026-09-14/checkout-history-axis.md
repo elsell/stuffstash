@@ -67,3 +67,19 @@ September16 Android normal-text follow-up now verifies independent name recovery
 older-page append/exhaustion, retained notes, ordinary Close and cold-root Close.
 See android-header-sheets.md for exact APK and retained evidence. Production detail
 focus, failed continuation and assistive reading remain separate acceptance work.
+
+## Retained iOS acceptance reconciled — September 23
+
+Full native run35247151136, source1a45d0bd (tested mergef7b3f995), passed
+`testCheckoutHistoryTextBoundsPaginationAndDismissal` on phone and iPad.
+[Exact results](native-full-352471-results.csv). The tested assertions cover notes
+within the scroll viewport below navigation, reachable Close, phone sheet expansion,
+retained records during name-read failure, successful name Retry, older-page append
+with its note within the viewport, and Close returning with the sheet absent.
+This supersedes the earlier pending statements for those named normal-text checks.
+
+The production history screen/sheet and fixture are unchanged between that source
+and2e50c384. Retained acceptance is scoped to that build; it is not fresh verification
+of all shared dependencies. iOS cold-root Close, failed continuation, originating
+detail focus, assistive reading and interruption remain open. No duplicate native
+run is needed to establish the already-passed sequence.

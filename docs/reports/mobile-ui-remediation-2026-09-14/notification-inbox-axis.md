@@ -100,3 +100,20 @@ and an actual tap resolves `closet`. See
 script is `/tmp/verify-inbox-trail.py`; the full compact sequence is
 `/tmp/verify-inbox-compact.py`, with `/tmp/inbox-compact-dark.log` on paul.
 Original1080×2400 size and light mode were explicitly confirmed restored.
+
+## Retained iOS acceptance reconciled — September 23
+
+Full native run35247151136, source1a45d0bd (tested mergef7b3f995), passed
+`testNotificationInboxReadStateAndNavigationReturn` and
+`testNotificationReadControlDeliveredTouchRegion` on both phone and iPad.
+[Exact results](native-full-352471-results.csv). Inspection of the tested assertions
+confirms read/unread toggles, location/item/settings destinations and return,
+mark-all then empty Unread, and nine delivered taps at center and ±21-point edge/
+corner offsets, each changing read state without leaving Notifications. This
+supersedes the earlier blanket iOS-pending statements for these named behaviors.
+
+The production inbox screen and fixture have no changes between that source and
+2e50c384. This is retained acceptance at the named build, not a new current-build
+run or proof of every shared dependency. Denied recovery on iOS, in-flight
+interruption, VoiceOver traversal, physical APNs and complete visual/appearance
+coverage remain unverified here. No unchanged journey was rerun.
