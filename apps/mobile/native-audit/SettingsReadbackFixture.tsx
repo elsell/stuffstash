@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, type PropsWithChildren } from 'react';
 import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
+import { ObservedCustomizationRepository } from '../src/adapters/customization/ObservedCustomizationRepository';
+import { QueryClientCustomizationMutationObserver } from '../src/adapters/serverState/QueryClientCustomizationMutationObserver';
 import { createMobileQueryClient } from '../src/adapters/serverState/MobileQueryClient';
 import { CustomizationAccessPolicy } from '../src/application/customization/CustomizationAccess';
 import { CustomizationContextQuery } from '../src/application/customization/CustomizationContextQuery';
@@ -23,7 +25,7 @@ export function createSettingsReadback() {
  function verify(context:CustomizationContext) {
   if(context.tenantId!==scope.tenantId||context.inventoryId!==scope.inventoryId)throw new Error('Outside the fixture inventory');
  }
- const repository:CustomizationRepository={
+ const storage:CustomizationRepository={
   async listTags(context){verify(context);return {items:[...records.values()]};},
   async createTag(context,input){verify(context);const id=`created-${++sequence}`;const tag:AssetTagDefinition={kind:'tag',id,key:id,...input};records.set(id,tag);return tag;},
   async updateTag(context,id,input){verify(context);const tag=records.get(id);if(!tag)throw new Error('Unknown tag');
@@ -34,8 +36,10 @@ export function createSettingsReadback() {
   createField:unavailable,updateField:unavailable,archiveField:unavailable,restoreField:unavailable,deleteField:unavailable,
   createAssetType:unavailable,updateAssetType:unavailable,archiveAssetType:unavailable,restoreAssetType:unavailable,deleteAssetType:unavailable,
  };
+ const client=createMobileQueryClient();
+ const repository=new ObservedCustomizationRepository(storage,new QueryClientCustomizationMutationObserver(client,'settings-readback'));
  return {
-  client:createMobileQueryClient(),policy:new CustomizationAccessPolicy(noCustomizationObservability),
+  client,policy:new CustomizationAccessPolicy(noCustomizationObservability),
   context:new CustomizationContextQuery({getSelectedScope:async()=>({tenant:{id:scope.tenantId,name:'Audit household',permissions:['configure']},inventory:{id:scope.inventoryId,name:'Audit inventory',permissions:['view','edit_asset']}})}),
   query:new CustomizationCollectionQuery(repository),tags:new ManageTags(repository,noCustomizationObservability),
   fields:new ManageCustomFields(repository,noCustomizationObservability),types:new ManageCustomAssetTypes(repository,noCustomizationObservability),

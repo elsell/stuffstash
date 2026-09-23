@@ -15,3 +15,11 @@ checks and reject unknown IDs. No fixture callback may directly update the visib
 collection in place of the normal query invalidation path. These checks establish
 controlled-client persistence, not server persistence or physical-device quality.
 This is subsequent audit work and does not expand the frozen selection release.
+
+Run35930694492 exposes missing fixture invalidation: compose the fake repository
+through the same ObservedCustomizationRepository and query-client mutation observer
+as production, using the persistent journey scope. A cache-backed regression must
+prove rejected commands keep cached reads intact and successful commands invalidate
+and refresh them. Never directly set the collection after save. Also require the
+returned row to clear the header and remain hittable; the failed capture shows an
+old row behind the header, which needs verification after correcting the wiring.

@@ -3122,6 +3122,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(save.isEnabled); save.tap()
     let updated = app.buttons["Tools emergency supplies, No color"].firstMatch
     XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(original.exists)
+    XCTAssertTrue(updated.isHittable)
+    XCTAssertGreaterThanOrEqual(updated.frame.minY, app.navigationBars["Tags"].frame.maxY)
     capture("settings-connected-collection-readback")
     updated.tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency supplies")
