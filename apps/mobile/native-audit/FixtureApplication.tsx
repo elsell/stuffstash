@@ -1,3 +1,5 @@
+import { SettingsReadbackProvider } from './SettingsReadbackFixture';
+export { SettingsReadbackFixture } from './SettingsReadbackFixture';
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
 export { BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
@@ -106,7 +108,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider><BrowseFilterJourneyProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider><BrowseFilterJourneyProvider><SettingsReadbackProvider>
     <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
       headerBackTitle: 'Back', headerTintColor: palette.action,
@@ -172,7 +174,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
-  </BrowseFilterJourneyProvider></AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
+  </SettingsReadbackProvider></BrowseFilterJourneyProvider></AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'
