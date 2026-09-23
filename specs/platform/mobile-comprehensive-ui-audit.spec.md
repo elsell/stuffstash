@@ -1930,3 +1930,13 @@ header actions before and after scrolling and with keyboard present on phone and
 iPad. Verify normal-text hierarchy as a complete editor before enlarged-text
 refinement. Shared Move and Move Here containers remain independently reviewed;
 this is an editor task decision, not a universal full-height-sheet rule.
+
+
+M261 connected acceptance uses the real detail and Edit route screens against one
+isolated in-memory asset repository and the real UpdateAssetCommand. Open Edit
+through the detail's production action, change metadata, save once, return to the
+same detail and reopen Edit to verify the persisted values. Fixture route wiring
+must preserve the production `/assets/:id/edit` destination and native options.
+No production credentials, server mutation or auth claim follows from this fake.
+Retain separate rejection/discard coverage; a successful task is not demonstrated
+by only rejecting Save and returning to the audit launcher.
