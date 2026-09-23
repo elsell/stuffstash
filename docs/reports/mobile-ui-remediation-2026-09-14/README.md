@@ -1,6 +1,6 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.27 (116.2)**; [release and changelog evidence](release-batch-116.md).
+Latest verified TestFlight: **0.24.28 (118.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35818700192).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
@@ -84,14 +84,16 @@ corrected observation order passes the focused archive journey on both devices i
 [native35816959842](https://github.com/elsell/stuffstash/actions/runs/35816959842),
 retaining the exact notice and destination assertions. All six final CI jobs pass.
 PR162 merged asc31638fc; [release35818700192](https://github.com/elsell/stuffstash/actions/runs/35818700192)
-is running. Upload, Apple processing and exact-build changelog are not yet claimed.
+completed successfully. Upload succeeded September23 at04:55:29UTC; Apple
+processing and exact-build changelog readback passed at04:59:56UTC. This releases
+the frozen menu fix, not the held color candidate or the later fixture-only PR164.
 
 Acceptance: shared menu open/lock/dismiss/unlock/execute behavior, representative
 filter selection and destructive-command recovery on phone/iPad, plus Android
 popup/choice behavior. No new color/input diagnostic runs. TestFlight note:
 “Fixed menus accepting outdated actions and reopening unexpectedly after a task unlocks.”
 
-## Current follow-up — onboarding command clearance
+## Accepted follow-up — onboarding command clearance
 
 M35's earlier fixture inserted a navigation header that production onboarding does
 not have. The corrected fixture preserves the production viewport and keeps its
@@ -102,7 +104,8 @@ passes2/2 on phone and iPad: full keyboard-open Connect clearance, exact one-tap
 submission and keyboard Go. Reviewed [phone](evidence/phone-onboarding-keyboard-clearance-358183.png)
 and [iPad](evidence/ipad-onboarding-keyboard-clearance-358183.png) captures agree.
 The prior header-bearing phone failure does not establish a shipped layout defect.
-No production workaround is needed for M35. Larger fonts and other configurations
+PR164 merged as2d9efd02, retaining the regression and evidence. No production
+workaround is needed for M35. Larger fonts and other configurations
 retain their separate audit scope.
 
 Android missing-photo recovery also passes on the same existing audit APK:
@@ -112,6 +115,47 @@ readable error, native Retry, retry failure and Close returning to the parent.
 The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
+
+## Frozen next release batch — Move destination recovery
+
+PR165 fixes M254: confirmed creations are merged with current search results by
+ID, filtered by query and retained as the selected destination. The failing mounted
+regression,90 focused tests, TypeScript, structural checks and critic establish the
+source correction. Android APKc62b07ae passes existing selection, native Container
+choice, rejected creation/retry, no duplicate creation offer, selected new row,
+rejected Move retention and successful exact-payload retry. [Reviewed capture](evidence/android-m254-retained.png)
+and [returned hierarchy](evidence/android-m254-returned.xml) retain evidence.
+
+Native35826352235 stopped phone scenarios during Xcode launch and iPad Move in a
+key-enumeration precheck. Its scoped observer correction preserved field hittability,
+keyboard presence, one typing attempt and exact text. Native35828644735 then exposed
+M255 in the real Move journey: Audit crate became Ae on phone and A on iPad before
+creation. [Exact outcomes](evidence/native-move-field-358286-results.txt). CI atbcbb83ed
+passes. These are failed acceptance runs, not release evidence.
+
+Current decision: the investigation budget is exhausted. Reuse Add's proven
+SwiftUI draft field for iOS Move query; do not repeat input/provider/timing
+comparisons. The shared adapter preserves native editing state; Move advances a
+query revision only after successful creation to apply the returned canonical
+name. Android keeps its existing input. Review requested an actual Move regression
+for canonical naming, unchanged field through typing/rejection and reset after
+success; it is added and its negative control fails without revision advancement.
+All1,925 remote tests (306 files), TypeScript and structural checks pass. Native
+implementation acceptance must verify exact
+one-attempt text plus creation/movement recovery, with Add as the shared-adapter
+regression. No further field-choice rerun is needed.
+
+### Custom-field choices — scoped acceptance complete
+
+M02/M11's real create-form composition passes all intermediate selections on both
+phone and iPad in35828644735: Type/Applies to choices, first/last target selection,
+removing the first and retaining the last. [Reviewed phone capture](evidence/phone-field-retained-target-358286.png). Android APKbe77f1fa passed the same
+sequence; [capture](evidence/android-field-choices-retained.png) and
+[hierarchy](evidence/android-field-choices-retained.xml) retain evidence. Earlier
+label and passive-observer failures remain recorded in commits984cba79/2f421bf4
+and their retained evidence. Field persistence, saved-target immutability and
+assistive modes were not part of this scenario; existing source tests retain those
+boundaries. Do not rerun this accepted shared-control composition unchanged.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad

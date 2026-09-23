@@ -22,6 +22,9 @@ on:
           - menu-ownership
           - archive-notice
           - onboarding-keyboard
+          - move-destination
+          - destination-and-field-choices
+          - field-choices
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -96,6 +99,26 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
+            move-destination)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
+              )
+              ;;
+            destination-and-field-choices)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomFieldChoicesStayInPlaceAndRetainTargets'
+              )
+              ;;
+            field-choices)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomFieldChoicesStayInPlaceAndRetainTargets'
               )
               ;;
             onboarding-keyboard)

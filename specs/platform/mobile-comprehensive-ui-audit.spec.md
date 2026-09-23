@@ -24,6 +24,45 @@ consumer checks. Keep spec-first development, meaningful regressions, code criti
 review and native verification. Sleeping scripts own terminal-state collection;
 manual status polling must not duplicate a healthy collector.
 
+## Move destination text entry
+
+The real Move journey reproduced lost query characters on phone and iPad after
+one complete typing attempt. Reuse the proven SwiftUI draft text-field adapter
+used by Add on iOS; keep the existing Android text input. Native text owns its
+editing buffer so ordinary query updates do not echo stale JavaScript values back
+into it. A successful creation can replace the query with the canonical returned
+name: advance an explicit draft query revision to reset the native field then.
+Pending/denied operations remain noneditable and late changes remain guarded.
+Do not change providers, typing speed or keyboard assistance to hide the failure.
+Retain exact one-attempt typing and creation/movement recovery acceptance.
+
+## Newly created Move destinations
+
+During a Move form visit, successful destination creation must immediately add
+that confirmed destination to the visible matches and select it, even if the
+lookup cache still contains an empty result. The matching name/kind/parent must
+no longer offer creation. Retain confirmed creations during that form visit,
+filter them by the current normalized title query, and merge lookup results by
+asset ID with server values taking precedence. Changing the query must not leak
+unrelated local matches or erase the selected destination. Failed creation adds
+nothing; failed Move retains the selection. Closing the form drops this local
+supplement. Backend authorization and duplicate rules remain authoritative.
+
+## Move destination acceptance coverage
+
+Use the real Move route with synthetic core, lookup, create and move ports in the
+isolated audit runner. Cover choosing an existing destination, switching to a new
+container through the native Kind menu, a rejected create retaining the exact
+query/kind, successful creation selecting that destination, rejected Move retaining
+that selection, and successful retry returning. The fake must validate exact
+creation and movement payloads, so returning alone cannot pass an incorrect move.
+Require a hittable query field, keyboard presence, one typing attempt and exact
+retained text; do not make enumeration of individual keyboard key hit regions a
+prerequisite for this editing journey. Keep this separate from the already accepted
+Move-here journey. Normal-size
+phone/iPad and Android checks precede enlarged-text work; real persistence and
+permission boundaries remain independently tested. No production route is added.
+
 ## Invitation native acceptance coverage
 
 The runner-only native suite must render the real invitation acceptance screen

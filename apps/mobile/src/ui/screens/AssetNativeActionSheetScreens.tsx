@@ -40,6 +40,7 @@ import {
 import { recordAssetActionCompletion } from './AssetActionCompletion';
 import {
   createdMoveDestinationParent,
+  mergeCreatedMoveDestinations,
   isSelectableMoveDestination,
   isSelectableMoveIntoCandidate,
   moveDestinationCreateInput,
@@ -212,7 +213,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
   const operation = useAssetSheetOperation(asset.canMove);
   const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
-  const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(candidates.data ?? [], asset) };
+  const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(mergeCreatedMoveDestinations(candidates.data ?? [], draft.matches, draft.query), asset) };
 
   async function createDestination(asset: AssetDetailViewModel): Promise<void> {
     const name = draft?.query.trim() ?? '';
@@ -234,7 +235,8 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
       setDraft({
         createKind,
         query: created.title,
-        matches: [createdParent, ...(draft?.matches ?? []).filter((match) => match.id !== asset.id)],
+        queryRevision: (draft.queryRevision ?? 0) + 1,
+        matches: [createdParent, ...draft.matches.filter((match) => match.id !== createdParent.id)],
         selectedParent: createdParent
       });
     } catch (error) {

@@ -70,6 +70,7 @@ exports = {
     "voice-plan-location": "VoicePlanLocationFixture",
     "audit-footer-appearance": "FooterAppearanceFixture",
     "audit-move-here-recovery": "MoveHereRecoveryFixture",
+    "audit-move-destination": "MoveDestinationFixture",
     "audit-edit-tags": "AssetEditTagsFixture",
     "audit-edit-recovery": "AssetEditRecoveryFixture",
     "audit-checkout-history": "CheckoutHistoryFixture",

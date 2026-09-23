@@ -1,3 +1,4 @@
+import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
@@ -94,23 +95,52 @@ it('submits an expiration clear through the native edit route', async () => {
 });
 
 it('creates the move destination with the kind selected in the native menu', async () => {
+  let lookupResults: ParentLookupResult[] = [];
   const client = createMobileQueryClient(); const h = new MobileRenderHarness(); const created: unknown[] = [];
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   try {
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
-        createAssetCommand={{ execute: async input => { created.push(input); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
-        moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
+        createAssetCommand={{ execute: async input => { created.push(input); if (created.length === 1) throw new Error('Create temporarily unavailable'); return { id: 'box', title: 'Camping box', message: 'Created' }; } }}
+        moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => lookupResults }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.allByType('TextInput').find(input => input.props.placeholder === 'Search places, boxes, shelves'), 'Camping box');
+    const originalField = h.byLabel('Put in');
+    await h.changeText(originalField, 'camping box');
+    expect(h.byLabel('Put in')).toBe(originalField);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
-    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "Camping box"')?.parent;
+    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
     await h.press(create ?? undefined);
-    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'Camping box' })]);
+    expect(latestAlert()?.title).toBe('Could not create destination');
+    expect(h.byLabel('Put in')).toBe(originalField);
+    expect(h.byLabel('Put in')?.props.value).toBe('camping box');
+    await h.press(create ?? undefined);
+    expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'camping box' }), expect.objectContaining({ kind: 'container', title: 'camping box' })]);
+    expect(h.byLabel('Put in')).not.toBe(originalField);
+    expect(h.byLabel('Put in')?.props.value).toBe('Camping box');
     expect(h.allText().join(' ')).toContain('Camping box');
+    expect(h.byLabel('Create container "Camping box"')).toBeUndefined();
+    const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.selected === true);
+    expect(selectedRows()).toHaveLength(1);
+    await h.changeText(h.byLabel('Put in'), 'Kitchen');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    expect(selectedRows()).toHaveLength(0);
+    expect(h.byLabel('Create container "Kitchen"')).toBeDefined();
+    await h.changeText(h.byLabel('Put in'), '  CAMPING box  ');
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    expect(selectedRows()).toHaveLength(1);
+    expect(h.byLabel('Create container "CAMPING box"')).toBeUndefined();
+    lookupResults = [{ id: 'box', title: 'Camping box', kind: 'container', subtitle: '', pathLabel: 'Garage / Camping box', selectionHint: 'Container', willPromoteToContainer: false }];
+    await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.parentCandidates('scope', 'tenant', 'inventory', 'CAMPING box') }));
+    await settle(h);
+    expect(selectedRows()).toHaveLength(1);
+    expect(h.allText().join(' ')).toContain('Garage / Camping box');
+    await h.press(h.byLabel('Move')); await settle(h);
+    expect(latestAlert()?.title).toBe('Could not move asset');
+    expect(selectedRows()).toHaveLength(1);
+
   } finally { await h.unmount(); }
 });
 

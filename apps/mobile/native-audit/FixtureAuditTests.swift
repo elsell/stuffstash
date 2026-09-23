@@ -454,6 +454,58 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForNonExistence(timeout: 5))
   }
 
+  func testMoveDestinationCreationRetainsDraftAndRetries() {
+    guard openFixtureURL("audit-move-destination") else { return }
+    let query = app.textFields["Put in"].firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 10))
+    func reveal(_ element: XCUIElement) {
+      for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    let existing = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Camping box")).firstMatch
+    XCTAssertTrue(existing.waitForExistence(timeout: 5))
+    reveal(existing); existing.tap()
+    XCTAssertTrue(existing.label.contains("Selected"))
+    XCTAssertTrue(query.isHittable)
+    query.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    query.typeText("Audit crate")
+    XCTAssertEqual(query.value as? String, "Audit crate")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
+    XCTAssertTrue(kind.waitForExistence(timeout: 5))
+    reveal(kind); kind.tap()
+    let container = app.buttons["Container"].firstMatch
+    XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
+    XCTAssertTrue(app.staticTexts["Move"].firstMatch.exists)
+    XCTAssertTrue(query.exists)
+    let create = app.buttons["Create container \"Audit crate\""].firstMatch
+    reveal(create); create.tap()
+    let failure = app.alerts["Could not create destination"]
+    XCTAssertTrue(failure.waitForExistence(timeout: 5))
+    XCTAssertTrue(failure.staticTexts["Audit destination temporarily unavailable"].exists)
+    failure.buttons["OK"].tap()
+    XCTAssertEqual(query.value as? String, "Audit crate")
+    reveal(create); create.tap()
+    XCTAssertTrue(create.waitForNonExistence(timeout: 5))
+    let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
+    XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
+    let selected = app.staticTexts["Audit crate"].firstMatch
+    XCTAssertTrue(selected.waitForExistence(timeout: 5))
+    let move = app.buttons["Move"].firstMatch
+    reveal(move); move.tap()
+    let rejected = app.alerts["Could not move asset"]
+    XCTAssertTrue(rejected.waitForExistence(timeout: 5))
+    XCTAssertTrue(rejected.staticTexts["Audit move temporarily unavailable"].exists)
+    rejected.buttons["OK"].tap()
+    XCTAssertTrue(selected.exists)
+    capture("move-destination-rejected-selection-retained")
+    reveal(move); move.tap()
+    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+  }
+
   func testMoveHereRejectedCommandRetainsSelectionAndRetryReturns() {
     let open = app.buttons["Audit Move here recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -1420,6 +1472,63 @@ final class FixtureAuditTests: XCTestCase {
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }
+  func testCustomFieldChoicesStayInPlaceAndRetainTargets() {
+    let open = app.buttons["Audit field choices"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Native UI audit"]
+    XCTAssertTrue(header.exists)
+    let type = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose Type.")).firstMatch
+    XCTAssertTrue(type.waitForExistence(timeout: 5)); XCTAssertTrue(type.isHittable)
+    XCTAssertTrue(app.staticTexts["Type"].exists)
+    type.tap()
+    let enumChoice = app.buttons["Enum"]
+    XCTAssertTrue(enumChoice.waitForExistence(timeout: 5)); enumChoice.tap()
+    XCTAssertTrue(app.textFields["New enum option"].waitForExistence(timeout: 5))
+    let applies = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose Applies to.")).firstMatch
+    for _ in 0..<4 where !applies.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(applies.isHittable)
+    XCTAssertTrue(app.staticTexts["Applies to"].exists)
+    applies.tap()
+    let selectedTypes = app.buttons["Selected asset types"]
+    XCTAssertTrue(selectedTypes.waitForExistence(timeout: 5)); selectedTypes.tap()
+    XCTAssertTrue(header.exists)
+    func target(_ name: String) -> XCUIElement {
+      app.descendants(matching: .any).matching(identifier: name).firstMatch
+    }
+    func assertTargets(_ value: String) {
+      let result = app.staticTexts["Selected targets: \(value)"].firstMatch
+      XCTAssertTrue(result.waitForExistence(timeout: 5))
+      let scroll = app.scrollViews.firstMatch
+      func visible() -> Bool {
+        let viewport = scroll.frame.intersection(app.frame)
+        let bounds = result.frame
+        return bounds.width > 0 && bounds.height > 0 && viewport.contains(bounds)
+      }
+      for _ in 0..<8 where !visible() { scroll.swipeDown() }
+      XCTAssertTrue(visible(), "The exact selected state must be readable; it is not a tap target")
+    }
+    let first = target("Audit type 01")
+    for _ in 0..<6 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(first.isHittable); first.tap()
+    assertTargets("type-1")
+    let last = target("Audit type 12")
+    for _ in 0..<8 where !last.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(last.isHittable); last.tap()
+    assertTargets("type-1, type-12")
+    for _ in 0..<8 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(first.isHittable); first.tap()
+    assertTargets("type-12")
+    XCTAssertTrue(app.staticTexts["Field type: enum"].exists)
+    XCTAssertTrue(app.staticTexts["Applicability: custom_asset_types"].exists)
+    XCTAssertTrue(header.exists)
+    capture("custom-field-retained-target")
+    let back = app.buttons["Back to audit menu"]
+    for _ in 0..<4 where !back.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(back.isHittable); back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testDraftOptionRemovalPreservesSavedOptions() throws {
     app.buttons["Audit draft options"].tap()
     let remove = app.buttons["Remove draft"]

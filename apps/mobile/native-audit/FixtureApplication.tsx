@@ -1,3 +1,4 @@
+import { CustomFieldChoicesFixture } from './CustomFieldChoicesFixture';
 export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
 import { useInputEventTrace } from './InputEventTrace';
@@ -18,6 +19,7 @@ export { InvitationAcceptanceFixture } from './InvitationAcceptanceFixture';
 export { NotificationInboxFixture, NotificationTargetFixture } from './NotificationInboxFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
+export { MoveDestinationFixture } from './MoveDestinationFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
@@ -141,6 +143,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
+      <Stack.Screen name="audit-move-destination" options={sheets.move} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
@@ -164,6 +167,7 @@ export function FixtureMenu() {
   const router = useRouter();
   const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
   const feedback = useAppFeedback();
+  const [fieldChoices, setFieldChoices] = useState(false);
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState<'scroll' | 'fixed'>();
@@ -174,6 +178,7 @@ export function FixtureMenu() {
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
   </FixturePage>;
+  if (fieldChoices) return <CustomFieldChoicesFixture onBack={() => setFieldChoices(false)} />;
   if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
@@ -203,6 +208,7 @@ export function FixtureMenu() {
       tone: 'error', title: 'Audit action needs attention', message: 'This is synthetic audit data.',
       action: { label: 'Retry audit action', onPress: () => setResult('Audit retry completed') }
     })} />
+    <Button title="Audit field choices" onPress={() => setFieldChoices(true)} />
     <Button title="Audit draft options" onPress={() => setShowDraftOptions(true)} />
     {showDraftOptions ? <DraftOptionsFixture /> : null}
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
@@ -234,6 +240,7 @@ export function FixtureMenu() {
     <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit menu ownership" onPress={() => router.push('/audit-menu-ownership' as Href)} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
+    <Button title="Audit Move destination" onPress={() => router.push('/audit-move-destination' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />

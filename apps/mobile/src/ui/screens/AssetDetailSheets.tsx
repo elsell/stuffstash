@@ -1,3 +1,4 @@
+import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
@@ -53,6 +54,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
+  readonly queryRevision?: number;
   readonly query: string;
   readonly matches: readonly ParentLookupResult[];
   readonly selectedParent: ParentLookupResult | null;
@@ -345,9 +347,9 @@ export function MoveAssetSheet({
         <Text style={styles.moveSubject}>{asset.title}</Text>
         {placement ? <PlacementPanel preview={placement} /> : null}
         <Text style={styles.inputLabel}>Put in</Text>
-        <AppTextInput
+        <DraftTextField
+          key={Platform.OS === 'ios' ? draft?.queryRevision ?? 0 : 'move-query'}
           accessibilityLabel="Put in"
-          autoCapitalize="sentences"
           editable={!disabled}
           onChangeText={onChangeQuery}
           placeholder="Search places, boxes, shelves"
