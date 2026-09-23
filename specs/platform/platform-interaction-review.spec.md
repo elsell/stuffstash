@@ -1,5 +1,18 @@
 # Platform Interaction Review
 
+## Move creation acceptance observations
+
+Run35867595817 retained iPad hierarchy contains the full `Audit crate` value after
+an immediate post-typing assertion read `Audit cr`. Wait at most five seconds for
+exact field equality before proceeding; never accept partial text. Its phone
+journey created and selected the destination, then queried obsolete standalone
+`Audit crate` status text. M262 presents `Selected: Audit crate`; assert that exact
+status and the selected candidate row, retaining all create/move rejection and
+retry assertions. This corrects observations, not production input behavior.
+The corrected complete workflow still requires native acceptance. Edit metadata
+recovery and tag entry passed on both devices in this run; connected phone Edit
+stopped at keyboard readiness before typing and remains unverified by this run.
+
 ## Custom-field choice acceptance
 
 M02/M11 need native evidence for their distinct control composition. Exercise the

@@ -470,7 +470,9 @@ final class FixtureAuditTests: XCTestCase {
     query.tap()
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     query.typeText("Audit crate")
-    XCTAssertEqual(query.value as? String, "Audit crate")
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "Audit crate"), object: query
+    )], timeout: 5), .completed)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
     XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch.exists)
@@ -495,7 +497,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(create.waitForNonExistence(timeout: 5))
     let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
     XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
-    let selected = app.staticTexts["Audit crate"].firstMatch
+    let selected = app.staticTexts["Selected: Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
     let move = app.buttons["Move"].firstMatch
     reveal(move); move.tap()
