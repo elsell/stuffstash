@@ -43,6 +43,7 @@ on:
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
+          - settings-readback
           - enum-and-settings
   pull_request:
     paths:
@@ -158,6 +159,9 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
               )
               ;;
+            settings-readback)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection") ;;
             settings-editing)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(

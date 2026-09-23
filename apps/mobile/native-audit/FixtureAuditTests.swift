@@ -3181,6 +3181,45 @@ final class FixtureAuditTests: XCTestCase {
     }
   }
 
+  func testSettingsSaveReadsBackFromTheSameCollection() {
+    guard openFixtureURL("audit-settings-readback") else { return }
+    let original = app.buttons["Tools, No color"].firstMatch
+    XCTAssertTrue(original.waitForExistence(timeout: 10)); original.tap()
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools")
+    name.tap(); name.typeText(" emergency supplies")
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isHittable); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    capture("settings-connected-save-rejected")
+    XCTAssertTrue(save.isEnabled); save.tap()
+    let updated = app.buttons["Tools emergency supplies, No color"].firstMatch
+    XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(original.exists)
+    capture("settings-connected-collection-readback")
+    updated.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    capture("settings-connected-reopened-editor")
+    app.buttons["Back to settings collection"].firstMatch.tap()
+    XCTAssertTrue(updated.waitForExistence(timeout: 10))
+    app.buttons["Add Tag"].firstMatch.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText("Camping")
+    XCTAssertEqual(name.value as? String, "Camping")
+    app.buttons["Dismiss keyboard"].firstMatch.tap(); save.tap()
+    let created = app.buttons["Camping, No color"].firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 10)); created.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Camping")
+    let archive = app.buttons["Archive"].firstMatch
+    for _ in 0..<6 where !archive.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(archive.isHittable); archive.tap()
+    let confirm = app.alerts["Archive Camping?"].buttons["Archive"].firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
+    XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(created.exists)
+    capture("settings-connected-created-tag-archived")
+  }
+
   func testSettingsCollectionUsesNativeSearchAndAdd() {
     let open = app.buttons["Audit settings collection"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

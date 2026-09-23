@@ -65,6 +65,7 @@ exports = {
     "audit-notifications": "NotificationInboxFixture",
     "audit-notification-target": "NotificationTargetFixture",
     "audit-customization": "CustomizationCollectionFixture",
+    "audit-settings-readback": "SettingsReadbackFixture",
     "audit-managed-search": "ManagedSearchPlacementFixture",
     "audit-browse-journey": "BrowseJourneyFixture",
     "search": "BrowseFilterJourneySearch",
