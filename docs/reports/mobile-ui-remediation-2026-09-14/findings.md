@@ -3555,6 +3555,19 @@ Saved/draft phone/iPad light/dark capture review remains required; M251 is open.
 
 Run35183213359 at d8f4b4f0 passes all five Add-draft journeys on both devices. Reviewed phone and iPad captures show light status text over the black viewer and dark status text restored after last-photo removal to the light Add screen. See [photo status evidence](native-photo-status-351832.md). This accepts those draft transitions in the candidate; saved-photo, dark-appearance and swipe-dismissal verification remain open. TestFlight113.1 does not include this correction.
 
+Saved-photo evidence reconciliation: run35247151136 at tested mergef7b3f995
+passes removal-failure/retry and explicit Close on both devices. Reviewed
+[phone](evidence/phone-photo-retained-after-retry-352471.png) and
+[iPad](evidence/ipad-photo-retained-after-retry-352471.png) captures show readable
+white status content above the black saved-photo viewer after retry. The phone
+[failure alert](evidence/phone-photo-removal-failure-1-352471.png) also preserves it;
+the iPad [failure alert](evidence/ipad-photo-removal-failure-1-352471.png) has no
+visible status content, so no contrast claim follows for that state. This closes
+the saved-photo retained-viewer check using existing evidence, not a rerun.
+Dark appearance, status restoration after saved-photo Close/swipe, and iPad alert
+status visibility remain unverified. The source ownership correction is already
+present in current main; no duplicate implementation is needed.
+
 ### M252 — Native color conversion decrements untouched RGB channels
 
 P2 source and compiled-native-expression confirmed. The pinned Expo55.0.17
