@@ -326,9 +326,13 @@ visibility assertion failed. This was not a product selection failure.
 retain evidence. Native archive reused the existing disposable build tree; source
 was synchronized tob75ef748, preserving its generated Android project/toolchain.
 
-Remaining acceptance: iOS popup lock/dismiss/unlock behavior plus representative
-asset overflow and Android choice selection, preserving selection/destructive
-semantics. VoiceOver/TalkBack behavior is not established by host-component fakes.
+Native35815492811 passes menu lock/dismiss/unlock/fresh execution and Browse
+selection on phone/iPad. Reviewed phone locked and iPad recovered captures retain
+zero/one activation counts. iPad also passes Settings archive confirmation, cancel,
+commit and notice; phone returns to Tags but its delayed success-notice observation
+fails. That unchanged command adapter is a separate harness acceptance correction,
+with the original failure retained in native-menu-358154-results.csv. Native asset
+overflow consumer verification and broader assistive behavior remain audit scope. VoiceOver/TalkBack behavior is not established by host-component fakes.
 No new release is claimed. Critic identified retained trigger reopening after
 unlock; two failing cases reproduced it. Trigger and accessibility dispatch now
 share the committed owner guard; five focused cases pass after correction. Final

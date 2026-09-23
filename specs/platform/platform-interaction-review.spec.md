@@ -1,5 +1,15 @@
 # Platform Interaction Review
 
+## Transient success observation order
+
+Native35815492811 phone passed Archive confirmation/cancellation and returned to
+Tags, but began querying its4200ms success notice about ten seconds after Archive.
+Observe the transient exact notice immediately after the confirmed command, then
+wait for the persistent Tags destination. Preserve both assertions and durations;
+do not lengthen the product notice or claim the late snapshot proves it appeared.
+This harness-only correction needs a focused archive-workflow run; it does not
+invalidate the independently passed menu lock/recovery and filter checks.
+
 ## Retained native menu actions
 
 An open native menu may deliver an item event after its parent locks, removes an

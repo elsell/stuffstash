@@ -2513,8 +2513,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(alert.waitForExistence(timeout: 5))
     capture("settings-editor-native-archive")
     alert.buttons["Archive"].tap()
-    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
     assertCustomizationNotice("Tag archived")
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
   }
 
   private func assertCustomizationNotice(_ title: String) {

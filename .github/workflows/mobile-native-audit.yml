@@ -20,6 +20,7 @@ on:
           - filters
           - release-corrections
           - menu-ownership
+          - archive-notice
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -90,6 +91,12 @@ jobs:
           audit_test_args=()
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            archive-notice)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
             menu-ownership)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(

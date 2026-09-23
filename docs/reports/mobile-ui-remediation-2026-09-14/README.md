@@ -74,10 +74,14 @@ of the frozen color candidate. No other product fixes are entering this batch.
 Remote mounted regressions, TypeScript, structural checks and code critic pass.
 [Native35815492811](https://github.com/elsell/stuffstash/actions/runs/35815492811)
 and [CI35815495522](https://github.com/elsell/stuffstash/actions/runs/35815495522)
-testb75ef748. All six CI jobs pass; the native collector still owns its terminal result. Android uses the
+testb75ef748. All six CI jobs pass. Native results are terminal: phone2/3, iPad3/3.
+[Exact results](native-menu-358154-results.csv) preserve the phone archive-notice failure. Android uses the
 existing disposable audit tree and emulator, with a scripted lock/recovery journey.
 Android lock/recovery and applied Browse choice pass; retained evidence is linked
-from M54. Phone/iPad acceptance remains pending; no new release is claimed.
+from M54. Phone/iPad menu and filter checks also pass. Phone archive returned to
+Tags but queried its4200ms notice about ten seconds after confirmation. The next
+focused check observes that exact transient notice before the persistent destination,
+retaining both assertions and durations. No product code change or new release is claimed.
 
 Acceptance: shared menu open/lock/dismiss/unlock/execute behavior, representative
 filter selection and destructive-command recovery on phone/iPad, plus Android
