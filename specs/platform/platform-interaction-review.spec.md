@@ -996,3 +996,14 @@ Freeze this correction as a separate release batch, requiring the installed patc
 to pass the eight search workflows, dependency resolution, shared-header tests and
 critical regression checks before TestFlight. Remove the runner-only transform
 from candidate validation so it cannot apply twice or hide packaging mistakes.
+
+### Collection geometry acceptance
+
+Measure card width on its outer layout container, not an inset title action.
+The iPad combined run 35871152122 measured the title action at 209 points;
+AssetCard applies horizontal body padding inside the card, so that observation
+cannot establish a violation of the 220-point outer-card minimum. Expose a stable
+layout test identifier without grouping or hiding its independently accessible
+child actions. Keep the same minimum and column-position assertions on the outer
+container. This corrects the observed object rather than relaxing the product
+requirement. Native rerun remains required for the corrected measurement.

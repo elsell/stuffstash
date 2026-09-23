@@ -2257,9 +2257,9 @@ final class FixtureAuditTests: XCTestCase {
 
   func testBrowseGridFitsDeviceWidth() {
     guard openFixtureURL("audit-browse-journey") else { return }
-    let garage = app.buttons["Open asset Garage"].firstMatch
-    let kitchen = app.buttons["Open asset Kitchen"].firstMatch
-    let tent = app.buttons["Open asset Camping tent"].firstMatch
+    let garage = app.otherElements["asset-card-journey-0"].firstMatch
+    let kitchen = app.otherElements["asset-card-journey-1"].firstMatch
+    let tent = app.otherElements["asset-card-journey-2"].firstMatch
     XCTAssertTrue(garage.waitForExistence(timeout: 10))
     XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
     XCTAssertTrue(tent.waitForExistence(timeout: 10))
