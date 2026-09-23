@@ -1,0 +1,52 @@
+Attributes: Application, 0x114662e40, pid: 21943, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x114662e40, pid: 21943, label: 'Stuff Stash'
+    Window (Main), 0x114662f80, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x1146630c0, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x114663200, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x114663340, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x114663480, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x1146635c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x114663700, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x114663840, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x114663980, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x114663ac0, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x114663c00, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x114663d40, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Menu ownership'
+                            Button, 0x114663e80, {{10.0, 32.0}, {90.5, 44.0}}, identifier: 'BackButton', label: 'Back'
+                            StaticText, 0x114662d00, {{304.5, 43.5}, {134.5, 21.0}}, label: 'Menu ownership'
+                          Other, 0x113157840, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x113154640, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x113156e40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x113156f80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x1131570c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    StaticText, 0x113157200, {{24.0, 110.0}, {696.0, 17.0}}, label: 'Menu ready'
+                                      StaticText, 0x113157340, {{24.0, 110.0}, {696.0, 17.0}}, label: 'Menu ready'
+                                    StaticText, 0x113157480, {{24.0, 151.0}, {696.0, 17.0}}, label: 'Menu activations: 1'
+                                      StaticText, 0x1131575c0, {{24.0, 151.0}, {696.0, 17.0}}, label: 'Menu activations: 1'
+                                    Other, 0x113157700, {{24.0, 192.0}, {44.0, 44.0}}
+                                      Other, 0x113157980, {{24.0, 192.0}, {44.0, 44.0}}
+                                        Other, 0x113157ac0, {{24.0, 192.0}, {44.0, 44.0}}
+                                          Button, 0x113157c00, {{24.0, 192.0}, {44.0, 44.0}}, label: 'Menu ownership actions'
+                                            Button, 0x113157d40, {{24.0, 192.0}, {44.0, 44.0}}
+                                              Image, 0x113157e80, {{24.0, 192.0}, {44.0, 44.0}}, identifier: 'ellipsis', label: 'More'
+                                    Other, 0x11468b0c0, {{24.0, 260.0}, {696.0, 48.0}}
+                                      Other, 0x11468b200, {{24.0, 260.0}, {696.0, 48.0}}
+                                        Other, 0x11468b340, {{24.0, 260.0}, {696.0, 48.0}}
+                                          Button, 0x11468b480, {{302.0, 260.0}, {140.0, 48.0}}, label: 'Lock menu shortly'
+                                    Other, 0x11468b5c0, {{24.0, 332.0}, {696.0, 48.0}}
+                                      Other, 0x114688640, {{24.0, 332.0}, {696.0, 48.0}}
+                                        Other, 0x114688000, {{24.0, 332.0}, {696.0, 48.0}}
+                                          Button, 0x114688140, {{322.0, 332.0}, {100.0, 48.0}}, label: 'Unlock menu', Disabled
+                          Other, 0x114688280, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x11468a300, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x11468a440, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x11468a580, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11468aa80, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x114662e40, pid: 21943, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x11468abc0, pid: 21943, label: 'Stuff Stash'
+  }

@@ -14,7 +14,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
-import { actionableMenuGroups, nativeMenuItemPresentation, pressNativeMenuItem } from './NativeActionMenuPresentation';
+import { actionableMenuGroups, nativeMenuItemPresentation } from './NativeActionMenuPresentation';
+import { useNativeMenuAction } from './useNativeMenuAction';
 import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
 export type { NativeActionMenuGroup, NativeActionMenuItem, NativeActionMenuProps, NativeActionMenuTrigger } from './NativeActionMenu.types';
@@ -26,6 +27,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
   const palette = useAppearanceAwarePalette();
   const actionableGroups = actionableMenuGroups(groups);
   const menuDisabled = disabled || actionableGroups.length === 0;
+  const { pressItem } = useNativeMenuAction(groups, menuDisabled);
   const menuLabel = trigger.kind === 'label'
     ? trigger.label
     : <Image
@@ -61,9 +63,9 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
                 ...(presentation.selectionAccessibilityValue
                   ? [nativeAccessibilityValue(presentation.selectionAccessibilityValue)]
                   : []),
-                nativeDisabled(!presentation.enabled)
+                nativeDisabled(menuDisabled || !presentation.enabled)
               ]}
-              onPress={() => pressNativeMenuItem(item)}
+              onPress={() => pressItem(group.id, item.id)}
               role={presentation.role}
               systemImage={presentation.systemImage as SwiftButtonImage}
             />;

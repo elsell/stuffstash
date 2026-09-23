@@ -24,7 +24,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 | M16 | Customization controls remain editable while Save is pending | Implemented; runtime pending | Pending-save inputs stay visible/disabled; open picker guarded; 53 focused tests including all editor kinds and failed-save recovery, check/structural green; critic found no blocker |
 | M17 | iPad onboarding stretches the form across the display with excessive separation from its action | Implemented; native rerun pending | Centered 600-point form column and adjacent action; typecheck/structural green, critic found no blockers; iPad landscape fixture added, enlarged text still pending |
 | M18 | Native menu pickers omit visible field labels outside a SwiftUI Form | Implemented; native rerun pending | Run34887652455 Browse screenshot; shared LabeledContent wraps menu value; native test requires visible Availability label and in-place selection |
-| M19 | Expiration filter sheet loses body/actions during native presentation | Expansion passes; phone keyboard actions unresolved | Run34920888328 direct-root candidate survives expansion on phone and iPad. Search keyboard action reachability passes on iPad but fails on phone. Large-text label finding tracked separately as M53 |
+| M19 | Expiration filter sheet loses body/actions during native presentation | Scoped native passes on phone/iPad | Run35247151136 passes testExpirationSheetBodySurvivesExpansion and testExpirationSearchKeepsActionsReachableWithKeyboard on both devices: body/Apply remain reachable after expansion; full query filters tags, actions clear the keyboard/accessory, and Back returns to Filters. Earlier keyboard failures below are historical. Large-text label finding remains separate as M53. |
 | M20 | Onboarding keyboard does not dismiss with downward content drag | Open | Run34887652455 iPhone preserves full typed URL but fails corrected downward dismissal; investigate actual gesture and scroll bounds before changing behavior |
 | M21 | Add fields can change while the submitted item is being saved | Implemented; source tests pass; native pending | Exclusive save/parent/photo operation ownership guards draft edits, duplicate submission and dismissal. Five remote tests cover save failure, parent failure and photo cancellation with draft retention and editing recovery; native verification remains pending |
 | M22 | Appearance uses navigation for three flat choices | Implemented; native menu scenario passes both devices | Settings now uses the shared native menu; older route reuses it. Immediate selection and storage-failure rollback are preserved; native menu rendering remains pending |
@@ -100,7 +100,14 @@ in that snapshot.
 
 ### M47 — Home return details uses an inline panel instead of its specified sheet
 
-Source-confirmed, open. `HomeScreen.tsx` renders `ReturnDetailsSheet` as a `View`
+Current status: implemented; run35247151136 passes the normal-text Home return
+cancel and recovery workflows on phone/iPad. The tests verify complete details
+entry, keyboard dismissal, failed-save draft retention, visible error, successful
+retry to Home, and cancel restoration. Long details, enlarged text and modal
+assistive focus remain unverified; these are not reasons to repeat the already
+passed normal-text workflows without a relevant change.
+
+Original source finding: `HomeScreen.tsx` rendered `ReturnDetailsSheet` as a `View`
 at the end of dashboard content, with bespoke buttons and a placeholder-only
 input. The asset checkout spec explicitly calls for a native sheet. The follow-up
 may be offscreen after Return, has no modal focus boundary, and lacks a persistent
@@ -283,20 +290,53 @@ locating the visible label. Critic found no blocker but correctly notes that its
 height check is only a coarse enlarged-text check: screenshots and the AX audit
 remain required to establish no clipping. Native outcome remains pending.
 
-### M54 — Choice adapters forward events while disabled
+### M54 — Retained menu callbacks outlive their current action state
 
-Source regression tests reproduced disabled callback delivery on iOS, Android
-and the generic renderer. Each adapter now rejects events from a disabled render
-and resumes valid changes after re-enabling. Android also marks each menu item
-disabled, so its open-menu presentation receives the current lock state.
+Current diagnosis: the original disabled-render guard did not cover a callback
+retained by an already-open menu. Mounted iOS, Android and fallback adapters all
+reproduced calling the old handler after a global lock. Investigation used one
+source pass; no additional native diagnostic run is needed to choose the fix.
 
-Three failing cases were observed before the fix;22 focused adapter/expiration/
-custom-field/reminder tests plus TypeScript and structural checks now pass remotely
-(`/tmp/native-choice-lock-green.log`). The shared consumer inventory is the same
-as M53. No authorization behavior changed. Critic found no blocker and emphasized
-the evidence limit: these checks prove current callback-boundary behavior, not
-immediate native handler replacement in an already-open menu. Physical timing and
-Android runtime acceptance remain pending.
+Implementation: resolve group/item IDs against current committed state; reject
+locked, removed and unmounted owners; dispatch the latest handler otherwise.
+Android/fallback menus close on lock and remain closed after unlock. Native item
+presentation includes the global lock. This preserves native controls and grouped,
+selected and destructive semantics. Source consumers reviewed include Android
+choice pickers, asset overflow, History selection and Expiration ordering.
+
+Evidence: all three retained-event cases failed before correction. Five mounted
+adapter cases now cover locking, item removal, group identity, item locks, current
+handlers, teardown and controlled popup dismissal. On paul, the mobile suite
+passes1,925 tests across306 files; TypeScript and mobile structural checks pass.
+That validation checkout also contains the separate color candidate; this is
+source verification, not a pristine release build or native runtime acceptance.
+Logs: `/tmp/menu-ownership-suite.log`, `/tmp/menu-ownership-types.log`, and
+`/tmp/menu-ownership-structural.log` on paul.
+
+Android native acceptance passes on API36 emulator5580, APK SHA-256
+`a7aa140a4b6517815665a8b4b9adec8d20ce5bd200d92f06c49056786be5337d`.
+The real Compose popup dismisses on lock, ignores a locked physical tap, stays
+closed after unlock and executes a fresh command exactly once. The production
+Browse choice selects Available and applies it. Its result is below the fixture
+launcher list; bounded scrolling revealed the expected result after the initial
+visibility assertion failed. This was not a product selection failure.
+[Locked hierarchy](evidence/android-menu-locked.xml),
+[executed command](evidence/android-menu-activated.xml),
+[applied choice](evidence/android-menu-choice-applied.xml) and reviewed screenshots
+retain evidence. Native archive reused the existing disposable build tree; source
+was synchronized tob75ef748, preserving its generated Android project/toolchain.
+
+Native35815492811 passes menu lock/dismiss/unlock/fresh execution and Browse
+selection on phone/iPad. Reviewed phone locked and iPad recovered captures retain
+zero/one activation counts. iPad also passes Settings archive confirmation, cancel,
+commit and notice; phone returns to Tags but its delayed success-notice observation
+fails. That unchanged command adapter is a separate harness acceptance correction,
+with the original failure retained in native-menu-358154-results.csv. Native asset
+overflow consumer verification and broader assistive behavior remain audit scope. VoiceOver/TalkBack behavior is not established by host-component fakes.
+No new release is claimed. Critic identified retained trigger reopening after
+unlock; two failing cases reproduced it. Trigger and accessibility dispatch now
+share the committed owner guard; five focused cases pass after correction. Final
+critic review found no remaining confirmed source blocker.
 
 ### M55 — Inbox open completion outlives its navigation intent
 

@@ -1,0 +1,3080 @@
+[
+  {
+    "test": "FixtureAuditTests/testControlledAddressEntry()",
+    "trace": {
+      "value": "h/example.invalid",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "h"
+        },
+        {
+          "kind": "change",
+          "text": "h",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "commit",
+          "text": "h"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "key",
+          "key": "s"
+        },
+        {
+          "kind": "key",
+          "key": ":"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "change",
+          "text": "h/",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "h/e",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "x"
+        },
+        {
+          "kind": "change",
+          "text": "h/ex",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "h/exa",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "h/exam",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "change",
+          "text": "h/examp",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "h/exampl",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "h/example",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": "."
+        },
+        {
+          "kind": "change",
+          "text": "h/example.",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "commit",
+          "text": "h/example."
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.i",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.i"
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.in",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.in"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.inv",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.inv"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.inva",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.inva"
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.inval",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.inval"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.invali",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.invali"
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "h/example.invalid",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "h/example.invalid"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testControlledTextEntryWithoutAccessory()",
+    "trace": {
+      "value": "Nve draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "commit",
+          "text": "N"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nv",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Nve",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Nve ",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "Nve d",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "commit",
+          "text": "Nve d"
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "Nve dr",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Nve dra",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draf",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft ",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft n",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft na",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft nam",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "Nve draft nam"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Nve draft name",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "Nve draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testControlledTextEntryWithoutAssistance()",
+    "trace": {
+      "value": "Native draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Na",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nat",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "Nati",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nativ",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native ",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "Native d",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "Native dr",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "commit",
+          "text": "Native dr"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native dra",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "Native draf",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native draft ",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft "
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft n",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft n"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft na",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft nam",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft nam"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft name",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryControlledTextEntry()",
+    "trace": {
+      "value": "Native t namedraf",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Na",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nat",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "Nati",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nativ",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native ",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "commit",
+          "text": "Native "
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Native tdraf",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native t draf",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Native t ndraf",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native t nadraf",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Native t namdraf",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native t namedraf",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "Native t namedraf"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryMultilineTextEntry()",
+    "trace": {
+      "value": "Native draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 2
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Na",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nat",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "Nati",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nativ",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "commit",
+          "text": "Native"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native ",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "Native d",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "Native dr",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native dra",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "Native draf",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native draft ",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft n",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft na",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft nam",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft name",
+          "count": 18
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinarySingleLineTextEntry()",
+    "trace": {
+      "value": "Nt name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "commit",
+          "text": "N"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nt",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Nt ",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Nt n",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Nt na",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Nt nam",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Nt name",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "commit",
+          "text": "Nt name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryTextEntryWithoutAccessory()",
+    "trace": {
+      "value": "Native draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Na",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nat",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "Nati",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nativ",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "commit",
+          "text": "Native"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native ",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "Native d",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "Native dr",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native dra",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "Native draf",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native draft ",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft n",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft na",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft na"
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft nam",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft name",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testOrdinaryTextEntryWithoutAssistance()",
+    "trace": {
+      "value": "N draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "commit",
+          "text": "N"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "N ",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "N d",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "N dr",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "N dra",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "N draf",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "N draft",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "N draft ",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "N draft n",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "N draft na",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "N draft nam",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "N draft name",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "commit",
+          "text": "N draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testPacedUncontrolledTextEntryDiagnostic()",
+    "trace": {
+      "value": "Native draft name",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "N"
+        },
+        {
+          "kind": "change",
+          "text": "N",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "commit",
+          "text": "N"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Na",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "commit",
+          "text": "Na"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Nat",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "commit",
+          "text": "Nat"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "Nati",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "commit",
+          "text": "Nati"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "Nativ",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "commit",
+          "text": "Nativ"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "commit",
+          "text": "Native"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native ",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "commit",
+          "text": "Native "
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "Native d",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "commit",
+          "text": "Native d"
+        },
+        {
+          "kind": "key",
+          "key": "r"
+        },
+        {
+          "kind": "change",
+          "text": "Native dr",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "commit",
+          "text": "Native dr"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native dra",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "commit",
+          "text": "Native dra"
+        },
+        {
+          "kind": "key",
+          "key": "f"
+        },
+        {
+          "kind": "change",
+          "text": "Native draf",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "commit",
+          "text": "Native draf"
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft"
+        },
+        {
+          "kind": "key",
+          "key": " "
+        },
+        {
+          "kind": "change",
+          "text": "Native draft ",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft "
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft n",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft n"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft na",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft na"
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft nam",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft nam"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "Native draft name",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "Native draft name"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testSeededAddressWithoutKeyboardAccessory()",
+    "trace": {
+      "value": "https://example.invalid",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "h"
+        },
+        {
+          "kind": "change",
+          "text": "h",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "ht",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "htt",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "commit",
+          "text": "htt"
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "change",
+          "text": "http",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "commit",
+          "text": "http"
+        },
+        {
+          "kind": "key",
+          "key": "s"
+        },
+        {
+          "kind": "change",
+          "text": "https",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "commit",
+          "text": "https"
+        },
+        {
+          "kind": "key",
+          "key": ":"
+        },
+        {
+          "kind": "change",
+          "text": "https:",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "commit",
+          "text": "https:"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "change",
+          "text": "https:/",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "commit",
+          "text": "https:/"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "change",
+          "text": "https://",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "commit",
+          "text": "https://"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "https://e",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "commit",
+          "text": "https://e"
+        },
+        {
+          "kind": "key",
+          "key": "x"
+        },
+        {
+          "kind": "change",
+          "text": "https://ex",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "commit",
+          "text": "https://ex"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "https://exa",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "commit",
+          "text": "https://exa"
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "https://exam",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "commit",
+          "text": "https://exam"
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "change",
+          "text": "https://examp",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "https://examp"
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "https://exampl",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "https://exampl"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "https://example",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "commit",
+          "text": "https://example"
+        },
+        {
+          "kind": "key",
+          "key": "."
+        },
+        {
+          "kind": "change",
+          "text": "https://example.",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "commit",
+          "text": "https://example."
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.i",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.i"
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.in",
+          "count": 18
+        },
+        {
+          "kind": "selection",
+          "start": 18,
+          "end": 18
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.in"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inv",
+          "count": 19
+        },
+        {
+          "kind": "selection",
+          "start": 19,
+          "end": 19
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.inv"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inva",
+          "count": 20
+        },
+        {
+          "kind": "selection",
+          "start": 20,
+          "end": 20
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.inva"
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inval",
+          "count": 21
+        },
+        {
+          "kind": "selection",
+          "start": 21,
+          "end": 21
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.inval"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.invali",
+          "count": 22
+        },
+        {
+          "kind": "selection",
+          "start": 22,
+          "end": 22
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.invali"
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.invalid",
+          "count": 23
+        },
+        {
+          "kind": "selection",
+          "start": 23,
+          "end": 23
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.invalid"
+        }
+      ]
+    }
+  },
+  {
+    "test": "FixtureAuditTests/testUncontrolledAddressEntry()",
+    "trace": {
+      "value": "https://example.invalid",
+      "dropped": 0,
+      "events": [
+        {
+          "kind": "commit",
+          "text": ""
+        },
+        {
+          "kind": "key",
+          "key": "h"
+        },
+        {
+          "kind": "change",
+          "text": "h",
+          "count": 1
+        },
+        {
+          "kind": "selection",
+          "start": 1,
+          "end": 1
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "ht",
+          "count": 2
+        },
+        {
+          "kind": "selection",
+          "start": 2,
+          "end": 2
+        },
+        {
+          "kind": "key",
+          "key": "t"
+        },
+        {
+          "kind": "change",
+          "text": "htt",
+          "count": 3
+        },
+        {
+          "kind": "selection",
+          "start": 3,
+          "end": 3
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "change",
+          "text": "http",
+          "count": 4
+        },
+        {
+          "kind": "selection",
+          "start": 4,
+          "end": 4
+        },
+        {
+          "kind": "key",
+          "key": "s"
+        },
+        {
+          "kind": "change",
+          "text": "https",
+          "count": 5
+        },
+        {
+          "kind": "selection",
+          "start": 5,
+          "end": 5
+        },
+        {
+          "kind": "commit",
+          "text": "https"
+        },
+        {
+          "kind": "key",
+          "key": ":"
+        },
+        {
+          "kind": "change",
+          "text": "https:",
+          "count": 6
+        },
+        {
+          "kind": "selection",
+          "start": 6,
+          "end": 6
+        },
+        {
+          "kind": "commit",
+          "text": "https:"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "change",
+          "text": "https:/",
+          "count": 7
+        },
+        {
+          "kind": "selection",
+          "start": 7,
+          "end": 7
+        },
+        {
+          "kind": "commit",
+          "text": "https:/"
+        },
+        {
+          "kind": "key",
+          "key": "/"
+        },
+        {
+          "kind": "change",
+          "text": "https://",
+          "count": 8
+        },
+        {
+          "kind": "selection",
+          "start": 8,
+          "end": 8
+        },
+        {
+          "kind": "commit",
+          "text": "https://"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "https://e",
+          "count": 9
+        },
+        {
+          "kind": "selection",
+          "start": 9,
+          "end": 9
+        },
+        {
+          "kind": "commit",
+          "text": "https://e"
+        },
+        {
+          "kind": "key",
+          "key": "x"
+        },
+        {
+          "kind": "change",
+          "text": "https://ex",
+          "count": 10
+        },
+        {
+          "kind": "selection",
+          "start": 10,
+          "end": 10
+        },
+        {
+          "kind": "commit",
+          "text": "https://ex"
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "https://exa",
+          "count": 11
+        },
+        {
+          "kind": "selection",
+          "start": 11,
+          "end": 11
+        },
+        {
+          "kind": "commit",
+          "text": "https://exa"
+        },
+        {
+          "kind": "key",
+          "key": "m"
+        },
+        {
+          "kind": "change",
+          "text": "https://exam",
+          "count": 12
+        },
+        {
+          "kind": "selection",
+          "start": 12,
+          "end": 12
+        },
+        {
+          "kind": "commit",
+          "text": "https://exam"
+        },
+        {
+          "kind": "key",
+          "key": "p"
+        },
+        {
+          "kind": "change",
+          "text": "https://examp",
+          "count": 13
+        },
+        {
+          "kind": "selection",
+          "start": 13,
+          "end": 13
+        },
+        {
+          "kind": "commit",
+          "text": "https://examp"
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "https://exampl",
+          "count": 14
+        },
+        {
+          "kind": "selection",
+          "start": 14,
+          "end": 14
+        },
+        {
+          "kind": "commit",
+          "text": "https://exampl"
+        },
+        {
+          "kind": "key",
+          "key": "e"
+        },
+        {
+          "kind": "change",
+          "text": "https://example",
+          "count": 15
+        },
+        {
+          "kind": "selection",
+          "start": 15,
+          "end": 15
+        },
+        {
+          "kind": "commit",
+          "text": "https://example"
+        },
+        {
+          "kind": "key",
+          "key": "."
+        },
+        {
+          "kind": "change",
+          "text": "https://example.",
+          "count": 16
+        },
+        {
+          "kind": "selection",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "kind": "commit",
+          "text": "https://example."
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.i",
+          "count": 17
+        },
+        {
+          "kind": "selection",
+          "start": 17,
+          "end": 17
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.i"
+        },
+        {
+          "kind": "key",
+          "key": "n"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.in",
+          "count": 18
+        },
+        {
+          "kind": "selection",
+          "start": 18,
+          "end": 18
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.in"
+        },
+        {
+          "kind": "key",
+          "key": "v"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inv",
+          "count": 19
+        },
+        {
+          "kind": "selection",
+          "start": 19,
+          "end": 19
+        },
+        {
+          "kind": "key",
+          "key": "a"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inva",
+          "count": 20
+        },
+        {
+          "kind": "selection",
+          "start": 20,
+          "end": 20
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.inva"
+        },
+        {
+          "kind": "key",
+          "key": "l"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.inval",
+          "count": 21
+        },
+        {
+          "kind": "selection",
+          "start": 21,
+          "end": 21
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.inval"
+        },
+        {
+          "kind": "key",
+          "key": "i"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.invali",
+          "count": 22
+        },
+        {
+          "kind": "selection",
+          "start": 22,
+          "end": 22
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.invali"
+        },
+        {
+          "kind": "key",
+          "key": "d"
+        },
+        {
+          "kind": "change",
+          "text": "https://example.invalid",
+          "count": 23
+        },
+        {
+          "kind": "selection",
+          "start": 23,
+          "end": 23
+        },
+        {
+          "kind": "commit",
+          "text": "https://example.invalid"
+        }
+      ]
+    }
+  }
+]

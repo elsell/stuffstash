@@ -50,6 +50,7 @@ exports = {
     "audit-contents-search": "AssetContentsSearchFixture",
     "audit-contents-search-preconfigured": "AssetContentsSearchFixture",
     "audit-region-recovery": "AssetRegionRecoveryFixture",
+    "audit-menu-ownership": "NativeMenuOwnershipFixture",
     "audit-command-height": "CommandHeightFixture",
     "audit-notice": "NoticePlacementFixture",
     "audit-notice-sheet": "NoticePlacementFixture",

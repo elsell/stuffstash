@@ -1,5 +1,37 @@
 # Platform Interaction Review
 
+## Transient success observation order
+
+Native35815492811 phone passed Archive confirmation/cancellation and returned to
+Tags, but began querying its4200ms success notice about ten seconds after Archive.
+Observe the transient exact notice immediately after the confirmed command, then
+wait for the persistent Tags destination. Preserve both assertions and durations;
+do not lengthen the product notice or claim the late snapshot proves it appeared.
+This harness-only correction needs a focused archive-workflow run; it does not
+invalidate the independently passed menu lock/recovery and filter checks.
+
+## Retained native menu actions
+
+An open native menu may deliver an item event after its parent locks, removes an
+item, replaces the current handler, or unmounts. All menu adapters must resolve
+events against committed current menu state, identified by group and item IDs.
+Reject a globally disabled menu, disabled/removed item, and retired component;
+otherwise invoke the current handler. Never run a captured obsolete callback.
+Native item presentation must include the global lock. Controlled Android and
+fallback popups close on lock and must not reopen automatically after unlocking.
+Retained trigger and accessibility callbacks also obey the current lock and teardown.
+Keep iOS/Android native controls, selected/destructive semantics and grouping.
+Tests must retain a real rendered adapter callback across these transitions;
+source tests do not establish native popup refresh or assistive-tech behavior.
+
+Native acceptance uses a runner-only menu fixture with a bounded delayed lock,
+visible lock/activation state, explicit unlock and timer cleanup on removal.
+Open the production adapter before the lock, require disabled items or a dismissed
+popup, verify no activation, then unlock and execute one fresh command. Run this
+on phone/iPad with representative filter choice and destructive-command workflows.
+This checks native presentation and delivery; retained-event ownership remains
+covered by the mounted callback tests. No production data is mutated.
+
 ## Native Sharing access fixtures
 
 Runner-only Sharing scenarios may seed a permissionless scope, one rejected access

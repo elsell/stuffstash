@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
-import { actionableMenuGroups, nativeMenuItemPresentation, pressNativeMenuItem } from './NativeActionMenuPresentation';
+import { describe, expect, it } from 'vitest';
+import { actionableMenuGroups, nativeMenuItemPresentation } from './NativeActionMenuPresentation';
 import type { NativeActionMenuGroup, NativeActionMenuItem } from './NativeActionMenu.types';
 
 function item(overrides: Partial<NativeActionMenuItem> = {}): NativeActionMenuItem {
-  return { id: 'edit', label: 'Edit', onPress: vi.fn(), ...overrides };
+  return { id: 'edit', label: 'Edit', onPress: () => undefined, ...overrides };
 }
 
 describe('NativeActionMenu presentation', () => {
@@ -41,12 +41,4 @@ describe('NativeActionMenu presentation', () => {
     });
   });
 
-  it('does not invoke disabled items and invokes enabled items once', () => {
-    const onPress = vi.fn();
-    pressNativeMenuItem(item({ disabled: true, onPress }));
-    expect(onPress).not.toHaveBeenCalled();
-
-    pressNativeMenuItem(item({ onPress }));
-    expect(onPress).toHaveBeenCalledOnce();
-  });
 });

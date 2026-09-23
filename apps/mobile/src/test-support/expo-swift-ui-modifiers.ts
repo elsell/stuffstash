@@ -18,3 +18,6 @@ export const keyboardType=modifier('keyboardType');
 export const textContentType=modifier('textContentType');
 export const textInputAutocapitalization=modifier('textInputAutocapitalization');
 export const autocorrectionDisabled=(value=true)=>({type:'autocorrectionDisabled',value});
+export const accessibilityValue=modifier('accessibilityValue');
+export const contentShape=modifier('contentShape');
+export const shapes={rectangle:()=>({type:'rectangle'})};

@@ -1,0 +1,4 @@
+test,phone,ipad
+testBrowseUsesInPlaceAvailabilityMenuAndReachableActions,passed,passed
+testNativeMenuLocksOpenActionsAndRecovers,passed,passed
+testSettingsEditorNativeArchiveConfirmsBeforeReturning,failed,passed
