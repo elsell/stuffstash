@@ -35,6 +35,15 @@ inline Add structure and a hidden Move Here header. Corrected expectations and a
 and critic review pass. All six CI35891523435 jobs passed at336e17ef. These checks
 do not establish native presentation or physical-device behavior.
 
+## Next connected workflow
+
+Source review at b5eee60f of Browse → Filters → results/detail/Back retains in-place
+short choices and searchable tag selection. M274 recommends replacing the
+three-destination Expiration intermediate page with a native action menu; preserve
+inherited filters and original Browse return context. This is outside frozen
+M265–M273. Current connected native return/scroll evidence is still required;
+source state ownership does not certify the visual journey.
+
 ## Separate unresolved decisions
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)

@@ -3920,3 +3920,34 @@ selection task. Use native search/header commands and checked rows, retaining th
 chosen item through refinement and failed submission. 81 focused source checks
 pass; native acceptance remains pending. See
 `specs/platform/mobile-move-here-selection.spec.md` for scope and acceptance.
+
+
+### M274 — Expiration review adds an unnecessary intermediate filter page
+
+P2 pattern-selection recommendation; source inspected at b5eee60f. In
+`BrowseFiltersScreen.tsx`, the overview opens a local Expiration page containing
+only three navigation destinations (soon, expired, all dates). Each immediately
+opens the shared expiration workspace. This adds page/back chrome without a
+search, hierarchy, or draft choice requiring a separate task. The existing
+active-items explanation can remain beside the menu.
+
+Use the existing NativeActionMenu for these three clearly named review commands
+on the overview. Keep the active-items restriction visible before invocation,
+and preserve draft text/tags/kind/availability and prior Browse route as required
+by expiration-workspace.spec.md. Do not present it as a filter already applied or
+require an extra Show results after choosing the command. Tags still justify
+searchable multiselection; Type/Status/Availability/Sort already use native choices
+in place and should remain so. This is a project judgment informed by Apple's
+[menus](https://developer.apple.com/design/human-interface-guidelines/menus) and
+[modality](https://developer.apple.com/design/human-interface-guidelines/modality)
+guidance, not an Apple prohibition on selection pages.
+
+Acceptance: change availability and tags, open/dismiss the review menu without
+changing Browse or drafts, choose each review mode, verify inherited filters,
+then Back restores the original Browse query/sort/scroll context. Check menu
+placement on phone/iPad and disabled/current actions during scope verification.
+Source review found explicit scope validation and shared query composition;
+`loadFirstPage` only updates the submitted query, so its name alone is not evidence
+of pagination or scroll loss. Filters are exposed only in List; forcing List on
+filter apply is not a confirmed Map-return defect. Current native connected
+filter/detail/Back continuity remains unverified. Separate from frozen M265–M273.
