@@ -154,8 +154,8 @@ No further field-choice rerun is needed.
 
 Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
 leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
-The decision is implemented: shared native DraftTextField preserves ordinary editing
-and rejected options; accepted Add advances an explicit reset revision. Validation
+The candidate uses shared native DraftTextField for ordinary editing and rejected
+options; accepted Add advances an explicit reset revision. Validation
 hints remain native. Android retains the existing controlled field. Both reset/hint
 regressions failed before correction;all1,928 remote tests (307 files), TypeScript,
 structural checks and critic pass. Native
@@ -167,11 +167,26 @@ clearing, selective removal and return with standard keyboard dismissal; scoped
 driver error and correction. This does not certify keyboard-open Add or whole-editor
 persistence.
 
-The next native run combines corrected enum entry with a new shared Settings
-full-name/rejected-save/retry workflow. The real editor and managers call a repository
-fake that validates the exact full name before failing once. This extends the prior
-one-character edit check; it does not certify persisted collection readback. Its
-preparation, TypeScript, structural checks and critic passed before inclusion.
+Android at current source98b50a49 also passes enum recovery and the complete Settings
+name/save-retry workflow on APK690c2fdf; [evidence](evidence/android-enum-settings-98b50a49-results.txt).
+Source overlay initially restored production routes; reapplying runner fixtures fixed
+setup before acceptance. Reapply fixtures after future full-source overlays.
+
+[Native35839289171](https://github.com/elsell/stuffstash/actions/runs/35839289171)
+at98b50a49 did not pass acceptance. Phone enum times out waiting for exact `ready`,
+although the final hierarchy contains it; this proves neither text loss nor a passing
+deadline. iPad observes exact `ready`, then fails duplicate rejection; the final field
+is empty and only the original option remains. Settings full-name/rejected-save/retry
+passes on phone; iPad fails the success-notice check, not name retention. All six CI
+jobs pass. These results do not justify another Settings input migration.
+
+Decision: hold PR167. Keep the native adapter and its hint modifier present with an
+empty value between errors, preserving the SwiftUI subtree across validation. The
+regression failed first and passes after correction; critic found no blocker. Run
+one focused enum acceptance on this correction; [retained failure evidence](evidence/native-enum-358392-results.txt). Do not repeat key,
+provider or pacing investigations, or rerun unchanged failures. Settings notice
+observation remains a separate acceptance gap; no persisted collection readback is
+claimed. Latest verified release remains0.24.29 (120.1).
 
 ### Custom-field choices — scoped acceptance complete
 

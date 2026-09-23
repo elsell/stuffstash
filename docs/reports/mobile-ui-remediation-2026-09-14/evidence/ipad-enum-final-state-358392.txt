@@ -1,0 +1,78 @@
+Attributes: Application, 0x1084a12c0, pid: 28012, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x1084a12c0, pid: 28012, label: 'Stuff Stash'
+    Window (Main), 0x1084a1400, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x1084a1540, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x1084a1040, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x1084a1180, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x1084a0dc0, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x1084a0f00, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x1084a0b40, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x1084a0c80, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x1084a08c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x1084a0a00, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x1084a0640, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x1084a0780, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Native UI audit'
+                            StaticText, 0x1084a0000, {{312.0, 43.5}, {119.5, 21.0}}, label: 'Native UI audit'
+                          Other, 0x1084a0140, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x1084a03c0, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x1084a0500, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x1084a0280, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x1084a1900, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x1084a1a40, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x1084a1b80, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x1084a1cc0, {{0.0, 86.0}, {744.0, 591.5}}
+                                          Other, 0x1084a1e00, {{0.0, 86.0}, {744.0, 591.5}}
+                                            Button, 0x1084a1f40, {{20.0, 106.0}, {704.0, 37.5}}, label: 'Back to audit menu'
+                                            StaticText, 0x1084a2080, {{20.0, 163.5}, {704.0, 17.0}}, label: 'Field type: enum'
+                                              StaticText, 0x1084a21c0, {{20.0, 163.5}, {704.0, 17.0}}, label: 'Field type: enum'
+                                            StaticText, 0x1084a2300, {{20.0, 200.5}, {704.0, 17.0}}, label: 'Applicability: all_assets'
+                                              StaticText, 0x1084a2440, {{20.0, 200.5}, {704.0, 17.0}}, label: 'Applicability: all_assets'
+                                            StaticText, 0x1084a2580, {{20.0, 237.5}, {704.0, 17.0}}, label: 'Selected targets: none'
+                                              StaticText, 0x1084a26c0, {{20.0, 237.5}, {704.0, 17.0}}, label: 'Selected targets: none'
+                                            Other, 0x1084a2800, {{36.0, 290.5}, {672.0, 48.0}}
+                                              Other, 0x1084a2940, {{36.0, 290.5}, {672.0, 48.0}}
+                                                Other, 0x1084a2a80, {{36.0, 290.5}, {672.0, 48.0}}
+                                                  StaticText, 0x1084a2bc0, {{36.0, 304.2}, {37.5, 20.5}}, label: 'Type'
+                                                  Button, 0x1084a2d00, {{624.5, 297.5}, {83.5, 34.5}}, label: 'Type, Choose Type. Current value Enum'
+                                                    StaticText, 0x1084a2e40, {{636.5, 304.5}, {43.5, 20.5}}, label: 'Enum'
+                                            StaticText, 0x1084a2f80, {{36.0, 377.0}, {672.0, 18.0}}, label: 'Options'
+                                              StaticText, 0x1084a30c0, {{36.0, 377.0}, {672.0, 18.0}}, label: 'Options'
+                                            Other, 0x1084a3200, {{36.0, 405.0}, {672.0, 48.0}}
+                                              Other, 0x1084a3340, {{36.0, 405.0}, {672.0, 48.0}}
+                                                Other, 0x1084a3480, {{36.0, 405.0}, {672.0, 48.0}}
+                                                  Button, 0x1084a35c0, {{318.0, 405.0}, {108.5, 48.0}}, label: 'Remove ready'
+                                            Other, 0x1084a3700, {{36.0, 463.0}, {672.0, 54.0}}
+                                              Other, 0x1084a3840, {{36.0, 463.0}, {672.0, 54.0}}
+                                                Other, 0x1084a3980, {{36.0, 463.0}, {672.0, 54.0}}
+                                                  TextField, 0x1084a3ac0, {{36.0, 473.0}, {672.0, 34.0}}, label: 'New enum option', placeholderValue: 'Add option'
+                                            Other, 0x1084a3c00, {{36.0, 527.0}, {672.0, 48.0}}
+                                              Other, 0x1084a3d40, {{36.0, 527.0}, {672.0, 48.0}}
+                                                Other, 0x1084a3e80, {{36.0, 527.0}, {672.0, 48.0}}
+                                                  Button, 0x11575be80, {{330.5, 527.0}, {83.5, 48.0}}, label: 'Add option'
+                                            Other, 0x11575b700, {{36.0, 607.0}, {672.0, 48.0}}
+                                              Other, 0x11575b840, {{36.0, 607.0}, {672.0, 48.0}}
+                                                Other, 0x11575b980, {{36.0, 607.0}, {672.0, 48.0}}
+                                                  StaticText, 0x11575bac0, {{36.0, 620.8}, {76.0, 20.5}}, label: 'Applies to'
+                                                  Button, 0x11575b200, {{595.5, 614.0}, {112.5, 34.5}}, label: 'Applies to, Choose Applies to. Current value All assets'
+                                                    StaticText, 0x11575b340, {{607.5, 621.0}, {72.5, 20.5}}, label: 'All assets'
+                                        Other, 0x11575b480, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11575b5c0, {{738.0, 537.0}, {3.0, 568.0}}
+                                        Other, 0x11575ad00, {{32.0, 1100.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11575ae40, {{27.0, 1127.0}, {689.5, 3.0}}
+                                        Other, 0x11575af80, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11575b0c0, {{738.0, 537.0}, {3.0, 568.0}}
+                                        Other, 0x11575aa80, {{32.0, 1100.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11575abc0, {{27.0, 1127.0}, {689.5, 3.0}}
+                          Other, 0x115759680, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x1157597c0, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x115759900, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x115759b80, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x11575a940, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x1084a12c0, pid: 28012, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x115759a40, pid: 28012, label: 'Stuff Stash'
+  }

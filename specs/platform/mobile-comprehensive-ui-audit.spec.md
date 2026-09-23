@@ -1769,7 +1769,12 @@ and busy-state changes keep the native editing instance. A successful Add advanc
 a local reset revision and clears the field; Android keeps its controlled input
 instance. Changing the enclosing loaded resource already unmounts controls through
 the editor loading state. Type disclosure re-entry seeds the retained pending value.
-Keep the field's validation accessibility hint alongside its visible error.
+Keep the field's validation accessibility hint alongside its visible error. Keep
+the native modifier sequence stable when the hint appears or clears: supply an
+empty hint rather than inserting/removing its modifier. Expo55.0.17 wraps modifiers
+structurally and reseeds TextField on appearance; validation must not recreate that
+subtree and replace the user's draft. Run35839289171's iPad duplicate rejection
+ended with an empty field; verify the unchanged recovery workflow after correction.
 
 Use one focused native pass on phone and iPad. A failed exact-value assertion in
 this production consumer selects the established native draft-field adapter;

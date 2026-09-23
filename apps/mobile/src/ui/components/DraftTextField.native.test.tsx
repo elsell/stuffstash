@@ -9,12 +9,16 @@ it('updates the native validation hint without replacing the editing seed', asyn
   try {
     await h.render(field());
     const native = h.byType('SwiftUITextField');
+    const modifierTypes = native?.props.modifiers.map((modifier: { type: string }) => modifier.type);
+    expect(native?.props.modifiers).toContainEqual({ type: 'accessibilityHint', value: '' });
     await h.render(field('This option already exists.'));
+    expect(native?.props.modifiers.map((modifier: { type: string }) => modifier.type)).toEqual(modifierTypes);
     expect(h.byType('SwiftUITextField')).toBe(native);
     expect(native?.props.modifiers).toContainEqual({ type: 'accessibilityHint', value: 'This option already exists.' });
     await h.render(field());
     expect(h.byType('SwiftUITextField')).toBe(native);
-    expect(native?.props.modifiers.some((modifier: { type: string }) => modifier.type === 'accessibilityHint')).toBe(false);
+    expect(native?.props.modifiers).toContainEqual({ type: 'accessibilityHint', value: '' });
+    expect(native?.props.modifiers.map((modifier: { type: string }) => modifier.type)).toEqual(modifierTypes);
     expect(native?.props.defaultValue).toBe('Saved');
   } finally { await h.unmount(); }
 });

@@ -8,6 +8,6 @@ export function DraftTextField({ value, editable, accessibilityLabel: label, acc
   return <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
     <TextField defaultValue={initialValue} placeholder={placeholder} onValueChange={text => {
       if (editable !== false) onChangeText(text);
-    }} modifiers={[accessibilityLabel(label), ...(hint ? [accessibilityHint(hint)] : []), textFieldStyle('roundedBorder'), disabled(editable === false)]} />
+    }} modifiers={[accessibilityLabel(label), accessibilityHint(hint ?? ''), textFieldStyle('roundedBorder'), disabled(editable === false)]} />
   </Host>;
 }

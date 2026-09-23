@@ -1,0 +1,9 @@
+Source: 98b50a49d49041693096e8ad3c0bc52f7ece9711
+Native: https://github.com/elsell/stuffstash/actions/runs/35839289171
+Phone enum failed exact-ready 5s wait; final hierarchy contains ready. This does not prove a passing deadline.
+iPad enum passed exact ready, failed duplicate explanation; final field empty, original ready option remains.
+Settings phone full-name/save-retry passed; iPad failed success notice wait. No evidence here justifies migrating the Settings name input.
+All six CI35839299152 jobs passed. Candidate not accepted for release.
+
+Correction: stable accessibilityHint modifier (empty string when no hint). Pinned Expo55.0.17 View+ModifierArray.swift reduces modifiers into nested AnyViews; TextFieldView.swift onAppear reseeds defaultValue. Conditional modifier insertion can reset the subtree. Native recovery acceptance remains required.
+Remote regression failed before correction, then passed (13 tests); TypeScript passed. Critic found no blocker, noted source tests do not prove SwiftUI lifecycle.
