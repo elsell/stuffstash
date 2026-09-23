@@ -1997,7 +1997,9 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
       }
       XCTAssertTrue(field.waitForExistence(timeout: 5)); XCTAssertTrue(field.isHittable)
-      field.tap(); waitForKeyboard(keyLabel: "t", timeout: 30); field.typeText(query)
+      // Verify native input through the entered text and matching results below.
+      // A separate keyboard-key snapshot can itself exhaust the wait budget.
+      field.tap(); field.typeText(query)
       let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
       XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
       app.buttons["Dismiss keyboard"].firstMatch.tap()

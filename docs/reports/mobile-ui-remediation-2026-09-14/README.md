@@ -4,25 +4,15 @@ The comprehensive audit is **incomplete**. Prioritize stable screen structure,
 connected everyday tasks, visual coherence, then detailed states. Normal text comes
 first. The surface/axis inventory checks omissions; it is not a separate test queue.
 
-## Design acceptance hold
+## Design acceptance
 
-User review rejected Move’s visual hierarchy, indentation and text-only creation
-action. Native35895924050 passes functionality only. M265–M273 is held pending
-whole-layout redesign and matching phone/iPad visual review; do not equate green
-workflow checks with product acceptance.
-
-The redesign now uses an actual SwiftUI List on iOS, grouped subject/choices,
-retained selected rows, stacked native search and toolbar-owned destination
-creation. Android shares the grouping through its existing controls. Native review exposed
-a crowded subject/value row; b58ee297 stacks the subject above its location. The
-[Android workflow and entry review](evidence/android-move-redesign-b58ee297-results.txt)
-pass after that correction. Source checks
-cover selection/retry, title ownership and retired callbacks; native screenshots
-of entry, selection, creation and recovery are still required before acceptance.
-Run35901635030 failed (phone2/4, iPad1/4). It exposed duplicate list inset,
-crowded icon/text, clipped status content, and untappable blank space in iPad
-rows. [Current diagnosis and corrections](evidence/move-redesign-359016-results.txt).
-The revised layout and row hit area remain pending native review.
+The rejected Move layout has been replaced with a native iOS list, grouped
+subject and destination choices, visible native search, and toolbar-owned
+creation. The creation form now uses aligned Name and Kind sections with one
+explanatory footer. Final source9b3ae737 passes all four Move workflows on phone
+and iPad in35920806955; the phone retry followed an Xcode launch failure.
+Android recovery and phone/iPad entry, selection and creation captures were
+reviewed. This closes the scoped Move design hold, not the comprehensive audit.
 
 ## Delivery and frozen batch
 
@@ -45,8 +35,8 @@ Unrelated findings do not block either release.
 | --- | --- | --- |
 | Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivered in0.24.32; no unchanged layout rerun. |
 | Map/detail hierarchy | M265/M266 scoped phone/iPad acceptance passed in35874901875; Android captures retained. | Preserve in the integrated batch; no claim of whole-detail acceptance. |
-| Add/Edit selection | 35920079319 passes all three tag/draft cases on both devices. Phone/iPad screenshots show current destination and top-level choice below the header. | Correct the new assertion to query the radio element rather than Button; preserve exact name, hit target and bounds. Remaining Add search/creation workflow requires corrected native acceptance. |
-| Move | 35917033325 passes all four workflows on phone/iPad. Final grouped creation at9b3ae737 passes all four iPad cases and Android recovery; screenshots are coherent. Required CI passes all six jobs in35920887890. | Phone35920806955 passed both Move Here cases but Xcode launch failed before connected Move and creation. One unchanged phone-job retry is running. |
+| Add/Edit selection | 35920079319 passes all three tag/draft cases on both devices. Current destination and top-level choice are below the header. 35924460431 passes Add on iPad; phone's second search stops in a slow keyboard accessibility query, with visible, hittable keyboard afterward. | Verify actual typed text, matching result and complete cancel/reopen/creation recovery; do not rerun unrelated selection cases. |
+| Move | Final grouped creation source9b3ae737 passes all four workflows on both devices in35920806955; Android recovery and phone/iPad screenshots reviewed. All six required CI pass on53521aeb in35924509167. | Scoped Move acceptance complete; preserve in the batch. |
 | Move Here | 35917033325 passes rejected-command/retry and suggestions recovery on phone/iPad. iPad error capture has clear destination, local feedback and a bordered retry action. | Reviewed phone/iPad normal-text recovery layout is coherent; preserve these results through final creation-form verification. |
 
 The integrated source run passed1,968/1,970 tests. The two failures enforced removed

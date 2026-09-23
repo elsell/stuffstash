@@ -59,3 +59,13 @@ Cancel/Create. Use the same neutral background and row alignment as Add place.
 Preserve independent naming, placement policy, pending guards and retry. Verify
 name/header clearance and nonoverlapping Kind on phone/iPad, and inspect the whole
 form; no standalone custom panel or new action navigation is needed.
+
+### Destination search input acceptance
+
+For Add destination, verify input by typing into the hittable native search field,
+asserting its exact text and the expected destination results, then completing
+cancel/reopen, selection and creation recovery. Do not make a separate keyboard-key
+accessibility snapshot a prerequisite: run35924460431 exhausted30 seconds inside
+one key query, while subsequent evidence showed the keyboard and key hittable.
+This changes the observation, not the production behavior or workflow requirement.
+A typing or result failure remains a release blocker.
