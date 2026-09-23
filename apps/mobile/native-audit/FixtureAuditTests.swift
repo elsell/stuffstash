@@ -2046,6 +2046,7 @@ final class FixtureAuditTests: XCTestCase {
     let creationName = app.textFields["New place name"].firstMatch
     XCTAssertTrue(creationName.isHittable)
     XCTAssertGreaterThanOrEqual(creationName.frame.minY, app.navigationBars["New place"].frame.maxY)
+    XCTAssertLessThanOrEqual(creationName.frame.minY - app.navigationBars["New place"].frame.maxY, 96, "Creation form must not inherit search/header spacing twice")
     capture("add-destination-creation-entry")
     cancelCreation.tap()
     XCTAssertTrue(app.navigationBars["Put in"].waitForExistence(timeout: 5))

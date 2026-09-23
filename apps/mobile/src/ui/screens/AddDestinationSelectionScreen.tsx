@@ -65,12 +65,11 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
     {props.loading ? <SettingsSection><SettingsLoadingRow label="Loading suggestions…" /></SettingsSection> : null}
     {props.failed ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>Suggestions could not be loaded.</Text></View><NativeCommandButton label="Retry suggestions" disabled={props.disabled} onPress={openCreation.onBack} /></SettingsSection> : null}
   </>;
-  const content = <ScrollView style={{ flex: 1, backgroundColor: palette.background }}
+  const content = <ScrollView key={creationOpen ? 'creation' : 'selection'} style={{ flex: 1, backgroundColor: palette.background }}
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-      contentInsetAdjustmentBehavior={Platform.OS === 'ios' && creationOpen ? 'never' : 'automatic'}
+      contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingBottom: 20 + (Platform.OS === 'ios' ? insets.bottom : 0),
-        paddingTop: Platform.OS === 'ios' && creationOpen ? headerHeight : 0 }}>
+      contentContainerStyle={{ paddingBottom: 20 + (Platform.OS === 'ios' ? insets.bottom : 0) }}>
         {creationOpen ? <>
           <SettingsSection title="Name" footer="A new place is saved immediately, even if you cancel adding the item later.">
             <View style={styles.navigationRow}>

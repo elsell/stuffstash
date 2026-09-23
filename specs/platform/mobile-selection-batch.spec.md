@@ -69,3 +69,13 @@ accessibility snapshot a prerequisite: run35924460431 exhausted30 seconds inside
 one key query, while subsequent evidence showed the keyboard and key hittable.
 This changes the observation, not the production behavior or workflow requirement.
 A typing or result failure remains a release blocker.
+
+### Add creation inset ownership
+
+Run35928152275 passes the phone workflow but shows excessive blank space above
+New place. The direct native scroll body must own automatic top insets in both
+selection and creation. Reset its scroll identity when switching between those
+tasks so search offsets cannot carry into the form; do not add a second manual
+header-height padding. Verify Name clears the native header and starts within
+96 points of its lower edge at normal text, on both phone and iPad. Retain full
+cancel/reopen, selection, rejected creation and retry checks.
