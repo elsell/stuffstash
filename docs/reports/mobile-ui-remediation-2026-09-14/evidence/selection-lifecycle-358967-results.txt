@@ -1,0 +1,6 @@
+Run: https://github.com/elsell/stuffstash/actions/runs/35896778173
+Source: b5eee60f6d584cfded1882898fe1182e754397de
+iPhone 17: all selection lifecycle cases passed.
+iPad mini: Add/Edit tags passed; Add destination and unfinished-tag failed exact-value predicate deadlines (5 seconds) after keyboard entry.
+Both teardown hierarchies AND screenshots contain the expected exact values: Asset name=Tent and New tag name=Camping. This is not evidence of lost text. The failed runs did not reach the remaining workflow steps.
+Decision: retain the failed gate; investigate bounded accessibility-settling observation, not keyboard provider/key delivery again. No production text change is justified by this result alone.
