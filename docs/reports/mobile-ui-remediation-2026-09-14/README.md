@@ -129,7 +129,13 @@ Native35821158725 stopped before selection because its prefix-only matcher omitt
 the visible field label that SwiftUI prepends. Both retained hierarchies show the
 expected controls. Follow the existing Browse semantic-label substring matcher;
 keep visible-label and intermediate selection assertions. No production correction
-is justified by this harness failure. One corrected acceptance run remains. Existing shared
+is justified by this harness failure. Corrected run35822973764 reaches both menu
+choices and selects the first target on both devices. Its [phone capture](evidence/phone-field-choice-first-selected-358229.png)
+and retained hierarchies show the exact selected ID and checked row. The passive
+observer is visible but not hittable; use exact text plus visible bounds, keeping
+all intermediate assertions. The two-run investigation budget is exhausted: retain
+this correction for the next broader acceptance batch. PR165 stays draft; iOS
+last-target selection and removal remain unverified. No isolated rerun is planned. Existing shared
 Save/Back acceptance is not being repeated; field persistence and assistive modes
 are outside this specific check.
 

@@ -1445,9 +1445,16 @@ final class FixtureAuditTests: XCTestCase {
       app.descendants(matching: .any).matching(identifier: name).firstMatch
     }
     func assertTargets(_ value: String) {
-      let result = app.staticTexts["Selected targets: \(value)"]
-      for _ in 0..<8 where !result.isHittable { app.scrollViews.firstMatch.swipeDown() }
-      XCTAssertTrue(result.isHittable)
+      let result = app.staticTexts["Selected targets: \(value)"].firstMatch
+      XCTAssertTrue(result.waitForExistence(timeout: 5))
+      let scroll = app.scrollViews.firstMatch
+      func visible() -> Bool {
+        let viewport = scroll.frame.intersection(app.frame)
+        let bounds = result.frame
+        return bounds.width > 0 && bounds.height > 0 && viewport.contains(bounds)
+      }
+      for _ in 0..<8 where !visible() { scroll.swipeDown() }
+      XCTAssertTrue(visible(), "The exact selected state must be readable; it is not a tap target")
     }
     let first = target("Audit type 01")
     for _ in 0..<6 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -1459,9 +1466,7 @@ final class FixtureAuditTests: XCTestCase {
     assertTargets("type-1, type-12")
     for _ in 0..<8 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(first.isHittable); first.tap()
-    let result = app.staticTexts["Selected targets: type-12"]
-    for _ in 0..<8 where !result.isHittable { app.scrollViews.firstMatch.swipeDown() }
-    XCTAssertTrue(result.isHittable)
+    assertTargets("type-12")
     XCTAssertTrue(app.staticTexts["Field type: enum"].exists)
     XCTAssertTrue(app.staticTexts["Applicability: custom_asset_types"].exists)
     XCTAssertTrue(header.exists)

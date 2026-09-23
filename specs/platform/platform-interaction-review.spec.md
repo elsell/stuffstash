@@ -13,7 +13,14 @@ Native35821158725 exposes the pickers as `Type, Choose Type. Current value Text`
 and the equivalent Applies to label: SwiftUI LabeledContent adds its visible label.
 Match the semantic choice label within that composed name, following the existing
 Browse choice acceptance pattern; do not assume the custom label is a prefix.
-Keep independent visible-label and state-transition assertions.
+Keep independent visible-label and state-transition assertions. Run35822973764
+shows the exact first selection visibly rendered and the row checked on both
+platforms, while XCTest reports its passive observer as not hittable. Check passive
+state with exact text and visible viewport bounds; reserve hittability assertions
+for controls the user activates. Preserve every intermediate selection assertion.
+The two focused runs exhausted this acceptance investigation budget. Include the
+corrected observation in the next broader batch rather than dispatching another
+isolated run; the remaining iOS selection/removal sequence stays unverified.
 Use one focused phone/iPad run plus Android acceptance. Investigate a failure only
 if it distinguishes a control defect from fixture/observation behavior; retain the
 default one-source-pass/two-experiment budget. No production change is presumed.
