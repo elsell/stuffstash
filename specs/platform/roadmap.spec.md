@@ -566,3 +566,9 @@ change. Retain M51 and other runtime findings independently. Current matrix has
 142 surfaces/3408 cells:2593 source-reviewed,576 finding,198 not-applicable,41
 runtime-partial. Source coverage does not imply native acceptance or audit closure.
 TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
+
+The next connected asset-task follow-up is M270: Move currently conflates search
+with creation naming and hides the creation controls when the name changes.
+Use shared native search/choice presentation and a separate creation draft after
+M269's scoped Android acceptance; preserve the frozen release batch and the
+independent iPhone/iPad verification already running for Add destination selection.

@@ -3887,3 +3887,19 @@ visit with local query, tap-to-apply, cancellation preserving the original paren
 and explicit secondary creation. See mobile-add-location-selection.spec.md.
 Implementation and full native acceptance remain pending; not a release gate for
 M260–M264 or M265–M268.
+
+### M270 — Move conflates destination search with naming a new place
+
+P1 task continuity and consistency finding. MoveAssetSheet uses its Put in search
+field as the new destination name; typing in it closes the creation disclosure,
+so correcting the proposed name hides Kind/Create. This is source-confirmed.
+The normal-text iPad35874141371 capture also shows custom highlighted Selected
+rows and a persistent form-style search field, unlike the shared native search
+and choice vocabulary now used by Add. The passed M262 create/retry workflow
+remains valid; it did not exercise correcting the name after opening creation.
+
+Separate native destination search from the explicit creation name draft, retain
+Kind/Create while editing, and reuse the shared choice rows. Keep the explicit
+Move confirmation because selection changes a proposal, not asset containment.
+See mobile-move-destination-selection.spec.md. This follow-up does not expand the
+frozen M260–M264 release or invalidate its scoped acceptance evidence.
