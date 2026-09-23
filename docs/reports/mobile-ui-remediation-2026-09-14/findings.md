@@ -3993,3 +3993,26 @@ The corrected Android connected journey and actual native typing/submit/return
 pass; [evidence](evidence/android-search-ownership-results.txt). Shared-consumer
 source checks and review pass. iPhone/iPad connected verification remains open.
 Keep this in the follow-up filter batch, separate from M265–M273.
+
+### M277 — Asset detail actions lack a coherent task hierarchy
+
+P2 design finding from normal-text phone/iPad captures in35907123046 at ebd1ef66,
+plus the Android connected-detail fixture. [Phone](evidence/phone-asset-detail-actions-359071.png)
+and [iPad](evidence/ipad-asset-detail-actions-359071.png) show a full-width prominent
+Check out action, separate unbounded Edit/Move row, and separate centered Add
+photos action. On tablet these controls spread across the content width without
+forming a compact task group. No operation failure is inferred from these images.
+
+This is an interaction/hierarchy judgment, not a claim that native text buttons
+violate Apple guidance. Apple's [buttons guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+ties prominence to likely actions; [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout)
+asks for logical grouping and adaptation. The older spec explicitly made checkout
+primary, but the current whole-task review calls for reconsidering that choice.
+
+Next design decision: keep identity/location as the reading focus, give editing a
+familiar persistent toolbar command, group secondary asset operations deliberately,
+and keep availability/Return near its status. Preserve discoverability and
+one-step access where warranted; do not hide everything in More merely to reduce
+button count. Compare populated/empty-photo items, checked-out items and places
+on phone/iPad before choosing the final composition. Spec update must precede
+implementation. This follow-up does not gate frozen M265–M273.

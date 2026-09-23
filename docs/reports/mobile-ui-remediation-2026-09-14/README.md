@@ -44,6 +44,14 @@ inherited filters and original Browse return context. This is outside frozen
 M265–M273. Current connected native return/scroll evidence is still required;
 source state ownership does not certify the visual journey.
 
+## Detail action hierarchy follow-up
+
+Normal-text phone/iPad detail captures in35907123046 expose a scattered command
+hierarchy: prominent full-width Check out, separate Edit/Move, and isolated Add
+photos. M277 records the evidence and next design decision in [findings](findings.md).
+This is outside the frozen selection batch; preserve task access while reviewing
+the complete detail composition rather than merely changing button padding.
+
 ## Separate unresolved decisions
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
