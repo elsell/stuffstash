@@ -23,6 +23,13 @@ It is not a full product backlog, release plan, issue tracker, or substitute for
 
 ## Current Focus
 
+September 23 operational interruption: expiration sweeps recovered after a
+rolling SpiceDB restart. Renewed certificates were present, but downstream
+permission checks retained an expired-certificate failure until restart.
+Track durable certificate/trust reload behavior and worker failure alerting;
+see `docs/reports/spicedb-tls-recovery-2026-09-23.md`. This recovery does not close
+the mobile audit or establish physical-device push delivery.
+
 The user now authorizes full mobile audit **and remediation**, beyond the previous
 source-only report. Follow `specs/platform/mobile-comprehensive-ui-audit.spec.md`
 and the surface/axis ledger under `docs/reports/mobile-ui-remediation-2026-09-14/`.
