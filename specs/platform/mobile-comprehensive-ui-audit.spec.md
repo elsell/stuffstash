@@ -1,5 +1,36 @@
 # Comprehensive mobile UI audit and remediation
 
+## Governing objective and priority order — September 23
+
+Audit and improve the whole mobile experience across all recorded surfaces and
+axes, fixing confirmed findings and delivering verified batches through TestFlight
+with changelogs. Choose work by its effect on everyday use, not by how easily it
+can be enumerated or tested. Apply this priority order:
+
+1. Screen structure and stability: headers, persistent control placement,
+   navigation hierarchy and transitions. Switching peer views must not relocate
+   the switcher or change its interaction role.
+2. Core workflows: Home to Browse List/Map, opening an asset, Edit, Move and
+   filtering. Judge each complete journey and select its platform pattern,
+   including whether a sheet is justified, before polishing its controls.
+3. Visual coherence: hierarchy, density, grouping and action prominence across
+   those connected screens.
+4. Detailed states and edge cases: refine once the underlying workflow is sound.
+
+Immediate data-loss/security/task-blocking defects remain urgent. Normal text is
+the baseline review before enlarged-text refinements. The coverage ledger remains
+an omission check, not the work queue. Tests support the chosen experience and do
+not determine which product problem deserves attention.
+
+Start each review with an end-to-end walkthrough and a concise experience judgment:
+what remains stable, what navigation or modality costs the task adds, and whether
+its primary action is obvious. Distinguish observed runtime behavior from source
+inference. Do not call a spacing-only correction a resolution of a poor pattern.
+The isolated M259 Edit scroll-frame candidate is held until this pattern review;
+its mounted test results do not justify shipping it. The M257/M258 text-loss batch
+may complete its existing verification and release independently.
+
+
 ## Investigation and acceptance discipline
 
 Prioritize confirmed user-visible defects at normal text size. Keep one current

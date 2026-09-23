@@ -4,6 +4,13 @@ Latest verified TestFlight: **0.24.30 (121.1)**; [release and changelog verifica
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
+## Review priority
+
+Follow the [everyday workflow review](everyday-workflow-review.md): screen structure
+and stability, core task patterns, visual coherence, then detailed states. The
+coverage matrix is an omission check, not the work queue. The isolated Edit
+scroll-frame candidate is held pending the interaction decision.
+
 ## Scope and evidence
 
 [Surfaces](surfaces.json), [axes](axes.json), and [coverage matrix](matrix.csv)
