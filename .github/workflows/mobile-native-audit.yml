@@ -11,6 +11,7 @@ on:
         options:
           - all
           - color-picker
+          - color-acceptance
           - filter-search-timing
           - search-placement
           - text-entry
@@ -107,6 +108,20 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
+              )
+              ;;
+            color-acceptance)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorPickerOpensDirectlyAndClearPreservesParentDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorFirstTapWithoutPreTapCapture'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellHasSingleAccessibleName'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorRedEditsPreserveOtherChannelsInDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsTagColorWellReturnsToDraftAndSaves'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeBackProtectsDirtyDraft'
               )
               ;;
             color-picker)

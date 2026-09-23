@@ -2493,6 +2493,46 @@ final class FixtureAuditTests: XCTestCase {
     assertCustomizationNotice("Tag archived")
   }
 
+  func testSettingsTagColorWellReturnsToDraftAndSaves() {
+    openCustomizationEditor()
+    let picker = app.buttons["Choose any color"].firstMatch
+    for _ in 0..<10 where !picker.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(picker.isHittable)
+    XCTAssertGreaterThanOrEqual(picker.frame.width, 44)
+    XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+    let green = app.buttons["Choose Green tag color"].firstMatch
+    XCTAssertTrue(green.isHittable)
+    green.tap()
+    XCTAssertEqual(observePredicate("settings-color-preset", predicate: NSPredicate(format: "selected == true"), object: green), .completed)
+    picker.tap()
+    let sliders = app.buttons["Sliders"]
+    XCTAssertTrue(sliders.waitForExistence(timeout: 5))
+    sliders.tap()
+    let red = app.sliders["Red"].firstMatch
+    XCTAssertEqual(observePredicate("settings-color-slider", predicate: NSPredicate { _, _ in red.exists && red.isHittable }, object: nil), .completed)
+    red.adjust(toNormalizedSliderPosition: 0.75)
+    capture("settings-tag-system-color")
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let dismiss = app.otherElements["PopoverDismissRegion"]
+      XCTAssertTrue(dismiss.exists)
+      dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+    } else {
+      app.buttons["close"].tap()
+    }
+    XCTAssertTrue(sliders.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(observePredicate("settings-color-draft", predicate: NSPredicate(format: "selected == false"), object: green), .completed,
+                   "The system color edit must replace the preset in the parent draft")
+    let name = app.textFields["Name"]
+    XCTAssertEqual(name.value as? String, "Tools")
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isHittable)
+    XCTAssertTrue(save.isEnabled)
+    capture("settings-tag-color-draft")
+    save.tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    assertCustomizationNotice("Tag saved")
+  }
+
   private func assertCustomizationNotice(_ title: String) {
     let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
     let expected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", title), object: notice)

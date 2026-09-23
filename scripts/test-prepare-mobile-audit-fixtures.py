@@ -146,6 +146,30 @@ class NativeAuditSelectionTests(unittest.TestCase):
             self.assertEqual(arguments.count(option), 1, option)
             self.assertEqual(arguments[arguments.index(option) + 1], expected)
 
+    def test_color_acceptance_selects_control_and_real_consumer_workflows(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / '.github/workflows/mobile-native-audit.yml').read_text()
+        selection = workflow.split('          audit_test_args=()', 1)[1].split('          printf', 1)[0]
+        result = subprocess.run(['bash', '-c', 'audit_test_args=()\n' + selection + '\nprintf "%s\\n" "${audit_test_args[@]}"'],
+                                env={**os.environ, 'AUDIT_TEST_CASE': 'color-acceptance', 'AUDIT_SUITE': 'fixtures'},
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expected = {
+            'testColorPickerOpensDirectlyAndClearPreservesParentDraft',
+            'testColorFirstTapWithoutPreTapCapture', 'testColorWellHasSingleAccessibleName',
+            'testColorWellDeliveredTouchRegion', 'testNativeColorRedEditsPreserveOtherChannelsInDraft',
+            'testNativeColorLockDisablesTheWellAndPreservesDraft',
+            'testSettingsTagColorWellReturnsToDraftAndSaves',
+            'testAddRetainsUnfinishedTagAcrossDetailsDisclosure',
+            'testSettingsEditorNativeBackProtectsDirtyDraft',
+        }
+        names = [line.removeprefix('-only-testing:StuffStashAuditTests/FixtureAuditTests/') for line in result.stdout.splitlines()]
+        self.assertEqual(set(names), expected)
+        self.assertEqual(len(names), len(expected))
+        swift = (root / 'apps/mobile/native-audit/FixtureAuditTests.swift').read_text()
+        for name in names:
+            self.assertIn('func ' + name + '()', swift)
+
     def test_release_corrections_selects_named_existing_workflows(self):
         root = Path(__file__).resolve().parents[1]
         workflow = (root / '.github/workflows/mobile-native-audit.yml').read_text()
