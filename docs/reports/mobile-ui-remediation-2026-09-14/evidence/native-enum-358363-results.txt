@@ -1,0 +1,5 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35836383102
+Source64e90a8c1db76f048a96fea8682f87c9fa5f9102
+Phone job107100744754: 1 test, 1 failure; iPad job107100744949: 1 test, 1 failure.
+Both fail exact ready value assertion before Add. Retained focused New enum option contains r on both devices.
+Decision: use established native draft adapter, preserve rejected editing instance, explicitly reset successful Add. No provider/pacing/key-delivery repeats.

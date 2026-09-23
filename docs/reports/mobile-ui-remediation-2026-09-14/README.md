@@ -150,22 +150,28 @@ release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
 passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
 No further field-choice rerun is needed.
 
-### Next acceptance — enum option editing
+### Current candidate — enum option text retention
 
-Source64e90a8c adds one focused production-control journey: duplicate rejection
-retains exact text, clearing and entering a new option produces its canonical row,
-Add clears the field, and removing the new option preserves the old one. The
-fixture now matches production keyboard-container settings; preparation tests,
-TypeScript, structural checks and critic pass. Native35836383102 is running under
-a sleeping terminal-result collector. A real exact-text failure selects the proven
-native draft adapter; no provider/key/pacing comparisons will be repeated.
+Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
+leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
+The decision is implemented: shared native DraftTextField preserves ordinary editing
+and rejected options; accepted Add advances an explicit reset revision. Validation
+hints remain native. Android retains the existing controlled field. Both reset/hint
+regressions failed before correction;all1,928 remote tests (307 files), TypeScript,
+structural checks and critic pass. Native
+acceptance is still required; no provider/key/pacing comparison will be repeated.
 
-Android APK25689da4 passes the sequence with standard keyboard dismissal; scoped
-[evidence](evidence/android-enum-editing-results.txt) and captures retain the result.
-The first driver touched a label behind the IME because it tested existence rather
-than visible bounds. This was corrected in the driver; it establishes no product
-defect and no keyboard-open Add acceptance. No production enum change is proposed
-without the focused iOS result.
+Android APK25689da4 passes duplicate rejection, new-option canonicalization, field
+clearing, selective removal and return with standard keyboard dismissal; scoped
+[evidence](evidence/android-enum-editing-results.txt) records the initial hidden-tap
+driver error and correction. This does not certify keyboard-open Add or whole-editor
+persistence.
+
+The next native run combines corrected enum entry with a new shared Settings
+full-name/rejected-save/retry workflow. The real editor and managers call a repository
+fake that validates the exact full name before failing once. This extends the prior
+one-character edit check; it does not certify persisted collection readback. Its
+preparation, TypeScript, structural checks and critic passed before inclusion.
 
 ### Custom-field choices — scoped acceptance complete
 

@@ -3672,3 +3672,19 @@ selected new destination without duplicate creation, movement failure/retry and 
 on both phone and iPad. Representative Add passes on both. All six CI jobs pass.
 [Terminal evidence](evidence/native-move-add-358316-results.txt); release delivery is
 tracked in the sole current summary.
+
+
+### M256 — iOS enum option entry loses most typed characters
+
+P1 runtime-confirmed: native35836383102 at64e90a8c leaves `r` after one `ready`
+entry on both phone and iPad, before Add. [Retained evidence](evidence/native-enum-358363-results.txt).
+The fixture uses production controls and the production keyboard-container policy.
+Android passes the actual option sequence with normal keyboard dismissal; its first
+driver failure tapped behind the IME and is not a product finding.
+
+Decision: use shared DraftTextField for iOS enum entry. Keep its instance while
+editing/rejecting, advance a local revision only after accepted Add, and preserve
+the validation accessibility hint. Android keeps its controlled input instance.
+The reset and hint regressions failed first;114 focused tests pass after correction.
+Critic found no blocker. Native acceptance retains exact typing and recovery;
+Settings full-name/save recovery will run alongside it as a separate scoped check.

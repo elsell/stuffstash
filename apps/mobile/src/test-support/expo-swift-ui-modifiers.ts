@@ -1,5 +1,6 @@
 const modifier=(type:string)=>(value:unknown)=>({type,value});
 export const accessibilityLabel=modifier('accessibilityLabel');
+export const accessibilityHint=modifier('accessibilityHint');
 export const buttonStyle=modifier('buttonStyle');
 export const controlSize=modifier('controlSize');
 export const disabled=modifier('disabled');

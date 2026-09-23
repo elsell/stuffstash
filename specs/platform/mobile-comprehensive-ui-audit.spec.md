@@ -1763,6 +1763,14 @@ Commands must remain reachable with the keyboard present; the existing form and
 Back destination must survive. Keep saved-option immutability in its already
 accepted separate scenario instead of replaying unrelated picker/target workflows.
 
+The iOS enum option field uses the shared native draft adapter after run35836383102
+retained only `r` from `ready` on both devices. Ordinary typing, validation errors
+and busy-state changes keep the native editing instance. A successful Add advances
+a local reset revision and clears the field; Android keeps its controlled input
+instance. Changing the enclosing loaded resource already unmounts controls through
+the editor loading state. Type disclosure re-entry seeds the retained pending value.
+Keep the field's validation accessibility hint alongside its visible error.
+
 Use one focused native pass on phone and iPad. A failed exact-value assertion in
 this production consumer selects the established native draft-field adapter;
 it does not reopen provider-removal, key-delivery or pacing experiments. If typing
