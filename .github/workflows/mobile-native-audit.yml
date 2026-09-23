@@ -28,6 +28,7 @@ on:
           - field-choices
           - enum-editing
           - workflow-batch
+          - hierarchy-followup
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -160,6 +161,15 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+              )
+              ;;
+            hierarchy-followup)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
               )
               ;;
             workflow-batch)

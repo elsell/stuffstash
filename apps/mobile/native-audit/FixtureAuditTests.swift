@@ -2253,6 +2253,50 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-header-after-scroll")
   }
 
+  func testMapRootContextAndAncestorReturn() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let control = app.segmentedControls.firstMatch
+    XCTAssertTrue(control.waitForExistence(timeout: 10))
+    control.buttons["Map"].tap()
+    let root = app.buttons["Open location Main Inventory"].firstMatch
+    XCTAssertTrue(app.staticTexts["Main Inventory"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertFalse(root.exists)
+    let garage = app.buttons["Garage, Place, 10 inside"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 5)); XCTAssertTrue(garage.isHittable)
+    capture("map-root-context")
+    garage.tap()
+    let breadcrumb = app.buttons["Open location Garage"].firstMatch
+    XCTAssertTrue(breadcrumb.waitForExistence(timeout: 5))
+    XCTAssertTrue(root.isHittable)
+    capture("map-garage-context")
+    root.tap()
+    XCTAssertTrue(breadcrumb.waitForNonExistence(timeout: 5))
+    XCTAssertFalse(root.exists)
+    XCTAssertTrue(garage.isHittable)
+    XCTAssertTrue(app.staticTexts["Main Inventory"].firstMatch.exists)
+    capture("map-root-return")
+  }
+
+  func testEmptyPhotoDetailPrioritizesIdentityAndActions() {
+    guard openFixtureURL("audit-edit-journey") else { return }
+    let title = app.staticTexts["Camping tent"].firstMatch
+    let status = app.staticTexts["No photos"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    XCTAssertTrue(status.waitForExistence(timeout: 5))
+    let edit = app.buttons["Edit"].firstMatch
+    let move = app.buttons["Move"].firstMatch
+    let add = app.buttons["Add photos"].firstMatch
+    XCTAssertTrue(edit.isHittable); XCTAssertTrue(move.isHittable)
+    XCTAssertTrue(add.isHittable)
+    XCTAssertGreaterThan(title.frame.height, 0)
+    XCTAssertGreaterThan(status.frame.height, 0)
+    XCTAssertLessThanOrEqual(title.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(edit.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(move.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(add.frame.maxY, app.frame.maxY)
+    capture("detail-empty-photo-hierarchy")
+  }
+
   func testBrowseGridFitsDeviceWidth() {
     guard openFixtureURL("audit-browse-journey") else { return }
     let garage = app.buttons["Open asset Garage"].firstMatch

@@ -3826,3 +3826,22 @@ a root breadcrumb label is immediately followed by a second inventory heading.
 Review breadcrumb/root-column hierarchy together; do not merely reduce spacing.
 Keep outside the frozen M260–M264 batch. This does not affect the switcher's
 confirmed stable anchor.
+
+### M266 — Empty photo panel dominates asset details
+
+P2 information-hierarchy finding observed on the Android normal-text connected
+journey for candidate da2516a9 (android-workflow-batch-moved-detail.png). With no
+photos, a large placeholder occupies the upper detail screen before the asset
+name and location. AssetDetailPhotoGallery.tsx gives its empty state a 240-point
+minimum height; AssetDetailView.tsx places it before item identity. The 4:3
+aspect ratio applies only to actual photos, not this empty panel. A compact empty-photo affordance should keep item
+identity and primary tasks prominent; preserve the full photo gallery when media
+exists. Review phone/iPad and Android consumers together. Keep outside the frozen
+M260–M264 release batch.
+
+M265/M266 follow-up source is isolated on `codex/mobile-detail-hierarchy`.
+Root breadcrumb correction passes23 focused tests and an Android root/Garage/root
+walkthrough. Empty-photo hierarchy passes26 focused tests and Android rendering.
+Both pass TypeScript, structural checks and code review. iOS/iPad acceptance is
+prepared as `hierarchy-followup`; findings remain open pending native acceptance.
+See evidence/map-hierarchy-results.txt and evidence/detail-hierarchy-results.txt.
