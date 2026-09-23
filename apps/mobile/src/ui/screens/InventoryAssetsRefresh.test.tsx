@@ -35,3 +35,32 @@ it('reconciles inventory assets silently and shows refresh only for the current 
     expect(h.byType('FlatList')?.props.refreshing).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
+
+it('allows a new inventory pull while the previous inventory request is pending', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const firstScope = { tenantId: 'tenant', inventoryId: 'first' };
+  const secondScope = { tenantId: 'tenant', inventoryId: 'second' };
+  const scopeKey = mobileQueryKeys.inventoryScope('session');
+  const snapshot: InventoryAssetsSnapshot = { inventoryName: 'Home', assets: [] };
+  const finishes: (() => void)[] = [];
+  const query = new InventoryAssetsQuery({ getInventoryAssetsSnapshot: () => new Promise(resolve => finishes.push(() => resolve(snapshot))) });
+  client.setQueryData(scopeKey, firstScope);
+  for (const scope of [firstScope, secondScope]) client.setQueryData(mobileQueryKeys.inventoryAssets('session', scope.tenantId, scope.inventoryId), snapshot);
+  const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 10)));
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => firstScope}>
+      <AppFeedbackProvider><InventoryAssetsRouteScreen inventoryAssetsQuery={query} /></AppFeedbackProvider>
+    </MobileServerStateProvider>);
+    await h.run(() => h.byType('FlatList')?.props.onRefresh()); await settle();
+    expect(h.byType('FlatList')?.props.refreshing).toBe(true);
+    await h.run(() => client.setQueryData(scopeKey, secondScope)); await settle();
+    expect(h.byType('FlatList')?.props.refreshing).toBe(false);
+    await h.run(() => h.byType('FlatList')?.props.onRefresh()); await settle();
+    expect(finishes).toHaveLength(2);
+    expect(h.byType('FlatList')?.props.refreshing).toBe(true);
+    await h.run(() => finishes[0]()); await settle();
+    expect(h.byType('FlatList')?.props.refreshing).toBe(true);
+    await h.run(() => finishes[1]()); await settle();
+    expect(h.byType('FlatList')?.props.refreshing).toBe(false);
+  } finally { await h.unmount(); client.clear(); }
+});
