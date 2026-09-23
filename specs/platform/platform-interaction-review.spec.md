@@ -9,6 +9,11 @@ by scroll, remove one draft selection and preserve the other. Keep visible label
 and verify the same header remains. Controlled draft observers are fixture-only.
 This does not certify field persistence, keyboard entry, inherited immutable targets
 or assistive behavior; their existing source and workflow evidence remains separate.
+Native35821158725 exposes the pickers as `Type, Choose Type. Current value Text`
+and the equivalent Applies to label: SwiftUI LabeledContent adds its visible label.
+Match the semantic choice label within that composed name, following the existing
+Browse choice acceptance pattern; do not assume the custom label is a prefix.
+Keep independent visible-label and state-transition assertions.
 Use one focused phone/iPad run plus Android acceptance. Investigate a failure only
 if it distinguishes a control defect from fixture/observation behavior; retain the
 default one-source-pass/two-experiment budget. No production change is presumed.

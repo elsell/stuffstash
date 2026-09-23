@@ -1,0 +1,64 @@
+Attributes: Application, 0x10a33e300, pid: 39562, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x10a33e300, pid: 39562, label: 'Stuff Stash'
+    Window (Main), 0x10a33e440, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x10a33e580, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x10a33e080, {{0.0, 0.0}, {744.0, 1133.0}}
+          Other, 0x10a33e1c0, {{0.0, 0.0}, {744.0, 1133.0}}
+            Other, 0x10a33de00, {{0.0, 0.0}, {744.0, 1133.0}}
+              Other, 0x10a33df40, {{0.0, 0.0}, {744.0, 1133.0}}
+                Other, 0x10a33db80, {{0.0, 0.0}, {744.0, 1133.0}}
+                  Other, 0x10a33dcc0, {{0.0, 0.0}, {744.0, 1133.0}}
+                    Other, 0x10a33d900, {{0.0, 0.0}, {744.0, 1133.0}}
+                      Other, 0x10a33da40, {{0.0, 0.0}, {744.0, 1133.0}}
+                        Other, 0x10a33d680, {{0.0, 0.0}, {744.0, 1133.0}}
+                          NavigationBar, 0x10a33d7c0, {{0.0, 32.0}, {744.0, 54.0}}, identifier: 'Native UI audit'
+                            StaticText, 0x10a33cf00, {{312.0, 43.5}, {119.5, 21.0}}, label: 'Native UI audit'
+                          Other, 0x10a33d040, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x10a33d180, {{0.0, 0.0}, {744.0, 1133.0}}
+                              Other, 0x10a33d400, {{0.0, 86.0}, {744.0, 1047.0}}
+                                Other, 0x10a33d540, {{0.0, 86.0}, {744.0, 1047.0}}
+                                  Other, 0x10a33d2c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                    Other, 0x10a33c780, {{0.0, 86.0}, {744.0, 1047.0}}
+                                      ScrollView, 0x10a33c8c0, {{0.0, 86.0}, {744.0, 1047.0}}
+                                        Other, 0x10a33ca00, {{0.0, 86.0}, {744.0, 361.5}}
+                                          Other, 0x10a33cc80, {{0.0, 86.0}, {744.0, 361.5}}
+                                            Button, 0x10a33cdc0, {{20.0, 106.0}, {704.0, 37.5}}, label: 'Back to audit menu'
+                                            StaticText, 0x10a33cb40, {{20.0, 163.5}, {704.0, 17.0}}, label: 'Field type: text'
+                                              StaticText, 0x10a33c500, {{20.0, 163.5}, {704.0, 17.0}}, label: 'Field type: text'
+                                            StaticText, 0x10a33c640, {{20.0, 200.5}, {704.0, 17.0}}, label: 'Applicability: all_assets'
+                                              StaticText, 0x10a33c280, {{20.0, 200.5}, {704.0, 17.0}}, label: 'Applicability: all_assets'
+                                            StaticText, 0x10a33c3c0, {{20.0, 237.5}, {704.0, 17.0}}, label: 'Selected targets: none'
+                                              StaticText, 0x10a33c000, {{20.0, 237.5}, {704.0, 17.0}}, label: 'Selected targets: none'
+                                            Other, 0x10a33c140, {{36.0, 290.5}, {672.0, 48.0}}
+                                              Other, 0x10a33e940, {{36.0, 290.5}, {672.0, 48.0}}
+                                                Other, 0x10a33ea80, {{36.0, 290.5}, {672.0, 48.0}}
+                                                  StaticText, 0x10a33ebc0, {{36.0, 304.2}, {37.5, 20.5}}, label: 'Type'
+                                                  Button, 0x10a33ed00, {{636.0, 297.5}, {72.0, 34.5}}, label: 'Type, Choose Type. Current value Text'
+                                                    StaticText, 0x10a33ee40, {{648.0, 304.5}, {32.0, 20.5}}, label: 'Text'
+                                            Other, 0x10a33ef80, {{36.0, 377.0}, {672.0, 48.0}}
+                                              Other, 0x10a33f0c0, {{36.0, 377.0}, {672.0, 48.0}}
+                                                Other, 0x10a33f200, {{36.0, 377.0}, {672.0, 48.0}}
+                                                  StaticText, 0x10a33f340, {{36.0, 390.8}, {76.0, 20.5}}, label: 'Applies to'
+                                                  Button, 0x10a33f480, {{595.5, 384.0}, {112.5, 34.5}}, label: 'Applies to, Choose Applies to. Current value All assets'
+                                                    StaticText, 0x10a33f5c0, {{607.5, 391.0}, {72.5, 20.5}}, label: 'All assets'
+                                        Other, 0x10a33f700, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x10a33f840, {{738.0, 767.0}, {3.0, 331.0}}
+                                        Other, 0x10a33f980, {{32.0, 1100.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x10a33fac0, {{35.0, 1127.0}, {674.0, 3.0}}
+                                        Other, 0x10a33fc00, {{711.0, 98.5}, {30.0, 1002.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x10a33fd40, {{738.0, 767.0}, {3.0, 331.0}}
+                                        Other, 0x10a33fe80, {{32.0, 1100.0}, {680.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x10a050780, {{35.0, 1127.0}, {674.0, 3.0}}
+                          Other, 0x10a050a00, {{0.0, 0.0}, {744.0, 1133.0}}
+                            Other, 0x10a052bc0, {{0.0, 0.0}, {744.0, 1133.0}}
+    Window, 0x10a052d00, {{0.0, 0.0}, {744.0, 1133.0}}
+      Other, 0x10a052e40, {{0.0, 0.0}, {744.0, 1133.0}}
+        Other, 0x10a052f80, {{0.0, 0.0}, {744.0, 1133.0}}
+Path to element:
+ →Application, 0x10a33e300, pid: 39562, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x10a0530c0, pid: 39562, label: 'Stuff Stash'
+  }

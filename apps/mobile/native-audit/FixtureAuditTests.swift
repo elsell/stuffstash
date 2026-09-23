@@ -1426,14 +1426,14 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.isHittable); open.tap()
     let header = app.navigationBars["Native UI audit"]
     XCTAssertTrue(header.exists)
-    let type = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose Type.")).firstMatch
+    let type = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose Type.")).firstMatch
     XCTAssertTrue(type.waitForExistence(timeout: 5)); XCTAssertTrue(type.isHittable)
     XCTAssertTrue(app.staticTexts["Type"].exists)
     type.tap()
     let enumChoice = app.buttons["Enum"]
     XCTAssertTrue(enumChoice.waitForExistence(timeout: 5)); enumChoice.tap()
     XCTAssertTrue(app.textFields["New enum option"].waitForExistence(timeout: 5))
-    let applies = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose Applies to.")).firstMatch
+    let applies = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose Applies to.")).firstMatch
     for _ in 0..<4 where !applies.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(applies.isHittable)
     XCTAssertTrue(app.staticTexts["Applies to"].exists)
@@ -1466,7 +1466,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Applicability: custom_asset_types"].exists)
     XCTAssertTrue(header.exists)
     capture("custom-field-retained-target")
-    app.buttons["Back to audit menu"].tap()
+    let back = app.buttons["Back to audit menu"]
+    for _ in 0..<4 where !back.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(back.isHittable); back.tap()
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 

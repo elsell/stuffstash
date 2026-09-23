@@ -122,8 +122,14 @@ M02/M11 retain a distinct native gap: Type/Applies to menus and scroll-separated
 applicability selections in the real CustomizationFieldControls. A runner-only
 create-form fixture now checks enum disclosure, in-place applicability choice,
 selecting first/last targets and removing the first while retaining the last.
-No production correction is presumed. One focused phone/iPad run and Android
-verification will determine whether this composition needs a fix. Existing shared
+Android APKbe77f1faa79bebf423b28a41e15defa518c1cf0e2ab8a56341795c096c2d5aee
+passes every selection transition; [final capture](evidence/android-field-choices-retained.png)
+and [hierarchy](evidence/android-field-choices-retained.xml) retain the result.
+Native35821158725 stopped before selection because its prefix-only matcher omitted
+the visible field label that SwiftUI prepends. Both retained hierarchies show the
+expected controls. Follow the existing Browse semantic-label substring matcher;
+keep visible-label and intermediate selection assertions. No production correction
+is justified by this harness failure. One corrected acceptance run remains. Existing shared
 Save/Back acceptance is not being repeated; field persistence and assistive modes
 are outside this specific check.
 
