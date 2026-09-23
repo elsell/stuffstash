@@ -1,0 +1,6 @@
+Android API36 emulator-5580
+APK SHA256: 25689da4f32451d7a792e3e3071fb95dfa126d6949da1760d42d1d2766316cb0
+Existing disposable audit tree c62b07ae baseline plus CustomFieldChoicesFixture at64e90a8c; production enum controls unchanged.
+Passed: exact duplicate entry; standard keyboard dismissal preserves draft; duplicate rejection retains ready; clear and enter Camping kit; canonical camping-kit added; input cleared; removal preserves ready; return to audit menu.
+Scope: nested production controls; not whole-editor saving or keyboard-open command reachability.
+Initial driver attempt failed because it tapped XML bounds behind the IME. Retained screenshot showed obstruction. Corrected driver explicitly dismisses IME and verifies retained text before Add; no product fix inferred.

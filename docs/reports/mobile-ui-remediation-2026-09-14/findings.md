@@ -10,7 +10,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 | M02 | Custom field short choices use bespoke disclosure radios | Implemented; scoped native choices pass | Shared native Type/Applies to menus, read-only transition guard; 34 focused tests and typecheck/structural; critic found no blockers |
 | M03 | Redundant exact-date staging | Implemented; scoped native passes | Run351214 phone/iPad logs pass testExactExpirationUsesCompactNativePicker: Add date, native picker, no redundant Use date, dismiss and Clear. Android cancellation, arbitrary date edits and wider adaptation retain their separate evidence requirements. |
 | M04 | Standard header actions remain custom on some screens | Implemented; native pending | Add, inbox and reminder timing use shared native bar items with disabled guards; 29 focused tests/check/structural; critic copy mismatch corrected |
-| M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; runtime pending | Shared focus-aware lifecycle across all refresh owners; real query-cache and inbox blur tests; 1324 remote tests/typecheck/structural green; critic found no blockers |
+| M05 | Background queries control pull indicators; some gesture owners retain state across blur | Implemented; Home tab-return native acceptance passes | Run35247151136 passes testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn on phone/iPad. Verified the tested source asserts the pull indicator disappears after Browse→Home and all header/accessory actions remain reachable. Shared-hook tests cover explicit pull, duplicate rejection, blur, refocus and late completion during a newer pull. A native held-pull/navigation race and Android refresh behavior are not established by this tab-return scenario. |
 | M06 | Notice motion/timing/targets need accessibility adaptation | Implemented; runtime pending | Persistent actions/warnings/errors and screen-reader notices; live Reduce Motion, readable labels, 48-point controls and enlarged-text stacking; 8 focused tests/typecheck green; critic requested motion regression, added and passed |
 | M07 | Switcher lacks bounded scroll/explicit dismissal and identifies households by name | Implemented; scoped native passes | Run351214 phone/iPad logs pass testInventorySwitcherHouseholdRetryAndClose: household selection, failed switch, retry return, reopen and native Close. Full long-list bounds and identity-collision behavior are not established by this scenario alone. |
 | M08 | Adaptive/assistive-tech runtime matrix unverified | Runtime access established; coverage partial | macOS iPhone/iPad runners and Android API36 emulator are available. Native device/state coverage remains partial; VoiceOver and TalkBack acceptance remain open. See native-ipad-351214.md and android-action-descriptions.md for result-export and screen-reader limitations. |
@@ -2790,7 +2790,12 @@ on paul; the final22 sharing tests include cancelled/pending row discrimination.
 Code critic identified and verified correction of a row-lookup false positive.
 Phone/iPad native confirmation, cancellation failure/retry and keyboard reachability
 remain required; neither this substitution nor mounted tests proves the shared
-menu keyboard cause. M193 stays open pending native evidence.
+menu keyboard cause. Follow-up native35247151136 passes
+`testSharingRecoveryKeepsHeaderAndCommandsReachable` on phone and iPad. The tested
+source1a45d0bd asserts exact email, absent keyboard, a44-point direct Cancel command,
+failed cancellation, retry, terminal command removal and return. M193's current
+normal-text cancellation workflow is accepted; this does not certify the retired
+menu path or all assistive/adaptive modes.
 
 ### M194 — Native ellipsis menu has an undersized hit region
 
@@ -3336,8 +3341,12 @@ Android APKde9ebc9e verifies missing-link creation, deliberate cancellation fail
 successful retry, Cancelled row without command, retained email and accurate conditional
 guidance. See evidence/android-sharing-guidance-complete.png. Twenty-two sharing
 behavior tests, six fixture-preparation tests and structural checks pass on paul;
-critic found no blocker. iOS copy/layout acceptance remains pending in the updated
-journey; unrelated/newer errors cannot be cleared by this copy-only change.
+critic found no blocker. Native35247151136 passes the updated Sharing journey on
+phone/iPad, including the exact conditional guidance after successful cancellation,
+retained email and a new creation attempt. The tested source1a45d0bd contains these
+assertions and its Sharing screen is unchanged at9d08cf34. M239 normal-text recovery
+is accepted on all three tested platforms. Unrelated/newer errors cannot be cleared
+by this copy-only change; real-service and assistive coverage remain separate.
 
 
 ### M240 — Connection help fails to open after native phone activation
@@ -3637,14 +3646,14 @@ choice, create failure/retry and move failure/retry. Final script lookup expecte
 an offscreen launcher button; [retained hierarchy](evidence/android-move-destination-returned.xml)
 confirms Native UI audit and absence of the Move form. No replay is needed to prove
 return. First picker lookup omitted its current-value suffix; corrected in place.
-iOS execution remains pending; this is not whole Move acceptance.
+iOS Move recovery now passes on phone and iPad in35831661267.
 
 M254 correction implemented: merge confirmed form-local creations with lookup
 matches, filter local titles by normalized query, and prefer server values by ID.
 The mounted regression reproduced the duplicate offer before the fix;90 focused
 tests, TypeScript and structural checks now pass remotely. Query changes, casing,
 server deduplication and rejected-move retention are covered. Critic found no
-source blocker. Corrected native acceptance remains pending.
+source blocker. Corrected native acceptance35831661267 passes on both devices. PR165 merged as00e8e032.
 
 
 ### M255 — Move destination query loses typed characters on iOS
@@ -3666,3 +3675,25 @@ and successful Move retry, plus representative Add native regression.
 
 M02/M11 native create-form choices now pass both devices in35828644735 (Android
 previously passed); field persistence and assistive behavior retain separate scope.
+
+M254/M255 acceptance: native35831661267 passes exact typing, creation failure/retry,
+selected new destination without duplicate creation, movement failure/retry and return
+on both phone and iPad. Representative Add passes on both. All six CI jobs pass.
+[Terminal evidence](evidence/native-move-add-358316-results.txt); release delivery is
+tracked in the sole current summary.
+
+
+### M256 — iOS enum option entry loses most typed characters
+
+P1 runtime-confirmed: native35836383102 at64e90a8c leaves `r` after one `ready`
+entry on both phone and iPad, before Add. [Retained evidence](evidence/native-enum-358363-results.txt).
+The fixture uses production controls and the production keyboard-container policy.
+Android passes the actual option sequence with normal keyboard dismissal; its first
+driver failure tapped behind the IME and is not a product finding.
+
+Decision: use shared DraftTextField for iOS enum entry. Keep its instance while
+editing/rejecting, advance a local revision only after accepted Add, and preserve
+the validation accessibility hint. Android keeps its controlled input instance.
+The reset and hint regressions failed first;114 focused tests pass after correction.
+Critic found no blocker. Native acceptance retains exact typing and recovery;
+Settings full-name/save recovery will run alongside it as a separate scoped check.

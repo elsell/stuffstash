@@ -1,0 +1,8 @@
+Source: 827fd875a9b1a5491f5d5fbbb5930865f3156ba7
+Run: https://github.com/elsell/stuffstash/actions/runs/35831661267
+Phone: 2 tests, 0 failures; Add 50.492s, Move 192.359s
+iPad: 2 tests, 0 failures; Add 79.611s, Move 110.020s
+Both: testAddDraftWithHeaderConfiguredBeforePresentation and testMoveDestinationCreationRetainsDraftAndRetries pass.
+CI35831664866: all six jobs pass.
+Reviewed captures: complete retained native name/query, selected newly created destination, no duplicate create offer, reachable actions.
+Scope: changed Move recovery workflow and representative shared Add field. Not comprehensive app acceptance.

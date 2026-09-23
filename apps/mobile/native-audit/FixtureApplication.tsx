@@ -223,6 +223,7 @@ export function FixtureMenu() {
     <Button title="Audit settings controls without scrolling" onPress={() => setSettingsControls('fixed')} />
     <Button title="Audit settings collection" onPress={() => router.push('/audit-customization' as Href)} />
     <Button title="Audit settings editor" onPress={() => router.push('/audit-customization-editor' as Href)} />
+    <Button title="Audit settings save recovery" onPress={() => router.push('/audit-customization-editor?recovery=save' as Href)} />
     {['direct', 'nested', 'footer', 'direct-footer', 'scroll-footer'].map(variant => <Button key={variant} title={`Audit ${variant} sheet`}
       onPress={() => router.push({ pathname: '/audit-sheet-diagnostic', params: { variant } } as Href)} />)}
     <Button title="Audit Checkout history" onPress={() => router.push('/audit-checkout-history' as Href)} />

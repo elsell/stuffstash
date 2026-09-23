@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { expect, it } from 'vitest';
+import { Platform } from 'react-native';
 import { MobileRenderHarness } from '../../test-support/render';
 import { CustomizationFieldControls } from './CustomizationEditorFields';
 
@@ -171,4 +172,36 @@ it('adds a normalized option without changing persisted options and clears its i
     await h.press(h.byLabel('Add option'));
     expect(h.all().filter(node => node.props.accessibilityLabel === 'Remove new-option')).toHaveLength(1);
   } finally { await h.unmount(); }
+});
+
+
+it.each(['ios', 'android'])('retains rejected enum editing and resets accepted native drafts on %s', async platform => {
+  const originalPlatform = Platform.OS; Platform.OS = platform as typeof Platform.OS;
+  const h = new MobileRenderHarness();
+  function Form() {
+    const [options, setOptions] = useState<readonly string[]>(['saved']);
+    const [draft, setDraft] = useState('');
+    return <CustomizationFieldControls persistedEnumOptions={['saved']} persistedTargetIds={[]} applicability="all_assets" canMutate eligibleTypes={[]} enumOptions={options} fieldType="enum" mode="edit" newOption={draft}
+      onApplicability={() => {}} onEnumOptions={setOptions} onFieldType={() => {}} onNewOption={setDraft} onTargets={() => {}} targetIds={[]} />;
+  }
+  try {
+    await h.render(<Form />);
+    const input = h.byLabel('New enum option');
+    await h.changeText(input, 'Saved');
+    expect(h.byLabel('New enum option')).toBe(input);
+    await h.press(h.byLabel('Add option'));
+    expect(h.byLabel('New enum option')).toBe(input);
+    expect(input?.props.value).toBe('Saved');
+    expect(input?.props.accessibilityHint).toBe('This option already exists.');
+    await h.changeText(input, 'Camping kit');
+    expect(h.byLabel('New enum option')).toBe(input);
+    await h.press(h.byLabel('Add option'));
+    const cleared = h.byLabel('New enum option');
+    if (platform === 'ios') expect(cleared).not.toBe(input);
+    else expect(cleared).toBe(input);
+    expect(cleared?.props.value).toBe('');
+    expect(cleared?.props.accessibilityHint).toBeUndefined();
+    expect(h.byLabel('Remove camping-kit')).toBeDefined();
+    expect(h.byText('saved · Existing')).toBeDefined();
+  } finally { await h.unmount(); Platform.OS = originalPlatform; }
 });

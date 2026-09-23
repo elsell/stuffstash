@@ -1,6 +1,6 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.28 (118.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35818700192).
+Latest verified TestFlight: **0.24.29 (120.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35834368106).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
@@ -62,7 +62,7 @@ phone/iPad. Text-entry comparisons and other audit findings are outside this bat
 The TestFlight note will be: “Improved custom tag color selection with the iOS
 system color picker, while preserving your draft and preset colors.”
 
-## Current release — menu action ownership
+## Previous release — menu action ownership
 
 Sourceb75ef748 fixes retained native menu callbacks executing obsolete actions or
 reopening after unlock. M54 in [findings](findings.md) holds the current diagnosis.
@@ -116,7 +116,7 @@ The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
 
-## Frozen next release batch — Move destination recovery
+## Current release batch — Move destination recovery
 
 PR165 fixes M254: confirmed creations are merged with current search results by
 ID, filtered by query and retained as the selected destination. The failing mounted
@@ -141,9 +141,53 @@ name. Android keeps its existing input. Review requested an actual Move regressi
 for canonical naming, unchanged field through typing/rejection and reset after
 success; it is added and its negative control fails without revision advancement.
 All1,925 remote tests (306 files), TypeScript and structural checks pass. Native
-implementation acceptance must verify exact
-one-attempt text plus creation/movement recovery, with Add as the shared-adapter
-regression. No further field-choice rerun is needed.
+acceptance35831661267 passes2/2 on both phone and iPad: exact one-attempt text,
+creation/movement recovery and the representative Add regression. All six CI jobs
+pass at827fd875. [Terminal evidence](evidence/native-move-add-358316-results.txt)
+and retained captures establish scoped acceptance. PR165 merged as00e8e032;
+release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
+08:23:35UTC on September23; Apple processing and exact-build changelog readback
+passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
+No further field-choice rerun is needed.
+
+### Current candidate — enum option text retention
+
+Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
+leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
+The candidate uses shared native DraftTextField for ordinary editing and rejected
+options; accepted Add advances an explicit reset revision. Validation
+hints remain native. Android retains the existing controlled field. Both reset/hint
+regressions failed before correction;all1,928 remote tests (307 files), TypeScript,
+structural checks and critic pass. Native
+acceptance is still required; no provider/key/pacing comparison will be repeated.
+
+Android APK25689da4 passes duplicate rejection, new-option canonicalization, field
+clearing, selective removal and return with standard keyboard dismissal; scoped
+[evidence](evidence/android-enum-editing-results.txt) records the initial hidden-tap
+driver error and correction. This does not certify keyboard-open Add or whole-editor
+persistence.
+
+Android at current source98b50a49 also passes enum recovery and the complete Settings
+name/save-retry workflow on APK690c2fdf; [evidence](evidence/android-enum-settings-98b50a49-results.txt).
+Source overlay initially restored production routes; reapplying runner fixtures fixed
+setup before acceptance. Reapply fixtures after future full-source overlays.
+
+[Native35842653888](https://github.com/elsell/stuffstash/actions/runs/35842653888)
+at9d08cf34 passes the full enum duplicate/recovery workflow on phone. iPad stops
+at the initial five-second predicate waiter: one4.26-second false evaluation,
+followed by complete `ready` in teardown. That does not establish iPad acceptance.
+All six CI jobs pass. [Retained results and reviewed captures](evidence/native-enum-358426-results.txt).
+
+Decision: keep PR167 held and retain the native adapter with its stable hint
+modifier. Read exact native values directly after typing and before Add, as the
+Sharing email scenario does. Keep one typing attempt, keyboard-open command checks,
+duplicate retention, canonical creation/reset and removal. Critic found no blocker;
+the focused phone/iPad acceptance is required. No provider/key/pacing reruns.
+
+The separate Settings check in358392 passed full-name/save-retry on phone and failed
+the iPad success-notice observation. It does not justify migrating the Settings name
+input or certify persisted collection readback. Latest verified release remains
+0.24.29 (120.1).
 
 ### Custom-field choices — scoped acceptance complete
 

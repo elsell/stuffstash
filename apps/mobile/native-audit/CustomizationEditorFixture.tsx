@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { router, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { createMobileQueryClient } from '../src/adapters/serverState/MobileQueryClient';
 import { CustomizationAccessPolicy } from '../src/application/customization/CustomizationAccess';
 import { CustomizationContextQuery } from '../src/application/customization/CustomizationContextQuery';
@@ -17,12 +17,23 @@ const scope = { tenantId: 'audit-household', inventoryId: 'audit-inventory' };
 const unavailable = async (): Promise<never> => { throw new Error('Only tag editing is supported in this fixture'); };
 
 export function CustomizationEditorFixture() {
+  const { recovery } = useLocalSearchParams<{ recovery?: string }>();
+  return <CustomizationEditorSession key={recovery ?? 'ordinary'} rejectFirstSave={recovery === 'save'} />;
+}
+
+function CustomizationEditorSession({ rejectFirstSave }: { readonly rejectFirstSave: boolean }) {
   const [state] = useState(() => {
+    let saveAttempts = 0;
     let tag: AssetTagDefinition | undefined = { kind: 'tag', id: 'tools', key: 'tools', displayName: 'Tools' };
     const repository: CustomizationRepository = {
       async listTags() { return { items: tag ? [tag] : [] }; },
       async updateTag(_context, id, input) {
         if (!tag || tag.id !== id) throw new Error('Unknown fixture tag');
+        if (rejectFirstSave) {
+          if (input.displayName !== 'Tools emergency supplies') throw new Error('Unexpected audit Settings name');
+          saveAttempts += 1;
+          if (saveAttempts === 1) throw new Error('Audit Settings temporarily unavailable');
+        }
         tag = { ...tag, ...input }; return tag;
       },
       async archiveTag(_context, id) {

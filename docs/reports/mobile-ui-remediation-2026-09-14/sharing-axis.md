@@ -19,8 +19,8 @@ for native hierarchy observations between taps.
 - [Failure with reachable retry](evidence/android-sharing-direct-failure.png)
 - [Cancelled row and stale guidance](evidence/android-sharing-direct-complete.png)
 
-This confirms Android normal-size behavior only. M193's phone/iPad keyboard issue
-remains open pending the queued iOS revision. TalkBack, enlarged text, landscape,
+This capture confirms Android normal-size behavior only. Later phone/iPad
+acceptance is recorded below. TalkBack, enlarged text, landscape,
 multi-row native disambiguation and real server cancellation are not established.
 
 M239 is newly runtime-confirmed: after cancellation succeeds, the retained creation
@@ -32,7 +32,12 @@ errors. Android APK `de9ebc9e2717f72cf4d03250caae843717cebbf082cc443c5d04ebde721
 repeats the unavailable-link, failure, retry and terminal-row journey. The retained
 email and [updated guidance](evidence/android-sharing-guidance-complete.png) are
 visible after success. Existing22 sharing checks, six fixture-preparation checks
-and structural checks pass; critic clear. iOS acceptance remains pending.
+and structural checks pass; critic clear. Native35247151136 subsequently passes
+`testSharingRecoveryKeepsHeaderAndCommandsReachable` on both phone and iPad.
+Verified against the tested source1a45d0bd: the scenario asserts the exact corrected
+guidance after cancellation, retained email, retry creation, Copy failure/retry,
+Share failure and return. [Named results](native-full-352471-results.csv) establish
+scoped M239 normal-text acceptance, not real-service or assistive certification.
 
 ## Native follow-up: M193/M194
 
@@ -45,8 +50,10 @@ Asset overflow consumer is included in review; label/sort-icon triggers are
 unchanged. Twenty-eight Sharing/menu checks plus TypeScript and structural checks
 pass remotely on paul. An additional 18 Asset detail/overflow checks pass there.
 Critic found no blocker. Native assertions now require
-44-point button bounds and keyboard absence before cancellation. Actual iPhone
-and iPad acceptance remains pending; do not infer it from these source checks.
+44-point button bounds and keyboard absence before cancellation. Native35247151136
+passes these assertions with the subsequent direct Cancel command on phone/iPad,
+including failed cancellation and successful retry. This accepts M193's current
+workflow; it does not prove the retired ellipsis path or close M194's other consumers.
 
 Reviewed September 15 against source after PR138, covering R048 Sharing and a
 partial comparison with R019/S131 invitation acceptance/link entry. This is source

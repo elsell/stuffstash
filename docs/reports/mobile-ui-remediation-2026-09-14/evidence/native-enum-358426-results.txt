@@ -1,0 +1,7 @@
+Source: 9d08cf3469cf43f3b25202761dacade631e1b070
+Native: https://github.com/elsell/stuffstash/actions/runs/35842653888
+Phone107121184656: complete enum recovery passed111.585s. Retained duplicate screenshot reviewed: ready remains with duplicate error and reachable Add above keyboard.
+iPad107121184364: initial exact-value predicate wait failed; sole evaluation starts1.041s, lasts4.260s, false; wait5.302s. Final snapshot contains ready. This is not a passing initial gate and no iPad recovery acceptance is claimed.
+All six CI35842659959 jobs passed. Duplicate PR native run35842659928 cancelled intentionally.
+Decision: retain product correction, use direct XCUIElement.value assertions after single typing actions, before Add. No repeated typing, relaxed strings, or teardown-as-pass. This is functional acceptance, not a5s latency guarantee. Critic found no blocker; native rerun required.
+Selected artifact reads: phone431250bytes of4162095; iPad497707bytes of175644737.

@@ -1,0 +1,13 @@
+Release: https://github.com/elsell/stuffstash/actions/runs/35834368106
+Merged PR165: 00e8e032a31e9367f6abfd432188701649166593
+Version: v0.24.29; build120.1
+All jobs successful: validation107094196610, publication107096069986, iOS upload107096962817, changelog107102314173.
+2026-09-23T08:23:35Z Upload succeeded; EXPORT SUCCEEDED.
+2026-09-23T08:26:02Z Verified TestFlight changelog for v0.24.29 (120.1).
+Verifier requires Apple VALID state and exact whatsNew readback for the build.
+Notes:
+- Fixed missing characters when searching for a Move destination on iOS.
+- Fixed Move offering to create the same destination again after you had just created it.
+- Your new destination stays selected when retrying a move.
+Nonblocking archive warnings: third-party React, ReactNativeDependencies and hermesvm dSYMs missing; upload and processing still succeeded.
+Scope excludes held color PR161 and subsequent enum acceptance work.

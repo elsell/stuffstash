@@ -1750,3 +1750,55 @@ are identifiers, not prose. Keep native draft ownership and successful-create/sc
 reset behavior. Run350950's unchanged exact-email native assertion fails visibly;
 changing keyboard traits is a candidate correction, not proof that missing typed
 characters are resolved. Preserve that native gate and submission/retry checks.
+
+
+### Enum option editing acceptance
+
+Normal-text acceptance of custom-field choices does not establish option editing.
+Exercise the production controls with a duplicate option: enter its complete text
+once, invoke Add, retain the exact draft with the duplicate explanation, clear it,
+enter a new multiword option once, add it, and observe the canonical option plus an
+empty entry field. Remove only that new draft option and preserve the existing one.
+Commands must remain reachable with the keyboard present; the existing form and
+Back destination must survive. Keep saved-option immutability in its already
+accepted separate scenario instead of replaying unrelated picker/target workflows.
+
+The iOS enum option field uses the shared native draft adapter after run35836383102
+retained only `r` from `ready` on both devices. Ordinary typing, validation errors
+and busy-state changes keep the native editing instance. A successful Add advances
+a local reset revision and clears the field; Android keeps its controlled input
+instance. Changing the enclosing loaded resource already unmounts controls through
+the editor loading state. Type disclosure re-entry seeds the retained pending value.
+Keep the field's validation accessibility hint alongside its visible error. Keep
+the native modifier sequence stable when the hint appears or clears: supply an
+empty hint rather than inserting/removing its modifier. Expo55.0.17 wraps modifiers
+structurally and reseeds TextField on appearance; validation must not recreate that
+subtree and replace the user's draft. Run35839289171's iPad duplicate rejection
+ended with an empty field; verify the unchanged recovery workflow after correction.
+
+Use one focused native pass on phone and iPad. A failed exact-value assertion in
+this production consumer selects the established native draft-field adapter;
+it does not reopen provider-removal, key-delivery or pacing experiments. If typing
+and recovery pass, retain the existing implementation and record scoped acceptance.
+
+
+Text-entry acceptance reads the actual native field value immediately after the
+single typing action, before Add, using XCTest's direct value assertion as in the
+Sharing email workflow. Do not treat a later teardown snapshot as a pass. The
+nested five-second diagnostic waiter is not a product response-time requirement:
+run35842653888 recorded one4.26-second false evaluation on iPad and complete text
+at teardown, while phone passed the whole recovery sequence. Remove that timing
+wrapper for enum text/clear assertions; preserve exact strings, keyboard-open Add,
+duplicate retention, normalized creation, successful reset and selective removal.
+
+### Shared Settings name and save recovery acceptance
+
+The representative Settings editor must accept a complete multiword name change,
+not only a one-character append. Exercise the actual routed editor with a controlled
+repository: the first exact-payload save is rejected, the full name stays editable,
+and retry with the same payload returns to the collection with its success notice.
+The fixture uses the production header, keyboard container, application managers
+and editor; rejection belongs in the repository fake, not in alternate UI logic.
+Keep existing successful-save, dirty-back and lifecycle cases intact. A real typing
+failure selects native draft ownership for this shared single-line editor family;
+no repeat provider-removal or typing-speed experiment is needed.

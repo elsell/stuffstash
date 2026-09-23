@@ -1529,6 +1529,55 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testEnumOptionEntryRetainsDuplicateAndClearsAcceptedDraft() {
+    let open = app.buttons["Audit field choices"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let type = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose Type.")).firstMatch
+    XCTAssertTrue(type.waitForExistence(timeout: 5)); type.tap()
+    let enumChoice = app.buttons["Enum"]
+    XCTAssertTrue(enumChoice.waitForExistence(timeout: 5)); enumChoice.tap()
+    let field = app.textFields["New enum option"].firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    field.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    field.typeText("ready")
+    XCTAssertEqual(field.value as? String, "ready")
+    let add = app.buttons["Add option"].firstMatch
+    func addOption() {
+      for _ in 0..<4 where !add.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(add.isHittable)
+      XCTAssertTrue(app.keyboards.firstMatch.exists, "This acceptance requires Add with the keyboard present")
+      XCTAssertFalse(add.frame.intersects(app.keyboards.firstMatch.frame), "Add must clear the keyboard")
+      add.tap()
+    }
+    addOption()
+    XCTAssertTrue(app.staticTexts["This option already exists."].waitForExistence(timeout: 5))
+    XCTAssertEqual(field.value as? String, "ready")
+    capture("enum-duplicate-draft-retained")
+    field.tap()
+    field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 5))
+    let clearedDraft = field.value as? String
+    XCTAssertTrue(clearedDraft == "" || clearedDraft == "Add option", "Expected cleared draft, got \(String(describing: clearedDraft))")
+    field.typeText("Camping kit")
+    XCTAssertEqual(field.value as? String, "Camping kit")
+    addOption()
+    let added = app.buttons["Remove camping-kit"].firstMatch
+    XCTAssertTrue(added.waitForExistence(timeout: 5))
+    let acceptedDraft = field.value as? String
+    XCTAssertTrue(acceptedDraft == "" || acceptedDraft == "Add option", "Expected accepted draft reset, got \(String(describing: acceptedDraft))")
+    XCTAssertFalse(app.staticTexts["This option already exists."].exists)
+    for _ in 0..<4 where !added.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(added.isHittable); added.tap()
+    XCTAssertTrue(added.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Remove ready"].exists)
+    capture("enum-new-option-removed-existing-retained")
+    let back = app.buttons["Back to audit menu"]
+    for _ in 0..<6 where !back.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(back.isHittable); back.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testDraftOptionRemovalPreservesSavedOptions() throws {
     app.buttons["Audit draft options"].tap()
     let remove = app.buttons["Remove draft"]
@@ -2633,6 +2682,34 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(alert.waitForExistence(timeout: 5))
     capture("settings-editor-native-discard")
     alert.buttons["Discard"].tap()
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    XCTAssertFalse(name.exists)
+  }
+
+  func testSettingsFullNameSurvivesRejectedSaveAndRetry() {
+    let open = app.buttons["Audit settings save recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools")
+    name.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    name.typeText(" emergency supplies")
+    XCTAssertEqual(observePredicate("settings-complete-name",
+      predicate: NSPredicate(format: "value == %@", "Tools emergency supplies"), object: name), .completed)
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(save.isEnabled); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save"].waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    XCTAssertTrue(name.isEnabled)
+    XCTAssertEqual(observePredicate("settings-save-recovered",
+      predicate: NSPredicate(format: "enabled == true"), object: save), .completed)
+    capture("settings-full-name-rejected-save-retained")
+    XCTAssertTrue(save.isHittable); save.tap()
+    assertCustomizationNotice("Tag saved")
     XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
     XCTAssertFalse(name.exists)
   }

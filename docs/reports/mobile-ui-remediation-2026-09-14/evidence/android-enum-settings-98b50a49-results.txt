@@ -1,0 +1,8 @@
+Source mobile src/native-audit:98b50a49
+APK SHA256:690c2fdf4b09e4f3fe5e281d4f9042cc34836acab628acddf754777bc35b5cd5
+Android API36 emulator-5580.
+Enum: exact duplicate input, retained rejection, clearing/new multiword input, canonical option creation, input reset, selective removal and return passed with normal keyboard dismissal.
+Settings: Tools emergency supplies entered completely, first exact-payload save rejected, full name retained/editable, retry returned to collection.
+Repository fake verifies payload; independent collection fixture does not verify persisted readback. Runner route title is fixture-specific, not production header acceptance.
+Initial rebuilt APKef6b019f launched production onboarding because the src overlay replaced runner-only routes. Restoring production route directory from HEAD then installing fixture routes corrected setup; no product failure inferred.
+Operational rule: reapply fixture routes after a full src overlay into the existing disposable audit tree. Never alter the original untracked Android tree.

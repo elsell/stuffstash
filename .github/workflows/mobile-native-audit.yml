@@ -25,6 +25,9 @@ on:
           - move-destination
           - destination-and-field-choices
           - field-choices
+          - enum-editing
+          - settings-editing
+          - enum-and-settings
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -113,6 +116,25 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomFieldChoicesStayInPlaceAndRetainTargets'
+              )
+              ;;
+            enum-and-settings)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEnumOptionEntryRetainsDuplicateAndClearsAcceptedDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
+              )
+              ;;
+            settings-editing)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
+              )
+              ;;
+            enum-editing)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEnumOptionEntryRetainsDuplicateAndClearsAcceptedDraft'
               )
               ;;
             field-choices)
