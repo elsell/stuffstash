@@ -1114,7 +1114,7 @@ final class FixtureAuditTests: XCTestCase {
         let scroll = app.scrollViews.firstMatch
         for _ in 0..<6 where !status.isHittable { scroll.swipeUp() }
         XCTAssertTrue(status.isHittable)
-        XCTAssertEqual(app.staticTexts["Availability"].count, 1)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "Availability").count, 1)
         if variant == "checked-out" { XCTAssertTrue(app.buttons["Return"].firstMatch.isHittable) }
         capture("detail-context-" + variant + "-availability")
       }

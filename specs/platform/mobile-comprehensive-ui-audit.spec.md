@@ -2183,3 +2183,14 @@ Verify the filter follow-up and sharing refinement in one native build per devic
 the existing sharing recovery case. Keep `browse-filter-journey` unchanged for
 focused diagnosis. Reuse the independent detail composition run; no sharing code
 changes its consumers. Do not require an all-fixture run for this scoped batch.
+
+## Follow-up batch native compilation gate
+
+Run35918141231 failed XCTest compilation before executing workflows: the
+Availability uniqueness assertion called count on XCUIElement. Preserve the
+uniqueness requirement using an exact-label element query. This run supplies no
+runtime acceptance evidence. Cancel superseded35919524865, whose same test source
+contains the compile error. Verify the final M274–M278 composition using one
+phone/iPad build per device: six filter/search/return cases, sharing recovery, and
+five representative detail/hierarchy cases. Keep focused suite choices available
+and share their test lists instead of maintaining divergent copies.

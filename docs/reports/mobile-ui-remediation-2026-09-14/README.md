@@ -23,7 +23,7 @@ Unrelated findings do not block either release.
 
 Browse List/Map structure shipped in0.24.32 after native verification. The frozen
 M265–M273 selection batch is tracked independently in PR173; its current Move
-creation-inset and Add destination readiness runs remain release gates.
+grouped-creation and Add destination entry runs remain release gates. The preceding Move run passed all four workflows on both devices.
 
 The filter follow-up run35911930846 passed all six iPad cases and five of six phone
 cases, including overview/menu, tag footer, search and Browse/detail return. Phone
@@ -32,7 +32,7 @@ results exist but are offscreen. The candidate correction removes the redundant
 flex wrapper so FlatList is the native screen's direct scrolling body, preserving
 automatic insets and background. The connected result-tap-and-return test stays
 unchanged. The precise UIKit transition cause and corrected native behavior remain
-unproven; no extra swipe or timeout is used to hide the defect.
+unproven; no extra swipe or timeout is used to hide the defect. Search ownership preserves queries across filter application; the connected Android journey and scoped native search checks are recorded in [the evidence](evidence/android-search-ownership-results.txt).
 
 ## Detail action hierarchy follow-up
 
@@ -52,7 +52,15 @@ checks and Android review do not establish iOS visual acceptance.
 
 Sharing review also corrected inline feedback alignment and grouped Share/Copy
 completion actions (M278). Android controlled recovery and visual review pass;
-phone/iPad sharing verification is combined with the filter workflow run.
+phone/iPad sharing verification is combined with the filter and detail workflows.
+
+Run35918141231 failed before tests ran: its Swift uniqueness assertion counted a
+single element instead of an element query. This provides no runtime evidence.
+The assertion now uses an exact-label query; superseded35919524865 was cancelled
+because it contains the same compile error. The corrected follow-up suite combines
+all twelve detail/filter/sharing cases in one build per device. Suite selection
+checks confirm 12 unique existing methods; fixture preparation and critic pass.
+Native compilation and visual/workflow acceptance remain required.
 
 ## Separate unresolved decisions
 
@@ -87,47 +95,3 @@ This is the sole current status summary. Update it in place. Keep exact diagnose
 decisions and durable evidence; historical pending-run statements elsewhere are not
 current state. Sleeping scripts collect terminal job results without unchanged
 status narration. Do not weaken acceptance to make a batch pass.
-
-
-M274 candidate review: native filters run35897564291 passes on phone/iPad at
-07f03d61. Matching screenshots confirm the overview menu removes the intermediate
-page. Visual acceptance remains open: shorten repetitive menu labels and address
-the filter sheet's overall density (M275), especially the iPad footer. Connected
-Browse/detail/Back continuity is not established by fixture callback tests.
-The iPad density candidate still hides Sort on entry despite tighter rows.
-Filters now initially use the native large detent while retaining resizing and
-bottom actions; [visual acceptance remains open](evidence/filter-initial-size-results.txt).
-[Reviewed evidence](evidence/filter-menu-358975-results.txt).
-
-### Connected filter return correction
-
-M276 reproduced search loss after applying Availability on Android. The shared
-native search adapter now distinguishes an active search interaction from header
-lifecycle callbacks. Android connected Browse/Filters/detail/Back and Expiration
-inheritance pass, as do native clear/type/submit and retained-query checks.
-[Evidence](evidence/android-search-ownership-results.txt). iPhone native search/return checks pass in run35909057029. iPad Browse return
-and Place search pass; Expiration stops at the known pre-scroll assertion, already
-corrected in the combined run35911930846. [Terminal evidence](evidence/filter-connected-359052-results.txt).
-Full native acceptance remains open; this follow-up does not broaden frozen M265–M273.
-
-
-### Detail hierarchy implementation — native acceptance open
-
-M277 now exposes permission-aware Edit in the native header, keeps Move with
-location, and pairs availability status with its command. Standalone detail
-consumers retain Edit; item/container/place checks cover duplicate removal and
-read-only container status. Forty-two focused source tests, TypeScript and the
-mobile structural check pass on paul. Critic found duplicate checked-out metadata;
-that is corrected with a regression test. Android's first render prompted aligned,
-bounded context rows. The revised Android item render has aligned context rows;
-native header Edit opens the current asset and Cancel returns with commands intact.
-[Android render](evidence/android-detail-contextual-actions.png). Representative Android photo, checked-out/read-only container and editable Place
-checks pass; Edit/More/Search coexist on Place, and read-only status retains no
-mutation controls. The [photo](evidence/android-detail-photo.png),
-[container](evidence/android-detail-checked-out.png),
-[read-only](evidence/android-detail-read-only.png) and
-[Place](evidence/android-detail-place.png) renders keep M277 visually open:
-photo actions still interrupt identity reading, and empty sections/actions push
-actual contents too far down. The bundled image proves gallery layout only.
-iPhone/iPad acceptance remains open. The corrected native reachability helper
-checks Edit inside its header, not below the header with scroll content. This is a follow-up, not a new gate on the frozen selection batch.

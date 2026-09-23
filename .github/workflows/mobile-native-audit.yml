@@ -20,6 +20,7 @@ on:
           - browse-journey
           - browse-filter-journey
           - filter-sharing-workflows
+          - followup-release
           - filters
           - release-corrections
           - menu-ownership
@@ -111,6 +112,13 @@ jobs:
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/native-audit"
           audit_test_args=()
+          hierarchy_test_args=(
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailContextVariantsKeepNativeCommandsAndStatus'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
+          )
           case "$AUDIT_TEST_CASE" in
             all) ;;
             archive-notice)
@@ -202,13 +210,7 @@ jobs:
               ;;
             hierarchy-followup)
               test "$AUDIT_SUITE" = fixtures || exit 1
-              audit_test_args=(
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailContextVariantsKeepNativeCommandsAndStatus'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
-              )
+              audit_test_args=("${hierarchy_test_args[@]}")
               ;;
             workflow-batch)
               test "$AUDIT_SUITE" = fixtures || exit 1
@@ -308,7 +310,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
               )
               ;;
-            browse-filter-journey|filter-sharing-workflows)
+            browse-filter-journey|filter-sharing-workflows|followup-release)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
@@ -318,8 +320,11 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSheetBodySurvivesExpansion'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
               )
-              if [ "$AUDIT_TEST_CASE" = filter-sharing-workflows ]; then
+              if [ "$AUDIT_TEST_CASE" != browse-filter-journey ]; then
                 audit_test_args+=('-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable')
+              fi
+              if [ "$AUDIT_TEST_CASE" = followup-release ]; then
+                audit_test_args+=("${hierarchy_test_args[@]}")
               fi
               ;;
             browse-journey)
