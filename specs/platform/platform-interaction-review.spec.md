@@ -1,5 +1,29 @@
 # Platform Interaction Review
 
+## Direct UIKit optional tag color
+
+M51's investigation budget is exhausted. Replace the current SwiftUI-hosted color
+control with an Expo view adapter around Apple's UIColorWell, retaining the system
+picker and existing in-place optional tag-color task. This is an implementation
+decision supported by repeated opening failures, not a claim that SwiftUI caused
+them. See Apple's UIColorWell and color-well guidance linked in the audit evidence.
+
+The native control has a44-point minimum hit area, a single descriptive accessible
+name, no alpha editing, and native enabled/disabled state. Its wrapper must not
+duplicate accessibility or capture touches. Opening or dismissing without selection
+must not invent a persisted color. Valid selection emits uppercase six-digit RGB
+to the current parent draft; rounded byte conversion preserves unchanged channels.
+Parent color changes, clearing and permission locks update the control without
+emitting user changes. Existing presets and Android behavior remain unchanged.
+
+Use a focused local `color-well` module with ExpoModulesCore; keep it separate from
+sheet geometry. Detect its actual native view before choosing the adapter so older
+binaries retain the existing fallback. Test null/invalid selection, external reset,
+disabled native events, RGB conversion and shared Add/Edit/Settings consumers.
+One focused phone/iPad acceptance run must cover first-tap opening, selection,
+dismissal, clear, draft retention and lock/unlock before release. A failed gate
+drives a concrete correction, not another broad comparison.
+
 ## Native Sharing access fixtures
 
 Runner-only Sharing scenarios may seed a permissionless scope, one rejected access

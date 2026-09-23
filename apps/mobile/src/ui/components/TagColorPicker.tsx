@@ -3,7 +3,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions,
 import { Check, Palette, X } from 'lucide-react-native';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { expoUIColorPickerAvailable } from './FullSpectrumTagColorPickerPresentation';
+import { nativeColorWellAvailable } from './FullSpectrumTagColorPickerPresentation';
 import { FullSpectrumTagColorPicker } from './FullSpectrumTagColorPicker';
 import { tagColorModalLayout } from './TagColorPickerPresentation';
 import { AppTextInput, appKeyboardDismissMode } from './AppTextInput';
@@ -29,7 +29,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   const contextPalette = useAppearancePalette();
   const colors = palette ?? contextPalette;
   const styles = createStyles(colors);
-  const nativePicker = expoUIColorPickerAvailable(Platform.OS);
+  const nativePicker = nativeColorWellAvailable(Platform.OS);
   const normalizedValue = normalizeColor(value);
   const hasTypedColor = value.trim().length > 0;
   const invalidTypedColor = hasTypedColor && normalizedValue === undefined;

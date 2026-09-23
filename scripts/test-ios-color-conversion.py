@@ -55,6 +55,33 @@ print("Passed \(checks) installed native color conversion checks")
         script = Path(temp) / "ColorConversionContract.swift"
         script.write_text(harness)
         subprocess.run(["swift", str(script)], check=True, cwd=root)
+        direct = root / "apps/mobile/modules/color-well/ios/TagColorRGB.swift"
+        script.write_text(direct.read_text() + r'''
+
+for byte in 0...255 {
+    let expected = String(format: "#%02X7D32", byte)
+    for red in [Double(byte) / 255, (Double(byte) / 255).nextDown, (Double(byte) / 255).nextUp] {
+        guard TagColorRGB.hex(red: red, green: 125.0 / 255, blue: 50.0 / 255) == expected else {
+            fatalError("Direct color well must preserve rounded RGB channels")
+        }
+    }
+    guard let rgb = TagColorRGB.components(expected.lowercased()),
+          TagColorRGB.hex(red: rgb.red, green: rgb.green, blue: rgb.blue) == expected else {
+        fatalError("Direct color well must round-trip parent selection")
+    }
+}
+let invalidSelections: [String?] = [nil, "", "#123", "123456", "#GGGGGG", "#+FFFFF"]
+for invalid in invalidSelections {
+    guard TagColorRGB.components(invalid) == nil else { fatalError("Invalid optional selection") }
+}
+guard TagColorRGB.hex(red: -0.1, green: 1.1, blue: 0) == "#00FF00",
+      TagColorRGB.hex(red: .nan, green: 0, blue: 0) == nil,
+      TagColorRGB.hex(red: 0, green: .infinity, blue: 0) == nil else {
+    fatalError("Invalid native components must not produce malformed colors")
+}
+print("Passed direct color well RGB round-trip, rounding, clamp and invalid-selection checks")
+''')
+        subprocess.run(["swift", str(script)], check=True, cwd=root)
 
 
 if __name__ == "__main__":

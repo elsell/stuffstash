@@ -1,26 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { adjustSpectrumValue, androidSpectrumAccessibility, expoUIColorPickerAvailable, fullSpectrumPickerKind, spectrumGestureOwnership } from './FullSpectrumTagColorPickerPresentation';
+import { adjustSpectrumValue, androidSpectrumAccessibility, nativeColorWellAvailable, fullSpectrumPickerKind, spectrumGestureOwnership } from './FullSpectrumTagColorPickerPresentation';
 
 describe('full spectrum tag color picker', () => {
-  it('uses the SwiftUI native picker only on iOS', () => {
+  it('uses the system color well only on supported iOS binaries', () => {
     expect(fullSpectrumPickerKind('ios', true)).toBe('native-ios');
     expect(fullSpectrumPickerKind('ios', false)).toBe('project-spectrum');
     expect(fullSpectrumPickerKind('android', true)).toBe('project-spectrum');
   });
 
-  it('requires both ExpoUI native views before selecting SwiftUI', () => {
-    const supported = (moduleName: string, viewName: string) => moduleName === 'ExpoUI' && ['HostView', 'ColorPickerView'].includes(viewName) ? {} : undefined;
-    const staleHost = (_moduleName: string, viewName: string) => viewName === 'ColorPickerView' ? {} : undefined;
-    const stalePicker = (_moduleName: string, viewName: string) => viewName === 'HostView' ? {} : undefined;
-
-    expect(expoUIColorPickerAvailable('ios', supported)).toBe(true);
-    expect(expoUIColorPickerAvailable('ios', staleHost)).toBe(false);
-    expect(expoUIColorPickerAvailable('ios', stalePicker)).toBe(false);
-    expect(expoUIColorPickerAvailable('android', supported)).toBe(false);
+  it('requires the direct native color well and rejects old SwiftUI-only binaries', () => {
+    const supported = (module: string, view: string) => module === 'StuffStashColorWell' && view === 'TagColorWellView' ? {} : undefined;
+    const oldBinary = (module: string) => module === 'ExpoUI' ? {} : undefined;
+    expect(nativeColorWellAvailable('ios', supported)).toBe(true);
+    expect(nativeColorWellAvailable('ios', oldBinary)).toBe(false);
+    expect(nativeColorWellAvailable('ios', () => undefined)).toBe(false);
+    expect(nativeColorWellAvailable('android', supported)).toBe(false);
   });
 
   it('fails closed when a stale binary throws while resolving native view config', () => {
-    expect(expoUIColorPickerAvailable('ios', () => { throw new Error('Unimplemented component'); })).toBe(false);
+    expect(nativeColorWellAvailable('ios', () => { throw new Error('Unimplemented component'); })).toBe(false);
   });
 
   it('keeps spectrum gestures in the fixed modal interaction surface', () => {

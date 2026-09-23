@@ -31,6 +31,12 @@ collector finish and consume its result once. It is an independent observation,
 not a new correction. Collector session27553 writes `/tmp/native358032-*`.
 The proposed additional native trace implementation was removed before commit.
 
+M51 candidate: direct UIKit adapter implemented, with current-owner event handling
+and native enabled state. Remote validation passes1,921 tests across305 files,
+TypeScript and structural checks; regressions were observed failing before fixes.
+Code critic has no remaining source blocker. CocoaPods lock integration, Swift RGB
+checks and focused phone/iPad acceptance are pending. This candidate is not released.
+
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
 experiments without naming competing causes and the decision each outcome changes.

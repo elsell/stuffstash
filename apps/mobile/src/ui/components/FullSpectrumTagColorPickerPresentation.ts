@@ -1,16 +1,16 @@
 export type ExpoViewConfigLookup = (moduleName: string, viewName: string) => unknown;
 
-export function expoUIColorPickerAvailable(platform: string, lookup: ExpoViewConfigLookup = nativeExpoViewConfig): boolean {
+export function nativeColorWellAvailable(platform: string, lookup: ExpoViewConfigLookup = nativeExpoViewConfig): boolean {
   if (platform !== 'ios') return false;
   try {
-    return Boolean(lookup('ExpoUI', 'HostView') && lookup('ExpoUI', 'ColorPickerView'));
+    return Boolean(lookup('StuffStashColorWell', 'TagColorWellView'));
   } catch {
     return false;
   }
 }
 
-export function fullSpectrumPickerKind(platform: string, nativeExpoUIAvailable: boolean): 'native-ios' | 'project-spectrum' {
-  return platform === 'ios' && nativeExpoUIAvailable ? 'native-ios' : 'project-spectrum';
+export function fullSpectrumPickerKind(platform: string, nativeColorWellSupported: boolean): 'native-ios' | 'project-spectrum' {
+  return platform === 'ios' && nativeColorWellSupported ? 'native-ios' : 'project-spectrum';
 }
 
 function nativeExpoViewConfig(moduleName: string, viewName: string): unknown {

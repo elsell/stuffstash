@@ -3,11 +3,11 @@ import { PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { minimumTouchTargetSize } from '../theme/tokens';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { adjustSpectrumValue, androidSpectrumAccessibility, expoUIColorPickerAvailable, fullSpectrumPickerKind, spectrumGestureOwnership } from './FullSpectrumTagColorPickerPresentation';
+import { adjustSpectrumValue, androidSpectrumAccessibility, nativeColorWellAvailable, fullSpectrumPickerKind, spectrumGestureOwnership } from './FullSpectrumTagColorPickerPresentation';
 import { NativeTagColorPicker } from './NativeTagColorPicker';
 
 export function FullSpectrumTagColorPicker({ compact = false, disabled = false, onChange, value }: { readonly compact?: boolean; readonly disabled?: boolean; readonly onChange: (value: string) => void; readonly value: string }) {
-  const pickerKind = fullSpectrumPickerKind(Platform.OS, expoUIColorPickerAvailable(Platform.OS));
+  const pickerKind = fullSpectrumPickerKind(Platform.OS, nativeColorWellAvailable(Platform.OS));
   if (pickerKind === 'native-ios') {
     return <NativeTagColorPicker disabled={disabled} onChange={onChange} value={value} />;
   }
