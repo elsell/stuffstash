@@ -2247,3 +2247,14 @@ Extend the connected Browse → Filters → Expiration journey to verify viewpor
 width/height, all three visible modes and actual switching before detail/Back.
 Check the native Sharing and detail-command consumers in the same follow-up run.
 No navigation delay, forced rerender or screen-size padding workaround is allowed.
+
+## Follow-up native result35930669612
+
+Sharing's corrected form containment passes on both devices. Detail Move exposes
+a48-point-high but only41.5–41.7-point-wide native button. The short label needs
+a48-point minimum width inside the native label, rather than relying on the
+120-point React host width. Keep the native44-point target acceptance unchanged.
+The Screens invalidation backport does not correct the iPad580×650 expiration
+viewport. Do not claim that hypothesis proven or rerun it unchanged. The next
+implementation decision must address transition ownership from the filter sheet
+to the full-screen expiration task, while preserving Browse Back and filters.

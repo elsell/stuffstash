@@ -6,11 +6,11 @@ export function NativeCommandButton({ label, disabled = false, onPress, prominen
   return <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
     <Button role={role} onPress={() => { if (!disabled) onPress(); }} modifiers={[
       buttonStyle(prominence === 'primary' ? 'borderedProminent' : 'borderless'), nativeDisabled(disabled), accessibilityLabel(label),
-      fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 48 })
+      fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 48 })
     ]}>
       {prominence === 'primary' ? <HStack><Spacer />
         <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 32 })]}>{label}</Text>
-        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 48 })]}>{label}</Text>}
+        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 48 })]}>{label}</Text>}
     </Button>
   </Host>;
 }
