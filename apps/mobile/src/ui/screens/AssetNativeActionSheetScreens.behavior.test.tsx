@@ -120,6 +120,7 @@ it('creates the move destination with the kind selected in the native menu', asy
     expect(h.byLabel('Put in')?.props.value).toBe('camping box');
     await h.press(h.byLabel('New destination'));
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
     await h.press(create ?? undefined);
     expect(latestAlert()?.title).toBe('Could not create destination');
@@ -228,6 +229,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     await h.press(h.byLabel('New destination'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const create = h.byLabel('Create location "New box"');
     expect(create).toBeDefined();
     const move = h.byLabel('Move');

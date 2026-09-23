@@ -54,6 +54,7 @@ import { useAppearancePalette } from '../theme/AppearanceContext';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
+  readonly creationName?: string;
   readonly queryRevision?: number;
   readonly query: string;
   readonly matches: readonly ParentLookupResult[];
@@ -279,6 +280,12 @@ export function MoveAssetSheet({
   isCreatingDestination = false, asset,
   draft,
   candidatesAvailable = true,
+  creationCandidatesAvailable = false,
+  creationMatches = [],
+  creationStatus,
+  onBeginCreation,
+  onCancelCreation,
+  onChangeCreationName,
   candidateStatus,
   isSaving,
   onChangeQuery,
@@ -293,6 +300,12 @@ export function MoveAssetSheet({
   readonly asset: AssetDetailViewModel;
   readonly draft: MoveDraft | undefined;
   readonly candidatesAvailable?: boolean;
+  readonly creationCandidatesAvailable?: boolean;
+  readonly creationMatches?: readonly ParentLookupResult[];
+  readonly creationStatus?: ReactNode;
+  readonly onBeginCreation: () => void;
+  readonly onCancelCreation: () => void;
+  readonly onChangeCreationName: (name: string) => void;
   readonly candidateStatus?: ReactNode;
   readonly isSaving: boolean;
   readonly isCreatingDestination?: boolean;
@@ -304,23 +317,29 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
-  const [creationExpanded, setCreationExpanded] = useState(false);
+  const creationExpanded = draft?.creationName !== undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
   const disabled = isSaving || readOnly;
   const canSaveMove = draft ? canSaveMoveAsset(asset, draft.selectedParent) && !disabled : false;
   const placement = draft ? movePlacementPreview(asset, draft.selectedParent) : undefined;
   const createPlacement = moveDestinationCreatePlacement(asset);
-  const createTitle = draft?.query.trim() ?? '';
+  const createTitle = draft?.creationName?.trim() ?? '';
   const createKind = draft?.createKind ?? 'location';
-  const canCreate = draft && candidatesAvailable
+  const canCreate = draft && creationCandidatesAvailable
     ? canCreateMoveDestination({
         kind: createKind,
-        matches: draft.matches,
+        matches: creationMatches,
         parentAssetId: createPlacement.parentAssetId,
-        query: draft.query
+        query: createTitle
       })
     : false;
+  const creationActions = useFocusedSheetActions({
+    primaryLabel: 'Create destination', secondaryLabel: 'Cancel new destination',
+    disabled: disabled || !creationExpanded || !canCreate,
+    secondaryDisabled: disabled || !creationExpanded,
+    onApply: onCreateDestination, onBack: onCancelCreation
+  });
   const actions = useFocusedSheetActions({ primaryLabel: 'Move', secondaryLabel: 'Cancel',
     disabled: !canSaveMove, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
@@ -343,13 +362,13 @@ export function MoveAssetSheet({
           key={Platform.OS === 'ios' ? draft?.queryRevision ?? 0 : 'move-query'}
           accessibilityLabel="Put in"
           editable={!disabled}
-          onChangeText={query => { if (!disabled) { setCreationExpanded(false); onChangeQuery(query); } }}
+          onChangeText={query => { if (!disabled) { onCancelCreation(); onChangeQuery(query); } }}
           placeholder="Search places, boxes, shelves"
           placeholderTextColor={palette.textMuted}
           style={styles.input}
           value={draft?.query ?? ''}
         />
-        {candidateStatus}
+        {creationExpanded ? null : candidateStatus}
         {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
         <ParentRow
           disabled={disabled}
@@ -370,10 +389,15 @@ export function MoveAssetSheet({
             onPress={() => onSelectParent(match)}
           />
         ))}
-        {canCreate && !creationExpanded ? <NativeCommandButton label="New destination" disabled={disabled}
-          onPress={() => { if (!disabled) setCreationExpanded(true); }} /> : null}
-        {canCreate && creationExpanded ? (
+        {candidatesAvailable && !creationExpanded ? <NativeCommandButton label="New destination" disabled={disabled}
+          onPress={() => { if (!disabled) onBeginCreation(); }} /> : null}
+        {creationExpanded ? (
           <View style={styles.createDestinationPanel}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
+              editable={!disabled} placeholder="Place or container name" style={styles.input}
+              onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
+            {creationStatus}
             <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
               value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
               includeEmptyOption={false} disabled={disabled}
@@ -383,10 +407,10 @@ export function MoveAssetSheet({
               {moveDestinationCreatePlacementLabel(createPlacement)}
             </Text>
             <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
-              disabled={disabled} onPress={onCreateDestination} />
+              disabled={creationActions.disabled} onPress={creationActions.onApply} />
             <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
             {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Creating destination…</Text> : null}
-            <NativeCommandButton label="Cancel new destination" disabled={disabled} onPress={() => setCreationExpanded(false)} />
+            <NativeCommandButton label="Cancel new destination" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
           </View>
         ) : null}
       </ScrollView>

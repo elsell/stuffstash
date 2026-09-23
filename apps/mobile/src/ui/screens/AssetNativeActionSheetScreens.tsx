@@ -39,6 +39,7 @@ import {
 } from './AssetDetailEditPresentation';
 import { recordAssetActionCompletion } from './AssetActionCompletion';
 import {
+  canCreateMoveDestination,
   createdMoveDestinationParent,
   mergeCreatedMoveDestinations,
   isSelectableMoveDestination,
@@ -213,12 +214,16 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
   const operation = useAssetSheetOperation(asset.canMove);
   const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
+  const creationCandidates = useParentCandidates(draft.creationName ?? '', parentLookupQuery, draft.creationName !== undefined);
+  const creationMatches = mergeCreatedMoveDestinations(creationCandidates.data ?? [], draft.matches, draft.creationName ?? '');
   const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(mergeCreatedMoveDestinations(candidates.data ?? [], draft.matches, draft.query), asset) };
 
   async function createDestination(asset: AssetDetailViewModel): Promise<void> {
-    const name = draft?.query.trim() ?? '';
+    const name = draft.creationName?.trim() ?? '';
     const createKind = draft?.createKind ?? 'location';
-    if (name.length === 0) {
+    if (draft.creationName === undefined || !creationCandidates.data || creationCandidates.isError
+      || !canCreateMoveDestination({ kind: createKind, matches: creationMatches,
+        parentAssetId: moveDestinationCreatePlacement(asset).parentAssetId, query: name })) {
       return;
     }
     if (!operation.begin('create')) return;
@@ -273,6 +278,12 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
           readOnly={!asset.canMove}
           candidatesAvailable={candidates.data !== undefined}
           candidateStatus={<CandidateStatus candidates={candidates} />}
+          creationCandidatesAvailable={creationCandidates.data !== undefined && !creationCandidates.isError}
+          creationMatches={creationMatches}
+          creationStatus={<CandidateStatus candidates={creationCandidates} />}
+          onBeginCreation={() => operation.change(() => setDraft(current => ({ ...current, creationName: current.query })))}
+          onCancelCreation={() => operation.change(() => setDraft(current => ({ ...current, creationName: undefined })))}
+          onChangeCreationName={creationName => operation.change(() => setDraft(current => ({ ...current, creationName })))}
           asset={asset}
           draft={shownDraft}
           isSaving={isSaving}

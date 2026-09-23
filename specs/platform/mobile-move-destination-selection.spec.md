@@ -1,6 +1,7 @@
 # Move Destination Selection
 
-Status: M270 confirmed interaction inconsistency; implementation pending.
+Status: M270 creation-name separation implemented and source-verified; native search,
+shared choice rows and connected native acceptance remain pending.
 Keep separate from frozen M260–M264 and the M269 native acceptance run.
 
 ## Task and pattern
@@ -41,7 +42,9 @@ small flat choices such as Kind continue to use the in-place native picker.
 - Cancel new destination returns to the existing choices with search and selection
   unchanged. Preserve the existing Kind preference; reopen with a fresh proposed
   name seeded from the current search. Creation failure retains name/kind for retry;
-  success selects the created destination and closes the creation task.
+  success selects the created destination, shows its title in search, and closes
+  the creation task. Retained Create events use committed current draft and lookup
+  availability; canceled, pending, disabled and completed creation reject them.
 - Reuse the existing command port, independent creation boundary, operation lock,
   committed-current callbacks, and stable native removal behavior. Scope/permission
   changes or a departed owner reject late interaction and presentation callbacks.
@@ -58,3 +61,12 @@ coverage for reused controls, code review, then phone/iPad/Android native accept
 Retain existing typed-input and rejected-command evidence; do not reopen keyboard
 provider experiments unless a new failure distinguishes a specific product cause.
 Judge task continuity and action reachability before detailed edge cases.
+
+## Current evidence
+
+The mounted name-edit scenario first failed without a dedicated name field. The
+retained Create regression then reproduced submission of the previous name while
+the current name lookup was pending. Both pass after separate draft ownership and
+the shared focused action guard. All 45 focused Move/Edit action tests, TypeScript
+and mobile structural checks pass on the remote Linux validation host. Code critic
+cleared the correction. This does not establish native presentation or complete M270.
