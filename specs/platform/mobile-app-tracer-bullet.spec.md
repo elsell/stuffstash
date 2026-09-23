@@ -346,7 +346,7 @@ This spec defines camera behavior only for attaching still photos during the Add
     scrolling must remain available.
   - Programmatic navigation, including selecting a row or tapping a breadcrumb, must animate smoothly to the relevant column unless the user has requested reduced motion.
   - Deeper containment columns should enter and leave with subtle native-feeling motion instead of flashing in and out. The first implementation should use a small spatial slide plus fade for normal motion, inspired by platform navigation/shared-axis transitions, and reduce that to a fade or instant update when reduced motion is enabled.
-  - Breadcrumbs must remain visible, clickable, and synchronized with the active column. Tapping a breadcrumb must move to that level without collapsing unrelated history unless the destination is intentionally reset.
+  - When a containment path is open, breadcrumbs must remain visible, clickable, and synchronized with the active column. At the root with no open path, omit the redundant root-only breadcrumb; the root column heading identifies the inventory. Tapping a breadcrumb must move to that level without collapsing unrelated history unless the destination is intentionally reset.
   - The main body of a row must select that asset as the current branch and reveal its immediate children in the next column when the asset is a location or container.
   - Rows that are part of the current expanded path must remain visually
     distinguished from sibling rows so users can identify the active branch when
