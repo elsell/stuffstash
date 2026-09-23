@@ -1,6 +1,45 @@
 # Comprehensive mobile UI audit and remediation
 
-## Released checkpoint — September 17
+## Current checkpoint — September 23
+
+Latest verified TestFlight: **0.24.27 (116.2)**, including the M207 native search
+placement correction. Apple processing and exact-build changelog readback passed;
+see [release evidence](release-batch-116.md). The audit is **not complete**.
+
+The [coverage matrix](matrix.csv) enumerates142 surfaces ×24 axes =3,408 unique
+cells:2,593 source-reviewed,576 finding,198 not-applicable and41 runtime-partial.
+These classify review evidence; they are not counts of completed native checks or
+distinct unresolved defects. Individual findings and later corrections are tracked
+in [findings](findings.md) and their linked surface reports.
+
+The latest [full native run](native-full-352471.md) passes74/92 phone and84/92 iPad
+fixture cases. All16 changed search cases passed before release. Remaining
+failures include ordinary text entry, intermittent color opening, enlarged-text
+layouts and diagnostic container variants. Do not equate every diagnostic failure
+with a shipped workflow defect or erase earlier failures after a later pass.
+
+Continue in this order:
+
+1. Normal-text editing: [text-entry evidence](text-entry-axis.md). Focused
+   run35803226783 is collecting key/change events on phone/iPad; acceptance still
+   requires exact text. Its outcome is pending.
+2. Color opening M51: [latest isolation](native-color-scroll-352164.md) rules out
+   disabling scrolling as a sufficient correction. Native touch delivery and
+   presentation ownership remain unproven; preserve ordinary scroll behavior.
+3. Remaining changed workflows and configurations in the surface reports,
+   including enlarged text after normal-text findings, Android, assistive
+   technology, and physical-device-only interactions.
+
+Freeze and verify each release batch independently of finishing the entire audit.
+The later eager native-observation refinement is not released and still needs
+runtime evidence. Source tests, archived builds and TestFlight uploads do not
+certify visual or interaction acceptance.
+
+The checkpoints below are historical. Their statements about active jobs,
+unreleased candidates and pending checks describe that checkpoint only; use the
+current summary and later linked evidence for present status.
+
+## Historical released checkpoint — September 17
 
 TestFlight **0.24.24 (113.1)** is published through successful
 [release35171759572](https://github.com/elsell/stuffstash/actions/runs/35171759572).
@@ -8,14 +47,14 @@ Apple processing and exact changelog readback passed. The user explicitly chose
 this interim release with the known iPhone filter keyboard overlap disclosed.
 The comprehensive audit remains incomplete. See [release evidence](release-batch-113.md).
 
-## Follow-up correction checkpoint
+## Historical follow-up correction checkpoint
 
 Native351811 accepts the reported normal-text portrait filter overlap correction
 on phone/iPad; see [native boundary evidence](native-boundary-351811.md). Candidate
 PR155 is not released. M251 visual verification and the phone color-picker failure
 remain open, alongside broader adaptation and the comprehensive audit.
 
-## Pre-release audit checkpoint — September 17
+## Historical pre-release audit checkpoint — September 17
 
 The coverage inventory contains142 surfaces ×24 axes =3,408 unique cells:2,593
 source-reviewed,576 finding,198 not-applicable and41 runtime-partial. These are
@@ -201,7 +240,7 @@ A source-reviewed cell never implies a runtime pass. Add discovered internal
 surfaces during inspection. Record justified N/A per cell; do not default missing
 coverage to pass. This effort includes fixing findings and TestFlight release.
 
-## Current checkpoint — September 15
+## Historical checkpoint — September 15
 
 The requested PR150 checkpoint is released as **TestFlight0.24.23 (112.1)**.
 [Run35028077706](https://github.com/elsell/stuffstash/actions/runs/35028077706)
