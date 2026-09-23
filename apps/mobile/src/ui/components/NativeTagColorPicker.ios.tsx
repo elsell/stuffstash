@@ -23,6 +23,8 @@ export function NativeTagColorPicker({ disabled, onChange, value }: { readonly d
   return <View style={styles.row}>
     <Text accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       style={[styles.label, { color: palette.text }, disabled && styles.disabled]}>Choose any color</Text>
+    {nativeTagColorSelection(value) ? <View pointerEvents="none" accessible={false} accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants" style={[styles.swatch, { backgroundColor: value, borderColor: palette.border }]} /> : null}
     <ColorWell style={styles.well} selection={nativeTagColorSelection(value)} enabled={!disabled}
       onSelectionChange={event => {
         const selected = nativeTagColorSelection(event.nativeEvent.value);
@@ -36,5 +38,6 @@ const styles = StyleSheet.create({
   row: { minHeight: minimumTouchTargetSize, width: '100%', flexDirection: 'row', alignItems: 'center', gap: 12 },
   label: { flex: 1, fontSize: 17 },
   well: { width: minimumTouchTargetSize, height: minimumTouchTargetSize },
+  swatch: { width: 24, height: 24, borderRadius: 12, borderWidth: 1 },
   disabled: { opacity: 0.55 }
 });

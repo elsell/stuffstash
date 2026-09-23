@@ -2,38 +2,35 @@
 
 ## Direct UIKit optional tag color
 
-M51's investigation budget is exhausted. Replace the current SwiftUI-hosted color
-control with an Expo view adapter around Apple's UIColorWell, retaining the system
-picker and existing in-place optional tag-color task. This is an implementation
-decision supported by repeated opening failures, not a claim that SwiftUI caused
-them. See Apple's UIColorWell and color-well guidance linked in the audit evidence.
+M51's investigation budget is exhausted. Run35809662780 still observes a missed
+phone opening after preset selection with UIColorWell, despite accepting ordinary
+opening and Settings save. Use a standard UIKit palette button to present
+UIColorPickerViewController explicitly. Apple's native picker remains the task;
+the observed well activation limitation justifies this command presentation.
 
-The native control has a44-point minimum hit area, a single descriptive accessible
-name, no alpha editing, and native enabled/disabled state. Its wrapper must not
-duplicate accessibility or capture touches. Opening or dismissing without selection
-must not invent a persisted color. Valid selection emits uppercase six-digit RGB
-to the current parent draft; rounded byte conversion preserves unchanged channels.
-Parent color changes, clearing and permission locks update the control without
-emitting user changes. Existing presets and Android behavior remain unchanged.
+Keep the48-point target, a single descriptive accessible name, no alpha editing,
+and native enabled state. Derive the presenter from the mounted view's responder
+chain; use a sheet in compact width and a button-anchored popover in regular
+width. Both forms must clear ownership on interactive dismissal. Prevent duplicate presentation,
+dismiss on lock or removal, and ignore late callbacks from retired presentations.
+Initial setup, external selection updates and dismissal must not emit user edits.
+A valid user edit emits uppercase six-digit RGB to the current parent draft;
+rounded byte conversion preserves unchanged channels. Clearing retires the picker
+without inventing a selection. Existing presets and Android behavior stay intact.
 
-Expose the UIColorWell itself as the single accessible button, rather than its
-internal default-named child. Hide the accompanying visual text from accessibility
-traversal. Native acceptance must retain the descriptive name and exercise actual
-activation; changing the test to accept the internal generic label is insufficient.
-The adapter owns the well's accessible-name getter so UIKit selection updates
-cannot replace it with the generic system name. Preserve UIKit's activation and
-enabled-state behavior; do not proxy taps or traverse private subviews.
-For the Add draft regression, keyboard readiness checks the next intended key
-(T for Tent, C for Camping) instead of enumerating every key. Preserve the same
-five-second deadline, actual typing and exact complete-value assertions.
+Keep the command icon in its native appearance-aware tint. Show selected RGB as
+a separate bordered decorative swatch, so black/white choices do not hide the
+command or disappear against the page. Hide the swatch and accompanying visual
+label from accessibility traversal; the button exposes the task and selected value.
 
-Use a focused local `color-well` module with ExpoModulesCore; keep it separate from
-sheet geometry. Detect its actual native view before choosing the adapter so older
-binaries retain the existing fallback. Test null/invalid selection, external reset,
-disabled native events, RGB conversion and shared Add/Edit/Settings consumers.
-One focused phone/iPad acceptance run must cover first-tap opening, selection,
-dismissal, clear, draft retention and lock/unlock before release. A failed gate
-drives a concrete correction, not another broad comparison.
+Use the existing focused local `color-well` Expo module, separate from sheet
+geometry. Detect its actual native view so older binaries retain the fallback.
+Verify first-tap opening, touch area, selection, dismissal, clear, draft retention
+and lock/unlock on phone/iPad, plus Add and Settings consumers, before release.
+Retain exact accessibility and RGB assertions. For the Add draft regression,
+keyboard readiness checks the intended T/C key instead of enumerating all keys;
+keep the five-second deadline, actual typing and complete-value assertions.
+A failed acceptance gate drives a concrete correction, not a broad comparison.
 
 ## Native Sharing access fixtures
 
