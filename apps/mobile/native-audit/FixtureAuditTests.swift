@@ -1922,6 +1922,52 @@ final class FixtureAuditTests: XCTestCase {
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
+  func testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
+      for _ in 0..<16 where !element.isHittable { scroll.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    name.tap(); waitForKeyboard(); name.typeText("Tent")
+    let typed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
+    XCTAssertEqual(XCTWaiter.wait(for: [typed], timeout: 5), .completed)
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let details = app.buttons["More details"].firstMatch
+    reveal(details, in: form); details.tap()
+    let choose = app.buttons["Choose tags"].firstMatch
+    reveal(choose, in: form); choose.tap()
+    let choice = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    var choices = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    reveal(choice, in: choices); choice.tap()
+    let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "checkbox, checked"), object: choice)
+    XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed)
+    let cancel = app.buttons["Cancel selecting tags"].firstMatch
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    reveal(choose, in: form); choose.tap()
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    choices = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    reveal(choice, in: choices)
+    XCTAssertNotEqual(choice.value as? String, "checkbox, checked")
+    choice.tap()
+    let done = app.buttons["Done selecting tags"].firstMatch
+    done.tap(); XCTAssertTrue(done.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Tent")
+    let save = app.buttons["Save item"].firstMatch
+    XCTAssertTrue(save.isEnabled); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save asset"].firstMatch.waitForExistence(timeout: 15))
+    if app.alerts.buttons["OK"].firstMatch.exists { app.alerts.buttons["OK"].firstMatch.tap() }
+    reveal(choose, in: form); choose.tap()
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    XCTAssertEqual(choice.value as? String, "checkbox, checked")
+    capture("add-tag-selection-after-rejected-save")
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Tent")
+  }
+
   func testAddRetainsUnfinishedTagAcrossDetailsDisclosure() {
     let open = app.buttons["Audit Add configured header"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

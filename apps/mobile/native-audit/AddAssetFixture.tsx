@@ -15,7 +15,7 @@ import { PhotoSelectionQuery } from '../src/application/add/PhotoSelectionQuery'
 export function AddAssetFixture() {
   const [fixture] = useState(() => {
     let selectedPhotos = false;
-    const context = { tenantId: 'audit-tenant', tenantName: 'Audit household', inventoryId: 'audit-inventory', inventoryName: 'Audit inventory', canAdd: true, assetTags: [] };
+    const context = { tenantId: 'audit-tenant', tenantName: 'Audit household', inventoryId: 'audit-inventory', inventoryName: 'Audit inventory', canAdd: true, assetTags: Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, displayName: `Tag ${index + 1}` })) };
     return {
       context,
       client: createMobileQueryClient(),

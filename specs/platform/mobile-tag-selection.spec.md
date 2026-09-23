@@ -62,3 +62,8 @@ Use meaningful mounted tests first, then native phone/iPad and Android workflows
 The existing Filters tag journey is a representative shared-row/search regression;
 do not make every surface/axis cell an individual test. A component-native control
 or green unit test does not prove the end-to-end task fits platform conventions.
+
+Native fixtures must include existing choices beyond the initial viewport in both
+Add and Edit. Add acceptance includes named asset draft retention through Cancel,
+selected-review search, Done, and a rejected save; this must not rely solely on
+Edit sharing the selection component.
