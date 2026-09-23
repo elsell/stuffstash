@@ -64,3 +64,13 @@ Unfinished tag disclosure remains unverified: phone failed to obtain a keyboard
 on the reopened field; iPad entered Camping and reached Add tag, then exceeded the ten-minute case allowance during repeated scroll/geometry observations. Preserve these gates
 and inspect retained evidence before choosing a correction; do not repeat input
 provider or key-delivery experiments. These results do not close the whole batch.
+
+The disclosure harness uses `for ... where !visible()`, which evaluates expensive
+native geometry for every remaining iteration even when the field is already
+visible. Replace it with an explicit early return on visibility and one geometry
+snapshot per attempt. Preserve bounded scrolling, header/viewport containment,
+hittability, ordinary field tap, and exact Tent/Camping checks. This fixes a known
+observation cost, not a proved production focus defect. One corrected lifecycle
+run distinguishes exhausted observation time from a persistent focus failure. If
+phone focus still fails, retain that failed gate and choose an input-lifecycle
+correction from its evidence rather than repeating keyboard experiments.

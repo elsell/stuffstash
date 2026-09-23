@@ -2067,18 +2067,21 @@ final class FixtureAuditTests: XCTestCase {
     let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
     XCTAssertTrue(scroll.exists)
     func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
-      func visible() -> Bool {
+      for attempt in 0...18 {
         let bounds = scroll.frame.intersection(app.frame)
         let top = max(bounds.minY, app.navigationBars["Add item"].frame.maxY)
-        return (!requiresHit || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
-      }
-      for _ in 0..<18 where !visible() {
-        let above = element.frame.minY < app.navigationBars["Add item"].frame.maxY
+        let frame = element.frame
+        let contained = frame.minY >= top && frame.maxY <= bounds.maxY
+        if contained && (!requiresHit || element.isHittable) { return }
+        guard attempt < 18 else {
+          XCTFail("Target must be visible below the header and inside the scroll viewport")
+          return
+        }
+        let above = frame.minY < top
         let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
         let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
         start.press(forDuration: 0.05, thenDragTo: end)
       }
-      XCTAssertTrue(visible())
     }
     func dismissKeyboard() {
       let dismiss = app.buttons["Dismiss keyboard"].firstMatch
