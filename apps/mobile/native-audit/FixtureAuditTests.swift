@@ -2303,7 +2303,15 @@ final class FixtureAuditTests: XCTestCase {
     let listItemY = listItem.frame.minY
     verifyAnchor()
     capture("browse-journey-list-top")
-    app.scrollViews.firstMatch.swipeUp()
+    // Start in the card gutter so this scroll cannot activate a card command.
+    let firstCard = app.otherElements["asset-card-journey-0"].firstMatch
+    let secondCard = app.otherElements["asset-card-journey-1"].firstMatch
+    let gutterX = (firstCard.frame.maxX + secondCard.frame.minX) / 2
+    let origin = app.coordinate(withNormalizedOffset: .zero)
+    let start = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.7))
+    let end = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.3))
+    start.press(forDuration: 0.05, thenDragTo: end)
+    XCTAssertTrue(control.exists, "Scrolling must remain on Browse")
     XCTAssertTrue(!listItem.exists || listItem.frame.minY < listItemY - 40, "The list must actually scroll")
     verifyAnchor()
     capture("browse-journey-list-scrolled")

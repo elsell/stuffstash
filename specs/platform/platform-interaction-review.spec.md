@@ -1007,3 +1007,15 @@ layout test identifier without grouping or hiding its independently accessible
 child actions. Keep the same minimum and column-position assertions on the outer
 container. This corrects the observed object rather than relaxing the product
 requirement. Native rerun remains required for the corrected measurement.
+
+## Browse scroll gesture acceptance
+
+Run35879482924 passed corrected outer-card geometry on iPad, but the subsequent
+synthetic list swipe left Browse for the unmatched root route. This does not
+establish a header layout regression. Its previous assertion incorrectly accepted
+an absent item after route departure as proof of scrolling. Keep the Browse control
+present before judging movement, and originate the list drag in the visible gutter
+between the first two cards, away from card navigation targets. Preserve anchor,
+actual content movement, Map and return assertions. This one distinguishing run
+checks accidental gesture activation versus a repeatable scroll/navigation defect;
+do not start keyboard/provider experiments or alter production layout without evidence.
