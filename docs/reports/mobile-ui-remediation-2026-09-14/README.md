@@ -1,6 +1,6 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.27 (116.2)**; [release and changelog evidence](release-batch-116.md).
+Latest verified TestFlight: **0.24.28 (118.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35818700192).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
@@ -84,14 +84,16 @@ corrected observation order passes the focused archive journey on both devices i
 [native35816959842](https://github.com/elsell/stuffstash/actions/runs/35816959842),
 retaining the exact notice and destination assertions. All six final CI jobs pass.
 PR162 merged asc31638fc; [release35818700192](https://github.com/elsell/stuffstash/actions/runs/35818700192)
-is running. Upload, Apple processing and exact-build changelog are not yet claimed.
+completed successfully. Upload succeeded September23 at04:55:29UTC; Apple
+processing and exact-build changelog readback passed at04:59:56UTC. This releases
+the frozen menu fix, not the held color candidate or the later fixture-only PR164.
 
 Acceptance: shared menu open/lock/dismiss/unlock/execute behavior, representative
 filter selection and destructive-command recovery on phone/iPad, plus Android
 popup/choice behavior. No new color/input diagnostic runs. TestFlight note:
 “Fixed menus accepting outdated actions and reopening unexpectedly after a task unlocks.”
 
-## Current follow-up — onboarding command clearance
+## Accepted follow-up — onboarding command clearance
 
 M35's earlier fixture inserted a navigation header that production onboarding does
 not have. The corrected fixture preserves the production viewport and keeps its
@@ -102,7 +104,8 @@ passes2/2 on phone and iPad: full keyboard-open Connect clearance, exact one-tap
 submission and keyboard Go. Reviewed [phone](evidence/phone-onboarding-keyboard-clearance-358183.png)
 and [iPad](evidence/ipad-onboarding-keyboard-clearance-358183.png) captures agree.
 The prior header-bearing phone failure does not establish a shipped layout defect.
-No production workaround is needed for M35. Larger fonts and other configurations
+PR164 merged as2d9efd02, retaining the regression and evidence. No production
+workaround is needed for M35. Larger fonts and other configurations
 retain their separate audit scope.
 
 Android missing-photo recovery also passes on the same existing audit APK:

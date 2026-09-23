@@ -335,7 +335,7 @@ with the original failure retained in native-menu-358154-results.csv. Focused
 archive-only35816959842 now passes the exact notice and destination assertions on
 both devices. Native asset
 overflow consumer verification and broader assistive behavior remain audit scope. VoiceOver/TalkBack behavior is not established by host-component fakes.
-PR162 merged asc31638fc; release35818700192 is running. Critic identified retained trigger reopening after
+PR162 merged asc31638fc; release35818700192 delivered TestFlight0.24.28(118.1), with Apple processing and exact-build changelog verified. Critic identified retained trigger reopening after
 unlock; two failing cases reproduced it. Trigger and accessibility dispatch now
 share the committed owner guard; five focused cases pass after correction. Final
 critic review found no remaining confirmed source blocker.

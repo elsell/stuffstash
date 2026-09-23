@@ -30,27 +30,21 @@ Completion requires tracking every applicable cell and confirmed finding; do not
 close the effort after only fixing the original ten audit examples.
 
 
-The UI design skill now chooses platform patterns before components. Remediation
-continues after PRs127 and129, with 140 surfaces and 24 axes tracked individually. The
-interim release validation passed 1,374 mobile tests; source checks are not native
-acceptance. Native macOS runner fixtures have verified
-selected menu, date and feedback scenarios, but expiration sheet expansion and
-Add launch still fail. Keyboard readiness had a test-procedure error now corrected
-for a later run. Continue the source audit, native diagnosis, Android runtime
-coverage, and TestFlight release. On September 15 the user requested an interim
-TestFlight release of the current fixes while this audit continues. This milestone
-does not certify the full audit: retain the native failures and unreviewed cells,
-publish release notes, and continue remediation after delivery.
-TestFlight **0.24.11 (99.1)** uploaded successfully and its exact-build changelog
-was verified on September 15 at 00:53 UTC in release34913014534. Continue the audit
-after PR129, merged for v0.24.12 in release34917914704. Build100.1 uploaded successfully at01:55:59UTC and Apple processing/exact-build
-changelog verification succeeded at01:58:20UTC. PR131 merged as8b1fe7b8 and release34920497945 delivered TestFlight0.24.13(101.1).
-Upload succeeded at02:42:13UTC; Apple processing and the exact-build changelog were
-verified at02:44:35UTC on September15. PR132 continues with
-the iOS system-address candidate and a native-stack Home return-details sheet.
-The sheet retains inventory ownership, permission-loss recovery and session-bound
-commands. Source checks do not certify native presentation; phone/iPad fixtures,
-query-readiness failures and remaining surface/axis cells still require work.
+The UI design skill chooses platform patterns before components. The audit tracks
+142 surfaces and24 axes; those3,408 cells classify scope and evidence, not separate
+tests. Follow the bounded-investigation policy: one current diagnosis, shared-control
+verification plus representative workflows, and sleeping terminal-result collectors.
+Prioritize normal-text user-visible defects. Freeze verified release batches without
+making unrelated audit findings release prerequisites.
+
+Latest verified delivery is TestFlight0.24.28(118.1), released September23 through
+run35818700192: menu ownership guards accepted on iOS/iPadOS/Android, Apple processing
+and exact-build changelog readback complete. PR164 adds production-viewport onboarding
+acceptance (phone/iPad/Android pass) and reconciles existing evidence; no product
+layout workaround was required. The color candidate remains held with explicit
+phone acceptance gaps. Broader adaptation, assistive technology and lifecycle
+coverage remain open. Use the audit README as the single current diagnosis summary;
+older reports below preserve historical context rather than current blockers.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a
