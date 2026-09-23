@@ -23,7 +23,9 @@ It is not a general requirement to navigate for small flat choices.
 ## Behavior
 
 - Add retains a compact Put in disclosure row showing its chosen value, using
-  the existing SelectionRow; supporting path text stays below it.
+  the existing SelectionRow; supporting path text stays below it only when it
+  adds context beyond the destination name. Status and error content use the
+  standard grouped-row insets rather than touching the group edge.
   Opening it never changes the draft or creates an asset.
 - The selection visit owns its query. Search updates results without clearing or
   changing the parent held by Add. Preserve the selected destination when hidden

@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useFocusEffect } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -60,12 +60,12 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: palette.background }}>
       <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 20 }}>
         <SettingsSection footer="Choosing a destination changes this draft only.">
-          <Text style={styles.rowContext}>{`Current: ${props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory'}`}</Text>
+          <View style={styles.navigationRow}><Text style={styles.rowContext}>{`Current: ${props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory'}`}</Text></View>
           <SettingsChoiceRow label="Top level" accessibilityLabel="Choose inventory top level" selected={!props.selected && !props.unresolvedSelection} disabled={props.disabled} onPress={() => select()} />
         </SettingsSection>
-        {props.error ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>{props.error}</Text></SettingsSection> : null}
+        {props.error ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>{props.error}</Text></View></SettingsSection> : null}
         {props.loading ? <SettingsSection><SettingsLoadingRow label="Loading suggestions…" /></SettingsSection> : null}
-        {props.failed ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>Suggestions could not be loaded.</Text><NativeCommandButton label="Retry suggestions" disabled={props.disabled} onPress={openCreation.onBack} /></SettingsSection> : null}
+        {props.failed ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>Suggestions could not be loaded.</Text></View><NativeCommandButton label="Retry suggestions" disabled={props.disabled} onPress={openCreation.onBack} /></SettingsSection> : null}
         <SettingsSection footer={!props.loading && !props.failed && !props.matches.length ? 'No matching destinations' : undefined}>
           {props.matches.map(parent => <SettingsChoiceRow key={parent.id} label={parent.title} context={parent.disabledReason ?? `${parent.selectionHint} · ${parent.pathLabel || parent.subtitle}`}
             accessibilityLabel={`Choose destination ${parent.title}`} selected={props.selected?.id === parent.id} disabled={props.disabled || parent.canSelectAsParent === false} onPress={() => select(parent.id)} />)}

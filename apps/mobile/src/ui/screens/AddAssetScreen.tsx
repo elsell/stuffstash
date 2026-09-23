@@ -654,7 +654,7 @@ function ScopedAddAssetScreen({
                 <View style={styles.parentPicker}>
                   <SelectionRow label="Put in" accessibilityLabel="Choose destination" value={selectedParent?.title ?? (parentQuery.trim() || 'Top level')}
                     disabled={destinationActions.disabled} onPress={destinationActions.onApply} />
-                  {selectedParent ? <Text style={styles.parentMeta}>{selectedParent.pathLabel || selectedParent.subtitle}</Text> : null}
+                  {selectedParent && (selectedParent.pathLabel || selectedParent.subtitle) !== selectedParent.title ? <Text style={styles.parentMeta}>{selectedParent.pathLabel || selectedParent.subtitle}</Text> : null}
                   {selectedParent?.willPromoteToContainer ? <Text style={styles.parentPromotionText}>Stuff Stash will turn {selectedParent.title} into a container for this item.</Text> : null}
                 </View>
 

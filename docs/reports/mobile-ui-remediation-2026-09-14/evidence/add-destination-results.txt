@@ -1,0 +1,23 @@
+M269 Add destination — current acceptance evidence
+
+Android emulator-5580, normal text, release fixture build on paul.
+Runtime source: a1809d7b (before subsequent status-row spacing refinement).
+Connected acceptance passed: named Tent draft; search Shelf 14; Cancel retains
+Garage; reopen and select Shelf 14 returns directly to Add; rejected item save
+retains draft; explicit Audit shed creation fails once; retry creates and selects
+the place; returns to Add with Tent intact. Screenshot: android-add-destination-return.png.
+
+Prior source552e7c1b crashed on creation-success return:
+ScreenStackFragment added into a non-stack container, originating in
+ScreenStackHeaderConfig.onUpdate / canNavigateBack. Stable usePreventRemove(true)
+with current-task cancellation and completed-task dispatch resolved this exact
+connected workflow in a1809d7b; no timer workaround was added.
+
+Mounted evidence: 80 focused Add and shared asset-action tests passed before the
+removal correction; eight relevant connected/route tests passed after it, plus
+TypeScript and mobile structural checks. Ten fixture-preparation tests passed.
+Code critic reported no source blocker. Physical-device behavior is not covered.
+
+iPhone/iPad acceptance pending. Supersede old dispatched35884098251 when queued;
+it targets552e7c1b before the stable-removal correction. Final status-row spacing
+and duplicate path-label refinement requires its own native screenshot review.
