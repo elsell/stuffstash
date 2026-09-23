@@ -76,3 +76,40 @@ command payload assertions. Shared choice acceptance verifies single selection, 
 mutation on selection, retired callbacks after a row disappears, explicit Move,
 and retained selection after rejection. This does not establish native presentation
 or complete M270.
+
+## Visual redesign after user rejection
+
+Functional native run35895924050 does not establish design acceptance. The user
+rejected the flat text hierarchy, unexplained row indentation and floating text
+creation command. Current MoveSelectionRow wraps a custom SettingsChoiceRow inside
+formScrollContent: both own horizontal inset. Replace this composition.
+
+For iOS Move and Move Here, use the pinned Expo UI SwiftUI List and Section
+primitives as the scrolling body, with one owner of native row insets/separators.
+Show a compact subject/current-location section and a separately labelled choices
+section. Candidate rows use an appropriate SF Symbol, primary name, secondary
+location path, and trailing selection checkmark. Selecting proposes the move;
+the persistent native confirmation command commits it. Keep an existing selected
+candidate understandable through search refinement without redundant free-floating
+Selected paragraphs. Preserve disabled candidates and their reasons.
+
+Native search uses a deliberate stacked navigation placement for these selection
+tasks on both phone and iPad. Browse retains its existing compact search icon;
+this is task-specific, not a global search redesign. The pinned screens adapter
+supports stacked placement and disables toolbar integration for it. Compare
+matching idle/search/selected states across devices.
+
+Move creation is a secondary native toolbar action, not a centered body text
+button. Entering creation should present one coherent bounded form with native
+Cancel/Create commands; do not leave competing Move controls active or scatter
+creation below the destination list. Preserve independent creation name, kind,
+placement explanation, validation, rejection/retry and return with the created
+destination selected. No new dependency is required: pinned Expo UI supports
+List/Section/HStack/VStack/Image/Text/Button and RNHostView for existing status
+content where necessary. Validate navigation safe areas and bridged content on a
+native runtime before adopting it; source support is not rendering evidence.
+
+Android follows its platform list/search/action conventions and the same information
+hierarchy; do not inject SwiftUI or copy iOS appearance into Android. Acceptance
+requires retained functional scenarios plus matching normal-text screenshots of
+entry, search, selected destination, creation and recovery judged as a whole.
