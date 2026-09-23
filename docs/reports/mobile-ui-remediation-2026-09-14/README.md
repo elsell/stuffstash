@@ -34,8 +34,10 @@ The proposed additional native trace implementation was removed before commit.
 M51 candidate: direct UIKit adapter implemented, with current-owner event handling
 and native enabled state. Remote validation passes1,921 tests across305 files,
 TypeScript and structural checks; regressions were observed failing before fixes.
-Code critic has no remaining source blocker. CocoaPods lock integration, Swift RGB
-checks and focused phone/iPad acceptance are pending. This candidate is not released.
+Code critic has no remaining source blocker. CI35804903978 passes the compiled
+Swift RGB checks and all non-lock jobs. Its generated lock adds only the local
+color-well module and is now committed. Focused phone/iPad acceptance and the
+updated lock gate remain pending. This candidate is not released.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
