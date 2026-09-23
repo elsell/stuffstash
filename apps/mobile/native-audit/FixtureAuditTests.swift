@@ -2168,6 +2168,48 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-header-after-scroll")
   }
 
+  func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let control = app.segmentedControls.firstMatch
+    XCTAssertTrue(control.waitForExistence(timeout: 10))
+    let list = control.buttons["List"]
+    let map = control.buttons["Map"]
+    XCTAssertTrue(list.isSelected)
+    let initialFrame = control.frame
+    func verifyAnchor() {
+      XCTAssertTrue(list.isHittable)
+      XCTAssertTrue(map.isHittable)
+      XCTAssertEqual(app.segmentedControls.count, 1)
+      XCTAssertEqual(control.frame.minX, initialFrame.minX, accuracy: 1)
+      XCTAssertEqual(control.frame.minY, initialFrame.minY, accuracy: 1)
+      XCTAssertEqual(control.frame.width, initialFrame.width, accuracy: 1)
+      XCTAssertTrue(app.buttons["Add an asset"].firstMatch.isHittable)
+      XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
+    }
+    let listItem = app.staticTexts["Camping tent"].firstMatch
+    XCTAssertTrue(listItem.waitForExistence(timeout: 10))
+    let listItemY = listItem.frame.minY
+    verifyAnchor()
+    capture("browse-journey-list-top")
+    app.scrollViews.firstMatch.swipeUp()
+    XCTAssertTrue(!listItem.exists || listItem.frame.minY < listItemY - 40, "The list must actually scroll")
+    verifyAnchor()
+    capture("browse-journey-list-scrolled")
+    map.tap()
+    XCTAssertTrue(map.isSelected)
+    let overview = app.staticTexts["12 active assets · 2 root items"].firstMatch
+    XCTAssertTrue(overview.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.buttons["Filters"].exists)
+    verifyAnchor()
+    capture("browse-journey-map")
+    list.tap()
+    XCTAssertTrue(list.isSelected)
+    XCTAssertTrue(app.buttons["Filters"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertFalse(overview.exists)
+    verifyAnchor()
+    capture("browse-journey-list-return")
+  }
+
   func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {
     let entry = app.buttons["Audit Home in tabs"].firstMatch
     for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }

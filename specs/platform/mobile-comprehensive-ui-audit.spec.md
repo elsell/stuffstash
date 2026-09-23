@@ -1904,3 +1904,20 @@ whole-keyboard enumeration. Run35858864716 proves the iPad native keyboard label
 space as a literal blank, not “space”; readiness targets the actual first C key
 shown in the retained hierarchy without weakening the exact text assertion. Acceptance requires full text, accepted clearing,
 staged tag presence and retained selection through disclosure.
+
+### Stable Browse peer-view control (M260)
+
+List and Map are peer presentations of the same inventory. Give their segmented
+control one persistent owner in Browse's native navigation header, independent of
+the changing content. Do not render a second switcher in either result or map
+headers. Keep existing native Add/search behavior, inventory choice on Home,
+query/refinement state and Map path retention. Switching views must not change the
+control's anchor, dimensions or scroll ownership. Native header handlers must
+settle across navigation feedback, observe current committed state and retire on
+unmount. Shared header placement preserves content space and scroll-edge behavior.
+
+Acceptance: walk List → Map → List, search/refine and open/return from an asset at
+normal text; judge stability and content hierarchy, then verify exact state
+retention and one reachable switcher. Mounted checks establish ownership/state,
+not native geometry. Native phone/iPad review must verify the header's Add/search
+commands and switcher fit together before release.

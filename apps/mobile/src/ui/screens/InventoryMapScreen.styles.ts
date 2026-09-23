@@ -18,11 +18,6 @@ export function createStyles(colors: MobileColorPalette) {
     gap: spacing.md,
     marginBottom: spacing.xs
   },
-  headerActions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
   headerAddButton: {
     alignItems: 'center',
     borderRadius: 22,

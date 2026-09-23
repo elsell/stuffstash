@@ -2,7 +2,6 @@ import React from 'react';
 import { afterEach, expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { SearchHeader } from './SearchScreen';
-import { InventoryMapHeaderActions } from './InventoryMapScreen';
 import { lightPalette } from '../theme/tokens';
 
 let h: MobileRenderHarness;
@@ -10,19 +9,18 @@ afterEach(async () => { await h?.unmount(); });
 async function mount(overrides: Partial<Parameters<typeof SearchHeader>[0]> = {}) {
   h = new MobileRenderHarness();
   await h.render(<SearchHeader isLoading={false} lifecycleState="active" checkoutState="any"
-    palette={lightPalette} resultCount={0} scope="all" selectedSurface="list" selectedTagIds={[]}
-    sort="updated_desc" submittedQuery="" onChangeSurface={() => {}} onClearFilters={() => {}}
+    palette={lightPalette} resultCount={0} scope="all" selectedTagIds={[]}
+    sort="updated_desc" submittedQuery="" onClearFilters={() => {}}
     onRemoveFilter={() => {}} onToggleFilters={() => {}} {...overrides} />);
 }
 
-it('keeps search and creation out of content headers while exposing List and Map', async () => {
+it('keeps search and creation out of content headers and leaves the view switcher to navigation', async () => {
   await mount();
   expect(h.byLabel('Add an asset')).toBeUndefined();
   expect(h.all().some(node => node.props.placeholder === 'Search names, places, or tags')).toBe(false);
-  expect(h.byLabel('Browse view')?.props.accessibilityRole).toBe('tablist');
+  expect(h.byLabel('Browse view')).toBeUndefined();
   expect(h.allText()).not.toContain('Home inventory');
-  await h.render(<InventoryMapHeaderActions palette={lightPalette} selectedSurface="map" onChangeSurface={() => {}} />);
-  expect(h.byLabel('Add an asset')).toBeUndefined();
+
 });
 
 it('describes submitted results without claiming a total', async () => {
