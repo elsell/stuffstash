@@ -29,6 +29,7 @@ on:
           - edit-recovery
           - edit-tags
           - normal-detail-recovery
+          - edit-and-move-drafts
           - settings-editing
           - enum-and-settings
   pull_request:
@@ -132,6 +133,14 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
+              )
+              ;;
+            edit-and-move-drafts)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
               )
               ;;
             normal-detail-recovery)

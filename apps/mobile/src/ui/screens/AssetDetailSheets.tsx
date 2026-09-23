@@ -173,6 +173,7 @@ function EditTagPicker({
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
   const [showAllTags, setShowAllTags] = useState(false);
+  const [tagEntryRevision, setTagEntryRevision] = useState(0);
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.label, expanded: showAllTags });
 
   function toggleTag(tagId: string): void {
@@ -196,6 +197,7 @@ function EditTagPicker({
       selectedTagIds,
       pendingTags: newTags
     });
+    if (transition.shouldClearInputs) setTagEntryRevision(current => current + 1);
     onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
   }
 
@@ -265,15 +267,18 @@ function EditTagPicker({
         onPress={() => { if (!disabled) setShowAllTags(current => !current); }}
       /> : null}
       <View style={styles.newTagRow}>
-        <AppTextInput
-          accessibilityLabel="New tag name"
-          editable={!disabled}
-          onChangeText={setNewTagName}
-          placeholder="New tag"
-          placeholderTextColor={palette.textMuted}
-          style={[styles.input, styles.newTagNameInput]}
-          value={newTagName}
-        />
+        <View style={styles.newTagNameInput}>
+          <DraftTextField
+            key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
+            accessibilityLabel="New tag name"
+            editable={!disabled}
+            onChangeText={setNewTagName}
+            placeholder="New tag"
+            placeholderTextColor={palette.textMuted}
+            style={styles.input}
+            value={newTagName}
+          />
+        </View>
         <AppTextInput
           accessibilityLabel="New tag color"
           autoCapitalize="characters"

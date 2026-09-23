@@ -1859,3 +1859,16 @@ selection updates. Preserve read-only and busy guards, suggestion retry, selecti
 and cancellation behavior. Native35850832085 is the failing regression: one Tent
 entry leaves T on both phone and iPad before any suggestion action. Acceptance
 requires the exact full query and successful retry with that query retained.
+
+### Edit new-tag native draft retention (M258)
+
+Edit uses the shared native DraftTextField for new tag names on iOS, with a
+flex-width owner beside the color field. Ordinary typing, invalid input, selection,
+color and disclosure changes retain the same editing buffer. Only an accepted tag
+resolution that clears inputs advances the native field revision; Android retains
+its controlled field instance. Preserve staged tags, validation, busy/read-only
+guards and route ownership resets. Native35853305160 reached the tag field on both
+devices, then phone reduced one Camping entry to C. iPad stopped before typing in
+whole-keyboard enumeration; readiness should observe the stable space key without
+weakening the exact text assertion. Acceptance requires full text, accepted clearing,
+staged tag presence and retained selection through disclosure.

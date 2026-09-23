@@ -21,6 +21,15 @@ adaptation/assistive-technology coverage remain open in the surface reports.
 
 ## Current diagnosis and decisions — September 23
 
+Current frozen batch: M257 Move Here query retention and M258 Edit new-tag name
+retention use the established native draft field.70 focused mounted/native-adapter
+checks pass. Grouped phone/iPad acceptance covers both changed workflows plus
+Edit metadata recovery. [Latest tag evidence](evidence/native-edit-tags-358533-results.txt)
+confirms ordinary swipes resolve the initial tag reachability failure; do not
+repeat short-drag or provider experiments. The separate iPad Edit return-to-name
+visibility gap remains tracked. Do not infer native acceptance from source tests.
+
+
 | Defect | Established facts | Decision and next acceptance |
 | --- | --- | --- |
 | M51: custom color picker sometimes does not open | Ordinary well taps intermittently leave the parent unchanged. Disabling scrolling is insufficient. RGB retention and disabled-state fixes already passed. [Evidence](native-color-scroll-352164.md). | Diagnostic budget exhausted. Use a standard UIKit button with explicitly owned system color-picker presentation; both prior well paths showed missed opening. Verify first-tap opening, selection, dismissal, parent draft retention, clear and lock/unlock on phone/iPad. Retain presets. |

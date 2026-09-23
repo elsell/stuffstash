@@ -2,6 +2,7 @@ import type { ParentLookupResult } from '../../application/add/ParentLookupQuery
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
+import { Platform } from 'react-native';
 import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
@@ -423,7 +424,8 @@ it('names staged Edit tag removal and preserves other tags and edited fields', a
   } finally { await h.unmount(); client.clear(); }
 });
 
-it('explains an overlong Edit tag name and preserves the asset draft through correction', async () => {
+it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accepted input on %s', async platform => {
+  const originalPlatform = Platform.OS; Platform.OS = platform as typeof Platform.OS;
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
     asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
@@ -435,6 +437,7 @@ it('explains an overlong Edit tag name and preserves the asset draft through cor
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    const input = h.byLabel('New tag name');
     const longName = 'Camping equipment '.repeat(8);
     await h.changeText(h.byLabel('New tag name'), longName);
     expect(h.byText('Use a shorter tag name.')).toBeDefined();
@@ -443,9 +446,16 @@ it('explains an overlong Edit tag name and preserves the asset draft through cor
     expect(h.byLabel('New tag name')?.props.value).toBe(longName);
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
-    await h.press(h.byLabel('Add tag')); await h.press(h.byLabel('Save'));
+    expect(h.byLabel('New tag name')).toBe(input);
+    await h.press(h.byLabel('Add tag'));
+    const cleared = h.byLabel('New tag name');
+    if (platform === 'ios') expect(cleared).not.toBe(input);
+    else expect(cleared).toBe(input);
+    expect(cleared?.props.value).toBe('');
+    expect(h.byLabel('Remove new tag Camping')).toBeDefined();
+    await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep me', newTags: [{ displayName: 'Camping' }] })]);
-  } finally { await h.unmount(); }
+  } finally { await h.unmount(); Platform.OS = originalPlatform; }
 });
 
 

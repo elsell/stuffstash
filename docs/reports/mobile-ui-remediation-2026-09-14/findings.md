@@ -3708,3 +3708,15 @@ resets it for another asset/inventory/tenant. Android keeps its controlled fallb
 The existing exact native assertion is the failing regression.69 focused route,
 eligibility, return and shared-native checks plus TypeScript/structural checks pass;
 critic found no blocker. Corrected native exact input/retry acceptance remains open.
+
+### M258 — Edit loses new-tag name characters on iPhone
+
+P1 runtime-confirmed: one Camping entry leaves C in35853305160.
+[Evidence](evidence/native-edit-tags-358533-results.txt). Ordinary swipes now reach
+the selected tag and field on both devices; the prior initial reachability failure
+was a driver gesture issue. iPad stopped before typing in key enumeration.
+Decision: reuse native DraftTextField with a flex-width owner. Preserve editing
+through invalid input and ordinary renders; reset the iOS field only when accepted
+tag resolution clears inputs. Android keeps its controlled instance. Mounted
+accepted-reset regression failed first;70 focused tests pass after correction.
+Native exact text, accepted clearing, staging and selection acceptance remains open.
