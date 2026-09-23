@@ -1,5 +1,18 @@
 # Platform Interaction Review
 
+## Move creation acceptance observations
+
+Run35867595817 retained iPad hierarchy contains the full `Audit crate` value after
+an immediate post-typing assertion read `Audit cr`. Wait at most five seconds for
+exact field equality before proceeding; never accept partial text. Its phone
+journey created and selected the destination, then queried obsolete standalone
+`Audit crate` status text. M262 presents `Selected: Audit crate`; assert that exact
+status and the selected candidate row, retaining all create/move rejection and
+retry assertions. This corrects observations, not production input behavior.
+The corrected complete workflow still requires native acceptance. Edit metadata
+recovery and tag entry passed on both devices in this run; connected phone Edit
+stopped at keyboard readiness before typing and remains unverified by this run.
+
 ## Map and empty-detail hierarchy acceptance
 
 M265/M266 follow-up acceptance uses existing Browse and connected Edit fixtures.
@@ -995,3 +1008,26 @@ Freeze this correction as a separate release batch, requiring the installed patc
 to pass the eight search workflows, dependency resolution, shared-header tests and
 critical regression checks before TestFlight. Remove the runner-only transform
 from candidate validation so it cannot apply twice or hide packaging mistakes.
+
+### Collection geometry acceptance
+
+Measure card width on its outer layout container, not an inset title action.
+The iPad combined run 35871152122 measured the title action at 209 points;
+AssetCard applies horizontal body padding inside the card, so that observation
+cannot establish a violation of the 220-point outer-card minimum. Expose a stable
+layout test identifier without grouping or hiding its independently accessible
+child actions. Keep the same minimum and column-position assertions on the outer
+container. This corrects the observed object rather than relaxing the product
+requirement. Native rerun remains required for the corrected measurement.
+
+## Browse scroll gesture acceptance
+
+Run35879482924 passed corrected outer-card geometry on iPad, but the subsequent
+synthetic list swipe left Browse for the unmatched root route. This does not
+establish a header layout regression. Its previous assertion incorrectly accepted
+an absent item after route departure as proof of scrolling. Keep the Browse control
+present before judging movement, and originate the list drag in the visible gutter
+between the first two cards, away from card navigation targets. Preserve anchor,
+actual content movement, Map and return assertions. This one distinguishing run
+checks accidental gesture activation versus a repeatable scroll/navigation defect;
+do not start keyboard/provider experiments or alter production layout without evidence.

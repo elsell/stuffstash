@@ -43,13 +43,13 @@ passed on phone/iPad and required CI passed on ddcb700c. Release35889902851 is
 running; latest verified TestFlight remains0.24.31(122.1) until exact-build Apple
 processing and changelog verification succeed. Do not widen this frozen batch.
 
-Follow-ups remain separate: M265/M266 have scoped phone/iPad acceptance; M270
-Move selection has Android acceptance and pending iOS evidence. Native tag visits
-confirmed M271 draft-name loss on reappearance and M272 Tags appearing behind its
-modal editor. The current batch preserves the native draft seed and presents
-Tags/Add destination above their owner, with grouped selection-lifecycle acceptance.
-See `mobile-selection-lifecycle.spec.md`. Unrelated findings do not gate a
-verified release; keep connected normal-text workflows ahead of isolated polish.
+The next batch is frozen to M265–M273 on codex/mobile-selection-batch: hierarchy,
+Add/Edit selection, draft retention and consistent Move/Move Here interactions.
+See `mobile-selection-batch.spec.md` for current acceptance and
+`mobile-selection-lifecycle.spec.md` for the confirmed draft/presentation diagnosis.
+Its source integration is checked; grouped native acceptance remains pending.
+Do not expand this batch while native checks run. Unrelated findings stay tracked
+in the comprehensive audit. Resume connected normal-text workflows after delivery.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

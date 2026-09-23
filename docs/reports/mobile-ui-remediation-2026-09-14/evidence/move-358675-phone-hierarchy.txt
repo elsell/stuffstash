@@ -1,0 +1,65 @@
+Attributes: Application, 0x11a64c500, pid: 60324, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x11a64c500, pid: 60324, label: 'Stuff Stash'
+    Window (Main), 0x11a64c640, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a64c780, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11a64c280, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11a64c3c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11a64c000, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11a64c140, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x11a64ca00, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11a64cb40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11a64cc80, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11a64cdc0, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x11a64cf00, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Move asset'
+                          Button, 0x11a64d040, {{20.0, 66.0}, {44.0, 36.0}}, label: 'Cancel'
+                          StaticText, 0x11a64d180, {{155.0, 73.7}, {92.0, 20.7}}, label: 'Move asset'
+                          Button, 0x11a64d2c0, {{338.0, 66.0}, {44.0, 36.0}}, label: 'Move'
+                        Other, 0x11a64d400, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11a64d540, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11a64d680, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x11a64d7c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x11a64d900, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x11a64da40, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x11a64db80, {{0.0, 0.0}, {402.0, 840.0}}
+                                    Other, 0x11a64dcc0, {{24.0, 10.0}, {354.0, 830.0}}
+                                      ScrollView, 0x11a64de00, {{24.0, 10.0}, {354.0, 830.0}}
+                                        Other, 0x11a64df40, {{24.0, 10.0}, {354.0, 830.0}}
+                                          Other, 0x11a64e080, {{24.0, 10.0}, {354.0, 160.8}}
+                                        Other, 0x11a64e1c0, {{24.0, 10.0}, {354.0, 830.0}}
+                                        Other, 0x11a64e300, {{24.0, 116.0}, {354.0, 318.7}}
+                                          Other, 0x11a64e440, {{24.0, 116.0}, {354.0, 318.7}}
+                                            StaticText, 0x11a64e580, {{24.0, 116.0}, {354.0, 20.3}}, label: 'Audit tent'
+                                              StaticText, 0x11a64e6c0, {{24.0, 116.0}, {354.0, 20.3}}, label: 'Audit tent'
+                                            StaticText, 0x11a64e800, {{24.0, 146.3}, {354.0, 20.0}}, label: 'Current location: Inventory root'
+                                              StaticText, 0x11a64e940, {{24.0, 146.3}, {354.0, 20.0}}, label: 'Current location: Inventory root'
+                                            StaticText, 0x11a64ea80, {{24.0, 176.3}, {354.0, 20.0}}, label: 'Selected: Audit crate'
+                                              StaticText, 0x11a64ebc0, {{24.0, 176.3}, {354.0, 20.0}}, label: 'Selected: Audit crate'
+                                            StaticText, 0x11a64ed00, {{24.0, 216.3}, {354.0, 15.7}}, label: 'Put in'
+                                              StaticText, 0x11a64ee40, {{24.0, 216.3}, {354.0, 15.7}}, label: 'Put in'
+                                            Other, 0x11a64ef80, {{24.0, 242.0}, {354.0, 54.0}}
+                                              Other, 0x11a64f0c0, {{24.0, 242.0}, {354.0, 54.0}}
+                                                Other, 0x11a64f200, {{24.0, 242.0}, {354.0, 54.0}}
+                                                  TextField, 0x11a64f340, {{24.0, 252.0}, {354.0, 34.0}}, label: 'Put in', placeholderValue: 'Search places, boxes, shelves', value: Audit crate
+                                            Button, 0x11a64f480, {{24.0, 306.0}, {354.0, 64.3}}, label: 'Inventory root, Top level, No containing location'
+                                            Button, 0x11a64f5c0, {{24.0, 380.3}, {354.0, 64.3}}, label: 'Audit crate, Container, Audit crate, Selected', Selected
+                                        Other, 0x11a64f700, {{345.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11a64f840, {{372.0, 292.3}, {3.0, 516.7}}
+                                        Other, 0x11a64f980, {{52.0, 807.0}, {298.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11a64fac0, {{55.0, 834.0}, {292.0, 3.0}}
+                                        Other, 0x11a64fc00, {{345.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x11a64fd40, {{372.0, 292.3}, {3.0, 516.7}}
+                                        Other, 0x11a64fe80, {{52.0, 807.0}, {298.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x11a01f700, {{55.0, 834.0}, {292.0, 3.0}}
+                        Other, 0x1196857c0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x119685540, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x119685680, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x119684f00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x119685400, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x11a64c500, pid: 60324, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x119685040, pid: 60324, label: 'Stuff Stash'
+  }

@@ -1,0 +1,14 @@
+Frozen M260–M264: corrected Move creation acceptance
+Run35874141371, sourcebd2bb91118ad97d3e5c01888e6f248257212508c
+Both iPhone17 and iPad mini(A17 Pro) passed.
+
+Workflow: select existing destination; enter exact Audit crate name; explicitly
+open creation; choose Container in place; reject creation; retry; select created
+container; reject Move; retain selected destination; retry Move; return to prior
+screen. The obsolete standalone text assertion was corrected; no production
+behavior changed for this run. Reviewed iPad capture confirms reachable persistent
+native commands and retained selected destination after rejected Move.
+
+This resolves the Move acceptance gap in combined run35871152122. Browse outer-card
+geometry remains in35879482924. The earlier iPad Edit keyboard-readiness failure
+is not reclassified as a passing run; prior scoped Edit evidence remains separate.

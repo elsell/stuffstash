@@ -9,8 +9,6 @@ import voiceScreenSource from '../screens/VoiceSessionSheetScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import mapScreenSource from '../screens/InventoryMapScreen.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
-import addScreenSource from '../screens/AddAssetScreen.tsx?raw';
-// @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import tagColorPickerSource from '../components/TagColorPicker.tsx?raw';
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
 import customizationFieldsSource from '../components/CustomizationEditorFields.tsx?raw';
@@ -52,10 +50,9 @@ describe('mobile navigation contract', () => {
     expect(appSources).toHaveProperty('../../app/add.tsx');
     expect(appSources).not.toHaveProperty('../../app/(tabs)/add.tsx');
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add["']/);
-    expect(addScreenSource).toContain('automaticallyAdjustKeyboardInsets');
-    expect(addScreenSource).toContain('nestedScrollEnabled');
-    expect(addScreenSource).toContain('parentMenuResults');
-    expect(addScreenSource).toContain('onSearchFocus');
+    expect(appSources).toHaveProperty('../../app/add-destination.tsx');
+    expect(appSources).not.toHaveProperty('../../app/(tabs)/add-destination.tsx');
+    expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add-destination["']/);
   });
 
   it('keeps Settings as a non-tab stack route', () => {

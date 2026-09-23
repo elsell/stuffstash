@@ -1,0 +1,11 @@
+Run35867595817 source458df6940d37d874bd2bafe77ff426fd22633569, both jobs failed.
+Phone107207658865: Edit metadata recovery, Edit tags, MoveHere passed.
+Connected Edit failed before typing because keyboard readiness timed out.
+Move creation passed creation/retry/selected-row checks, failed obsolete standalone
+Audit crate text assertion. Retained native hierarchy has Selected: Audit crate.
+iPad107207659210: connected Edit, metadata recovery, Edit tags, MoveHere passed.
+Move creation immediate post-type equality read Audit cr; retained final hierarchy
+has full Audit crate. Correct harness to bounded5s exact equality and current exact
+selected-status label. No production input change justified by these captures.
+Move recovery after these failure points remains unverified until corrected rerun.
+Range-extracted only relevant evidence; avoided large complete artifact downloads.
