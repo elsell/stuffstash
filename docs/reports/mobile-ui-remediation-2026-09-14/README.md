@@ -129,7 +129,13 @@ The retained final hierarchy confirms successful return despite an offscreen
 launcher assertion. M254 correction now merges confirmed local creations with current search results,
 filters by query and prefers server records by ID. The mounted regression failed
 before the fix;90 focused tests, TypeScript and structural checks pass remotely.
-Code critic found no blocker. Corrected native acceptance is pending. iOS execution
+Code critic found no blocker. Corrected Android APKc62b07ae passes existing
+selection, native Container choice, rejected creation/retry, no duplicate creation
+offer, selected new row, rejected Move retention and successful exact-payload retry.
+[Reviewed capture](evidence/android-m254-retained.png) and
+[returned hierarchy](evidence/android-m254-returned.xml) retain evidence.
+CI and combined iPhone/iPad acceptance atcdba3261 remain pending; sleeping
+collector81300 owns terminal observation (`/tmp/collect-m254-batch.sh`). iOS execution
 is pending. Budget: one source pass, at most two discriminating
 native experiments. First acceptance distinguishes correct in-place choices and
 retained drafts from a specific command/layout failure; a failed gate determines
