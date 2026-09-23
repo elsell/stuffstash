@@ -13,7 +13,10 @@ workflow checks with product acceptance.
 
 The redesign now uses an actual SwiftUI List on iOS, grouped subject/choices,
 retained selected rows, stacked native search and toolbar-owned destination
-creation. Android shares the grouping through its existing controls. Source checks
+creation. Android shares the grouping through its existing controls. Native review exposed
+a crowded subject/value row; b58ee297 stacks the subject above its location. The
+[Android workflow and entry review](evidence/android-move-redesign-b58ee297-results.txt)
+pass after that correction. Source checks
 cover selection/retry, title ownership and retired callbacks; native screenshots
 of entry, selection, creation and recovery are still required before acceptance.
 
