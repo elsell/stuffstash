@@ -1,0 +1,29 @@
+Combined candidate da2516a967d45c94a1c70cea8c1e87ec0ce95831.
+Android emulator5580, release APK4b5391e97d06d083fd6e0de6605fe593d38aa5b58434edb4fc32c2b7cb7a9a2f.
+Remote incremental build succeeded; no dependency/native module delta from retained build.
+Normal-text Edit tags passed: explicit creation, cancellation clears unstaged entry,
+exact Camping input, Save disabled while unstaged, Keep editing retains text,
+Add enables Save, original and extra selections survive collapse, Discard exits.
+Reviewed collapsed creation screenshot; existing tag-set chips remain a separately
+tracked interaction review. Connected Edit/Move passed: Save with keyboard, updated detail name, persisted
+name when reopened, clean Cancel, move to Garage, updated detail location,
+persisted destination on reopening. Saved/moved detail captures reviewed.
+Controlled in-memory fixture: no backend write, real auth or physical-device claim.
+
+Browse phone walkthrough: outer native List/Map bounds remain [354,139][727,264]
+through real scrolling and both views. Material selection redistributes 3 physical
+pixels between segment bounds; compare the whole control, matching the iOS test.
+On List return the same Camping tent title is at y670 before/after. The initial
+driver expected Filters to be visible, but the correctly restored offset leaves
+that content-header button offscreen. Verified selected List, visible asset,
+absent Map overview and exact offset from retained native trees instead. No
+production correction or additional replay was needed for that final assertion.
+Android tablet/window resize and real-backend behavior remain unverified.
+
+Move destination creation/recovery passed on the same APK: existing selection,
+Container choice, rejected creation retains query and kind, successful retry
+selects the created destination, rejected move retains that destination, and
+retry returns to the fixture launcher. Initial and retained-selection screenshots
+reviewed: persistent native Cancel/Move remain visible, destination choice is
+primary, and creation is absent until requested. This is controlled failure
+injection through the fixture ports, not verification of a live service outage.
