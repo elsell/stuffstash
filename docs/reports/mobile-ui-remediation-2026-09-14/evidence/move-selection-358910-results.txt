@@ -1,0 +1,12 @@
+Run35891073312, source4317a261.
+Phone job107283385553: Move stopped at Button-only choice lookup; actual radio
+exists as Other. Move Here retry stops after clear while native Close is visible
+and task Move is absent. Recovery stops looking for Cancel during active search.
+iPad job107283384850: same initial Move radio lookup failure; Move Here full
+rejected-command/retained-selection/retry/return PASSED. Recovery fails looking
+for task Cancel during active search.
+Decision: semantic radio lookup and finish native search before task commands.
+Preserve exact state/retry/return checks. No production changes are justified.
+Raw job logs retained under /tmp/move-here-m273-{phone,ipad}.log; remote artifacts
+10767255275 and10764704893. Range extraction downloaded about1.3MB, not the full
+488MB archives. Viewed iPad search state and phone search-active retained state.

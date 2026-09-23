@@ -460,7 +460,7 @@ final class FixtureAuditTests: XCTestCase {
       for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
       XCTAssertTrue(element.isHittable)
     }
-    let existing = app.buttons["Choose destination Camping box"].firstMatch
+    let existing = app.descendants(matching: .any)["Choose destination Camping box"].firstMatch
     XCTAssertTrue(existing.waitForExistence(timeout: 10))
     existing.tap()
     XCTAssertTrue(app.buttons["Move"].firstMatch.isEnabled)
@@ -510,7 +510,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(create.waitForNonExistence(timeout: 5))
     let selected = app.staticTexts["Selected: Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["Choose destination Audit crate"].exists)
+    XCTAssertTrue(app.descendants(matching: .any)["Choose destination Audit crate"].exists)
     let move = app.buttons["Move"].firstMatch
     reveal(move); move.tap()
     let rejected = app.alerts["Could not move asset"]
@@ -554,7 +554,12 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertEqual(candidate.value as? String, "radio button, checked")
-    let move = app.buttons["Move here"].firstMatch
+    let header = app.navigationBars["Move something here"]
+    let closeSearch = header.buttons["Close"].firstMatch
+    if closeSearch.exists && closeSearch.isHittable { closeSearch.tap() }
+    let move = header.buttons["Move here"].firstMatch
+    XCTAssertTrue(move.waitForExistence(timeout: 5))
+    XCTAssertTrue(move.isHittable)
     XCTAssertTrue(move.isEnabled)
     move.tap()
     XCTAssertTrue(app.alerts["Could not move asset here"].waitForExistence(timeout: 5))
@@ -605,14 +610,16 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(results.exists)
     for _ in 0..<8 where !retry.isHittable { results.swipeUp() }
     XCTAssertTrue(retry.isHittable)
-    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("move-here-suggestions-error-\(captureSuffix)")
     retry.tap()
     XCTAssertTrue(app.descendants(matching: .any)["Choose item Audit tent"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
     capture("move-here-suggestions-recovered-\(captureSuffix)")
-    app.buttons["Cancel"].firstMatch.tap()
-    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    resetNativeSearch(query)
+    let cancel = app.navigationBars["Move something here"].buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5)); XCTAssertTrue(cancel.isHittable)
+    cancel.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
     XCTAssertTrue(open.isHittable)
   }
 
@@ -1381,7 +1388,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(commit.isHittable); XCTAssertTrue(cancel.isHittable)
     XCTAssertFalse(commit.isEnabled)
     capture("asset-move-journey-picker")
-    let garage = app.buttons["Choose destination Garage"].firstMatch
+    let garage = app.descendants(matching: .any)["Choose destination Garage"].firstMatch
     XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
     garage.tap()
     XCTAssertEqual(garage.value as? String, "radio button, checked"); XCTAssertTrue(commit.isEnabled)

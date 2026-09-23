@@ -48,3 +48,26 @@ header actions and checked row are visible without overlap. This does not establ
 iOS, tablet, physical-device or backend mutation acceptance. After clearing native
 search, dismiss the keyboard only if it remains; iPad may already collapse search.
 Keep the checked-selection and explicit Move assertions regardless.
+
+## Native35891073312: bounded decision
+
+Move's initial choice exists on both devices as an accessibility Other/radio,
+not a Button. Match its semantic label across descendants and retain checked,
+hittable and enabled assertions. This is an observation correction.
+
+Move Here completed the entire rejected-command/retry/return path on iPad. Phone
+stopped after clearing search because native integrated search remained active
+with a visible Close control, so task Move was not yet exposed. Both recovery
+checks likewise requested task Cancel while native search was still active.
+Keep the user's compact integrated search pattern: use its Close/clear interaction
+and then require task commands to return, preserving the chosen item. Do not
+replace it with a permanently expanded field merely to satisfy those assertions.
+Persistent task commands apply outside the native search submode. Apple's
+[search placement API](https://developer.apple.com/documentation/uikit/uinavigationitem/searchbarplacement-swift.enum)
+defines integratedButton as the integrated placement whose inactive state is a
+button. Captures establish actual control availability; they do not certify the
+remaining phone workflow or the Move creation steps that were never reached.
+
+Retain exact query, checked state, failure/retry and successful return assertions.
+One corrected grouped acceptance run follows these specific fixes; no provider,
+keyboard, timing or production layout changes are justified by these failures.
