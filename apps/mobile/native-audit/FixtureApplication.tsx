@@ -117,8 +117,8 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-browse-journey" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
-      <Stack.Screen name="add-destination" options={{ title: 'Put in', presentation: 'card', headerShown: true }} />
-      <Stack.Screen name="asset-tag-selection" options={{ title: 'Tags', presentation: 'card' }} />
+      <Stack.Screen name="add-destination" options={{ ...sheets.selection, title: 'Put in' }} />
+      <Stack.Screen name="asset-tag-selection" options={{ ...sheets.selection, title: 'Tags' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />

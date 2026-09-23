@@ -41,3 +41,12 @@ on phone/iPad. Keep existing whole-string entry and clear/retry evidence; do not
 restart provider or keyboard investigations. M272 needs visible, tappable selection
 and predictable return from both parent forms. These fixes are follow-ups; they do
 not silently expand frozen M260–M264 acceptance.
+
+The grouped selection-lifecycle native run covers Add destination, Add/Edit Tags,
+and unfinished Add tag disclosure. Assert the selection's Done command is hittable
+before trying to scroll its choices; accessibility-tree presence alone did not
+prove it was above the editor. Use targeted T/C readiness for these Add inputs and the established lowercase t
+for native search; literal space was absent in retained iPad evidence, retaining exact typed-value assertions. Staging an unfinished
+tag after disclosure may close creation; require the staged tag and enabled Save,
+and require any remaining entry to be empty. Do not require a cleared field to
+remain mounted. Native acceptance remains pending for M271/M272.

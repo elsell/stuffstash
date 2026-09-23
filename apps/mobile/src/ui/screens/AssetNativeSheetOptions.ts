@@ -31,6 +31,10 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
 export function createAssetNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
+    selection: {
+      contentStyle: { backgroundColor: palette.surface }, headerShown: true,
+      presentation: platform === 'ios' ? 'fullScreenModal' as const : 'card' as const
+    },
     add: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.background },
       presentation: 'card' as const, headerShown: true, title: 'Add item'

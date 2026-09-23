@@ -118,8 +118,8 @@ function ThemedApp() {
         />
         <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
         <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
-        <Stack.Screen name="add-destination" options={{ title: 'Put in', presentation: 'card', headerShown: true }} />
-        <Stack.Screen name="asset-tag-selection" options={{ title: 'Tags', presentation: 'card', headerShown: true }} />
+        <Stack.Screen name="add-destination" options={{ ...sheetOptions.selection, title: 'Put in' }} />
+        <Stack.Screen name="asset-tag-selection" options={{ ...sheetOptions.selection, title: 'Tags' }} />
         <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"

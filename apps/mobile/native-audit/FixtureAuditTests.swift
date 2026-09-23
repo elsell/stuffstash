@@ -1322,6 +1322,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
     reveal(chooseTags)
     chooseTags.tap()
+    let visibleDone = app.buttons["Done selecting tags"].firstMatch
+    XCTAssertTrue(visibleDone.waitForExistence(timeout: 5))
+    XCTAssertTrue(visibleDone.isHittable, "Tag selection must appear above its editor")
     let extra = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
     XCTAssertTrue(extra.waitForExistence(timeout: 5))
     let tagScroll = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
@@ -1948,12 +1951,12 @@ final class FixtureAuditTests: XCTestCase {
       let button = app.buttons["Search"].firstMatch
       XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
       let field = app.searchFields.firstMatch
-      XCTAssertTrue(field.waitForExistence(timeout: 5)); waitForKeyboard(); field.typeText(query)
+      XCTAssertTrue(field.waitForExistence(timeout: 5)); waitForKeyboard(keyLabel: "t"); field.typeText(query)
       let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
       XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
       app.buttons["Dismiss keyboard"].firstMatch.tap()
     }
-    name.tap(); waitForKeyboard(); name.typeText("Tent")
+    name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
     let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
     XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
     app.buttons["Dismiss keyboard"].firstMatch.tap()
@@ -1999,7 +2002,7 @@ final class FixtureAuditTests: XCTestCase {
       for _ in 0..<16 where !element.isHittable { scroll.swipeUp() }
       XCTAssertTrue(element.isHittable)
     }
-    name.tap(); waitForKeyboard(); name.typeText("Tent")
+    name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
     let typed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
     XCTAssertEqual(XCTWaiter.wait(for: [typed], timeout: 5), .completed)
     app.buttons["Dismiss keyboard"].firstMatch.tap()
@@ -2067,7 +2070,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     reveal(name)
     name.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "T")
     name.typeText("Tent")
     let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
     XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
@@ -2091,7 +2094,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
     let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
     XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)
@@ -2115,12 +2118,13 @@ final class FixtureAuditTests: XCTestCase {
     add.tap()
     let staged = app.buttons["Remove new tag Camping"].firstMatch
     let stageComplete = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      guard entry.exists, staged.exists, save.exists else { return false }
+      guard staged.exists, save.exists else { return false }
+      if !entry.exists { return save.isEnabled }
       let value = entry.value
       return (value == nil || value as? String == "" || value as? String == "New tag") && save.isEnabled
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [stageComplete], timeout: 5), .completed,
-      "Staging must retain the tag, clear the existing entry and enable Save")
+      "Staging must retain the tag, clear or close creation and enable Save")
     capture("add-tag-staged")
     let clear = app.buttons["Clear draft"].firstMatch
     reveal(clear)

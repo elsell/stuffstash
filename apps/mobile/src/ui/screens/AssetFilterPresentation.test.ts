@@ -58,3 +58,11 @@ it('gives Move a full-height destination picker and persistent native commands',
     presentation: 'formSheet', headerShown: true, title: 'Move asset', sheetAllowedDetents: [1]
   });
 });
+
+
+it('presents child selection above iOS modal asset forms while Android keeps card navigation', () => {
+  const ios = createAssetNativeSheetOptions(colors, 'ios').selection;
+  expect(ios).toMatchObject({ presentation: 'fullScreenModal', headerShown: true });
+  expect(ios).not.toHaveProperty('sheetAllowedDetents');
+  expect(createAssetNativeSheetOptions(colors, 'android').selection).toMatchObject({ presentation: 'card', headerShown: true });
+});
