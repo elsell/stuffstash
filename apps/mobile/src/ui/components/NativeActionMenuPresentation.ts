@@ -19,7 +19,3 @@ export function nativeMenuItemPresentation(item: NativeActionMenuItem): {
     systemImage: item.isSelected ? 'checkmark' : item.systemImage
   };
 }
-
-export function pressNativeMenuItem(item: NativeActionMenuItem): void {
-  if (!item.disabled) item.onPress();
-}

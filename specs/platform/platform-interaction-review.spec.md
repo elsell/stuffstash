@@ -1,5 +1,19 @@
 # Platform Interaction Review
 
+## Retained native menu actions
+
+An open native menu may deliver an item event after its parent locks, removes an
+item, replaces the current handler, or unmounts. All menu adapters must resolve
+events against committed current menu state, identified by group and item IDs.
+Reject a globally disabled menu, disabled/removed item, and retired component;
+otherwise invoke the current handler. Never run a captured obsolete callback.
+Native item presentation must include the global lock. Controlled Android and
+fallback popups close on lock and must not reopen automatically after unlocking.
+Retained trigger and accessibility callbacks also obey the current lock and teardown.
+Keep iOS/Android native controls, selected/destructive semantics and grouping.
+Tests must retain a real rendered adapter callback across these transitions;
+source tests do not establish native popup refresh or assistive-tech behavior.
+
 ## Native Sharing access fixtures
 
 Runner-only Sharing scenarios may seed a permissionless scope, one rejected access

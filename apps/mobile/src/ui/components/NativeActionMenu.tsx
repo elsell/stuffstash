@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { actionableMenuGroups, pressNativeMenuItem } from './NativeActionMenuPresentation';
+import { actionableMenuGroups } from './NativeActionMenuPresentation';
+import { useNativeMenuAction } from './useNativeMenuAction';
 import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
 export type { NativeActionMenuGroup, NativeActionMenuItem, NativeActionMenuProps, NativeActionMenuTrigger } from './NativeActionMenu.types';
@@ -10,25 +11,27 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
   const [expanded, setExpanded] = useState(false);
   const actionableGroups = actionableMenuGroups(groups);
   const menuDisabled = disabled || actionableGroups.length === 0;
+  const { pressItem, trigger: openMenu } = useNativeMenuAction(groups, menuDisabled);
+  useEffect(() => { if (menuDisabled) setExpanded(false); }, [menuDisabled]);
   return <View style={styles.anchor}>
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      accessibilityState={{ disabled: menuDisabled, expanded }}
+      accessibilityState={{ disabled: menuDisabled, expanded: expanded && !menuDisabled }}
       disabled={menuDisabled}
-      onPress={() => setExpanded((current) => !current)}
+      onPress={() => openMenu(() => setExpanded((current) => !current))}
       style={[styles.trigger, trigger.kind === 'label' ? null : styles.compactTrigger]}
     >
       <Text>{trigger.kind === 'label' ? trigger.label : trigger.kind === 'icon' ? '⇅' : '•••'}</Text>
     </Pressable>
-    {expanded ? <View accessibilityRole="menu" style={styles.menu}>
+    {expanded && !menuDisabled ? <View accessibilityRole="menu" style={styles.menu}>
       {actionableGroups.map((group) => <View key={group.id}>
         {group.items.map((item) => <Pressable
           accessibilityRole="menuitem"
-          accessibilityState={{ disabled: Boolean(item.disabled), selected: Boolean(item.isSelected) }}
-          disabled={item.disabled}
+          accessibilityState={{ disabled: menuDisabled || Boolean(item.disabled), selected: Boolean(item.isSelected) }}
+          disabled={menuDisabled || item.disabled}
           key={item.id}
-          onPress={() => { setExpanded(false); pressNativeMenuItem(item); }}
+          onPress={() => pressItem(group.id, item.id, () => setExpanded(false))}
           style={styles.item}
         >
           <Text>{item.label}</Text>

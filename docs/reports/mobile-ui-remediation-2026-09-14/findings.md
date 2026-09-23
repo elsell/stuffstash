@@ -283,20 +283,36 @@ locating the visible label. Critic found no blocker but correctly notes that its
 height check is only a coarse enlarged-text check: screenshots and the AX audit
 remain required to establish no clipping. Native outcome remains pending.
 
-### M54 — Choice adapters forward events while disabled
+### M54 — Retained menu callbacks outlive their current action state
 
-Source regression tests reproduced disabled callback delivery on iOS, Android
-and the generic renderer. Each adapter now rejects events from a disabled render
-and resumes valid changes after re-enabling. Android also marks each menu item
-disabled, so its open-menu presentation receives the current lock state.
+Current diagnosis: the original disabled-render guard did not cover a callback
+retained by an already-open menu. Mounted iOS, Android and fallback adapters all
+reproduced calling the old handler after a global lock. Investigation used one
+source pass; no additional native diagnostic run is needed to choose the fix.
 
-Three failing cases were observed before the fix;22 focused adapter/expiration/
-custom-field/reminder tests plus TypeScript and structural checks now pass remotely
-(`/tmp/native-choice-lock-green.log`). The shared consumer inventory is the same
-as M53. No authorization behavior changed. Critic found no blocker and emphasized
-the evidence limit: these checks prove current callback-boundary behavior, not
-immediate native handler replacement in an already-open menu. Physical timing and
-Android runtime acceptance remain pending.
+Implementation: resolve group/item IDs against current committed state; reject
+locked, removed and unmounted owners; dispatch the latest handler otherwise.
+Android/fallback menus close on lock and remain closed after unlock. Native item
+presentation includes the global lock. This preserves native controls and grouped,
+selected and destructive semantics. Source consumers reviewed include Android
+choice pickers, asset overflow, History selection and Expiration ordering.
+
+Evidence: all three retained-event cases failed before correction. Five mounted
+adapter cases now cover locking, item removal, group identity, item locks, current
+handlers, teardown and controlled popup dismissal. On paul, the mobile suite
+passes1,925 tests across306 files; TypeScript and mobile structural checks pass.
+That validation checkout also contains the separate color candidate; this is
+source verification, not a pristine release build or native runtime acceptance.
+Logs: `/tmp/menu-ownership-suite.log`, `/tmp/menu-ownership-types.log`, and
+`/tmp/menu-ownership-structural.log` on paul.
+
+Remaining acceptance: native popup lock/dismiss/unlock behavior plus representative
+asset overflow and Android choice selection, preserving selection/destructive
+semantics. VoiceOver/TalkBack behavior is not established by host-component fakes.
+No new release is claimed. Critic identified retained trigger reopening after
+unlock; two failing cases reproduced it. Trigger and accessibility dispatch now
+share the committed owner guard; five focused cases pass after correction. Final
+critic review found no remaining confirmed source blocker.
 
 ### M55 — Inbox open completion outlives its navigation intent
 

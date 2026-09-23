@@ -8,3 +8,6 @@ export const Picker='SwiftUIPicker';
 export const LabeledContent='SwiftUILabeledContent';
 export const TextField='SwiftUITextField';
 export const ColorPicker='SwiftUIColorPicker';
+export const Menu='SwiftUIMenu';
+export const Section='SwiftUISection';
+export const Image='SwiftUIImage';
