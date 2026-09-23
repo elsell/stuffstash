@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { MoveSelectionList } from '../components/MoveSelectionList';
 import type { MoveSelectionRowModel, MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
@@ -316,6 +317,7 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
+  const headerHeight = useHeaderHeight();
   const creationExpanded = draft?.creationName !== undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -364,7 +366,8 @@ export function MoveAssetSheet({
   }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <Frame style={Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor}>
+    <Frame style={[Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor,
+      Platform.OS === 'ios' && creationExpanded ? { paddingTop: headerHeight + spacing.sm } : undefined]}>
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
@@ -376,7 +379,7 @@ export function MoveAssetSheet({
           ...(draft?.matches ?? []).map(toRow)]}
         retainedSelection={draft?.selectedParent && !draft.matches.some(match => match.id === draft.selectedParent?.id)
           ? toRow(draft.selectedParent) : undefined} /> :
-      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {creationExpanded ? (
           <View style={styles.createDestinationPanel}>
             <Text style={styles.inputLabel}>Name</Text>

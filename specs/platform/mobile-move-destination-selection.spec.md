@@ -162,3 +162,22 @@ took4.23 seconds and returned false before the five-second deadline. Recorded
 post-failure state confirms finite, hittable keyboard and t key. Permit the same
 bounded30-second readiness observation for this case, retaining all geometry,
 hittability and exact-text checks. Leave other readiness deadlines unchanged.
+
+
+## Creation form header ownership
+
+Run35911803207 confirms the iPhone new-destination field starts at y99 while the
+native header ends at y116. The focused React Native creation form must reserve
+the current measured native header height on iOS, with automatic scroll content
+insets disabled so there is one inset owner. Keep SwiftUI selection-list inset
+ownership unchanged. The form must remain reachable after choosing Kind and
+returning from cancellation, with keyboard avoidance and retained draft intact.
+No hard-coded device/header height is allowed. Existing native creation checks
+must reach and edit the name, create after a rejected attempt, and return to Move.
+For stacked Move Here search, test cleanup clears the search field directly;
+it must not use an unscoped Cancel lookup that can dismiss the task itself.
+
+Move Here keyboard cleanup observes either native dismissal after clearing or a
+hittable dismissal command, then still requires the keyboard to disappear. The
+iPad failure in run35911803207 captured no keyboard immediately after an earlier
+existence snapshot; this is a transition race, not evidence of a missing command.

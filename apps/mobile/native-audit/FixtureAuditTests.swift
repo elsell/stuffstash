@@ -554,11 +554,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(candidate.value as? String, "Selected")
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    if app.keyboards.firstMatch.exists {
-      let dismiss = app.buttons["Dismiss keyboard"].firstMatch
-      XCTAssertTrue(dismiss.isHittable); dismiss.tap()
-      XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
-    }
+    dismissMoveSearchKeyboardIfNeeded()
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertEqual(candidate.value as? String, "Selected")
     let header = app.navigationBars["Move something here"]
@@ -594,6 +590,18 @@ final class FixtureAuditTests: XCTestCase {
     verifyMoveHereSuggestionsRecovery(captureSuffix: "accessibility-size")
   }
 
+  private func dismissMoveSearchKeyboardIfNeeded() {
+    let keyboard = app.keyboards.firstMatch
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    // Clearing native search can dismiss the keyboard before this snapshot settles.
+    let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !keyboard.exists || dismiss.isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 5), .completed)
+    if keyboard.exists && dismiss.isHittable { dismiss.tap() }
+    XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
+  }
+
   private func verifyMoveHereSuggestionsRecovery(captureSuffix: String) {
     let open = app.buttons["Audit Move here recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -618,7 +626,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.descendants(matching: .any)["Choose item Audit tent"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
     capture("move-here-suggestions-recovered-\(captureSuffix)")
-    resetNativeSearch(query)
+    let clear = query.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable); clear.tap()
+    dismissMoveSearchKeyboardIfNeeded()
     let cancel = app.navigationBars["Move something here"].buttons["Cancel"].firstMatch
     XCTAssertTrue(cancel.waitForExistence(timeout: 5)); XCTAssertTrue(cancel.isHittable)
     cancel.tap()
