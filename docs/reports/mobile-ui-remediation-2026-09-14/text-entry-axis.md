@@ -265,6 +265,12 @@ product workflows. Phone10/14 and iPad11/14 comparisons pass.
 
 ## September 23 continuation
 
+The [later full-run key traces](native-text-entry-352471.md) corroborate complete
+key receipt despite corrupted values. Read the earlier provider-free comparison
+linked there before repeating accessory/provider experiments; those exclusions
+have already been tested. Native backing-field/edit/writeback instrumentation is
+the next unresolved boundary, not another broad production input substitution.
+
 Focused native run35803226783 tests source253414943d3549ff581dd8e8c39872e189cf5ea9
 on iPhone17 and iPad mini. It includes the prepared key-event recorder and retains
 the ordinary typing/exact-value requirements. Both jobs were confirmed running;
