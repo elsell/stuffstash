@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { SettingsSection, useSettingsListStyles } from './SettingsList';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { MoveSelectionList } from '../components/MoveSelectionList';
 import type { MoveSelectionRowModel, MoveSelectionStatus } from '../components/MoveSelectionList.types';
@@ -318,6 +319,7 @@ export function MoveAssetSheet({
   readonly onSelectRoot: () => void;
 }) {
   const headerHeight = useHeaderHeight();
+  const { styles: settingsStyles } = useSettingsListStyles();
   const creationExpanded = draft?.creationName !== undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -367,6 +369,7 @@ export function MoveAssetSheet({
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
     <Frame style={[Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor,
+      creationExpanded ? { backgroundColor: palette.background } : undefined,
       Platform.OS === 'ios' && creationExpanded ? { paddingTop: headerHeight + spacing.sm } : undefined]}>
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
@@ -381,23 +384,26 @@ export function MoveAssetSheet({
           ? toRow(draft.selectedParent) : undefined} /> :
       <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {creationExpanded ? (
-          <View style={styles.createDestinationPanel}>
-            <Text style={styles.inputLabel}>Name</Text>
-            <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
-              editable={!disabled} placeholder="Place or container name" style={styles.input}
-              onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
+          <>
+            <SettingsSection title="Name">
+              <View style={settingsStyles.navigationRow}>
+                <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
+                  editable={!disabled} placeholder="Place or container name"
+                  style={[settingsStyles.rowLabel, { minHeight: 48, flex: 1 }]}
+                  onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
+              </View>
+            </SettingsSection>
+            <SettingsSection footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
+              <View style={settingsStyles.navigationRow}>
+                <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
+                  value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+                  includeEmptyOption={false} disabled={disabled}
+                  onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
+              </View>
+            </SettingsSection>
             {creationStatus}
-            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
-              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
-              includeEmptyOption={false} disabled={disabled}
-              onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
-            <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
-            <Text style={styles.createPlacementText}>
-              {moveDestinationCreatePlacementLabel(createPlacement)}
-            </Text>
-            <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
             {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Creating destination…</Text> : null}
-          </View>
+          </>
         ) : null}
       </ScrollView>}
     </Frame>
@@ -567,27 +573,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  createDestinationPanel: {
-    backgroundColor: colors.brandDustyBlueSoft,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-    marginVertical: spacing.xs,
-    padding: spacing.sm
-  },
-  createKindHelp: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    paddingHorizontal: spacing.xs
-  },
-  createPlacementText: {
-    color: colors.accentStrong,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 18,
-    paddingHorizontal: spacing.xs
-  },
   parentSubtitle: {
     color: colors.textMuted,
     fontSize: 13,

@@ -482,8 +482,12 @@ final class FixtureAuditTests: XCTestCase {
     reveal(newDestination); newDestination.tap()
     let name = app.textFields["New destination name"].firstMatch
     XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
-    capture("move-destination-creation-entry")
+    XCTAssertTrue(name.isHittable)
+    XCTAssertGreaterThanOrEqual(name.frame.minY, app.navigationBars["New destination"].frame.maxY)
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
+    XCTAssertTrue(kind.isHittable)
+    XCTAssertGreaterThanOrEqual(kind.frame.minY, name.frame.maxY)
+    capture("move-destination-creation-entry")
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()

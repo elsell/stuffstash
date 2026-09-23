@@ -46,3 +46,16 @@ and floating centered text commands. Native search is currently collapsed behind
 an iPhone toolbar icon and expanded in the reviewed iPad capture; compare matching
 states before claiming platform consistency. Reuse native list/toolbar patterns;
 SettingsChoiceRow is a custom React Native row, not a system-native list.
+
+### Creation form coherence
+
+Run35917033325 iPad passes all four Move workflows, and reviewed selection/recovery
+captures have aligned native sections and visible search. Its creation capture
+still uses a blue custom panel, inconsistently inset explanatory text and very
+heavy labels. Keep the functional result separate from this visual finding.
+Replace the creation panel with the shared grouped form: a Name section, an
+in-place Kind picker section with a single explanatory footer, and native
+Cancel/Create. Use the same neutral background and row alignment as Add place.
+Preserve independent naming, placement policy, pending guards and retry. Verify
+name/header clearance and nonoverlapping Kind on phone/iPad, and inspect the whole
+form; no standalone custom panel or new action navigation is needed.
