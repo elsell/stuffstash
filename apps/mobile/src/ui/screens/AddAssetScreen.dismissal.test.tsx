@@ -211,7 +211,9 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
         const create = h.byLabel('Create place');
         expect(create).toBeDefined();
         await h.run(() => { void create!.props.onPress(); });
-        expect(h.byLabel('Creating place…')?.props.accessibilityState).toMatchObject({ disabled: true });
+        expect(h.byText('Creating place…')).toBeDefined();
+        expect(h.byLabel('Create place')?.props.disabled).toBe(true);
+        expect(h.byLabel('Cancel new place')?.props.disabled).toBe(true);
       } else {
         await h.press(h.all().find(node => node.props.accessibilityHint === 'Choose camera or photo library'));
         await h.run(() => { void pressAlertButton(operation === 'camera-failure' ? 'Take Photo' : 'Choose from Library'); });
@@ -426,6 +428,8 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.press(h.byLabel('New place'));
     expect(h.byLabel('New place name')?.props.value).toBe('New parent');
     await h.changeText(h.byLabel('New place name'), '');
+    expect(h.byLabel('Create place')?.props.disabled).toBe(true);
+    await h.press(h.byLabel('Cancel new place'));
     expect(h.byText('Not selected yet')).toBeUndefined();
     expect(h.byText('Current: Top level in this inventory')).toBeDefined();
   } finally { await h.unmount(); }

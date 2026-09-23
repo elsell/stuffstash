@@ -1979,10 +1979,13 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(element.isHittable)
     }
     func search(_ query: String) {
-      let button = app.buttons["Search"].firstMatch
-      XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
       let field = app.searchFields.firstMatch
-      XCTAssertTrue(field.waitForExistence(timeout: 5)); waitForKeyboard(keyLabel: "t"); field.typeText(query)
+      if !field.exists {
+        let button = app.buttons["Search"].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
+      }
+      XCTAssertTrue(field.waitForExistence(timeout: 5)); XCTAssertTrue(field.isHittable)
+      field.tap(); waitForKeyboard(keyLabel: "t"); field.typeText(query)
       let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
       XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
       app.buttons["Dismiss keyboard"].firstMatch.tap()
@@ -2016,12 +2019,24 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
     reveal(newPlace, in: destinations); newPlace.tap()
     XCTAssertEqual(app.textFields["New place name"].firstMatch.value as? String, "Audit shed")
-    let create = app.buttons["Create place"].firstMatch
-    reveal(create, in: destinations); create.tap()
+    XCTAssertTrue(app.navigationBars["New place"].exists)
+    let cancelCreation = app.navigationBars["New place"].buttons["Cancel new place"].firstMatch
+    XCTAssertTrue(cancelCreation.isHittable)
+    capture("add-destination-creation-entry")
+    cancelCreation.tap()
+    XCTAssertTrue(app.navigationBars["Put in"].waitForExistence(timeout: 5))
+    XCTAssertTrue(newPlace.isHittable); newPlace.tap()
+    XCTAssertTrue(app.navigationBars["New place"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.textFields["New place name"].firstMatch.value as? String, "Audit shed")
+    let create = app.navigationBars["New place"].buttons["Create place"].firstMatch
+    XCTAssertTrue(create.isHittable); create.tap()
     XCTAssertTrue(app.staticTexts["Place creation unavailable. Try again."].firstMatch.waitForExistence(timeout: 5))
     capture("add-destination-creation-retry")
-    reveal(create, in: destinations); create.tap()
-    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(create.isHittable); create.tap()
+    XCTAssertTrue(app.navigationBars["New place"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(create.waitForNonExistence(timeout: 5))
+    let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: choose)
+    XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
     XCTAssertEqual(choose.value as? String, "Audit shed")
     XCTAssertEqual(name.value as? String, "Tent")
     capture("add-destination-created-and-returned")

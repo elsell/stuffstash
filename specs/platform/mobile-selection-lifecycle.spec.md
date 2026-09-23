@@ -89,3 +89,20 @@ input code for this evidence. If this observation still fails, inspect the final
 state and stop repeating the same experiment. Slow visible entry remains a
 product performance concern if runtime evidence establishes it; a longer test
 observation budget does not certify responsiveness.
+
+## Add destination creation task layout
+
+Run35903554297 passes all four selection workflows on phone/iPad, but its iPad
+creation-retry capture clips Cancel new place inside the grouped panel. Functional
+completion does not accept this layout. Apply the same task distinction as Move:
+a native New place toolbar action opens a focused creation form with native
+Cancel/Create commands. Cancel returns to destination selection and retains the
+Add draft; Create retains existing validation, immediate persistence, retry and
+return with the new destination selected. Hide competing destination choices
+while creating. Keep the immediate-save explanation in the creation form.
+
+The searchable destination picker uses stacked native search, as Move does, so
+search and the secondary creation action are both discoverable. The system header
+owns command spacing and hit targets; do not stack intrinsic SwiftUI command hosts
+inside a clipped React Native group. Retain keyboard ownership and busy guards.
+Verify matching phone/iPad creation entry, error/retry, cancellation, and return.

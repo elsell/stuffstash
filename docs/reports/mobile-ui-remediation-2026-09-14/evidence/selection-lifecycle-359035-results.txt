@@ -1,0 +1,16 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35903554297
+Source b15f5d2b8c9503ad148651548a24764442e2a687
+All four selection lifecycle cases pass on iPhone17 and iPad mini.
+No production text/provider changes. Exact names, downstream draft retention,
+creation retry, canceled selection, rejected save and unfinished tag checks pass.
+This closes the prior exact-value observation gate; it does not certify input
+responsiveness. Recorded observation time includes XCTest accessibility work.
+Visual review: phone destination return keeps Tent and Audit shed. iPad tag list
+and footer remain separate. iPad new-place retry clips Cancel new place in its
+panel. Creation-task layout is NOT accepted; replace inline creation commands
+with native header ownership and a focused form before this batch ships.
+
+ipad-testAddDestinationSelectionPreservesDraftAndRecoversCreation-selection-text-observation-timing.txt: Exact text observation elapsed: 7.897801995277405 seconds; result: 1
+ipad-testAddRetainsUnfinishedTagAcrossDetailsDisclosure-selection-text-observation-timing.txt: Exact text observation elapsed: 1.5466219186782837 seconds; result: 1
+phone-testAddDestinationSelectionPreservesDraftAndRecoversCreation-selection-text-observation-timing.txt: Exact text observation elapsed: 1.7828500270843506 seconds; result: 1
+phone-testAddRetainsUnfinishedTagAcrossDetailsDisclosure-selection-text-observation-timing.txt: Exact text observation elapsed: 1.4403209686279297 seconds; result: 1
