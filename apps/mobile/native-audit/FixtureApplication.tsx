@@ -1,3 +1,4 @@
+export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
 import { useInputEventTrace } from './InputEventTrace';
 export { AndroidHeaderCompositionFixture } from './AndroidHeaderCompositionFixture';
@@ -138,6 +139,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-customization" options={{ title: 'Tags' }} />
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
+      <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
@@ -230,6 +232,7 @@ export function FixtureMenu() {
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
     <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
+    <Button title="Audit menu ownership" onPress={() => router.push('/audit-menu-ownership' as Href)} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />

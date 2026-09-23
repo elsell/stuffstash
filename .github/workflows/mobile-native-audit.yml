@@ -19,6 +19,7 @@ on:
           - home-header
           - filters
           - release-corrections
+          - menu-ownership
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -89,6 +90,14 @@ jobs:
           audit_test_args=()
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            menu-ownership)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeMenuLocksOpenActionsAndRecovers'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
             search-placement)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(

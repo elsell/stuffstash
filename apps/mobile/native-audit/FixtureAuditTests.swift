@@ -17,6 +17,41 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testNativeMenuLocksOpenActionsAndRecovers() {
+    let entry = app.buttons["Audit menu ownership"].firstMatch
+    for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(entry.isHittable); entry.tap()
+    let trigger = app.buttons["Menu ownership actions"].firstMatch
+    XCTAssertTrue(trigger.waitForExistence(timeout: 5))
+    app.buttons["Lock menu shortly"].tap()
+    trigger.tap()
+    let command = app.buttons["Run menu command"].firstMatch
+    XCTAssertTrue(command.waitForExistence(timeout: 3))
+    XCTAssertTrue(app.staticTexts["Menu locked"].waitForExistence(timeout: 10))
+    let locked = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !command.exists || !command.isEnabled
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [locked], timeout: 5), .completed)
+    if command.exists {
+      XCTAssertFalse(command.isEnabled)
+      command.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+    XCTAssertTrue(app.staticTexts["Menu activations: 0"].exists)
+    capture("menu-owner-locked")
+    // Tapping outside an open native menu dismisses it without choosing an item.
+    if command.exists { app.navigationBars["Menu ownership"].tap() }
+    XCTAssertTrue(command.waitForNonExistence(timeout: 5))
+    let unlock = app.buttons["Unlock menu"].firstMatch
+    XCTAssertTrue(unlock.isHittable); unlock.tap()
+    XCTAssertTrue(app.staticTexts["Menu ready"].waitForExistence(timeout: 5))
+    XCTAssertFalse(command.exists, "Unlock must not reopen a dismissed menu")
+    trigger.tap()
+    XCTAssertTrue(command.waitForExistence(timeout: 5)); XCTAssertTrue(command.isEnabled)
+    command.tap()
+    XCTAssertTrue(app.staticTexts["Menu activations: 1"].waitForExistence(timeout: 5))
+    capture("menu-owner-recovered")
+  }
+
   func testNotificationInboxReadStateAndNavigationReturn() {
     let entry = app.buttons["Audit Notifications"].firstMatch
     for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }

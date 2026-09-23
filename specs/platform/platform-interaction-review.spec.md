@@ -14,6 +14,14 @@ Keep iOS/Android native controls, selected/destructive semantics and grouping.
 Tests must retain a real rendered adapter callback across these transitions;
 source tests do not establish native popup refresh or assistive-tech behavior.
 
+Native acceptance uses a runner-only menu fixture with a bounded delayed lock,
+visible lock/activation state, explicit unlock and timer cleanup on removal.
+Open the production adapter before the lock, require disabled items or a dismissed
+popup, verify no activation, then unlock and execute one fresh command. Run this
+on phone/iPad with representative filter choice and destructive-command workflows.
+This checks native presentation and delivery; retained-event ownership remains
+covered by the mounted callback tests. No production data is mutated.
+
 ## Native Sharing access fixtures
 
 Runner-only Sharing scenarios may seed a permissionless scope, one rejected access
