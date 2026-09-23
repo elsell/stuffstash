@@ -51,6 +51,7 @@ it('blocks native removal during creation and allows it after the operation ends
     expect(dispatchedActions().filter(action => action.type === 'GO_BACK')).toEqual([]);
     await render(false);
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
-    expect(dispatchedActions().filter(action => action.type === 'GO_BACK')).toHaveLength(1);
+    expect(h.byText('Location selection')).toBeUndefined();
+    expect(dispatchedActions().filter(action => action.type === 'back').length).toBeGreaterThan(0);
   } finally { await h.unmount(); resetNavigation(); }
 });

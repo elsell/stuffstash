@@ -67,3 +67,12 @@ choices with rejected item save, permission loss, blurred opening, actual route
 removal and pending-operation protection. Code review found no source blocker.
 Native Android acceptance and iPhone/iPad acceptance remain separate requirements;
 these checks do not prove device navigation, keyboard or visual behavior.
+
+Android connected acceptance on source552e7c1b reached search/cancel, direct
+selection, rejected item save and creation failure/retry, but crashed on creation
+success return with ScreenStackFragment added into a non-stack container during
+header update. Keep route removal protection installed throughout the visit and
+its exit, following HomeReturnDetailsRoute; read current task state in the removal
+callback. A live task cancels only when unlocked; a completed task dispatches the
+original removal. Do not toggle native removal configuration in the completion
+render. Reverify the connected creation-success return before native acceptance.
