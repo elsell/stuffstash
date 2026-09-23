@@ -964,6 +964,71 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse availability: available"].waitForExistence(timeout: 5))
     capture("browse-applied")
   }
+  func testBrowseFiltersDetailAndBackPreserveContext() {
+    guard openFixtureURL("search?query=Camping") else { return }
+    let filters = app.buttons["Filters"].firstMatch
+    XCTAssertTrue(filters.waitForExistence(timeout: 10)); filters.tap()
+    let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
+    XCTAssertTrue(availability.waitForExistence(timeout: 5)); availability.tap()
+    let available = app.buttons["Available"].firstMatch
+    XCTAssertTrue(available.waitForExistence(timeout: 5)); available.tap()
+    capture("connected-browse-filter-draft")
+    app.buttons["Show results"].firstMatch.tap()
+    let summary = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "18 shown", "Camping")).firstMatch
+    XCTAssertTrue(summary.waitForExistence(timeout: 10))
+    let list = app.scrollViews.firstMatch
+    let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item"))
+    let initial = app.buttons[cards.firstMatch.label].firstMatch
+    XCTAssertTrue(initial.isHittable)
+    let initialY = initial.frame.minY
+    list.swipeUp()
+    XCTAssertTrue(!initial.exists || !initial.isHittable || abs(initial.frame.minY - initialY) > 20,
+      "The list must actually move before testing scroll restoration")
+    guard let card = cards.allElementsBoundByIndex.first(where: { $0.isHittable }) else {
+      XCTFail("A filtered asset must be visible after scrolling"); return
+    }
+    let label = card.label
+    let position = card.frame.minY
+    capture("connected-browse-filter-results-scrolled")
+    card.tap()
+    XCTAssertTrue(app.navigationBars["Details"].waitForExistence(timeout: 10))
+    capture("connected-browse-filter-detail")
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    let restored = app.buttons[label].firstMatch
+    XCTAssertTrue(restored.waitForExistence(timeout: 10)); XCTAssertTrue(restored.isHittable)
+    XCTAssertEqual(restored.frame.minY, position, accuracy: 3)
+    XCTAssertTrue(summary.exists)
+    capture("connected-browse-filter-detail-return")
+  }
+
+  func testBrowseExpirationDetailAndBackPreserveContext() {
+    guard openFixtureURL("search?query=Camping") else { return }
+    let filters = app.buttons["Filters"].firstMatch
+    XCTAssertTrue(filters.waitForExistence(timeout: 10)); filters.tap()
+    let availability = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose availability")).firstMatch
+    XCTAssertTrue(availability.waitForExistence(timeout: 5)); availability.tap()
+    let available = app.buttons["Available"].firstMatch
+    XCTAssertTrue(available.waitForExistence(timeout: 5)); available.tap()
+    let menu = app.buttons["Choose expiration review"].firstMatch
+    XCTAssertTrue(menu.isHittable); menu.tap(); app.buttons["Expired"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Expiration"].waitForExistence(timeout: 10))
+    let expired = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 03")).firstMatch
+    XCTAssertTrue(expired.waitForExistence(timeout: 10)); XCTAssertTrue(expired.isHittable)
+    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch.exists)
+    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Kitchen item")).firstMatch.exists)
+    capture("connected-expiration-filter-results")
+    expired.tap()
+    XCTAssertTrue(app.navigationBars["Details"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    XCTAssertTrue(expired.waitForExistence(timeout: 10)); XCTAssertTrue(expired.isHittable)
+    capture("connected-expiration-detail-return")
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    XCTAssertTrue(filters.waitForExistence(timeout: 10))
+    let summary = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "24 shown", "Camping")).firstMatch
+    XCTAssertTrue(summary.exists)
+    capture("connected-expiration-browse-return")
+  }
+
   func testBrowseExpirationReviewUsesOverviewMenu() {
     app.buttons["Audit Browse filters"].tap()
     let menu = app.buttons["Choose expiration review"].firstMatch

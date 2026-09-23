@@ -1031,3 +1031,16 @@ between the first two cards, away from card navigation targets. Preserve anchor,
 actual content movement, Map and return assertions. This one distinguishing run
 checks accidental gesture activation versus a repeatable scroll/navigation defect;
 do not start keyboard/provider experiments or alter production layout without evidence.
+
+### Connected Browse refinement verification
+
+Verify Browse → Filters → applied results → asset detail → Back, and Browse →
+Filters → Expiration → asset detail → Back → Browse using the production route
+controllers and navigation. Fixture callbacks alone cannot establish return
+context or scroll restoration. Keep application queries injectable at route-screen
+boundaries; the production route entrypoint only binds AppServices. Runner-only
+fixtures may replace query repositories with deterministic in-memory reads and
+must preserve scope validation, query keys, route parameters and commit/cancel
+semantics. Use actual matching and filtering in those repositories, not constant
+responses that make every selection appear valid. Verify fixture read isolation
+and requested filters, then inspect normal-text phone/iPad workflow captures.

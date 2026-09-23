@@ -18,6 +18,7 @@ on:
           - add-draft
           - home-header
           - browse-journey
+          - browse-filter-journey
           - filters
           - release-corrections
           - menu-ownership
@@ -303,6 +304,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorRedEditsPreserveOtherChannelsInDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
+              )
+              ;;
+            browse-filter-journey)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationDetailAndBackPreserveContext'
               )
               ;;
             browse-journey)
