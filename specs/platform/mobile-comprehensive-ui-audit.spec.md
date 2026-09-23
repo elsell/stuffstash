@@ -1750,3 +1750,20 @@ are identifiers, not prose. Keep native draft ownership and successful-create/sc
 reset behavior. Run350950's unchanged exact-email native assertion fails visibly;
 changing keyboard traits is a candidate correction, not proof that missing typed
 characters are resolved. Preserve that native gate and submission/retry checks.
+
+
+### Enum option editing acceptance
+
+Normal-text acceptance of custom-field choices does not establish option editing.
+Exercise the production controls with a duplicate option: enter its complete text
+once, invoke Add, retain the exact draft with the duplicate explanation, clear it,
+enter a new multiword option once, add it, and observe the canonical option plus an
+empty entry field. Remove only that new draft option and preserve the existing one.
+Commands must remain reachable with the keyboard present; the existing form and
+Back destination must survive. Keep saved-option immutability in its already
+accepted separate scenario instead of replaying unrelated picker/target workflows.
+
+Use one focused native pass on phone and iPad. A failed exact-value assertion in
+this production consumer selects the established native draft-field adapter;
+it does not reopen provider-removal, key-delivery or pacing experiments. If typing
+and recovery pass, retain the existing implementation and record scoped acceptance.

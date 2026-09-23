@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, ScrollView, Text } from 'react-native';
+import { Button, KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
 import type { CustomAssetTypeDefinition, CustomFieldApplicability, CustomFieldType } from '../src/domain/customization/Customization';
+import { appKeyboardDismissMode } from '../src/ui/components/AppTextInput';
 import { CustomizationFieldControls } from '../src/ui/components/CustomizationEditorFields';
 
 const eligibleTypes: readonly CustomAssetTypeDefinition[] = Array.from({ length: 12 }, (_, index) => ({
@@ -15,7 +16,7 @@ export function CustomFieldChoicesFixture({ onBack }: { readonly onBack: () => v
   const [targetIds, setTargetIds] = useState<readonly string[]>([]);
   const [options, setOptions] = useState<readonly string[]>(['ready']);
   const [newOption, setNewOption] = useState('');
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>
+  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}><ScrollView automaticallyAdjustKeyboardInsets keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 20, gap: 20 }}>
     <Button title="Back to audit menu" onPress={onBack} />
     <Text>{`Field type: ${fieldType}`}</Text>
     <Text>{`Applicability: ${applicability}`}</Text>
@@ -25,5 +26,5 @@ export function CustomFieldChoicesFixture({ onBack }: { readonly onBack: () => v
       targetIds={targetIds} persistedTargetIds={[]} onTargets={setTargetIds}
       enumOptions={options} persistedEnumOptions={[]} onEnumOptions={setOptions}
       newOption={newOption} onNewOption={setNewOption} />
-  </ScrollView>;
+  </ScrollView></KeyboardAvoidingView>;
 }
