@@ -10,6 +10,17 @@ do not lengthen the product notice or claim the late snapshot proves it appeared
 This harness-only correction needs a focused archive-workflow run; it does not
 invalidate the independently passed menu lock/recovery and filter checks.
 
+## Onboarding fixture viewport parity
+
+Production AppServicesContent renders onboarding instead of its navigation-stack
+children. The submission fixture previously added a visible audit header and an
+in-flow observer label. Its Android keyboard clipping is not yet a confirmed
+production-layout defect. Hide that header while this fixture owns the root screen
+and position its command observer outside layout flow. Restore production viewport
+parity before choosing a keyboard/layout correction. Keep the real form, command,
+keyboard and exact submission assertions. Do not ship a layout workaround for
+space consumed only by the test harness.
+
 ## Onboarding command clearance acceptance
 
 M35 remains a normal-text acceptance gap: existing Connect tests explicitly dismiss

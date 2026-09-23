@@ -48,7 +48,7 @@ inspected screenshots or whole-surface acceptance. See [iPad evidence limit](nat
 
 | M34 | Time-zone search uses a plain custom field instead of native navigation search | Implemented; native pending | Shared native search preserves readable-city/IANA matching and cancellation without save. Two focused remote tests, check/structural pass; critic no blockers. Verify title integration and route cleanup natively |
 
-| M35 | Onboarding Connect is largely covered by the phone keyboard | Open; native-confirmed in submission fixture | Run34906713382 retains full URL but Connect tap does not submit; inspected screenshot shows only a thin portion above the keyboard. Explicit dismissal can unblock command testing, but does not resolve keyboard layout |
+| M35 | Onboarding Connect is largely covered by the phone keyboard | Fixture viewport corrected; Android passes; iOS verification pending | Production setup replaces the navigation stack. Removing the audit-only header/in-flow observer yields Android Connect bounds[63,1188][1017,1313], above IME top1517, and exact one-tap submission without production changes. APK8db5032592a7e18b5f9fab0dfd2a724d9cf4d53aa1ec1329fe3a0ac3c686aea6. See [ready capture](evidence/android-onboarding-parity-ready.png), [geometry](evidence/android-onboarding-parity-ready.xml), and [submission](evidence/android-onboarding-parity-submitted.xml). The earlier header-bearing fixture cannot by itself prove a shipped layout defect. |
 
 | M36 | Type reminder mode uses custom choice rows for three flat values | Implemented; native pending | Shared native Reminders picker preserves inheritance, failed selection and Discard. Six focused remote tests, typecheck/structural pass; critic no blockers. Native Custom/defaults scenario added |
 

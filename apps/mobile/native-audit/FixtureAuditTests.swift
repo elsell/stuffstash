@@ -1813,7 +1813,9 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
     let address = app.textFields["Server address"]
-    XCTAssertTrue(address.waitForExistence(timeout: 5)); address.tap()
+    XCTAssertTrue(address.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.navigationBars["Native UI audit"].isHittable, "Production setup has no navigation header")
+    address.tap()
     waitForKeyboard()
     address.typeText("https://example.invalid")
     XCTAssertEqual(address.value as? String, "https://example.invalid")

@@ -347,8 +347,9 @@ function OnboardingSubmissionFixture() {
   const [command] = useState(() => new OnboardingCommand(fakes.profiles, () => fakes.api, fakes.auth));
   const [state, setState] = useState<OnboardingStartState>({ step: 'instance' });
   return <View style={{ flex: 1 }}>
+    <Stack.Screen options={{ headerShown: false }} />
     <OnboardingScreen command={command} initialState={state} onStateChange={setState} onComplete={() => {}} />
-    <Text>{`Submitted address: ${fakes.auth.signIns.at(-1) ?? 'none'}`}</Text>
+    <Text pointerEvents="none" style={{ position: 'absolute', bottom: 0 }}>{`Submitted address: ${fakes.auth.signIns.at(-1) ?? 'none'}`}</Text>
   </View>;
 }
 
