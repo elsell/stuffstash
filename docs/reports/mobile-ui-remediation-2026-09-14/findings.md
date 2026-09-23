@@ -3874,3 +3874,16 @@ Done/Cancel, scope teardown and native-back cancellation. Remote mounted checks
 cover retained drafts, hidden selections, missing tag assignments and stale
 callbacks. Native runtime acceptance is pending. Keep outside the frozen release
 and the separately verified creation-disclosure fixes M264/M267.
+
+### M269 — Add location search edits the draft before selection
+
+P2 core-interaction/pattern finding. Add's inline ParentPicker nests a scrolling
+result list in the asset form. Its search callback changes parentQuery and clears
+parentAssetId immediately; collapsing the picker offers no restoration boundary.
+Android normal-text review confirms the custom inline presentation; search stayed
+visible, so no offscreen-field defect is claimed. Move already uses a dedicated
+destination-first task. Decision: a native navigation-owned single-selection
+visit with local query, tap-to-apply, cancellation preserving the original parent,
+and explicit secondary creation. See mobile-add-location-selection.spec.md.
+Implementation and full native acceptance remain pending; not a release gate for
+M260–M264 or M265–M268.

@@ -38,6 +38,14 @@ measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
 interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.
 
+The M260–M264 release remains frozen while its corrected native Move and Browse
+measurements complete. Keep follow-up changes separate: M265/M266 have scoped
+phone/iPad acceptance; M267/M268 continue creation/selection acceptance. The next
+core interaction is Add destination selection (M269): isolate search from the
+asset draft and replace the custom nested chooser with a native selection visit.
+See `mobile-add-location-selection.spec.md`. Unrelated findings do not gate a
+verified frozen release batch.
+
 Latest verified delivery is TestFlight0.24.31(122.1), with exact-build changelog
 verification in run35866654390 (M257/M258). The next frozen batch is M260–M264:
 stable Browse switching, task-focused Edit/Move, adaptive tablet density and
