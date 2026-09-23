@@ -34,6 +34,9 @@ Small single-value choices elsewhere must retain their in-place native menus.
 - Search matches tag names, preserves all selected IDs when results change, and
   distinguishes no matches from no tags. Provide a way to review selected tags
   without clearing the user's query or silently dropping hidden selections.
+- Assigned IDs absent from the current tag list remain selected until explicitly
+  removed. Selected review exposes these as unavailable tags with removal controls;
+  it must not claim no selection or expose raw IDs as names.
 - Keep optional New tag creation in the owning form as specified by M264/M267.
   Pending new tags and unfinished creation input survive an existing-tag
   selection visit. Selection must not create or mutate inventory tags remotely.
