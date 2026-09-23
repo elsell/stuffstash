@@ -201,6 +201,13 @@ on the existing APK690c2fdf; [reviewed evidence](evidence/android-edit-normal-re
 The independent iOS acceptance run35847685581 is running at37584855; its sleeping
 collector retains terminal outcomes. It does not change or block the enum release.
 
+Normal-text Edit tag recovery now passes on Android using that same APK: exact
+entry, unstaged-draft protection, staged-tag retention, collapsed selections and
+Discard. [Evidence](evidence/android-edit-tags-normal-results.txt). The shared native
+scenario adds default-text coverage with explicit staged-tag and editor-exit checks;
+remote fixture/structural checks and critic review pass. Focused iOS `edit-tags`
+acceptance is queued atb52d5538 behind the existing Edit run, not a replacement.
+
 ### Custom-field choices — scoped acceptance complete
 
 M02/M11's real create-form composition passes all intermediate selections on both

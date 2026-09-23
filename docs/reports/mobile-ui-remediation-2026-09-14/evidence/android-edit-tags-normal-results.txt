@@ -1,0 +1,4 @@
+Android API36 Pixel6, default text, light; existing APK690c2fdf4b09e4f3fe5e281d4f9042cc34836acab628acddf754777bc35b5cd5.
+Passed exact Camping entry, disabled Save while unstaged, Cancel/Keep editing retention, Add with Remove new tag Camping present, enabled Save, selected Tag13 and original Tag14 retained after collapse, Discard removes editor and returns to launcher.
+Driver first inspected enabled on the label child; retained XML proved the clickable Save parent disabled. Corrected to inspect command parent and resumed the same live draft. A local script-generation syntax error performed no app actions. Neither was a product defect or a replay of typing.
+Reviewed selected-extra capture. Controlled fixture; no backend persistence or assistive acceptance claim.
