@@ -74,3 +74,18 @@ observation cost, not a proved production focus defect. One corrected lifecycle
 run distinguishes exhausted observation time from a persistent focus failure. If
 phone focus still fails, retain that failed gate and choose an input-lifecycle
 correction from its evidence rather than repeating keyboard experiments.
+
+
+## Native run 35896778173 decision
+
+Phone completes all four selection workflows. iPad completes Add/Edit Tags; the
+other two cases stop at five-second exact-value predicates after typing, while
+both final screenshots and accessibility trees contain exact Tent/Camping. This
+does not establish input loss or completion of the later steps. Allow one bounded
+30-second accessibility-value observation after typing in these two cases, record
+the elapsed observation time, and retain exact equality and all later assertions.
+Do not retype, inject state, change the keyboard provider, or change production
+input code for this evidence. If this observation still fails, inspect the final
+state and stop repeating the same experiment. Slow visible entry remains a
+product performance concern if runtime evidence establishes it; a longer test
+observation budget does not certify responsiveness.

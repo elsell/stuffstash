@@ -1952,6 +1952,18 @@ final class FixtureAuditTests: XCTestCase {
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
+  private func waitForExactEnteredText(_ text: String, in field: XCUIElement) {
+    let started = Date()
+    let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", text), object: field)
+    let result = XCTWaiter.wait(for: [entered], timeout: 30)
+    let timing = XCTAttachment(string: "Exact text observation elapsed: \(Date().timeIntervalSince(started)) seconds; result: \(result.rawValue)")
+    timing.name = "selection-text-observation-timing"
+    timing.lifetime = .keepAlways
+    add(timing)
+    XCTAssertEqual(result, .completed)
+    XCTAssertEqual(field.value as? String, text)
+  }
+
   func testAddDestinationSelectionPreservesDraftAndRecoversCreation() {
     guard openFixtureURL("audit-add-destination") else { return }
     let name = app.textFields["Asset name"].firstMatch
@@ -1971,8 +1983,7 @@ final class FixtureAuditTests: XCTestCase {
       app.buttons["Dismiss keyboard"].firstMatch.tap()
     }
     name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
-    let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
-    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+    waitForExactEnteredText("Tent", in: name)
     app.buttons["Dismiss keyboard"].firstMatch.tap()
     let choose = app.buttons["Choose destination"].firstMatch
     reveal(choose, in: form); choose.tap(); search("Shelf 14")
@@ -2093,9 +2104,7 @@ final class FixtureAuditTests: XCTestCase {
     name.tap()
     waitForKeyboard(keyLabel: "T")
     name.typeText("Tent")
-    let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
-    XCTAssertEqual(name.value as? String, "Tent")
+    waitForExactEnteredText("Tent", in: name)
     dismissKeyboard()
     let save = app.buttons["Save item"].firstMatch
     XCTAssertTrue(save.isEnabled)
@@ -2117,9 +2126,7 @@ final class FixtureAuditTests: XCTestCase {
     entry.tap()
     waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
-    let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)
-    XCTAssertEqual(entry.value as? String, "Camping")
+    waitForExactEnteredText("Camping", in: entry)
     dismissKeyboard()
     XCTAssertFalse(save.isEnabled)
     reveal(details)
