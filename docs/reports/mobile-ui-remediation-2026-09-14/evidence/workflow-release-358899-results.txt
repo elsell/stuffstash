@@ -1,0 +1,15 @@
+Released: 0.24.32 (123.1), 2026-09-23.
+PR171 merged as690ee8e4ae0fbec369bb65b8fcd39aabf9c9e8d6.
+Release35889902851: all four jobs succeeded.
+Job107289740775 direct log: 2026-09-23T17:06:27.2738339Z
+Verified TestFlight changelog for v0.24.32 (123.1).
+The publication script requires Apple VALID and exact English notes readback.
+
+Notes:
+- Keep the List and Map switcher in the same place while browsing.
+- Edit items with persistent Save and Cancel controls.
+- Choose a move destination before opening optional destination creation.
+- Show more useful Browse columns on iPad.
+- Create new tags only when needed, without losing other edits.
+
+Scope: frozen M260–M264. M265–M273 remain a separate draft batch.

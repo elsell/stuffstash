@@ -39,9 +39,9 @@ interaction pattern is reviewed. Preserve bounded investigation and quiet sleepi
 scripts that report terminal results, not repeated unchanged waiting messages.
 
 M260–M264 merged in PR171 at690ee8e4 after final Browse run35887017924
-passed on phone/iPad and required CI passed on ddcb700c. Release35889902851 is
-running; latest verified TestFlight remains0.24.31(122.1) until exact-build Apple
-processing and changelog verification succeed. Do not widen this frozen batch.
+passed on phone/iPad and required CI passed on ddcb700c. Release35889902851
+completed: TestFlight0.24.32(123.1) Apple processing and exact changelog readback
+verified. This batch is delivered.
 
 The next batch is frozen to M265–M273 on codex/mobile-selection-batch: hierarchy,
 Add/Edit selection, draft retention and consistent Move/Move Here interactions.

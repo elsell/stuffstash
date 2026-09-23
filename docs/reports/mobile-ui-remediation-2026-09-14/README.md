@@ -6,13 +6,11 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery and frozen batch
 
-Latest verified TestFlight: **0.24.31 (122.1)**, with Apple processing and exact
-[changelog readback](evidence/edit-move-release-358666-results.txt).
-
-M260–M264 merged in [PR171](https://github.com/elsell/stuffstash/pull/171).
-Its [release35889902851](https://github.com/elsell/stuffstash/actions/runs/35889902851)
-has been dispatched; final delivery is not yet verified. Final Browse run35887017924
-passed on phone/iPad, and required CI passed on ddcb700c before merge.
+Latest verified TestFlight: **0.24.32 (123.1)** — M260–M264, with Apple processing
+and exact [changelog readback](evidence/workflow-release-358899-results.txt).
+[PR171](https://github.com/elsell/stuffstash/pull/171) merged as690ee8e4;
+release35889902851 succeeded. Final Browse run35887017924 passed on phone/iPad,
+and required CI passed on ddcb700c before merge.
 
 The next batch is frozen to **M265–M273**, [draft PR173](https://github.com/elsell/stuffstash/pull/173):
 Map/detail hierarchy, optional Add tag creation, Add/Edit tag selection, Add
@@ -25,7 +23,7 @@ Unrelated findings do not block either release.
 
 | Workflow | Established evidence | Remaining acceptance |
 | --- | --- | --- |
-| Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivery verification for PR171; no unchanged layout rerun. |
+| Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivered in0.24.32; no unchanged layout rerun. |
 | Map/detail hierarchy | M265/M266 scoped phone/iPad acceptance passed in35874901875; Android captures retained. | Preserve in the integrated batch; no claim of whole-detail acceptance. |
 | Add/Edit selection | Run35880132749 showed an empty Add name after Tags and Edit Tags behind its modal owner. M271 keeps the current native reappearance seed; M272 presents selection above its owner. | Grouped [35890124446](https://github.com/elsell/stuffstash/actions/runs/35890124446): name retention, visible/tappable selection, Cancel/Done, destination creation/retry and unfinished tag disclosure. |
 | Move | M270 separates search from creation name and preserves Kind/Create during editing. Android connected creation/move retry passed. | Corrected grouped Move/Move Here native run below; retain exact query/name and selected state assertions. |
@@ -34,7 +32,7 @@ Unrelated findings do not block either release.
 The integrated source run passed1,968/1,970 tests. The two failures enforced removed
 inline Add structure and a hidden Move Here header. Corrected expectations and all
 54 other tests in those files pass. TypeScript, structural checks, fixture preparation
-and critic review pass. CI35891523435 is the current integration gate. These checks
+and critic review pass. All six CI35891523435 jobs passed at336e17ef. These checks
 do not establish native presentation or physical-device behavior.
 
 ## Separate unresolved decisions
