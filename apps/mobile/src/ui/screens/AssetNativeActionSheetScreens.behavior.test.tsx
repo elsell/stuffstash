@@ -182,11 +182,9 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
       expect(h.byText('Selected: Camping box')).toBeUndefined();
       expect(h.byLabel('Move')?.props.disabled).toBe(true);
     }
-    const input = h.byLabel('Find item, box, or place');
     const retainedSearch = moveSearch.options;
-    if (mode === 'move') await h.run(() => moveSearch.change('Camping'));
-    else await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    const candidateRow = mode === 'move' ? h.byLabel('Choose destination Camping box') : h.byText('Camping box')?.parent?.parent?.parent;
+    await h.run(() => moveSearch.change('Camping')); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    const candidateRow = h.byLabel(mode === 'move' ? 'Choose destination Camping box' : 'Choose item Camping box');
     await h.press(candidateRow ?? undefined);
     if (mode === 'move') expect(h.byText('Selected: Camping box')).toBeDefined();
     const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
@@ -198,14 +196,8 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
     expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
-    if (mode === 'move') {
-      expect(moveSearch.options).toBeUndefined();
-      await h.run(() => retainedSearch!.onChangeText({ nativeEvent: { text: 'Wrong destination' } }));
-    } else {
-      expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
-      await h.changeText(input, 'Wrong destination');
-      expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
-    }
+    expect(moveSearch.options).toBeUndefined();
+    await h.run(() => retainedSearch!.onChangeText({ nativeEvent: { text: 'Wrong destination' } }));
     const alertBefore = latestAlert();
     if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
     await h.run(() => outcome === 'failure' ? rejectSave(new Error('Failed')) : resolveSave({ id: 'asset', title: 'Tent', message: 'Moved' })); await settle(h);
@@ -215,7 +207,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
     else expect(completion).toBeUndefined();
     expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
-    expect(mode === 'move' ? moveSearch.text : h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    expect(moveSearch.text).toBe('Camping');
     if (outcome === 'failure' && !returned) {
       const action = { type: 'GO_BACK', source: mode };
       await h.run(() => attemptNavigation(action));
@@ -385,18 +377,18 @@ it('does not call failed move-here suggestions empty and recovers inside results
         moveAssetCommand={{ execute: async () => { throw new Error('Move not requested'); } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.byLabel('Find item, box, or place'), 'Tent');
+    await h.run(() => moveSearch.change('Tent'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
     const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
-    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Find item, box, or place').length).toBeGreaterThan(0);
+    expect(moveSearch.options).toBeDefined();
     expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
     expect(h.byText('No movable matches')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false;
     await h.press(h.byLabel('Retry suggestions')); await settle(h);
     expect(h.byText('No movable matches')).toBeDefined();
-    expect(h.byLabel('Find item, box, or place')?.props.value).toBe('Tent');
+    expect(moveSearch.text).toBe('Tent');
   } finally { await h.unmount(); }
 });
 
@@ -638,10 +630,10 @@ it.each(['move', 'here'] as const)('retained %s footer uses current selection an
       {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No creation requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.press(h.byText('First box')?.parent?.parent?.parent ?? undefined);
+    await h.press(h.byLabel(mode === 'move' ? 'Choose destination First box' : 'Choose item First box'));
     save = h.byLabel(mode === 'move' ? 'Move' : 'Move here')!.props.onPress;
     cancel = h.byLabel('Cancel')!.props.onPress;
-    await h.press(h.byText('Second box')?.parent?.parent?.parent ?? undefined);
+    await h.press(h.byLabel(mode === 'move' ? 'Choose destination Second box' : 'Choose item Second box'));
     await h.run(() => setScreenFocused(false));
     await h.run(save); await h.run(cancel);
     expect(submitted).toEqual([]); expect(dispatchedActions()).toEqual([]);

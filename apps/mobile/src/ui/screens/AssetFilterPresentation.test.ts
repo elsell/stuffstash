@@ -66,3 +66,9 @@ it('presents child selection above iOS modal asset forms while Android keeps car
   expect(ios).not.toHaveProperty('sheetAllowedDetents');
   expect(createAssetNativeSheetOptions(colors, 'android').selection).toMatchObject({ presentation: 'card', headerShown: true });
 });
+
+it('gives Move Here the same full-height task structure as Move', () => {
+  expect(createAssetNativeSheetOptions(colors, 'ios').moveHere).toMatchObject({
+    presentation: 'formSheet', headerShown: true, title: 'Move something here', sheetAllowedDetents: [1]
+  });
+});

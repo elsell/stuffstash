@@ -1,5 +1,9 @@
 import React from 'react';
-import { expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { NativeSearchDriver } from '../../test-support/NativeSearchDriver';
+let search: NativeSearchDriver;
+beforeEach(() => { search = new NativeSearchDriver(); });
+afterEach(() => search.dispose());
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetId } from '../../domain/assets/AssetSummary';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
@@ -36,10 +40,10 @@ for (const route of ['edit', 'move', 'move-here'] as const) {
         } else {
           if (route === 'edit') await h.changeText(h.byLabel('Asset name'), 'Updated tent');
           else {
-            await h.changeText(h.byLabel(route === 'move' ? 'Put in' : 'Find item, box, or place'), 'Camping');
+            await h.run(() => search.change('Camping'));
             await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));
             await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
-            await h.press(h.byText('Camping box')?.parent?.parent?.parent ?? undefined);
+            await h.press(h.byLabel(route === 'move' ? 'Choose destination Camping box' : 'Choose item Camping box'));
           }
           await h.press(h.byLabel(route === 'edit' ? 'Save' : route === 'move' ? 'Move' : 'Move here'));
           expect(submitted).toHaveLength(1);

@@ -7,7 +7,6 @@ import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
 import { AssetTagSelectionField } from '../components/AssetTagSelectionField';
-import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
@@ -49,7 +48,6 @@ import {
   moveDestinationCreatePlacement,
   moveDestinationCreatePlacementLabel,
   type MoveDestinationCreateKind,
-  type MoveDestinationRow,
   movePlacementPreview
 } from './AssetDetailMovePresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
@@ -365,11 +363,11 @@ export function MoveAssetSheet({
         {placement?.hasChanged ? <Text style={styles.sheetSubtitle}>{`Selected: ${placement.proposedLocationLabel}`}</Text> : null}
         {creationExpanded ? null : candidateStatus}
         {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
-        <MoveDestinationChoice label="Inventory root" context="Top level · No containing location"
+        <MoveSelectionRow label="Inventory root" context="Top level · No containing location"
           accessibilityLabel="Choose inventory root" disabled={disabled}
           selected={draft?.selectedParent === null} onPress={onSelectRoot} />
         {draft?.matches.map(match => (
-          <MoveDestinationChoice key={match.id} label={match.title}
+          <MoveSelectionRow key={match.id} label={match.title}
             context={match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`}
             accessibilityLabel={`Choose destination ${match.title}`}
             disabled={disabled || match.canSelectAsParent === false}
@@ -430,22 +428,28 @@ export function MoveThingsHereSheet({
   const disabled = isSaving || readOnly;
   const canSave = draft?.selectedAsset !== undefined && !disabled;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
+  const actions = useFocusedSheetActions({ primaryLabel: 'Move here', secondaryLabel: 'Cancel',
+    disabled: !canSave, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+    disabled: isSaving, onPress: actions.onBack }], 'left');
+  const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Move here',
+    disabled: !canSave, onPress: actions.onApply }]);
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
+    ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
+  const search = { query: draft?.query ?? '', placeholder: 'Search your inventory',
+    onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
+  const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <AssetActionKeyboardFrame style={styles.sheet}>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {Platform.OS !== 'android' ? <Text style={styles.sheetTitle}>Move something here</Text> : null}
+    <Frame style={styles.editor}>
+      <Stack.Screen options={headerOptions} />
+      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} enabled={!disabled} />
+        : !disabled ? <NativeFilterSearch {...search} /> : null}
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
-        <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
-        <Text style={styles.inputLabel}>Find item, box, or place</Text>
-        <DraftTextField
-          accessibilityLabel="Find item, box, or place"
-          editable={!disabled}
-          onChangeText={onChangeQuery}
-          placeholder="Search your inventory"
-          placeholderTextColor={palette.textMuted}
-          style={styles.input}
-          value={draft?.query ?? ''}
-        />
+        <Text style={styles.moveSubject}>{`Destination: ${draft?.target.title ?? 'this place'}`}</Text>
+        <Text style={styles.sheetSubtitle}>Choose an item, box, or place to move here.</Text>
+        {draft?.selectedAsset ? <Text style={styles.sheetSubtitle}>{`Selected: ${draft.selectedAsset.title}`}</Text> : null}
+        {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
         {candidateStatus}
         {candidatesAvailable && draft?.matches.length === 0 ? (
           <View style={styles.parentEmptyState}>
@@ -453,28 +457,15 @@ export function MoveThingsHereSheet({
             <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
           </View>
         ) : null}
-        {draft?.matches.map((match) => (
-          <ParentRow
-            disabled={disabled}
-            key={match.id}
-            isSelected={draft.selectedAsset?.id === match.id}
-            row={moveIntoCandidateRow(match)}
-            onPress={() => onSelectAsset(match)}
-          />
-        ))}
-        <MovePreview
-          left={draft?.selectedAsset?.title ?? 'Choose something'}
-          right={draft?.target.title ?? 'Here'}
-        />
+        {draft?.matches.map(match => {
+          const row = moveIntoCandidateRow(match);
+          return <MoveSelectionRow key={match.id} label={row.title}
+            context={`${row.kindLabel} · ${row.pathLabel || row.title}`}
+            accessibilityLabel={`Choose item ${row.title}`} disabled={disabled}
+            selected={draft.selectedAsset?.id === match.id} onPress={() => onSelectAsset(match)} />;
+        })}
       </ScrollView>
-      <SheetActions
-        busy={isSaving}
-        disabled={!canSave}
-        primaryLabel={isSaving ? 'Moving' : 'Move here'}
-        onClose={onClose}
-        onSave={onSave}
-      />
-    </AssetActionKeyboardFrame>
+    </Frame>
   );
 }
 
@@ -486,64 +477,10 @@ function ActionEligibilityNotice() {
   </Text>;
 }
 
-function MoveDestinationChoice(props: Parameters<typeof SettingsChoiceRow>[0]) {
+function MoveSelectionRow(props: Parameters<typeof SettingsChoiceRow>[0]) {
   const selection = useFocusedSheetActions({ primaryLabel: props.accessibilityLabel ?? props.label,
     secondaryLabel: '', disabled: props.disabled ?? false, onApply: props.onPress, onBack: () => {} });
   return <SettingsChoiceRow {...props} onPress={selection.onApply} />;
-}
-
-function ParentRow({
-  disabled, isSelected,
-  onPress,
-  row
-}: {
-  readonly disabled: boolean;
-  readonly isSelected: boolean;
-  readonly onPress: () => void;
-  readonly row: MoveDestinationRow;
-}) {
-  const styles = useStyles();
-  return (
-    <Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{ disabled, selected: isSelected }} onPress={() => { if (!disabled) onPress(); }} style={[styles.parentRow, isSelected ? styles.parentRowSelected : null, disabled && styles.disabledAction]}>
-      <View style={styles.parentTextColumn}>
-        <View style={styles.parentTitleRow}>
-          <Text style={styles.parentTitle}>{row.title}</Text>
-          <Text style={styles.parentKindPill}>{row.kindLabel}</Text>
-        </View>
-        <Text style={styles.parentPath}>{row.pathLabel}</Text>
-      </View>
-      {isSelected ? <Text style={styles.parentSelected}>Selected</Text> : null}
-    </Pressable>
-  );
-}
-
-function MovePreview({ left, right }: { readonly left: string; readonly right: string }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.movePreview}>
-      <Text style={styles.movePreviewLabel}>Move preview</Text>
-      <Text style={styles.movePreviewText}>{left}{' -> '}{right}</Text>
-    </View>
-  );
-}
-
-function SheetActions({
-  busy, disabled,
-  onClose,
-  onSave,
-  primaryLabel
-}: {
-  readonly disabled: boolean;
-  readonly onClose: () => void;
-  readonly onSave: () => void;
-  readonly primaryLabel: string;
-  readonly busy: boolean;
-}) {
-  const actions = useFocusedSheetActions({
-    primaryLabel, secondaryLabel: 'Cancel', disabled, secondaryDisabled: busy,
-    onApply: onSave, onBack: onClose
-  });
-  return <NativeSheetActions keyboardAvoidance="container" {...actions} />;
 }
 
 function useStyles() {
@@ -557,19 +494,6 @@ function createStyles(colors: MobileColorPalette) {
     flex: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    flex: 1,
-    gap: spacing.sm,
-    padding: spacing.lg,
-    paddingTop: spacing.xl
-  },
-  sheetTitle: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   moveSubject: {
     color: colors.text,
@@ -679,36 +603,12 @@ function createStyles(colors: MobileColorPalette) {
     lineHeight: 18,
     paddingHorizontal: spacing.xs
   },
-  parentRow: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    justifyContent: 'space-between',
-    minHeight: 64,
-    paddingVertical: spacing.sm
-  },
-  parentRowSelected: {
-    backgroundColor: colors.selected
-  },
   parentEmptyState: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     gap: spacing.xs,
     marginVertical: spacing.xs,
     padding: spacing.md
-  },
-  parentTextColumn: {
-    flex: 1,
-    gap: spacing.xs,
-    minWidth: 0
-  },
-  parentTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs
   },
   parentTitle: {
     color: colors.text,
@@ -717,52 +617,10 @@ function createStyles(colors: MobileColorPalette) {
     fontWeight: '900',
     letterSpacing: 0
   },
-  parentKindPill: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
-    color: colors.accentStrong,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 3
-  },
-  parentPath: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
-  },
   parentSubtitle: {
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18
-  },
-  parentSelected: {
-    color: colors.action,
-    flexShrink: 0,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  movePreview: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    padding: spacing.md
-  },
-  movePreviewLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase'
-  },
-  movePreviewText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0,
-    marginTop: spacing.xs
   },
   disabledAction: {
     opacity: 0.55

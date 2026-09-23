@@ -3903,3 +3903,20 @@ Kind/Create while editing, and reuse the shared choice rows. Keep the explicit
 Move confirmation because selection changes a proposal, not asset containment.
 See mobile-move-destination-selection.spec.md. This follow-up does not expand the
 frozen M260–M264 release or invalidate its scoped acceptance evidence.
+
+
+### M271/M272 — Selection visits lose a draft or appear behind its editor
+
+Native run35880132749 confirms Add name loss after Tags and untappable Edit Tags
+behind its modal owner. Fixes are committed at2b7a7169/ad633cd4; grouped phone/iPad
+acceptance remains pending. Current diagnosis and verification contract:
+`specs/platform/mobile-selection-lifecycle.spec.md`.
+
+### M273 — Move Here retains the old custom action-sheet structure
+
+Source-confirmed P2 task/pattern consistency defect: partial-height iOS sheet,
+form search, custom selected badges and large arrow preview diverge from Move's
+selection task. Use native search/header commands and checked rows, retaining the
+chosen item through refinement and failed submission. 81 focused source checks
+pass; native acceptance remains pending. See
+`specs/platform/mobile-move-here-selection.spec.md` for scope and acceptance.
