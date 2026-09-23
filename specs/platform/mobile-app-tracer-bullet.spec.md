@@ -123,7 +123,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Recently added, full asset lists, and search results open the same asset-detail language.
   - Add creates one asset in the selected inventory and optional parent asset.
 - Mobile asset detail must be an asset workspace, not a read-only card or a pile of unrelated buttons:
-  - A photo-first hero area must support multiple visible photo positions, stable placeholder space, and an obvious `Add photos` affordance.
+  - When photos exist, a photo-first hero area must support multiple visible photo positions, stable preview space, and an obvious `Add photos` affordance. When no photos exist, render identity, placement and its primary actions first, then compact `No photos` status and the single authorized `Add photos` command. Do not reserve a hero-sized blank panel or repeat the asset kind as placeholder content. Keep loading/error recovery distinct from a confirmed empty gallery. This hierarchy is a product decision applying [Apple’s layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout), not an Apple-mandated empty-state layout.
   - Items, containers, and locations must use the same shared asset-detail
     photo gallery and full-screen viewer. Containable assets must not suppress
     the gallery-level add-photo affordance and recreate it later as a separate

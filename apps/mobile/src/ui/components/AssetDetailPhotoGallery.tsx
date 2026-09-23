@@ -29,7 +29,6 @@ export type AssetDetailPhotoPagePresentation = {
 export type AssetDetailPhotoGalleryProps = {
   readonly canAddPhotos: boolean;
   readonly contentHorizontalPadding?: number;
-  readonly imagePlaceholderLabel: string;
   readonly onAddPhotos?: () => void;
   readonly onPhotoPress?: (photoId: string) => void;
   readonly palette?: MobileColorPalette;
@@ -58,7 +57,6 @@ export function assetDetailPhotoWidth(
 export function AssetDetailPhotoGallery({
   canAddPhotos,
   contentHorizontalPadding = defaultHorizontalPagePadding,
-  imagePlaceholderLabel,
   onAddPhotos,
   onPhotoPress,
   palette: paletteOverride,
@@ -74,20 +72,8 @@ export function AssetDetailPhotoGallery({
   if (photos.length === 0) {
     return (
       <View style={styles.gallery}>
-        <View
-          accessibilityLabel="No photos"
-          style={[
-            styles.mediaFrame,
-            styles.emptyMedia,
-            {
-              backgroundColor: palette.elevatedSurface,
-              borderColor: palette.border,
-              width: photoWidth
-            }
-          ]}
-        >
-          <Camera color={palette.textMuted} size={28} />
-          <Text style={[styles.emptyTitle, { color: palette.text }]}>{imagePlaceholderLabel}</Text>
+        <View style={styles.emptyMedia}>
+          <Camera color={palette.textMuted} size={20} />
           <Text style={[styles.emptySupporting, { color: palette.textMuted }]}>No photos</Text>
         </View>
         {canUseAddPhotos ? (
@@ -195,15 +181,9 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   emptyMedia: {
-    borderWidth: 1,
-    gap: spacing.xs,
-    minHeight: 240,
-    padding: spacing.lg
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center'
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm
   },
   emptySupporting: {
     fontSize: 15,

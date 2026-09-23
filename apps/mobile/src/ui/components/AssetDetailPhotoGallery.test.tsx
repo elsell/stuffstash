@@ -13,7 +13,7 @@ describe('asset gallery', () => {
   it('explains a failed preview and keeps opening the original photo available', async () => {
     const harness = new MobileRenderHarness(); const opened: string[] = [];
     try {
-      await harness.render(<AssetDetailPhotoGallery canAddPhotos imagePlaceholderLabel="Item" photos={photos}
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos photos={photos}
         onAddPhotos={() => {}} onPhotoPress={id => opened.push(id)} />);
       await harness.run(() => harness.allByType('Image')[0]?.props.onError?.({ nativeEvent: { error: 'private URL' } }));
       expect(harness.allText()).toContain('Preview unavailable');
@@ -29,7 +29,7 @@ describe('asset gallery', () => {
   it('starts fresh for replacement preview credentials and ignores obsolete failure callbacks', async () => {
     const harness = new MobileRenderHarness();
     const render = (currentPhotos: readonly AssetPhotoViewModel[]) => harness.render(
-      <AssetDetailPhotoGallery canAddPhotos={false} imagePlaceholderLabel="Item" photos={currentPhotos} />);
+      <AssetDetailPhotoGallery canAddPhotos={false} photos={currentPhotos} />);
     try {
       await render(photos);
       const oldFailure = harness.allByType('Image')[0]?.props.onError;
@@ -57,7 +57,7 @@ describe('asset gallery', () => {
   it.each([{ photos: [] }, { photos }])('keeps a separate Add photos command for empty and populated galleries', async ({ photos: currentPhotos }) => {
     const harness = new MobileRenderHarness(); let added = 0;
     try {
-      await harness.render(<AssetDetailPhotoGallery canAddPhotos imagePlaceholderLabel="Item" photos={currentPhotos}
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos photos={currentPhotos}
         onAddPhotos={() => { added++; }} />);
       await harness.press(harness.byLabel('Add photos'));
       expect(added).toBe(1);
@@ -69,7 +69,7 @@ describe('asset gallery', () => {
   it.each([false, true])('omits Add photos when permission or its handler is absent', async canAddPhotos => {
     const harness = new MobileRenderHarness();
     try {
-      await harness.render(<AssetDetailPhotoGallery canAddPhotos={canAddPhotos} imagePlaceholderLabel="Item" photos={photos}
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos={canAddPhotos} photos={photos}
         {...(!canAddPhotos ? { onAddPhotos: () => {} } : {})} />);
       expect(harness.byLabel('Add photos')).toBeUndefined();
     } finally { await harness.unmount(); }
@@ -78,7 +78,7 @@ describe('asset gallery', () => {
   it('opens the selected photo and retains authenticated thumbnail sources', async () => {
     const harness = new MobileRenderHarness(); const opened: string[] = [];
     try {
-      await harness.render(<AssetDetailPhotoGallery canAddPhotos={false} imagePlaceholderLabel="Item" photos={photos}
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos={false} photos={photos}
         onPhotoPress={id => opened.push(id)} />);
       await harness.press(harness.byLabel('Open photo 2 of 2'));
       expect(opened).toEqual(['two']);
