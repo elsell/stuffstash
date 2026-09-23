@@ -485,6 +485,9 @@ final class FixtureAuditTests: XCTestCase {
     failure.buttons["OK"].tap()
     XCTAssertEqual(query.value as? String, "Audit crate")
     reveal(create); create.tap()
+    XCTAssertTrue(create.waitForNonExistence(timeout: 5))
+    let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
+    XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
     let selected = app.staticTexts["Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
     let move = app.buttons["Move"].firstMatch

@@ -3638,3 +3638,10 @@ an offscreen launcher button; [retained hierarchy](evidence/android-move-destina
 confirms Native UI audit and absence of the Move form. No replay is needed to prove
 return. First picker lookup omitted its current-value suffix; corrected in place.
 iOS execution remains pending; this is not whole Move acceptance.
+
+M254 correction implemented: merge confirmed form-local creations with lookup
+matches, filter local titles by normalized query, and prefer server values by ID.
+The mounted regression reproduced the duplicate offer before the fix;90 focused
+tests, TypeScript and structural checks now pass remotely. Query changes, casing,
+server deduplication and rejected-move retention are covered. Critic found no
+source blocker. Corrected native acceptance remains pending.

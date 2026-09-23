@@ -24,6 +24,18 @@ consumer checks. Keep spec-first development, meaningful regressions, code criti
 review and native verification. Sleeping scripts own terminal-state collection;
 manual status polling must not duplicate a healthy collector.
 
+## Newly created Move destinations
+
+During a Move form visit, successful destination creation must immediately add
+that confirmed destination to the visible matches and select it, even if the
+lookup cache still contains an empty result. The matching name/kind/parent must
+no longer offer creation. Retain confirmed creations during that form visit,
+filter them by the current normalized title query, and merge lookup results by
+asset ID with server values taking precedence. Changing the query must not leak
+unrelated local matches or erase the selected destination. Failed creation adds
+nothing; failed Move retains the selection. Closing the form drops this local
+supplement. Backend authorization and duplicate rules remain authoritative.
+
 ## Move destination acceptance coverage
 
 Use the real Move route with synthetic core, lookup, create and move ports in the

@@ -126,8 +126,10 @@ Remote fixture installation (10 tests), TypeScript and structural checks pass.
 Android APK41b83db4 completed this recovery journey, but exposed M254: the form
 still offers duplicate creation after selecting its newly created destination.
 The retained final hierarchy confirms successful return despite an offscreen
-launcher assertion. Current decision: fix candidate/creation-eligibility coherence
-with a failing mounted regression before further native acceptance. iOS execution
+launcher assertion. M254 correction now merges confirmed local creations with current search results,
+filters by query and prefers server records by ID. The mounted regression failed
+before the fix;90 focused tests, TypeScript and structural checks pass remotely.
+Code critic found no blocker. Corrected native acceptance is pending. iOS execution
 is pending. Budget: one source pass, at most two discriminating
 native experiments. First acceptance distinguishes correct in-place choices and
 retained drafts from a specific command/layout failure; a failed gate determines

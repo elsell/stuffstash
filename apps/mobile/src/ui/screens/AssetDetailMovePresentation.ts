@@ -15,6 +15,20 @@ export type MoveDestinationCreatePlacement = {
   readonly parentPathLabel?: string;
 };
 
+/** Keep confirmed creations available while the scoped search cache catches up. */
+export function mergeCreatedMoveDestinations(
+  fetched: readonly ParentLookupResult[],
+  created: readonly ParentLookupResult[],
+  query: string
+): readonly ParentLookupResult[] {
+  const normalized = normalizeForMoveDestination(query);
+  const matches = new Map(created
+    .filter(candidate => normalizeForMoveDestination(candidate.title).includes(normalized))
+    .map(candidate => [candidate.id, candidate]));
+  for (const candidate of fetched) matches.set(candidate.id, candidate);
+  return [...matches.values()];
+}
+
 export function canSaveMoveAsset(
   asset: Pick<AssetDetailViewModel, 'parentAssetId'>,
   selectedParent: ParentLookupResult | null
