@@ -172,21 +172,22 @@ name/save-retry workflow on APK690c2fdf; [evidence](evidence/android-enum-settin
 Source overlay initially restored production routes; reapplying runner fixtures fixed
 setup before acceptance. Reapply fixtures after future full-source overlays.
 
-[Native35839289171](https://github.com/elsell/stuffstash/actions/runs/35839289171)
-at98b50a49 did not pass acceptance. Phone enum times out waiting for exact `ready`,
-although the final hierarchy contains it; this proves neither text loss nor a passing
-deadline. iPad observes exact `ready`, then fails duplicate rejection; the final field
-is empty and only the original option remains. Settings full-name/rejected-save/retry
-passes on phone; iPad fails the success-notice check, not name retention. All six CI
-jobs pass. These results do not justify another Settings input migration.
+[Native35842653888](https://github.com/elsell/stuffstash/actions/runs/35842653888)
+at9d08cf34 passes the full enum duplicate/recovery workflow on phone. iPad stops
+at the initial five-second predicate waiter: one4.26-second false evaluation,
+followed by complete `ready` in teardown. That does not establish iPad acceptance.
+All six CI jobs pass. [Retained results and reviewed captures](evidence/native-enum-358426-results.txt).
 
-Decision: hold PR167. Keep the native adapter and its hint modifier present with an
-empty value between errors, preserving the SwiftUI subtree across validation. The
-regression failed first and passes after correction; critic found no blocker. Run
-one focused enum acceptance on this correction; [retained failure evidence](evidence/native-enum-358392-results.txt). Do not repeat key,
-provider or pacing investigations, or rerun unchanged failures. Settings notice
-observation remains a separate acceptance gap; no persisted collection readback is
-claimed. Latest verified release remains0.24.29 (120.1).
+Decision: keep PR167 held and retain the native adapter with its stable hint
+modifier. Read exact native values directly after typing and before Add, as the
+Sharing email scenario does. Keep one typing attempt, keyboard-open command checks,
+duplicate retention, canonical creation/reset and removal. Critic found no blocker;
+the focused phone/iPad acceptance is required. No provider/key/pacing reruns.
+
+The separate Settings check in358392 passed full-name/save-retry on phone and failed
+the iPad success-notice observation. It does not justify migrating the Settings name
+input or certify persisted collection readback. Latest verified release remains
+0.24.29 (120.1).
 
 ### Custom-field choices — scoped acceptance complete
 

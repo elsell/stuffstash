@@ -1,0 +1,158 @@
+Attributes: Application, 0x113077d40, pid: 24435, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x113077d40, pid: 24435, label: 'Stuff Stash'
+    Window (Main), 0x113077e80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x105d6b200, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x105d68640, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x105d6af80, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x105d6b0c0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x105d6a800, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x105d6a940, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x105d6aa80, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x105d6abc0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x105d6ad00, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x105d6ae40, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Native UI audit'
+                          StaticText, 0x105d6b700, {{141.3, 73.7}, {119.3, 20.7}}, label: 'Native UI audit'
+                        Other, 0x105d6b840, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x105d6b980, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x105d6b340, {{0.0, 116.0}, {402.0, 758.0}}
+                              Other, 0x105d6b480, {{0.0, 116.0}, {402.0, 758.0}}
+                                Other, 0x105d6b5c0, {{0.0, 116.0}, {402.0, 758.0}}
+                                  Other, 0x105d68780, {{0.0, 116.0}, {402.0, 495.0}}
+                                    ScrollView, 0x105d68000, {{0.0, 116.0}, {402.0, 495.0}}
+                                      Other, 0x105d68140, {{0.0, -96.3}, {402.0, 642.7}}
+                                        Other, 0x105d68280, {{0.0, -96.3}, {402.0, 642.7}}
+                                          Button, 0x105d683c0, {{20.0, -76.3}, {362.0, 37.7}}, label: 'Back to audit menu'
+                                          StaticText, 0x105d68500, {{20.0, -18.7}, {362.0, 17.0}}, label: 'Field type: enum'
+                                            StaticText, 0x113043200, {{20.0, -18.7}, {362.0, 17.0}}, label: 'Field type: enum'
+                                          StaticText, 0x113043340, {{20.0, 18.3}, {362.0, 17.0}}, label: 'Applicability: all_assets'
+                                            StaticText, 0x113043480, {{20.0, 18.3}, {362.0, 17.0}}, label: 'Applicability: all_assets'
+                                          StaticText, 0x1130435c0, {{20.0, 55.3}, {362.0, 17.0}}, label: 'Selected targets: none'
+                                            StaticText, 0x113043700, {{20.0, 55.3}, {362.0, 17.0}}, label: 'Selected targets: none'
+                                          Other, 0x113043840, {{36.0, 108.3}, {330.0, 48.0}}
+                                            Other, 0x113043980, {{36.0, 108.3}, {330.0, 48.0}}
+                                              Other, 0x113043ac0, {{36.0, 108.3}, {330.0, 48.0}}
+                                                StaticText, 0x113043c00, {{36.0, 122.2}, {37.3, 20.3}}, label: 'Type'
+                                                Button, 0x113043d40, {{282.3, 115.3}, {83.7, 34.3}}, label: 'Type, Choose Type. Current value Enum'
+                                                  StaticText, 0x113043e80, {{294.0, 122.3}, {43.3, 20.3}}, label: 'Enum'
+                                          StaticText, 0x1130426c0, {{36.0, 194.7}, {330.0, 18.0}}, label: 'Options'
+                                            StaticText, 0x113042800, {{36.0, 194.7}, {330.0, 18.0}}, label: 'Options'
+                                          Other, 0x113042940, {{36.0, 222.7}, {330.0, 48.0}}
+                                            Other, 0x113042a80, {{36.0, 222.7}, {330.0, 48.0}}
+                                              Other, 0x113042bc0, {{36.0, 222.7}, {330.0, 48.0}}
+                                                Button, 0x113042d00, {{147.0, 222.7}, {108.3, 48.0}}, label: 'Remove ready'
+                                          Other, 0x113042e40, {{36.0, 280.7}, {330.0, 54.0}}
+                                            Other, 0x113042f80, {{36.0, 280.7}, {330.0, 54.0}}
+                                              Other, 0x1130430c0, {{36.0, 280.7}, {330.0, 54.0}}
+                                                TextField, 0x113040dc0, {{36.0, 290.7}, {330.0, 34.0}}, label: 'New enum option', placeholderValue: 'Add option', value: ready, Keyboard Focused
+                                          StaticText, 0x113040f00, {{36.0, 344.7}, {330.0, 15.7}}, label: 'This option already exists.'
+                                            StaticText, 0x113041040, {{36.0, 344.7}, {330.0, 15.7}}, label: 'This option already exists.'
+                                          StaticText, 0x113041180, {{36.0, 370.3}, {330.0, 15.7}}, label: 'Add or clear this option before saving.'
+                                            StaticText, 0x1130412c0, {{36.0, 370.3}, {330.0, 15.7}}, label: 'Add or clear this option before saving.'
+                                          Other, 0x113042080, {{36.0, 396.0}, {330.0, 48.0}}
+                                            Other, 0x1130421c0, {{36.0, 396.0}, {330.0, 48.0}}
+                                              Other, 0x113042300, {{36.0, 396.0}, {330.0, 48.0}}
+                                                Button, 0x113042440, {{159.3, 396.0}, {83.3, 48.0}}, label: 'Add option'
+                                          Other, 0x113040c80, {{36.0, 476.0}, {330.0, 48.0}}
+                                            Other, 0x113042580, {{36.0, 476.0}, {330.0, 48.0}}
+                                              Other, 0x113040780, {{36.0, 476.0}, {330.0, 48.0}}
+                                                StaticText, 0x1130408c0, {{36.0, 489.8}, {76.0, 20.3}}, label: 'Applies to'
+                                                Button, 0x113040a00, {{253.3, 483.0}, {112.7, 34.3}}, label: 'Applies to, Choose Applies to. Current value All assets'
+                                                  StaticText, 0x113040b40, {{265.3, 490.0}, {72.3, 20.3}}, label: 'All assets'
+                                      Other, 0x113178000, {{369.0, 116.0}, {30.0, 379.0}}, label: 'Vertical scroll bar, 2 pages', value: 81%
+                                        Other, 0x113178140, {{396.0, 231.0}, {3.0, 261.0}}
+                                      Other, 0x113178280, {{0.0, 578.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x1131783c0, {{3.0, 605.0}, {393.0, 3.0}}
+                                      Other, 0x113178500, {{369.0, 116.0}, {30.0, 379.0}}, label: 'Vertical scroll bar, 2 pages', value: 81%
+                                        Other, 0x113178640, {{396.0, 231.0}, {3.0, 261.0}}
+                                      Other, 0x113178780, {{0.0, 578.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x1131788c0, {{3.0, 605.0}, {393.0, 3.0}}
+                        Other, 0x113178a00, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x113178b40, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x113178c80, {{0.0, 830.0}, {402.0, 44.0}}, identifier: 'app-keyboard-accessory-host'
+                    Other, 0x113178dc0, {{0.0, 830.0}, {402.0, 44.0}}
+    Window, 0x113178f00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x113179040, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113179180, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1131792c0, {{0.0, 495.0}, {402.0, 379.0}}
+          Other, 0x113179400, {{0.0, 495.0}, {402.0, 44.0}}
+            Other, 0x113179540, {{20.0, 485.0}, {362.0, 44.0}}
+              Other, 0x113179680, {{0.0, 485.0}, {402.0, 44.0}}
+                Button, 0x1131797c0, {{338.0, 485.0}, {44.0, 44.0}}, label: 'Dismiss keyboard'
+            Other, 0x113179900, {{0.0, 495.0}, {201.0, 44.0}}
+            Other, 0x113179a40, {{201.0, 495.0}, {201.0, 44.0}}
+          Other, 0x113179b80, {{0.0, 539.0}, {402.0, 335.0}}, identifier: 'inputView'
+    Window, 0x113179cc0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x113179e00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113179f40, {{0.0, 495.0}, {402.0, 379.0}}
+          Other, 0x11317a080, {{0.0, 495.0}, {402.0, 44.0}}
+          Other, 0x11317a1c0, {{0.0, 539.0}, {402.0, 44.0}}, identifier: 'SystemInputAssistantView'
+            Other, 0x11317a300, {{0.0, 539.0}, {402.0, 44.0}}
+              Other, 0x11317a440, {{0.0, 539.0}, {402.0, 44.0}}, identifier: 'CenterPageView'
+                Other, 0x11317a580, {{0.0, -61.0}, {402.0, 1244.0}}
+                  ScrollView, 0x11317a6c0, {{0.0, 539.0}, {402.0, 44.0}}
+                Other, 0x11317a800, {{0.0, 539.0}, {402.0, 44.0}}
+                  Other, 0x11317a940, {{0.0, 539.0}, {402.0, 44.0}}, label: 'Typing Predictions'
+                    Other, 0x11317aa80, {{0.0, 539.0}, {402.0, 44.0}}
+                      Other, 0x11317abc0, {{0.0, 539.0}, {402.0, 44.0}}
+                        Other, 0x11317ad00, {{0.0, 539.0}, {134.0, 44.0}}, label: '“r”'
+                        Other, 0x11317ae40, {{134.0, 539.0}, {134.0, 44.0}}, label: 'really'
+                        Other, 0x11317af80, {{268.0, 539.0}, {134.0, 44.0}}, label: 'right'
+          Other, 0x11317b0c0, {{0.0, 539.0}, {402.0, 335.0}}
+            Other, 0x11317b200, {{0.0, 539.0}, {402.0, 335.0}}
+              Other, 0x11317b340, {{0.0, 539.0}, {402.0, 335.0}}
+          Other, 0x11317b480, {{0.0, 583.0}, {402.0, 233.0}}
+            Keyboard, 0x11317b5c0, {{0.0, 583.0}, {402.0, 233.0}}
+              Other, 0x11317b700, {{0.0, 583.0}, {402.0, 233.0}}
+                Other, 0x11317b840, {{0.0, 583.0}, {402.0, 233.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x11317b980, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x11317bac0, {{4.7, 590.0}, {39.3, 54.0}}, label: 'Q'
+                  Key, 0x11317bc00, {{44.0, 590.0}, {39.7, 54.0}}, label: 'W'
+                  Key, 0x11317bd40, {{83.7, 590.0}, {39.3, 54.0}}, label: 'E'
+                  Key, 0x11317be80, {{123.0, 590.0}, {39.7, 54.0}}, label: 'R'
+                  Key, 0x113194000, {{162.7, 590.0}, {39.3, 54.0}}, label: 'T'
+                  Key, 0x113194140, {{202.0, 590.0}, {39.7, 54.0}}, label: 'Y'
+                  Key, 0x113194280, {{241.7, 590.0}, {39.3, 54.0}}, label: 'U'
+                  Key, 0x1131943c0, {{281.0, 590.0}, {39.7, 54.0}}, label: 'I'
+                  Key, 0x113194500, {{320.7, 590.0}, {39.3, 54.0}}, label: 'O'
+                  Key, 0x113194640, {{360.0, 590.0}, {39.7, 54.0}}, label: 'P'
+                  Key, 0x113194780, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x1131948c0, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x113194a00, {{24.3, 644.0}, {39.3, 54.0}}, label: 'A'
+                  Key, 0x113194b40, {{63.7, 644.0}, {39.7, 54.0}}, label: 'S'
+                  Key, 0x113194c80, {{103.3, 644.0}, {39.3, 54.0}}, label: 'D'
+                  Key, 0x113194dc0, {{142.7, 644.0}, {39.7, 54.0}}, label: 'F'
+                  Key, 0x113194f00, {{182.3, 644.0}, {39.3, 54.0}}, label: 'G'
+                  Key, 0x113195040, {{221.7, 644.0}, {39.7, 54.0}}, label: 'H'
+                  Key, 0x113195180, {{261.3, 644.0}, {39.3, 54.0}}, label: 'J'
+                  Key, 0x1131952c0, {{300.7, 644.0}, {39.7, 54.0}}, label: 'K'
+                  Key, 0x113195400, {{340.3, 644.0}, {39.3, 54.0}}, label: 'L'
+                  Key, 0x113195540, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Button, 0x113195680, {{4.7, 698.0}, {51.3, 54.0}}, identifier: 'shift', label: 'shift', Selected
+                  Key, 0x1131957c0, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x113195900, {{63.7, 698.0}, {39.7, 54.0}}, label: 'Z'
+                  Key, 0x113195a40, {{103.3, 698.0}, {39.3, 54.0}}, label: 'X'
+                  Key, 0x113195b80, {{142.7, 698.0}, {39.7, 54.0}}, label: 'C'
+                  Key, 0x113195cc0, {{182.3, 698.0}, {39.3, 54.0}}, label: 'V'
+                  Key, 0x113195e00, {{221.7, 698.0}, {39.7, 54.0}}, label: 'B'
+                  Key, 0x113195f40, {{261.3, 698.0}, {39.3, 54.0}}, label: 'N'
+                  Key, 0x113196080, {{300.7, 698.0}, {39.7, 54.0}}, label: 'M'
+                  Key, 0x1131961c0, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x113196300, {{348.0, 698.0}, {51.7, 54.0}}, identifier: 'delete', label: 'delete'
+                  Key, 0x113196440, {{4.7, 752.0}, {98.7, 54.0}}, identifier: 'more', label: 'numbers'
+                  Key, 0x113196580, {{103.3, 752.0}, {197.3, 54.0}}, identifier: 'space', label: ' '
+                  Button, 0x1131966c0, {{300.7, 752.0}, {99.0, 54.0}}, identifier: 'Return', label: 'return'
+          Other, 0x113196800, {{0.0, 583.0}, {402.0, 291.0}}
+            Button, 0x113196940, {{8.5, 805.7}, {68.1, 68.7}}, label: 'Emoji'
+              StaticText, 0x113196a80, {{8.5, 805.7}, {0.0, 0.0}}
+            Button, 0x113196bc0, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x113196d00, {{325.4, 805.4}, {0.0, 0.0}}
+            Button, 0x113196e40, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x113196f80, {{325.4, 805.4}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x113077d40, pid: 24435, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x1131970c0, pid: 24435, label: 'Stuff Stash'
+  }

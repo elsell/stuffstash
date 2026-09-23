@@ -1542,8 +1542,7 @@ final class FixtureAuditTests: XCTestCase {
     field.tap()
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     field.typeText("ready")
-    XCTAssertEqual(observePredicate("enum-duplicate-draft",
-      predicate: NSPredicate(format: "value == %@", "ready"), object: field), .completed)
+    XCTAssertEqual(field.value as? String, "ready")
     let add = app.buttons["Add option"].firstMatch
     func addOption() {
       for _ in 0..<4 where !add.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -1558,16 +1557,15 @@ final class FixtureAuditTests: XCTestCase {
     capture("enum-duplicate-draft-retained")
     field.tap()
     field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 5))
-    XCTAssertEqual(observePredicate("enum-duplicate-draft-cleared",
-      predicate: NSPredicate(format: "value == %@ OR value == %@", "", "Add option"), object: field), .completed)
+    let clearedDraft = field.value as? String
+    XCTAssertTrue(clearedDraft == "" || clearedDraft == "Add option", "Expected cleared draft, got \(String(describing: clearedDraft))")
     field.typeText("Camping kit")
-    XCTAssertEqual(observePredicate("enum-new-draft",
-      predicate: NSPredicate(format: "value == %@", "Camping kit"), object: field), .completed)
+    XCTAssertEqual(field.value as? String, "Camping kit")
     addOption()
     let added = app.buttons["Remove camping-kit"].firstMatch
     XCTAssertTrue(added.waitForExistence(timeout: 5))
-    XCTAssertEqual(observePredicate("enum-accepted-draft-cleared",
-      predicate: NSPredicate(format: "value == %@ OR value == %@", "", "Add option"), object: field), .completed)
+    let acceptedDraft = field.value as? String
+    XCTAssertTrue(acceptedDraft == "" || acceptedDraft == "Add option", "Expected accepted draft reset, got \(String(describing: acceptedDraft))")
     XCTAssertFalse(app.staticTexts["This option already exists."].exists)
     for _ in 0..<4 where !added.isHittable { app.scrollViews.firstMatch.swipeDown() }
     XCTAssertTrue(added.isHittable); added.tap()

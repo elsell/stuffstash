@@ -1782,6 +1782,15 @@ it does not reopen provider-removal, key-delivery or pacing experiments. If typi
 and recovery pass, retain the existing implementation and record scoped acceptance.
 
 
+Text-entry acceptance reads the actual native field value immediately after the
+single typing action, before Add, using XCTest's direct value assertion as in the
+Sharing email workflow. Do not treat a later teardown snapshot as a pass. The
+nested five-second diagnostic waiter is not a product response-time requirement:
+run35842653888 recorded one4.26-second false evaluation on iPad and complete text
+at teardown, while phone passed the whole recovery sequence. Remove that timing
+wrapper for enum text/clear assertions; preserve exact strings, keyboard-open Add,
+duplicate retention, normalized creation, successful reset and selective removal.
+
 ### Shared Settings name and save recovery acceptance
 
 The representative Settings editor must accept a complete multiword name change,
