@@ -1,5 +1,30 @@
 # Platform Interaction Review
 
+## Native text-edit diagnostic boundary
+
+The retained351529,351564 and352471 evidence shows complete key sequences with
+lost/reordered text, including verified provider omission on iPad. Do not repeat
+provider removal, accessory hiding or paced typing as a proposed general fix.
+Next runner-only instrumentation must distinguish edits from framework writeback:
+
+- Record each native input instance and monotonic operation sequence in a bounded
+  native buffer, including dropped-record count. Export explicitly after unchanged
+  exact-value acceptance observations; do not trigger JavaScript renders per event.
+- Record delegate shouldChange range/replacement, preceding text/selection and
+  returned replacement/acceptance. Returning YES precedes UIKit's actual edit;
+  it is not an after-edit observation.
+- Record EditingChanged entry and pending-change transitions, then framework
+  textInputDidChange entry, suppression reason, event count and emitted text.
+- Record updateState, setTextAndSelection and attributed-string writes with
+  incoming/current counts and text/selection before and after actual writes.
+- Limit installation to isolated synthetic native-audit builds, reject ordinary
+  app/release installation, and retain normal fixtures as the comparison. Never
+  export user-entered production content through this diagnostic path.
+
+Installer isolation and buffer bounds require tests before implementation. Native
+compilation and a trace proving these boundaries remain required; planning this
+instrumentation does not establish a production cause or correction.
+
 ## Native Sharing access fixtures
 
 Runner-only Sharing scenarios may seed a permissionless scope, one rejected access
