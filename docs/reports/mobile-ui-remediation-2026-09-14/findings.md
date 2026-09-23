@@ -3611,3 +3611,30 @@ timely acceptance. Preserve runner/automation latency as an alternative hypothes
 and isolate it before modifying production behavior or promoting the dependency
 patch. See native-search-hit-testing-352366.md and the retained failure captures.
 M207 remains open; the ordering transformation is still runner-only.
+
+
+### M254 — Move offers to recreate its newly created destination
+
+P2 runtime/source-confirmed on Android API36, normal text, APK
+41b83db495fc8e7f20d7d5f38b9518314965f6734ee8f59e496b5a9128d8d9bf.
+After creating Audit crate, the preview selects it but the form still offers
+Create container "Audit crate". [Capture](evidence/android-move-destination-retained-preview.png).
+MoveAssetForm saves the new candidate in draft.matches, then shownDraft replaces
+those matches with cached candidates.data. The exact-name lookup remains empty,
+so creation eligibility remains true. This permits an unintended duplicate and
+hides the newly created choice even though movement uses the correct selected ID.
+
+Decision: preserve the locally confirmed creation in the current destination
+results/eligibility immediately; reconcile with refreshed lookup results without
+losing selection or leaking it into unrelated searches. Add a mounted regression
+with an unchanged empty lookup cache before changing production. Verify creation
+command disappears, created row remains selected, unrelated query behaves normally,
+and rejected Move/retry still preserves the exact destination. One source pass
+used; no further cause-finding experiment needed. Native acceptance follows the fix.
+
+The same Android journey passed existing selection, exact query, native Container
+choice, create failure/retry and move failure/retry. Final script lookup expected
+an offscreen launcher button; [retained hierarchy](evidence/android-move-destination-returned.xml)
+confirms Native UI audit and absence of the Move form. No replay is needed to prove
+return. First picker lookup omitted its current-value suffix; corrected in place.
+iOS execution remains pending; this is not whole Move acceptance.

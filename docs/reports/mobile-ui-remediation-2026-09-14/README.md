@@ -123,7 +123,12 @@ recovery (M231). The runner-only real Move form now has exact-payload synthetic
 ports for existing selection, new Container creation, rejected creation with query
 and kind retained, created selection, rejected move and successful retry return.
 Remote fixture installation (10 tests), TypeScript and structural checks pass.
-Native execution is pending. Budget: one source pass, at most two discriminating
+Android APK41b83db4 completed this recovery journey, but exposed M254: the form
+still offers duplicate creation after selecting its newly created destination.
+The retained final hierarchy confirms successful return despite an offscreen
+launcher assertion. Current decision: fix candidate/creation-eligibility coherence
+with a failing mounted regression before further native acceptance. iOS execution
+is pending. Budget: one source pass, at most two discriminating
 native experiments. First acceptance distinguishes correct in-place choices and
 retained drafts from a specific command/layout failure; a failed gate determines
 the only follow-up correction. Run this with the held field-choice observer fix,
