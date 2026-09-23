@@ -998,7 +998,8 @@ does not certify Map-path return, all text sizes, or spatial command styling.
 M88 detail commands reuse NativeCommandButton with optional primary prominence.
 Default commands retain their existing native text-button appearance. Add item here
 uses native primary styling; Move items here and maintenance remain quiet. Direct
-item Check out/Return retains primary prominence, while contained-workspace
+item Check out/Return originally retained primary prominence; M277 below
+supersedes that emphasis with availability-context commands. Contained-workspace
 availability remains quiet. Authorization-derived visibility, missing-handler and
 pending disabling, action ordering and route destinations must be preserved.
 SwiftUI and Compose own button appearance and label measurement; preview styling
@@ -2050,3 +2051,59 @@ anchor/scroll and grid fit, connected Edit save and Move return, Edit metadata/t
 recovery, destination creation/retry and Move Here input. Prior component results
 remain scoped evidence; the combined run verifies integration. Unrelated findings
 stay in the audit and must not silently expand this batch.
+
+
+## M277: Asset detail action hierarchy
+
+Task: inspect an asset and its location, then deliberately edit, relocate, or
+change availability. The detail page is not a checkout confirmation form.
+The observed phone/iPad detail layouts give a full-width Check out command more
+emphasis than identity and spread Edit/Move across a separate maintenance row.
+This is a project hierarchy judgment, not evidence of relative command usage.
+
+Use the existing native header adapters to expose Edit persistently for editable
+assets, alongside More and the existing Place search entry. Remove the duplicate
+body Edit command when the route supplies this header action. Preserve a body
+fallback for standalone detail consumers without native navigation. Read-only
+assets omit Edit; pending actions disable it. The retained header callback must
+use the current committed asset and permissions, and become inert after teardown.
+Do not replace the stable header action ownership mechanism.
+
+Group location and its Move command in one section with a shared leading edge.
+Keep Move directly discoverable; do not hide it in More just to reduce visible
+controls. A place uses Move place, and nested-place location breadcrumbs remain
+navigable. At inventory root, location context still explains what Move changes.
+Use a native secondary command, without spreading commands equally across the
+full tablet width. Preserve the selected asset and return context in the existing
+Move task.
+
+Present availability with its current status and a nearby Check out or Return
+command. Available and checked-out states must be understandable without reading
+a button. Do not make Check out the page-wide primary action. Preserve checkout
+context already available in the view model and keep domain eligibility,
+permissions, pending locks, recovery and return behavior unchanged. Locations
+must not acquire an availability control they do not support.
+
+Keep photo commands with the photo section and containment commands with contents.
+Add item here remains the place workspace's primary creation command. Preserve
+history and destructive actions in their existing grouped More menu. Do not
+introduce a generic action dashboard or wrap every section in a new card.
+
+Apple's [toolbar guidance](https://developer.apple.com/design/human-interface-guidelines/toolbars)
+supports prioritizing direct commands and warns about discoverability of hidden
+menu actions. Its [button guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+relates prominence to the likely action; it does not prohibit text buttons.
+These sources inform the project-specific grouping above, not a claim that Apple
+requires these exact asset commands.
+
+Acceptance: compare item, container and place details, populated and empty photos,
+available and checked-out items and containers, read-only and pending states at normal text size on iPhone,
+iPad and Android. Visually review entry and scrolled content for clear hierarchy,
+consistent leading edges and contained action widths. Exercise header Edit and
+cancel/save return, Move and return, availability failure/retry and More, plus
+Place search without loss of header commands. Containers must retain both their
+contents commands and supported availability actions without duplicate Edit.
+Verify latest-owner and removed
+header callbacks in source tests. Native screenshots and connected task checks
+are both required; passing tests alone do not close M277. This follow-up is not a
+prerequisite for releasing independently accepted M265–M273 fixes.

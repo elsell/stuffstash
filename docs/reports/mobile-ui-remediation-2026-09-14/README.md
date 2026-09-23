@@ -103,5 +103,7 @@ M276 reproduced search loss after applying Availability on Android. The shared
 native search adapter now distinguishes an active search interaction from header
 lifecycle callbacks. Android connected Browse/Filters/detail/Back and Expiration
 inheritance pass, as do native clear/type/submit and retained-query checks.
-[Evidence](evidence/android-search-ownership-results.txt). Native iPhone/iPad
-acceptance is still required; this follow-up does not broaden frozen M265–M273.
+[Evidence](evidence/android-search-ownership-results.txt). iPhone native search/return checks pass in run35909057029. iPad Browse return
+and Place search pass; Expiration stops at the known pre-scroll assertion, already
+corrected in the combined run35911930846. [Terminal evidence](evidence/filter-connected-359052-results.txt).
+Full native acceptance remains open; this follow-up does not broaden frozen M265–M273.
