@@ -478,3 +478,9 @@ Review normal-text phone/iPad filters first and inspect representative consumers
 of the shared row. Bottom filter confirmation/cancellation remains unchanged.
 Native screenshots showed excessive filter-body density; the source reveals a
 48-point native picker plus text-row padding, not proof the footer itself is faulty.
+
+Settings editors group Archive, Restore and Delete permanently separately from
+editable fields without an implementation-oriented “Lifecycle” heading. The
+action labels explain the available operations; keep existing destructive
+semantics, permissions, confirmation and draft recovery unchanged. This applies
+to tags, custom fields and asset types.
