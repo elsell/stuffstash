@@ -3814,3 +3814,15 @@ beyond the existing phone pair. Resize retains offset scoped to the loaded inven
 and criteria; Places and enlarged-text layouts remain one column. Focused source
 checks pass. Native phone/iPad density and scrolling acceptance remains open; the
 app is portrait-locked, so no rotation support is claimed.
+
+M260 scoped native acceptance now passes on phone and iPad in
+[run35867740920](evidence/native-browse-358677-results.txt). Combined batch
+verification remains required.
+
+### M265 — Map repeats the inventory title at its root
+
+P2 visual-coherence finding observed in both phone and iPad run35867740920:
+a root breadcrumb label is immediately followed by a second inventory heading.
+Review breadcrumb/root-column hierarchy together; do not merely reduce spacing.
+Keep outside the frozen M260–M264 batch. This does not affect the switcher's
+confirmed stable anchor.

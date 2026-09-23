@@ -2042,3 +2042,9 @@ Changing column count must preserve the current result criteria and scroll offse
 rather than return to the beginning. Never restore an offset from a different
 inventory or result criteria. Verify phone and iPad rendering and resize behavior
 natively before declaring this finding closed.
+
+The M260–M264 release batch is frozen. Its combined native selection covers Browse
+anchor/scroll and grid fit, connected Edit save and Move return, Edit metadata/tag
+recovery, destination creation/retry and Move Here input. Prior component results
+remain scoped evidence; the combined run verifies integration. Unrelated findings
+stay in the audit and must not silently expand this batch.

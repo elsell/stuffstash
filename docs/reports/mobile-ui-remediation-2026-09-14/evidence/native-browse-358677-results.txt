@@ -1,0 +1,8 @@
+M260 native acceptance: run35867740920, sourced492b51a.
+Phone107203554074 and iPad107203554631 each passed the complete Browse journey:
+List at top, actual content scrolling, Map, return to List; one switcher with
+unchanged anchor and reachable Add/Search across transitions.
+Reviewed List scrolled and Map captures on both devices.
+This does not certify Home transitions, live-data detail return, tablet density
+(M263), dark appearance or header transparency. Root Map repeats its inventory
+title; keep that separate visual-coherence finding tracked.

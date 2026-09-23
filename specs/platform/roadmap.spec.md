@@ -38,10 +38,13 @@ measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
 interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.
 
-Latest verified delivery is TestFlight0.24.30(121.1), with exact-build changelog
-verification in run35848122466. The frozen M257/M258 text-loss batch can ship after
-its remaining tag acceptance; broader workflow redesign does not silently expand
-that release gate. Current results and held candidates live in the audit README.
+Latest verified delivery is TestFlight0.24.31(122.1), with exact-build changelog
+verification in run35866654390 (M257/M258). The next frozen batch is M260–M264:
+stable Browse switching, task-focused Edit/Move, adaptive tablet density and
+explicit tag creation. Verify these changed workflows and critical regressions
+together, then ship independently of unrelated audit findings. Native M260
+switch/scroll acceptance passed on phone and iPad in run35867740920; remaining
+batch acceptance is open. Do not expand this batch while waiting.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a
