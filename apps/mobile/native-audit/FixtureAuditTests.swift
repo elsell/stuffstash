@@ -466,7 +466,10 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(existing.waitForExistence(timeout: 5))
     reveal(existing); existing.tap()
     XCTAssertTrue(existing.label.contains("Selected"))
-    query.tap(); waitForKeyboard(); query.typeText("Audit crate")
+    XCTAssertTrue(query.isHittable)
+    query.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    query.typeText("Audit crate")
     XCTAssertEqual(query.value as? String, "Audit crate")
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()

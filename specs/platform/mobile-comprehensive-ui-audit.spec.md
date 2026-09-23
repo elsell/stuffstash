@@ -44,7 +44,10 @@ container through the native Kind menu, a rejected create retaining the exact
 query/kind, successful creation selecting that destination, rejected Move retaining
 that selection, and successful retry returning. The fake must validate exact
 creation and movement payloads, so returning alone cannot pass an incorrect move.
-Keep this separate from the already accepted Move-here journey. Normal-size
+Require a hittable query field, keyboard presence, one typing attempt and exact
+retained text; do not make enumeration of individual keyboard key hit regions a
+prerequisite for this editing journey. Keep this separate from the already accepted
+Move-here journey. Normal-size
 phone/iPad and Android checks precede enlarged-text work; real persistence and
 permission boundaries remain independently tested. No production route is added.
 

@@ -134,8 +134,14 @@ selection, native Container choice, rejected creation/retry, no duplicate creati
 offer, selected new row, rejected Move retention and successful exact-payload retry.
 [Reviewed capture](evidence/android-m254-retained.png) and
 [returned hierarchy](evidence/android-m254-returned.xml) retain evidence.
-CI and combined iPhone/iPad acceptance atcdba3261 remain pending; sleeping
-collector81300 owns terminal observation (`/tmp/collect-m254-batch.sh`). iOS execution
+CI35826356314 passes all six jobs atcdba3261. Native35826352235 passes the full
+field-choice sequence on iPad; phone fails both scenarios during Xcode launch,
+before task execution. iPad Move stops before typing: one key-enumeration readiness
+sample is false and exhausts the waiter; the later capture shows the focused field
+and keyboard. Retain those failures. The reviewed scoped correction requires field
+hittability, keyboard existence, one typing attempt and unchanged exact text,
+without independently enumerating keyboard keys. One corrected Move acceptance
+attempt remains; no input/provider changes or renewed field-choice investigation. iOS execution
 is pending. Budget: one source pass, at most two discriminating
 native experiments. First acceptance distinguishes correct in-place choices and
 retained drafts from a specific command/layout failure; a failed gate determines
