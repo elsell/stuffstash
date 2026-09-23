@@ -1,5 +1,29 @@
 # Comprehensive mobile UI audit and remediation
 
+## Investigation and acceptance discipline
+
+Prioritize confirmed user-visible defects at normal text size. Keep one current
+diagnosis per active defect with established facts, excluded causes, implementation
+decision, remaining budget and acceptance gates; link durable evidence instead of
+duplicating checkpoint narratives. Default investigation budget: one source review
+and two native experiments. Every experiment must distinguish named competing
+causes and state what each outcome would change. Exhaustion requires a concrete
+implementation/adapter decision or documented external limitation, not another
+equivalent run. Budgets persist across task continuations.
+
+Current text-entry and color investigations have exhausted that diagnostic budget.
+No further broad provider/accessory/pacing/scrolling comparisons are authorized by
+the audit plan. Prioritize concrete corrections and unchanged user-workflow acceptance;
+retain completed diagnostic evidence without restarting equivalent runs. Keep diagnostic-only
+failures distinct from confirmed shipped-workflow failures.
+
+Validate shared control behavior across relevant states, representative consumers
+and critical end-to-end workflows. The3,408 coverage cells do not require3,408 tests.
+Differences in composition, lifecycle, security or edit ownership justify extra
+consumer checks. Keep spec-first development, meaningful regressions, code critic
+review and native verification. Sleeping scripts own terminal-state collection;
+manual status polling must not duplicate a healthy collector.
+
 ## Invitation native acceptance coverage
 
 The runner-only native suite must render the real invitation acceptance screen
