@@ -2007,7 +2007,7 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Dismiss keyboard"].firstMatch.tap()
     let choose = app.buttons["Choose destination"].firstMatch
     reveal(choose, in: form); choose.tap()
-    let topLevel = app.buttons["Choose inventory top level"].firstMatch
+    let topLevel = app.descendants(matching: .any)["Choose inventory top level"].firstMatch
     XCTAssertTrue(topLevel.waitForExistence(timeout: 5))
     XCTAssertTrue(topLevel.isHittable)
     let pickerHeader = app.navigationBars["Put in"]

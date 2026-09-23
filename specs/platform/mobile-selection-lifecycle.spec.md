@@ -123,3 +123,13 @@ Verify initial current/top-level context below the header, search entry, creatio
 name clearance, cancellation and retry on phone and iPad. Keyboard focus remains
 unverified until the same native journey completes; this layout correction alone
 does not establish its cause or resolution.
+
+Run35920079319 passes the three tag/draft workflows on both devices. Add destination
+stops at the new initial-context assertion because SettingsChoiceRow is exposed
+as an accessibility Other with radio-button value, not Button. Both retained
+hierarchies show the exact named top-level choice below the native header; matching
+screenshots show current context and initial choices. Query the choice by its exact
+accessibility name across element types, as the existing destination selection
+assertion does. Keep hittability and header bounds, keyboard entry, draft recovery
+and creation checks unchanged. This is a harness correction, not another product
+layout change. The remaining focused Add/creation workflow still needs acceptance.
