@@ -1,3 +1,5 @@
+import { Stack } from 'expo-router';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
@@ -7,7 +9,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   Platform,
   Pressable,
@@ -97,21 +99,26 @@ export function EditAssetSheet({
   const editContext = assetEditContext(asset);
   const disabled = isSaving || readOnly;
   const canSave = canSaveEditAsset(asset, draft) && !disabled;
+  const actions = useFocusedSheetActions({
+    primaryLabel: 'Save', secondaryLabel: 'Cancel', disabled: !canSave,
+    secondaryDisabled: isSaving, onApply: onSave, onBack: onClose
+  });
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+    disabled: isSaving, onPress: actions.onBack }], 'left');
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save',
+    disabled: !canSave, onPress: actions.onApply }]);
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
+    ...cancelOptions, ...saveOptions }), [cancelOptions, saveOptions]);
+  const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <AssetActionKeyboardFrame style={styles.sheet}>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {Platform.OS !== 'android' ? <Text style={styles.sheetTitle}>Edit asset</Text> : null}
+    <Frame style={styles.editor}>
+      <Stack.Screen options={headerOptions} />
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
-        <View style={styles.readOnlyContextPanel}>
-          <Text style={styles.readOnlyContextLabel}>Kind</Text>
-          <Text style={styles.readOnlyContextValue}>
-            {editContext.customTypeLabel
-              ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
-              : editContext.kindLabel}
-          </Text>
-          <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
-        </View>
+        <Text style={styles.sheetSubtitle}>
+          {editContext.customTypeLabel ? `${editContext.kindLabel} · ${editContext.customTypeLabel}` : editContext.kindLabel}
+        </Text>
         <Text style={styles.inputLabel}>Name</Text>
         <AppTextInput
           accessibilityLabel="Asset name"
@@ -140,14 +147,7 @@ export function EditAssetSheet({
           onChange={(tagIds, newTags, inlineTag) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags, inlineTag })}
         />
       </ScrollView>
-      <SheetActions
-        busy={isSaving}
-        disabled={!canSave}
-        primaryLabel={isSaving ? 'Saving' : 'Save'}
-        onClose={onClose}
-        onSave={onSave}
-      />
-    </AssetActionKeyboardFrame>
+    </Frame>
   );
 }
 
@@ -579,6 +579,12 @@ function useStyles() {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  editor: {
+    backgroundColor: colors.surface,
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm
+  },
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
@@ -610,30 +616,6 @@ function createStyles(colors: MobileColorPalette) {
   formScrollContent: {
     gap: spacing.sm,
     paddingBottom: spacing.sm
-  },
-  readOnlyContextPanel: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    gap: spacing.xs,
-    padding: spacing.md
-  },
-  readOnlyContextLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase'
-  },
-  readOnlyContextValue: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  readOnlyContextHelp: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
   },
   inputLabel: {
     color: colors.text,

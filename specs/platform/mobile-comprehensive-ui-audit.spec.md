@@ -1904,3 +1904,29 @@ whole-keyboard enumeration. Run35858864716 proves the iPad native keyboard label
 space as a literal blank, not “space”; readiness targets the actual first C key
 shown in the retained hierarchy without weakening the exact text assertion. Acceptance requires full text, accepted clearing,
 staged tag presence and retained selection through disclosure.
+
+### Full-height asset editor (M261)
+
+Editing asset metadata is a multi-field content-editing task. Present one
+full-height native form sheet on iOS/iPadOS, consistent with Add, and a native
+stack destination on Android. A single full-height detent preserves the asset
+context without requiring the user to expand a small action sheet before editing.
+Use a native title and persistent Cancel/Save actions; remove the duplicate body
+title and bottom action pair. Keep cancellation explicit and dirty-draft
+confirmation, permission guards and operation ownership unchanged. Busy state
+disables both actions; Save uses the latest committed valid draft.
+
+Show kind/type as concise read-only context, followed by the editable identity,
+expiration and tags groups. Do not devote a prominent instructional panel to a
+field that cannot be edited. Preserve inline tag creation, staged selection and
+expiration capability; selecting this container does not certify the current tag
+management layout as final. Let the iOS ScrollView own keyboard insets; Android
+retains its keyboard-resizing frame. Do not combine native automatic keyboard
+insets with a second iOS keyboard-avoidance displacement.
+
+Acceptance walks asset → Edit → change name/expiration/tags → Save → asset,
+then Cancel/Keep editing/Discard and save rejection with draft retention. Check
+header actions before and after scrolling and with keyboard present on phone and
+iPad. Verify normal-text hierarchy as a complete editor before enlarged-text
+refinement. Shared Move and Move Here containers remain independently reviewed;
+this is an editor task decision, not a universal full-height-sheet rule.
