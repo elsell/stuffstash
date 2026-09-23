@@ -150,7 +150,7 @@ release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
 passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
 No further field-choice rerun is needed.
 
-### Current candidate — enum option text retention
+### Shipping batch — enum option text retention
 
 Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
 leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
@@ -158,8 +158,8 @@ The candidate uses shared native DraftTextField for ordinary editing and rejecte
 options; accepted Add advances an explicit reset revision. Validation
 hints remain native. Android retains the existing controlled field. Both reset/hint
 regressions failed before correction;all1,928 remote tests (307 files), TypeScript,
-structural checks and critic pass. Native
-acceptance is still required; no provider/key/pacing comparison will be repeated.
+structural checks and critic pass. Final native acceptance now passes on both devices;
+no provider/key/pacing comparison was repeated.
 
 Android APK25689da4 passes duplicate rejection, new-option canonicalization, field
 clearing, selective removal and return with standard keyboard dismissal; scoped
@@ -178,11 +178,14 @@ at the initial five-second predicate waiter: one4.26-second false evaluation,
 followed by complete `ready` in teardown. That does not establish iPad acceptance.
 All six CI jobs pass. [Retained results and reviewed captures](evidence/native-enum-358426-results.txt).
 
-Decision: keep PR167 held and retain the native adapter with its stable hint
-modifier. Read exact native values directly after typing and before Add, as the
-Sharing email scenario does. Keep one typing attempt, keyboard-open command checks,
-duplicate retention, canonical creation/reset and removal. Critic found no blocker;
-the focused phone/iPad acceptance is required. No provider/key/pacing reruns.
+Final acceptance [35845533702](https://github.com/elsell/stuffstash/actions/runs/35845533702)
+at47418b41 passes the complete enum workflow on phone and iPad, with exact native
+values before submission, keyboard-open command checks, duplicate retention,
+canonical creation/reset and selective removal. [Results](evidence/native-enum-358455-results.txt).
+All six CI jobs pass at that commit. PR167 merged asfe748466; automatic release
+[35848122466](https://github.com/elsell/stuffstash/actions/runs/35848122466) is running.
+A sleeping collector retains terminal jobs and logs; TestFlight delivery and
+changelog readback are not yet verified. Unrelated findings do not gate this batch.
 
 The separate Settings check in358392 passed full-name/save-retry on phone and failed
 the iPad success-notice observation. It does not justify migrating the Settings name
@@ -195,8 +198,8 @@ The routed Edit form now has a prepared default-text scenario for complete name
 entry, metadata retries, rejected Save, Keep editing and explicit Discard return.
 Its existing enlarged-text scenarios remain separate. Android passes this sequence
 on the existing APK690c2fdf; [reviewed evidence](evidence/android-edit-normal-results.txt).
-The iOS test and focused workflow selection are prepared locally for the next audit
-batch; they do not change or block the frozen enum release candidate.
+The independent iOS acceptance run35847685581 is running at37584855; its sleeping
+collector retains terminal outcomes. It does not change or block the enum release.
 
 ### Custom-field choices — scoped acceptance complete
 
