@@ -1869,6 +1869,7 @@ resolution that clears inputs advances the native field revision; Android retain
 its controlled field instance. Preserve staged tags, validation, busy/read-only
 guards and route ownership resets. Native35853305160 reached the tag field on both
 devices, then phone reduced one Camping entry to C. iPad stopped before typing in
-whole-keyboard enumeration; readiness should observe the stable space key without
-weakening the exact text assertion. Acceptance requires full text, accepted clearing,
+whole-keyboard enumeration. Run35858864716 proves the iPad native keyboard labels
+space as a literal blank, not “space”; readiness targets the actual first C key
+shown in the retained hierarchy without weakening the exact text assertion. Acceptance requires full text, accepted clearing,
 staged tag presence and retained selection through disclosure.

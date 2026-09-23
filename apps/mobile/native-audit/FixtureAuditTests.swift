@@ -1274,7 +1274,7 @@ final class FixtureAuditTests: XCTestCase {
     let entry = app.textFields["New tag name"].firstMatch
     reveal(entry)
     entry.tap()
-    waitForKeyboard(keyLabel: "space")
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
     XCTAssertEqual(entry.value as? String, "Camping")
     let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
