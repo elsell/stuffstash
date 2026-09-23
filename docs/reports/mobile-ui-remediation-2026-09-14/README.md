@@ -26,10 +26,10 @@ adaptation/assistive-technology coverage remain open in the surface reports.
 | M51: custom color picker sometimes does not open | Ordinary well taps intermittently leave the parent unchanged. Disabling scrolling is insufficient. RGB retention and disabled-state fixes already passed. [Evidence](native-color-scroll-352164.md). | Diagnostic budget exhausted. Implement a direct UIKit color-well adapter using the system picker, replacing the current SwiftUI-hosted path for this control. Verify first-tap opening, selection, dismissal, parent draft retention, clear and lock/unlock on phone/iPad. Retain presets. |
 | Text loss in RN input comparisons | Complete key sequences can yield missing/reordered JS values. Verified provider-free iPad still fails; pacing or removing assistance is not a general correction. [Consolidated evidence](native-text-entry-352471.md). | Diagnostic budget exhausted. Keep existing native Add-name, invitation-email and onboarding adapters. Verify actual editing workflows and fix a reproduced consumer with the established native field pattern; do not replace every input because an isolated comparison fails. Preserve external reset, draft, disabled and submission semantics. |
 
-Run35803226783 was already dispatched before this decision; let its sleeping
-collector finish and consume its result once. It is an independent observation,
-not a new correction. Collector session27553 writes `/tmp/native358032-*`.
-The proposed additional native trace implementation was removed before commit.
+Run35803226783 completed: phone12/14 and iPad9/14. Its
+[exact outcomes](native-text-entry-358032-results.csv) reproduce the known isolated
+RN input failures; this does not change the decision above. No further trace
+instrumentation is planned.
 
 M51 candidate: direct UIKit adapter implemented, with current-owner event handling
 and native enabled state. Remote validation passes1,921 tests across305 files,
@@ -37,7 +37,8 @@ TypeScript and structural checks; regressions were observed failing before fixes
 Code critic has no remaining source blocker. CI35804903978 passes the compiled
 Swift RGB checks and all non-lock jobs. Its generated lock adds only the local
 color-well module and is now committed. Focused phone/iPad acceptance and the
-updated lock gate remain pending. This candidate is not released.
+updated lock gate remain pending in native35805411868 and CI35805414085 at
+4e906d30. Sleeping collectors own result collection. This candidate is not released.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
