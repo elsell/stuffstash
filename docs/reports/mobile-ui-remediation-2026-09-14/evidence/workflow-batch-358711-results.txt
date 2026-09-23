@@ -8,7 +8,8 @@ MoveHere recovery passed.
 
 Remaining acceptance:
 - Both Move creation tests failed at obsolete standalone Audit crate assertion,
-  already corrected by83e2c145. Run35874141371 covers corrected observations.
+  corrected by83e2c145. Run35874141371 now passes on both devices;
+  see move-358741-results.txt for scoped acceptance.
 - iPad density measured inset title action209pt instead of outercard. Added outer
   layout marker and retained220pt requirement. Corrected native measurement pending.
 - iPad connected Edit stopped before typing at keyboard-interactivity readiness.
