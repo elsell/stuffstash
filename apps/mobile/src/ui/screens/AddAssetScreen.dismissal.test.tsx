@@ -404,7 +404,8 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
     await h.changeText(h.byLabel('Search parent'), 'New parent');
     expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
-    expect(h.byText('Not selected yet')).toBeDefined();
+    expect(h.byText('Not selected yet')).toBeUndefined();
+    expect(h.byText('No parent')).toBeDefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byText('Suggestions could not be loaded.')).toBeDefined();

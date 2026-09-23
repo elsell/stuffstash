@@ -139,6 +139,7 @@ function ScopedAddAssetScreen({
   const [description, setDescription] = useState(emptyDraft.description);
   const [parentAssetId, setParentAssetId] = useState<string | undefined>(emptyDraft.parentAssetId);
   const [parentQuery, setParentQuery] = useState(emptyDraft.parentQuery);
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
 
   const [isCreatingParent, setIsCreatingParent] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<readonly SelectedAssetPhoto[]>(
@@ -177,11 +178,11 @@ function ScopedAddAssetScreen({
 
   const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
-  const candidates = useParentCandidates(parentQuery, parentLookupQuery, isParentMenuOpen);
-  const parentMatches = createdParent && createdParent.title === parentQuery
+  const candidates = useParentCandidates(isParentMenuOpen ? parentSearchQuery : parentQuery, parentLookupQuery, isParentMenuOpen);
+  const parentMatches = createdParent && createdParent.title === parentSearchQuery
     ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
     : candidates.data ?? [];
-  const normalizedParentQuery = normalizeParentName(parentQuery);
+  const normalizedParentQuery = normalizeParentName(parentSearchQuery);
   const canCreateParent = candidates.data !== undefined && normalizedParentQuery.length > 0
     && ![createdParent, ...parentMatches].filter(isParentSelection).some(parent => normalizeParentName(parent.title) === normalizedParentQuery);
 
@@ -377,7 +378,7 @@ function ScopedAddAssetScreen({
   }
 
   async function createParent(): Promise<void> {
-    const parentName = parentQuery.trim();
+    const parentName = parentSearchQuery.trim();
     if (loadState.status !== 'ready' || !canCreateParent) {
       return;
     }
@@ -402,6 +403,7 @@ function ScopedAddAssetScreen({
       };
       setParentAssetId(result.id);
       setParentQuery(result.title);
+      setParentSearchQuery(result.title);
       setLastParent(createdParent);
       setCreatedParent(createdParent);
       setIsParentMenuOpen(true);
@@ -620,8 +622,7 @@ function ScopedAddAssetScreen({
                   lastParent={lastParent}
                   onChangeQuery={(value) => {
                     if (draftOperation.current) return;
-                    setParentQuery(value);
-                    setParentAssetId(undefined);
+                    setParentSearchQuery(value);
                     setCreatedParent(undefined);
                     setIsParentMenuOpen(true);
                   }}
@@ -629,7 +630,7 @@ function ScopedAddAssetScreen({
                     setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 0);
                   }}
                   onCreateParent={createParent}
-                  onOpenChange={open => editDraft(() => setIsParentMenuOpen(open))}
+                  onOpenChange={open => editDraft(() => { if (open) setParentSearchQuery(''); setIsParentMenuOpen(open); })}
                   onSelectParent={(parent) => {
                     if (draftOperation.current) return;
                     setParentAssetId(parent?.id);
@@ -639,7 +640,8 @@ function ScopedAddAssetScreen({
                     setIsParentMenuOpen(false);
                   }}
                   parentAssetId={parentAssetId}
-                  query={parentQuery}
+                  selectedQuery={parentQuery}
+                  query={parentSearchQuery}
                 />
 
                 <Pressable
@@ -917,6 +919,7 @@ function ParentPicker({
   onSearchFocus,
   onSelectParent,
   parentAssetId,
+  selectedQuery,
   query
 }: {
   readonly canCreateParent: boolean;
@@ -932,11 +935,12 @@ function ParentPicker({
   readonly onSearchFocus: () => void;
   readonly onSelectParent: (parent: ParentSelection | undefined) => void;
   readonly parentAssetId: string | undefined;
+  readonly selectedQuery: string;
   readonly query: string;
 }) {
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
-  const selectedParent = resolveSelectedParent(matches, parentAssetId, query, lastParent);
+  const selectedParent = resolveSelectedParent(matches, parentAssetId, selectedQuery, lastParent);
   const createdParentId = createdParent?.id;
 
   return (
@@ -950,11 +954,11 @@ function ParentPicker({
         style={styles.parentSelectButton}
       >
         <View style={styles.parentSelectText}>
-          <Text style={styles.parentTitle}>{selectedParent?.title ?? (query.trim() || 'No parent')}</Text>
+          <Text style={styles.parentTitle}>{selectedParent?.title ?? (selectedQuery.trim() || 'No parent')}</Text>
           <Text style={styles.parentMeta}>
             {selectedParent
               ? `${selectedParent.selectionHint} · ${selectedParent.subtitle}`
-              : query.trim() ? 'Not selected yet' : 'Top level in this inventory'}
+              : selectedQuery.trim() ? 'Not selected yet' : 'Top level in this inventory'}
           </Text>
         </View>
         {isOpen ? (
@@ -1003,7 +1007,7 @@ function ParentPicker({
             ) : null}
             <ParentOption disabled={disabled}
               identityKind="inventory"
-              isSelected={parentAssetId === undefined && query.trim().length === 0}
+              isSelected={parentAssetId === undefined && selectedQuery.trim().length === 0}
               label="No parent"
               meta="Top level in this inventory"
               onPress={() => onSelectParent(undefined)}

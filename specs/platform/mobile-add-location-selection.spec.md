@@ -1,6 +1,6 @@
 # Add Item Location Selection
 
-Status: M269 specified; implementation and acceptance pending.
+Status: M269 draft/search isolation implemented; native chooser and acceptance pending.
 Keep separate from frozen M260–M264 and tag-selection native acceptance.
 
 ## Problem and pattern
