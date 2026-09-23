@@ -30,7 +30,7 @@ it('cancels without applying and carries draft into expiration review', async ()
     await h.press(h.byLabel('Choose expiration review'));
     expect(h.byLabel('Choose availability')).toBeDefined();
     expect(h.byLabel('Back to filters')).toBeUndefined();
-    await h.press(h.byText('Review expired items')?.parent ?? undefined);
+    await h.press(h.byText('Expired')?.parent ?? undefined);
     expect(expiration).toEqual([{ mode: 'expired', draft: { ...initial, checkoutState: 'available' } }]);
     await h.press(h.byLabel('Cancel filters'));
     expect(cancelled).toBe(1);
@@ -105,7 +105,7 @@ it('keeps verification recovery inside scrollable content with the draft and act
   } finally { await h.unmount(); }
 });
 
-for (const [label, mode] of [['Review expiring soon items', 'soon'], ['Review expired items', 'expired'], ['Review all expiration dates', 'all']] as const) {
+for (const [label, mode] of [['Expiring soon', 'soon'], ['Expired', 'expired'], ['All dates', 'all']] as const) {
   it(`opens ${mode} directly with current draft and rejects retained commands while busy`, async () => {
     const h = new MobileRenderHarness(); const calls: unknown[] = [];
     const render = (busy = false) => h.render(<BrowseFiltersScreen initial={initial} query="medicine" tags={[]} busy={busy}
@@ -113,7 +113,7 @@ for (const [label, mode] of [['Review expiring soon items', 'soon'], ['Review ex
       onExpiration={(mode, draft) => calls.push({ mode, draft })} />);
     try {
       await render();
-      expect(h.allText()).toContain('Expiration reviews active items, regardless of the Browse status filter.');
+      expect(h.allText()).toContain('Reviews active items only.');
       await h.press(h.byLabel('Choose expiration review'));
       expect(h.byLabel('Choose tags')).toBeDefined();
       const retained = h.byText(label)?.parent?.props.onPress;
@@ -137,7 +137,7 @@ it('dismisses the review menu without navigation or changing draft choices', asy
     await h.press(h.byLabel('Choose availability')); await h.press(h.byLabel('Checked out'));
     await h.press(h.byLabel('Choose expiration review'));
     await h.press(h.byLabel('Choose expiration review'));
-    expect(h.byText('Review expired items')).toBeUndefined();
+    expect(h.byText('Expired')).toBeUndefined();
     await h.press(h.byLabel('Show results'));
     expect(applied).toEqual([{ ...initial, checkoutState: 'checked_out' }]);
   } finally { await h.unmount(); }

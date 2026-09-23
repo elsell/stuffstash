@@ -52,13 +52,13 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
           <SettingsNavigationRow label="Tags" context={draft.tagIds.length ? draft.tagIds.length + ' selected' : 'Any tags'} accessibilityLabel="Choose tags" onPress={() => open('tags')} />
           {searchMode ? <SettingsValueRow label="Sort" value="Relevance while searching" /> : <SettingsPickerRow label="Sort" accessibilityLabel="Choose sort" value={draft.sort} options={choices.sort} disabled={busy} onChange={value => setDraft({ ...draft, sort: value })} />}
         </SettingsSection>
-        <SettingsSection footer="Expiration reviews active items, regardless of the Browse status filter.">
+        <SettingsSection footer="Reviews active items only.">
           <View style={styles.navigationRow}>
             <NativeActionMenu accessibilityLabel="Choose expiration review" disabled={busy}
               trigger={{ kind: 'label', label: 'Review expiration' }} groups={[{ id: 'expiration', items: [
-                { id: 'soon', label: 'Review expiring soon items', onPress: () => onExpiration('soon', draft) },
-                { id: 'expired', label: 'Review expired items', onPress: () => onExpiration('expired', draft) },
-                { id: 'all', label: 'Review all expiration dates', onPress: () => onExpiration('all', draft) }
+                { id: 'soon', label: 'Expiring soon', onPress: () => onExpiration('soon', draft) },
+                { id: 'expired', label: 'Expired', onPress: () => onExpiration('expired', draft) },
+                { id: 'all', label: 'All dates', onPress: () => onExpiration('all', draft) }
               ] }]} />
           </View>
         </SettingsSection>

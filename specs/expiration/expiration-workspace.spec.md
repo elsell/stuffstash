@@ -221,9 +221,10 @@ adapter contract and action regressions in addition to the existing sheet tests.
 ### Browse review entry (M274)
 
 The Browse filter overview offers one native action menu labelled Review expiration
-with commands Review expiring soon items, Review expired items, and Review all
-expiration dates. Do not add an intermediate page for these three destinations.
-Keep the active-items restriction visible beside the menu before selection. Menu
+with commands Expiring soon, Expired, and All dates. The trigger supplies the
+action context; avoid repeating it in each menu command. Do not add an intermediate page for these three destinations.
+Keep the active-items restriction visible beside the menu before selection as
+“Reviews active items only.” Menu
 dismissal changes neither filters nor navigation. A chosen command immediately
 opens the selected review with the current filter draft and submitted query;
 retain existing scope verification and original Browse return context. Disable

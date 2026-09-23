@@ -975,7 +975,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(menu.isHittable)
     menu.tap()
-    let expired = app.buttons["Review expired items"].firstMatch
+    let expired = app.buttons["Expired"].firstMatch
     XCTAssertTrue(expired.waitForExistence(timeout: 5))
     XCTAssertTrue(expired.isHittable)
     XCTAssertTrue(app.navigationBars["Filters"].exists)
