@@ -1061,3 +1061,9 @@ their existing semantics. Navigation return must preserve query, filters and
 scroll context. Verify the shared adapter with representative Browse and Move
 consumers, then the connected native Browse refinement journey; source tests do
 not establish the Android root cause or native acceptance alone.
+
+Connected filter native verification must scroll the actual filter body when an
+entry is below its visible viewport, retaining hittability before activation.
+Run35905242914 confirms the iPad Expiration entry is below the fixed footer; its
+check stopped before any scroll. This is not evidence that scrolling fails, nor
+acceptance of the sheet's density. Preserve M275 visual review independently.

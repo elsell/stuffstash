@@ -1,0 +1,7 @@
+Run35905242914 at d7d7689b: phone both connected cases pass.
+iPad Browse/Filters/detail/Back passes; Expiration stops at immediate hittability
+before scrolling. Final screenshot and AX show Expiration below fixed footer.
+Bounded correction: scroll actual filter body above footer before requiring
+hittability and opening the menu. No product or query change justified by this
+failure. M275 visual density remains open. Corrected search run35909057029 was
+already dispatched with this same harness limitation; do not repeat diagnostics.

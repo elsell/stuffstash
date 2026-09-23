@@ -1010,7 +1010,17 @@ final class FixtureAuditTests: XCTestCase {
     let available = app.buttons["Available"].firstMatch
     XCTAssertTrue(available.waitForExistence(timeout: 5)); available.tap()
     let menu = app.buttons["Choose expiration review"].firstMatch
-    XCTAssertTrue(menu.isHittable); menu.tap(); app.buttons["Expired"].firstMatch.tap()
+    let filterBody = app.scrollViews.containing(.button, identifier: "Choose expiration review").firstMatch
+    for _ in 0..<5 {
+      if menu.isHittable { break }
+      // Start above the fixed footer so the gesture belongs to the filter list.
+      let start = filterBody.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45))
+      let end = filterBody.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
+      start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    XCTAssertTrue(menu.isHittable)
+    capture("connected-expiration-filter-entry")
+    menu.tap(); app.buttons["Expired"].firstMatch.tap()
     XCTAssertTrue(app.navigationBars["Expiration"].waitForExistence(timeout: 10))
     let expired = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 03")).firstMatch
     XCTAssertTrue(expired.waitForExistence(timeout: 10)); XCTAssertTrue(expired.isHittable)
