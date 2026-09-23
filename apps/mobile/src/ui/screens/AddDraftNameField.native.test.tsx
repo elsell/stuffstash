@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { AddDraftNameField } from './AddDraftNameField.ios';
 
-it('retains the native seed during editing and replaces it only for a new draft revision', async () => {
+it('keeps the native instance while updating its reappearance seed and honoring draft resets', async () => {
   const h = new MobileRenderHarness(); const changes: string[] = [];
   const field = (revision: number, value: string, editable = true) => <AddDraftNameField key={revision}
     accessibilityLabel="Asset name" editable={editable} value={value} onChangeText={text => changes.push(text)} />;
@@ -12,7 +12,7 @@ it('retains the native seed during editing and replaces it only for a new draft 
     await h.change(h.byType('SwiftUITextField'), 'Native draft name');
     expect(changes).toEqual(['Native draft name']);
     await h.render(field(0, 'Native draft name'));
-    expect(h.byType('SwiftUITextField')?.props.defaultValue).toBe('Restored tent');
+    expect(h.byType('SwiftUITextField')?.props.defaultValue).toBe('Native draft name');
     await h.render(field(0, 'Native draft name', false));
     await h.change(h.byType('SwiftUITextField'), 'Busy callback');
     expect(changes).toEqual(['Native draft name']);

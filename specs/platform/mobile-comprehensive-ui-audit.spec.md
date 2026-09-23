@@ -1496,8 +1496,10 @@ Passing the comparison does not establish physical typing or prove the cause.
 The iOS Add name field may use the already-pinned SwiftUI TextField as a scoped
 candidate after the default-assisted comparison passes on phone and iPad. Keep
 ordinary text assistance, its visible Name label and accessible Asset name. Seed
-once per existing name revision; restored drafts and Clear draft deliberately
-remount the field, while typing, metadata refresh and rejected saves do not. Keep
+from the current committed draft for native reappearance; restored drafts and
+Clear draft deliberately remount the field, while typing, metadata refresh and
+rejected saves do not. The native field owns live typing; defaultValue is its
+appearance seed, not a command to rewrite each edit (see mobile-selection-lifecycle.spec.md). Keep
 application state as the save/validation owner and disable changes while busy.
 Android retains its current field. Do not generalize this migration to multiline,
 search, generated-key or externally controlled fields. Unchanged Add whole-string
