@@ -11,3 +11,6 @@ export const ColorPicker='SwiftUIColorPicker';
 export const Menu='SwiftUIMenu';
 export const Section='SwiftUISection';
 export const Image='SwiftUIImage';
+
+export const List='SwiftUIList';
+export const RNHostView='SwiftUIRNHostView';

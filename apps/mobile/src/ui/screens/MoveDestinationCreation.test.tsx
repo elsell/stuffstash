@@ -11,9 +11,12 @@ import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary
 import { createMobileQueryClient } from '../../adapters/serverState/MobileQueryClient';
 import { MobileRenderHarness } from '../../test-support/render';
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
+import { navigationOptions, resetNavigation } from '../../test-support/navigation';
 import { latestAlert } from '../../test-support/react-native';
 const settle = async (h: MobileRenderHarness, ms = 30) => { await h.run(() => new Promise(resolve => setTimeout(resolve, ms))); };
 it('edits a creation name without collapsing Kind or changing search, validates that name, and retries it', async () => {
+  resetNavigation();
+  const currentTitle = () => (Object.assign({}, ...navigationOptions()) as { title?: string }).title;
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
@@ -29,7 +32,9 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     await h.run(() => search.change('Garden')); await settle(h, 350); await settle(h);
     await h.press(h.byLabel('New destination'));
     await settle(h, 350); await settle(h);
-    const retainedCreate = h.byLabel('Create location "Garden"')!.props.onPress;
+    expect(h.byLabel('Move')).toBeUndefined();
+    expect(h.byLabel('Choose inventory root')).toBeUndefined();
+    const retainedCreate = h.byLabel('Create destination')!.props.onPress;
     await h.press(h.byLabel('Cancel new destination'));
     await h.run(() => retainedCreate());
     expect(submitted).toEqual([]);
@@ -37,10 +42,11 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     await h.changeText(h.byLabel('New destination name'), 'Garden shed');
     await h.run(() => retainedCreate());
     expect(submitted).toEqual([]);
+    expect(currentTitle()).toBe('New destination');
     expect(h.byLabel('Choose destination kind')).toBeDefined();
     expect(search.text).toBe('Garden');
     expect(h.byLabel('Put in')).toBeUndefined();
-    expect(h.byLabel('Create location "Garden shed"')?.props.disabled).toBe(true);
+    expect(h.byLabel('Create destination')?.props.disabled).toBe(true);
     await settle(h, 350); await settle(h);
     expect(lookups).toContain('Garden shed');
     await h.run(() => resolveName([])); await settle(h);
@@ -48,10 +54,10 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     expect(latestAlert()?.title).toBe('Could not create destination');
     expect(h.byLabel('New destination name')?.props.value).toBe('Garden shed');
     expect(h.byLabel('Choose destination kind')).toBeDefined();
-    await h.press(h.byLabel('Create location "Garden shed"'));
+    await h.press(h.byLabel('Create destination'));
     expect(submitted).toEqual([expect.objectContaining({ title: 'Garden shed' }), expect.objectContaining({ title: 'Garden shed' })]);
     expect(h.byLabel('New destination name')).toBeUndefined();
-    expect(h.byText('Selected: Garden shed')).toBeDefined();
+    expect(h.byLabel('Choose destination Garden shed')?.props.accessibilityState.checked).toBe(true);
     await h.run(() => retainedCreate());
     expect(submitted).toHaveLength(2);
 
@@ -83,7 +89,8 @@ it.each(['ios', 'android'] as const)('selects one destination on %s and moves on
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(false);
     expect(submitted).toEqual([]);
     await changeSearch('unmatched'); await settle(h, 350);
-    expect(h.byText('Selected: House / Garage')).toBeDefined();
+    expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
+    expect(h.byText('Selected')).toBeDefined();
     await h.press(h.byLabel('Choose inventory root'));
     await h.run(choose);
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(true);

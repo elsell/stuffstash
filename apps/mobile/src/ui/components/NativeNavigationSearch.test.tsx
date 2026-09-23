@@ -84,3 +84,11 @@ it('seeds a newly enabled native field without rewriting native edit echoes', as
   await h.render(render(true,'replacement')); expect(writes).toEqual(['retained','replacement']);
  } finally {await h.unmount();unsubscribe();resetNavigation();}
 });
+
+it('allows selection tasks to show stacked native search without changing the default', async () => {
+ resetNavigation(); const h = new MobileRenderHarness();
+ try {
+  await h.render(<NativeNavigationSearch placement="stacked" query="" placeholder="Find a destination" onChange={()=>{}} onSubmit={()=>{}} onClear={()=>{}} />);
+  expect((navigationOptions().at(-1) as {headerSearchBarOptions:{placement:string}}).headerSearchBarOptions.placement).toBe('stacked');
+ } finally { await h.unmount(); resetNavigation(); }
+});

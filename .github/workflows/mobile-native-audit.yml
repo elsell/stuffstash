@@ -120,6 +120,7 @@ jobs:
             move-selection-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'

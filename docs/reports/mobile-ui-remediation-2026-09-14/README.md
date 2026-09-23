@@ -11,6 +11,12 @@ action. Native35895924050 passes functionality only. M265–M273 is held pending
 whole-layout redesign and matching phone/iPad visual review; do not equate green
 workflow checks with product acceptance.
 
+The redesign now uses an actual SwiftUI List on iOS, grouped subject/choices,
+retained selected rows, stacked native search and toolbar-owned destination
+creation. Android shares the grouping through its existing controls. Source checks
+cover selection/retry, title ownership and retired callbacks; native screenshots
+of entry, selection, creation and recovery are still required before acceptance.
+
 ## Delivery and frozen batch
 
 Latest verified TestFlight: **0.24.32 (123.1)** — M260–M264, with Apple processing
