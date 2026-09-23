@@ -36,8 +36,17 @@ and native enabled state. Remote validation passes1,921 tests across305 files,
 TypeScript and structural checks; regressions were observed failing before fixes.
 Code critic has no remaining source blocker. CI35805414085 passes all six jobs,
 including compiled Swift RGB checks and the committed native dependency lock.
-Focused phone/iPad acceptance remains pending in native35805411868 at4e906d30.
-The sleeping collector owns result collection. This candidate is not released.
+Native35805411868 at4e906d30 passes1/9 on each device. Seven color checks stop
+before activation because UIKit exposes its internal button as “Color” alongside
+the separate visible text ([hierarchy](evidence/phone-color-accessibility-358054.txt)).
+Correction: expose the well itself as the named accessible button and hide the
+visual label from traversal; retain exact native acceptance. The Add check also
+stops before typing: its exhaustive key query finds readiness but takes5.5seconds
+([timing](evidence/phone-add-keyboard-readiness-358054.txt)). Check the intended
+T/C key instead, retaining the five-second deadline and exact text assertions.
+Remote1,921 tests, TypeScript and11 fixture checks pass; critic reports no source
+blocker. Corrected native activation/disabled-state acceptance remains required.
+This candidate is not released.
 
 Frozen release scope: direct system color-well presentation in tag editing,
 current-owner selection events, disabled-state handling and optional color reset.

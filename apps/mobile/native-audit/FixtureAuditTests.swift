@@ -1581,7 +1581,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     reveal(name)
     name.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "T")
     name.typeText("Tent")
     let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
     XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
@@ -1595,7 +1595,7 @@ final class FixtureAuditTests: XCTestCase {
     let entry = app.textFields["New tag name"].firstMatch
     reveal(entry)
     entry.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
     let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
     XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)

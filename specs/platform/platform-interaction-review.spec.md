@@ -16,6 +16,14 @@ to the current parent draft; rounded byte conversion preserves unchanged channel
 Parent color changes, clearing and permission locks update the control without
 emitting user changes. Existing presets and Android behavior remain unchanged.
 
+Expose the UIColorWell itself as the single accessible button, rather than its
+internal default-named child. Hide the accompanying visual text from accessibility
+traversal. Native acceptance must retain the descriptive name and exercise actual
+activation; changing the test to accept the internal generic label is insufficient.
+For the Add draft regression, keyboard readiness checks the next intended key
+(T for Tent, C for Camping) instead of enumerating every key. Preserve the same
+five-second deadline, actual typing and exact complete-value assertions.
+
 Use a focused local `color-well` module with ExpoModulesCore; keep it separate from
 sheet geometry. Detect its actual native view before choosing the adapter so older
 binaries retain the existing fallback. Test null/invalid selection, external reset,

@@ -19,6 +19,8 @@ final class TagColorWellView: ExpoView {
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     isAccessibilityElement = false
+    well.isAccessibilityElement = true
+    well.accessibilityTraits = .button
     well.supportsAlpha = false
     well.title = "Choose any color"
     well.accessibilityLabel = "Choose any color"

@@ -21,7 +21,8 @@ export function NativeTagColorPicker({ disabled, onChange, value }: { readonly d
     return () => { committed.current = null; };
   }, [disabled, onChange]);
   return <View style={styles.row}>
-    <Text accessible={false} style={[styles.label, { color: palette.text }, disabled && styles.disabled]}>Choose any color</Text>
+    <Text accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={[styles.label, { color: palette.text }, disabled && styles.disabled]}>Choose any color</Text>
     <ColorWell style={styles.well} selection={nativeTagColorSelection(value)} enabled={!disabled}
       onSelectionChange={event => {
         const selected = nativeTagColorSelection(event.nativeEvent.value);
