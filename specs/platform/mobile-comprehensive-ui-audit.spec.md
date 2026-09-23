@@ -2050,3 +2050,17 @@ anchor/scroll and grid fit, connected Edit save and Move return, Edit metadata/t
 recovery, destination creation/retry and Move Here input. Prior component results
 remain scoped evidence; the combined run verifies integration. Unrelated findings
 stay in the audit and must not silently expand this batch.
+
+
+### Add destination search keyboard observation
+
+The iPad job107346778966 in run35909892208 completes three selection cases but
+stops before destination creation when search is reopened. The five-second
+keyboard readiness observation contains one 4.21-second false sample; final
+native evidence shows the visible keyboard and requested key both hittable with
+valid bounds. Give only this destination-search helper the existing bounded
+30-second keyboard-readiness budget, as already used for Move creation. Preserve
+actual typing, complete query equality, native selection, failure/retry and return
+assertions. This corrects an observation boundary, not proof of application
+acceptance or a reason to replace native search. The corrected run still must
+complete and its focused creation layout must be visually reviewed.

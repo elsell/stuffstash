@@ -1983,7 +1983,7 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
       }
       XCTAssertTrue(field.waitForExistence(timeout: 5)); XCTAssertTrue(field.isHittable)
-      field.tap(); waitForKeyboard(keyLabel: "t"); field.typeText(query)
+      field.tap(); waitForKeyboard(keyLabel: "t", timeout: 30); field.typeText(query)
       let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
       XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
       app.buttons["Dismiss keyboard"].firstMatch.tap()
