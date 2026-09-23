@@ -20,7 +20,12 @@ those same unchanged checks. The later eager-observation improvement is not in
 this released source and has no native acceptance yet.
 
 Onboarding phone105290143544 passes one executed test and skips two;
-iPad105290143896 passes3/3. Do not call the skipped phone paths verified.
+iPad105290143896 passes3/3. The phone's executed case is
+`testConnectionHelpAndKeyboardKeepActionsReachable`: exact URL, downward scroll-margin
+drag, keyboard disappearance, reachable Connect and help/draft retention. iPad also
+passes this case, inside-form dismissal and actual landscape adaptation. The latter
+two are iPad-only; do not call the skipped phone paths verified. These cases do not
+verify Connect while the keyboard remains open (M35).
 Required CI35247151149 passes, including native dependency resolution.
 
 Remaining full-suite failures concern known color activation, text-entry and

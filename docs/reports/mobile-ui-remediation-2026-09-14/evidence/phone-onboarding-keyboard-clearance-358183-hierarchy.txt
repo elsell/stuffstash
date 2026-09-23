@@ -1,0 +1,130 @@
+Attributes: Application, 0x1159cbe80, pid: 44932, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x1159cbe80, pid: 44932, label: 'Stuff Stash'
+    Window (Main), 0x1159cb980, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1159caf80, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1159c8dc0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1159c8f00, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1159c9040, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1159c9180, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1159cbd40, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1159cb0c0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1159c9400, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1159c9540, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1159c9680, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1159c97c0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1159c9900, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x104e8f340, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1159ddf40, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1159ddcc0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x1159dda40, {{0.0, 62.0}, {402.0, 460.0}}
+                                      ScrollView, 0x1159dfd40, {{0.0, 62.0}, {402.0, 460.0}}
+                                        Other, 0x1159df5c0, {{0.0, 62.0}, {402.0, 470.0}}
+                                          Other, 0x1159ded00, {{0.0, 62.0}, {402.0, 470.0}}
+                                            Other, 0x1159dea80, {{24.0, 86.0}, {36.0, 36.0}}
+                                              Image, 0x1159dd040, {{24.0, 86.0}, {36.0, 36.0}}, identifier: 'assets/assets/brand/stuff-stash-glyph.png'
+                                            StaticText, 0x1159de080, {{70.0, 93.7}, {89.0, 20.3}}, label: 'Stuff Stash'
+                                              StaticText, 0x1159de1c0, {{70.0, 93.7}, {89.0, 20.3}}, label: 'Stuff Stash'
+                                            StaticText, 0x1159de300, {{24.0, 176.0}, {354.0, 36.0}}, label: 'Connect to Stuff Stash'
+                                              StaticText, 0x1159de440, {{24.0, 176.0}, {354.0, 36.0}}, label: 'Connect to Stuff Stash'
+                                            StaticText, 0x1159de580, {{24.0, 240.0}, {354.0, 17.0}}, label: 'Server address'
+                                              StaticText, 0x1159de6c0, {{24.0, 240.0}, {354.0, 17.0}}, label: 'Server address'
+                                            Other, 0x1159de800, {{24.0, 266.0}, {354.0, 54.0}}
+                                              Other, 0x1159ddb80, {{24.0, 266.0}, {354.0, 54.0}}
+                                                Other, 0x115958780, {{24.0, 266.0}, {354.0, 54.0}}
+                                                  TextField, 0x11595a6c0, {{24.0, 276.0}, {354.0, 34.0}}, label: 'Server address', placeholderValue: 'https://stash.example.com', value: https://example.in..., Keyboard Focused
+                                            Button, 0x11595a800, {{24.0, 322.0}, {152.3, 44.0}}, label: 'Need help connecting?'
+                                            StaticText, 0x11595a940, {{24.0, 398.0}, {354.0, 38.0}}, label: 'Your browser will open for sign-in, then bring you back here.'
+                                              StaticText, 0x11595aa80, {{24.0, 398.0}, {354.0, 38.0}}, label: 'Your browser will open for sign-in, then bring you back here.'
+                                            Other, 0x11595abc0, {{24.0, 462.0}, {354.0, 48.0}}
+                                              Other, 0x11595ad00, {{24.0, 462.0}, {354.0, 48.0}}
+                                                Other, 0x11595ae40, {{24.0, 462.0}, {354.0, 48.0}}
+                                                  Button, 0x11595af80, {{24.0, 463.0}, {354.0, 46.0}}, label: 'Connect and sign in'
+                                        Other, 0x11595be80, {{369.0, 62.0}, {30.0, 460.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x11595bc00, {{396.0, 65.0}, {3.0, 380.7}}
+                                        Other, 0x11595bd40, {{0.0, 489.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x115958640, {{31.0, 516.0}, {340.0, 3.0}}
+                                        Other, 0x115958500, {{369.0, 62.0}, {30.0, 460.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                          Other, 0x1159583c0, {{396.0, 65.0}, {3.0, 380.7}}
+                                        Other, 0x115958280, {{0.0, 489.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x115958140, {{31.0, 516.0}, {340.0, 3.0}}
+                                    Other, 0x115958000, {{0.0, 62.0}, {402.0, 778.0}}
+                                  StaticText, 0x1159588c0, {{0.0, 857.0}, {162.0, 17.0}}, label: 'Submitted address: none'
+                                    StaticText, 0x11595b5c0, {{0.0, 857.0}, {162.0, 17.0}}, label: 'Submitted address: none'
+                        Other, 0x11595b480, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11595b0c0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11595b200, {{0.0, 830.0}, {402.0, 44.0}}, identifier: 'app-keyboard-accessory-host'
+                    Other, 0x11595b340, {{0.0, 830.0}, {402.0, 44.0}}
+    Window, 0x11595b700, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11595b840, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11595b980, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11595bac0, {{0.0, 522.0}, {402.0, 352.0}}
+          Other, 0x108554000, {{0.0, 522.0}, {402.0, 44.0}}
+            Other, 0x108554140, {{20.0, 512.0}, {362.0, 44.0}}
+              Other, 0x108554280, {{0.0, 512.0}, {402.0, 44.0}}
+                Button, 0x1085543c0, {{338.0, 512.0}, {44.0, 44.0}}, label: 'Dismiss keyboard'
+            Other, 0x108554500, {{0.0, 522.0}, {201.0, 44.0}}
+            Other, 0x108554640, {{201.0, 522.0}, {201.0, 44.0}}
+          Other, 0x108554780, {{0.0, 566.0}, {402.0, 308.0}}, identifier: 'inputView'
+    Window, 0x1085548c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x108554a00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x108554b40, {{0.0, 522.0}, {402.0, 352.0}}
+          Other, 0x108554c80, {{0.0, 522.0}, {402.0, 44.0}}
+          Other, 0x108554dc0, {{0.0, 566.0}, {402.0, 308.0}}
+            Other, 0x108554f00, {{0.0, 566.0}, {402.0, 308.0}}
+              Other, 0x108555040, {{0.0, 566.0}, {402.0, 308.0}}
+          Other, 0x108555180, {{0.0, 583.0}, {402.0, 233.0}}
+            Keyboard, 0x1085552c0, {{0.0, 583.0}, {402.0, 233.0}}
+              Other, 0x108555400, {{0.0, 583.0}, {402.0, 233.0}}
+                Other, 0x108555540, {{0.0, 583.0}, {402.0, 233.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x108555680, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1085557c0, {{4.7, 590.0}, {39.3, 54.0}}, label: 'q'
+                  Key, 0x108555900, {{44.0, 590.0}, {39.7, 54.0}}, label: 'w'
+                  Key, 0x108555a40, {{83.7, 590.0}, {39.3, 54.0}}, label: 'e'
+                  Key, 0x108555b80, {{123.0, 590.0}, {39.7, 54.0}}, label: 'r'
+                  Key, 0x108555cc0, {{162.7, 590.0}, {39.3, 54.0}}, label: 't'
+                  Key, 0x108555e00, {{202.0, 590.0}, {39.7, 54.0}}, label: 'y'
+                  Key, 0x108555f40, {{241.7, 590.0}, {39.3, 54.0}}, label: 'u'
+                  Key, 0x108556080, {{281.0, 590.0}, {39.7, 54.0}}, label: 'i'
+                  Key, 0x1085561c0, {{320.7, 590.0}, {39.3, 54.0}}, label: 'o'
+                  Key, 0x108556300, {{360.0, 590.0}, {39.7, 54.0}}, label: 'p'
+                  Key, 0x108556440, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x108556580, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1085566c0, {{24.3, 644.0}, {39.3, 54.0}}, label: 'a'
+                  Key, 0x108556800, {{63.7, 644.0}, {39.7, 54.0}}, label: 's'
+                  Key, 0x108556940, {{103.3, 644.0}, {39.3, 54.0}}, label: 'd'
+                  Key, 0x108556a80, {{142.7, 644.0}, {39.7, 54.0}}, label: 'f'
+                  Key, 0x108556bc0, {{182.3, 644.0}, {39.3, 54.0}}, label: 'g'
+                  Key, 0x108556d00, {{221.7, 644.0}, {39.7, 54.0}}, label: 'h'
+                  Key, 0x108556e40, {{261.3, 644.0}, {39.3, 54.0}}, label: 'j'
+                  Key, 0x108556f80, {{300.7, 644.0}, {39.7, 54.0}}, label: 'k'
+                  Key, 0x1085570c0, {{340.3, 644.0}, {39.3, 54.0}}, label: 'l'
+                  Key, 0x108557200, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Button, 0x108557340, {{4.7, 698.0}, {51.3, 54.0}}, identifier: 'shift', label: 'shift'
+                  Key, 0x108557480, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x1085575c0, {{63.7, 698.0}, {39.7, 54.0}}, label: 'z'
+                  Key, 0x108557700, {{103.3, 698.0}, {39.3, 54.0}}, label: 'x'
+                  Key, 0x108557840, {{142.7, 698.0}, {39.7, 54.0}}, label: 'c'
+                  Key, 0x108557980, {{182.3, 698.0}, {39.3, 54.0}}, label: 'v'
+                  Key, 0x108557ac0, {{221.7, 698.0}, {39.7, 54.0}}, label: 'b'
+                  Key, 0x108557c00, {{261.3, 698.0}, {39.3, 54.0}}, label: 'n'
+                  Key, 0x108557d40, {{300.7, 698.0}, {39.7, 54.0}}, label: 'm'
+                  Key, 0x108557e80, {{0.0, 583.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x108564000, {{348.0, 698.0}, {51.7, 54.0}}, identifier: 'delete', label: 'delete'
+                  Key, 0x108564140, {{4.7, 752.0}, {98.7, 54.0}}, identifier: 'more', label: 'numbers'
+                  Key, 0x108564280, {{103.3, 752.0}, {65.7, 54.0}}, label: '.'
+                  Key, 0x1085643c0, {{169.0, 752.0}, {66.0, 54.0}}, label: '/'
+                  Key, 0x108564500, {{235.0, 752.0}, {65.7, 54.0}}, label: '.com'
+                  Button, 0x108564640, {{300.7, 752.0}, {99.0, 54.0}}, identifier: 'Go', label: 'go'
+          Other, 0x108564780, {{0.0, 583.0}, {402.0, 291.0}}
+            Button, 0x1085648c0, {{8.5, 805.7}, {68.1, 68.7}}, label: 'Emoji'
+              StaticText, 0x108564a00, {{8.5, 805.7}, {0.0, 0.0}}
+            Button, 0x108564b40, {{325.4, 805.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate', Disabled
+              StaticText, 0x108564c80, {{325.4, 805.4}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x1159cbe80, pid: 44932, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x108564dc0, pid: 44932, label: 'Stuff Stash'
+  }

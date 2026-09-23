@@ -62,7 +62,7 @@ phone/iPad. Text-entry comparisons and other audit findings are outside this bat
 The TestFlight note will be: “Improved custom tag color selection with the iOS
 system color picker, while preserving your draft and preset colors.”
 
-## Current release batch — menu action ownership
+## Current release — menu action ownership
 
 Sourceb75ef748 fixes retained native menu callbacks executing obsolete actions or
 reopening after unlock. M54 in [findings](findings.md) holds the current diagnosis.
@@ -79,14 +79,39 @@ testb75ef748. All six CI jobs pass. Native results are terminal: phone2/3, iPad3
 existing disposable audit tree and emulator, with a scripted lock/recovery journey.
 Android lock/recovery and applied Browse choice pass; retained evidence is linked
 from M54. Phone/iPad menu and filter checks also pass. Phone archive returned to
-Tags but queried its4200ms notice about ten seconds after confirmation. The next
-focused check observes that exact transient notice before the persistent destination,
-retaining both assertions and durations. No product code change or new release is claimed.
+Tags but queried its4200ms notice about ten seconds after confirmation. The
+corrected observation order passes the focused archive journey on both devices in
+[native35816959842](https://github.com/elsell/stuffstash/actions/runs/35816959842),
+retaining the exact notice and destination assertions. All six final CI jobs pass.
+PR162 merged asc31638fc; [release35818700192](https://github.com/elsell/stuffstash/actions/runs/35818700192)
+is running. Upload, Apple processing and exact-build changelog are not yet claimed.
 
 Acceptance: shared menu open/lock/dismiss/unlock/execute behavior, representative
 filter selection and destructive-command recovery on phone/iPad, plus Android
-popup/choice behavior. No new color/input diagnostic runs. Planned TestFlight note:
+popup/choice behavior. No new color/input diagnostic runs. TestFlight note:
 “Fixed menus accepting outdated actions and reopening unexpectedly after a task unlocks.”
+
+## Current follow-up — onboarding command clearance
+
+M35's earlier fixture inserted a navigation header that production onboarding does
+not have. The corrected fixture preserves the production viewport and keeps its
+observer outside layout flow. Android passes full Connect clearance above the
+visible keyboard and exact one-tap URL submission without a product change.
+[Corrected iOS acceptance35818325756](https://github.com/elsell/stuffstash/actions/runs/35818325756)
+passes2/2 on phone and iPad: full keyboard-open Connect clearance, exact one-tap
+submission and keyboard Go. Reviewed [phone](evidence/phone-onboarding-keyboard-clearance-358183.png)
+and [iPad](evidence/ipad-onboarding-keyboard-clearance-358183.png) captures agree.
+The prior header-bearing phone failure does not establish a shipped layout defect.
+No production workaround is needed for M35. Larger fonts and other configurations
+retain their separate audit scope.
+
+Android missing-photo recovery also passes on the same existing audit APK:
+readable error, native Retry, retry failure and Close returning to the parent.
+[Capture](evidence/android-photo-recovery-retry.png) and
+[returned hierarchy](evidence/android-photo-recovery-closed.xml) retain evidence.
+The initial script's final lookup used iOS title casing; inspecting the captured
+Android uppercase label confirms return, without an unnecessary rerun. This does
+not establish successful image retry, zoom, backgrounding or assistive behavior.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
