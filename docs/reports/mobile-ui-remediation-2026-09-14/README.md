@@ -21,28 +21,18 @@ Unrelated findings do not block either release.
 
 ## Current diagnosis and next decisions
 
-| Workflow | Established evidence | Remaining acceptance |
-| --- | --- | --- |
-| Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivered in0.24.32; no unchanged layout rerun. |
-| Map/detail hierarchy | M265/M266 scoped phone/iPad acceptance passed in35874901875; Android captures retained. | Preserve in the integrated batch; no claim of whole-detail acceptance. |
-| Add/Edit selection | Run35880132749 showed an empty Add name after Tags and Edit Tags behind its modal owner. M271 keeps the current native reappearance seed; M272 presents selection above its owner. | 35890124446 passed Add/Edit Tags on both devices and Add destination on iPad. Phone destination needs native search closed before task Cancel. Unfinished tag disclosure still fails keyboard entry on phone and times out during scrolling on iPad after entering Camping; [retained evidence](evidence/selection-lifecycle-358901-results.txt) keeps those gates open. |
-| Move | M270 separates search from creation name and preserves Kind/Create during editing. Android connected creation/move retry passed. | Corrected grouped Move/Move Here native run below; retain exact query/name and selected state assertions. |
-| Move Here | M273 replaces the old partial sheet/custom preview with native header/search and checked rows. [Android workflow passed](evidence/move-here-m273-results.txt); retained screenshot inspected. | 35891073312 passed iPad rejected move/retry. Other cases stopped on native radio-role queries or task commands during active search. Corrected harness run35895924050 at e15d3133 is active; no product search changes. |
+Browse List/Map structure shipped in0.24.32 after native verification. The frozen
+M265–M273 selection batch is tracked independently in PR173; its current Move
+creation-inset and Add destination readiness runs remain release gates.
 
-The integrated source run passed1,968/1,970 tests. The two failures enforced removed
-inline Add structure and a hidden Move Here header. Corrected expectations and all
-54 other tests in those files pass. TypeScript, structural checks, fixture preparation
-and critic review pass. All six CI35891523435 jobs passed at336e17ef. These checks
-do not establish native presentation or physical-device behavior.
-
-## Next connected workflow
-
-Source review at b5eee60f of Browse → Filters → results/detail/Back retains in-place
-short choices and searchable tag selection. M274 recommends replacing the
-three-destination Expiration intermediate page with a native action menu; preserve
-inherited filters and original Browse return context. This is outside frozen
-M265–M273. Current connected native return/scroll evidence is still required;
-source state ownership does not certify the visual journey.
+The filter follow-up run35911930846 passed all six iPad cases and five of six phone
+cases, including overview/menu, tag footer, search and Browse/detail return. Phone
+Expiration entry renders its list at y750 with height62 in an874-point screen;
+results exist but are offscreen. The candidate correction removes the redundant
+flex wrapper so FlatList is the native screen's direct scrolling body, preserving
+automatic insets and background. The connected result-tap-and-return test stays
+unchanged. The precise UIKit transition cause and corrected native behavior remain
+unproven; no extra swipe or timeout is used to hide the defect.
 
 ## Detail action hierarchy follow-up
 

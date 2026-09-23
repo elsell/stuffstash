@@ -2143,3 +2143,18 @@ contents. Do not hide loading or failure behind an empty result.
 Validate populated/empty photo and twenty-item place fixtures as complete native
 screens, plus selection/opening and filtered no-result recovery. Source assertions
 about order or presence do not establish visual acceptance.
+
+### Expiration entry after filter review
+
+Run35911930846 passes all six iPad filter cases and five phone cases. The remaining
+phone capture confirms Expiration's ScrollView frame at y750 with height62 in an
+874-point screen; the first result exists below the viewport. Treat this as a
+layout failure, not a test needing a swipe or longer timeout.
+
+Make the Expiration FlatList the native screen's direct scrolling body, matching
+Browse's established structure. Remove the redundant flex View around the native
+header options and list; preserve the list background and automatic content inset.
+This removes an unnecessary native scroll-container boundary. The exact UIKit
+transition cause remains unproven; the existing connected filter→Expiration→detail
+and back scenario is the acceptance check and must retain immediate result
+hittability. Do not add fixed screen heights or measured-header padding here.
