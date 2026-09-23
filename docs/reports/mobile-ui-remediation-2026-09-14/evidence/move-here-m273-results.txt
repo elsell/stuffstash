@@ -1,0 +1,1 @@
+{"result": "passed", "source": "3f5d6e09", "checks": ["lookup failure/retry", "checked selection", "search preserves chosen item", "Move failure retains source/destination", "explicit retry returns"]}

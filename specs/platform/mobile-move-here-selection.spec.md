@@ -40,3 +40,11 @@ The grouped move-selection-workflows run covers Move creation/retry and Move Her
 lookup/retry/selection/refinement/clear/commit. Use known letter-key readiness,
 not literal space (absent in retained iPad evidence). Preserve complete typed-query
 and checked-state assertions, exact command fixture inputs and return checks.
+
+Android normal-text installed candidate3f5d6e09 passes lookup retry, checked choice,
+search refinement preserving selection, rejected Move with source/destination
+retained and successful retry/return. The retained-state screenshot was inspected:
+header actions and checked row are visible without overlap. This does not establish
+iOS, tablet, physical-device or backend mutation acceptance. After clearing native
+search, dismiss the keyboard only if it remains; iPad may already collapse search.
+Keep the checked-selection and explicit Move assertions regardless.

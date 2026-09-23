@@ -547,7 +547,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Selected: Audit tent"].exists)
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    if app.keyboards.firstMatch.exists {
+      let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+      XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+      XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    }
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertEqual(candidate.value as? String, "radio button, checked")
     let move = app.buttons["Move here"].firstMatch
