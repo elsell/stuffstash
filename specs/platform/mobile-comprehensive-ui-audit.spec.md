@@ -1833,3 +1833,10 @@ reachability and return to the launcher with the destination removed. Run these
 representative consumers together; no assertion of mutation persistence, assistive
 coverage or whole-app acceptance follows from them. Keep historical enlarged-text
 results independent.
+
+For the Edit name append scenario, readiness targets the first required space key
+using the existing named-key helper, rather than enumerating the whole keyboard
+in a timed predicate. Native35847685581 stops before typing on iPad after one
+4.68-second enumeration; its retained capture shows focused input and keyboard.
+This is not proof of input loss or a passing readiness deadline. Preserve exact
+one-attempt input, metadata retry, rejected Save and discard checks in acceptance.

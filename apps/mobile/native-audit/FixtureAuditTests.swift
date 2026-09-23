@@ -1337,7 +1337,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(types.waitForExistence(timeout: 10))
     XCTAssertTrue(tags.waitForExistence(timeout: 10))
     XCTAssertEqual(name.value as? String, "Audit tent")
-    name.tap(); waitForKeyboard()
+    name.tap(); waitForKeyboard(keyLabel: "space")
     name.typeText(" camping kit")
     let expectedName = "Audit tent camping kit"
     XCTAssertEqual(name.value as? String, expectedName)

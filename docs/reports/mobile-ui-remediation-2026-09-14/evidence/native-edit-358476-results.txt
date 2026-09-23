@@ -1,0 +1,5 @@
+Run: https://github.com/elsell/stuffstash/actions/runs/35847685581
+Source: 37584855ace3998bf5650591977ffb5e4ed8e339
+iPhone job107137709968: full testEditMetadataRecoveryRetainsNormalTextDraft passed, 158.658s.
+iPad job107137709829: failed keyboard-readiness before typing. Single evaluation start1.007s duration4.684s matched=false; waiter5.692s. Retained keyboard diagnostic hittable=true; reviewed final capture shows focused original Audit tent and keyboard. No input-loss claim.
+Decision: target first required space key with existing named-key readiness helper. Preserve one complete input attempt and all draft/recovery assertions. Include in grouped normal-detail run.
