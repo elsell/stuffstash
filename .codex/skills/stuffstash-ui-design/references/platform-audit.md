@@ -63,6 +63,29 @@ keyboard/edge-to-edge behavior. Use synthetic data; avoid changing user inventor
 
 ## Report and durable follow-through
 
+Maintain one short current diagnosis per active defect: user-visible failure,
+established facts and ruled-out causes, chosen correction, investigation budget,
+and acceptance checks. Link durable evidence rather than adding checkpoint prose
+to several reports. Read that diagnosis before searching or dispatching runs.
+
+Set the budget before investigating. Default to one source review and at most two
+discriminating native experiments per defect. Each experiment must name competing
+causes and what each possible outcome changes. A repeat with no new distinction
+is not an experiment. At the limit, choose an implementation, replace the failing
+adapter with an appropriate platform primitive, or document the precise external
+limitation and move to other actionable findings. Do not silently reset the budget
+after compaction or treat an arbitrary deadline as grounds to weaken acceptance.
+
+Prioritize failures in real user workflows over isolated diagnostic differences.
+Verify shared controls once across their relevant states, then representative
+consumers and critical workflows. The surface/axis ledger ensures coverage; its
+cells are not separate test obligations. Add consumer checks for materially
+different composition, lifecycle, permissions or editing semantics.
+
+Let bounded sleeping scripts collect terminal job results. Do not manually poll
+the same run while its collector is healthy. On resumption, check the existing
+collector handle first; transient observation failures do not justify a new run.
+
 Store the concise main report and linked coverage appendices under `docs/reports/`.
 Keep source-grounded details out of product UI copy. Separate confirmed backlog,
 intentional decisions, and required live checks. Record the scope actually audited,
