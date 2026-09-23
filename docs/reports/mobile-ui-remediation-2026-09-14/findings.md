@@ -3185,8 +3185,10 @@ P1 runtime-confirmed in the Android card candidate. Normal-text selection and
 rejected-command recovery passed, but successful retry crashed when removal
 protection toggled during route teardown. The shared Edit/Move/Move Here guard now
 remains registered and dispatches authorized exits. The same Android native journey
-returns successfully, and38 shared behavior tests pass. iOS gesture/teardown
-acceptance remains pending. See android-asset-actions.md for failing and passing
+returns successfully, and38 shared behavior tests pass. Run35247151136 also
+passes testMoveHereRejectedCommandRetainsSelectionAndRetryReturns on phone/iPad,
+including successful return after rejection. Idle iOS dismissal gestures remain
+unverified; do not rerun the accepted Android recovery journey. See android-asset-actions.md for failing and passing
 native evidence and coverage limits.
 
 ### M232 — Focused iPad proposal-location search collapses on clear

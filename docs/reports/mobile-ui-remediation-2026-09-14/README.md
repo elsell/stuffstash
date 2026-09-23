@@ -116,7 +116,20 @@ The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
 
-## Next acceptance batch — custom-field choices
+## Next acceptance batch — destination and custom-field choices
+
+Move destination selection/creation remains a distinct gap from accepted Move-here
+recovery (M231). The runner-only real Move form now has exact-payload synthetic
+ports for existing selection, new Container creation, rejected creation with query
+and kind retained, created selection, rejected move and successful retry return.
+Remote fixture installation (10 tests), TypeScript and structural checks pass.
+Native execution is pending. Budget: one source pass, at most two discriminating
+native experiments. First acceptance distinguishes correct in-place choices and
+retained drafts from a specific command/layout failure; a failed gate determines
+the only follow-up correction. Run this with the held field-choice observer fix,
+not as another isolated field investigation. No production fix is claimed.
+
+### Custom-field choices
 
 M02/M11 retain a distinct native gap: Type/Applies to menus and scroll-separated
 applicability selections in the real CustomizationFieldControls. A runner-only

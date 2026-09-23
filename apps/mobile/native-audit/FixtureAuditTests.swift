@@ -454,6 +454,52 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForNonExistence(timeout: 5))
   }
 
+  func testMoveDestinationCreationRetainsDraftAndRetries() {
+    guard openFixtureURL("audit-move-destination") else { return }
+    let query = app.textFields["Put in"].firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 10))
+    func reveal(_ element: XCUIElement) {
+      for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    let existing = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Camping box")).firstMatch
+    XCTAssertTrue(existing.waitForExistence(timeout: 5))
+    reveal(existing); existing.tap()
+    XCTAssertTrue(existing.label.contains("Selected"))
+    query.tap(); waitForKeyboard(); query.typeText("Audit crate")
+    XCTAssertEqual(query.value as? String, "Audit crate")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
+    XCTAssertTrue(kind.waitForExistence(timeout: 5))
+    reveal(kind); kind.tap()
+    let container = app.buttons["Container"].firstMatch
+    XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
+    XCTAssertTrue(app.staticTexts["Move"].firstMatch.exists)
+    XCTAssertTrue(query.exists)
+    let create = app.buttons["Create container \"Audit crate\""].firstMatch
+    reveal(create); create.tap()
+    let failure = app.alerts["Could not create destination"]
+    XCTAssertTrue(failure.waitForExistence(timeout: 5))
+    XCTAssertTrue(failure.staticTexts["Audit destination temporarily unavailable"].exists)
+    failure.buttons["OK"].tap()
+    XCTAssertEqual(query.value as? String, "Audit crate")
+    reveal(create); create.tap()
+    let selected = app.staticTexts["Audit crate"].firstMatch
+    XCTAssertTrue(selected.waitForExistence(timeout: 5))
+    let move = app.buttons["Move"].firstMatch
+    reveal(move); move.tap()
+    let rejected = app.alerts["Could not move asset"]
+    XCTAssertTrue(rejected.waitForExistence(timeout: 5))
+    XCTAssertTrue(rejected.staticTexts["Audit move temporarily unavailable"].exists)
+    rejected.buttons["OK"].tap()
+    XCTAssertTrue(selected.exists)
+    capture("move-destination-rejected-selection-retained")
+    reveal(move); move.tap()
+    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+  }
+
   func testMoveHereRejectedCommandRetainsSelectionAndRetryReturns() {
     let open = app.buttons["Audit Move here recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

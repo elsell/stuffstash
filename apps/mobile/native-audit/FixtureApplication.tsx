@@ -19,6 +19,7 @@ export { InvitationAcceptanceFixture } from './InvitationAcceptanceFixture';
 export { NotificationInboxFixture, NotificationTargetFixture } from './NotificationInboxFixture';
 export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
+export { MoveDestinationFixture } from './MoveDestinationFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
@@ -142,6 +143,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
+      <Stack.Screen name="audit-move-destination" options={sheets.move} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
@@ -238,6 +240,7 @@ export function FixtureMenu() {
     <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit menu ownership" onPress={() => router.push('/audit-menu-ownership' as Href)} />
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
+    <Button title="Audit Move destination" onPress={() => router.push('/audit-move-destination' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />

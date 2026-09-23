@@ -22,6 +22,7 @@ on:
           - menu-ownership
           - archive-notice
           - onboarding-keyboard
+          - destination-and-field-choices
           - field-choices
   pull_request:
     paths:
@@ -97,6 +98,13 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
+            destination-and-field-choices)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomFieldChoicesStayInPlaceAndRetainTargets'
               )
               ;;
             field-choices)

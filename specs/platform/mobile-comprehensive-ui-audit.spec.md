@@ -24,6 +24,18 @@ consumer checks. Keep spec-first development, meaningful regressions, code criti
 review and native verification. Sleeping scripts own terminal-state collection;
 manual status polling must not duplicate a healthy collector.
 
+## Move destination acceptance coverage
+
+Use the real Move route with synthetic core, lookup, create and move ports in the
+isolated audit runner. Cover choosing an existing destination, switching to a new
+container through the native Kind menu, a rejected create retaining the exact
+query/kind, successful creation selecting that destination, rejected Move retaining
+that selection, and successful retry returning. The fake must validate exact
+creation and movement payloads, so returning alone cannot pass an incorrect move.
+Keep this separate from the already accepted Move-here journey. Normal-size
+phone/iPad and Android checks precede enlarged-text work; real persistence and
+permission boundaries remain independently tested. No production route is added.
+
 ## Invitation native acceptance coverage
 
 The runner-only native suite must render the real invitation acceptance screen
