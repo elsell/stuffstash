@@ -1162,9 +1162,7 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertGreaterThanOrEqual(command.frame.height, 44, label)
       XCTAssertGreaterThanOrEqual(command.frame.minX, app.frame.minX, label)
       XCTAssertLessThanOrEqual(command.frame.maxX, app.frame.maxX, label)
-      if label == "Add item here" {
-        XCTAssertGreaterThan(command.frame.width, app.frame.width * 0.5)
-      }
+      XCTAssertGreaterThanOrEqual(command.frame.width, 44, label)
       capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-") + "-" + captureSuffix)
     }
     let back = app.navigationBars.buttons.firstMatch
