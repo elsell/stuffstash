@@ -1259,9 +1259,7 @@ final class FixtureAuditTests: XCTestCase {
       }
       for _ in 0..<18 where !visible() {
         let above = element.frame.minY < scroll.frame.minY
-        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
-        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        if above { scroll.swipeDown() } else { scroll.swipeUp() }
       }
       XCTAssertTrue(visible())
       XCTAssertTrue(cancel.isHittable)

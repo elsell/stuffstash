@@ -209,7 +209,12 @@ entry, unstaged-draft protection, staged-tag retention, collapsed selections and
 Discard. [Evidence](evidence/android-edit-tags-normal-results.txt). The shared native
 scenario adds default-text coverage with explicit staged-tag and editor-exit checks;
 remote fixture/structural checks and critic review pass. Focused iOS `edit-tags`
-acceptance is now running atb52d5538 (run35848704289), not a replacement.
+run35848704289 atb52d5538 fails both devices before typing: initial Tag14 remains
+below the correct viewport after18 short drags; the sheet remains at its starting
+detent. [Evidence](evidence/native-edit-tags-358487-results.txt). One follow-up uses
+ordinary native swipes with unchanged visibility assertions; repeated failure
+requires a product layout decision, not further gesture tuning. The separate
+four-scenario normal-detail run35850832085 is now running at86f2c51e.
 
 ### Custom-field choices — scoped acceptance complete
 

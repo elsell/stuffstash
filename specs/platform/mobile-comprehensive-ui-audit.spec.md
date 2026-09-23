@@ -1840,3 +1840,11 @@ in a timed predicate. Native35847685581 stops before typing on iPad after one
 4.68-second enumeration; its retained capture shows focused input and keyboard.
 This is not proof of input loss or a passing readiness deadline. Preserve exact
 one-attempt input, metadata retry, rejected Save and discard checks in acceptance.
+
+Tag reachability acceptance uses ordinary native scroll swipes, not repeated short
+press-and-drag gestures that can leave a multi-detent sheet at its starting height.
+Run35848704289 failed on both devices before typing with the correct form scroll
+owner, selected tag below its viewport, and no progression after18 short drags.
+One follow-up uses full native swipes with unchanged tag visibility, draft and
+selection assertions; if reachability still fails, investigate the sheet layout
+as a product defect rather than continue gesture tuning.
