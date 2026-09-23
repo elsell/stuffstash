@@ -30,12 +30,14 @@ adaptation/assistive-technology coverage remain open in the surface reports.
 
 Current frozen batch: M257 Move Here query retention and M258 Edit new-tag name
 retention use the established native draft field.70 focused checks and CI35858868488
-pass. [Native35858864716](evidence/native-edit-move-358588-results.txt) accepts
-Move Here on both devices and Edit metadata/tag workflows on phone. iPad tag
-acceptance stopped before typing because its space key has a literal blank label;
-observe the actual first C key and rerun only that workflow. No production change
-is needed for this driver correction. The separate iPad Edit return-to-name
-visibility gap remains open; other audit findings do not gate this batch.
+pass. Native35858864716 accepts Move Here on both devices and Edit tags on phone;
+[native35862073771](evidence/native-edit-tags-358620-results.txt) accepts Edit tags
+on iPad with identical application source. Its repeat phone run times out before
+typing: the readiness predicate matches but finishes after the deadline. Retain
+that failure explicitly alongside the earlier full phone pass. No further input
+diagnostic is needed for this scoped batch. Critic found no release blocker.
+The existing iPad metadata return-to-name layout gap and broader editor redesign
+remain open and do not gate these text-retention fixes.
 
 | Defect | Established facts | Decision and next acceptance |
 | --- | --- | --- |
