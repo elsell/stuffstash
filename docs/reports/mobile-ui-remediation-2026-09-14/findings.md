@@ -4030,3 +4030,19 @@ retention, cancellation failure/retry, creation retry and copy failure/retry.
 fixtures do not send invitations, exercise a system share destination or establish
 server authorization. Phone/iPad visual verification remains required; this
 belongs to the follow-up batch, not frozen M265–M273.
+
+M278 native visual review35921268590: feedback and Share/Copy grouping are clear,
+but Create Invitation is clipped at the New Invitation section's bottom on both
+devices ([phone](evidence/phone-sharing-clipped-action-359212.png)). Functional
+recovery passes do not close this finding. Candidate moves minimum control
+heights into native content measurement, retaining section clipping and padding.
+Native form-containment and shared detail-command checks remain required.
+
+### M279 — iPad Expiration mode control extends outside its content column
+
+Normal-text iPad35921268590 [capture](evidence/ipad-expiration-clipped-mode-359212.png)
+shows Expiring soon and Expired but clips All dates beyond the right edge of the
+bounded results column. Phone's three choices fit. Connected expired-item return
+passes, but does not establish mode-switch reachability. Correct the control's
+width ownership and verify all three choices against the actual column bounds.
+This structural finding belongs to the follow-up batch; PR173 stays frozen.

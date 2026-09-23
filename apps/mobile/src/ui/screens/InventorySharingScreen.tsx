@@ -231,7 +231,7 @@ export function InventorySharingScreen({
 
       <SettingsRefreshNotice visible={list.isRefetchError || list.isFetchNextPageError} onRetry={async () => { await (list.isFetchNextPageError ? list.fetchNextPage({ cancelRefetch: false }) : list.refetch({ cancelRefetch: false })); }} />
       <SettingsSection title="New Invitation">
-        <View style={styles.form}>
+        <View testID="invitation-creation-form" style={styles.form}>
           {creationError ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
             <Text style={styles.successTitle}>{creationError.title}</Text>
             <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{creationError.message}</Text>

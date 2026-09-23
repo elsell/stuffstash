@@ -62,8 +62,13 @@ a36-point system toolbar frame treated as a custom body button, and duplicate
 nested AX text nodes at the same Availability bounds. Matching screenshots and
 accessibility trees show the expected empty state and one visual heading. Correct
 those observations, require valid heading geometry before deduplication, and retain
-all recovery, bounds and permission checks. Only the five detail/hierarchy cases
-need another native run; do not repeat the nine unchanged passed workflows.
+all recovery, bounds and permission checks. The five detail/hierarchy cases are running with corrected observations. Visual
+review now also finds Create Invitation clipped by its section on both devices
+and All dates clipped from the iPad Expiration mode control. Sharing's native
+minimum-size candidate passes25 focused source tests, type/structural checks and
+critic review; native containment remains required. Correct Expiration's column
+width ownership before final follow-up acceptance. Preserve the passed connected
+journeys; add coverage for these actual layout failures.
 
 ## Separate unresolved decisions
 

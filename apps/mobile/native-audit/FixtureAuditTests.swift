@@ -342,8 +342,17 @@ final class FixtureAuditTests: XCTestCase {
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
     let create = app.buttons["Create Invitation"].firstMatch
-    reveal(create); create.tap()
+    func assertCreationContained() {
+      let creationForm = app.otherElements["invitation-creation-form"].firstMatch
+      XCTAssertTrue(creationForm.exists)
+      let bounds = creationForm.frame
+      XCTAssertFalse(bounds.isEmpty)
+      XCTAssertTrue(bounds.contains(create.frame), "The complete native action must fit its form")
+      XCTAssertGreaterThanOrEqual(bounds.maxY - create.frame.maxY, 15, "Retain the form's bottom inset")
+    }
+    reveal(create); assertCreationContained(); create.tap()
     feedback("Invitation created, link unavailable", message: "If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.", captureName: "sharing-unavailable-link")
+    assertCreationContained()
     XCTAssertEqual(email.value as? String, "audit@example.invalid")
     XCTAssertFalse(app.staticTexts["Complete invitation link"].exists)
 

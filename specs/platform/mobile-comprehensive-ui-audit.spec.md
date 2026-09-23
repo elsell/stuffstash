@@ -2213,3 +2213,20 @@ Three detail assertions need alignment with inspected native evidence:
 
 Rerun the five detail/hierarchy cases with these corrections. Preserve the nine
 passed follow-up workflows rather than re-running unchanged filter/sharing cases.
+
+## Sharing native content measurement
+
+Run35921268590 passes Sharing operations but phone/iPad captures clip Create
+Invitation at the bottom of its section. Phone section ends at548.6pt while the
+button ends at553.7pt. The54pt email host reports a34pt native field and the48pt
+command host a46pt native button: the22pt intrinsic/minimum difference matches
+the missing content space and bottom padding. Put these minimums in the measured
+SwiftUI content rather than only on the React Native Host. Preserve native button
+style, wrapping, email ownership, disabled guards and system keyboard behavior.
+Do not hide this with section overflow or extra compensating padding.
+
+Extend Sharing's native acceptance to require the full Create button rectangle
+inside its form with the intended bottom inset before creation and after failure.
+Review phone/iPad captures; source checks cannot prove cross-framework sizing.
+The shared command adapter also needs representative detail-command verification.
+This is a follow-up finding and does not expand PR173's frozen release scope.
