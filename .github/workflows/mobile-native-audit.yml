@@ -21,6 +21,7 @@ on:
           - release-corrections
           - menu-ownership
           - archive-notice
+          - onboarding-keyboard
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -95,6 +96,13 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
+            onboarding-keyboard)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOnboardingConnectRemainsReachableWithKeyboardOpen'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testOnboardingKeyboardGoSubmitsCompleteAddress'
               )
               ;;
             menu-ownership)

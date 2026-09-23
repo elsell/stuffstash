@@ -1808,6 +1808,51 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-complete-address-submission")
   }
 
+  func testOnboardingConnectRemainsReachableWithKeyboardOpen() {
+    let open = app.buttons["Audit onboarding submission"]
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let address = app.textFields["Server address"]
+    XCTAssertTrue(address.waitForExistence(timeout: 5)); address.tap()
+    waitForKeyboard()
+    address.typeText("https://example.invalid")
+    XCTAssertEqual(address.value as? String, "https://example.invalid")
+    let keyboard = app.keyboards.firstMatch
+    let connect = app.buttons["Connect and sign in"].firstMatch
+    let scroll = app.scrollViews.containing(.textField, identifier: "Server address").firstMatch
+    XCTAssertTrue(scroll.exists)
+    func usableViewport() -> CGRect {
+      let bounds = scroll.frame.intersection(app.frame)
+      let header = app.navigationBars.firstMatch
+      let top = header.exists && header.frame.intersects(bounds) ? max(bounds.minY, header.frame.maxY) : bounds.minY
+      let bottom = min(bounds.maxY, keyboard.frame.minY)
+      guard !bounds.isEmpty, bottom > top else { return .zero }
+      return CGRect(x: bounds.minX, y: top, width: bounds.width, height: bottom - top)
+    }
+    func fullyVisible() -> Bool {
+      guard keyboard.exists, connect.exists, connect.isEnabled, connect.isHittable else { return false }
+      let visible = usableViewport()
+      return !visible.isEmpty && connect.frame.minY >= visible.minY && connect.frame.maxY <= visible.maxY
+        && connect.frame.minX >= visible.minX && connect.frame.maxX <= visible.maxX
+    }
+    for _ in 0..<3 where !fullyVisible() {
+      XCTAssertTrue(keyboard.exists, "This check must keep the keyboard open")
+      let origin = app.coordinate(withNormalizedOffset: .zero)
+      let viewport = usableViewport()
+      XCTAssertGreaterThan(viewport.height, 32, "A drag requires usable space between header and keyboard")
+      let bottom = viewport.maxY - 16
+      let x = viewport.midX - app.frame.minX
+      let start = origin.withOffset(CGVector(dx: x, dy: bottom - app.frame.minY))
+      let end = origin.withOffset(CGVector(dx: x, dy: max(viewport.minY + 16, bottom - 220) - app.frame.minY))
+      start.press(forDuration: 0.1, thenDragTo: end)
+    }
+    XCTAssertTrue(fullyVisible(), "The entire Connect command must clear the open keyboard")
+    capture("onboarding-connect-keyboard-clearance")
+    connect.tap()
+    XCTAssertTrue(app.staticTexts["Submitted address: https://example.invalid"].waitForExistence(timeout: 5))
+    capture("onboarding-connect-keyboard-submitted")
+  }
+
   func testOnboardingKeyboardGoSubmitsCompleteAddress() {
     let open = app.buttons["Audit onboarding submission"]
     for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

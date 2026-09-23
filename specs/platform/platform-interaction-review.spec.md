@@ -10,6 +10,18 @@ do not lengthen the product notice or claim the late snapshot proves it appeared
 This harness-only correction needs a focused archive-workflow run; it does not
 invalidate the independently passed menu lock/recovery and filter checks.
 
+## Onboarding command clearance acceptance
+
+M35 remains a normal-text acceptance gap: existing Connect tests explicitly dismiss
+the keyboard before activating the command. Verify the real onboarding form with
+the URL keyboard still open, allowing bounded upward scrolling. The full Connect
+button must fit below the navigation/safe-area top and above the keyboard, remain
+enabled, and submit the exact address on one tap through the controlled command.
+Do not substitute keyboard Go or explicit dismissal for this check. A failure
+before exact address entry is not command-clearance evidence. This is a separate
+follow-up scope from the frozen menu batch; no production layout change is chosen
+until the named workflow supplies evidence.
+
 ## Retained native menu actions
 
 An open native menu may deliver an item event after its parent locks, removes an
