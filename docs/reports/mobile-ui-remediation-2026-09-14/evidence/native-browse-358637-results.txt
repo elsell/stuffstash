@@ -1,0 +1,7 @@
+Native35863725725 atd1f79f7e: phone and iPad fail line2190 before scrolling.
+The assertion looks for staticTexts[Camping tent]. Retained trees expose the title
+as buttons[Open asset Camping tent]; data rendered correctly on both devices.
+Phone element frame26.3,639.7,159.3,44.0. Screens show List/Map plus Add/Search fit.
+Correct only the asset selector. Keep real-scroll displacement, Map overview,
+Filters presence/absence and exact persistent-switcher anchor checks unchanged.
+No native pass is claimed. Tablet grid density is separately tracked asM263.

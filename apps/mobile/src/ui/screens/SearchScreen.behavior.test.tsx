@@ -1,3 +1,4 @@
+import { setWindowWidthForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import { navigationOptions, dispatchedActions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
@@ -47,6 +48,38 @@ function propsFor(overrides: Partial<React.ComponentProps<typeof SearchScreen>>)
 }
 
 describe('mounted Browse server state', () => {
+  it('adapts the grid on resize without replacing results or losing its scroll offset', async () => {
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    let reads = 0;
+    const props = propsFor({ initialQuery: 'tent', searchAssetsQuery: new SearchAssetsQuery({
+      browseAssets: async () => { reads++; return { assets: [asset('Camping tent')], hasMore: false }; }
+    }) });
+    const screen = () => <MobileServerStateProvider client={client} scopeId="resize"
+      loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <SearchScreen {...props} />
+    </MobileServerStateProvider>;
+    try {
+      await harness.render(screen()); await settle(harness); await settle(harness);
+      const phone = harness.byType('FlatList')!;
+      expect(phone.props.numColumns).toBe(2);
+      await harness.run(() => phone.props.onScroll({ nativeEvent: { contentOffset: { x: 0, y: 420 } } }));
+      const before = reads;
+      setWindowWidthForTest(744);
+      await harness.render(screen()); await settle(harness);
+      const tablet = harness.byType('FlatList')!;
+      expect(tablet.props.numColumns).toBe(3);
+      expect(tablet.props.columnWrapperStyle).toBeDefined();
+      expect(tablet.props.contentOffset).toEqual({ x: 0, y: 420 });
+      expect(tablet.props.data[0].asset.title).toBe('Camping tent');
+      expect(reads).toBe(before);
+      await harness.run(() => client.setQueryData(mobileQueryKeys.inventoryScope('resize'),
+        { tenantId: 'tenant', inventoryId: 'another-inventory' }));
+      await settle(harness);
+      expect(harness.byType('FlatList')!.props.contentOffset).toBeUndefined();
+    } finally { setWindowWidthForTest(390); await harness.unmount(); client.clear(); }
+  });
+
   it('switches inventory without retaining old rows or allowing delayed old work to win', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();
@@ -206,8 +239,11 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
  try{
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);
   await settle(h);await settle(h);
+  expect(navigationOptions().some(options => typeof (options as {headerTitle?: unknown}).headerTitle === 'function')).toBe(true);
+  const switcher = h.allByType('NativeSegmentedControl').find(node => node.props.values?.includes('Map'));
   await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
   await switchTo('Map');await settle(h);
+  expect(h.allByType('NativeSegmentedControl').filter(node => node.props.values?.includes('Map'))).toEqual([switcher]);
   expect(nativeSearch().placeholder).toBe('Find and expand path');
   expect(h.byTestId('browse-map-frame')?.props.style).toContainEqual({ paddingTop: 144 });
   await h.run(() => setNativeHeaderHeight(210));
@@ -216,6 +252,7 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,320)));
   expect(dispatchedActions().filter(action=>action.type==='setParams').at(-1)).toMatchObject({params:{surface:'map',query:'Tent',tagId:['tag']}});
   await switchTo('List');await settle(h);
+  expect(h.allByType('NativeSegmentedControl').filter(node => node.props.values?.includes('Map'))).toEqual([switcher]);
   expect(nativeSearch().placeholder).toBe('Search names, places, or tags');
   expect(h.byLabel('Filters, 1 applied')).toBeDefined();
   await h.run(()=>nativeSearch().onCancelButtonPress());await settle(h);

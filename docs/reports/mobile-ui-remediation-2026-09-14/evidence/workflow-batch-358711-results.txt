@@ -1,0 +1,20 @@
+Frozen M260–M264 combined native run 35871152122
+Source da2516a967d45c94a1c70cea8c1e87ec0ce95831
+
+iPhone: connected Edit save/return, connected Move, Browse density and switcher,
+Edit metadata recovery, Edit tag disclosure, MoveHere recovery all passed.
+iPad: connected Move, Browse switcher, Edit metadata recovery, Edit tag disclosure,
+MoveHere recovery passed.
+
+Remaining acceptance:
+- Both Move creation tests failed at obsolete standalone Audit crate assertion,
+  corrected by83e2c145. Run35874141371 now passes on both devices;
+  see move-358741-results.txt for scoped acceptance.
+- iPad density measured inset title action209pt instead of outercard. Added outer
+  layout marker and retained220pt requirement. Corrected native measurement pending.
+- iPad connected Edit stopped before typing at keyboard-interactivity readiness.
+  Previous35867595817 iPad connected Edit passed; this run does not prove it passed
+  on da2516a9. No new product diagnosis or repeated keyboard experiments inferred.
+
+Never describe this combined run as fully passed. Other follow-up findings M265+
+are outside this frozen batch.

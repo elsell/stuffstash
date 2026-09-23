@@ -3,7 +3,7 @@ import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
 import { Platform } from 'react-native';
-import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, navigationOptions, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -111,6 +111,13 @@ it('creates the move destination with the kind selected in the native menu', asy
     await h.changeText(originalField, 'camping box');
     expect(h.byLabel('Put in')).toBe(originalField);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    await h.press(h.byLabel('New destination'));
+    expect(h.byLabel('Choose destination kind')).toBeDefined();
+    await h.press(h.byLabel('Cancel new destination'));
+    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    expect(h.byLabel('Put in')?.props.value).toBe('camping box');
+    await h.press(h.byLabel('New destination'));
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
     const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
     await h.press(create ?? undefined);
@@ -128,6 +135,8 @@ it('creates the move destination with the kind selected in the native menu', asy
     await h.changeText(h.byLabel('Put in'), 'Kitchen');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     expect(selectedRows()).toHaveLength(0);
+    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    await h.press(h.byLabel('New destination'));
     expect(h.byLabel('Create container "Kitchen"')).toBeDefined();
     await h.changeText(h.byLabel('Put in'), '  CAMPING box  ');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
@@ -162,23 +171,24 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     await settle(h); await settle(h);
     if (mode === 'move') {
       expect(h.byText('Tent')).toBeDefined();
-      expect(h.byText('Current location')).toBeDefined();
-      expect(h.byText('Move to')).toBeUndefined();
+      expect(h.byText('Current location: Inventory root')).toBeDefined();
+      expect(h.byText('Selected: Camping box')).toBeUndefined();
       expect(h.byLabel('Move')?.props.disabled).toBe(true);
     }
     const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
     await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
     await h.press(candidateRow ?? undefined);
-    if (mode === 'move') expect(h.byText('Move to')).toBeDefined();
+    if (mode === 'move') expect(h.byText('Selected: Camping box')).toBeDefined();
     const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
     expect(save?.props.disabled).toBe(false);
     const submit = save!.props.onPress;
     await h.run(() => { submit(); submit(); });
     expect(submitted).toHaveLength(1);
+    if (mode === 'move') expect(h.byText('Moving…')).toBeDefined();
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
@@ -190,7 +200,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     const completion = consumeAssetActionCompletion('asset');
     if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
     else expect(completion).toBeUndefined();
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
     if (outcome === 'failure' && !returned) {
       const action = { type: 'GO_BACK', source: mode };
@@ -216,6 +226,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await settle(h); await settle(h);
     await h.changeText(h.allByType('TextInput')[0], 'New box');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    await h.press(h.byLabel('New destination'));
     const create = h.byLabel('Create location "New box"');
     expect(create).toBeDefined();
     const move = h.byLabel('Move');
@@ -231,7 +242,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
     expect(h.byText('Created destination')).toBeUndefined();
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
 
@@ -251,12 +262,13 @@ it.each(['failure', 'success', 'late completion', 'return success', 'return fail
     await settle(h); await settle(h);
     const input = h.allByType('TextInput')[0];
     await h.changeText(input, 'Submitted name');
-    const save = h.byText('Save')!.parent!.props.onPress;
+    const save = h.byLabel('Save')!.props.onPress;
     await h.run(() => { save(); save(); });
     expect(writes).toBe(1);
+    expect(h.byText('Saving changes…')).toBeDefined();
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
     await h.changeText(input, 'Unsubmitted name');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
     if (outcome === 'return success' || outcome === 'return failure') {
@@ -268,12 +280,12 @@ it.each(['failure', 'success', 'late completion', 'return success', 'return fail
       expect(dispatchedActions()).toEqual([]);
       expect(latestAlert()).toBe(alertBefore);
       expect(consumeAssetActionCompletion('asset')).toBeUndefined();
-      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
     } else if (outcome === 'failure') {
       await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
-      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
     } else if (outcome === 'success') {
       await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
       expect(dispatchedActions()).toEqual([{ type: 'back' }]);
@@ -296,9 +308,10 @@ it('keeps an existing tag selected when inline tag resolution updates the Edit d
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
     await h.press(h.byLabel('Add tag'));
-    const save = h.byText('Save')?.parent;
+    const save = h.byLabel('Save');
     expect(save?.props.disabled).toBe(false);
     await h.press(save ?? undefined);
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['camping'], newTags: [], description: 'Keep this description' })]);
@@ -323,7 +336,10 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
     const formScroll = harness.allByType('ScrollView').find(node =>
       node.queryAll(child => child.props.accessibilityLabel === 'Asset name').length > 0);
     expect(formScroll).toBeDefined();
-    expect(formScroll?.queryAll(child => child.children.join('') === 'Edit asset').length).toBeGreaterThan(0);
+    expect(formScroll?.queryAll(child => child.children.join('') === 'Edit asset')).toHaveLength(0);
+    expect(navigationOptions()).toEqual(expect.arrayContaining([expect.objectContaining({
+      headerLeft: expect.any(Function), headerRight: expect.any(Function), headerBackVisible: false
+    })]));
     for (const label of ['Retry asset types', 'Retry tags']) {
       expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
     }
@@ -393,6 +409,8 @@ it('waits for known Move suggestions before offering destination creation', asyn
     expect(h.byText('Create location "New room"')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);
+    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    await h.press(h.byLabel('New destination'));
     expect(h.byText('Create location "New room"')).toBeDefined();
     expect(h.byLabel('Put in')?.props.value).toBe('New room');
   } finally { await h.unmount(); }
@@ -410,6 +428,7 @@ it('names staged Edit tag removal and preserves other tags and edited fields', a
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     await h.changeText(h.byLabel('Description'), 'Keep my edit');
+    await h.press(h.byLabel('New tag'));
     for (const name of ['Camping', 'Outdoors']) {
       await h.changeText(h.byLabel('New tag name'), name); await h.press(h.byLabel('Add tag'));
     }
@@ -437,6 +456,7 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byLabel('New tag'));
     const input = h.byLabel('New tag name');
     const longName = 'Camping equipment '.repeat(8);
     await h.changeText(h.byLabel('New tag name'), longName);
@@ -493,6 +513,7 @@ it('protects an unstaged Edit tag from cancellation and silent omission on Save'
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     await h.press(h.byLabel('Cancel'));
     expect(latestAlert()?.title).toBe('Discard changes?');
@@ -637,4 +658,41 @@ it('does not retarget retained Edit commands after switching the scoped asset', 
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ assetId: 'second', title: 'Second draft' })]);
   } finally { await h.unmount(); client.clear(); resetNavigation(); }
+});
+
+
+it('keeps tag creation secondary and cancels only the unstaged tag', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({
+    tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Packed', kind: 'item', lifecycleState: 'active',
+      locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
+        inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(h.byLabel('New tag color')).toBeUndefined();
+    await h.press(h.byText('Camping')?.parent ?? undefined);
+    await h.changeText(h.byLabel('Description'), 'Ready');
+    await h.press(h.byLabel('New tag'));
+    const cancelCreation = h.byLabel('Cancel new tag')!.props.onPress;
+    await h.changeText(h.byLabel('Description'), 'Ready for the weekend');
+    await h.changeText(h.byLabel('New tag name'), 'Outdoors');
+    await h.press(h.byLabel('Add tag'));
+    await h.changeText(h.byLabel('New tag name'), 'Discard this');
+    await h.changeText(h.byLabel('New tag color'), '#123456');
+    await h.run(() => cancelCreation());
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
+    await h.press(h.byLabel('New tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    expect(h.byLabel('New tag color')?.props.value).toBe('');
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Ready for the weekend', tagIds: ['camping'], newTags: [{ displayName: 'Outdoors' }] })]);
+  } finally { await h.unmount(); client.clear(); }
 });

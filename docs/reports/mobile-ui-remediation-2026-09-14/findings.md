@@ -3733,3 +3733,96 @@ through invalid input and ordinary renders; reset the iOS field only when accept
 tag resolution clears inputs. Android keeps its controlled instance. Mounted
 accepted-reset regression failed first;70 focused tests pass after correction.
 Native exact text, accepted clearing, staging and selection acceptance remains open.
+
+
+### M261 — Edit uses a partial-height action-sheet layout for a multi-field task
+
+P1 pattern/structure finding, confirmed in source and historical user captures.
+Edit starts at56% height, duplicates its title, gives noneditable Kind a large
+instruction panel and spends bottom space on two task actions. Choose a full-height
+native editor with native Cancel/Save instead; preserve the asset context and all
+existing dirty-draft, permission and operation guards. This is a task-specific
+project decision, not an assertion that Apple prohibits editing sheets.
+
+Candidate: one full-height detent, persistent native header actions, concise
+kind/type context and a single iOS keyboard inset owner.97 focused tests, TypeScript
+and mobile structural checks pass remotely; critic found no source blocker.
+Native phone/iPad keyboard, scrolling, command fit and complete successful-save
+return remain pending. Tag management and Move pattern review remain separate
+open work; this correction does not certify the entire asset experience.
+
+
+### M262 — Move gives automatic creation controls priority over destination choices
+
+P1 task-pattern finding in MoveAssetSheet: a nonempty unmatched query inserts
+kind, help, placement and Create above the destination rows. Make creation an
+explicit secondary action below the choices. The candidate uses a full-height
+native picker with persistent Cancel/Move, concise current/selected context and
+an explicit New destination disclosure. Canceling creation retains query/selection;
+a new query closes the disclosure. Existing create/retry/select/move rules remain.
+
+98 focused checks, TypeScript and mobile structural checks pass remotely; critic
+found no source blocker. Edit/Move keep visible pending-command feedback after
+actions move into the header. The updated native creation/retry scenario and
+connected Edit scenario are grouped with Edit recovery and Move Here regression
+checks for the candidate batch. Native fit remains unverified; this is not a
+completed connected Move-to-updated-detail walkthrough or whole-app acceptance.
+
+### M264 — Edit exposes creation controls during ordinary tag selection
+
+P2 task/pattern finding. The normal Edit surface displays the new-tag name,
+hexadecimal field, palette, custom-color entry and Add button alongside existing
+choices, making secondary tag creation dominate the form. Candidate uses the
+existing native New tag command to reveal creation in place. Cancel new tag
+discards only its unstaged entry; existing selections, staged tags and other edits
+remain. Large tag-set selection still needs its own interaction review.
+Focused tests cover opt-in creation, cancellation, staging and existing rejection/
+dirty-draft guards; native normal-text verification is still required.
+### M260 — Browse relocates its peer-view switcher between List and Map
+
+P1 structural consistency defect reported by the user and confirmed in source:
+List puts the segmented control first in its scrolling results header, while Map
+places it after a flexible summary in a separate fixed header. Users must relocate
+the same command after using it; sharing the control component did not preserve
+its placement or scroll ownership.
+
+Decision: one persistent native navigation-title owner for the Browse switcher,
+independent of view content. Preserve existing Add/search controls and applied
+query/filter state. Remove the duplicate content-owned switchers. The native
+header retains its compact scroll-edge behavior without adding a content row.
+The mounted ownership regression failed first;32 focused checks, TypeScript,
+structural checks and10 fixture preparation tests pass. Native phone/iPad header
+fit and the List→scroll→Map→List experience require capture review before release.
+The Browse fixture does not certify asset/edit/move/filter navigation; the broader
+connected workflow review remains open.
+
+
+M260 runtime follow-up: [35863725725](evidence/native-browse-358637-results.txt)
+shows the candidate header fitting on phone/iPad. Both tests stop before scroll
+because they target static title text instead of the card's accessible Open asset
+button. Correct that selector; switching/scroll stability remains unverified.
+
+### M263 — Browse tablet cards remain a sparse two-column phone layout
+
+P2 visual-coherence finding observed in native358637 iPad screenshot at normal
+text. Two large square images consume most of the viewport; only two rows fit
+below the header. Review width-adaptive grid columns with a readable minimum card
+width and preserved query, selection and scroll behavior during resize. This is
+separate from the M260 switcher correction and does not block scoped text fixes.
+Candidate uses available safe-area width, adding columns at a 220-point minimum
+beyond the existing phone pair. Resize retains offset scoped to the loaded inventory
+and criteria; Places and enlarged-text layouts remain one column. Focused source
+checks pass. Native phone/iPad density and scrolling acceptance remains open; the
+app is portrait-locked, so no rotation support is claimed.
+
+M260 scoped native acceptance now passes on phone and iPad in
+[run35867740920](evidence/native-browse-358677-results.txt). Combined batch
+verification remains required.
+
+### M265 — Map repeats the inventory title at its root
+
+P2 visual-coherence finding observed in both phone and iPad run35867740920:
+a root breadcrumb label is immediately followed by a second inventory heading.
+Review breadcrumb/root-column hierarchy together; do not merely reduce spacing.
+Keep outside the frozen M260–M264 batch. This does not affect the switcher's
+confirmed stable anchor.

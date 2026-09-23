@@ -42,7 +42,6 @@ import {
   findInventoryMapSearchMatch,
   inventoryMapBranchSwipeOffset,
   inventoryMapGestureConfig,
-  InventoryMapSurface,
   mapOverviewLabel,
   nearestInventoryMapColumnForOffset,
   pathForBreadcrumbLevel,
@@ -52,7 +51,6 @@ import {
   shouldSelectInventoryMapBranchDuringSwipe,
   shouldSuppressInventoryMapScrollForBranchSwipe
 } from './InventoryMapPresentation';
-import { BrowseSurfaceControl } from './BrowseSurfaceControl';
 import type { InventoryMapColumnViewModel } from './InventoryMapPresentation';
 import { addHereRouteParams } from './AddAssetInitialParent';
 import { assetDetailHref } from './AssetDetailNavigation';
@@ -65,9 +63,7 @@ type InventoryMapScreenProps = {
   readonly canAdd: boolean;
   readonly inventoryMapQuery: Pick<InventoryMapQuery, 'execute'>;
   readonly pathStore: MutableRefObject<Map<string, readonly string[]>>;
-  readonly selectedSurface: InventoryMapSurface;
   readonly onAdd: () => void;
-  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
 };
 
 type InventoryMapState =
@@ -100,9 +96,7 @@ export function InventoryMapScreen({
   onChangeSearchQuery,
   inventoryMapQuery,
   pathStore,
-  selectedSurface,
-  onAdd,
-  onChangeSurface
+  onAdd
 }: InventoryMapScreenProps) {
   const colors = useAppearancePalette();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -560,11 +554,7 @@ export function InventoryMapScreen({
               <Text numberOfLines={1} style={styles.overviewText}>{mapOverviewLabel(state.map)}</Text>
             ) : null}
           </View>
-          <InventoryMapHeaderActions
-            palette={colors}
-            selectedSurface={selectedSurface}
-            onChangeSurface={onChangeSurface}
-          />
+
         </View>
         <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
         {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
@@ -657,18 +647,6 @@ export function InventoryMapScreen({
       ) : null}
     </View>
   );
-}
-
-export function InventoryMapHeaderActions({
-  palette, selectedSurface, onChangeSurface
-}: {
-  readonly palette: MobileColorPalette;
-  readonly selectedSurface: InventoryMapSurface;
-  readonly onChangeSurface: (surface: InventoryMapSurface) => void;
-}) {
-  return <View style={createStyles(palette).headerActions}>
-    <BrowseSurfaceControl palette={palette} selectedSurface={selectedSurface} onChangeSurface={onChangeSurface} />
-  </View>;
 }
 
 function InventoryMapColumn({

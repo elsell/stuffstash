@@ -1,0 +1,13 @@
+Browse native acceptance: run 35879482924
+Source: 6b63dd92cbb0dd5e26195c71e9f0a597bbe04a6d
+Phone job 107253567158: success.
+iPad job 107253567668: adaptive outer-card geometry passed; switcher journey failed.
+Failure: after first list swipe, List isHittable fails at FixtureAuditTests.swift:2292.
+Final screenshot and accessibility tree show expo-router-unmatched, URL stuffstash:///.
+Therefore this is not evidence of a displaced or hidden Browse header. The route
+left Browse. Root routing cause is unverified; do not mark the whole run passed.
+Earlier iPad anchor evidence remains scoped to its named source/run.
+Next distinguishing check: trace fixture entry/back/gesture route handling against
+production and existing successful anchor run before choosing any layout change.
+No replacement native run dispatched. Keep this separate from M270 implementation.
+Artifact 10761644832: range-extracted 526102 bytes, no full diagnostic download.

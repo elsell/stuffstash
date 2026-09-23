@@ -43,3 +43,18 @@ it('keeps Android checkout history Close available while retaining the iOS deten
     presentation: 'formSheet', sheetAllowedDetents: [0.58, 0.92]
   });
 });
+
+
+it('opens Edit at full height with persistent native completion controls', () => {
+  expect(createAssetNativeSheetOptions(colors, 'ios').edit).toMatchObject({
+    presentation: 'formSheet', headerShown: true, title: 'Edit asset',
+    sheetAllowedDetents: [1], gestureEnabled: false
+  });
+});
+
+
+it('gives Move a full-height destination picker and persistent native commands', () => {
+  expect(createAssetNativeSheetOptions(colors, 'ios').move).toMatchObject({
+    presentation: 'formSheet', headerShown: true, title: 'Move asset', sheetAllowedDetents: [1]
+  });
+});

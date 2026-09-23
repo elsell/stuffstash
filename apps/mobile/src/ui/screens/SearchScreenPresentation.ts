@@ -120,6 +120,8 @@ export function sortLabel(sort: AssetBrowseSort): string {
   return sort === 'updated_desc' ? 'Recently changed' : 'Default order';
 }
 
+const minimumTabletCardWidth = 220;
+
 export function browseColumnCount({
   fontScale,
   scope,
@@ -128,13 +130,15 @@ export function browseColumnCount({
   readonly fontScale: number;
   readonly scope: BrowseScope;
   readonly width: number;
-}): 1 | 2 {
-  return scope === 'places' || fontScale >= 1.35 || width < 350 ? 1 : 2;
+}): number {
+  if (scope === 'places' || fontScale >= 1.35 || width < 350) return 1;
+  const availableWidth = width - spacing.md * 2;
+  return Math.max(2, Math.floor((availableWidth + spacing.sm) / (minimumTabletCardWidth + spacing.sm)));
 }
 
-export function browseGridCardWidth(width: number, columnCount: 1 | 2): number | undefined {
-  return columnCount === 2
-    ? Math.floor((width - (spacing.md * 2) - spacing.sm) / 2)
+export function browseGridCardWidth(width: number, columnCount: number): number | undefined {
+  return columnCount > 1
+    ? Math.floor((width - (spacing.md * 2) - spacing.sm * (columnCount - 1)) / columnCount)
     : undefined;
 }
 

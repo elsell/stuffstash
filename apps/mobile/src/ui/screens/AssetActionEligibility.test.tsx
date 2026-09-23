@@ -26,6 +26,7 @@ it('does not submit Edit after permission changes during tag reconciliation', as
         updateAssetCommand={{ execute: async () => { mutations++; return { id: 'asset', title: 'Box', message: 'Saved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Retained tag'); await h.press(h.byLabel('Add tag'));
     await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetTags('scope', 'tenant', 'inventory'), refetchType: 'none' }));
     await h.press(h.byLabel('Save')); await settle(h);

@@ -1,3 +1,5 @@
+import { Stack } from 'expo-router';
+import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
@@ -7,7 +9,7 @@ import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   Platform,
   Pressable,
@@ -47,8 +49,7 @@ import {
   moveDestinationCreatePlacementLabel,
   type MoveDestinationCreateKind,
   type MoveDestinationRow,
-  movePlacementPreview,
-  MovePlacementPreview
+  movePlacementPreview
 } from './AssetDetailMovePresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
@@ -97,21 +98,27 @@ export function EditAssetSheet({
   const editContext = assetEditContext(asset);
   const disabled = isSaving || readOnly;
   const canSave = canSaveEditAsset(asset, draft) && !disabled;
+  const actions = useFocusedSheetActions({
+    primaryLabel: 'Save', secondaryLabel: 'Cancel', disabled: !canSave,
+    secondaryDisabled: isSaving, onApply: onSave, onBack: onClose
+  });
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+    disabled: isSaving, onPress: actions.onBack }], 'left');
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save',
+    disabled: !canSave, onPress: actions.onApply }]);
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
+    ...cancelOptions, ...saveOptions }), [cancelOptions, saveOptions]);
+  const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <AssetActionKeyboardFrame style={styles.sheet}>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {Platform.OS !== 'android' ? <Text style={styles.sheetTitle}>Edit asset</Text> : null}
+    <Frame style={styles.editor}>
+      <Stack.Screen options={headerOptions} />
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
-        <View style={styles.readOnlyContextPanel}>
-          <Text style={styles.readOnlyContextLabel}>Kind</Text>
-          <Text style={styles.readOnlyContextValue}>
-            {editContext.customTypeLabel
-              ? `${editContext.kindLabel} / ${editContext.customTypeLabel}`
-              : editContext.kindLabel}
-          </Text>
-          <Text style={styles.readOnlyContextHelp}>{editContext.helperText}</Text>
-        </View>
+        {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Saving changes…</Text> : null}
+        <Text style={styles.sheetSubtitle}>
+          {editContext.customTypeLabel ? `${editContext.kindLabel} · ${editContext.customTypeLabel}` : editContext.kindLabel}
+        </Text>
         <Text style={styles.inputLabel}>Name</Text>
         <AppTextInput
           accessibilityLabel="Asset name"
@@ -140,14 +147,7 @@ export function EditAssetSheet({
           onChange={(tagIds, newTags, inlineTag) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags, inlineTag })}
         />
       </ScrollView>
-      <SheetActions
-        busy={isSaving}
-        disabled={!canSave}
-        primaryLabel={isSaving ? 'Saving' : 'Save'}
-        onClose={onClose}
-        onSave={onSave}
-      />
-    </AssetActionKeyboardFrame>
+    </Frame>
   );
 }
 
@@ -173,7 +173,19 @@ function EditTagPicker({
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
   const [showAllTags, setShowAllTags] = useState(false);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const creationVisible = creatingTag || hasUnstagedEditTag(entry);
   const [tagEntryRevision, setTagEntryRevision] = useState(0);
+  const creationActions = useFocusedSheetActions({
+    primaryLabel: 'New tag', secondaryLabel: 'Cancel new tag',
+    disabled: disabled || creationVisible, secondaryDisabled: disabled || !creationVisible,
+    onApply: () => setCreatingTag(true),
+    onBack: () => {
+      setCreatingTag(false);
+      setTagEntryRevision(current => current + 1);
+      onChange(selectedTagIds, newTags, { name: '', color: '' });
+    }
+  });
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.label, expanded: showAllTags });
 
   function toggleTag(tagId: string): void {
@@ -266,34 +278,37 @@ function EditTagPicker({
         disabled={disabled}
         onPress={() => { if (!disabled) setShowAllTags(current => !current); }}
       /> : null}
-      <View style={styles.newTagRow}>
-        <View style={styles.newTagNameInput}>
-          <DraftTextField
-            key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
-            accessibilityLabel="New tag name"
+      {creationVisible ? <>
+        <View style={styles.newTagRow}>
+          <View style={styles.newTagNameInput}>
+            <DraftTextField
+              key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
+              accessibilityLabel="New tag name"
+              editable={!disabled}
+              onChangeText={setNewTagName}
+              placeholder="New tag"
+              placeholderTextColor={palette.textMuted}
+              style={styles.input}
+              value={newTagName}
+            />
+          </View>
+          <AppTextInput
+            accessibilityLabel="New tag color"
+            autoCapitalize="characters"
             editable={!disabled}
-            onChangeText={setNewTagName}
-            placeholder="New tag"
+            onChangeText={setNewTagColor}
+            placeholder="#2F80ED"
             placeholderTextColor={palette.textMuted}
-            style={styles.input}
-            value={newTagName}
+            style={[styles.input, styles.newTagColorInput]}
+            value={newTagColor}
           />
         </View>
-        <AppTextInput
-          accessibilityLabel="New tag color"
-          autoCapitalize="characters"
-          editable={!disabled}
-          onChangeText={setNewTagColor}
-          placeholder="#2F80ED"
-          placeholderTextColor={palette.textMuted}
-          style={[styles.input, styles.newTagColorInput]}
-          value={newTagColor}
-        />
-      </View>
-      {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
-      <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
-      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
-      {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
+        {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
+        <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
+        <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
+        {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
+        <NativeCommandButton label="Cancel new tag" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
+      </> : <NativeCommandButton label="New tag" disabled={creationActions.disabled} onPress={creationActions.onApply} />}
     </View>
   );
 }
@@ -328,6 +343,7 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
+  const [creationExpanded, setCreationExpanded] = useState(false);
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
   const disabled = isSaving || readOnly;
@@ -344,47 +360,43 @@ export function MoveAssetSheet({
         query: draft.query
       })
     : false;
+  const actions = useFocusedSheetActions({ primaryLabel: 'Move', secondaryLabel: 'Cancel',
+    disabled: !canSaveMove, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+    disabled: isSaving, onPress: actions.onBack }], 'left');
+  const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Move',
+    disabled: !canSaveMove, onPress: actions.onApply }]);
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
+    ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
+  const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <AssetActionKeyboardFrame style={styles.sheet}>
-      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {Platform.OS !== 'android' ? <Text accessibilityRole="header" style={styles.moveHeading}>Move</Text> : null}
+    <Frame style={styles.editor}>
+      <Stack.Screen options={headerOptions} />
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.moveSubject}>{asset.title}</Text>
-        {placement ? <PlacementPanel preview={placement} /> : null}
+        {placement ? <Text style={styles.sheetSubtitle}>{`Current location: ${placement.currentLocationLabel || 'Inventory root'}`}</Text> : null}
+        {placement?.hasChanged ? <Text style={styles.sheetSubtitle}>{`Selected: ${placement.proposedLocationLabel}`}</Text> : null}
         <Text style={styles.inputLabel}>Put in</Text>
         <DraftTextField
           key={Platform.OS === 'ios' ? draft?.queryRevision ?? 0 : 'move-query'}
           accessibilityLabel="Put in"
           editable={!disabled}
-          onChangeText={onChangeQuery}
+          onChangeText={query => { if (!disabled) { setCreationExpanded(false); onChangeQuery(query); } }}
           placeholder="Search places, boxes, shelves"
           placeholderTextColor={palette.textMuted}
           style={styles.input}
           value={draft?.query ?? ''}
         />
         {candidateStatus}
-        {canCreate ? (
-          <View style={styles.createDestinationPanel}>
-            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
-              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
-              includeEmptyOption={false} disabled={disabled}
-              onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
-            <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
-            <Text style={styles.createPlacementText}>
-              {moveDestinationCreatePlacementLabel(createPlacement)}
-            </Text>
-            <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
-              disabled={disabled} onPress={onCreateDestination} />
-            <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
-          </View>
-        ) : null}
+        {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
         <ParentRow
           disabled={disabled}
           isSelected={draft?.selectedParent === null}
           row={{
-            title: 'No parent',
+            title: 'Inventory root',
             kindLabel: 'Top level',
-            pathLabel: 'Inventory root'
+            pathLabel: 'No containing location'
           }}
           onPress={onSelectRoot}
         />
@@ -397,15 +409,27 @@ export function MoveAssetSheet({
             onPress={() => onSelectParent(match)}
           />
         ))}
+        {canCreate && !creationExpanded ? <NativeCommandButton label="New destination" disabled={disabled}
+          onPress={() => { if (!disabled) setCreationExpanded(true); }} /> : null}
+        {canCreate && creationExpanded ? (
+          <View style={styles.createDestinationPanel}>
+            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
+              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+              includeEmptyOption={false} disabled={disabled}
+              onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
+            <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
+            <Text style={styles.createPlacementText}>
+              {moveDestinationCreatePlacementLabel(createPlacement)}
+            </Text>
+            <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
+              disabled={disabled} onPress={onCreateDestination} />
+            <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
+            {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Creating destination…</Text> : null}
+            <NativeCommandButton label="Cancel new destination" disabled={disabled} onPress={() => setCreationExpanded(false)} />
+          </View>
+        ) : null}
       </ScrollView>
-      <SheetActions
-        busy={isSaving}
-        disabled={!canSaveMove}
-        primaryLabel={isCreatingDestination ? 'Creating destination…' : isSaving ? 'Moving' : 'Move'}
-        onClose={onClose}
-        onSave={onSave}
-      />
-    </AssetActionKeyboardFrame>
+    </Frame>
   );
 }
 
@@ -516,34 +540,6 @@ function ParentRow({
   );
 }
 
-function PlacementPanel({ preview }: { readonly preview: MovePlacementPreview }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.placementPanel}>
-      <PlacementRow label="Current location" value={preview.currentLocationLabel} />
-      {preview.hasChanged ? <PlacementRow label="Move to" value={preview.proposedLocationLabel} isEmphasized /> : null}
-    </View>
-  );
-}
-
-function PlacementRow({
-  isEmphasized = false,
-  label,
-  value
-}: {
-  readonly isEmphasized?: boolean;
-  readonly label: string;
-  readonly value: string;
-}) {
-  const styles = useStyles();
-  return (
-    <View style={styles.placementRow}>
-      <Text style={styles.placementLabel}>{label}</Text>
-      <Text style={[styles.placementValue, isEmphasized ? styles.placementValueEmphasized : null]}>{value}</Text>
-    </View>
-  );
-}
-
 function MovePreview({ left, right }: { readonly left: string; readonly right: string }) {
   const styles = useStyles();
   return (
@@ -579,6 +575,12 @@ function useStyles() {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  editor: {
+    backgroundColor: colors.surface,
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm
+  },
   sheet: {
     backgroundColor: colors.surface,
     flex: 1,
@@ -591,11 +593,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 26,
     fontWeight: '900',
     letterSpacing: 0
-  },
-  moveHeading: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600'
   },
   moveSubject: {
     color: colors.text,
@@ -610,30 +607,6 @@ function createStyles(colors: MobileColorPalette) {
   formScrollContent: {
     gap: spacing.sm,
     paddingBottom: spacing.sm
-  },
-  readOnlyContextPanel: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    gap: spacing.xs,
-    padding: spacing.md
-  },
-  readOnlyContextLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase'
-  },
-  readOnlyContextValue: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  readOnlyContextHelp: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
   },
   inputLabel: {
     color: colors.text,
@@ -794,28 +767,6 @@ function createStyles(colors: MobileColorPalette) {
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0
-  },
-  placementPanel: {
-    gap: spacing.sm
-  },
-  placementRow: {
-    gap: 2
-  },
-  placementLabel: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '400'
-  },
-  placementValue: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0,
-    lineHeight: 21
-  },
-  placementValueEmphasized: {
-    color: colors.action,
-    fontWeight: '900'
   },
   movePreview: {
     backgroundColor: colors.surfaceMuted,

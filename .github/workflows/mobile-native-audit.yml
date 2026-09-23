@@ -17,6 +17,7 @@ on:
           - text-entry-no-provider
           - add-draft
           - home-header
+          - browse-journey
           - filters
           - release-corrections
           - menu-ownership
@@ -26,6 +27,9 @@ on:
           - destination-and-field-choices
           - field-choices
           - enum-editing
+          - workflow-batch
+          - asset-workflows
+          - asset-edit-journey
           - edit-recovery
           - edit-tags
           - normal-detail-recovery
@@ -158,6 +162,37 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
               )
               ;;
+            workflow-batch)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            asset-workflows)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            asset-edit-journey)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+              )
+              ;;
             edit-recovery)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -223,6 +258,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorRedEditsPreserveOtherChannelsInDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
+              )
+              ;;
+            browse-journey)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
               )
               ;;
             home-header)

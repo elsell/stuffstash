@@ -470,15 +470,21 @@ final class FixtureAuditTests: XCTestCase {
     query.tap()
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
     query.typeText("Audit crate")
-    XCTAssertEqual(query.value as? String, "Audit crate")
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "Audit crate"), object: query
+    )], timeout: 5), .completed)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch.exists)
+    let newDestination = app.buttons["New destination"].firstMatch
+    XCTAssertTrue(newDestination.waitForExistence(timeout: 5))
+    reveal(newDestination); newDestination.tap()
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
     XCTAssertTrue(kind.waitForExistence(timeout: 5))
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
-    XCTAssertTrue(app.staticTexts["Move"].firstMatch.exists)
+    XCTAssertTrue(app.navigationBars["Move asset"].exists)
     XCTAssertTrue(query.exists)
     let create = app.buttons["Create container \"Audit crate\""].firstMatch
     reveal(create); create.tap()
@@ -491,7 +497,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(create.waitForNonExistence(timeout: 5))
     let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
     XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
-    let selected = app.staticTexts["Audit crate"].firstMatch
+    let selected = app.staticTexts["Selected: Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
     let move = app.buttons["Move"].firstMatch
     reveal(move); move.tap()
@@ -1271,7 +1277,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Tag 13"].exists)
     reveal(retained)
     XCTAssertTrue(retained.isSelected)
+    XCTAssertFalse(app.textFields["New tag name"].exists)
+    let newTag = app.buttons["New tag"].firstMatch
+    reveal(newTag); newTag.tap()
     let entry = app.textFields["New tag name"].firstMatch
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
     waitForKeyboard(keyLabel: "C")
@@ -1294,7 +1304,10 @@ final class FixtureAuditTests: XCTestCase {
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)
     add.tap()
-    XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    // A cleared SwiftUI field can expose no value while retaining its placeholder.
+    let clearedEntry = app.textFields["New tag name"].firstMatch
+    XCTAssertTrue(clearedEntry.exists)
+    XCTAssertTrue(clearedEntry.value == nil || ["", "New tag"].contains(clearedEntry.value as? String ?? "unexpected"))
     XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
     let expand = app.buttons["Show all tags"].firstMatch
@@ -1322,6 +1335,80 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     XCTAssertEqual(app.state, .runningForeground)
+  }
+
+  func testAssetMoveReturnsToUpdatedDetailAndReopensSelection() {
+    let open = app.buttons["Audit asset Edit journey"].firstMatch
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(app.staticTexts["Camping tent"].firstMatch.waitForExistence(timeout: 10))
+    let moveFromDetail = app.buttons["Move"].firstMatch
+    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
+    let header = app.navigationBars["Move asset"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let commit = header.buttons["Move"].firstMatch
+    let cancel = header.buttons["Cancel"].firstMatch
+    XCTAssertTrue(commit.isHittable); XCTAssertTrue(cancel.isHittable)
+    XCTAssertFalse(commit.isEnabled)
+    capture("asset-move-journey-picker")
+    let garage = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Garage")).firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
+    garage.tap()
+    XCTAssertTrue(garage.isSelected); XCTAssertTrue(commit.isEnabled)
+    capture("asset-move-journey-selected")
+    commit.tap()
+    XCTAssertTrue(header.waitForNonExistence(timeout: 10))
+    let location = app.buttons["Open location Garage"].firstMatch
+    for _ in 0..<4 where !location.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(location.waitForExistence(timeout: 10)); XCTAssertTrue(location.isHittable)
+    capture("asset-move-journey-updated-detail")
+    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isSelected)
+    XCTAssertFalse(commit.isEnabled)
+    capture("asset-move-journey-reopened")
+    XCTAssertTrue(cancel.isHittable); cancel.tap()
+    XCTAssertTrue(header.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(location.exists)
+  }
+
+  func testAssetEditSavesAndReturnsToUpdatedDetail() {
+    let open = app.buttons["Audit asset Edit journey"].firstMatch
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(app.staticTexts["Camping tent"].firstMatch.waitForExistence(timeout: 10))
+    let edit = app.buttons["Edit"].firstMatch
+    XCTAssertTrue(edit.waitForExistence(timeout: 5)); XCTAssertTrue(edit.isHittable)
+    capture("asset-edit-journey-detail-before")
+    edit.tap()
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let header = app.navigationBars["Edit asset"]
+    XCTAssertTrue(header.waitForExistence(timeout: 5))
+    let save = header.buttons["Save"].firstMatch
+    let cancel = header.buttons["Cancel"].firstMatch
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(cancel.isHittable)
+    capture("asset-edit-journey-editor")
+    name.tap(); waitForKeyboard(keyLabel: "space")
+    name.typeText(" kit")
+    XCTAssertEqual(name.value as? String, "Camping tent kit")
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(cancel.isHittable)
+    capture("asset-edit-journey-keyboard")
+    save.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    let updated = app.staticTexts["Camping tent kit"].firstMatch
+    XCTAssertTrue(updated.waitForExistence(timeout: 10))
+    XCTAssertTrue(edit.isHittable)
+    capture("asset-edit-journey-saved-detail")
+    edit.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Camping tent kit")
+    XCTAssertTrue(cancel.isHittable); cancel.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(updated.isHittable)
+    XCTAssertFalse(app.alerts["Discard changes?"].exists)
   }
 
   func testEditMetadataRecoveryRetainsNormalTextDraft() {
@@ -2166,6 +2253,81 @@ final class FixtureAuditTests: XCTestCase {
     verifyActions()
     XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
     capture("home-header-after-scroll")
+  }
+
+  func testBrowseGridFitsDeviceWidth() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let garage = app.otherElements["asset-card-journey-0"].firstMatch
+    let kitchen = app.otherElements["asset-card-journey-1"].firstMatch
+    let tent = app.otherElements["asset-card-journey-2"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10))
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
+    XCTAssertTrue(tent.waitForExistence(timeout: 10))
+    XCTAssertEqual(garage.frame.minY, kitchen.frame.minY, accuracy: 1)
+    XCTAssertEqual(garage.frame.width, kitchen.frame.width, accuracy: 1)
+    XCTAssertGreaterThan(kitchen.frame.minX, garage.frame.maxX)
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      XCTAssertEqual(garage.frame.minY, tent.frame.minY, accuracy: 1)
+      XCTAssertEqual(garage.frame.width, tent.frame.width, accuracy: 1)
+      XCTAssertGreaterThanOrEqual(garage.frame.width, 220)
+      XCTAssertLessThan(garage.frame.width, 300)
+      XCTAssertGreaterThan(tent.frame.minX, kitchen.frame.maxX)
+    } else {
+      XCTAssertGreaterThan(tent.frame.minY, garage.frame.minY)
+    }
+    XCTAssertLessThanOrEqual(kitchen.frame.maxX, app.frame.maxX)
+    XCTAssertLessThanOrEqual(tent.frame.maxX, app.frame.maxX)
+    capture("browse-adaptive-grid")
+  }
+
+  func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let control = app.segmentedControls.firstMatch
+    XCTAssertTrue(control.waitForExistence(timeout: 10))
+    let list = control.buttons["List"]
+    let map = control.buttons["Map"]
+    XCTAssertTrue(list.isSelected)
+    let initialFrame = control.frame
+    func verifyAnchor() {
+      XCTAssertTrue(list.isHittable)
+      XCTAssertTrue(map.isHittable)
+      XCTAssertEqual(app.segmentedControls.count, 1)
+      XCTAssertEqual(control.frame.minX, initialFrame.minX, accuracy: 1)
+      XCTAssertEqual(control.frame.minY, initialFrame.minY, accuracy: 1)
+      XCTAssertEqual(control.frame.width, initialFrame.width, accuracy: 1)
+      XCTAssertTrue(app.buttons["Add an asset"].firstMatch.isHittable)
+      XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
+    }
+    let listItem = app.buttons["Open asset Camping tent"].firstMatch
+    XCTAssertTrue(listItem.waitForExistence(timeout: 10))
+    let listItemY = listItem.frame.minY
+    verifyAnchor()
+    capture("browse-journey-list-top")
+    // Start in the card gutter so this scroll cannot activate a card command.
+    let firstCard = app.otherElements["asset-card-journey-0"].firstMatch
+    let secondCard = app.otherElements["asset-card-journey-1"].firstMatch
+    let gutterX = (firstCard.frame.maxX + secondCard.frame.minX) / 2
+    let origin = app.coordinate(withNormalizedOffset: .zero)
+    let start = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.7))
+    let end = origin.withOffset(CGVector(dx: gutterX, dy: app.frame.height * 0.3))
+    start.press(forDuration: 0.05, thenDragTo: end)
+    XCTAssertTrue(control.exists, "Scrolling must remain on Browse")
+    XCTAssertTrue(!listItem.exists || listItem.frame.minY < listItemY - 40, "The list must actually scroll")
+    verifyAnchor()
+    capture("browse-journey-list-scrolled")
+    map.tap()
+    XCTAssertTrue(map.isSelected)
+    let overview = app.staticTexts["12 active assets · 2 root items"].firstMatch
+    XCTAssertTrue(overview.waitForExistence(timeout: 10))
+    XCTAssertFalse(app.buttons["Filters"].exists)
+    verifyAnchor()
+    capture("browse-journey-map")
+    list.tap()
+    XCTAssertTrue(list.isSelected)
+    XCTAssertTrue(app.buttons["Filters"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertFalse(overview.exists)
+    verifyAnchor()
+    capture("browse-journey-list-return")
   }
 
   func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {

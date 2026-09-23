@@ -63,7 +63,7 @@ export function AssetCard({
   const styles = useAssetCardStyles(paletteOverride);
 
   return (
-    <View style={[
+    <View testID={`asset-card-${asset.id}`} style={[
       styles.card,
       isRow ? styles.rowCard : isCompact ? styles.compactCard : styles.standardCard,
       style

@@ -1904,3 +1904,147 @@ whole-keyboard enumeration. Run35858864716 proves the iPad native keyboard label
 space as a literal blank, not “space”; readiness targets the actual first C key
 shown in the retained hierarchy without weakening the exact text assertion. Acceptance requires full text, accepted clearing,
 staged tag presence and retained selection through disclosure.
+
+### Full-height asset editor (M261)
+
+Editing asset metadata is a multi-field content-editing task. Present one
+full-height native form sheet on iOS/iPadOS, consistent with Add, and a native
+stack destination on Android. A single full-height detent preserves the asset
+context without requiring the user to expand a small action sheet before editing.
+Use a native title and persistent Cancel/Save actions; remove the duplicate body
+title and bottom action pair. Keep cancellation explicit and dirty-draft
+confirmation, permission guards and operation ownership unchanged. Busy state
+disables both actions; Save uses the latest committed valid draft.
+
+Show kind/type as concise read-only context, followed by the editable identity,
+expiration and tags groups. Do not devote a prominent instructional panel to a
+field that cannot be edited. Preserve inline tag creation, staged selection and
+expiration capability; selecting this container does not certify the current tag
+management layout as final. Let the iOS ScrollView own keyboard insets; Android
+retains its keyboard-resizing frame. Do not combine native automatic keyboard
+insets with a second iOS keyboard-avoidance displacement.
+
+Acceptance walks asset → Edit → change name/expiration/tags → Save → asset,
+then Cancel/Keep editing/Discard and save rejection with draft retention. Check
+header actions before and after scrolling and with keyboard present on phone and
+iPad. Verify normal-text hierarchy as a complete editor before enlarged-text
+refinement. Shared Move and Move Here containers remain independently reviewed;
+this is an editor task decision, not a universal full-height-sheet rule.
+
+
+M261 connected acceptance uses the real detail and Edit route screens against one
+isolated in-memory asset repository and the real UpdateAssetCommand. Open Edit
+through the detail's production action, change metadata, save once, return to the
+same detail and reopen Edit to verify the persisted values. Fixture route wiring
+must preserve the production `/assets/:id/edit` destination and native options.
+No production credentials, server mutation or auth claim follows from this fake.
+Retain separate rejection/discard coverage; a successful task is not demonstrated
+by only rejecting Save and returning to the audit launcher.
+
+
+### Destination-first Move picker (M262)
+
+Move is a destination selection task. Use a full-height native form sheet on iOS
+and the existing native stack on Android, with persistent Cancel/Move commands.
+Keep the asset name and concise current/selected location context above the
+searchable destination list. Label the root choice Inventory root rather than
+implementation language such as No parent. The list remains the primary content; selecting an
+existing destination must not require passing a destination-creation form.
+
+After a nonempty search permits creation, offer an explicit New destination action
+below the choices. Only that action reveals kind, creation placement and Create.
+Cancel new destination returns to choosing without clearing the query or selected
+destination. Changing the search closes the creation disclosure so unrelated
+queries cannot inherit an open creation form. Preserve failed-creation drafts,
+created selection, retry, busy/permission guards, and final Move confirmation.
+Creation remains secondary and does not automatically move the asset. Inline
+search is deliberate here because finding a destination is the primary task.
+
+This task-specific full-height selection surface accommodates real inventory
+lists; it is not a universal rule for short flat choices. Keep Move Here unchanged.
+Verify choosing an existing destination and explicit create/retry/move with keyboard,
+scrolling and navigation return on phone/iPad before shipping. Judge the complete
+selection flow at normal text size; source assertions do not establish layout fit.
+
+Native header completion controls keep stable accessible names while disabled.
+Edit and Move must retain visible, announced Saving changes / Moving progress in
+the body while their commands are pending; moving actions into a native header
+must not silently remove the previous buttons' progress feedback.
+
+Connected Move acceptance must enter from the real asset detail route, select an
+existing destination, commit through MoveAssetCommand and the mutation observer,
+then show the new location on the same detail. Reopening Move must select the
+persisted destination and disable an unchanged move. The shared in-memory journey
+repository must preserve edited metadata and resolve placement on subsequent reads;
+isolated success callbacks are insufficient evidence for navigation return.
+
+Native empty-field checks must accept the platform's absent value as well as an
+empty string or placeholder, while separately requiring that the field exists
+and the staged tag is present. A missing element must never count as cleared.
+
+### Existing tags before tag creation in Edit (M264)
+
+Selecting inventory tags is the primary tag task. Keep tag creation secondary:
+show a native New tag command instead of an always-visible name, hexadecimal
+color field, palette, color picker and Add command. New tag reveals that bounded
+form in place; it does not open another sheet or navigation stack. This is the
+same explicit-creation principle used by Move, not a substitute for reviewing
+large tag selection sets separately.
+
+Cancel new tag clears only the unstaged name/color and closes creation; preserve
+selected existing tags, staged new tags and all other asset edits. Adding a tag
+keeps creation open with cleared input for another entry, while the staged tag
+remains visible. Preserve existing duplicate resolution, rejected-entry retention,
+busy/read-only guards and dirty-draft dismissal protection. Recovered nonempty
+creation drafts must remain visible. Verify normal-text selection without creation,
+creation/cancel, staging and Save natively before release.
+
+Creation commands must use the focused, committed current draft and enabled
+state. A callback retained before another edit or tag change must not restore
+obsolete fields; removal of the creation form retires its Cancel command.
+### Stable Browse peer-view control (M260)
+
+List and Map are peer presentations of the same inventory. Give their segmented
+control one persistent owner in Browse's native navigation header, independent of
+the changing content. Do not render a second switcher in either result or map
+headers. Keep existing native Add/search behavior, inventory choice on Home,
+query/refinement state and Map path retention. Switching views must not change the
+control's anchor, dimensions or scroll ownership. Native header handlers must
+settle across navigation feedback, observe current committed state and retire on
+unmount. Shared header placement preserves content space and scroll-edge behavior.
+
+Acceptance: walk List → Map → List, search/refine and open/return from an asset at
+normal text; judge stability and content hierarchy, then verify exact state
+retention and one reachable switcher. Mounted checks establish ownership/state,
+not native geometry. Native phone/iPad review must verify the header's Add/search
+commands and switcher fit together before release.
+
+
+Native35863725725 reaches the Browse candidate on both devices but stops before
+scrolling because card titles are exposed as accessible Open asset buttons, not
+standalone static text. Target the actual Open asset Camping tent button for the
+existing displacement assertion. Preserve the same data, deadlines, real scroll,
+List/Map state markers and exact control-anchor assertions. This fixes the driver
+selector and does not establish a native pass or warrant a production change.
+
+### Width-adaptive Browse collection (M263)
+
+Normal-text asset grids retain two columns on ordinary phones and use available
+tablet/window width for additional columns, with a 220-point minimum card width
+when adding a third or later column. This is a product density choice informed by
+Apple's adaptive [layout](https://developer.apple.com/design/human-interface-guidelines/layout)
+and [collections](https://developer.apple.com/design/human-interface-guidelines/collections)
+guidance, not an Apple-specified breakpoint. Preserve the existing one-column
+Places and enlarged-text layouts. Account for horizontal safe-area insets and
+inter-card spacing; partial last rows must retain the same card width.
+
+Changing column count must preserve the current result criteria and scroll offset
+rather than return to the beginning. Never restore an offset from a different
+inventory or result criteria. Verify phone and iPad rendering and resize behavior
+natively before declaring this finding closed.
+
+The M260–M264 release batch is frozen. Its combined native selection covers Browse
+anchor/scroll and grid fit, connected Edit save and Move return, Edit metadata/tag
+recovery, destination creation/retry and Move Here input. Prior component results
+remain scoped evidence; the combined run verifies integration. Unrelated findings
+stay in the audit and must not silently expand this batch.

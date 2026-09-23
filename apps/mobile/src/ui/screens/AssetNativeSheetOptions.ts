@@ -52,12 +52,12 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const,
       headerShown: true, gestureEnabled: false
     } : {
-      ...baseOptions, gestureEnabled: false, sheetAllowedDetents: [0.56, 0.9]
+      ...baseOptions, headerShown: true, title: 'Edit asset', gestureEnabled: false, sheetAllowedDetents: [1]
     } satisfies AssetNativeSheetOptions,
     move: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
     } : {
-      ...baseOptions, sheetAllowedDetents: [0.62, 0.92]
+      ...baseOptions, headerShown: true, title: 'Move asset', sheetAllowedDetents: [1]
     } satisfies AssetNativeSheetOptions,
     moveHere: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
