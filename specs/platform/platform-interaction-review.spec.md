@@ -1,5 +1,18 @@
 # Platform Interaction Review
 
+## Custom-field choice acceptance
+
+M02/M11 need native evidence for their distinct control composition. Exercise the
+production CustomizationFieldControls in a scrolling create-form fixture: choose
+Type and Applies to in place, expose enum controls, select two asset types separated
+by scroll, remove one draft selection and preserve the other. Keep visible labels
+and verify the same header remains. Controlled draft observers are fixture-only.
+This does not certify field persistence, keyboard entry, inherited immutable targets
+or assistive behavior; their existing source and workflow evidence remains separate.
+Use one focused phone/iPad run plus Android acceptance. Investigate a failure only
+if it distinguishes a control defect from fixture/observation behavior; retain the
+default one-source-pass/two-experiment budget. No production change is presumed.
+
 ## Transient success observation order
 
 Native35815492811 phone passed Archive confirmation/cancellation and returned to

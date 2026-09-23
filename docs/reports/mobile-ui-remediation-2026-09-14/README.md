@@ -116,6 +116,17 @@ The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
 
+## Next acceptance batch — custom-field choices
+
+M02/M11 retain a distinct native gap: Type/Applies to menus and scroll-separated
+applicability selections in the real CustomizationFieldControls. A runner-only
+create-form fixture now checks enum disclosure, in-place applicability choice,
+selecting first/last targets and removing the first while retaining the last.
+No production correction is presumed. One focused phone/iPad run and Android
+verification will determine whether this composition needs a fix. Existing shared
+Save/Back acceptance is not being repeated; field persistence and assistive modes
+are outside this specific check.
+
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
 experiments without naming competing causes and the decision each outcome changes.

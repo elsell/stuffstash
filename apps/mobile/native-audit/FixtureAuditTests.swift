@@ -1420,6 +1420,56 @@ final class FixtureAuditTests: XCTestCase {
     back.tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
   }
+  func testCustomFieldChoicesStayInPlaceAndRetainTargets() {
+    let open = app.buttons["Audit field choices"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let header = app.navigationBars["Native UI audit"]
+    XCTAssertTrue(header.exists)
+    let type = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose Type.")).firstMatch
+    XCTAssertTrue(type.waitForExistence(timeout: 5)); XCTAssertTrue(type.isHittable)
+    XCTAssertTrue(app.staticTexts["Type"].exists)
+    type.tap()
+    let enumChoice = app.buttons["Enum"]
+    XCTAssertTrue(enumChoice.waitForExistence(timeout: 5)); enumChoice.tap()
+    XCTAssertTrue(app.textFields["New enum option"].waitForExistence(timeout: 5))
+    let applies = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Choose Applies to.")).firstMatch
+    for _ in 0..<4 where !applies.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(applies.isHittable)
+    XCTAssertTrue(app.staticTexts["Applies to"].exists)
+    applies.tap()
+    let selectedTypes = app.buttons["Selected asset types"]
+    XCTAssertTrue(selectedTypes.waitForExistence(timeout: 5)); selectedTypes.tap()
+    XCTAssertTrue(header.exists)
+    func target(_ name: String) -> XCUIElement {
+      app.descendants(matching: .any).matching(identifier: name).firstMatch
+    }
+    func assertTargets(_ value: String) {
+      let result = app.staticTexts["Selected targets: \(value)"]
+      for _ in 0..<8 where !result.isHittable { app.scrollViews.firstMatch.swipeDown() }
+      XCTAssertTrue(result.isHittable)
+    }
+    let first = target("Audit type 01")
+    for _ in 0..<6 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(first.isHittable); first.tap()
+    assertTargets("type-1")
+    let last = target("Audit type 12")
+    for _ in 0..<8 where !last.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(last.isHittable); last.tap()
+    assertTargets("type-1, type-12")
+    for _ in 0..<8 where !first.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(first.isHittable); first.tap()
+    let result = app.staticTexts["Selected targets: type-12"]
+    for _ in 0..<8 where !result.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(result.isHittable)
+    XCTAssertTrue(app.staticTexts["Field type: enum"].exists)
+    XCTAssertTrue(app.staticTexts["Applicability: custom_asset_types"].exists)
+    XCTAssertTrue(header.exists)
+    capture("custom-field-retained-target")
+    app.buttons["Back to audit menu"].tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+  }
+
   func testDraftOptionRemovalPreservesSavedOptions() throws {
     app.buttons["Audit draft options"].tap()
     let remove = app.buttons["Remove draft"]

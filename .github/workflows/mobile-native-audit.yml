@@ -22,6 +22,7 @@ on:
           - menu-ownership
           - archive-notice
           - onboarding-keyboard
+          - field-choices
   pull_request:
     paths:
       - '.github/workflows/mobile-native-audit.yml'
@@ -96,6 +97,12 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+              )
+              ;;
+            field-choices)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomFieldChoicesStayInPlaceAndRetainTargets'
               )
               ;;
             onboarding-keyboard)

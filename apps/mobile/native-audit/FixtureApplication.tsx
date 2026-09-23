@@ -1,3 +1,4 @@
+import { CustomFieldChoicesFixture } from './CustomFieldChoicesFixture';
 export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
 import { useInputEventTrace } from './InputEventTrace';
@@ -164,6 +165,7 @@ export function FixtureMenu() {
   const router = useRouter();
   const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
   const feedback = useAppFeedback();
+  const [fieldChoices, setFieldChoices] = useState(false);
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState<'scroll' | 'fixed'>();
@@ -174,6 +176,7 @@ export function FixtureMenu() {
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
   </FixturePage>;
+  if (fieldChoices) return <CustomFieldChoicesFixture onBack={() => setFieldChoices(false)} />;
   if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
@@ -203,6 +206,7 @@ export function FixtureMenu() {
       tone: 'error', title: 'Audit action needs attention', message: 'This is synthetic audit data.',
       action: { label: 'Retry audit action', onPress: () => setResult('Audit retry completed') }
     })} />
+    <Button title="Audit field choices" onPress={() => setFieldChoices(true)} />
     <Button title="Audit draft options" onPress={() => setShowDraftOptions(true)} />
     {showDraftOptions ? <DraftOptionsFixture /> : null}
     <Button title="Audit controlled input" onPress={() => setInputMode('controlled')} />
