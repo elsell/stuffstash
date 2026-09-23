@@ -46,11 +46,19 @@ source state ownership does not certify the visual journey.
 
 ## Detail action hierarchy follow-up
 
-Normal-text phone/iPad detail captures in35907123046 expose a scattered command
-hierarchy: prominent full-width Check out, separate Edit/Move, and isolated Add
-photos. M277 records the evidence and next design decision in [findings](findings.md).
-This is outside the frozen selection batch; preserve task access while reviewing
-the complete detail composition rather than merely changing button padding.
+M277 now groups Move with Location and availability with its command, keeps Edit
+in the native header, pairs photo status with Add photos, and groups contents
+commands directly before the list. Empty sibling sections no longer push actual
+contents below the fold; empty places and no-result searches retain one useful
+recovery state. Android representative captures show the revised
+[photo row](evidence/android-detail-photo.png) and
+[place contents](evidence/android-detail-place.png). Populated-photo, checked-out,
+read-only and place header checks pass on the rebuilt Android fixture. The bundled
+image establishes gallery layout, not real-photo crop quality.
+
+Phone/iPad verification of the final composition remains open. This is outside
+the frozen selection batch and is not a prerequisite for its release. Source
+checks and Android review do not establish iOS visual acceptance.
 
 ## Separate unresolved decisions
 

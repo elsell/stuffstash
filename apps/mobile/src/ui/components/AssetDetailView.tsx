@@ -189,6 +189,8 @@ export function AssetDetailView({
             workspaceStatusMessage={workspaceStatusMessage}
           />
 
+          {asset.photos.length === 0 ? photoGallery : null}
+
           {asset.canContainAssets ? (
             <ContainedSpatialActions
               asset={asset}
@@ -198,7 +200,6 @@ export function AssetDetailView({
             />
           ) : null}
 
-          {asset.photos.length === 0 ? photoGallery : null}
         </View>
       )}
       ListFooterComponent={(

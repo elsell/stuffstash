@@ -21,7 +21,6 @@ import {
   containedAssetsSectionHeading,
   containedItemsEmptyState,
   containedItemsSectionHeading,
-  containedSpacesEmptyState,
   containedSpacesSectionHeading,
   type ContainedAssetAction,
   type ContainedAssetsEmptyState,
@@ -61,7 +60,12 @@ export function containedWorkspaceItems(
   const spaces = filterContainedAssets(asset.containedSpaces, normalizedQuery);
   const items = filterContainedAssets(asset.containedItems, normalizedQuery);
   const isFiltering = normalizedQuery.length > 0;
-  const noMatches = isFiltering && spaces.length + items.length === 0;
+  if (spaces.length + items.length === 0) {
+    return [{ key: 'contents-empty', kind: 'empty', canClearSearch: isFiltering,
+      emptyState: isFiltering
+        ? { title: 'No matching contents', message: 'Try another name or path.' }
+        : containedAssetsEmptyState(asset) }];
+  }
   const spacesHeading = containedSpacesSectionHeading(asset, isFiltering ? {
     visibleCount: spaces.length,
     totalCount: asset.containedSpaces.length
@@ -72,23 +76,12 @@ export function containedWorkspaceItems(
   } : undefined);
 
   return [
-    ...containedSectionItems(
-      'spaces',
-      spacesHeading,
-      containedAssetRows(spaces),
-      isFiltering
-        ? { title: 'No matching spaces', message: 'Try another name or path.' }
-        : containedSpacesEmptyState()
-    ),
-    ...containedSectionItems(
-      'items',
-      itemsHeading,
-      containedAssetRows(items),
-      isFiltering
-        ? { title: 'No matching items', message: 'Try another name or path.' }
-        : containedItemsEmptyState(asset),
-      noMatches
-    )
+    ...(spaces.length > 0 ? containedSectionItems(
+      'spaces', spacesHeading, containedAssetRows(spaces), containedAssetsEmptyState(asset)
+    ) : []),
+    ...(items.length > 0 ? containedSectionItems(
+      'items', itemsHeading, containedAssetRows(items), containedItemsEmptyState(asset)
+    ) : [])
   ];
 }
 
@@ -143,12 +136,13 @@ export function ContainedSpatialActions({
       style={styles.spatialActions}
     >
       {actions.map((action) => (
+        <View key={action.kind} style={styles.spatialCommand}>
         <ContainedAssetActionButton
           action={action}
           isActionPending={isActionPending}
-          key={action.kind}
           onPress={action.kind === 'add_here' ? onAddHere : onMoveThingsHere}
         />
+        </View>
       ))}
     </View>
   );
@@ -311,7 +305,8 @@ function ContainedAssetRowView({
 
 function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
-    spatialActions: { gap: spacing.md },
+    spatialActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, maxWidth: 560 },
+    spatialCommand: { width: 160, maxWidth: '100%' },
     maintenanceSection: {
       borderTopColor: palette.border,
       borderTopWidth: 1,

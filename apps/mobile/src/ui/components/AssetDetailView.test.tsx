@@ -325,9 +325,26 @@ describe('AssetDetailView', () => {
       .toEqual(['1 space', '1 item']);
     expect(pathMatches.filter((item) => item.kind === 'row').map((item) => item.row.title))
       .toEqual(['Utility shelf', 'Cordless drill']);
-    expect(noMatches.filter((item) => item.kind === 'section').map((item) => item.heading.summary))
-      .toEqual(['0 of 1 space', '0 of 1 item']);
+    expect(noMatches.filter((item) => item.kind === 'empty')).toHaveLength(1);
+    expect(noMatches.filter((item) => item.kind === 'section')).toHaveLength(0);
     expect(noMatches.some((item) => item.kind === 'empty' && item.canClearSearch)).toBe(true);
+  });
+
+  it('shows populated place contents without empty sibling sections and one empty state when nothing exists', () => {
+    const itemsOnly = containedWorkspaceItems(placeDetail({
+      items: [{ ...containedCard('drill', 'Drill', 'item'), relativePath: [], relativePathLabel: undefined }]
+    }), '');
+    expect(itemsOnly.filter(item => item.kind === 'section').map(item => item.heading.title))
+      .toEqual(['Items in Garage']);
+    expect(itemsOnly.filter(item => item.kind === 'empty')).toHaveLength(0);
+    const spacesOnly = containedWorkspaceItems(placeDetail({
+      spaces: [containedCard('shelf', 'Shelf', 'container')]
+    }), '');
+    expect(spacesOnly.filter(item => item.kind === 'section').map(item => item.heading.title))
+      .toEqual(['Spaces in Garage']);
+    const empty = containedWorkspaceItems(placeDetail(), '');
+    expect(empty.filter(item => item.kind === 'empty')).toHaveLength(1);
+    expect(empty.some(item => item.kind === 'empty' && item.canClearSearch)).toBe(false);
   });
 
   it('keeps native search out of the scrollable contents header', () => {
@@ -415,7 +432,8 @@ describe('AssetDetailView', () => {
     expect(addHereIndex).toBeGreaterThan(-1);
     expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
     expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
-    expect(addHereIndex).toBeLessThan(text.indexOf('Add photos'));
+    expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
+    expect(addHereIndex).toBeLessThan(text.indexOf('Move items here'));
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
 

@@ -512,13 +512,13 @@ describe('independent asset region recovery', () => {
       await test.render(); await settle(test.harness); await settle(test.harness);
       expect(test.harness.byLabel('Loading location and contents')).toBeDefined();
       expect(test.harness.allText()).not.toContain('No photos');
-      expect(test.harness.allText()).not.toContain('Nothing here yet');
+      expect(test.harness.allText()).not.toContain('Nothing inside yet');
       expect(test.harness.allText()).not.toContain('No spaces here yet');
       await test.harness.run(() => { firstContents.reject(new Error('Unavailable')); firstPhotos.reject(new Error('Unavailable')); });
       await settle(test.harness);
       expect(test.harness.byLabel('Retry contents')).toBeDefined();
       expect(test.harness.byLabel('Retry photos')).toBeDefined();
-      expect(test.harness.allText()).not.toContain('Nothing here yet');
+      expect(test.harness.allText()).not.toContain('Nothing inside yet');
       await test.harness.press(test.harness.byLabel('Retry contents'));
       await settle(test.harness);
       expect(test.harness.byLabel('Retry contents')).toBeUndefined();
@@ -531,7 +531,7 @@ describe('independent asset region recovery', () => {
       await test.harness.run(() => retryContents.resolve({ asset: core.asset, allAssets: [] }));
       await settle(test.harness);
       expect(test.harness.byLabel('Retry contents')).toBeUndefined();
-      expect(test.harness.allText()).toContain('Nothing here yet');
+      expect(test.harness.allText()).toContain('Nothing inside yet');
       expect(test.harness.allText()).toContain('Family tent');
     } finally { await test.harness.unmount(); }
   });
@@ -560,7 +560,7 @@ it('uses scoped native contents search and clears it when detail eligibility cha
     await test.harness.run(() => search()!.onCancelButtonPress());
     expect(test.harness.allText()).toContain('Tool 0');
     await test.harness.run(() => {search()!.onFocus(); search()!.onChangeText({ nativeEvent: { text: 'missing' } });});
-    expect(test.harness.allText()).toContain('No matching items');
+    expect(test.harness.allText()).toContain('No matching contents');
     await test.harness.press(test.harness.all().find(node => node.type === 'Pressable' && node.props.accessibilityLabel === 'Clear search'));
     expect(test.harness.allText()).toContain('Tool 0');
     await test.harness.run(() => {search()!.onFocus(); search()!.onChangeText({ nativeEvent: { text: 'Tool 19' } });});

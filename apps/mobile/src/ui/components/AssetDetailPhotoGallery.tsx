@@ -69,19 +69,19 @@ export function AssetDetailPhotoGallery({
   const pages = assetDetailPhotoPages(photos);
   const canUseAddPhotos = canAddPhotos && onAddPhotos !== undefined;
 
-  if (photos.length === 0) {
-    return (
-      <View style={styles.gallery}>
-        <View style={styles.emptyMedia}>
-          <Camera color={palette.textMuted} size={20} />
-          <Text style={[styles.emptySupporting, { color: palette.textMuted }]}>No photos</Text>
-        </View>
-        {canUseAddPhotos ? (
-          <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
-        ) : null}
-      </View>
-    );
-  }
+  const caption = <View style={styles.caption}>
+    <View style={styles.emptyMedia}>
+      <Camera accessible={false} color={palette.textMuted} size={20} />
+      <Text style={[styles.emptySupporting, { color: palette.textMuted }]}>
+        {photos.length === 0 ? 'No photos' : `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`}
+      </Text>
+    </View>
+    {canUseAddPhotos ? <View style={styles.captionCommand}>
+      <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
+    </View> : null}
+  </View>;
+
+  if (photos.length === 0) return caption;
 
   return (
     <View style={styles.gallery}>
@@ -101,9 +101,7 @@ export function AssetDetailPhotoGallery({
         })}
       </ScrollView>
 
-      {canUseAddPhotos ? (
-        <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
-      ) : null}
+      {caption}
     </View>
   );
 }
@@ -146,8 +144,9 @@ function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
 
 const styles = StyleSheet.create({
   previewFailure: { padding: spacing.lg, gap: spacing.sm },
+  caption: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, maxWidth: 560, width: '100%' },
+  captionCommand: { width: 120, maxWidth: '100%' },
   gallery: {
-    alignItems: 'flex-start',
     gap: spacing.sm
   },
   photoStrip: {

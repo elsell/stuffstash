@@ -2118,3 +2118,28 @@ They do not perform server mutations or establish authorization enforcement.
 The route variant remounts its query owner so one case cannot inherit another's
 permissions or state. Capture entry and the relevant contextual commands; keep
 whole-layout acceptance separate from assertions about command presence.
+
+### M277 content-first detail grouping
+
+Normal-text Android captures show the empty Spaces block ahead of twenty actual
+items and an unbounded Add photos command between media and identity. These are
+whole-page hierarchy defects. Keep the gallery's status/count and bounded Add
+photos command together in one wrapping caption row. Empty media uses the same
+compact row. Place that row before containment commands so photo controls do not
+split commands from their contents. Keep existing gallery paging and opening.
+
+Containment commands form a wrapping, bounded horizontal group: Add item here
+retains primary emphasis, Move items here is secondary. Native adapters own button
+appearance; this is a grouping correction, not a custom toolbar. Preserve native
+minimum targets and wrapping rather than squeezing long labels.
+
+For places, render sections with actual visible contents. An empty sibling section
+must not precede useful rows. When the entire place is empty, show one contents
+empty state with permission-appropriate guidance; when search has no matches, show
+one no-results state with Clear search. Retain relative-path matching, counts on
+visible sections, original ordering, and native search eligibility from total
+contents. Do not hide loading or failure behind an empty result.
+
+Validate populated/empty photo and twenty-item place fixtures as complete native
+screens, plus selection/opening and filtered no-result recovery. Source assertions
+about order or presence do not establish visual acceptance.
