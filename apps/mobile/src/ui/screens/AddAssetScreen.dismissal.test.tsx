@@ -336,6 +336,16 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     expect(h.byText('Tag 14')).toBeDefined();
     await h.changeText(h.byLabel('Search tags'), '');
     expect(h.byText('No matching tags')).toBeUndefined();
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    await h.press(h.byLabel('New tag'));
+    const cancelNewTag = h.byLabel('Cancel new tag')?.props.onPress;
+    await h.changeText(h.byLabel('New tag name'), 'Temporary');
+    await h.changeText(h.byLabel('Asset name'), 'Camping tent');
+    await h.run(() => cancelNewTag?.());
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(store.load(draftContext)?.title).toBe('Camping tent');
+    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
+    await h.press(h.byLabel('New tag'));
     const overlongName = 'Camping'.repeat(20);
     await h.changeText(h.byLabel('New tag name'), overlongName);
     expect(h.byText('Use a shorter tag name.')).toBeDefined();
@@ -368,6 +378,7 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     expect(store.load(draftContext)?.inlineTag?.color ?? '').toBe('');
     await h.changeText(h.byLabel('Asset name'), 'Tent');
     await h.press(h.byText('More details')?.parent ?? undefined);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     await h.press(h.byLabel('Add tag'));
     expect(store.load(draftContext)?.inlineTag?.name).toBe('');

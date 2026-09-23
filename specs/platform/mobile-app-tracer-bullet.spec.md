@@ -549,3 +549,14 @@ only a 44-point React Native host around a small symbol. Keep its native Menu
 semantics and visible ellipsis; apply the hit region to the label content. Verify
 the rendered trigger bounds and cancellation flow on phone and iPad. This does
 not establish that all native menu geometry is correct from source declarations.
+
+## Consistent optional tag creation in Add and Edit
+
+Existing-tag selection is primary in both asset forms. A native `New tag` command
+reveals name/color creation controls; an unfinished restored entry reveals them
+automatically. `Cancel new tag` clears only that unstaged name/color and collapses
+creation, preserving selected tags, staged definitions and all other asset fields.
+Creation actions use current committed draft state and respect focus/pending locks.
+Keep exact tag input, normalization, staging and draft restore behavior unchanged.
+This addresses task consistency; large tag collections still require their own
+selection-pattern review. No extra route or modal is needed for this optional form.

@@ -1957,6 +1957,16 @@ final class FixtureAuditTests: XCTestCase {
     reveal(details)
     details.tap()
     let entry = app.textFields["New tag name"].firstMatch
+    XCTAssertFalse(entry.exists)
+    let newTag = app.buttons["New tag"].firstMatch
+    reveal(newTag); newTag.tap()
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
+    let cancelNewTag = app.buttons["Cancel new tag"].firstMatch
+    reveal(cancelNewTag); cancelNewTag.tap()
+    XCTAssertTrue(entry.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(save.isEnabled)
+    reveal(newTag); newTag.tap()
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
     waitForKeyboard()

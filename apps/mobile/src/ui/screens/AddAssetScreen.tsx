@@ -1,3 +1,4 @@
+import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { tagChoicePresentation } from '../components/TagChoicePresentation';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -1051,6 +1052,18 @@ function AssetTagPicker({
 }) {
   const [tagSearch, setTagSearch] = useState('');
   const [tagNameRevision, setTagNameRevision] = useState(0);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const creationVisible = creatingTag || Boolean(entry.name.trim() || entry.color.trim());
+  const creationActions = useFocusedSheetActions({
+    primaryLabel: 'New tag', secondaryLabel: 'Cancel new tag',
+    disabled: disabled || creationVisible, secondaryDisabled: disabled || !creationVisible,
+    onApply: () => setCreatingTag(true),
+    onBack: () => {
+      setCreatingTag(false);
+      setTagNameRevision(current => current + 1);
+      onChange(selectedTagIds, newTags, { name: '', color: '' });
+    }
+  });
   const [showAllTags, setShowAllTags] = useState(false);
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.displayName, expanded: showAllTags, query: tagSearch });
   const colors = useAppearanceAwarePalette();
@@ -1146,6 +1159,7 @@ function AssetTagPicker({
       </View>
       {choices.noMatches ? <Text accessibilityLiveRegion="polite" style={styles.parentPromotionText}>No matching tags</Text> : null}
       {choices.canDisclose ? <NativeCommandButton label={showAllTags ? 'Show fewer tags' : 'Show all tags'} disabled={disabled} onPress={() => { if (!disabled) setShowAllTags(current => !current); }} /> : null}
+      {creationVisible ? <>
       <View style={styles.newTagRow}>
         <AddDraftNameField key={Platform.OS === 'ios' ? tagNameRevision : 'tag-name'} editable={!disabled}
           accessibilityLabel="New tag name"
@@ -1160,6 +1174,8 @@ function AssetTagPicker({
       <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
       <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
       {newTagName.trim() || newTagColor.trim() ? <Text style={styles.parentPromotionText}>Add this tag or clear its name and color before saving.</Text> : null}
+      <NativeCommandButton label="Cancel new tag" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
+      </> : <NativeCommandButton label="New tag" disabled={creationActions.disabled} onPress={creationActions.onApply} />}
     </View>
   );
 }

@@ -3845,3 +3845,17 @@ walkthrough. Empty-photo hierarchy passes26 focused tests and Android rendering.
 Both pass TypeScript, structural checks and code review. iOS/iPad acceptance is
 prepared as `hierarchy-followup`; findings remain open pending native acceptance.
 See evidence/map-hierarchy-results.txt and evidence/detail-hierarchy-results.txt.
+
+### M267 — Add and Edit disagree on optional tag creation
+
+P2 task-consistency finding from shared-consumer source review. AddAssetScreen's
+AssetTagPicker always exposed name/color creation while Edit's M264 correction
+requires New tag. Add now uses that same optional task: New tag reveals controls,
+Cancel new tag clears only unstaged entry, and restored unfinished entries reveal
+automatically. Current committed callbacks preserve current asset fields and tag
+selections. Red test reproduced initial exposure;24 Add tests, TypeScript and
+structural checks pass remotely. Code critic's retained-callback test correction
+was applied. Native Add acceptance now exercises disclosure/cancel/reopen before
+its existing exact input, collapse/restore, staging and draft-clear sequence.
+Native execution remains pending. Large tag-set selection remains a separate
+pattern review; this change does not certify or redesign that interaction.
