@@ -473,12 +473,16 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(query.value as? String, "Audit crate")
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch.exists)
+    let newDestination = app.buttons["New destination"].firstMatch
+    XCTAssertTrue(newDestination.waitForExistence(timeout: 5))
+    reveal(newDestination); newDestination.tap()
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
     XCTAssertTrue(kind.waitForExistence(timeout: 5))
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
-    XCTAssertTrue(app.staticTexts["Move"].firstMatch.exists)
+    XCTAssertTrue(app.navigationBars["Move asset"].exists)
     XCTAssertTrue(query.exists)
     let create = app.buttons["Create container \"Audit crate\""].firstMatch
     reveal(create); create.tap()

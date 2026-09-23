@@ -1940,3 +1940,33 @@ must preserve the production `/assets/:id/edit` destination and native options.
 No production credentials, server mutation or auth claim follows from this fake.
 Retain separate rejection/discard coverage; a successful task is not demonstrated
 by only rejecting Save and returning to the audit launcher.
+
+
+### Destination-first Move picker (M262)
+
+Move is a destination selection task. Use a full-height native form sheet on iOS
+and the existing native stack on Android, with persistent Cancel/Move commands.
+Keep the asset name and concise current/selected location context above the
+searchable destination list. Label the root choice Inventory root rather than
+implementation language such as No parent. The list remains the primary content; selecting an
+existing destination must not require passing a destination-creation form.
+
+After a nonempty search permits creation, offer an explicit New destination action
+below the choices. Only that action reveals kind, creation placement and Create.
+Cancel new destination returns to choosing without clearing the query or selected
+destination. Changing the search closes the creation disclosure so unrelated
+queries cannot inherit an open creation form. Preserve failed-creation drafts,
+created selection, retry, busy/permission guards, and final Move confirmation.
+Creation remains secondary and does not automatically move the asset. Inline
+search is deliberate here because finding a destination is the primary task.
+
+This task-specific full-height selection surface accommodates real inventory
+lists; it is not a universal rule for short flat choices. Keep Move Here unchanged.
+Verify choosing an existing destination and explicit create/retry/move with keyboard,
+scrolling and navigation return on phone/iPad before shipping. Judge the complete
+selection flow at normal text size; source assertions do not establish layout fit.
+
+Native header completion controls keep stable accessible names while disabled.
+Edit and Move must retain visible, announced Saving changes / Moving progress in
+the body while their commands are pending; moving actions into a native header
+must not silently remove the previous buttons' progress feedback.

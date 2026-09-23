@@ -51,3 +51,10 @@ it('opens Edit at full height with persistent native completion controls', () =>
     sheetAllowedDetents: [1], gestureEnabled: false
   });
 });
+
+
+it('gives Move a full-height destination picker and persistent native commands', () => {
+  expect(createAssetNativeSheetOptions(colors, 'ios').move).toMatchObject({
+    presentation: 'formSheet', headerShown: true, title: 'Move asset', sheetAllowedDetents: [1]
+  });
+});
