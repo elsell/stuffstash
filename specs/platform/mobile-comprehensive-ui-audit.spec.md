@@ -1812,3 +1812,14 @@ loads and retain the exact draft. A rejected Save must retain the name and permi
 Keep editing; deliberate Discard returns to the originating screen. Use the existing
 controlled metadata/command fixture. This verifies recovery, not successful backend
 persistence. Keep enlarged-text scenarios and their unresolved findings separate.
+
+### Normal-text Edit tag acceptance
+
+Run the existing routed tag draft/disclosure sequence at default text size, sharing
+its assertions with enlarged-text coverage. Verify exact one-attempt tag entry,
+Save disabled while unstaged, Cancel/Keep editing retention, accepted Add clearing
+the input, native expansion/collapse retaining selected extras, and explicit
+Discard removing the editor before the audit launcher is considered restored.
+This verifies local draft handling and selection, not successful server persistence.
+A reproduced entry failure selects the established native draft adapter; do not
+repeat provider or typing-speed experiments.

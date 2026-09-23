@@ -1204,11 +1204,19 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testEditTagDisclosureRetainsNormalTextDraft() {
+    verifyEditTagDisclosure(captureSuffix: "normal-size")
+  }
+
   func testEditTagDisclosureAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    verifyEditTagDisclosure(captureSuffix: "accessibility-size")
+  }
+
+  private func verifyEditTagDisclosure(captureSuffix: String) {
     let open = app.buttons["Audit Edit tags"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -1256,11 +1264,12 @@ final class FixtureAuditTests: XCTestCase {
     let explanation = app.staticTexts["Add this tag or clear its name and color before saving."].firstMatch
     XCTAssertTrue(explanation.exists)
     reveal(explanation, requiresHit: false)
-    capture("edit-unstaged-tag-retained-accessibility-size")
+    capture("edit-unstaged-tag-retained-\(captureSuffix)")
     let add = app.buttons["Add tag"].firstMatch
     reveal(add)
     add.tap()
     XCTAssertTrue(["", "New tag"].contains(entry.value as? String ?? "missing"))
+    XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
     let expand = app.buttons["Show all tags"].firstMatch
     reveal(expand)
@@ -1270,19 +1279,23 @@ final class FixtureAuditTests: XCTestCase {
     reveal(extra)
     extra.tap()
     XCTAssertTrue(extra.isSelected)
-    capture("edit-tags-expanded-accessibility-size")
+    capture("edit-tags-expanded-\(captureSuffix)")
     let collapse = app.buttons["Show fewer tags"].firstMatch
     reveal(collapse)
     collapse.tap()
     reveal(extra)
     XCTAssertTrue(extra.isSelected)
     XCTAssertTrue(retained.isSelected)
-    capture("edit-tags-collapsed-selected-accessibility-size")
+    capture("edit-tags-collapsed-selected-\(captureSuffix)")
     cancel.tap()
     let discard = app.alerts.buttons["Discard"]
     XCTAssertTrue(discard.waitForExistence(timeout: 5))
     discard.tap()
-    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.textFields["Asset name"].firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
   }
 
   func testEditMetadataRecoveryRetainsNormalTextDraft() {
