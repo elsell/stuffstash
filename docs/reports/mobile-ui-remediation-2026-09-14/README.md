@@ -77,3 +77,11 @@ This is the sole current status summary. Update it in place. Keep exact diagnose
 decisions and durable evidence; historical pending-run statements elsewhere are not
 current state. Sleeping scripts collect terminal job results without unchanged
 status narration. Do not weaken acceptance to make a batch pass.
+
+
+M274 candidate review: native filters run35897564291 passes on phone/iPad at
+07f03d61. Matching screenshots confirm the overview menu removes the intermediate
+page. Visual acceptance remains open: shorten repetitive menu labels and address
+the filter sheet's overall density (M275), especially the iPad footer. Connected
+Browse/detail/Back continuity is not established by fixture callback tests.
+[Reviewed evidence](evidence/filter-menu-358975-results.txt).

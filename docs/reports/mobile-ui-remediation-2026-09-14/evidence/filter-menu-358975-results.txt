@@ -1,0 +1,8 @@
+Native run: https://github.com/elsell/stuffstash/actions/runs/35897564291
+Source: 07f03d61464a4deb80112543c9f167c3f3f76a5f
+iPhone 17 and iPad mini (A17 Pro): filters workflow group succeeded.
+Reviewed captures: browse-expiration-review-menu on both devices.
+Observed: system menu anchored to overview; no intermediate Expiration page.
+Visual reservations: repeated Review wording wraps on both devices; iPad footer occupies substantial sheet height, with Reset all below the initial viewport. This is a density/hierarchy finding, not proof Reset all is untappable.
+Fixture callback checks do not verify connected Browse return, scroll, or detail navigation.
+M274 remains a candidate, not full visual/connected acceptance.

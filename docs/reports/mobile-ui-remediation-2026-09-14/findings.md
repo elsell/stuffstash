@@ -3960,3 +3960,22 @@ checks, TypeScript and structural checks pass remotely. Native overview-menu
 placement is prepared in the filters suite but not yet executed. Connected real
 route Back/scroll remains an explicit separate acceptance requirement. Do not add
 this candidate to the frozen M265–M273 release.
+
+
+M274 native candidate evidence: run35897564291 at07f03d61 passes the filters
+group on iPhone17/iPad mini. Matching menu screenshots were visually inspected;
+see [evidence](evidence/filter-menu-358975-results.txt). The menu removes the extra
+page, but repeated “Review” wording makes short choices wrap. Shorten the menu
+commands within their clearly labeled Expiration context before visual acceptance.
+Connected Browse/detail/Back continuity remains unverified.
+
+### M275 — Filter sheet hierarchy gives too much space to its footer
+
+P2 visual-coherence finding from the same phone/iPad captures. On iPad, the two
+full-width footer actions occupy a substantial portion of the sheet while Reset
+all falls below the initial content viewport. This does not establish overlap or
+an untappable control. Review the whole filter task: compact native row density,
+clear separation of filter values from expiration navigation, and one prominent
+results action with a subordinate dismissal affordance. Preserve the user's
+bottom results-action preference. Judge normal-text phone/iPad layouts and actual
+scroll access before changing shared sizing. This is outside frozen M265–M273.
