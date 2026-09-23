@@ -1,6 +1,6 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.28 (118.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35818700192).
+Latest verified TestFlight: **0.24.29 (120.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35834368106).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
@@ -62,7 +62,7 @@ phone/iPad. Text-entry comparisons and other audit findings are outside this bat
 The TestFlight note will be: “Improved custom tag color selection with the iOS
 system color picker, while preserving your draft and preset colors.”
 
-## Current release — menu action ownership
+## Previous release — menu action ownership
 
 Sourceb75ef748 fixes retained native menu callbacks executing obsolete actions or
 reopening after unlock. M54 in [findings](findings.md) holds the current diagnosis.
@@ -145,8 +145,27 @@ acceptance35831661267 passes2/2 on both phone and iPad: exact one-attempt text,
 creation/movement recovery and the representative Add regression. All six CI jobs
 pass at827fd875. [Terminal evidence](evidence/native-move-add-358316-results.txt)
 and retained captures establish scoped acceptance. PR165 merged as00e8e032;
-a sleeping collector owns release observation. TestFlight availability is not yet
-verified. No further field-choice rerun is needed.
+release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
+08:23:35UTC on September23; Apple processing and exact-build changelog readback
+passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
+No further field-choice rerun is needed.
+
+### Next acceptance — enum option editing
+
+Source64e90a8c adds one focused production-control journey: duplicate rejection
+retains exact text, clearing and entering a new option produces its canonical row,
+Add clears the field, and removing the new option preserves the old one. The
+fixture now matches production keyboard-container settings; preparation tests,
+TypeScript, structural checks and critic pass. Native35836383102 is running under
+a sleeping terminal-result collector. A real exact-text failure selects the proven
+native draft adapter; no provider/key/pacing comparisons will be repeated.
+
+Android APK25689da4 passes the sequence with standard keyboard dismissal; scoped
+[evidence](evidence/android-enum-editing-results.txt) and captures retain the result.
+The first driver touched a label behind the IME because it tested existence rather
+than visible bounds. This was corrected in the driver; it establishes no product
+defect and no keyboard-open Add acceptance. No production enum change is proposed
+without the focused iOS result.
 
 ### Custom-field choices — scoped acceptance complete
 
