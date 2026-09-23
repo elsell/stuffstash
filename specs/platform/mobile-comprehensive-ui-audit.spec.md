@@ -2230,3 +2230,20 @@ inside its form with the intended bottom inset before creation and after failure
 Review phone/iPad captures; source checks cannot prove cross-framework sizing.
 The shared command adapter also needs representative detail-command verification.
 This is a follow-up finding and does not expand PR173's frozen release scope.
+
+## Invalidated sheet scroll ownership (M279)
+
+The iPad expiration capture has a580×650 native viewport but744×1133 content.
+The native viewport retains the dismissed filter sheet's bounds; the mode picker
+itself has the correct content width. Backport the invalidated-screen guard from
+react-native-screens PR4652 (merge8b2163ba587a99eaba81aba09eb0e1153c028ade)
+to the existing pinned4.23.0 patch. In4.23, `invalidateImpl` clears `_controller`
+and no other code clears it; use that existing invalidation marker instead of
+introducing a second lifecycle flag. A deleted sheet must never discover or resize
+a recycled descendant scroll view. Keep the existing search-presentation patch.
+Source: https://github.com/software-mansion/react-native-screens/pull/4652
+
+Extend the connected Browse → Filters → Expiration journey to verify viewport
+width/height, all three visible modes and actual switching before detail/Back.
+Check the native Sharing and detail-command consumers in the same follow-up run.
+No navigation delay, forced rerender or screen-size padding workaround is allowed.

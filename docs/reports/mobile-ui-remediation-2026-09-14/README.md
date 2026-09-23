@@ -62,12 +62,18 @@ a36-point system toolbar frame treated as a custom body button, and duplicate
 nested AX text nodes at the same Availability bounds. Matching screenshots and
 accessibility trees show the expected empty state and one visual heading. Correct
 those observations, require valid heading geometry before deduplication, and retain
-all recovery, bounds and permission checks. The five detail/hierarchy cases are running with corrected observations. Visual
+all recovery, bounds and permission checks. The corrected detail run35926949273 stopped at compilation: the pinned Swift
+SDK requires `NSCoder.string(for:)` for rectangle serialization. That rename is
+fixed; this run provides no new runtime acceptance. Visual
 review now also finds Create Invitation clipped by its section on both devices
 and All dates clipped from the iPad Expiration mode control. Sharing's native
 minimum-size candidate passes25 focused source tests, type/structural checks and
-critic review; native containment remains required. Correct Expiration's column
-width ownership before final follow-up acceptance. Preserve the passed connected
+critic review; native containment remains required. Expiration's native viewport retained the dismissed sheet's580×650 frame while
+its content laid out at744×1133. The candidate backports upstream Screens4652's
+invalidation guard to pinned4.23; the picker width itself was correct. The shared
+native command measurement and sheet-lifecycle changes justify one combined
+follow-up run of the12 existing connected cases, now including full viewport,
+three-mode reachability and invitation form containment. Preserve the passed connected
 journeys; add coverage for these actual layout failures.
 
 ## Separate unresolved decisions

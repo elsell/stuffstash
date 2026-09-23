@@ -4043,6 +4043,7 @@ Native form-containment and shared detail-command checks remain required.
 Normal-text iPad35921268590 [capture](evidence/ipad-expiration-clipped-mode-359212.png)
 shows Expiring soon and Expired but clips All dates beyond the right edge of the
 bounded results column. Phone's three choices fit. Connected expired-item return
-passes, but does not establish mode-switch reachability. Correct the control's
-width ownership and verify all three choices against the actual column bounds.
+passes, but does not establish mode-switch reachability. The native tree establishes a580×650 scroll viewport around744×1133 content;
+the picker width is correct. Backport upstream Screens4652 to prevent a deleted
+sheet resizing a recycled scroll view. Verify the full viewport and all modes.
 This structural finding belongs to the follow-up batch; PR173 stays frozen.

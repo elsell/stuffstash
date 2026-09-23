@@ -1,3 +1,21 @@
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 1c447628d505fbf1bc0c296aee1b6d78321f4559..4a2552298b59d9390e95f49c1ccb6f78c0943ccf 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -241,6 +241,13 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ - (void)applyFrameCorrectionForDescendantScrollView
+ {
++  // Backport of upstream #4652: a deleted sheet must not resize a recycled scroll view.
++  // In 4.23 invalidateImpl clears the controller, which is our invalidation marker.
++  // Upstream commit: 8b2163ba587a99eaba81aba09eb0e1153c028ade.
++  if (_controller == nil) {
++    return;
++  }
++
+   RNS_REACT_SCROLL_VIEW_COMPONENT *scrollView = [self tryFindDescendantScrollView];
+   if (_sheetsScrollView != scrollView) {
+     [_sheetsScrollView removeObserver:self forKeyPath:@"bounds" context:nil];
 diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
 index 3270127a09a05af656566009ee6c4437590bb435..c4d8d6d1180af91f29362e756d7b028b2586733d 100644
 --- a/ios/RNSScreenStackHeaderConfig.mm

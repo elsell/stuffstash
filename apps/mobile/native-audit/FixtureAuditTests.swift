@@ -1035,6 +1035,18 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(expired.waitForExistence(timeout: 10)); XCTAssertTrue(expired.isHittable)
     XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch.exists)
     XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Kitchen item")).firstMatch.exists)
+    // The native viewport must not retain the dismissed filter sheet's size.
+    let viewport = app.scrollViews.firstMatch.frame
+    XCTAssertGreaterThanOrEqual(viewport.width, app.frame.width - 40)
+    XCTAssertGreaterThanOrEqual(viewport.height, app.frame.height - app.navigationBars["Expiration"].frame.maxY - 40)
+    for label in ["All dates", "Expiring soon", "Expired"] {
+      let mode = app.buttons[label].firstMatch
+      XCTAssertTrue(mode.exists && mode.isHittable)
+      XCTAssertTrue(viewport.contains(mode.frame), "Every mode must fit within the actual native viewport")
+      mode.tap()
+      XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: mode)], timeout: 5), .completed)
+    }
+    XCTAssertTrue(expired.waitForExistence(timeout: 10)); XCTAssertTrue(expired.isHittable)
     capture("connected-expiration-filter-results")
     expired.tap()
     XCTAssertTrue(app.navigationBars["Details"].waitForExistence(timeout: 10))
@@ -1129,7 +1141,7 @@ final class FixtureAuditTests: XCTestCase {
           XCTAssertFalse(frame.isEmpty || frame.isNull || frame.isInfinite)
           XCTAssertTrue([frame.minX, frame.minY, frame.width, frame.height].allSatisfy { $0.isFinite })
         }
-        XCTAssertEqual(Set(headings.map { NSStringFromCGRect($0.frame) }).count, 1)
+        XCTAssertEqual(Set(headings.map { NSCoder.string(for: $0.frame) }).count, 1)
         if variant == "checked-out" { XCTAssertTrue(app.buttons["Return"].firstMatch.isHittable) }
         capture("detail-context-" + variant + "-availability")
       }
