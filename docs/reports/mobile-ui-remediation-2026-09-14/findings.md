@@ -3859,3 +3859,15 @@ was applied. Native Add acceptance now exercises disclosure/cancel/reopen before
 its existing exact input, collapse/restore, staging and draft-clear sequence.
 Native execution remains pending. Large tag-set selection remains a separate
 pattern review; this change does not certify or redesign that interaction.
+
+### M268 — Existing-tag selection diverges across asset tasks
+
+P2 pattern-selection finding from Add/Edit/Filters consumer review. Edit renders
+selected plus the first12 chip choices with Show all and no search. Add adds inline
+search but uses the same growing chip grid; Filters uses a searched checkmarked
+list. Selecting a tag outside the first set makes Edit users scan the full grid.
+The decision in specs/platform/mobile-tag-selection.spec.md replaces the asset
+forms' unselected grids with a compact Tags summary and a shared searchable
+multi-selection view, preserving draft ownership and cancellation. This is a
+specified follow-up, not implemented or runtime verified. Keep outside the frozen
+release and the separately verified creation-disclosure fixes M264/M267.
