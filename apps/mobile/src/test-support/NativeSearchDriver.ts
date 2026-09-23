@@ -4,6 +4,7 @@ type SearchOptions = {
   ref: { current: unknown };
   onChangeText: (event: { nativeEvent: { text: string } }) => void;
   onClose: () => void;
+  onFocus: () => void;
   placement: string;
 };
 
@@ -24,6 +25,7 @@ export class NativeSearchDriver {
   });
   change(text: string) {
     if (!this.options) throw new Error('Native search is unavailable');
+    this.options.onFocus();
     this.text = text;
     this.options.onChangeText({ nativeEvent: { text } });
   }

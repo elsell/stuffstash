@@ -85,3 +85,12 @@ page. Visual acceptance remains open: shorten repetitive menu labels and address
 the filter sheet's overall density (M275), especially the iPad footer. Connected
 Browse/detail/Back continuity is not established by fixture callback tests.
 [Reviewed evidence](evidence/filter-menu-358975-results.txt).
+
+### Connected filter return correction
+
+M276 reproduced search loss after applying Availability on Android. The shared
+native search adapter now distinguishes an active search interaction from header
+lifecycle callbacks. Android connected Browse/Filters/detail/Back and Expiration
+inheritance pass, as do native clear/type/submit and retained-query checks.
+[Evidence](evidence/android-search-ownership-results.txt). Native iPhone/iPad
+acceptance is still required; this follow-up does not broaden frozen M265–M273.

@@ -75,12 +75,12 @@ it('explains unmatched tag search and restores the selected tag when search is c
     await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[{ id: 'tag', key: 'tools', label: 'Tools' }]} onApply={value => applied.push(value)} onCancel={() => {}} onExpiration={() => {}} />);
     await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('Filter by tag Tools'));
-    const options = () => (Object.assign({}, ...navigationOptions()) as { headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
+    const options = () => (Object.assign({}, ...navigationOptions()) as { headerSearchBarOptions?: { onFocus: () => void; onChangeText: (event: { nativeEvent: { text: string } }) => void } }).headerSearchBarOptions;
     expect(options()).toBeDefined();
-    await h.run(() => options()!.onChangeText({ nativeEvent: { text: 'unmatched' } }));
+    await h.run(() => {options()!.onFocus(); options()!.onChangeText({ nativeEvent: { text: 'unmatched' } });});
     expect(h.allText()).toContain('No matching tags');
     expect(options()).toBeDefined();
-    await h.run(() => options()!.onChangeText({ nativeEvent: { text: '' } }));
+    await h.run(() => {options()!.onFocus(); options()!.onChangeText({ nativeEvent: { text: '' } });});
     expect(h.allText()).not.toContain('No matching tags');
     expect(h.byLabel('Filter by tag Tools')?.props.accessibilityState.checked).toBe(true);
     await h.press(h.byLabel('Show results'));

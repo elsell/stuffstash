@@ -1044,3 +1044,20 @@ must preserve scope validation, query keys, route parameters and commit/cancel
 semantics. Use actual matching and filtering in those repositories, not constant
 responses that make every selection appear valid. Verify fixture read isolation
 and requested filters, then inspect normal-text phone/iPad workflow captures.
+
+### Native search interaction ownership across return
+
+Connected Browse refinement on Android d7d7689b preserved Availability but lost
+Camping on return (19 unscoped items instead of18 matching items). The native
+adapter currently treats empty text/close callbacks as user commands even when
+no search interaction is active. A mounted/focused screen alone does not prove
+that a search callback represents editing.
+
+Native search must begin an editing interaction on native focus/open, seed the
+retained query, and retire that interaction when the screen loses focus, search
+is disabled, or the user closes it. Ignore text/submit/close callbacks outside
+that interaction. Within it, typing, deliberate clearing and cancellation retain
+their existing semantics. Navigation return must preserve query, filters and
+scroll context. Verify the shared adapter with representative Browse and Move
+consumers, then the connected native Browse refinement journey; source tests do
+not establish the Android root cause or native acceptance alone.

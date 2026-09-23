@@ -40,7 +40,7 @@ it.each(['cancel', 'existing', 'top-level', 'create', 'permission'] as const)('p
       await h.run(() => setScreenFocused(true));
     }
     await h.press(chooser);
-    await h.run(() => Object.assign({}, ...navigationOptions()).headerSearchBarOptions.onChangeText({ nativeEvent: { text: 'Another place' } }));
+    await h.run(() => {const search = Object.assign({}, ...navigationOptions()).headerSearchBarOptions; search.onFocus(); search.onChangeText({ nativeEvent: { text: 'Another place' } });});
     expect(store.load(scope)).toMatchObject({ parentAssetId: 'garage', parentQuery: 'Garage', title: 'Tent', description: 'Packed' });
     await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));

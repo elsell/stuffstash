@@ -4,7 +4,7 @@ import { MobileRenderHarness } from '../../test-support/render';
 import { navigationOptions, resetNavigation } from '../../test-support/navigation';
 import { AssetTagSelectionScreen } from './AssetTagSelectionScreen';
 const tags = Array.from({ length: 30 }, (_, i) => ({ id: `tag-${i}`, label: `Tag ${i}` }));
-const search = (text: string) => (Object.assign({}, ...navigationOptions()).headerSearchBarOptions).onChangeText({ nativeEvent: { text } });
+const search = (text: string) => { const options = Object.assign({}, ...navigationOptions()).headerSearchBarOptions; options.onFocus(); options.onChangeText({ nativeEvent: { text } }); };
 
 it('selects beyond the first choices, preserves hidden selections, and commits only on Done', async () => {
   const h = new MobileRenderHarness(); const applied: string[][] = []; resetNavigation();

@@ -151,7 +151,7 @@ describe('rendered mobile customization production states', () => {
   it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
     let rows = [tag('one', 'Tools')]; let reads = 0;
     const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });
-    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } }));
+    await screen.run(() => {collectionSearch().onFocus(); collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } });});
     rows = [tag('two', 'Toolboxes'), tag('three', 'Garden')];
     await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }));
     await settleQueries(screen);
@@ -404,7 +404,7 @@ describe('rendered mobile customization production states', () => {
     await harness?.unmount(); harness = undefined;
     screen = await renderCollection({ query: { tags: async () => ({ items: [tag('tools', 'Tools')], complete: false }) } });
     expect(screen.allText()).toContain('Some settings may be missing');
-    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } }));
+    await screen.run(() => {collectionSearch().onFocus(); collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } });});
     expect(screen.allText()).toContain('No matches');
     expect(screen.allText()).toContain('No tags match “missing”.');
   });
@@ -678,7 +678,7 @@ function editorElement(overrides: Record<string, unknown> = {}) {
 
 function collectionSearch() {
   const options = navigationOptions().filter(value => Object.hasOwn(value as object, 'headerSearchBarOptions')).at(-1) as {
-    headerSearchBarOptions: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
+    headerSearchBarOptions: { onFocus: () => void; onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
   };
   return options?.headerSearchBarOptions;
 }

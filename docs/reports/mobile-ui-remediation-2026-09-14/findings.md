@@ -3979,3 +3979,17 @@ clear separation of filter values from expiration navigation, and one prominent
 results action with a subordinate dismissal affordance. Preserve the user's
 bottom results-action preference. Judge normal-text phone/iPad layouts and actual
 scroll access before changing shared sizing. This is outside frozen M265–M273.
+
+### M276 — Applying filters clears Browse search on Android
+
+P1 connected-workflow defect reproduced on d7d7689b: Camping24 results becomes
+19 unscoped Available results after applying Availability; it should show18
+matching Camping items. Native search accepted empty/close lifecycle callbacks
+without an active search interaction. Guard those callbacks with native focus/open
+ownership, retire ownership on navigation/disable/close, and seed retained text
+when the user reopens search. Preserve deliberate clear and submit behavior.
+
+The corrected Android connected journey and actual native typing/submit/return
+pass; [evidence](evidence/android-search-ownership-results.txt). Shared-consumer
+source checks and review pass. iPhone/iPad connected verification remains open.
+Keep this in the follow-up filter batch, separate from M265–M273.

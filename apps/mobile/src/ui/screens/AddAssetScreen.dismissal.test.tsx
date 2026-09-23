@@ -22,7 +22,7 @@ function DestinationContent() { return useAddDestinationTask()?.content ?? null;
 function AddAssetScreen(props: React.ComponentProps<typeof AddScreen>) { return <AddDestinationTaskProvider><AddScreen {...props} /><DestinationContent /></AddDestinationTaskProvider>; }
 async function searchParent(h: MobileRenderHarness, text: string) {
   if (Platform.OS === 'android') await h.changeText(h.byLabel('Search parent'), text);
-  else await h.run(() => Object.assign({}, ...navigationOptions()).headerSearchBarOptions.onChangeText({ nativeEvent: { text } }));
+  else await h.run(() => {const search = Object.assign({}, ...navigationOptions()).headerSearchBarOptions; search.onFocus(); search.onChangeText({ nativeEvent: { text } });});
 }
 
 it('removes the numbered draft photo while preserving the remaining selection and item draft', async () => {
