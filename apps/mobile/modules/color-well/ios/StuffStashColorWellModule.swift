@@ -12,8 +12,15 @@ public final class StuffStashColorWellModule: Module {
   }
 }
 
+final class TagColorWell: UIColorWell {
+  override var accessibilityLabel: String? {
+    get { "Choose any color" }
+    set { super.accessibilityLabel = newValue }
+  }
+}
+
 final class TagColorWellView: ExpoView {
-  let well = UIColorWell()
+  let well = TagColorWell()
   let onSelectionChange = EventDispatcher()
 
   required init(appContext: AppContext? = nil) {
@@ -23,7 +30,6 @@ final class TagColorWellView: ExpoView {
     well.accessibilityTraits = .button
     well.supportsAlpha = false
     well.title = "Choose any color"
-    well.accessibilityLabel = "Choose any color"
     well.selectedColor = nil
     well.addTarget(self, action: #selector(selectionChanged), for: .valueChanged)
     addSubview(well)

@@ -39,13 +39,20 @@ including compiled Swift RGB checks and the committed native dependency lock.
 Native35805411868 at4e906d30 passes1/9 on each device. Seven color checks stop
 before activation because UIKit exposes its internal button as “Color” alongside
 the separate visible text ([hierarchy](evidence/phone-color-accessibility-358054.txt)).
-Correction: expose the well itself as the named accessible button and hide the
-visual label from traversal; retain exact native acceptance. The Add check also
+The first correction hides the visual label from traversal; retain exact native
+acceptance. The Add check also
 stops before typing: its exhaustive key query finds readiness but takes5.5seconds
 ([timing](evidence/phone-add-keyboard-readiness-358054.txt)). Check the intended
 T/C key instead, retaining the five-second deadline and exact text assertions.
 Remote1,921 tests, TypeScript and11 fixture checks pass; critic reports no source
-blocker. Corrected native activation/disabled-state acceptance remains required.
+blocker. Follow-up35807485028 passes2/9 per device: Add draft retention and
+Settings dirty-back protection pass. The seven color tests still stop at lookup;
+the [new hierarchy](evidence/phone-color-accessibility-358074.txt) proves the
+duplicate label is gone but the well retains UIKit's generic “Color” name.
+Next correction: own the public accessibilityLabel getter in the UIColorWell
+subclass, retaining UIKit activation and avoiding private subviews. CI35807502264
+passes all six jobs for7c7f0ab7. Corrected native activation/disabled-state
+acceptance remains required; no opening behavior is inferred from lookup failures.
 This candidate is not released.
 
 Frozen release scope: direct system color-well presentation in tag editing,

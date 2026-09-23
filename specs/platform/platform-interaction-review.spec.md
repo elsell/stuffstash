@@ -20,6 +20,9 @@ Expose the UIColorWell itself as the single accessible button, rather than its
 internal default-named child. Hide the accompanying visual text from accessibility
 traversal. Native acceptance must retain the descriptive name and exercise actual
 activation; changing the test to accept the internal generic label is insufficient.
+The adapter owns the well's accessible-name getter so UIKit selection updates
+cannot replace it with the generic system name. Preserve UIKit's activation and
+enabled-state behavior; do not proxy taps or traverse private subviews.
 For the Add draft regression, keyboard readiness checks the next intended key
 (T for Tent, C for Camping) instead of enumerating every key. Preserve the same
 five-second deadline, actual typing and exact complete-value assertions.
