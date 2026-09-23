@@ -1921,3 +1921,11 @@ normal text; judge stability and content hierarchy, then verify exact state
 retention and one reachable switcher. Mounted checks establish ownership/state,
 not native geometry. Native phone/iPad review must verify the header's Add/search
 commands and switcher fit together before release.
+
+
+Native35863725725 reaches the Browse candidate on both devices but stops before
+scrolling because card titles are exposed as accessible Open asset buttons, not
+standalone static text. Target the actual Open asset Camping tent button for the
+existing displacement assertion. Preserve the same data, deadlines, real scroll,
+List/Map state markers and exact control-anchor assertions. This fixes the driver
+selector and does not establish a native pass or warrant a production change.
