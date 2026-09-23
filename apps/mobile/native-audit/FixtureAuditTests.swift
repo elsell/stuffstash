@@ -1275,7 +1275,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Tag 13"].exists)
     reveal(retained)
     XCTAssertTrue(retained.isSelected)
+    XCTAssertFalse(app.textFields["New tag name"].exists)
+    let newTag = app.buttons["New tag"].firstMatch
+    reveal(newTag); newTag.tap()
     let entry = app.textFields["New tag name"].firstMatch
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
     waitForKeyboard(keyLabel: "C")

@@ -173,7 +173,19 @@ function EditTagPicker({
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
   const selected = new Set(selectedTagIds);
   const [showAllTags, setShowAllTags] = useState(false);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const creationVisible = creatingTag || hasUnstagedEditTag(entry);
   const [tagEntryRevision, setTagEntryRevision] = useState(0);
+  const creationActions = useFocusedSheetActions({
+    primaryLabel: 'New tag', secondaryLabel: 'Cancel new tag',
+    disabled: disabled || creationVisible, secondaryDisabled: disabled || !creationVisible,
+    onApply: () => setCreatingTag(true),
+    onBack: () => {
+      setCreatingTag(false);
+      setTagEntryRevision(current => current + 1);
+      onChange(selectedTagIds, newTags, { name: '', color: '' });
+    }
+  });
   const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.label, expanded: showAllTags });
 
   function toggleTag(tagId: string): void {
@@ -266,34 +278,37 @@ function EditTagPicker({
         disabled={disabled}
         onPress={() => { if (!disabled) setShowAllTags(current => !current); }}
       /> : null}
-      <View style={styles.newTagRow}>
-        <View style={styles.newTagNameInput}>
-          <DraftTextField
-            key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
-            accessibilityLabel="New tag name"
+      {creationVisible ? <>
+        <View style={styles.newTagRow}>
+          <View style={styles.newTagNameInput}>
+            <DraftTextField
+              key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
+              accessibilityLabel="New tag name"
+              editable={!disabled}
+              onChangeText={setNewTagName}
+              placeholder="New tag"
+              placeholderTextColor={palette.textMuted}
+              style={styles.input}
+              value={newTagName}
+            />
+          </View>
+          <AppTextInput
+            accessibilityLabel="New tag color"
+            autoCapitalize="characters"
             editable={!disabled}
-            onChangeText={setNewTagName}
-            placeholder="New tag"
+            onChangeText={setNewTagColor}
+            placeholder="#2F80ED"
             placeholderTextColor={palette.textMuted}
-            style={styles.input}
-            value={newTagName}
+            style={[styles.input, styles.newTagColorInput]}
+            value={newTagColor}
           />
         </View>
-        <AppTextInput
-          accessibilityLabel="New tag color"
-          autoCapitalize="characters"
-          editable={!disabled}
-          onChangeText={setNewTagColor}
-          placeholder="#2F80ED"
-          placeholderTextColor={palette.textMuted}
-          style={[styles.input, styles.newTagColorInput]}
-          value={newTagColor}
-        />
-      </View>
-      {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
-      <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
-      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
-      {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
+        {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
+        <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
+        <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
+        {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
+        <NativeCommandButton label="Cancel new tag" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
+      </> : <NativeCommandButton label="New tag" disabled={creationActions.disabled} onPress={creationActions.onApply} />}
     </View>
   );
 }
