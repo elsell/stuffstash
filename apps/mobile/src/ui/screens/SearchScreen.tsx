@@ -15,7 +15,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { InventoryMapQuery } from '../../application/assets/InventoryMapQuery';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import type {
@@ -125,6 +125,9 @@ export function SearchScreen({
 }: SearchScreenProps) {
   const { fontScale, width } = useWindowDimensions();
   const navigationHeaderHeight = useHeaderHeight();
+  const safeArea = useSafeAreaInsets();
+  const collectionWidth = width - safeArea.left - safeArea.right;
+  const listOffset = useRef<{ identity: string; offset: { x: number; y: number } } | undefined>(undefined);
   const palette = useAppearancePalette();
   const serverState = useMobileServerStateScope();
   const inventoryScope = useQuery({
@@ -372,8 +375,10 @@ export function SearchScreen({
 
   const listItems = toBrowseListItems(state.results);
   const resultScope = state.results.scope;
-  const numColumns = browseColumnCount({ fontScale, scope: resultScope, width });
-  const gridCardWidth = browseGridCardWidth(width, numColumns);
+  const numColumns = browseColumnCount({ fontScale, scope: resultScope, width: collectionWidth });
+  const resultIdentity = JSON.stringify([scopeIdentity, resultScope, state.results.query,
+    state.results.lifecycleState, state.results.checkoutState, state.results.sort, state.results.tagIds]);
+  const gridCardWidth = browseGridCardWidth(collectionWidth, numColumns);
   const hasActiveFilters = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }) > 0;
   const isInitialError = state.status === 'error' && state.phase === 'initial';
   const isPaginationError = state.status === 'error' && state.phase === 'pagination';
@@ -398,12 +403,15 @@ export function SearchScreen({
         key={`${resultScope}:${numColumns.toString()}`}
         data={listItems}
         keyExtractor={keyBrowseListItem}
-        columnWrapperStyle={numColumns === 2 ? styles.cardRow : undefined}
+        columnWrapperStyle={numColumns > 1 ? styles.cardRow : undefined}
         contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="automatic"
         keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
         numColumns={numColumns}
+        contentOffset={listOffset.current?.identity === resultIdentity ? listOffset.current.offset : undefined}
+        onScroll={event => { listOffset.current = { identity: resultIdentity, offset: event.nativeEvent.contentOffset }; }}
+        scrollEventThrottle={16}
         refreshing={isRefreshing}
         onEndReached={() => { if (listItems.length > 0) void loadNextPage(); }}
         onEndReachedThreshold={0.55}

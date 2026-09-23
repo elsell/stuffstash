@@ -2026,3 +2026,19 @@ standalone static text. Target the actual Open asset Camping tent button for the
 existing displacement assertion. Preserve the same data, deadlines, real scroll,
 List/Map state markers and exact control-anchor assertions. This fixes the driver
 selector and does not establish a native pass or warrant a production change.
+
+### Width-adaptive Browse collection (M263)
+
+Normal-text asset grids retain two columns on ordinary phones and use available
+tablet/window width for additional columns, with a 220-point minimum card width
+when adding a third or later column. This is a product density choice informed by
+Apple's adaptive [layout](https://developer.apple.com/design/human-interface-guidelines/layout)
+and [collections](https://developer.apple.com/design/human-interface-guidelines/collections)
+guidance, not an Apple-specified breakpoint. Preserve the existing one-column
+Places and enlarged-text layouts. Account for horizontal safe-area insets and
+inter-card spacing; partial last rows must retain the same card width.
+
+Changing column count must preserve the current result criteria and scroll offset
+rather than return to the beginning. Never restore an offset from a different
+inventory or result criteria. Verify phone and iPad rendering and resize behavior
+natively before declaring this finding closed.

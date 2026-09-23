@@ -134,9 +134,11 @@ export const Keyboard = {
 export const StyleSheet = { create: <T>(styles: T) => styles, hairlineWidth: 1 };
 export const findNodeHandle = () => 1;
 let windowFontScale = 1;
+let windowWidth = 390;
+export function setWindowWidthForTest(value: number) { windowWidth = value; }
 export function setWindowFontScaleForTest(value: number) { windowFontScale = value; }
-export const Dimensions = { get: () => ({ fontScale: windowFontScale, height: 844, width: 390, scale: 1 }) };
-export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: 390 });
+export const Dimensions = { get: () => ({ fontScale: windowFontScale, height: 844, width: windowWidth, scale: 1 }) };
+export const useWindowDimensions = () => ({ fontScale: windowFontScale, height: 844, width: windowWidth });
 export const useColorScheme = () => systemColorScheme;
 class AnimatedValue {
   private value: number;

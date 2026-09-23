@@ -3809,4 +3809,8 @@ text. Two large square images consume most of the viewport; only two rows fit
 below the header. Review width-adaptive grid columns with a readable minimum card
 width and preserved query, selection and scroll behavior during resize. This is
 separate from the M260 switcher correction and does not block scoped text fixes.
-No implementation or acceptance is claimed yet.
+Candidate uses available safe-area width, adding columns at a 220-point minimum
+beyond the existing phone pair. Resize retains offset scoped to the loaded inventory
+and criteria; Places and enlarged-text layouts remain one column. Focused source
+checks pass. Native phone/iPad density and scrolling acceptance remains open; the
+app is portrait-locked, so no rotation support is claimed.

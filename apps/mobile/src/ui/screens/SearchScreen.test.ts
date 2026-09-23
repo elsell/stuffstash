@@ -23,7 +23,7 @@ import {
   shouldAutoFocusSearchInput
 } from './SearchScreenPresentation';
 import { createBrowseHeaderStyles } from './BrowseHeader';
-import { darkPalette, lightPalette } from '../theme/tokens';
+import { darkPalette, lightPalette, spacing } from '../theme/tokens';
 
 describe('SearchScreen presentation helpers', () => {
   it('uses calm Browse fields while native controls own refinement styling', () => {
@@ -123,6 +123,19 @@ describe('SearchScreen presentation helpers', () => {
     expect(browseColumnCount({ fontScale: 1, scope: 'all', width: 340 })).toBe(1);
     expect(browseGridCardWidth(393, 2)).toBe(175);
     expect(browseGridCardWidth(393, 1)).toBeUndefined();
+  });
+
+  it('adds readable columns as tablet and window space grows', () => {
+    expect(browseColumnCount({ fontScale: 1, scope: 'all', width: 744 })).toBe(3);
+    expect(browseColumnCount({ fontScale: 1, scope: 'items', width: 1133 })).toBe(4);
+    expect(browseColumnCount({ fontScale: 1, scope: 'all', width: 600 })).toBe(2);
+    expect(browseColumnCount({ fontScale: 1, scope: 'places', width: 1133 })).toBe(1);
+    for (const width of [744, 820, 1024, 1133, 1366]) {
+      const count = browseColumnCount({ fontScale: 1, scope: 'all', width });
+      const card = browseGridCardWidth(width, count)!;
+      expect(card).toBeGreaterThanOrEqual(220);
+      expect(card * count + spacing.sm * (count - 1) + spacing.md * 2).toBeLessThanOrEqual(width);
+    }
   });
 
   it('continues only the loaded page criteria and blocks pagination after a failed replacement', () => {

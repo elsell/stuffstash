@@ -2253,6 +2253,31 @@ final class FixtureAuditTests: XCTestCase {
     capture("home-header-after-scroll")
   }
 
+  func testBrowseGridFitsDeviceWidth() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let garage = app.buttons["Open asset Garage"].firstMatch
+    let kitchen = app.buttons["Open asset Kitchen"].firstMatch
+    let tent = app.buttons["Open asset Camping tent"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10))
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
+    XCTAssertTrue(tent.waitForExistence(timeout: 10))
+    XCTAssertEqual(garage.frame.minY, kitchen.frame.minY, accuracy: 1)
+    XCTAssertEqual(garage.frame.width, kitchen.frame.width, accuracy: 1)
+    XCTAssertGreaterThan(kitchen.frame.minX, garage.frame.maxX)
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      XCTAssertEqual(garage.frame.minY, tent.frame.minY, accuracy: 1)
+      XCTAssertEqual(garage.frame.width, tent.frame.width, accuracy: 1)
+      XCTAssertGreaterThanOrEqual(garage.frame.width, 220)
+      XCTAssertLessThan(garage.frame.width, 300)
+      XCTAssertGreaterThan(tent.frame.minX, kitchen.frame.maxX)
+    } else {
+      XCTAssertGreaterThan(tent.frame.minY, garage.frame.minY)
+    }
+    XCTAssertLessThanOrEqual(kitchen.frame.maxX, app.frame.maxX)
+    XCTAssertLessThanOrEqual(tent.frame.maxX, app.frame.maxX)
+    capture("browse-adaptive-grid")
+  }
+
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
     guard openFixtureURL("audit-browse-journey") else { return }
     let control = app.segmentedControls.firstMatch
