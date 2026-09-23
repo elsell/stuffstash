@@ -1,7 +1,7 @@
 M269 Add destination — current acceptance evidence
 
 Android emulator-5580, normal text, release fixture build on paul.
-Runtime source: a1809d7b (before subsequent status-row spacing refinement).
+Runtime source:26faa644, including status-row spacing and duplicate path suppression.
 Connected acceptance passed: named Tent draft; search Shelf 14; Cancel retains
 Garage; reopen and select Shelf 14 returns directly to Add; rejected item save
 retains draft; explicit Audit shed creation fails once; retry creates and selects
@@ -16,8 +16,11 @@ connected workflow in a1809d7b; no timer workaround was added.
 Mounted evidence: 80 focused Add and shared asset-action tests passed before the
 removal correction; eight relevant connected/route tests passed after it, plus
 TypeScript and mobile structural checks. Ten fixture-preparation tests passed.
-Code critic reported no source blocker. Physical-device behavior is not covered.
+Nine focused selection tests, TypeScript and structural checks also passed after
+the visual refinement. Code critic reported no source blocker. Physical-device behavior is not covered.
 
-iPhone/iPad acceptance pending. Supersede old dispatched35884098251 when queued;
-it targets552e7c1b before the stable-removal correction. Final status-row spacing
-and duplicate path-label refinement requires its own native screenshot review.
+iPhone/iPad acceptance pending in35884976277 on26faa644. Old35884098251 was
+superseded by the corrected-source dispatch. Final Android screenshots were
+reviewed: status/error rows have standard insets, the form shows a compact
+current-value disclosure, and creation failure/retry leaves commands reachable.
+Screenshot android-add-destination-retry.png records the recoverable error state.

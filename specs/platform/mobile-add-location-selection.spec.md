@@ -1,6 +1,7 @@
 # Add Item Location Selection
 
-Status: M269 native Add destination integration implemented; native acceptance pending.
+Status: M269 integration and scoped Android connected acceptance passed;
+iPhone/iPad acceptance pending in35884976277.
 Keep separate from frozen M260–M264 and tag-selection native acceptance.
 
 ## Problem and pattern
@@ -67,7 +68,8 @@ TypeScript and mobile structural checks on the remote validation host, plus ten
 fixture-preparation tests. Coverage includes cancel/existing/top-level/create
 choices with rejected item save, permission loss, blurred opening, actual route
 removal and pending-operation protection. Code review found no source blocker.
-Native Android acceptance and iPhone/iPad acceptance remain separate requirements;
+Final-source Android connected acceptance and screenshots pass; iPhone/iPad
+acceptance remains pending;
 these checks do not prove device navigation, keyboard or visual behavior.
 
 Android connected acceptance on source552e7c1b reached search/cancel, direct
