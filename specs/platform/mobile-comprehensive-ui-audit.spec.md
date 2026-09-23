@@ -1977,3 +1977,7 @@ then show the new location on the same detail. Reopening Move must select the
 persisted destination and disable an unchanged move. The shared in-memory journey
 repository must preserve edited metadata and resolve placement on subsequent reads;
 isolated success callbacks are insufficient evidence for navigation return.
+
+Native empty-field checks must accept the platform's absent value as well as an
+empty string or placeholder, while separately requiring that the field exists
+and the staged tag is present. A missing element must never count as cleared.
