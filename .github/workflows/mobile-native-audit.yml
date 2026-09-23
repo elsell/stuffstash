@@ -311,6 +311,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationDetailAndBackPreserveContext'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
               )
               ;;
             browse-journey)
