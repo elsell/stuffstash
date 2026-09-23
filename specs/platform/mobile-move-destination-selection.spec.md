@@ -1,7 +1,7 @@
 # Move Destination Selection
 
-Status: M270 creation-name separation implemented and source-verified; native search,
-shared choice rows and connected native acceptance remain pending.
+Status: M270 creation-name separation and shared choice rows implemented and
+source-verified; native search and connected native acceptance remain pending.
 Keep separate from frozen M260–M264 and the M269 native acceptance run.
 
 ## Task and pattern
@@ -67,6 +67,9 @@ Judge task continuity and action reachability before detailed edge cases.
 The mounted name-edit scenario first failed without a dedicated name field. The
 retained Create regression then reproduced submission of the previous name while
 the current name lookup was pending. Both pass after separate draft ownership and
-the shared focused action guard. All 45 focused Move/Edit action tests, TypeScript
+the shared focused action guard. All 50 focused Move/Edit/Add selection tests, TypeScript
 and mobile structural checks pass on the remote Linux validation host. Code critic
-cleared the correction. This does not establish native presentation or complete M270.
+cleared both corrections. Shared choice acceptance verifies single selection, no
+mutation on selection, retired callbacks after a row disappears, explicit Move,
+and retained selection after rejection. This does not establish native presentation
+or complete M270.

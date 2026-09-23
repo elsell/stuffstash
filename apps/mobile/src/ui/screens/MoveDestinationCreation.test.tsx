@@ -51,3 +51,38 @@ it('edits a creation name without collapsing Kind or changing search, validates 
 
   } finally { await h.unmount(); client.clear(); }
 });
+
+it('selects one destination with shared choice semantics and moves only after confirmation', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
+  const submitted: unknown[] = [];
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetMoveSheetRouteScreen assetId="asset" assetCoreQuery={core}
+        parentLookupQuery={{ execute: async query => query ? [] : [{ id: 'garage', title: 'Garage', kind: 'location', subtitle: '', pathLabel: 'House / Garage', selectionHint: 'Place', willPromoteToContainer: false }] }}
+        createAssetCommand={{ execute: async () => { throw new Error('No creation requested'); } }}
+        moveAssetCommand={{ execute: async input => { submitted.push(input); throw new Error('Keep selection for retry'); } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    const choice = h.byLabel('Choose destination Garage');
+    expect(choice?.props.accessibilityRole).toBe('radio');
+    expect(choice?.props.accessibilityState.checked).toBe(false);
+    expect(h.byText('Location · House / Garage')).toBeDefined();
+    const choose = choice!.props.onPress;
+    await h.run(choose);
+    expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
+    expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(false);
+    expect(submitted).toEqual([]);
+    await h.changeText(h.byLabel('Put in'), 'unmatched'); await settle(h, 350);
+    await h.press(h.byLabel('Choose inventory root'));
+    await h.run(choose);
+    expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(true);
+    expect(submitted).toEqual([]);
+    await h.changeText(h.byLabel('Put in'), ''); await settle(h, 350); await settle(h);
+    await h.press(h.byLabel('Choose destination Garage'));
+    await h.press(h.byLabel('Move'));
+    expect(submitted).toEqual([{ assetId: 'asset', parentAssetId: 'garage' }]);
+    expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
+  } finally { await h.unmount(); client.clear(); }
+});

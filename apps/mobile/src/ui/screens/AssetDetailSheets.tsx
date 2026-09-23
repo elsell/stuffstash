@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { SettingsChoiceRow } from './SettingsList';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
@@ -41,7 +42,6 @@ import {
   canSaveMoveAsset,
   moveIntoCandidateRow,
   moveIntoEmptyState,
-  moveDestinationRow,
   moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
   moveDestinationCreatePlacement,
@@ -370,24 +370,15 @@ export function MoveAssetSheet({
         />
         {creationExpanded ? null : candidateStatus}
         {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
-        <ParentRow
-          disabled={disabled}
-          isSelected={draft?.selectedParent === null}
-          row={{
-            title: 'Inventory root',
-            kindLabel: 'Top level',
-            pathLabel: 'No containing location'
-          }}
-          onPress={onSelectRoot}
-        />
-        {draft?.matches.map((match) => (
-          <ParentRow
-            disabled={disabled}
-            key={match.id}
-            isSelected={draft.selectedParent?.id === match.id}
-            row={moveDestinationRow(match)}
-            onPress={() => onSelectParent(match)}
-          />
+        <MoveDestinationChoice label="Inventory root" context="Top level · No containing location"
+          accessibilityLabel="Choose inventory root" disabled={disabled}
+          selected={draft?.selectedParent === null} onPress={onSelectRoot} />
+        {draft?.matches.map(match => (
+          <MoveDestinationChoice key={match.id} label={match.title}
+            context={match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`}
+            accessibilityLabel={`Choose destination ${match.title}`}
+            disabled={disabled || match.canSelectAsParent === false}
+            selected={draft.selectedParent?.id === match.id} onPress={() => onSelectParent(match)} />
         ))}
         {candidatesAvailable && !creationExpanded ? <NativeCommandButton label="New destination" disabled={disabled}
           onPress={() => { if (!disabled) onBeginCreation(); }} /> : null}
@@ -498,6 +489,12 @@ function ActionEligibilityNotice() {
   return <Text accessibilityRole="alert" style={styles.sheetSubtitle}>
     This item cannot be changed here. Your draft is kept while this screen is open.
   </Text>;
+}
+
+function MoveDestinationChoice(props: Parameters<typeof SettingsChoiceRow>[0]) {
+  const selection = useFocusedSheetActions({ primaryLabel: props.accessibilityLabel ?? props.label,
+    secondaryLabel: '', disabled: props.disabled ?? false, onApply: props.onPress, onBack: () => {} });
+  return <SettingsChoiceRow {...props} onPress={selection.onApply} />;
 }
 
 function ParentRow({

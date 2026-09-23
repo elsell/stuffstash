@@ -132,7 +132,7 @@ it('creates the move destination with the kind selected in the native menu', asy
     expect(h.byLabel('Put in')?.props.value).toBe('Camping box');
     expect(h.allText().join(' ')).toContain('Camping box');
     expect(h.byLabel('Create container "Camping box"')).toBeUndefined();
-    const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.selected === true);
+    const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.checked === true);
     expect(selectedRows()).toHaveLength(1);
     await h.changeText(h.byLabel('Put in'), 'Kitchen');
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
@@ -179,7 +179,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     }
     const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
     await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
+    const candidateRow = mode === 'move' ? h.byLabel('Choose destination Camping box') : h.byText('Camping box')?.parent?.parent?.parent;
     await h.press(candidateRow ?? undefined);
     if (mode === 'move') expect(h.byText('Selected: Camping box')).toBeDefined();
     const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
