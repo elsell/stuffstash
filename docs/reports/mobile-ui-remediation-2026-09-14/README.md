@@ -97,10 +97,21 @@ M35's earlier fixture inserted a navigation header that production onboarding do
 not have. The corrected fixture preserves the production viewport and keeps its
 observer outside layout flow. Android passes full Connect clearance above the
 visible keyboard and exact one-tap URL submission without a product change.
-The corrected iOS acceptance run35818325756 is running; its sleeping collector owns
-the outcome. The older header-bearing run35816635784 passes iPad and fails phone;
-that result does not establish a shipped layout defect. No additional layout
-workaround or diagnostic run is justified before the corrected fixture completes.
+[Corrected iOS acceptance35818325756](https://github.com/elsell/stuffstash/actions/runs/35818325756)
+passes2/2 on phone and iPad: full keyboard-open Connect clearance, exact one-tap
+submission and keyboard Go. Reviewed [phone](evidence/phone-onboarding-keyboard-clearance-358183.png)
+and [iPad](evidence/ipad-onboarding-keyboard-clearance-358183.png) captures agree.
+The prior header-bearing phone failure does not establish a shipped layout defect.
+No production workaround is needed for M35. Larger fonts and other configurations
+retain their separate audit scope.
+
+Android missing-photo recovery also passes on the same existing audit APK:
+readable error, native Retry, retry failure and Close returning to the parent.
+[Capture](evidence/android-photo-recovery-retry.png) and
+[returned hierarchy](evidence/android-photo-recovery-closed.xml) retain evidence.
+The initial script's final lookup used iOS title casing; inspecting the captured
+Android uppercase label confirms return, without an unnecessary rerun. This does
+not establish successful image retry, zoom, backgrounding or assistive behavior.
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
