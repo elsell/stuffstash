@@ -1,5 +1,5 @@
 import { AssetEditJourneyProvider } from './AssetEditJourneyFixture';
-export { AssetEditJourneyDetailFixture, AssetEditJourneyEditorFixture } from './AssetEditJourneyFixture';
+export { AssetEditJourneyDetailFixture, AssetEditJourneyEditorFixture, AssetEditJourneyMoveFixture } from './AssetEditJourneyFixture';
 import { CustomFieldChoicesFixture } from './CustomFieldChoicesFixture';
 export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
@@ -149,6 +149,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
       <Stack.Screen name="audit-edit-journey" options={{ title: 'Details' }} />
       <Stack.Screen name="assets/[assetId]/edit" options={sheets.edit} />
+      <Stack.Screen name="assets/[assetId]/move" options={sheets.move} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />

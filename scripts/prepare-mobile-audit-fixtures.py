@@ -73,6 +73,7 @@ exports = {
     "audit-move-destination": "MoveDestinationFixture",
     "audit-edit-journey": "AssetEditJourneyDetailFixture",
     "assets/[assetId]/edit": "AssetEditJourneyEditorFixture",
+    "assets/[assetId]/move": "AssetEditJourneyMoveFixture",
     "audit-edit-tags": "AssetEditTagsFixture",
     "audit-edit-recovery": "AssetEditRecoveryFixture",
     "audit-checkout-history": "CheckoutHistoryFixture",
