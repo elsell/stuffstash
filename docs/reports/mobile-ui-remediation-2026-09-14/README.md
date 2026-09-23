@@ -84,6 +84,9 @@ M274 candidate review: native filters run35897564291 passes on phone/iPad at
 page. Visual acceptance remains open: shorten repetitive menu labels and address
 the filter sheet's overall density (M275), especially the iPad footer. Connected
 Browse/detail/Back continuity is not established by fixture callback tests.
+The iPad density candidate still hides Sort on entry despite tighter rows.
+Filters now initially use the native large detent while retaining resizing and
+bottom actions; [visual acceptance remains open](evidence/filter-initial-size-results.txt).
 [Reviewed evidence](evidence/filter-menu-358975-results.txt).
 
 ### Connected filter return correction

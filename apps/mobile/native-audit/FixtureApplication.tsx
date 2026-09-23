@@ -168,7 +168,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
-      <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
+      <Stack.Screen name="audit-expiration-medium" options={{ ...sheets.filters, sheetInitialDetentIndex: 0 }} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}

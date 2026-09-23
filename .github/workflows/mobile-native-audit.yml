@@ -312,6 +312,9 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationDetailAndBackPreserveContext'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationReviewUsesOverviewMenu'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSheetBodySurvivesExpansion'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
               )
               ;;
             browse-journey)

@@ -9,9 +9,9 @@ it('uses an Android native stack filter route without sheet footer lifecycle', (
   expect(filters).not.toHaveProperty('sheetAllowedDetents');
 });
 
-it('retains the iOS filter sheet', () => {
+it('opens the iOS filter task at the large detent while allowing resizing', () => {
   expect(createAssetNativeSheetOptions(colors, 'ios').filters).toMatchObject({
-    presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.7, 1]
+    presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.7, 1], sheetInitialDetentIndex: 1
   });
 });
 

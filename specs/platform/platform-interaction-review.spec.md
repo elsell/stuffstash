@@ -1067,3 +1067,15 @@ entry is below its visible viewport, retaining hittability before activation.
 Run35905242914 confirms the iPad Expiration entry is below the fixed footer; its
 check stopped before any scroll. This is not evidence that scrolling fails, nor
 acceptance of the sheet's density. Preserve M275 visual review independently.
+
+### Initial filter task size
+
+M275 iPad evidence at cfe9f137 confirms removing duplicate picker padding alone
+still leaves Sort and expiration below the opening viewport while both bottom
+actions dominate the short sheet. Browse and Expiration filters must initially
+use the native large detent, keeping the smaller detent available for deliberate
+resizing and retaining the user-requested bottom results/cancel actions. Do not
+change unrelated asset sheets or Android stack presentation. Verify ordinary
+filter choices and the fixed actions in the initial normal-text phone/iPad view;
+retain explicit medium-to-large recovery coverage as a separately configured
+fixture. A larger sheet does not by itself certify hierarchy or accessibility.

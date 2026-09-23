@@ -1043,6 +1043,10 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Audit Browse filters"].tap()
     let menu = app.buttons["Choose expiration review"].firstMatch
     XCTAssertTrue(menu.waitForExistence(timeout: 5))
+    let sort = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose sort")).firstMatch
+    XCTAssertTrue(sort.isHittable, "Ordinary filter choices must be reachable in the initial large sheet")
+    XCTAssertTrue(app.buttons["Show results"].firstMatch.isHittable)
+    XCTAssertTrue(app.buttons["Cancel filters"].firstMatch.isHittable)
     capture("browse-filter-overview")
     let scroll = app.scrollViews.containing(.button, identifier: "Choose expiration review").firstMatch
     for _ in 0..<6 {

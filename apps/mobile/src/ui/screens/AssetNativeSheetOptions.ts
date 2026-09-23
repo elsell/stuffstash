@@ -50,6 +50,7 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
       ...baseOptions,
       headerShown: true,
       sheetAllowedDetents: [0.7, 1],
+      sheetInitialDetentIndex: 1,
       title: 'Filters'
     },
     edit: platform === 'android' ? {
