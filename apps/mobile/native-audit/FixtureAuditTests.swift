@@ -1228,7 +1228,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     XCTAssertTrue(field.isHittable)
     XCTAssertEqual(field.placeholderValue, "Search this place")
-    waitForKeyboard()
+    field.tap()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
     XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))
@@ -1267,11 +1267,9 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(searchButton.isHittable)
       searchButton.tap()
       XCTAssertTrue(field.waitForExistence(timeout: 5))
-    } else if !app.keyboards.firstMatch.exists {
-      field.tap()
     }
     XCTAssertTrue(field.isHittable)
-    waitForKeyboard()
+    field.tap()
     field.typeText("19")
     XCTAssertEqual(field.value as? String, "19")
     XCTAssertTrue(app.buttons["Open asset Tool 19. Item"].firstMatch.waitForExistence(timeout: 5))

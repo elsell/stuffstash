@@ -2258,3 +2258,15 @@ The Screens invalidation backport does not correct the iPad580×650 expiration
 viewport. Do not claim that hypothesis proven or rerun it unchanged. The next
 implementation decision must address transition ownership from the filter sheet
 to the full-screen expiration task, while preserving Browse Back and filters.
+
+The bounded follow-up review identifies a separate KVO ownership gap: before
+`observeValueForKeyPath` resizes an observed scroll view (including the content
+wrapper branch), require that view to remain a descendant of the owning screen.
+Invalidation is deferred until after the mounting transaction; its existing guard
+alone cannot protect this callback. This is an ownership correction, not proof
+of M279's cause. Keep the native viewport and mode checks unchanged.
+
+Place search acceptance uses real typing, exact text, matching/nonmatching results,
+clear/retype/cancel and return. Like Add destination, it does not require a separate
+keyboard-key tree query before typing;35930669612 iPad failed that query while the
+search field was focused and the keyboard visible. Actual entry remains required.

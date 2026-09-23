@@ -2473,7 +2473,7 @@ DEPENDENCIES:
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0_3f87ae8155044d787a119889890f9a10/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../../../node_modules/.pnpm/expo-network@55.0.14_expo@55.0.26_react@19.2.0/node_modules/expo-network/ios`)"
   - "ExpoNotifications (from `../../../node_modules/.pnpm/expo-notifications@55.0.23_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+r_8c9437a852921738cc1fa3cbad81a3b3/node_modules/expo-notifications/ios`)"
-  - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_3f1a8437f153004175bc64a8fab5612e/node_modules/expo-router/ios`)"
+  - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_95396cf38ef57204e004a847a5cd9be8/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios`)"
   - "ExpoSymbols (from `../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._5099956c01165c3b712d9b89728d05b9/node_modules/expo-symbols/ios`)"
   - "ExpoUI (from `../../../node_modules/.pnpm/@expo+ui@55.0.17_patch_hash=72ed4c392322df3dd5a755e323dfcccc3b8bced9b5e5116ea8bc8bbad3d_c9551f1d541702fed7e5f20eaaa9702e/node_modules/@expo/ui/ios`)"
@@ -2556,7 +2556,7 @@ DEPENDENCIES:
   - "ReactNativeDependencies (from `../../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)"
   - "RNDateTimePicker (from `../../../node_modules/.pnpm/@react-native-community+datetimepicker@8.6.0_expo@55.0.26_react-native@0.83.6_@babel+co_d5f850ea8d0aee02c488150b53c2df09/node_modules/@react-native-community/datetimepicker`)"
   - "RNReanimated (from `../../../node_modules/.pnpm/react-native-reanimated@4.2.1_react-native-worklets@0.7.4_@babel+core@7.29.7_react-nati_424fbfafbe74d4ff4605d2593ee7c57d/node_modules/react-native-reanimated`)"
-  - "RNScreens (from `../../../node_modules/.pnpm/react-native-screens@4.23.0_patch_hash=ac4d257922bc38532c9ede9d69b8677cf2d7ce04852dee5e_a04c32436f3925009a0cef514b26b4c6/node_modules/react-native-screens`)"
+  - "RNScreens (from `../../../node_modules/.pnpm/react-native-screens@4.23.0_patch_hash=080ba5fc5c541055d709bdc3f1b0f2e4a5814bafca5b7ca8_6cf9aa0a5aa21f22012840e788424f75/node_modules/react-native-screens`)"
   - "RNSVG (from `../../../node_modules/.pnpm/react-native-svg@15.15.3_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/react-native-svg`)"
   - "RNWorklets (from `../../../node_modules/.pnpm/react-native-worklets@0.7.4_@babel+core@7.29.7_react-native@0.83.6_@babel+core@7.29.7_@_7345a8c995851505f53f6791f1174e08/node_modules/react-native-worklets`)"
   - StuffStashSheetBoundary (from `../modules/sheet-boundary/ios`)
@@ -2626,7 +2626,7 @@ EXTERNAL SOURCES:
   ExpoNotifications:
     :path: "../../../node_modules/.pnpm/expo-notifications@55.0.23_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+r_8c9437a852921738cc1fa3cbad81a3b3/node_modules/expo-notifications/ios"
   ExpoRouter:
-    :path: "../../../node_modules/.pnpm/expo-router@55.0.16_3f1a8437f153004175bc64a8fab5612e/node_modules/expo-router/ios"
+    :path: "../../../node_modules/.pnpm/expo-router@55.0.16_95396cf38ef57204e004a847a5cd9be8/node_modules/expo-router/ios"
   ExpoSecureStore:
     :path: "../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios"
   ExpoSymbols:
@@ -2791,7 +2791,7 @@ EXTERNAL SOURCES:
   RNReanimated:
     :path: "../../../node_modules/.pnpm/react-native-reanimated@4.2.1_react-native-worklets@0.7.4_@babel+core@7.29.7_react-nati_424fbfafbe74d4ff4605d2593ee7c57d/node_modules/react-native-reanimated"
   RNScreens:
-    :path: "../../../node_modules/.pnpm/react-native-screens@4.23.0_patch_hash=ac4d257922bc38532c9ede9d69b8677cf2d7ce04852dee5e_a04c32436f3925009a0cef514b26b4c6/node_modules/react-native-screens"
+    :path: "../../../node_modules/.pnpm/react-native-screens@4.23.0_patch_hash=080ba5fc5c541055d709bdc3f1b0f2e4a5814bafca5b7ca8_6cf9aa0a5aa21f22012840e788424f75/node_modules/react-native-screens"
   RNSVG:
     :path: "../../../node_modules/.pnpm/react-native-svg@15.15.3_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/react-native-svg"
   RNWorklets:

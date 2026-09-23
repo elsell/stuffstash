@@ -54,32 +54,28 @@ Sharing review also corrected inline feedback alignment and grouped Share/Copy
 completion actions (M278). Android controlled recovery and visual review pass;
 phone/iPad sharing verification is combined with the filter and detail workflows.
 
-Run35921268590 passes nine of twelve cases on both devices, including all six
-filter/search/return workflows, Sharing recovery, Map context and empty-photo
-hierarchy. This establishes the corrected phone Expiration entry/return workflow.
-Three detail assertions stop on observation mismatches: old empty-state copy,
-a36-point system toolbar frame treated as a custom body button, and duplicate
-nested AX text nodes at the same Availability bounds. Matching screenshots and
-accessibility trees show the expected empty state and one visual heading. Correct
-those observations, require valid heading geometry before deduplication, and retain
-all recovery, bounds and permission checks. The corrected detail run35926949273 stopped at compilation: the pinned Swift
-SDK requires `NSCoder.string(for:)` for rectangle serialization. That rename is
-fixed; this run provides no new runtime acceptance. Visual
-review now also finds Create Invitation clipped by its section on both devices
-and All dates clipped from the iPad Expiration mode control. Sharing's native
-minimum-size candidate passes25 focused source tests, type/structural checks and
-critic review; native containment remains required. Expiration's native viewport retained the dismissed sheet's580×650 frame while
-its content laid out at744×1133. The candidate backports upstream Screens4652's
-invalidation guard to pinned4.23; the picker width itself was correct. The shared
-native command measurement and sheet-lifecycle changes justify one combined
-follow-up run of the12 existing connected cases, now including full viewport,
-three-mode reachability and invitation form containment. Preserve the passed connected
-journeys; add coverage for these actual layout failures. Run35929273167 stopped
-before compilation because the Podfile.lock still referenced the old patched
-Screens and ExpoRouter directories. c8f18ce3 updates only their four source paths
-to the frozen installation; versions, checksums and deployment enforcement remain
-unchanged. The corrected native run is the next acceptance gate, not evidence of
-another product failure.
+Run35930669612 atc8f18ce3 passes10/12 phone and9/12 iPad cases. Sharing
+form containment and recovery pass; reviewed iPad creation/completion controls are
+unclipped and grouped. Detail variants, empty-photo hierarchy, recovery, Map context
+and the other filter journeys pass. The remaining decisions are:
+
+- iPad Expiration still has a580×650 viewport. The initial invalidation guard
+  did not fix it. A bounded source review finds that KVO still resizes an observed
+  scroll view without checking ancestry before either sizing branch. The next
+  candidate guards that ownership; the unchanged viewport/all-mode checks decide
+  acceptance. No frame padding or timing workaround is introduced.
+- Detail Move is48 points high but41.5–41.7 wide.13f38ce7 adds a48-point native
+  minimum label/button width; existing44-point acceptance remains unchanged.
+- iPad Place search stopped in the separate keyboard-tree readiness query with
+  a focused field and visible keyboard. Use direct native typing with exact text,
+  result, clear/retype/cancel and return assertions, as established for Add.
+- Phone Expiration did not reach Filters at its initial fixture readiness check;
+  its final capture shows Browse with Filters. Retain the gate and distinguish
+  this entry failure from the confirmed iPad viewport defect.
+
+The earlier native bootstrap failure is resolved by synchronized Podfile source
+paths. Every new patch identity must update both dependency and external-source
+entries before dispatch; preserve deployment-mode enforcement.
 
 ## Separate unresolved decisions
 
