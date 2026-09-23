@@ -2688,6 +2688,34 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(name.exists)
   }
 
+  func testSettingsFullNameSurvivesRejectedSaveAndRetry() {
+    let open = app.buttons["Audit settings save recovery"]
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools")
+    name.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    name.typeText(" emergency supplies")
+    XCTAssertEqual(observePredicate("settings-complete-name",
+      predicate: NSPredicate(format: "value == %@", "Tools emergency supplies"), object: name), .completed)
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(save.isEnabled); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save"].waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    XCTAssertTrue(name.isEnabled)
+    XCTAssertEqual(observePredicate("settings-save-recovered",
+      predicate: NSPredicate(format: "enabled == true"), object: save), .completed)
+    capture("settings-full-name-rejected-save-retained")
+    XCTAssertTrue(save.isHittable); save.tap()
+    assertCustomizationNotice("Tag saved")
+    XCTAssertTrue(app.buttons["Add Tag"].waitForExistence(timeout: 10))
+    XCTAssertFalse(name.exists)
+  }
+
   func testSettingsEditorNativeSaveReturnsToCollection() {
     openCustomizationEditor()
     let name = app.textFields["Name"]

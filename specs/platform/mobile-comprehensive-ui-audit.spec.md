@@ -1767,3 +1767,16 @@ Use one focused native pass on phone and iPad. A failed exact-value assertion in
 this production consumer selects the established native draft-field adapter;
 it does not reopen provider-removal, key-delivery or pacing experiments. If typing
 and recovery pass, retain the existing implementation and record scoped acceptance.
+
+
+### Shared Settings name and save recovery acceptance
+
+The representative Settings editor must accept a complete multiword name change,
+not only a one-character append. Exercise the actual routed editor with a controlled
+repository: the first exact-payload save is rejected, the full name stays editable,
+and retry with the same payload returns to the collection with its success notice.
+The fixture uses the production header, keyboard container, application managers
+and editor; rejection belongs in the repository fake, not in alternate UI logic.
+Keep existing successful-save, dirty-back and lifecycle cases intact. A real typing
+failure selects native draft ownership for this shared single-line editor family;
+no repeat provider-removal or typing-speed experiment is needed.
