@@ -53,8 +53,10 @@ and record intentional departures as project choices rather than Apple rules.
 
 ## Review and completion
 
-Review in this order: task/pattern fit, state and recovery, accessibility/adaptation,
-visual execution, then engineering correctness. Apply the same standard to all
+Review connected everyday workflows before isolated controls. Prioritize screen
+structure/stability, core task/pattern fit, visual coherence, then detailed states
+and edge cases. Tests support this experience judgment; easy test coverage must
+not set the product work queue. Apply the same standard to all
 consumers of shared controls. Spec before code; meaningful tests before changes;
 code critic before finalization, per repository instructions.
 

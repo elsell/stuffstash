@@ -30,21 +30,18 @@ Completion requires tracking every applicable cell and confirmed finding; do not
 close the effort after only fixing the original ten audit examples.
 
 
-The UI design skill chooses platform patterns before components. The audit tracks
-142 surfaces and24 axes; those3,408 cells classify scope and evidence, not separate
-tests. Follow the bounded-investigation policy: one current diagnosis, shared-control
-verification plus representative workflows, and sleeping terminal-result collectors.
-Prioritize normal-text user-visible defects. Freeze verified release batches without
-making unrelated audit findings release prerequisites.
+The next mobile review follows everyday workflows: Home → Browse List/Map →
+asset → Edit/Move → Filters and back. Prioritize stable screen structure and
+controls, appropriate task patterns, visual coherence, then detailed states.
+The142-surface/24-axis ledger checks omissions; it must not drive work toward easy
+measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
+interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
+scripts that report terminal results, not repeated unchanged waiting messages.
 
-Latest verified delivery is TestFlight0.24.28(118.1), released September23 through
-run35818700192: menu ownership guards accepted on iOS/iPadOS/Android, Apple processing
-and exact-build changelog readback complete. PR164 adds production-viewport onboarding
-acceptance (phone/iPad/Android pass) and reconciles existing evidence; no product
-layout workaround was required. The color candidate remains held with explicit
-phone acceptance gaps. Broader adaptation, assistive technology and lifecycle
-coverage remain open. Use the audit README as the single current diagnosis summary;
-older reports below preserve historical context rather than current blockers.
+Latest verified delivery is TestFlight0.24.30(121.1), with exact-build changelog
+verification in run35848122466. The frozen M257/M258 text-loss batch can ship after
+its remaining tag acceptance; broader workflow redesign does not silently expand
+that release gate. Current results and held candidates live in the audit README.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

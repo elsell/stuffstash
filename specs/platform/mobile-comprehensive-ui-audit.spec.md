@@ -1,5 +1,36 @@
 # Comprehensive mobile UI audit and remediation
 
+## Governing objective and priority order — September 23
+
+Audit and improve the whole mobile experience across all recorded surfaces and
+axes, fixing confirmed findings and delivering verified batches through TestFlight
+with changelogs. Choose work by its effect on everyday use, not by how easily it
+can be enumerated or tested. Apply this priority order:
+
+1. Screen structure and stability: headers, persistent control placement,
+   navigation hierarchy and transitions. Switching peer views must not relocate
+   the switcher or change its interaction role.
+2. Core workflows: Home to Browse List/Map, opening an asset, Edit, Move and
+   filtering. Judge each complete journey and select its platform pattern,
+   including whether a sheet is justified, before polishing its controls.
+3. Visual coherence: hierarchy, density, grouping and action prominence across
+   those connected screens.
+4. Detailed states and edge cases: refine once the underlying workflow is sound.
+
+Immediate data-loss/security/task-blocking defects remain urgent. Normal text is
+the baseline review before enlarged-text refinements. The coverage ledger remains
+an omission check, not the work queue. Tests support the chosen experience and do
+not determine which product problem deserves attention.
+
+Start each review with an end-to-end walkthrough and a concise experience judgment:
+what remains stable, what navigation or modality costs the task adds, and whether
+its primary action is obvious. Distinguish observed runtime behavior from source
+inference. Do not call a spacing-only correction a resolution of a poor pattern.
+The isolated M259 Edit scroll-frame candidate is held until this pattern review;
+its mounted test results do not justify shipping it. The M257/M258 text-loss batch
+may complete its existing verification and release independently.
+
+
 ## Investigation and acceptance discipline
 
 Prioritize confirmed user-visible defects at normal text size. Keep one current
@@ -1802,3 +1833,74 @@ and editor; rejection belongs in the repository fake, not in alternate UI logic.
 Keep existing successful-save, dirty-back and lifecycle cases intact. A real typing
 failure selects native draft ownership for this shared single-line editor family;
 no repeat provider-removal or typing-speed experiment is needed.
+
+### Normal-text Asset Edit recovery acceptance
+
+Verify the routed production Edit form at the default text size before pursuing
+its enlarged-text failures. Enter one complete multiword name while asset-type
+and tag metadata reads have failed, dismiss editing normally, retry both metadata
+loads and retain the exact draft. A rejected Save must retain the name and permit
+Keep editing; deliberate Discard returns to the originating screen. Use the existing
+controlled metadata/command fixture. This verifies recovery, not successful backend
+persistence. Keep enlarged-text scenarios and their unresolved findings separate.
+
+### Normal-text Edit tag acceptance
+
+Run the existing routed tag draft/disclosure sequence at default text size, sharing
+its assertions with enlarged-text coverage. Verify exact one-attempt tag entry,
+Save disabled while unstaged, Cancel/Keep editing retention, accepted Add clearing
+the input, native expansion/collapse retaining selected extras, and explicit
+Discard removing the editor before the audit launcher is considered restored.
+This verifies local draft handling and selection, not successful server persistence.
+A reproduced entry failure selects the established native draft adapter; do not
+repeat provider or typing-speed experiments.
+
+### Normal-text detail and Move Here acceptance
+
+Before enlarged-text remediation, reuse existing detail action geometry, independent
+photo/contents recovery, and Move Here query/suggestion retry scenarios at default
+text size. Retain exact query input, separate error/empty outcomes, native command
+reachability and return to the launcher with the destination removed. Run these
+representative consumers together; no assertion of mutation persistence, assistive
+coverage or whole-app acceptance follows from them. Keep historical enlarged-text
+results independent.
+
+For the Edit name append scenario, readiness targets the first required space key
+using the existing named-key helper, rather than enumerating the whole keyboard
+in a timed predicate. Native35847685581 stops before typing on iPad after one
+4.68-second enumeration; its retained capture shows focused input and keyboard.
+This is not proof of input loss or a passing readiness deadline. Preserve exact
+one-attempt input, metadata retry, rejected Save and discard checks in acceptance.
+
+Tag reachability acceptance uses ordinary native scroll swipes, not repeated short
+press-and-drag gestures that can leave a multi-detent sheet at its starting height.
+Run35848704289 failed on both devices before typing with the correct form scroll
+owner, selected tag below its viewport, and no progression after18 short drags.
+One follow-up uses full native swipes with unchanged tag visibility, draft and
+selection assertions; if reachability still fails, investigate the sheet layout
+as a product defect rather than continue gesture tuning.
+
+### Move Here native query retention (M257)
+
+Move Here reuses the shared native DraftTextField on iOS so ordinary query, loading,
+selection and error renders preserve the native editing buffer. Android keeps its
+existing controlled input. Asset/tenant/inventory ownership already keys the route
+form and resets the query when that owner changes; do not add resets to lookup or
+selection updates. Preserve read-only and busy guards, suggestion retry, selection
+and cancellation behavior. Native35850832085 is the failing regression: one Tent
+entry leaves T on both phone and iPad before any suggestion action. Acceptance
+requires the exact full query and successful retry with that query retained.
+
+### Edit new-tag native draft retention (M258)
+
+Edit uses the shared native DraftTextField for new tag names on iOS, with a
+flex-width owner beside the color field. Ordinary typing, invalid input, selection,
+color and disclosure changes retain the same editing buffer. Only an accepted tag
+resolution that clears inputs advances the native field revision; Android retains
+its controlled field instance. Preserve staged tags, validation, busy/read-only
+guards and route ownership resets. Native35853305160 reached the tag field on both
+devices, then phone reduced one Camping entry to C. iPad stopped before typing in
+whole-keyboard enumeration. Run35858864716 proves the iPad native keyboard labels
+space as a literal blank, not “space”; readiness targets the actual first C key
+shown in the retained hierarchy without weakening the exact text assertion. Acceptance requires full text, accepted clearing,
+staged tag presence and retained selection through disclosure.

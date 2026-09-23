@@ -1,0 +1,5 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35848704289
+Source b52d55381279bfbef2af70cbb9bf7055000636bb
+Phone107146533302 and iPad107146533341 fail initial selected Tag14 reveal at line1238, before typing.
+Phone form scroll bounds {{31,445.8},{339.9,266.6}}; Tag14 {{167.7,962},{82.9,46.1}}. Reviewed final capture stays at top of half-height sheet despite18 short press/drags (.7 to .4 of scroll height). Correct scroll owner; input and tag behavior not reached.
+Decision: one ordinary swipe followup, preserving all visibility/draft/selection assertions. Same reachability failure must select a product layout investigation, not further gesture tuning. No product success inferred from source checks or captures.

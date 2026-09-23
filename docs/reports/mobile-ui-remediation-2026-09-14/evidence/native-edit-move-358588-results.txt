@@ -1,0 +1,6 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35858864716
+Source c0e9d51acbebde6bbff776418f2846ece5ccb7b6
+CI35858868488 success.
+Phone107173854088: Edit metadata recovery, Edit tag workflow, Move Here exact query/retry all pass.
+iPad107173854186: Move Here exact query/retry passes. Edit metadata remains blocked at name visibility line1354 after recovery. Edit tag stops before typing at keyboard-readiness line678 because key named space does not exist.
+Retained iPad hierarchy shows C at {{202.5,984.0},{66.0,64.5}}, space labelled literal blank. Decision: readiness targets actual first C key. Exact Camping, accepted clearing, staged tag, disclosure/selection and discard assertions unchanged. No production change or renewed keyboard diagnosis. Run only tag acceptance; Move Here accepted on both devices, phone Edit recovery accepted, separate iPad Edit scrolling stays open.

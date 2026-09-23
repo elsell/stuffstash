@@ -1,8 +1,15 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.29 (120.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35834368106).
+Latest verified TestFlight: **0.24.30 (121.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35848122466).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
+
+## Review priority
+
+Follow the [everyday workflow review](everyday-workflow-review.md): screen structure
+and stability, core task patterns, visual coherence, then detailed states. The
+coverage matrix is an omission check, not the work queue. The isolated Edit
+scroll-frame candidate is held pending the interaction decision.
 
 ## Scope and evidence
 
@@ -20,6 +27,17 @@ establish whole-app acceptance. Physical-device-only behavior, Android and broad
 adaptation/assistive-technology coverage remain open in the surface reports.
 
 ## Current diagnosis and decisions — September 23
+
+Current frozen batch: M257 Move Here query retention and M258 Edit new-tag name
+retention use the established native draft field.70 focused checks and CI35858868488
+pass. Native35858864716 accepts Move Here on both devices and Edit tags on phone;
+[native35862073771](evidence/native-edit-tags-358620-results.txt) accepts Edit tags
+on iPad with identical application source. Its repeat phone run times out before
+typing: the readiness predicate matches but finishes after the deadline. Retain
+that failure explicitly alongside the earlier full phone pass. No further input
+diagnostic is needed for this scoped batch. Critic found no release blocker.
+The existing iPad metadata return-to-name layout gap and broader editor redesign
+remain open and do not gate these text-retention fixes.
 
 | Defect | Established facts | Decision and next acceptance |
 | --- | --- | --- |
@@ -150,7 +168,7 @@ release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
 passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
 No further field-choice rerun is needed.
 
-### Current candidate — enum option text retention
+### Released — enum option text retention
 
 Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
 leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
@@ -158,8 +176,8 @@ The candidate uses shared native DraftTextField for ordinary editing and rejecte
 options; accepted Add advances an explicit reset revision. Validation
 hints remain native. Android retains the existing controlled field. Both reset/hint
 regressions failed before correction;all1,928 remote tests (307 files), TypeScript,
-structural checks and critic pass. Native
-acceptance is still required; no provider/key/pacing comparison will be repeated.
+structural checks and critic pass. Final native acceptance now passes on both devices;
+no provider/key/pacing comparison was repeated.
 
 Android APK25689da4 passes duplicate rejection, new-option canonicalization, field
 clearing, selective removal and return with standard keyboard dismissal; scoped
@@ -178,16 +196,49 @@ at the initial five-second predicate waiter: one4.26-second false evaluation,
 followed by complete `ready` in teardown. That does not establish iPad acceptance.
 All six CI jobs pass. [Retained results and reviewed captures](evidence/native-enum-358426-results.txt).
 
-Decision: keep PR167 held and retain the native adapter with its stable hint
-modifier. Read exact native values directly after typing and before Add, as the
-Sharing email scenario does. Keep one typing attempt, keyboard-open command checks,
-duplicate retention, canonical creation/reset and removal. Critic found no blocker;
-the focused phone/iPad acceptance is required. No provider/key/pacing reruns.
+Final acceptance [35845533702](https://github.com/elsell/stuffstash/actions/runs/35845533702)
+at47418b41 passes the complete enum workflow on phone and iPad, with exact native
+values before submission, keyboard-open command checks, duplicate retention,
+canonical creation/reset and selective removal. [Results](evidence/native-enum-358455-results.txt).
+All six CI jobs pass at that commit. PR167 merged asfe748466; release35848122466
+completed. TestFlight0.24.30 (121.1) upload, Apple VALID processing and exact
+changelog readback are verified. [Delivery evidence](evidence/enum-release-358481-results.txt).
+Unrelated audit findings remain outside this delivered batch.
 
 The separate Settings check in358392 passed full-name/save-retry on phone and failed
 the iPad success-notice observation. It does not justify migrating the Settings name
-input or certify persisted collection readback. Latest verified release remains
-0.24.29 (120.1).
+input or certify persisted collection readback. This remains outside the delivered enum batch.
+
+### Next normal-text acceptance — Asset Edit
+
+The routed Edit form now has a prepared default-text scenario for complete name
+entry, metadata retries, rejected Save, Keep editing and explicit Discard return.
+Its existing enlarged-text scenarios remain separate. Android passes this sequence
+on the existing APK690c2fdf; [reviewed evidence](evidence/android-edit-normal-results.txt).
+iOS run35847685581 at37584855 passes the complete Edit workflow on phone. iPad
+stops before typing in the all-key readiness predicate (one4.68-second evaluation);
+reviewed capture shows focused input and keyboard. [Results](evidence/native-edit-358476-results.txt).
+Decision: use the existing named-space-key readiness check, preserving exact input
+and recovery assertions; include Edit in the grouped normal-detail acceptance.
+No production input migration or provider/pacing experiment is justified.
+
+Normal-text Edit tag recovery now passes on Android using that same APK: exact
+entry, unstaged-draft protection, staged-tag retention, collapsed selections and
+Discard. [Evidence](evidence/android-edit-tags-normal-results.txt). The shared native
+scenario adds default-text coverage with explicit staged-tag and editor-exit checks;
+remote fixture/structural checks and critic review pass. Focused iOS `edit-tags`
+run35848704289 atb52d5538 fails both devices before typing: initial Tag14 remains
+below the correct viewport after18 short drags; the sheet remains at its starting
+detent. [Evidence](evidence/native-edit-tags-358487-results.txt). One follow-up uses
+ordinary native swipes with unchanged visibility assertions; repeated failure
+requires a product layout decision, not further gesture tuning. The grouped normal-detail run35850832085 at86f2c51e completed: detail reachability
+and independent regions pass both devices; Edit passes phone. iPad Edit passes
+exact typing and both metadata retries, then fails full name visibility despite
+native swipes; retain this with the sheet reachability investigation. Move Here
+loses `Tent` to `T` on both devices (M257). [Results](evidence/native-normal-detail-358508-results.txt).
+M257 now reuses DraftTextField;69 focused tests, TypeScript, structural checks and
+critic pass. Native correction acceptance is pending. Tag swipe follow-up35853305160
+remains independent; no repeated provider/key-delivery diagnostics.
 
 ### Custom-field choices — scoped acceptance complete
 

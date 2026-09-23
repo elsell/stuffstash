@@ -1,0 +1,5 @@
+Android API36 Pixel6, default text/light appearance. Existing audit APK690c2fdf4b09e4f3fe5e281d4f9042cc34836acab628acddf754777bc35b5cd5, source98b50a49; Asset Edit unchanged in current candidate.
+Controlled production routed Edit form passes: one multiword name entry, both metadata failure/retry paths, exact name retained, rejected Save, Keep editing, explicit Discard and editor absence at launcher. No successful backend persistence claimed. Retained screenshot inspected.
+First driver attempt tried a Retry command clipped above its scroll parent: AX child bounds appeared onscreen but were outside ScrollView bounds. Corrected driver requires full command inside actual scroll viewport before tapping; no product finding from that driver miss.
+Driver on paul: /tmp/verify-android-edit-recovery.py. Log: /tmp/android-edit-normal.log.
+iOS normal-text equivalent is prepared, not yet run. Critic identified background launcher existence as a weak return check; corrected to require editor absence, visible/hittable foreground launcher and app foreground state. Ten fixture-preparation checks and structural checks pass remotely.

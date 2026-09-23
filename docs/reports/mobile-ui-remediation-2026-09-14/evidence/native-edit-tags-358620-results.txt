@@ -1,0 +1,15 @@
+Scoped M257/M258 acceptance, 2026-09-23
+App source c0e9d51a and4aec43d1 is identical (git diff apps/mobile/src and package/patch inputs empty).
+35858864716: phone Edit metadata+tags and Move Here pass; iPad Move Here passes.
+35862073771 at4aec43d1: iPad Edit tags passes267.727s, job107184462283.
+Latest phone run107184462492 fails readiness before typing atFixtureAuditTests.swift678.
+Its named-C predicate matched true but consumed4.030s after starting1.052s into a5s waiter;
+result timed out at5.083s. Retained hierarchy shows C finite/hittable after the deadline.
+Do not call this job passed, increase deadlines, or infer product text loss from it.
+Retain earlier complete phone pass for this unchanged application implementation.
+Reviewed iPad retained-entry and collapsed-selected screenshots: Camping retained, then
+entry clears on accepted addition, Camping staged, Tag13/14 remain selected.
+Existing iPad metadata return-to-name layout gap and broad editor design remain open.
+Critic reviewed this evidence combination and found no scoped release blocker.
+CI35858868488 passed.70 focused checks, TypeScript and structural checks passed.
+This establishes the text-retention correction, not comprehensive editor UX acceptance.

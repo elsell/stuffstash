@@ -1,0 +1,6 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35853305160
+Source6dc485e715898a99097f3312346deac3bfdf3f78
+Phone107163071481: ordinary swipes reach selected Tag14 and New tag name. One Camping entry yields C at line1279, before Add (M258 native RED).
+iPad107163071934: ordinary swipes reach selected Tag14 and input. Whole-keyboard enumeration stops before typing with nonfinite key hit frames. Not evidence of text loss on iPad.
+Decision: initial Tag14 reachability was short-drag driver behavior. Do not refactor layout from that failure. Replace confirmed phone tag input with existing native draft field; preserve accepted-clear revision and Android instance. Observe stable space key for readiness; exact full-text acceptance unchanged.
+Mounted accepted-reset regression fails on iOS before fix (42 pass,1 fail); after fix70 focused tests pass. Native acceptance pending.

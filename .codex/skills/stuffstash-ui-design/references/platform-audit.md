@@ -1,5 +1,24 @@
 # Whole-product interaction audit
 
+## Start with the everyday experience
+
+Walk Home → Browse List/Map → asset → Edit/Move → Filters and back, at normal
+text size, before reviewing isolated controls. Judge the whole sequence: stable
+headers and control anchors, understandable transitions, unnecessary navigation or
+modality, retained browsing context, visual hierarchy and a clear primary action.
+Name the build/device for runtime judgments; source tracing is a separate evidence
+level. Do not substitute a collection of passing tests for this walkthrough.
+
+Order work by screen structure/stability, core task/pattern fit, visual coherence,
+then detailed states/edge cases. Keep urgent data-loss/security/task blockers
+urgent. A peer-view switcher needs one stable position across views. A cumbersome
+editor needs a pattern decision, not merely improved sheet spacing. Choose whether
+Edit, Move or filtering should use a screen, modal task, picker or in-place control
+from its task, rather than inheriting the current container.
+
+Use the coverage inventory below to find omissions after judging the workflows;
+it is not a priority ranking or a list of separate tests.
+
 ## Establish coverage
 
 Record revision/date, shipped clients/OS scope, and available runtime access. Read

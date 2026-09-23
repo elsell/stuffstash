@@ -1,0 +1,5 @@
+Source: 47418b41c34370e0ea9c6c22a2f6253422f2d3cf
+Run: https://github.com/elsell/stuffstash/actions/runs/35845533702
+iOS fixtures (iPad mini (A17 Pro)) [enum-editing]: success
+iOS fixtures (iPhone 17) [enum-editing]: success
+Both executed testEnumOptionEntryRetainsDuplicateAndClearsAcceptedDraft and passed. Reviewed retained duplicate and selective-removal captures. Exact values asserted before submission; no five-second input latency guarantee. All six CI jobs passed in 35845538817.

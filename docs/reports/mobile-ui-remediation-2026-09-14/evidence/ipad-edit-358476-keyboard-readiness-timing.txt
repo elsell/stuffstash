@@ -1,0 +1,2 @@
+start=1.007378833333405, duration=4.684023208333201, matched=false
+wait duration=5.691807541666776, result=2
