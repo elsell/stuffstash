@@ -1823,3 +1823,13 @@ Discard removing the editor before the audit launcher is considered restored.
 This verifies local draft handling and selection, not successful server persistence.
 A reproduced entry failure selects the established native draft adapter; do not
 repeat provider or typing-speed experiments.
+
+### Normal-text detail and Move Here acceptance
+
+Before enlarged-text remediation, reuse existing detail action geometry, independent
+photo/contents recovery, and Move Here query/suggestion retry scenarios at default
+text size. Retain exact query input, separate error/empty outcomes, native command
+reachability and return to the launcher with the destination removed. Run these
+representative consumers together; no assertion of mutation persistence, assistive
+coverage or whole-app acceptance follows from them. Keep historical enlarged-text
+results independent.

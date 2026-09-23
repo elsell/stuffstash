@@ -535,11 +535,19 @@ final class FixtureAuditTests: XCTestCase {
     capture("move-here-successful-retry")
   }
 
+  func testMoveHereSuggestionsRecoverAtNormalTextSize() {
+    verifyMoveHereSuggestionsRecovery(captureSuffix: "normal-size")
+  }
+
   func testMoveHereRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    verifyMoveHereSuggestionsRecovery(captureSuffix: "accessibility-size")
+  }
+
+  private func verifyMoveHereSuggestionsRecovery(captureSuffix: String) {
     let open = app.buttons["Audit Move here recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -574,11 +582,11 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<8 where !retry.isHittable { results.swipeUp() }
     XCTAssertTrue(retry.isHittable)
     XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
-    capture("move-here-suggestions-error")
+    capture("move-here-suggestions-error-\(captureSuffix)")
     retry.tap()
     XCTAssertTrue(app.buttons["Audit tent, Item, Garage"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
-    capture("move-here-suggestions-recovered")
+    capture("move-here-suggestions-recovered-\(captureSuffix)")
     app.buttons["Cancel"].firstMatch.tap()
     XCTAssertTrue(query.waitForNonExistence(timeout: 5))
     XCTAssertTrue(open.isHittable)
@@ -944,11 +952,19 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Apply expiration filters"].isHittable)
   }
 
+  func testDetailCommandsRemainReachableAtNormalTextSize() {
+    verifyDetailCommandReachability(captureSuffix: "normal-size")
+  }
+
   func testDetailCommandsRemainReachableAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    verifyDetailCommandReachability(captureSuffix: "accessibility-size")
+  }
+
+  private func verifyDetailCommandReachability(captureSuffix: String) {
     let open = app.buttons["Audit detail commands"]
     for _ in 0..<14 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -977,12 +993,14 @@ final class FixtureAuditTests: XCTestCase {
       if label == "Add item here" {
         XCTAssertGreaterThan(command.frame.width, app.frame.width * 0.5)
       }
-      capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-"))
+      capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-") + "-" + captureSuffix)
     }
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
     back.tap()
-    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(add.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
   }
 
   func testPlaceContentsUseNativeSearchAndKeepNavigation() {
@@ -1150,11 +1168,19 @@ final class FixtureAuditTests: XCTestCase {
     capture("static-search-fresh-query")
   }
 
+  func testAssetRegionsRecoverAtNormalTextSize() {
+    verifyAssetRegionRecovery(captureSuffix: "normal-size")
+  }
+
   func testAssetRegionRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    verifyAssetRegionRecovery(captureSuffix: "accessibility-size")
+  }
+
+  private func verifyAssetRegionRecovery(captureSuffix: String) {
     let open = app.buttons["Audit contents recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
@@ -1183,25 +1209,27 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(visible())
     }
     reveal(photos)
-    capture("asset-region-photo-error-accessibility-size")
+    capture("asset-region-photo-error-\(captureSuffix)")
     photos.tap()
     XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["No photos"].firstMatch.waitForExistence(timeout: 5))
     reveal(app.staticTexts["No photos"].firstMatch)
-    capture("asset-region-photo-recovered-accessibility-size")
+    capture("asset-region-photo-recovered-\(captureSuffix)")
     reveal(contents)
-    capture("asset-region-contents-error-accessibility-size")
+    capture("asset-region-contents-error-\(captureSuffix)")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
     XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
     let empty = app.staticTexts["Nothing here yet"].firstMatch
     XCTAssertTrue(empty.waitForExistence(timeout: 5))
     reveal(empty)
-    capture("asset-region-recovered-accessibility-size")
+    capture("asset-region-recovered-\(captureSuffix)")
     let back = app.navigationBars.buttons.firstMatch
     XCTAssertTrue(back.isHittable)
     back.tap()
-    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    XCTAssertTrue(empty.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(open.isHittable)
   }
 
   func testEditTagDisclosureRetainsNormalTextDraft() {
