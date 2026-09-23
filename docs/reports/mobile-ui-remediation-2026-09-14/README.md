@@ -54,13 +54,16 @@ Sharing review also corrected inline feedback alignment and grouped Share/Copy
 completion actions (M278). Android controlled recovery and visual review pass;
 phone/iPad sharing verification is combined with the filter and detail workflows.
 
-Run35918141231 failed before tests ran: its Swift uniqueness assertion counted a
-single element instead of an element query. This provides no runtime evidence.
-The assertion now uses an exact-label query; superseded35919524865 was cancelled
-because it contains the same compile error. The corrected follow-up suite combines
-all twelve detail/filter/sharing cases in one build per device. Suite selection
-checks confirm 12 unique existing methods; fixture preparation and critic pass.
-Native compilation and visual/workflow acceptance remain required.
+Run35921268590 passes nine of twelve cases on both devices, including all six
+filter/search/return workflows, Sharing recovery, Map context and empty-photo
+hierarchy. This establishes the corrected phone Expiration entry/return workflow.
+Three detail assertions stop on observation mismatches: old empty-state copy,
+a36-point system toolbar frame treated as a custom body button, and duplicate
+nested AX text nodes at the same Availability bounds. Matching screenshots and
+accessibility trees show the expected empty state and one visual heading. Correct
+those observations, require valid heading geometry before deduplication, and retain
+all recovery, bounds and permission checks. Only the five detail/hierarchy cases
+need another native run; do not repeat the nine unchanged passed workflows.
 
 ## Separate unresolved decisions
 

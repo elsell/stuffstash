@@ -2194,3 +2194,22 @@ contains the compile error. Verify the final M274–M278 composition using one
 phone/iPad build per device: six filter/search/return cases, sharing recovery, and
 five representative detail/hierarchy cases. Keep focused suite choices available
 and share their test lists instead of maintaining divergent copies.
+
+Run35921268590 executes all twelve cases: nine pass on both devices, including
+connected filters/Expiration return, tag-footer clearance and Sharing recovery.
+Three detail assertions need alignment with inspected native evidence:
+- Recovery now displays the specified `Nothing inside yet` empty state, not the
+  removed `Nothing here yet` copy. Require the new state and retain retry/return.
+- RN exposes Availability as nested StaticText nodes at identical bounds. Require
+  one distinct heading rectangle, rather than one accessibility-tree node; source
+  tests independently guard duplicate status content. This does not establish
+  VoiceOver traversal, which remains a separate audit axis.
+- The system Edit bar item has a36-point AX glyph/control frame within its native
+  header. Keep its hittability, containment and horizontal bounds; reserve the
+  custom body-command44-point height check for body commands. Do not resize native
+  toolbar controls to satisfy a body-layout assertion. Connected Edit navigation
+  has its separate native workflow evidence; this check alone does not measure
+  the system's extended hit region.
+
+Rerun the five detail/hierarchy cases with these corrections. Preserve the nine
+passed follow-up workflows rather than re-running unchanged filter/sharing cases.

@@ -1114,7 +1114,13 @@ final class FixtureAuditTests: XCTestCase {
         let scroll = app.scrollViews.firstMatch
         for _ in 0..<6 where !status.isHittable { scroll.swipeUp() }
         XCTAssertTrue(status.isHittable)
-        XCTAssertEqual(app.staticTexts.matching(identifier: "Availability").count, 1)
+        let headings = app.staticTexts.matching(identifier: "Availability").allElementsBoundByIndex
+        for heading in headings {
+          let frame = heading.frame
+          XCTAssertFalse(frame.isEmpty || frame.isNull || frame.isInfinite)
+          XCTAssertTrue([frame.minX, frame.minY, frame.width, frame.height].allSatisfy { $0.isFinite })
+        }
+        XCTAssertEqual(Set(headings.map { NSStringFromCGRect($0.frame) }).count, 1)
         if variant == "checked-out" { XCTAssertTrue(app.buttons["Return"].firstMatch.isHittable) }
         capture("detail-context-" + variant + "-availability")
       }
@@ -1159,7 +1165,7 @@ final class FixtureAuditTests: XCTestCase {
         start.press(forDuration: 0.05, thenDragTo: end)
       }
       XCTAssertTrue(fullyVisible(), label)
-      XCTAssertGreaterThanOrEqual(command.frame.height, 44, label)
+      if label != "Edit" { XCTAssertGreaterThanOrEqual(command.frame.height, 44, label) }
       XCTAssertGreaterThanOrEqual(command.frame.minX, app.frame.minX, label)
       XCTAssertLessThanOrEqual(command.frame.maxX, app.frame.maxX, label)
       XCTAssertGreaterThanOrEqual(command.frame.width, 44, label)
@@ -1390,7 +1396,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
     XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
-    let empty = app.staticTexts["Nothing here yet"].firstMatch
+    let empty = app.staticTexts["Nothing inside yet"].firstMatch
     XCTAssertTrue(empty.waitForExistence(timeout: 5))
     reveal(empty)
     capture("asset-region-recovered-\(captureSuffix)")
