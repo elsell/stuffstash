@@ -1328,6 +1328,43 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(app.state, .runningForeground)
   }
 
+  func testAssetMoveReturnsToUpdatedDetailAndReopensSelection() {
+    let open = app.buttons["Audit asset Edit journey"].firstMatch
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(app.staticTexts["Camping tent"].firstMatch.waitForExistence(timeout: 10))
+    let moveFromDetail = app.buttons["Move"].firstMatch
+    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
+    let header = app.navigationBars["Move asset"]
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    let commit = header.buttons["Move"].firstMatch
+    let cancel = header.buttons["Cancel"].firstMatch
+    XCTAssertTrue(commit.isHittable); XCTAssertTrue(cancel.isHittable)
+    XCTAssertFalse(commit.isEnabled)
+    capture("asset-move-journey-picker")
+    let garage = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Garage")).firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
+    garage.tap()
+    XCTAssertTrue(garage.isSelected); XCTAssertTrue(commit.isEnabled)
+    capture("asset-move-journey-selected")
+    commit.tap()
+    XCTAssertTrue(header.waitForNonExistence(timeout: 10))
+    let location = app.buttons["Open location Garage"].firstMatch
+    for _ in 0..<4 where !location.isHittable { app.scrollViews.firstMatch.swipeDown() }
+    XCTAssertTrue(location.waitForExistence(timeout: 10)); XCTAssertTrue(location.isHittable)
+    capture("asset-move-journey-updated-detail")
+    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
+    XCTAssertTrue(header.waitForExistence(timeout: 10))
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isSelected)
+    XCTAssertFalse(commit.isEnabled)
+    capture("asset-move-journey-reopened")
+    XCTAssertTrue(cancel.isHittable); cancel.tap()
+    XCTAssertTrue(header.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(location.exists)
+  }
+
   func testAssetEditSavesAndReturnsToUpdatedDetail() {
     let open = app.buttons["Audit asset Edit journey"].firstMatch
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

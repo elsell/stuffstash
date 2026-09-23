@@ -1970,3 +1970,10 @@ Native header completion controls keep stable accessible names while disabled.
 Edit and Move must retain visible, announced Saving changes / Moving progress in
 the body while their commands are pending; moving actions into a native header
 must not silently remove the previous buttons' progress feedback.
+
+Connected Move acceptance must enter from the real asset detail route, select an
+existing destination, commit through MoveAssetCommand and the mutation observer,
+then show the new location on the same detail. Reopening Move must select the
+persisted destination and disable an unchanged move. The shared in-memory journey
+repository must preserve edited metadata and resolve placement on subsequent reads;
+isolated success callbacks are insufficient evidence for navigation return.
