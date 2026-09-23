@@ -51,3 +51,38 @@ it('retains presentation while invoking only current eligible committed actions'
   await h.run(history); await h.run(replacementHistory);
   expect(calls).toEqual(['current', 'current-archive', 'replacement']);
 });
+
+it('keeps Edit current and rejects retained presses after permission loss, pending work and teardown', async () => {
+  const h = new MobileRenderHarness();
+  const calls: string[] = [];
+  let options!: Options;
+  const observe = (value: Options) => { options = value; };
+  const value = (name: string, editable = true, disabled = false): AssetHeaderOverflowProps => ({
+    asset: { title: 'Drill', canArchive: true, canRestore: false, canDeletePermanently: false },
+    disabled, onHistory: () => {}, onCheckoutHistory: () => {}, onLifecycleAction: () => {},
+    onEdit: editable ? () => calls.push(name) : undefined
+  });
+  const header = new MobileRenderHarness();
+  let retained!: () => void;
+  try {
+    await h.render(<Probe value={value('old')} observe={observe} />);
+    await header.render(<>{options.headerRight?.({ canGoBack: true })}</>);
+    const edit = header.byLabel('Edit');
+    expect(edit).toBeDefined();
+    retained = edit!.props.onPress;
+    const original = options;
+    await h.render(<Probe value={value('current')} observe={observe} />);
+    expect(options).toBe(original);
+    await h.run(retained);
+    expect(calls).toEqual(['current']);
+    await h.render(<Probe value={value('pending', true, true)} observe={observe} />);
+    await h.run(retained);
+    await h.render(<Probe value={value('read-only', false)} observe={observe} />);
+    await h.run(retained);
+    await header.render(<>{options.headerRight?.({ canGoBack: true })}</>);
+    expect(header.byLabel('Edit')).toBeUndefined();
+    expect(calls).toEqual(['current']);
+  } finally { await h.unmount(); await header.unmount(); }
+  await h.run(retained);
+  expect(calls).toEqual(['current']);
+});

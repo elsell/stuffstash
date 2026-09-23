@@ -11,7 +11,6 @@ import {
   AssetDetailMaintenanceBar
 } from './AssetDetailIdentitySection';
 import {
-  assetDetailAvailabilityAction,
   assetDetailMaintenanceActions
 } from './AssetDetailPresentation';
 import {
@@ -159,6 +158,7 @@ export function ContainedWorkspaceMaintenance({
   asset,
   isActionPending,
   onCheckout,
+  showEditAction = true,
   onEdit,
   onMove,
   onReturn
@@ -166,15 +166,16 @@ export function ContainedWorkspaceMaintenance({
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onCheckout?: () => void;
+  readonly showEditAction?: boolean;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onReturn?: () => void;
 }) {
   const styles = createStyles(useAppearanceAwarePalette());
-  const hasAvailabilityAction = assetDetailAvailabilityAction(asset) !== undefined;
+  const hasAvailabilityStatus = asset.kind !== 'location';
   const hasMaintenanceAction = assetDetailMaintenanceActions(asset)
-    .some((action) => action.id === 'edit' || action.id === 'move');
-  if (!hasAvailabilityAction && !hasMaintenanceAction) {
+    .some((action) => showEditAction && action.id === 'edit');
+  if (!hasAvailabilityStatus && !hasMaintenanceAction) {
     return null;
   }
   return (
@@ -184,11 +185,12 @@ export function ContainedWorkspaceMaintenance({
         isActionPending={isActionPending}
         onCheckout={onCheckout}
         onReturn={onReturn}
-        quiet
       />
       <AssetDetailMaintenanceBar
         asset={asset}
         isActionPending={isActionPending}
+        showMoveAction={false}
+        showEditAction={showEditAction}
         onEdit={onEdit}
         onMove={onMove}
       />

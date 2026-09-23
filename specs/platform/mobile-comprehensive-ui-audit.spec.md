@@ -2078,7 +2078,8 @@ full tablet width. Preserve the selected asset and return context in the existin
 Move task.
 
 Present availability with its current status and a nearby Check out or Return
-command. Available and checked-out states must be understandable without reading
+command. This section owns checkout status and actor information; exception
+metadata retains lifecycle only, avoiding a duplicate Availability section. Available and checked-out states must be understandable without reading
 a button. Do not make Check out the page-wide primary action. Preserve checkout
 context already available in the view model and keep domain eligibility,
 permissions, pending locks, recovery and return behavior unchanged. Locations

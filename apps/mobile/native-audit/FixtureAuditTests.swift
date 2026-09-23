@@ -2541,7 +2541,7 @@ final class FixtureAuditTests: XCTestCase {
     let status = app.staticTexts["No photos"].firstMatch
     XCTAssertTrue(title.waitForExistence(timeout: 10))
     XCTAssertTrue(status.waitForExistence(timeout: 5))
-    let edit = app.buttons["Edit"].firstMatch
+    let edit = app.navigationBars["Details"].buttons["Edit"].firstMatch
     let move = app.buttons["Move"].firstMatch
     let add = app.buttons["Add photos"].firstMatch
     XCTAssertTrue(edit.isHittable); XCTAssertTrue(move.isHittable)

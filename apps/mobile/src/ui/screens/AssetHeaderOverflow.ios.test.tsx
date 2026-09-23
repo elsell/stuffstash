@@ -47,3 +47,21 @@ describe('AssetHeaderOverflow iOS native header contract', () => {
     expect(calls).toEqual(['history', 'archive']);
   });
 });
+
+
+it('places native Edit beside More and disables it during pending work', () => {
+  const calls: string[] = [];
+  const props = { asset: { title: 'Drill', canArchive: false, canRestore: false, canDeletePermanently: false },
+    onEdit: () => calls.push('edit'), onHistory: () => {}, onCheckoutHistory: () => {}, onLifecycleAction: () => {} };
+  const items = assetHeaderOverflowScreenOptions(props).unstable_headerRightItems?.({ canGoBack: true }) ?? [];
+  expect(items.map(item => item.type)).toEqual(['button', 'menu']);
+  const edit = items[0];
+  if (edit.type !== 'button') throw new Error('Expected native Edit');
+  expect(edit.accessibilityLabel).toBe('Edit');
+  edit.onPress();
+  const disabled = assetHeaderOverflowScreenOptions({ ...props, disabled: true }).unstable_headerRightItems?.({ canGoBack: true })?.[0];
+  if (disabled?.type !== 'button') throw new Error('Expected disabled native Edit');
+  expect(disabled.disabled).toBe(true);
+  disabled.onPress();
+  expect(calls).toEqual(['edit']);
+});

@@ -107,3 +107,17 @@ inheritance pass, as do native clear/type/submit and retained-query checks.
 and Place search pass; Expiration stops at the known pre-scroll assertion, already
 corrected in the combined run35911930846. [Terminal evidence](evidence/filter-connected-359052-results.txt).
 Full native acceptance remains open; this follow-up does not broaden frozen M265–M273.
+
+
+### Detail hierarchy implementation — native acceptance open
+
+M277 now exposes permission-aware Edit in the native header, keeps Move with
+location, and pairs availability status with its command. Standalone detail
+consumers retain Edit; item/container/place checks cover duplicate removal and
+read-only container status. Forty-two focused source tests, TypeScript and the
+mobile structural check pass on paul. Critic found duplicate checked-out metadata;
+that is corrected with a regression test. Android's first render prompted aligned,
+bounded context rows. The revised Android item render has aligned context rows;
+native header Edit opens the current asset and Cancel returns with commands intact.
+[Android render](evidence/android-detail-contextual-actions.png). Populated-photo,
+container/place native comparisons and iPhone/iPad acceptance remain open. This is a follow-up, not a new gate on the frozen selection batch.

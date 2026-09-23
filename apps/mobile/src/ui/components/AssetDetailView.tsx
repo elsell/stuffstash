@@ -58,6 +58,7 @@ type AssetDetailViewProps = {
   readonly workspaceStatusKind?: 'success' | 'working';
   readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
+  readonly showEditAction?: boolean;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onCheckout?: () => void;
@@ -95,6 +96,7 @@ export function AssetDetailView({
   onBack,
   onCheckout,
   onChildPress,
+  showEditAction = true,
   onEdit,
   onMove,
   overflowMenu,
@@ -165,6 +167,7 @@ export function AssetDetailView({
             asset={asset}
             isActionPending={isActionPending}
             onCheckout={onCheckout}
+            showEditAction={showEditAction}
             onEdit={onEdit}
             onMove={onMove}
             onParentLocationPress={onParentLocationPress}
@@ -205,6 +208,7 @@ export function AssetDetailView({
               asset={asset}
               isActionPending={isActionPending}
               onCheckout={onCheckout}
+              showEditAction={showEditAction}
               onEdit={onEdit}
               onMove={onMove}
               onReturn={onReturn}
