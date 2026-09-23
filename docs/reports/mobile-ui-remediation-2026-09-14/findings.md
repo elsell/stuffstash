@@ -306,7 +306,20 @@ source verification, not a pristine release build or native runtime acceptance.
 Logs: `/tmp/menu-ownership-suite.log`, `/tmp/menu-ownership-types.log`, and
 `/tmp/menu-ownership-structural.log` on paul.
 
-Remaining acceptance: native popup lock/dismiss/unlock behavior plus representative
+Android native acceptance passes on API36 emulator5580, APK SHA-256
+`a7aa140a4b6517815665a8b4b9adec8d20ce5bd200d92f06c49056786be5337d`.
+The real Compose popup dismisses on lock, ignores a locked physical tap, stays
+closed after unlock and executes a fresh command exactly once. The production
+Browse choice selects Available and applies it. Its result is below the fixture
+launcher list; bounded scrolling revealed the expected result after the initial
+visibility assertion failed. This was not a product selection failure.
+[Locked hierarchy](evidence/android-menu-locked.xml),
+[executed command](evidence/android-menu-activated.xml),
+[applied choice](evidence/android-menu-choice-applied.xml) and reviewed screenshots
+retain evidence. Native archive reused the existing disposable build tree; source
+was synchronized tob75ef748, preserving its generated Android project/toolchain.
+
+Remaining acceptance: iOS popup lock/dismiss/unlock behavior plus representative
 asset overflow and Android choice selection, preserving selection/destructive
 semantics. VoiceOver/TalkBack behavior is not established by host-component fakes.
 No new release is claimed. Critic identified retained trigger reopening after
