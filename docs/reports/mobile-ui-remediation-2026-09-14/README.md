@@ -1,6 +1,6 @@
 # Mobile UI audit — current state
 
-Latest verified TestFlight: **0.24.29 (120.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35834368106).
+Latest verified TestFlight: **0.24.30 (121.1)**; [release and changelog verification](https://github.com/elsell/stuffstash/actions/runs/35848122466).
 The comprehensive audit remains incomplete. Normal-text user-visible defects take
 priority; freeze and release verified batches independently of audit completion.
 
@@ -150,7 +150,7 @@ release35834368106 succeeded. TestFlight0.24.29 (120.1) upload succeeded at
 passed at08:26:02UTC. [Release evidence](evidence/move-release-358343-results.txt).
 No further field-choice rerun is needed.
 
-### Shipping batch — enum option text retention
+### Released — enum option text retention
 
 Native35836383102 at64e90a8c fails on both devices before Add: entering `ready`
 leaves `r`. [Retained outcomes](evidence/native-enum-358363-results.txt), findingM256.
@@ -182,15 +182,14 @@ Final acceptance [35845533702](https://github.com/elsell/stuffstash/actions/runs
 at47418b41 passes the complete enum workflow on phone and iPad, with exact native
 values before submission, keyboard-open command checks, duplicate retention,
 canonical creation/reset and selective removal. [Results](evidence/native-enum-358455-results.txt).
-All six CI jobs pass at that commit. PR167 merged asfe748466; automatic release
-[35848122466](https://github.com/elsell/stuffstash/actions/runs/35848122466) is running.
-A sleeping collector retains terminal jobs and logs; TestFlight delivery and
-changelog readback are not yet verified. Unrelated findings do not gate this batch.
+All six CI jobs pass at that commit. PR167 merged asfe748466; release35848122466
+completed. TestFlight0.24.30 (121.1) upload, Apple VALID processing and exact
+changelog readback are verified. [Delivery evidence](evidence/enum-release-358481-results.txt).
+Unrelated audit findings remain outside this delivered batch.
 
 The separate Settings check in358392 passed full-name/save-retry on phone and failed
 the iPad success-notice observation. It does not justify migrating the Settings name
-input or certify persisted collection readback. Latest verified release remains
-0.24.29 (120.1).
+input or certify persisted collection readback. This remains outside the delivered enum batch.
 
 ### Next normal-text acceptance — Asset Edit
 

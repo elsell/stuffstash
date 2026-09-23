@@ -1,0 +1,11 @@
+Release: 0.24.30 (121.1)
+Source: fe7484660b3684c0f04e5b84a19b64a966f8f2c6 (PR167)
+Run: https://github.com/elsell/stuffstash/actions/runs/35848122466
+All four jobs succeeded: validation107139096248; images107140982318; iOS upload107141879477; changelog107146862817.
+Upload succeeded: 2026-09-23T10:44:25Z.
+Verified TestFlight changelog for v0.24.30 (121.1): 2026-09-23T10:47:51Z.
+Verified script at released source requires exact version/platform, Apple processingState VALID, and exact English localization readback before success.
+Notes:
+- Fixed missing characters when entering custom-field options on iOS.
+- Kept your entry intact when an option is rejected as a duplicate.
+Nonblocking upload warnings: missing third-party React, ReactNativeDependencies and Hermes dSYMs. They did not prevent upload or processing acceptance.
