@@ -1,0 +1,14 @@
+M270 Move destination interaction acceptance
+Production source: 8e2edaa9 (all changed production files copied into isolated Android fixture build).
+Android emulator emulator-5580, normal text, controlled ports: passed.
+Checks: choose existing destination; search Audit; open creation; choose Container;
+edit name to Audit crate while Kind remains; cancel; reopen with Audit seed and
+retained Container; repeat edit; rejected creation/retry; rejected Move retains
+Audit crate selection; retry returns to native audit menu. Fixture commands enforce
+exact creation title/kind/placement and moved asset/destination IDs.
+Reviewed retained-selection and edited-name screenshots: controls reachable, no
+content overlap. Phone-sized emulator only; no physical device/accessibility claim.
+Initial Android automation stopped on exact Kind label; native label includes the
+current value ('Choose destination kind, Location'). Updated selector to honor
+that composed name. No production correction was needed for that observation.
+iPhone/iPad acceptance run: 35888124430. Pending; do not infer success from Android.

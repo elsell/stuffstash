@@ -1,7 +1,8 @@
 # Move Destination Selection
 
 Status: M270 creation-name separation, shared choice rows and native search are
-implemented and source-verified; connected native acceptance remains pending.
+implemented and source-verified. Connected Android native acceptance passed;
+iPhone/iPad run35888124430 remains pending.
 Keep separate from frozen M260–M264 and the M269 native acceptance run.
 
 ## Task and pattern
