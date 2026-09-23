@@ -1,0 +1,96 @@
+Attributes: Application, 0x106061cc0, pid: 37853, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x106061cc0, pid: 37853, label: 'Stuff Stash'
+    Window (Main), 0x106061e00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x106061f40, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x106061a40, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x106061b80, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1060617c0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x106061900, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x106061540, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x106061680, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1060612c0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x106061400, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x106061040, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Add item'
+                          Button, 0x106061180, {{20.0, 66.0}, {44.0, 36.0}}, label: 'Close Add'
+                          StaticText, 0x106060dc0, {{164.3, 73.7}, {73.0, 20.7}}, label: 'Add item'
+                          Button, 0x106060f00, {{338.0, 66.0}, {44.0, 36.0}}, label: 'Save item'
+                        Other, 0x106060c80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x106060b40, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1060608c0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x106060a00, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1060603c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x106060500, {{0.0, 0.0}, {402.0, 874.0}}
+                                    Other, 0x106060640, {{0.0, 0.0}, {402.0, 874.0}}
+                                      ScrollView, 0x106060780, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x106060140, {{0.0, 0.0}, {402.0, 874.0}}
+                                          Other, 0x106060280, {{0.0, 0.0}, {402.0, 170.8}}
+                                        Other, 0x106060000, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x106063840, {{0.0, 116.0}, {402.0, 562.7}}
+                                          Other, 0x106063980, {{0.0, 116.0}, {402.0, 562.7}}
+                                            StaticText, 0x106063ac0, {{24.0, 150.0}, {354.0, 20.0}}, label: 'Could not save asset'
+                                              StaticText, 0x106063c00, {{24.0, 150.0}, {354.0, 20.0}}, label: 'Could not save asset'
+                                            StaticText, 0x106063d40, {{24.0, 190.0}, {354.0, 20.0}}, label: 'Rejected draft: Native draft name'
+                                              StaticText, 0x106063e80, {{24.0, 190.0}, {354.0, 20.0}}, label: 'Rejected draft: Native draft name'
+                                            Other, 0x106063340, {{24.0, 226.0}, {22.0, 22.0}}
+                                            Other, 0x106062440, {{28.7, 230.7}, {13.0, 13.0}}
+                                              Other, 0x106062580, {{29.6, 231.1}, {11.0, 12.1}}
+                                                Other, 0x1060626c0, {{29.6, 231.1}, {11.0, 12.1}}
+                                                Other, 0x106062800, {{29.8, 233.8}, {10.7, 4.0}}
+                                                Other, 0x106062940, {{32.1, 232.3}, {6.2, 4.1}}
+                                                Other, 0x106062a80, {{34.5, 236.5}, {1.3, 6.7}}
+                                            StaticText, 0x106062bc0, {{52.0, 228.3}, {106.7, 17.0}}, label: 'Audit inventory'
+                                              StaticText, 0x106062d00, {{52.0, 228.3}, {106.7, 17.0}}, label: 'Audit inventory'
+                                            Other, 0x106062e40, {{168.7, 226.0}, {22.0, 22.0}}
+                                            Other, 0x106062f80, {{173.3, 230.7}, {13.0, 13.0}}
+                                              Other, 0x1060630c0, {{173.8, 231.6}, {12.1, 11.1}}
+                                                Other, 0x106063200, {{173.8, 233.8}, {12.1, 8.9}}
+                                                Other, 0x106062300, {{175.9, 231.6}, {7.8, 11.1}}
+                                                Other, 0x102a73200, {{178.1, 234.3}, {3.5, 1.3}}
+                                                Other, 0x1130812c0, {{178.1, 236.5}, {3.5, 1.3}}
+                                                Other, 0x113081400, {{178.1, 238.7}, {3.5, 4.0}}
+                                            StaticText, 0x113081540, {{196.7, 228.3}, {113.0, 17.0}}, label: 'Audit household'
+                                              StaticText, 0x113081680, {{196.7, 228.3}, {113.0, 17.0}}, label: 'Audit household'
+                                            StaticText, 0x1130817c0, {{24.0, 264.0}, {354.0, 17.0}}, label: 'Photos'
+                                              StaticText, 0x113081900, {{24.0, 264.0}, {354.0, 17.0}}, label: 'Photos'
+                                            Other, 0x113081a40, {{24.0, 293.0}, {354.0, 108.0}}
+                                              ScrollView, 0x113081b80, {{24.0, 293.0}, {354.0, 108.0}}
+                                                Other, 0x113081cc0, {{24.0, 293.0}, {118.0, 108.0}}
+                                                  Other, 0x113081e00, {{24.0, 293.0}, {118.0, 108.0}}
+                                                    Button, 0x113081f40, {{24.0, 293.0}, {108.0, 108.0}}, label: 'Add photos'
+                                                Other, 0x113082580, {{345.0, 293.0}, {30.0, 108.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                  Other, 0x1130826c0, {{372.0, 296.0}, {3.0, 102.0}}
+                                                Other, 0x113082800, {{345.0, 293.0}, {30.0, 108.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                  Other, 0x113082940, {{372.0, 296.0}, {3.0, 102.0}}
+                                            StaticText, 0x113082a80, {{24.0, 417.0}, {354.0, 17.0}}, label: 'Name'
+                                              StaticText, 0x113082bc0, {{24.0, 417.0}, {354.0, 17.0}}, label: 'Name'
+                                            Other, 0x113082d00, {{24.0, 440.0}, {354.0, 54.0}}
+                                              Other, 0x113082e40, {{24.0, 440.0}, {354.0, 54.0}}
+                                                Other, 0x113083340, {{24.0, 440.0}, {354.0, 54.0}}
+                                                  TextField, 0x113083480, {{24.0, 450.0}, {354.0, 34.0}}, label: 'Asset name', placeholderValue: 'Furnace filter, passport, camping bin', value: Native draft name
+                                            StaticText, 0x113083e80, {{24.0, 510.0}, {354.0, 20.3}}, label: 'Put in'
+                                              StaticText, 0x113083700, {{24.0, 510.0}, {354.0, 20.3}}, label: 'Put in'
+                                            Button, 0x113083840, {{24.0, 540.3}, {354.0, 56.3}}, label: 'No parent, Top level in this inventory'
+                                            Button, 0x113083d40, {{24.0, 596.7}, {354.0, 44.0}}, label: 'More details'
+                                        Other, 0x113083c00, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x113083ac0, {{396.0, 340.3}, {3.0, 468.7}}
+                                        Other, 0x113083980, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x1130835c0, {{65.0, 868.0}, {272.0, 3.0}}
+                                        Other, 0x113083200, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x113082f80, {{396.0, 340.3}, {3.0, 468.7}}
+                                        Other, 0x1130830c0, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x113082080, {{65.0, 868.0}, {272.0, 3.0}}
+                                  StaticText, 0x113082440, {{8.0, 854.0}, {100.0, 16.0}}, identifier: 'audit-query-readiness', label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":3},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","add-context"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","principal"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","customization","asset-type-choices","active"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","parent-candidates",""],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","add-context"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","customization","asset-type-choices","active"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","parent-candidates",""],"status":"pending","fetch":"idle","data":false,"observers":0}]}', value: {"online":true,"fo...
+                                    StaticText, 0x113082300, {{8.0, 854.0}, {100.0, 16.0}}, label: '{"online":true,"focused":true,"queries":[{"key":["mobile","audit","inventory-scope"],"status":"success","fetch":"idle","data":true,"observers":3},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","add-context"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","principal"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","customization","asset-type-choices","active"],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","inventory-pending","inventory","inventory-pending","parent-candidates",""],"status":"pending","fetch":"idle","data":false,"observers":0},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","add-context"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","customization","asset-type-choices","active"],"status":"success","fetch":"idle","data":true,"observers":1},{"key":["mobile","audit","tenant","audit-tenant","inventory","audit-inventory","parent-candidates",""],"status":"pending","fetch":"idle","data":false,"observers":0}]}'
+                        Other, 0x1130821c0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x113081180, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x113080000, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x113080140, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x106088dc0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x106061cc0, pid: 37853, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x106088780, pid: 37853, label: 'Stuff Stash'
+  }

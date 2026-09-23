@@ -116,7 +116,7 @@ The initial script's final lookup used iOS title casing; inspecting the captured
 Android uppercase label confirms return, without an unnecessary rerun. This does
 not establish successful image retry, zoom, backgrounding or assistive behavior.
 
-## Frozen next release batch — Move destination recovery
+## Current release batch — Move destination recovery
 
 PR165 fixes M254: confirmed creations are merged with current search results by
 ID, filtered by query and retained as the selected destination. The failing mounted
@@ -141,9 +141,12 @@ name. Android keeps its existing input. Review requested an actual Move regressi
 for canonical naming, unchanged field through typing/rejection and reset after
 success; it is added and its negative control fails without revision advancement.
 All1,925 remote tests (306 files), TypeScript and structural checks pass. Native
-implementation acceptance must verify exact
-one-attempt text plus creation/movement recovery, with Add as the shared-adapter
-regression. No further field-choice rerun is needed.
+acceptance35831661267 passes2/2 on both phone and iPad: exact one-attempt text,
+creation/movement recovery and the representative Add regression. All six CI jobs
+pass at827fd875. [Terminal evidence](evidence/native-move-add-358316-results.txt)
+and retained captures establish scoped acceptance. PR165 merged as00e8e032;
+a sleeping collector owns release observation. TestFlight availability is not yet
+verified. No further field-choice rerun is needed.
 
 ### Custom-field choices — scoped acceptance complete
 

@@ -3637,14 +3637,14 @@ choice, create failure/retry and move failure/retry. Final script lookup expecte
 an offscreen launcher button; [retained hierarchy](evidence/android-move-destination-returned.xml)
 confirms Native UI audit and absence of the Move form. No replay is needed to prove
 return. First picker lookup omitted its current-value suffix; corrected in place.
-iOS execution remains pending; this is not whole Move acceptance.
+iOS Move recovery now passes on phone and iPad in35831661267.
 
 M254 correction implemented: merge confirmed form-local creations with lookup
 matches, filter local titles by normalized query, and prefer server values by ID.
 The mounted regression reproduced the duplicate offer before the fix;90 focused
 tests, TypeScript and structural checks now pass remotely. Query changes, casing,
 server deduplication and rejected-move retention are covered. Critic found no
-source blocker. Corrected native acceptance remains pending.
+source blocker. Corrected native acceptance35831661267 passes on both devices. PR165 merged as00e8e032.
 
 
 ### M255 — Move destination query loses typed characters on iOS
@@ -3666,3 +3666,9 @@ and successful Move retry, plus representative Add native regression.
 
 M02/M11 native create-form choices now pass both devices in35828644735 (Android
 previously passed); field persistence and assistive behavior retain separate scope.
+
+M254/M255 acceptance: native35831661267 passes exact typing, creation failure/retry,
+selected new destination without duplicate creation, movement failure/retry and return
+on both phone and iPad. Representative Add passes on both. All six CI jobs pass.
+[Terminal evidence](evidence/native-move-add-358316-results.txt); release delivery is
+tracked in the sole current summary.
