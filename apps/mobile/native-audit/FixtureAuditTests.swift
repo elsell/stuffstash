@@ -457,7 +457,11 @@ final class FixtureAuditTests: XCTestCase {
   func testMoveDestinationCreationRetainsDraftAndRetries() {
     guard openFixtureURL("audit-move-destination") else { return }
     func reveal(_ element: XCUIElement) {
-      for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      for _ in 0..<8 where !element.isHittable {
+        let scroll = app.scrollViews.firstMatch
+        if element.frame.minY < app.navigationBars.firstMatch.frame.maxY { scroll.swipeDown() }
+        else { scroll.swipeUp() }
+      }
       XCTAssertTrue(element.isHittable)
     }
     let existing = app.descendants(matching: .any)["Choose destination Camping box"].firstMatch
@@ -480,6 +484,7 @@ final class FixtureAuditTests: XCTestCase {
     reveal(newDestination); newDestination.tap()
     let name = app.textFields["New destination name"].firstMatch
     XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
+    capture("move-destination-creation-entry")
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch

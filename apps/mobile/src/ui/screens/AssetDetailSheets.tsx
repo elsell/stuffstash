@@ -364,7 +364,7 @@ export function MoveAssetSheet({
   }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <Frame style={styles.editor}>
+    <Frame style={Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor}>
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
@@ -446,7 +446,7 @@ export function MoveThingsHereSheet({
   }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <Frame style={styles.editor}>
+    <Frame style={Platform.OS === 'ios' ? styles.nativeSelection : styles.editor}>
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!disabled} />
         : !disabled ? <NativeFilterSearch {...search} /> : null}
@@ -477,6 +477,7 @@ function useStyles() {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  nativeSelection: { flex: 1 },
   editor: {
     backgroundColor: colors.surface,
     flex: 1,

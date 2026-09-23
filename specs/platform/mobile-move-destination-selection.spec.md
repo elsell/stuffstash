@@ -118,3 +118,25 @@ Android subject summary uses the asset name above its secondary current-location
 text, aligned with the choice text. It is descriptive context, not a setting's
 label/value row; long names and paths must wrap independently without competing
 for horizontal space. Android runtime review of bca78c94 exposed this distinction.
+
+### Native list inset and status ownership
+
+Native run35901635030 exposed a second inset from the old editor wrapper,
+zero-gap icon/text composition, and a clipped RN status view inside a SwiftUI
+list cell. The selection body must occupy the full available sheet width; the
+system List alone owns grouped-list margins. Keep form padding only for creation
+and the Android editor. Specify a readable icon/text gap and a smaller title/path
+gap rather than relying on the bridge's zero-spacing defaults.
+
+Render existing React Native recovery content in its own width-constrained sibling
+above the native list, with one standard horizontal inset. Do not use an
+intrinsically measured RNHostView inside a SwiftUI cell: its unconstrained Yoga
+width can exceed the cell and clip messages. Preserve retry focus guards and
+command behavior. Capture phone and iPad recovery as well as idle selection before
+claiming this correction verified.
+
+The entire candidate row, including empty space between its text and checkmark,
+must select the candidate. The pinned SwiftUI plain button needs an explicit
+rectangular content shape on its label stack. The iPad center-row taps in the
+existing connected native scenarios are the regression check; do not move those
+taps onto the text to hide a deficient touch target.

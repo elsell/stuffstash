@@ -1,0 +1,18 @@
+Run: https://github.com/elsell/stuffstash/actions/runs/35901635030
+Source: bca78c94b63e564bd5039d15636981ee23734318
+Result: FAILED. iPhone 2/4; iPad 1/4.
+Visual review: native phone search visible, but duplicate outer/list insets,
+zero-gap icon/text, and clipped iPad bridged error status. Not accepted.
+iPad selection: all three center-row taps leave rows Not selected in teardown;
+SwiftUI plain label stack lacks a content shape across its Spacer. Keep center
+row taps as regression. Do not retarget them to visible text.
+Phone creation: test reaches creation, selects Container, then blindly scrolls
+up to reveal a name field already above the visible viewport. Directional reveal
+must scroll toward the field; add entry capture before scrolling.
+Phone Move Here: search/recovery completes; final fixture launcher hittability
+assertion fails after dismissal. This does not prove dismissal failed.
+Corrections: iOS selection wrapper without editor insets; explicit stack gaps;
+width-constrained RN status sibling; rectangular native row content shape;
+directional creation reveal. No acceptance claim until named native rerun and
+visual review. Six focused source tests, TypeScript, structural check pass;
+critic reviewed final scope and preserved row-center regression.

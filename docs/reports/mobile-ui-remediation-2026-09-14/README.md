@@ -19,6 +19,10 @@ a crowded subject/value row; b58ee297 stacks the subject above its location. The
 pass after that correction. Source checks
 cover selection/retry, title ownership and retired callbacks; native screenshots
 of entry, selection, creation and recovery are still required before acceptance.
+Run35901635030 failed (phone2/4, iPad1/4). It exposed duplicate list inset,
+crowded icon/text, clipped status content, and untappable blank space in iPad
+rows. [Current diagnosis and corrections](evidence/move-redesign-359016-results.txt).
+The revised layout and row hit area remain pending native review.
 
 ## Delivery and frozen batch
 
@@ -42,8 +46,8 @@ Unrelated findings do not block either release.
 | Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivered in0.24.32; no unchanged layout rerun. |
 | Map/detail hierarchy | M265/M266 scoped phone/iPad acceptance passed in35874901875; Android captures retained. | Preserve in the integrated batch; no claim of whole-detail acceptance. |
 | Add/Edit selection | Run35880132749 showed an empty Add name after Tags and Edit Tags behind its modal owner. M271 keeps the current native reappearance seed; M272 presents selection above its owner. | Corrected run35896778173 passes every selection case on phone and Add/Edit tags on iPad. Two iPad cases miss the five-second exact-value observation deadline, but teardown screenshots/hierarchies contain exact Tent/Camping. [Evidence](evidence/selection-lifecycle-358967-results.txt). Their later workflow steps remain unverified; inspect bounded accessibility settling, not provider/key delivery again. |
-| Move | M270 separates search from creation name and preserves Kind/Create during editing. Android connected creation/move retry passed. | Passed on phone/iPad in35895924050, including creation, rejection/retry and return; [evidence](evidence/move-selection-358959-results.txt). |
-| Move Here | M273 replaces the old partial sheet/custom preview with native header/search and checked rows. [Android workflow passed](evidence/move-here-m273-results.txt); retained screenshot inspected. | Passed all three grouped workflows on phone/iPad in35895924050; selected/recovered screenshots inspected. Prior role/search-mode harness failures are resolved. |
+| Move | M270 separates search from creation name and preserves Kind/Create during editing. Android connected creation/move retry passed. | Pre-redesign functionality passed35895924050; redesigned candidate failed35901635030. Verify corrected layout, row-center selection and creation/retry. |
+| Move Here | M273 replaces the old partial sheet/custom preview with native header/search and checked rows. [Android workflow passed](evidence/move-here-m273-results.txt); retained screenshot inspected. | Pre-redesign functionality passed35895924050; redesigned iPad row-center selection fails35901635030. Verify corrected row hit area and recovery layout. |
 
 The integrated source run passed1,968/1,970 tests. The two failures enforced removed
 inline Add structure and a hidden Move Here header. Corrected expectations and all
