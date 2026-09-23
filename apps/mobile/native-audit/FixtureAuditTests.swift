@@ -2271,7 +2271,7 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(app.buttons["Add an asset"].firstMatch.isHittable)
       XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
     }
-    let listItem = app.staticTexts["Camping tent"].firstMatch
+    let listItem = app.buttons["Open asset Camping tent"].firstMatch
     XCTAssertTrue(listItem.waitForExistence(timeout: 10))
     let listItemY = listItem.frame.minY
     verifyAnchor()

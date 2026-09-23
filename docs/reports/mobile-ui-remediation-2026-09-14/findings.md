@@ -3795,3 +3795,18 @@ structural checks and10 fixture preparation tests pass. Native phone/iPad header
 fit and the List→scroll→Map→List experience require capture review before release.
 The Browse fixture does not certify asset/edit/move/filter navigation; the broader
 connected workflow review remains open.
+
+
+M260 runtime follow-up: [35863725725](evidence/native-browse-358637-results.txt)
+shows the candidate header fitting on phone/iPad. Both tests stop before scroll
+because they target static title text instead of the card's accessible Open asset
+button. Correct that selector; switching/scroll stability remains unverified.
+
+### M263 — Browse tablet cards remain a sparse two-column phone layout
+
+P2 visual-coherence finding observed in native358637 iPad screenshot at normal
+text. Two large square images consume most of the viewport; only two rows fit
+below the header. Review width-adaptive grid columns with a readable minimum card
+width and preserved query, selection and scroll behavior during resize. This is
+separate from the M260 switcher correction and does not block scoped text fixes.
+No implementation or acceptance is claimed yet.
