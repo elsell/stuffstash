@@ -33,6 +33,7 @@ on:
           - asset-edit-journey
           - edit-recovery
           - edit-tags
+          - add-destination
           - tag-selection
           - normal-detail-recovery
           - edit-and-move-drafts
@@ -156,6 +157,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            add-destination)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
               )
               ;;
             tag-selection)

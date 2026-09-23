@@ -1,3 +1,6 @@
+import { SelectionRow } from '../components/SelectionRow';
+import { useAddDestinationPresentation } from '../navigation/AddDestinationTask';
+import { AddDestinationSelectionScreen } from './AddDestinationSelectionScreen';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetTagSelectionField } from '../components/AssetTagSelectionField';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
@@ -13,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useParentCandidates } from '../serverState/useParentCandidates';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import {
   AccessibilityInfo,
@@ -30,7 +33,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, ChevronDown, ChevronUp, ImagePlus, X } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, ImagePlus, X } from 'lucide-react-native';
 import { CreateAssetCommand } from '../../application/add/CreateAssetCommand';
 import {
   AddAssetDraft,
@@ -113,7 +116,7 @@ export function AddAssetScreen(props: AddAssetScreenProps) {
   const scopeId = useMobileServerStateScopeId();
   const addContext = useMobileInventoryServerQuery({ key: mobileQueryKeys.addContext, query: signal => props.addAssetContextQuery.execute({ signal }) });
   const principal = useQuery({ queryKey: mobileQueryKeys.principal(scopeId), queryFn: ({ signal }) => props.addDraftScopeQuery.getPrincipal({ signal }) });
-  return <ScopedAddAssetScreen key={JSON.stringify(addContext.resourceKey)} {...props} addContext={addContext} principalId={principal.data?.id} principalError={principal.error} onRetry={() => { if (addContext.isError) void addContext.refetch({ cancelRefetch: false }); if (principal.isError) void principal.refetch({ cancelRefetch: false }); }} />;
+  return <ScopedAddAssetScreen key={JSON.stringify([addContext.resourceKey, principal.data?.id])} {...props} addContext={addContext} principalId={principal.data?.id} principalError={principal.error} onRetry={() => { if (addContext.isError) void addContext.refetch({ cancelRefetch: false }); if (principal.isError) void principal.refetch({ cancelRefetch: false }); }} />;
 }
 
 function ScopedAddAssetScreen({
@@ -183,8 +186,18 @@ function ScopedAddAssetScreen({
     ? [createdParent, ...(candidates.data ?? []).filter((parent) => parent.id !== createdParent.id)]
     : candidates.data ?? [];
   const normalizedParentQuery = normalizeParentName(parentSearchQuery);
-  const canCreateParent = candidates.data !== undefined && normalizedParentQuery.length > 0
+  const canCreateParent = candidates.data !== undefined && !candidates.isError && normalizedParentQuery.length > 0
     && ![createdParent, ...parentMatches].filter(isParentSelection).some(parent => normalizeParentName(parent.title) === normalizedParentQuery);
+
+  const canChooseDestination = loadState.status === 'ready' && loadState.context.canAdd
+    && Boolean(addContext.data?.canAdd) && !isAccessFailure(addContext.error) && !principalError
+    && Boolean(principalId && principalId === draftContext?.principalId);
+  const destinationOwner = useRef<object | undefined>(undefined);
+  useLayoutEffect(() => {
+    destinationOwner.current = canChooseDestination ? {} : undefined;
+    if (!canChooseDestination) setIsParentMenuOpen(false);
+    return () => { destinationOwner.current = undefined; };
+  }, [canChooseDestination]);
 
   useEffect(() => {
     if (!addContext.data) {
@@ -379,10 +392,11 @@ function ScopedAddAssetScreen({
 
   async function createParent(): Promise<void> {
     const parentName = parentSearchQuery.trim();
-    if (loadState.status !== 'ready' || !canCreateParent) {
+    if (!destinationOwner.current || !isParentMenuOpen || !canCreateParent) {
       return;
     }
 
+    const owner = destinationOwner.current;
     if (!beginDraftOperation('parent')) return;
     setIsCreatingParent(true);
     setSaveState({ status: 'idle' });
@@ -392,6 +406,7 @@ function ScopedAddAssetScreen({
         title: parentName,
         description: ''
       });
+      if (destinationOwner.current !== owner) return;
       const createdParent = {
         id: result.id,
         title: result.title,
@@ -406,9 +421,10 @@ function ScopedAddAssetScreen({
       setParentSearchQuery(result.title);
       setLastParent(createdParent);
       setCreatedParent(createdParent);
-      setIsParentMenuOpen(true);
+      setIsParentMenuOpen(false);
 
     } catch (error) {
+      if (destinationOwner.current !== owner) return;
       const message = readableError(error, 'Could not create parent.');
       showDraftError('Could not create parent', message);
     } finally {
@@ -522,6 +538,30 @@ function ScopedAddAssetScreen({
     setLastParent(draft.lastParent);
   }
 
+  const selectedParent = resolveSelectedParent(parentMatches, parentAssetId, parentQuery, lastParent);
+  const destinationActions = useFocusedSheetActions({
+    primaryLabel: 'Choose destination', secondaryLabel: 'Cancel', disabled: draftBusy || !canChooseDestination,
+    onApply: () => editDraft(() => { setParentSearchQuery(''); setIsParentMenuOpen(true); }), onBack: () => {}
+  });
+  useAddDestinationPresentation(isParentMenuOpen && canChooseDestination ? {
+    blocked: draftBusy,
+    onClose: () => setIsParentMenuOpen(false),
+    content: <AddDestinationSelectionScreen query={parentSearchQuery} selected={selectedParent}
+      unresolvedSelection={parentAssetId || parentQuery.trim() ? parentQuery || 'Selected destination' : undefined}
+      matches={parentMatches} disabled={draftBusy} loading={!candidates.data && !candidates.isError}
+      failed={candidates.isError} creating={isCreatingParent} canCreate={canCreateParent}
+      error={saveState.status === 'error' ? saveState.message : undefined}
+      onQuery={value => { if (destinationOwner.current) editDraft(() => { setParentSearchQuery(value); setCreatedParent(undefined); }); }}
+      onRetry={() => { if (destinationOwner.current && !draftOperation.current) void candidates.refetch(); }}
+      onCreate={() => void createParent()}
+      onClose={() => { if (!draftOperation.current) setIsParentMenuOpen(false); }}
+      onSelect={parent => {
+        if (!destinationOwner.current || draftOperation.current) return;
+        setParentAssetId(parent?.id); setParentQuery(parent?.title ?? ''); setLastParent(parent);
+        setCreatedParent(undefined); setIsParentMenuOpen(false);
+      }} />
+  } : undefined);
+
   const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
   const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
     disabled: draftBusy || hasUnstagedTag || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
@@ -611,38 +651,12 @@ function ScopedAddAssetScreen({
                   value={title}
                 />
 
-                {isParentMenuOpen && !candidates.data ? <Text accessibilityLiveRegion="polite" style={styles.fieldLabel}>{candidates.isError ? 'Suggestions could not be loaded.' : 'Loading suggestions…'}</Text> : null}
-                {isParentMenuOpen && candidates.isError ? <NativeCommandButton label="Retry suggestions" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void candidates.refetch(); }} /> : null}
-                <ParentPicker disabled={draftBusy}
-                  canCreateParent={canCreateParent}
-                  isCreatingParent={isCreatingParent}
-                  createdParent={createdParent}
-                  matches={parentMatches}
-                  isOpen={isParentMenuOpen}
-                  lastParent={lastParent}
-                  onChangeQuery={(value) => {
-                    if (draftOperation.current) return;
-                    setParentSearchQuery(value);
-                    setCreatedParent(undefined);
-                    setIsParentMenuOpen(true);
-                  }}
-                  onSearchFocus={() => {
-                    setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 0);
-                  }}
-                  onCreateParent={createParent}
-                  onOpenChange={open => editDraft(() => { if (open) setParentSearchQuery(''); setIsParentMenuOpen(open); })}
-                  onSelectParent={(parent) => {
-                    if (draftOperation.current) return;
-                    setParentAssetId(parent?.id);
-                    setParentQuery(parent?.title ?? '');
-                    setLastParent(parent);
-                    setCreatedParent(undefined);
-                    setIsParentMenuOpen(false);
-                  }}
-                  parentAssetId={parentAssetId}
-                  selectedQuery={parentQuery}
-                  query={parentSearchQuery}
-                />
+                <View style={styles.parentPicker}>
+                  <SelectionRow label="Put in" accessibilityLabel="Choose destination" value={selectedParent?.title ?? (parentQuery.trim() || 'Top level')}
+                    disabled={destinationActions.disabled} onPress={destinationActions.onApply} />
+                  {selectedParent ? <Text style={styles.parentMeta}>{selectedParent.pathLabel || selectedParent.subtitle}</Text> : null}
+                  {selectedParent?.willPromoteToContainer ? <Text style={styles.parentPromotionText}>Stuff Stash will turn {selectedParent.title} into a container for this item.</Text> : null}
+                </View>
 
                 <Pressable
                   accessibilityRole="button"
@@ -905,140 +919,6 @@ function PhotoPreviewItem({
 }
 
 
-function ParentPicker({
-  canCreateParent,
-  disabled,
-  createdParent,
-  isCreatingParent,
-  isOpen,
-  lastParent,
-  matches,
-  onChangeQuery,
-  onCreateParent,
-  onOpenChange,
-  onSearchFocus,
-  onSelectParent,
-  parentAssetId,
-  selectedQuery,
-  query
-}: {
-  readonly canCreateParent: boolean;
-  readonly disabled: boolean;
-  readonly createdParent: ParentSelection | undefined;
-  readonly isCreatingParent: boolean;
-  readonly isOpen: boolean;
-  readonly lastParent: ParentSelection | undefined;
-  readonly matches: readonly ParentLookupResult[];
-  readonly onChangeQuery: (value: string) => void;
-  readonly onCreateParent: () => void;
-  readonly onOpenChange: (isOpen: boolean) => void;
-  readonly onSearchFocus: () => void;
-  readonly onSelectParent: (parent: ParentSelection | undefined) => void;
-  readonly parentAssetId: string | undefined;
-  readonly selectedQuery: string;
-  readonly query: string;
-}) {
-  const colors = useAppearanceAwarePalette();
-  const styles = createStyles(colors);
-  const selectedParent = resolveSelectedParent(matches, parentAssetId, selectedQuery, lastParent);
-  const createdParentId = createdParent?.id;
-
-  return (
-    <View style={styles.parentPicker}>
-      <Text style={styles.sectionTitle}>Put in</Text>
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled}
-        accessibilityState={{ expanded: isOpen, disabled }}
-        onPress={() => onOpenChange(!isOpen)}
-        style={styles.parentSelectButton}
-      >
-        <View style={styles.parentSelectText}>
-          <Text style={styles.parentTitle}>{selectedParent?.title ?? (selectedQuery.trim() || 'No parent')}</Text>
-          <Text style={styles.parentMeta}>
-            {selectedParent
-              ? `${selectedParent.selectionHint} · ${selectedParent.subtitle}`
-              : selectedQuery.trim() ? 'Not selected yet' : 'Top level in this inventory'}
-          </Text>
-        </View>
-        {isOpen ? (
-          <ChevronUp color={colors.textMuted} size={18} strokeWidth={2.2} />
-        ) : (
-          <ChevronDown color={colors.textMuted} size={18} strokeWidth={2.2} />
-        )}
-      </Pressable>
-      {isOpen ? (
-        <View style={styles.parentMenu}>
-          <AppTextInput
-            accessibilityLabel="Search parent"
-            editable={!disabled}
-            autoFocus
-            onChangeText={onChangeQuery}
-            onFocus={onSearchFocus}
-            placeholder="Search or type new place"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={query}
-          />
-          <ScrollView
-            automaticallyAdjustKeyboardInsets
-            contentContainerStyle={styles.parentMenuResultsContent}
-            keyboardDismissMode={appKeyboardDismissMode()}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            showsVerticalScrollIndicator
-            style={styles.parentMenuResults}
-          >
-            {canCreateParent ? (
-              <NativeCommandButton
-                label={isCreatingParent ? 'Creating place…' : `Create "${query.trim()}" as a place`}
-                disabled={disabled || isCreatingParent}
-                onPress={onCreateParent}
-              />
-            ) : null}
-            {createdParent ? (
-              <ParentOption disabled={disabled}
-                isSelected
-                label={createdParent.title}
-                leading="created"
-                meta="Place created"
-                onPress={() => onSelectParent(createdParent)}
-              />
-            ) : null}
-            <ParentOption disabled={disabled}
-              identityKind="inventory"
-              isSelected={parentAssetId === undefined && selectedQuery.trim().length === 0}
-              label="No parent"
-              meta="Top level in this inventory"
-              onPress={() => onSelectParent(undefined)}
-            />
-            {matches.filter((parent) => parent.id !== createdParentId).map((parent) => (
-              <ParentOption
-                disabled={disabled || parent.canSelectAsParent === false}
-                isSelected={parentAssetId === parent.id}
-                key={parent.id}
-                label={parent.title}
-                meta={parent.disabledReason ?? `${parent.selectionHint} · ${parent.subtitle}`}
-                onPress={() => {
-                  if (parent.canSelectAsParent === false) {
-                    return;
-                  }
-                  onSelectParent(parent);
-                }}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      ) : null}
-      {selectedParent?.willPromoteToContainer ? (
-        <Text style={styles.parentPromotionText}>
-          Stuff Stash will turn {selectedParent.title} into a container for this item.
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
 function AssetTagPicker({
   scope,
   disabled,
@@ -1177,53 +1057,6 @@ function KeyboardDismissBar({
         <Text style={styles.keyboardDoneText}>Done</Text>
       </Pressable>
     </View>
-  );
-}
-
-function ParentOption({
-  disabled = false,
-  identityKind,
-  isSelected,
-  label,
-  leading,
-  meta,
-  onPress
-}: {
-  readonly disabled?: boolean;
-  readonly identityKind?: 'inventory';
-  readonly isSelected: boolean;
-  readonly label: string;
-  readonly leading?: 'created';
-  readonly meta: string;
-  readonly onPress: () => void;
-}) {
-  const colors = useAppearanceAwarePalette();
-  const styles = createStyles(colors);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled, selected: isSelected }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        styles.parentOption,
-        isSelected ? styles.parentOptionSelected : null,
-        disabled ? styles.parentOptionDisabled : null
-      ]}
-    >
-      <View style={styles.parentCheck}>
-        {leading === 'created' ? (
-          <Check color={colors.success} size={16} strokeWidth={2.6} />
-        ) : (
-          <Text style={styles.parentCheckText}>{isSelected ? '✓' : ''}</Text>
-        )}
-      </View>
-      {identityKind ? <IdentityIcon kind={identityKind} size="sm" /> : null}
-      <View style={styles.parentText}>
-        <Text style={styles.parentTitle}>{label}</Text>
-        <Text style={styles.parentMeta}>{meta}</Text>
-      </View>
-    </Pressable>
   );
 }
 
@@ -1385,78 +1218,6 @@ function createStyles(colors: MobileColorPalette) {
   },
   parentPicker: {
     marginTop: spacing.xs
-  },
-  parentSelectButton: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    justifyContent: 'space-between',
-    minHeight: 56,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  parentSelectText: {
-    flex: 1,
-    minWidth: 0
-  },
-  parentMenu: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    marginTop: spacing.xs,
-    maxHeight: 340,
-    padding: spacing.xs
-  },
-  parentMenuResults: {
-    maxHeight: 260
-  },
-  parentMenuResultsContent: {
-    paddingBottom: spacing.xs
-  },
-  parentOption: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
-    minHeight: 48,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
-  },
-  parentOptionSelected: {
-    borderColor: colors.action
-  },
-  parentOptionDisabled: {
-    opacity: 0.58
-  },
-  parentCheck: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 20
-  },
-  parentCheckText: {
-    color: colors.action,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  parentText: {
-    flex: 1,
-    minWidth: 0
-  },
-  parentTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0
   },
   parentMeta: {
     color: colors.textMuted,

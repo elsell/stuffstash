@@ -1,7 +1,6 @@
 # Add Item Location Selection
 
-Status: M269 draft/search isolation and native chooser primitives implemented;
-Add integration and native acceptance pending.
+Status: M269 native Add destination integration implemented; native acceptance pending.
 Keep separate from frozen M260–M264 and tag-selection native acceptance.
 
 ## Problem and pattern
@@ -23,7 +22,8 @@ It is not a general requirement to navigate for small flat choices.
 
 ## Behavior
 
-- Add retains a compact Put in field showing the chosen destination and path.
+- Add retains a compact Put in disclosure row showing its chosen value, using
+  the existing SelectionRow; supporting path text stays below it.
   Opening it never changes the draft or creates an asset.
 - The selection visit owns its query. Search updates results without clearing or
   changing the parent held by Add. Preserve the selected destination when hidden
@@ -60,10 +60,10 @@ and retry, including keyboard and a result beyond the first viewport on phone,
 iPad and Android. Inspect the whole form-to-selection transition, not just row
 props. Shared Move lookup/creation behavior gets representative regression checks.
 
-The preparatory chooser passes five mounted tests plus TypeScript and mobile
-structural checks on the remote validation host. Coverage includes preserved
-selection through search, direct top-level choice, retired/locked callbacks and
-creation lookup/failure/retry. Code review found no blocker in these primitives.
-This does not verify the actual navigation route: integration must enforce focused
-opening and scope/permission invalidation, then exercise Back, unmount, pending
-creation protection and the connected native Add workflow above.
+The integrated workflow passes 80 focused Add and shared asset-action tests,
+TypeScript and mobile structural checks on the remote validation host, plus ten
+fixture-preparation tests. Coverage includes cancel/existing/top-level/create
+choices with rejected item save, permission loss, blurred opening, actual route
+removal and pending-operation protection. Code review found no source blocker.
+Native Android acceptance and iPhone/iPad acceptance remain separate requirements;
+these checks do not prove device navigation, keyboard or visual behavior.

@@ -1922,6 +1922,61 @@ final class FixtureAuditTests: XCTestCase {
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
+  func testAddDestinationSelectionPreservesDraftAndRecoversCreation() {
+    guard openFixtureURL("audit-add-destination") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
+      for _ in 0..<12 where !element.isHittable { scroll.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    func search(_ query: String) {
+      let button = app.buttons["Search"].firstMatch
+      XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
+      let field = app.searchFields.firstMatch
+      XCTAssertTrue(field.waitForExistence(timeout: 5)); waitForKeyboard(); field.typeText(query)
+      let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
+      XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+      app.buttons["Dismiss keyboard"].firstMatch.tap()
+    }
+    name.tap(); waitForKeyboard(); name.typeText("Tent")
+    let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
+    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let choose = app.buttons["Choose destination"].firstMatch
+    reveal(choose, in: form); choose.tap(); search("Shelf 14")
+    let shelf = app.descendants(matching: .any)["Choose destination Shelf 14"].firstMatch
+    XCTAssertTrue(shelf.waitForExistence(timeout: 5))
+    let cancel = app.buttons["Cancel location selection"].firstMatch
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(choose.value as? String, "Garage")
+    XCTAssertEqual(name.value as? String, "Tent")
+    reveal(choose, in: form); choose.tap(); search("Shelf 14")
+    XCTAssertTrue(shelf.waitForExistence(timeout: 5)); XCTAssertTrue(shelf.isHittable); shelf.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(choose.value as? String, "Shelf 14")
+    app.buttons["Save item"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Could not save asset"].firstMatch.waitForExistence(timeout: 5))
+    if app.alerts.buttons["OK"].firstMatch.exists { app.alerts.buttons["OK"].firstMatch.tap() }
+    reveal(choose, in: form); choose.tap(); search("Audit shed")
+    let destinations = app.scrollViews.containing(.any, identifier: "Choose inventory top level").firstMatch
+    let newPlace = app.buttons["New place"].firstMatch
+    let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: newPlace)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+    reveal(newPlace, in: destinations); newPlace.tap()
+    XCTAssertEqual(app.textFields["New place name"].firstMatch.value as? String, "Audit shed")
+    let create = app.buttons["Create place"].firstMatch
+    reveal(create, in: destinations); create.tap()
+    XCTAssertTrue(app.staticTexts["Place creation unavailable. Try again."].firstMatch.waitForExistence(timeout: 5))
+    capture("add-destination-creation-retry")
+    reveal(create, in: destinations); create.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(choose.value as? String, "Audit shed")
+    XCTAssertEqual(name.value as? String, "Tent")
+    capture("add-destination-created-and-returned")
+  }
+
   func testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure() {
     guard openFixtureURL("audit-add-header") else { return }
     let name = app.textFields["Asset name"].firstMatch

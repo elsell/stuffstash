@@ -1,3 +1,4 @@
+import { AddDestinationTaskProvider, useAddDestinationTask } from '../navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import { scrollCommandsForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
@@ -5,7 +6,7 @@ import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
 import { Platform, pressAlertButton, latestActionSheetCallback } from '../../test-support/react-native';
 import { afterEach, expect, it } from 'vitest';
-import { AddAssetScreen } from './AddAssetScreen';
+import { AddAssetScreen as AddScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
 import { AddDraftScopeQuery } from '../../application/add/AddDraftScopeQuery';
 import { InMemoryAddAssetDraftStore } from '../../application/add/AddAssetDraftStore';
@@ -16,6 +17,13 @@ import { createMobileQueryClient, mobileQueryKeys } from '../../adapters/serverS
 import { MobileServerStateProvider } from '../navigation/MobileServerStateProvider';
 import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { AppFeedbackProvider } from '../feedback/AppFeedback';
+
+function DestinationContent() { return useAddDestinationTask()?.content ?? null; }
+function AddAssetScreen(props: React.ComponentProps<typeof AddScreen>) { return <AddDestinationTaskProvider><AddScreen {...props} /><DestinationContent /></AddDestinationTaskProvider>; }
+async function searchParent(h: MobileRenderHarness, text: string) {
+  if (Platform.OS === 'android') await h.changeText(h.byLabel('Search parent'), text);
+  else await h.run(() => Object.assign({}, ...navigationOptions()).headerSearchBarOptions.onChangeText({ nativeEvent: { text } }));
+}
 
 it('removes the numbered draft photo while preserving the remaining selection and item draft', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
@@ -195,11 +203,12 @@ for (const operation of ['parent', 'photo', 'library-failure', 'camera-failure']
       await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
       await h.changeText(h.byLabel('Asset name'), 'Keep this draft');
       if (operation === 'parent') {
-        await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
-        await h.changeText(h.byLabel('Search parent'), 'New parent');
+        await h.press(h.byLabel('Choose destination'));
+        await searchParent(h, 'New parent');
         await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
         await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
-        const create = h.byLabel('Create "New parent" as a place');
+        await h.press(h.byLabel('New place'));
+        const create = h.byLabel('Create place');
         expect(create).toBeDefined();
         await h.run(() => { void create!.props.onPress(); });
         expect(h.byLabel('Creating place…')?.props.accessibilityState).toMatchObject({ disabled: true });
@@ -401,23 +410,24 @@ it('waits for known parent suggestions before offering quick creation in Add', a
       parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async input => { if (input === 'New parent' && ++attempts === 1) throw new Error('Lookup unavailable'); return []; } })}
       photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
-    await h.press(h.byText('No parent')?.parent?.parent ?? undefined);
-    await h.changeText(h.byLabel('Search parent'), 'New parent');
-    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    await h.press(h.byLabel('Choose destination'));
+    await searchParent(h, 'New parent');
+    expect(h.byLabel('New place')?.props.disabled).toBe(true);
     expect(h.byText('Not selected yet')).toBeUndefined();
-    expect(h.byText('No parent')).toBeDefined();
+    expect(h.byText('Current: Top level in this inventory')).toBeDefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byText('Suggestions could not be loaded.')).toBeDefined();
-    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeUndefined();
+    expect(h.byLabel('New place')?.props.disabled).toBe(true);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
     await h.press(h.byLabel('Retry suggestions'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
-    expect(h.allByType('Text').find(node => node.children.join('') === 'Create "New parent" as a place')).toBeDefined();
-    expect(h.byLabel('Search parent')?.props.value).toBe('New parent');
-    await h.changeText(h.byLabel('Search parent'), '');
+    expect(h.byLabel('New place')?.props.disabled).toBe(false);
+    await h.press(h.byLabel('New place'));
+    expect(h.byLabel('New place name')?.props.value).toBe('New parent');
+    await h.changeText(h.byLabel('New place name'), '');
     expect(h.byText('Not selected yet')).toBeUndefined();
-    expect(h.byText('Top level in this inventory')).toBeDefined();
+    expect(h.byText('Current: Top level in this inventory')).toBeDefined();
   } finally { await h.unmount(); }
 });
 

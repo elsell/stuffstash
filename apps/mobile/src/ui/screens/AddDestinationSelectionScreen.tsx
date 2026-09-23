@@ -15,6 +15,7 @@ import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 export type AddDestinationSelectionProps = {
   readonly query: string;
   readonly selected?: ParentSelection;
+  readonly unresolvedSelection?: string;
   readonly matches: readonly ParentSelection[];
   readonly disabled: boolean;
   readonly loading: boolean;
@@ -59,8 +60,8 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: palette.background }}>
       <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 20 }}>
         <SettingsSection footer="Choosing a destination changes this draft only.">
-          <Text style={styles.rowContext}>{`Current: ${props.selected?.pathLabel || props.selected?.title || 'Top level in this inventory'}`}</Text>
-          <SettingsChoiceRow label="Top level" accessibilityLabel="Choose inventory top level" selected={!props.selected} disabled={props.disabled} onPress={() => select()} />
+          <Text style={styles.rowContext}>{`Current: ${props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory'}`}</Text>
+          <SettingsChoiceRow label="Top level" accessibilityLabel="Choose inventory top level" selected={!props.selected && !props.unresolvedSelection} disabled={props.disabled} onPress={() => select()} />
         </SettingsSection>
         {props.error ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>{props.error}</Text></SettingsSection> : null}
         {props.loading ? <SettingsSection><SettingsLoadingRow label="Loading suggestions…" /></SettingsSection> : null}
