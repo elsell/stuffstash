@@ -1981,3 +1981,24 @@ isolated success callbacks are insufficient evidence for navigation return.
 Native empty-field checks must accept the platform's absent value as well as an
 empty string or placeholder, while separately requiring that the field exists
 and the staged tag is present. A missing element must never count as cleared.
+
+### Existing tags before tag creation in Edit (M264)
+
+Selecting inventory tags is the primary tag task. Keep tag creation secondary:
+show a native New tag command instead of an always-visible name, hexadecimal
+color field, palette, color picker and Add command. New tag reveals that bounded
+form in place; it does not open another sheet or navigation stack. This is the
+same explicit-creation principle used by Move, not a substitute for reviewing
+large tag selection sets separately.
+
+Cancel new tag clears only the unstaged name/color and closes creation; preserve
+selected existing tags, staged new tags and all other asset edits. Adding a tag
+keeps creation open with cleared input for another entry, while the staged tag
+remains visible. Preserve existing duplicate resolution, rejected-entry retention,
+busy/read-only guards and dirty-draft dismissal protection. Recovered nonempty
+creation drafts must remain visible. Verify normal-text selection without creation,
+creation/cancel, staging and Save natively before release.
+
+Creation commands must use the focused, committed current draft and enabled
+state. A callback retained before another edit or tag change must not restore
+obsolete fields; removal of the creation form retires its Cancel command.

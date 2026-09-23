@@ -308,6 +308,7 @@ it('keeps an existing tag selected when inline tag resolution updates the Edit d
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
     await h.press(h.byLabel('Add tag'));
     const save = h.byLabel('Save');
@@ -427,6 +428,7 @@ it('names staged Edit tag removal and preserves other tags and edited fields', a
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     await h.changeText(h.byLabel('Description'), 'Keep my edit');
+    await h.press(h.byLabel('New tag'));
     for (const name of ['Camping', 'Outdoors']) {
       await h.changeText(h.byLabel('New tag name'), name); await h.press(h.byLabel('Add tag'));
     }
@@ -454,6 +456,7 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byLabel('New tag'));
     const input = h.byLabel('New tag name');
     const longName = 'Camping equipment '.repeat(8);
     await h.changeText(h.byLabel('New tag name'), longName);
@@ -510,6 +513,7 @@ it('protects an unstaged Edit tag from cancellation and silent omission on Save'
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Camping');
     await h.press(h.byLabel('Cancel'));
     expect(latestAlert()?.title).toBe('Discard changes?');
@@ -654,4 +658,41 @@ it('does not retarget retained Edit commands after switching the scoped asset', 
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ assetId: 'second', title: 'Second draft' })]);
   } finally { await h.unmount(); client.clear(); resetNavigation(); }
+});
+
+
+it('keeps tag creation secondary and cancels only the unstaged tag', async () => {
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
+  const core = new AssetCoreQuery({ getAssetCore: async () => ({
+    tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1',
+    asset: { id: assetId('asset'), title: 'Tent', description: 'Packed', kind: 'item', lifecycleState: 'active',
+      locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
+        inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
+        updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(h.byLabel('New tag color')).toBeUndefined();
+    await h.press(h.byText('Camping')?.parent ?? undefined);
+    await h.changeText(h.byLabel('Description'), 'Ready');
+    await h.press(h.byLabel('New tag'));
+    const cancelCreation = h.byLabel('Cancel new tag')!.props.onPress;
+    await h.changeText(h.byLabel('Description'), 'Ready for the weekend');
+    await h.changeText(h.byLabel('New tag name'), 'Outdoors');
+    await h.press(h.byLabel('Add tag'));
+    await h.changeText(h.byLabel('New tag name'), 'Discard this');
+    await h.changeText(h.byLabel('New tag color'), '#123456');
+    await h.run(() => cancelCreation());
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
+    await h.press(h.byLabel('New tag'));
+    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    expect(h.byLabel('New tag color')?.props.value).toBe('');
+    await h.press(h.byLabel('Save'));
+    expect(saved).toEqual([expect.objectContaining({ description: 'Ready for the weekend', tagIds: ['camping'], newTags: [{ displayName: 'Outdoors' }] })]);
+  } finally { await h.unmount(); client.clear(); }
 });

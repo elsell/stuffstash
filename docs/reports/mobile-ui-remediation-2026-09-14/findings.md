@@ -3767,3 +3767,14 @@ actions move into the header. The updated native creation/retry scenario and
 connected Edit scenario are grouped with Edit recovery and Move Here regression
 checks for the candidate batch. Native fit remains unverified; this is not a
 completed connected Move-to-updated-detail walkthrough or whole-app acceptance.
+
+### M264 — Edit exposes creation controls during ordinary tag selection
+
+P2 task/pattern finding. The normal Edit surface displays the new-tag name,
+hexadecimal field, palette, custom-color entry and Add button alongside existing
+choices, making secondary tag creation dominate the form. Candidate uses the
+existing native New tag command to reveal creation in place. Cancel new tag
+discards only its unstaged entry; existing selections, staged tags and other edits
+remain. Large tag-set selection still needs its own interaction review.
+Focused tests cover opt-in creation, cancellation, staging and existing rejection/
+dirty-draft guards; native normal-text verification is still required.
