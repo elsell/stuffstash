@@ -1978,7 +1978,11 @@ final class FixtureAuditTests: XCTestCase {
     reveal(choose, in: form); choose.tap(); search("Shelf 14")
     let shelf = app.descendants(matching: .any)["Choose destination Shelf 14"].firstMatch
     XCTAssertTrue(shelf.waitForExistence(timeout: 5))
+    let closeSearch = app.navigationBars.buttons["Close"].firstMatch
+    if closeSearch.exists && closeSearch.isHittable { closeSearch.tap() }
     let cancel = app.buttons["Cancel location selection"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+    XCTAssertTrue(cancel.isHittable)
     cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
     XCTAssertEqual(choose.value as? String, "Garage")
     XCTAssertEqual(name.value as? String, "Tent")

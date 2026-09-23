@@ -50,3 +50,17 @@ for native search; literal space was absent in retained iPad evidence, retaining
 tag after disclosure may close creation; require the staged tag and enabled Save,
 and require any remaining entry to be empty. Do not require a cleared field to
 remain mounted. Native acceptance remains pending for M271/M272.
+
+## Native run 35890124446 decision
+
+Add Tags and Edit Tags passed on phone and iPad, including exact Add name retention
+and rejected-save recovery. Add destination passed on iPad; phone stopped when the
+harness requested task Cancel while native search was still active. Close the
+native search submode before requesting task Cancel, then retain the original
+parent destination and exact name assertions. Do not clear or alter selection to
+make this pass. This is the same observed search-mode distinction as Move Here.
+
+Unfinished tag disclosure remains unverified: phone failed to obtain a keyboard
+on the reopened field; iPad entered Camping and reached Add tag, then exceeded the ten-minute case allowance during repeated scroll/geometry observations. Preserve these gates
+and inspect retained evidence before choosing a correction; do not repeat input
+provider or key-delivery experiments. These results do not close the whole batch.

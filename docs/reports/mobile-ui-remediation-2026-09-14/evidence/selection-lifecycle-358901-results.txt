@@ -1,0 +1,13 @@
+Native run 35890124446, source ad633cd4
+Phone/iPad: Add tag Cancel/Done/rejected save and Edit tag workflow passed.
+iPad: Add destination selection/create rejection/retry/return passed.
+Phone destination: task Cancel queried while native search remained active.
+Correction: close native search, then require task Cancel visible and hittable;
+retain exact Garage/Tent parent assertions. Critic reviewed; remote fixture prep
+10 tests passed. Corrected native result not yet established.
+Phone unfinished tag: reopened New tag field did not produce a keyboard.
+Retained screenshot shows Tent preserved and the empty New tag field visible.
+iPad unfinished tag: entered Camping, dismissed keyboard, and reached Add tag;
+exceeded 10-minute case allowance during repeated scrolling/geometry observation.
+No evidence supports a new keyboard provider experiment or production timing fix.
+These unfinished-tag gates remain open. Move grouped run35895924050 is separate.
