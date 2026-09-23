@@ -27,9 +27,11 @@ it('cancels without applying and carries draft into expiration review', async ()
   try {
     await h.render(<BrowseFiltersScreen initial={initial} query="medicine" tags={[]} onApply={() => { throw new Error('Must not apply'); }} onCancel={() => cancelled++} onExpiration={(mode, draft) => expiration.push({ mode, draft })} />);
     await h.press(h.byLabel('Choose availability')); await h.press(h.byLabel('Available'));
-    await h.press(h.byLabel('Choose expiration review')); await h.press(h.byLabel('Review expired items'));
+    await h.press(h.byLabel('Choose expiration review'));
+    expect(h.byLabel('Choose availability')).toBeDefined();
+    expect(h.byLabel('Back to filters')).toBeUndefined();
+    await h.press(h.byText('Review expired items')?.parent ?? undefined);
     expect(expiration).toEqual([{ mode: 'expired', draft: { ...initial, checkoutState: 'available' } }]);
-    await h.press(h.byLabel('Back to filters'));
     await h.press(h.byLabel('Cancel filters'));
     expect(cancelled).toBe(1);
   } finally { await h.unmount(); }
@@ -39,7 +41,7 @@ it('cancels pending verification when Back returns to the filter overview', asyn
   const h = new MobileRenderHarness(); let cancelled = 0;
   try {
     await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[]} busy onApply={() => {}} onCancel={() => {}} onCancelPending={() => cancelled++} onExpiration={() => {}} />);
-    await h.press(h.byLabel('Choose expiration review'));
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('Back to filters'));
     expect(cancelled).toBe(1);
     expect(h.byLabel('Choose availability')).toBeDefined();
@@ -100,5 +102,43 @@ it('keeps verification recovery inside scrollable content with the draft and act
     expect(parent?.type).toBe('ScrollView');
     await h.press(h.byLabel('Show results'));
     expect(applied[0].tagIds).toEqual(['tag']);
+  } finally { await h.unmount(); }
+});
+
+for (const [label, mode] of [['Review expiring soon items', 'soon'], ['Review expired items', 'expired'], ['Review all expiration dates', 'all']] as const) {
+  it(`opens ${mode} directly with current draft and rejects retained commands while busy`, async () => {
+    const h = new MobileRenderHarness(); const calls: unknown[] = [];
+    const render = (busy = false) => h.render(<BrowseFiltersScreen initial={initial} query="medicine" tags={[]} busy={busy}
+      onApply={() => { throw new Error('Review is not filter apply'); }} onCancel={() => {}}
+      onExpiration={(mode, draft) => calls.push({ mode, draft })} />);
+    try {
+      await render();
+      expect(h.allText()).toContain('Expiration reviews active items, regardless of the Browse status filter.');
+      await h.press(h.byLabel('Choose expiration review'));
+      expect(h.byLabel('Choose tags')).toBeDefined();
+      const retained = h.byText(label)?.parent?.props.onPress;
+      expect(retained).toBeTypeOf('function');
+      await render(true); await h.run(retained);
+      expect(calls).toEqual([]);
+      await render();
+      await h.press(h.byLabel('Choose availability')); await h.press(h.byLabel('Checked out'));
+      await h.press(h.byLabel('Choose expiration review')); await h.press(h.byText(label)?.parent ?? undefined);
+      expect(calls).toEqual([{ mode, draft: { ...initial, checkoutState: 'checked_out' } }]);
+    } finally { await h.unmount(); }
+  });
+}
+
+it('dismisses the review menu without navigation or changing draft choices', async () => {
+  const h = new MobileRenderHarness(); const applied: BrowseFilterDraft[] = [];
+  try {
+    await h.render(<BrowseFiltersScreen initial={initial} query="" tags={[]}
+      onApply={draft => applied.push(draft)} onCancel={() => { throw new Error('Menu dismissal is not filter cancellation'); }}
+      onExpiration={() => { throw new Error('Menu dismissal is not navigation'); }} />);
+    await h.press(h.byLabel('Choose availability')); await h.press(h.byLabel('Checked out'));
+    await h.press(h.byLabel('Choose expiration review'));
+    await h.press(h.byLabel('Choose expiration review'));
+    expect(h.byText('Review expired items')).toBeUndefined();
+    await h.press(h.byLabel('Show results'));
+    expect(applied).toEqual([{ ...initial, checkoutState: 'checked_out' }]);
   } finally { await h.unmount(); }
 });

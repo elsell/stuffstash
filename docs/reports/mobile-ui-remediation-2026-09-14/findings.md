@@ -3951,3 +3951,12 @@ Source review found explicit scope validation and shared query composition;
 of pagination or scroll loss. Filters are exposed only in List; forcing List on
 filter apply is not a confirmed Map-return defect. Current native connected
 filter/detail/Back continuity remains unverified. Separate from frozen M265–M273.
+
+
+M274 candidate is isolated on codex/mobile-filter-review. The existing iOS/Android
+NativeActionMenu replaces only the intermediate page; tags and scope verification
+stay unchanged. Four red source tests established the changed behavior;25 focused
+checks, TypeScript and structural checks pass remotely. Native overview-menu
+placement is prepared in the filters suite but not yet executed. Connected real
+route Back/scroll remains an explicit separate acceptance requirement. Do not add
+this candidate to the frozen M265–M273 release.

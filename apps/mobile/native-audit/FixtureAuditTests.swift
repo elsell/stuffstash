@@ -964,6 +964,27 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse availability: available"].waitForExistence(timeout: 5))
     capture("browse-applied")
   }
+  func testBrowseExpirationReviewUsesOverviewMenu() {
+    app.buttons["Audit Browse filters"].tap()
+    let menu = app.buttons["Choose expiration review"].firstMatch
+    XCTAssertTrue(menu.waitForExistence(timeout: 5))
+    let scroll = app.scrollViews.containing(.button, identifier: "Choose expiration review").firstMatch
+    for _ in 0..<6 {
+      if menu.isHittable { break }
+      scroll.swipeUp()
+    }
+    XCTAssertTrue(menu.isHittable)
+    menu.tap()
+    let expired = app.buttons["Review expired items"].firstMatch
+    XCTAssertTrue(expired.waitForExistence(timeout: 5))
+    XCTAssertTrue(expired.isHittable)
+    XCTAssertTrue(app.navigationBars["Filters"].exists)
+    XCTAssertFalse(app.navigationBars["Expiration"].exists)
+    capture("browse-expiration-review-menu")
+    expired.tap()
+    XCTAssertTrue(app.staticTexts["Expiration mode: expired"].waitForExistence(timeout: 5))
+  }
+
   func testExpirationSheetBodySurvivesExpansion() {
     app.buttons["Audit medium expiration filters"].tap()
     XCTAssertTrue(app.buttons["Choose tags"].waitForExistence(timeout: 5))
