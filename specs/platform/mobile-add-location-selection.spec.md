@@ -1,6 +1,7 @@
 # Add Item Location Selection
 
-Status: M269 draft/search isolation implemented; native chooser and acceptance pending.
+Status: M269 draft/search isolation and native chooser primitives implemented;
+Add integration and native acceptance pending.
 Keep separate from frozen M260–M264 and tag-selection native acceptance.
 
 ## Problem and pattern
@@ -58,3 +59,11 @@ Then normal-text native Add → choose destination → back/choose → rejected 
 and retry, including keyboard and a result beyond the first viewport on phone,
 iPad and Android. Inspect the whole form-to-selection transition, not just row
 props. Shared Move lookup/creation behavior gets representative regression checks.
+
+The preparatory chooser passes five mounted tests plus TypeScript and mobile
+structural checks on the remote validation host. Coverage includes preserved
+selection through search, direct top-level choice, retired/locked callbacks and
+creation lookup/failure/retry. Code review found no blocker in these primitives.
+This does not verify the actual navigation route: integration must enforce focused
+opening and scope/permission invalidation, then exercise Back, unmount, pending
+creation protection and the connected native Add workflow above.
