@@ -3750,3 +3750,20 @@ and mobile structural checks pass remotely; critic found no source blocker.
 Native phone/iPad keyboard, scrolling, command fit and complete successful-save
 return remain pending. Tag management and Move pattern review remain separate
 open work; this correction does not certify the entire asset experience.
+
+
+### M262 — Move gives automatic creation controls priority over destination choices
+
+P1 task-pattern finding in MoveAssetSheet: a nonempty unmatched query inserts
+kind, help, placement and Create above the destination rows. Make creation an
+explicit secondary action below the choices. The candidate uses a full-height
+native picker with persistent Cancel/Move, concise current/selected context and
+an explicit New destination disclosure. Canceling creation retains query/selection;
+a new query closes the disclosure. Existing create/retry/select/move rules remain.
+
+98 focused checks, TypeScript and mobile structural checks pass remotely; critic
+found no source blocker. Edit/Move keep visible pending-command feedback after
+actions move into the header. The updated native creation/retry scenario and
+connected Edit scenario are grouped with Edit recovery and Move Here regression
+checks for the candidate batch. Native fit remains unverified; this is not a
+completed connected Move-to-updated-detail walkthrough or whole-app acceptance.

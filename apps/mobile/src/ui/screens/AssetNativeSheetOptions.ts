@@ -57,7 +57,7 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
     move: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
     } : {
-      ...baseOptions, sheetAllowedDetents: [0.62, 0.92]
+      ...baseOptions, headerShown: true, title: 'Move asset', sheetAllowedDetents: [1]
     } satisfies AssetNativeSheetOptions,
     moveHere: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
