@@ -213,8 +213,14 @@ run35848704289 atb52d5538 fails both devices before typing: initial Tag14 remain
 below the correct viewport after18 short drags; the sheet remains at its starting
 detent. [Evidence](evidence/native-edit-tags-358487-results.txt). One follow-up uses
 ordinary native swipes with unchanged visibility assertions; repeated failure
-requires a product layout decision, not further gesture tuning. The separate
-four-scenario normal-detail run35850832085 is now running at86f2c51e.
+requires a product layout decision, not further gesture tuning. The grouped normal-detail run35850832085 at86f2c51e completed: detail reachability
+and independent regions pass both devices; Edit passes phone. iPad Edit passes
+exact typing and both metadata retries, then fails full name visibility despite
+native swipes; retain this with the sheet reachability investigation. Move Here
+loses `Tent` to `T` on both devices (M257). [Results](evidence/native-normal-detail-358508-results.txt).
+M257 now reuses DraftTextField;69 focused tests, TypeScript, structural checks and
+critic pass. Native correction acceptance is pending. Tag swipe follow-up35853305160
+remains independent; no repeated provider/key-delivery diagnostics.
 
 ### Custom-field choices — scoped acceptance complete
 

@@ -1,0 +1,8 @@
+Run https://github.com/elsell/stuffstash/actions/runs/35850832085
+Source86f2c51eae24903e13491e50398847035a8187fe
+Phone107154746097 and iPad107154745550:
+- testAssetRegionsRecoverAtNormalTextSize: both passed (recovery to independent empty states).
+- testDetailCommandsRemainReachableAtNormalTextSize: both passed (geometry/reachability, not command execution).
+- testEditMetadataRecoveryRetainsNormalTextDraft: phone passed; iPad passed exact full-name typing and both metadata retries, then failed name visibility after native swipes. Name extends below the short form viewport; no save/recovery acceptance inferred for iPad.
+- testMoveHereSuggestionsRecoverAtNormalTextSize: both fail Tent -> T at line572 before suggestion retry. M257 native RED.
+M257 decision: use existing DraftTextField in Move Here; no provider/pacing diagnostics. Owner-keyed form remount preserves resource reset.69 focused tests, TypeScript/structural checks and critic pass after implementation; corrected native acceptance pending.

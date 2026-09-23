@@ -1848,3 +1848,14 @@ owner, selected tag below its viewport, and no progression after18 short drags.
 One follow-up uses full native swipes with unchanged tag visibility, draft and
 selection assertions; if reachability still fails, investigate the sheet layout
 as a product defect rather than continue gesture tuning.
+
+### Move Here native query retention (M257)
+
+Move Here reuses the shared native DraftTextField on iOS so ordinary query, loading,
+selection and error renders preserve the native editing buffer. Android keeps its
+existing controlled input. Asset/tenant/inventory ownership already keys the route
+form and resets the query when that owner changes; do not add resets to lookup or
+selection updates. Preserve read-only and busy guards, suggestion retry, selection
+and cancellation behavior. Native35850832085 is the failing regression: one Tent
+entry leaves T on both phone and iPad before any suggestion action. Acceptance
+requires the exact full query and successful retry with that query retained.

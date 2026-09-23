@@ -3697,3 +3697,14 @@ the validation accessibility hint. Android keeps its controlled input instance.
 The reset and hint regressions failed first;114 focused tests pass after correction.
 Critic found no blocker. Native acceptance retains exact typing and recovery;
 Settings full-name/save recovery will run alongside it as a separate scoped check.
+
+### M257 — Move Here loses query characters on iOS
+
+P1 runtime-confirmed on both phone and iPad in35850832085 at86f2c51e: one
+`Tent` entry leaves `T` before any suggestion action. [Evidence](evidence/native-normal-detail-358508-results.txt).
+Decision: reuse shared native DraftTextField for this query; preserve the input
+instance through lookups, selection and failures. Existing keyed route ownership
+resets it for another asset/inventory/tenant. Android keeps its controlled fallback.
+The existing exact native assertion is the failing regression.69 focused route,
+eligibility, return and shared-native checks plus TypeScript/structural checks pass;
+critic found no blocker. Corrected native exact input/retry acceptance remains open.

@@ -437,9 +437,8 @@ export function MoveThingsHereSheet({
         {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.sheetSubtitle}>Choose an existing asset to put inside {draft?.target.title ?? 'this place'}.</Text>
         <Text style={styles.inputLabel}>Find item, box, or place</Text>
-        <AppTextInput
+        <DraftTextField
           accessibilityLabel="Find item, box, or place"
-          autoCapitalize="sentences"
           editable={!disabled}
           onChangeText={onChangeQuery}
           placeholder="Search your inventory"
