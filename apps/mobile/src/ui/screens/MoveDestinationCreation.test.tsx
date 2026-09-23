@@ -1,4 +1,9 @@
-import { expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { Platform } from 'react-native';
+import { NativeSearchDriver } from '../../test-support/NativeSearchDriver';
+let search: NativeSearchDriver;
+beforeEach(() => { search = new NativeSearchDriver(); });
+afterEach(() => search.dispose());
 import { AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetId } from '../../domain/assets/AssetSummary';
@@ -21,7 +26,7 @@ it('edits a creation name without collapsing Kind or changing search, validates 
         moveAssetCommand={{ execute: async () => { throw new Error('Choosing does not move'); } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.byLabel('Put in'), 'Garden'); await settle(h, 350); await settle(h);
+    await h.run(() => search.change('Garden')); await settle(h, 350); await settle(h);
     await h.press(h.byLabel('New destination'));
     await settle(h, 350); await settle(h);
     const retainedCreate = h.byLabel('Create location "Garden"')!.props.onPress;
@@ -33,7 +38,8 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     await h.run(() => retainedCreate());
     expect(submitted).toEqual([]);
     expect(h.byLabel('Choose destination kind')).toBeDefined();
-    expect(h.byLabel('Put in')?.props.value).toBe('Garden');
+    expect(search.text).toBe('Garden');
+    expect(h.byLabel('Put in')).toBeUndefined();
     expect(h.byLabel('Create location "Garden shed"')?.props.disabled).toBe(true);
     await settle(h, 350); await settle(h);
     expect(lookups).toContain('Garden shed');
@@ -52,8 +58,10 @@ it('edits a creation name without collapsing Kind or changing search, validates 
   } finally { await h.unmount(); client.clear(); }
 });
 
-it('selects one destination with shared choice semantics and moves only after confirmation', async () => {
+it.each(['ios', 'android'] as const)('selects one destination on %s and moves only after confirmation', async platform => {
+  const originalPlatform = Platform.OS; Platform.OS = platform;
   const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const changeSearch = (text: string) => platform === 'ios' ? h.run(() => search.change(text)) : h.changeText(h.byLabel('Search places, boxes, shelves'), text);
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   const submitted: unknown[] = [];
@@ -74,15 +82,20 @@ it('selects one destination with shared choice semantics and moves only after co
     expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(false);
     expect(submitted).toEqual([]);
-    await h.changeText(h.byLabel('Put in'), 'unmatched'); await settle(h, 350);
+    await changeSearch('unmatched'); await settle(h, 350);
+    expect(h.byText('Selected: House / Garage')).toBeDefined();
     await h.press(h.byLabel('Choose inventory root'));
     await h.run(choose);
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(true);
     expect(submitted).toEqual([]);
-    await h.changeText(h.byLabel('Put in'), ''); await settle(h, 350); await settle(h);
+    await changeSearch(''); await settle(h, 350); await settle(h);
     await h.press(h.byLabel('Choose destination Garage'));
+    if (platform === 'ios') await h.run(() => search.options!.onClose());
+    else await changeSearch('');
+    await settle(h);
+    expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
     await h.press(h.byLabel('Move'));
     expect(submitted).toEqual([{ assetId: 'asset', parentAssetId: 'garage' }]);
     expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
-  } finally { await h.unmount(); client.clear(); }
+  } finally { await h.unmount(); client.clear(); Platform.OS = originalPlatform; }
 });

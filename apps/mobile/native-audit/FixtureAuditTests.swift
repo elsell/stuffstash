@@ -456,47 +456,61 @@ final class FixtureAuditTests: XCTestCase {
 
   func testMoveDestinationCreationRetainsDraftAndRetries() {
     guard openFixtureURL("audit-move-destination") else { return }
-    let query = app.textFields["Put in"].firstMatch
-    XCTAssertTrue(query.waitForExistence(timeout: 10))
     func reveal(_ element: XCUIElement) {
       for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
       XCTAssertTrue(element.isHittable)
     }
-    let existing = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Camping box")).firstMatch
-    XCTAssertTrue(existing.waitForExistence(timeout: 5))
-    reveal(existing); existing.tap()
-    XCTAssertTrue(existing.label.contains("Selected"))
-    XCTAssertTrue(query.isHittable)
-    query.tap()
-    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-    query.typeText("Audit crate")
-    XCTAssertEqual(query.value as? String, "Audit crate")
+    let existing = app.buttons["Choose destination Camping box"].firstMatch
+    XCTAssertTrue(existing.waitForExistence(timeout: 10))
+    existing.tap()
+    XCTAssertTrue(app.buttons["Move"].firstMatch.isEnabled)
+    XCTAssertFalse(app.textFields["Put in"].exists)
+    let search = app.buttons["Search"].firstMatch
+    XCTAssertTrue(search.isHittable); search.tap()
+    let query = app.searchFields.firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 5)); waitForKeyboard(keyLabel: "space")
+    query.typeText("Audit")
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+      predicate: NSPredicate(format: "value == %@", "Audit"), object: query
+    )], timeout: 5), .completed)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
-    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch.exists)
     let newDestination = app.buttons["New destination"].firstMatch
     XCTAssertTrue(newDestination.waitForExistence(timeout: 5))
     reveal(newDestination); newDestination.tap()
+    let name = app.textFields["New destination name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
-    XCTAssertTrue(kind.waitForExistence(timeout: 5))
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
-    XCTAssertTrue(app.navigationBars["Move asset"].exists)
-    XCTAssertTrue(query.exists)
+    func finishName() {
+      reveal(name); name.tap(); waitForKeyboard(keyLabel: "space"); name.typeText(" crate")
+      XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == %@", "Audit crate"), object: name
+      )], timeout: 5), .completed)
+      XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+      XCTAssertTrue(kind.exists, "Editing the name must retain Kind")
+    }
+    finishName()
+    let cancelCreation = app.buttons["Cancel new destination"].firstMatch
+    reveal(cancelCreation); cancelCreation.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    reveal(newDestination); newDestination.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
+    finishName()
     let create = app.buttons["Create container \"Audit crate\""].firstMatch
     reveal(create); create.tap()
     let failure = app.alerts["Could not create destination"]
     XCTAssertTrue(failure.waitForExistence(timeout: 5))
     XCTAssertTrue(failure.staticTexts["Audit destination temporarily unavailable"].exists)
     failure.buttons["OK"].tap()
-    XCTAssertEqual(query.value as? String, "Audit crate")
+    XCTAssertEqual(name.value as? String, "Audit crate")
     reveal(create); create.tap()
     XCTAssertTrue(create.waitForNonExistence(timeout: 5))
-    let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
-    XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
-    let selected = app.staticTexts["Audit crate"].firstMatch
+    let selected = app.staticTexts["Selected: Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Choose destination Audit crate"].exists)
     let move = app.buttons["Move"].firstMatch
     reveal(move); move.tap()
     let rejected = app.alerts["Could not move asset"]
@@ -506,7 +520,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(selected.exists)
     capture("move-destination-rejected-selection-retained")
     reveal(move); move.tap()
-    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
   }
 
@@ -1358,10 +1371,10 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(commit.isHittable); XCTAssertTrue(cancel.isHittable)
     XCTAssertFalse(commit.isEnabled)
     capture("asset-move-journey-picker")
-    let garage = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Garage")).firstMatch
+    let garage = app.buttons["Choose destination Garage"].firstMatch
     XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
     garage.tap()
-    XCTAssertTrue(garage.isSelected); XCTAssertTrue(commit.isEnabled)
+    XCTAssertEqual(garage.value as? String, "radio button, checked"); XCTAssertTrue(commit.isEnabled)
     capture("asset-move-journey-selected")
     commit.tap()
     XCTAssertTrue(header.waitForNonExistence(timeout: 10))
@@ -1372,7 +1385,7 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isSelected)
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertEqual(garage.value as? String, "radio button, checked")
     XCTAssertFalse(commit.isEnabled)
     capture("asset-move-journey-reopened")
     XCTAssertTrue(cancel.isHittable); cancel.tap()

@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import { SettingsChoiceRow } from './SettingsList';
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
+import { NativeFilterSearch } from '../components/NativeFilterSearch.android';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
@@ -55,7 +57,6 @@ import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from
 
 export type MoveDraft = {
   readonly creationName?: string;
-  readonly queryRevision?: number;
   readonly query: string;
   readonly matches: readonly ParentLookupResult[];
   readonly selectedParent: ParentLookupResult | null;
@@ -348,26 +349,20 @@ export function MoveAssetSheet({
     disabled: !canSaveMove, onPress: actions.onApply }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
     ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
+  const searchEnabled = !disabled && !creationExpanded;
+  const search = { query: draft?.query ?? '', placeholder: 'Search places, boxes, shelves',
+    onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
     <Frame style={styles.editor}>
       <Stack.Screen options={headerOptions} />
+      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} enabled={searchEnabled} />
+        : searchEnabled ? <NativeFilterSearch {...search} /> : null}
       <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
         <Text style={styles.moveSubject}>{asset.title}</Text>
         {placement ? <Text style={styles.sheetSubtitle}>{`Current location: ${placement.currentLocationLabel || 'Inventory root'}`}</Text> : null}
         {placement?.hasChanged ? <Text style={styles.sheetSubtitle}>{`Selected: ${placement.proposedLocationLabel}`}</Text> : null}
-        <Text style={styles.inputLabel}>Put in</Text>
-        <DraftTextField
-          key={Platform.OS === 'ios' ? draft?.queryRevision ?? 0 : 'move-query'}
-          accessibilityLabel="Put in"
-          editable={!disabled}
-          onChangeText={query => { if (!disabled) { onCancelCreation(); onChangeQuery(query); } }}
-          placeholder="Search places, boxes, shelves"
-          placeholderTextColor={palette.textMuted}
-          style={styles.input}
-          value={draft?.query ?? ''}
-        />
         {creationExpanded ? null : candidateStatus}
         {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
         <MoveDestinationChoice label="Inventory root" context="Top level · No containing location"
