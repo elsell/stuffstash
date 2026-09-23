@@ -183,7 +183,6 @@ describe('addHereParams', () => {
 describe('asset native sheet route options', () => {
   it('uses stack-native form sheets with grabbers and detents for asset actions', () => {
     for (const options of [
-      assetEditNativeSheetOptions,
       assetMoveNativeSheetOptions,
       assetMoveHereNativeSheetOptions
     ]) {

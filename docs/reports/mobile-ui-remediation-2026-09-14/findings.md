@@ -3733,3 +3733,20 @@ through invalid input and ordinary renders; reset the iOS field only when accept
 tag resolution clears inputs. Android keeps its controlled instance. Mounted
 accepted-reset regression failed first;70 focused tests pass after correction.
 Native exact text, accepted clearing, staging and selection acceptance remains open.
+
+
+### M261 — Edit uses a partial-height action-sheet layout for a multi-field task
+
+P1 pattern/structure finding, confirmed in source and historical user captures.
+Edit starts at56% height, duplicates its title, gives noneditable Kind a large
+instruction panel and spends bottom space on two task actions. Choose a full-height
+native editor with native Cancel/Save instead; preserve the asset context and all
+existing dirty-draft, permission and operation guards. This is a task-specific
+project decision, not an assertion that Apple prohibits editing sheets.
+
+Candidate: one full-height detent, persistent native header actions, concise
+kind/type context and a single iOS keyboard inset owner.97 focused tests, TypeScript
+and mobile structural checks pass remotely; critic found no source blocker.
+Native phone/iPad keyboard, scrolling, command fit and complete successful-save
+return remain pending. Tag management and Move pattern review remain separate
+open work; this correction does not certify the entire asset experience.

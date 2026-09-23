@@ -3,7 +3,7 @@ import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
 import { Platform } from 'react-native';
-import { attemptNavigation, dispatchedActions, resetNavigation, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
+import { attemptNavigation, dispatchedActions, resetNavigation, navigationOptions, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
@@ -178,7 +178,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     expect(submitted).toHaveLength(1);
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
     expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
     await h.changeText(input, 'Wrong destination');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
@@ -190,7 +190,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     const completion = consumeAssetActionCompletion('asset');
     if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
     else expect(completion).toBeUndefined();
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
     if (outcome === 'failure' && !returned) {
       const action = { type: 'GO_BACK', source: mode };
@@ -231,7 +231,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
     expect(h.byText('Created destination')).toBeUndefined();
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
 
@@ -251,12 +251,12 @@ it.each(['failure', 'success', 'late completion', 'return success', 'return fail
     await settle(h); await settle(h);
     const input = h.allByType('TextInput')[0];
     await h.changeText(input, 'Submitted name');
-    const save = h.byText('Save')!.parent!.props.onPress;
+    const save = h.byLabel('Save')!.props.onPress;
     await h.run(() => { save(); save(); });
     expect(writes).toBe(1);
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
-    expect(h.byText('Cancel')?.parent?.props.disabled).toBe(true);
+    expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
     await h.changeText(input, 'Unsubmitted name');
     expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
     if (outcome === 'return success' || outcome === 'return failure') {
@@ -268,12 +268,12 @@ it.each(['failure', 'success', 'late completion', 'return success', 'return fail
       expect(dispatchedActions()).toEqual([]);
       expect(latestAlert()).toBe(alertBefore);
       expect(consumeAssetActionCompletion('asset')).toBeUndefined();
-      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
     } else if (outcome === 'failure') {
       await h.run(() => rejectSave(new Error('Failed'))); await settle(h);
       expect(h.allByType('TextInput')[0]?.props.value).toBe('Submitted name');
-      expect(h.byText('Cancel')?.parent?.props.disabled).toBe(false);
+      expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
     } else if (outcome === 'success') {
       await h.run(() => resolveSave({ id: 'asset', title: 'Submitted name', message: 'Saved' }));
       expect(dispatchedActions()).toEqual([{ type: 'back' }]);
@@ -298,7 +298,7 @@ it('keeps an existing tag selected when inline tag resolution updates the Edit d
     await settle(h); await settle(h);
     await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
     await h.press(h.byLabel('Add tag'));
-    const save = h.byText('Save')?.parent;
+    const save = h.byLabel('Save');
     expect(save?.props.disabled).toBe(false);
     await h.press(save ?? undefined);
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['camping'], newTags: [], description: 'Keep this description' })]);
@@ -323,7 +323,10 @@ it('retries failed Edit metadata independently while retaining the dirty name', 
     const formScroll = harness.allByType('ScrollView').find(node =>
       node.queryAll(child => child.props.accessibilityLabel === 'Asset name').length > 0);
     expect(formScroll).toBeDefined();
-    expect(formScroll?.queryAll(child => child.children.join('') === 'Edit asset').length).toBeGreaterThan(0);
+    expect(formScroll?.queryAll(child => child.children.join('') === 'Edit asset')).toHaveLength(0);
+    expect(navigationOptions()).toEqual(expect.arrayContaining([expect.objectContaining({
+      headerLeft: expect.any(Function), headerRight: expect.any(Function), headerBackVisible: false
+    })]));
     for (const label of ['Retry asset types', 'Retry tags']) {
       expect(formScroll?.queryAll(child => child.props.accessibilityLabel === label).length).toBeGreaterThan(0);
     }
