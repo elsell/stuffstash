@@ -968,6 +968,7 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Audit Browse filters"].tap()
     let menu = app.buttons["Choose expiration review"].firstMatch
     XCTAssertTrue(menu.waitForExistence(timeout: 5))
+    capture("browse-filter-overview")
     let scroll = app.scrollViews.containing(.button, identifier: "Choose expiration review").firstMatch
     for _ in 0..<6 {
       if menu.isHittable { break }
