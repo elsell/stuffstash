@@ -34,11 +34,18 @@ instrumentation is planned.
 M51 candidate: direct UIKit adapter implemented, with current-owner event handling
 and native enabled state. Remote validation passes1,921 tests across305 files,
 TypeScript and structural checks; regressions were observed failing before fixes.
-Code critic has no remaining source blocker. CI35804903978 passes the compiled
-Swift RGB checks and all non-lock jobs. Its generated lock adds only the local
-color-well module and is now committed. Focused phone/iPad acceptance and the
-updated lock gate remain pending in native35805411868 and CI35805414085 at
-4e906d30. Sleeping collectors own result collection. This candidate is not released.
+Code critic has no remaining source blocker. CI35805414085 passes all six jobs,
+including compiled Swift RGB checks and the committed native dependency lock.
+Focused phone/iPad acceptance remains pending in native35805411868 at4e906d30.
+The sleeping collector owns result collection. This candidate is not released.
+
+Frozen release scope: direct system color-well presentation in tag editing,
+current-owner selection events, disabled-state handling and optional color reset.
+Acceptance covers ordinary first taps and touch area, RGB channel retention,
+dismissal, lock/unlock, Add draft retention and the Settings save workflow on
+phone/iPad. Text-entry comparisons and other audit findings are outside this batch.
+The TestFlight note will be: “Improved custom tag color selection with the iOS
+system color picker, while preserving your draft and preset colors.”
 
 For each concrete correction, run one focused native acceptance pass. If it fails,
 use the specific failed gate to choose the next correction; do not reopen broad
