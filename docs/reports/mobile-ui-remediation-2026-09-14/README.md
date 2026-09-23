@@ -50,6 +50,10 @@ Phone/iPad verification of the final composition remains open. This is outside
 the frozen selection batch and is not a prerequisite for its release. Source
 checks and Android review do not establish iOS visual acceptance.
 
+Sharing review also corrected inline feedback alignment and grouped Share/Copy
+completion actions (M278). Android controlled recovery and visual review pass;
+phone/iPad sharing verification is combined with the filter workflow run.
+
 ## Separate unresolved decisions
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)

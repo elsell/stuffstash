@@ -4016,3 +4016,17 @@ one-step access where warranted; do not hide everything in More merely to reduce
 button count. Compare populated/empty-photo items, checked-out items and places
 on phone/iPad before choosing the final composition. Spec update must precede
 implementation. This follow-up does not gate frozen M265–M273.
+
+### M278 — Sharing feedback and completion actions break the reading flow
+
+Normal-text Android review confirms centered inline error paragraphs under leading
+headings and widely separated Copy/Share commands. The candidate aligns inline
+feedback with its form/row and groups primary Share invitation beside secondary
+Copy link. [Feedback](evidence/android-sharing-inline-feedback.png) and
+[link actions](evidence/android-sharing-link-actions.png) were reviewed after a
+native rebuild. The controlled journey passes access selection, missing-link draft
+retention, cancellation failure/retry, creation retry and copy failure/retry.
+22 sharing tests, TypeScript, structural checks and source review pass. These
+fixtures do not send invitations, exercise a system share destination or establish
+server authorization. Phone/iPad visual verification remains required; this
+belongs to the follow-up batch, not frozen M265–M273.

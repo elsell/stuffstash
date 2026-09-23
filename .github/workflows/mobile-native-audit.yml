@@ -19,6 +19,7 @@ on:
           - home-header
           - browse-journey
           - browse-filter-journey
+          - filter-sharing-workflows
           - filters
           - release-corrections
           - menu-ownership
@@ -307,7 +308,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
               )
               ;;
-            browse-filter-journey)
+            browse-filter-journey|filter-sharing-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
@@ -317,6 +318,9 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSheetBodySurvivesExpansion'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
               )
+              if [ "$AUDIT_TEST_CASE" = filter-sharing-workflows ]; then
+                audit_test_args+=('-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable')
+              fi
               ;;
             browse-journey)
               test "$AUDIT_SUITE" = fixtures || exit 1

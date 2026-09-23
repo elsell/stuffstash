@@ -2158,3 +2158,28 @@ This removes an unnecessary native scroll-container boundary. The exact UIKit
 transition cause remains unproven; the existing connected filter→Expiration→detail
 and back scenario is the acceptance check and must retain immediate result
 hittability. Do not add fixed screen heights or measured-header padding here.
+
+### Sharing inline feedback alignment
+
+Normal-text Android creation and cancellation recovery captures show centered
+error paragraphs beneath leading-aligned titles inside the same form or invitation
+row. Inline feedback belongs to that local reading flow. Use leading-aligned text
+with the existing error-message typography and color for creation, link and
+cancellation feedback; reserve centered empty-state styling for standalone states.
+Preserve error wording, live announcements, retained input, permissions and retry
+commands. This is a visual-coherence correction, not a change to invitation safety
+or one-time link behavior. Review successful link and failure/retry captures as a
+whole, retaining the existing behavioral tests.
+
+The successful link capture also shows Copy link and Share invitation as widely
+separated centered text commands. Group them in a bounded wrapping row adjacent
+to the one-time link. Share invitation is the primary completion command; Copy
+link is its alternative. This project hierarchy choice preserves both direct
+paths and all pending/error ownership. It does not invoke external sharing
+without the user's command. Long labels wrap and controls retain native targets.
+
+Verify the filter follow-up and sharing refinement in one native build per device:
+`filter-sharing-workflows` composes the existing six connected filter cases with
+the existing sharing recovery case. Keep `browse-filter-journey` unchanged for
+focused diagnosis. Reuse the independent detail composition run; no sharing code
+changes its consumers. Do not require an all-fixture run for this scoped batch.

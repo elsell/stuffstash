@@ -234,7 +234,7 @@ export function InventorySharingScreen({
         <View style={styles.form}>
           {creationError ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
             <Text style={styles.successTitle}>{creationError.title}</Text>
-            <Text style={settingsStyles.errorMessage}>{creationError.message}</Text>
+            <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{creationError.message}</Text>
           </View> : null}
           <Text style={styles.label}>Email</Text>
           <InvitationEmailInput
@@ -267,12 +267,16 @@ export function InventorySharingScreen({
               {visibleCreated.inviteUrl}
             </Text>
             <View style={styles.linkActions}>
-              <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : 'Copy link'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
-              <NativeCommandButton label={linkWorking === 'share' ? 'Sharing…' : 'Share invitation'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
+              <View style={styles.linkCommand}>
+                <NativeCommandButton prominence="primary" label={linkWorking === 'share' ? 'Sharing…' : 'Share invitation'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
+              </View>
+              <View style={styles.linkCommand}>
+                <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : 'Copy link'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
+              </View>
             </View>
             {linkFeedback ? <View accessibilityLiveRegion="polite" accessibilityRole={linkFeedback.message ? 'alert' : undefined}>
               <Text style={styles.successTitle}>{linkFeedback.title}</Text>
-              {linkFeedback.message ? <Text style={settingsStyles.errorMessage}>{linkFeedback.message}</Text> : null}
+              {linkFeedback.message ? <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{linkFeedback.message}</Text> : null}
             </View> : null}
           </View>
         </SettingsSection>
@@ -293,7 +297,7 @@ export function InventorySharingScreen({
                 {cancellingKeys.has(cancellationKey(invitation.id)) ? <Text accessibilityLiveRegion="polite" style={styles.invitationMetadata}>Cancelling…</Text> : null}
                 {cancellationErrors[invitation.id] ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
                   <Text style={styles.successTitle}>Could not cancel invitation</Text>
-                  <Text style={settingsStyles.errorMessage}>{cancellationErrors[invitation.id]}</Text>
+                  <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
                 {invitation.status === 'pending' && !invitation.isExpired ? (
                   <NativeCommandButton label="Cancel invitation" role="destructive"
@@ -340,6 +344,7 @@ function readableError(error: unknown): string {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+    inlineFeedback: { textAlign: 'auto' },
     form: { gap: spacing.sm, padding: spacing.md },
     label: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
     input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.sm, borderWidth: StyleSheet.hairlineWidth, color: colors.text, fontSize: 17, minHeight: 48, paddingHorizontal: spacing.md },
@@ -347,7 +352,8 @@ function createStyles(colors: MobileColorPalette) {
     successTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
     linkContext: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
     linkText: { backgroundColor: colors.background, borderRadius: radius.sm, color: colors.text, fontSize: 13, lineHeight: 19, padding: spacing.sm },
-    linkActions: { gap: spacing.xs },
+    linkActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, maxWidth: 560 },
+    linkCommand: { width: 160, maxWidth: '100%' },
     empty: { minHeight: 68, justifyContent: 'center', paddingHorizontal: spacing.md },
     emptyText: { color: colors.textMuted, fontSize: 16 },
     separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: spacing.md },
