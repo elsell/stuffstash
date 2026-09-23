@@ -1285,6 +1285,64 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5))
   }
 
+  func testEditMetadataRecoveryRetainsNormalTextDraft() {
+    let open = app.buttons["Audit Edit recovery"].firstMatch
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let types = app.buttons["Retry asset types"].firstMatch
+    let tags = app.buttons["Retry tags"].firstMatch
+    XCTAssertTrue(types.waitForExistence(timeout: 10))
+    XCTAssertTrue(tags.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Audit tent")
+    name.tap(); waitForKeyboard()
+    name.typeText(" camping kit")
+    let expectedName = "Audit tent camping kit"
+    XCTAssertEqual(name.value as? String, expectedName)
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    func reveal(_ element: XCUIElement) {
+      func visible() -> Bool {
+        let bounds = scroll.frame.intersection(app.frame)
+        return element.isHittable && element.frame.minY >= bounds.minY && element.frame.maxY <= bounds.maxY
+      }
+      for _ in 0..<12 where !visible() {
+        if element.frame.minY < scroll.frame.minY { scroll.swipeDown() } else { scroll.swipeUp() }
+      }
+      XCTAssertTrue(visible())
+    }
+    reveal(tags); tags.tap()
+    XCTAssertTrue(tags.waitForNonExistence(timeout: 5))
+    reveal(types); types.tap()
+    XCTAssertTrue(types.waitForNonExistence(timeout: 5))
+    reveal(name)
+    XCTAssertEqual(name.value as? String, expectedName)
+    capture("edit-normal-metadata-recovered-draft")
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isEnabled); XCTAssertTrue(save.isHittable); save.tap()
+    let failure = app.alerts["Could not save changes"]
+    XCTAssertTrue(failure.waitForExistence(timeout: 5)); failure.buttons["OK"].tap()
+    XCTAssertEqual(name.value as? String, expectedName)
+    XCTAssertTrue(save.isEnabled)
+    let cancel = app.buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.isHittable); cancel.tap()
+    let keep = app.alerts.buttons["Keep editing"]
+    XCTAssertTrue(keep.waitForExistence(timeout: 5)); keep.tap()
+    XCTAssertEqual(name.value as? String, expectedName)
+    capture("edit-normal-rejected-save-retained")
+    cancel.tap()
+    let discard = app.alerts.buttons["Discard"]
+    XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable)
+    XCTAssertEqual(app.state, .runningForeground)
+  }
+
   func testEditMetadataRecoveryAtAccessibilityTextSize() {
     app.terminate()
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

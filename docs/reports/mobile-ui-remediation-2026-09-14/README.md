@@ -189,6 +189,15 @@ the iPad success-notice observation. It does not justify migrating the Settings 
 input or certify persisted collection readback. Latest verified release remains
 0.24.29 (120.1).
 
+### Next normal-text acceptance — Asset Edit
+
+The routed Edit form now has a prepared default-text scenario for complete name
+entry, metadata retries, rejected Save, Keep editing and explicit Discard return.
+Its existing enlarged-text scenarios remain separate. Android passes this sequence
+on the existing APK690c2fdf; [reviewed evidence](evidence/android-edit-normal-results.txt).
+The iOS test and focused workflow selection are prepared locally for the next audit
+batch; they do not change or block the frozen enum release candidate.
+
 ### Custom-field choices — scoped acceptance complete
 
 M02/M11's real create-form composition passes all intermediate selections on both

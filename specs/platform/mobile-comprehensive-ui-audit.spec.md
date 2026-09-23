@@ -1802,3 +1802,13 @@ and editor; rejection belongs in the repository fake, not in alternate UI logic.
 Keep existing successful-save, dirty-back and lifecycle cases intact. A real typing
 failure selects native draft ownership for this shared single-line editor family;
 no repeat provider-removal or typing-speed experiment is needed.
+
+### Normal-text Asset Edit recovery acceptance
+
+Verify the routed production Edit form at the default text size before pursuing
+its enlarged-text failures. Enter one complete multiword name while asset-type
+and tag metadata reads have failed, dismiss editing normally, retry both metadata
+loads and retain the exact draft. A rejected Save must retain the name and permit
+Keep editing; deliberate Discard returns to the originating screen. Use the existing
+controlled metadata/command fixture. This verifies recovery, not successful backend
+persistence. Keep enlarged-text scenarios and their unresolved findings separate.

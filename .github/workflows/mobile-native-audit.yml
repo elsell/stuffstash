@@ -26,6 +26,7 @@ on:
           - destination-and-field-choices
           - field-choices
           - enum-editing
+          - edit-recovery
           - settings-editing
           - enum-and-settings
   pull_request:
@@ -129,6 +130,12 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
+              )
+              ;;
+            edit-recovery)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
               )
               ;;
             enum-editing)
