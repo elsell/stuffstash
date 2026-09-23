@@ -472,7 +472,7 @@ final class FixtureAuditTests: XCTestCase {
     let query = app.searchFields.firstMatch
     XCTAssertTrue(query.waitForExistence(timeout: 5)); XCTAssertTrue(query.isHittable)
     capture("move-selection-idle")
-    query.tap(); waitForKeyboard(keyLabel: "t")
+    query.tap(); waitForKeyboard(keyLabel: "t", timeout: 30)
     query.typeText("Audit")
     waitForExactEnteredText("Audit", in: query)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
@@ -691,7 +691,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard(keyLabel: String? = nil) {
+  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 5) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = NSPredicate { _, _ in
@@ -705,14 +705,14 @@ final class FixtureAuditTests: XCTestCase {
         return key.isHittable
       }
     }
-    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil)
+    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil, timeout: timeout)
     if result != .completed {
       recordHitTestState("keyboard-readiness", elements: [keyboard] + (keyLabel.map { [keyboard.keys[$0]] } ?? []))
     }
     XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
   }
 
-  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?) -> XCTWaiter.Result {
+  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?, timeout: TimeInterval = 5) -> XCTWaiter.Result {
     let started = ProcessInfo.processInfo.systemUptime
     var observations: [String] = []
     let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
@@ -722,7 +722,7 @@ final class FixtureAuditTests: XCTestCase {
       observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
       return matched
     }, object: nil)
-    let result = XCTWaiter.wait(for: [expectation], timeout: 5)
+    let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
     observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
     let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
     attachment.name = name

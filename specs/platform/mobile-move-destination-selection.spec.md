@@ -156,3 +156,9 @@ this demonstrated status-placement defect.
 Reuse the existing bounded 30-second exact-text observation, with elapsed timing,
 for the demonstrated Move creation-search observation timeout. Retain exact Audit
 and all subsequent creation/retry assertions; do not retype or change providers.
+
+The same run's iPad creation case stops before typing: its sole readiness check
+took4.23 seconds and returned false before the five-second deadline. Recorded
+post-failure state confirms finite, hittable keyboard and t key. Permit the same
+bounded30-second readiness observation for this case, retaining all geometry,
+hittability and exact-text checks. Leave other readiness deadlines unchanged.
