@@ -3,7 +3,7 @@ import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActio
 import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
-import { tagChoicePresentation } from '../components/TagChoicePresentation';
+import { AssetTagSelectionField } from '../components/AssetTagSelectionField';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
@@ -18,7 +18,6 @@ import {
   Text,
   View
 } from 'react-native';
-import { Check } from 'lucide-react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
@@ -139,6 +138,7 @@ export function EditAssetSheet({
         />
         {assetTypes || !assetTypesFailed ? <AssetExpirationEditor asset={asset} draft={draft} types={assetTypes} disabled={disabled} onChange={onChange} /> : null}
         <EditTagPicker
+          scope={JSON.stringify([asset.tenantId, asset.inventoryId, asset.id])}
           disabled={disabled}
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
@@ -152,6 +152,7 @@ export function EditAssetSheet({
 }
 
 function EditTagPicker({
+  scope,
   disabled,
   newTags,
   onChange,
@@ -159,6 +160,7 @@ function EditTagPicker({
   tags,
   entry
 }: {
+  readonly scope: string;
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
   readonly entry: NonNullable<EditDraft['inlineTag']>;
@@ -171,8 +173,6 @@ function EditTagPicker({
   const { name: newTagName, color: newTagColor } = entry;
   function setNewTagName(name: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, name }); }
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
-  const selected = new Set(selectedTagIds);
-  const [showAllTags, setShowAllTags] = useState(false);
   const [creatingTag, setCreatingTag] = useState(false);
   const creationVisible = creatingTag || hasUnstagedEditTag(entry);
   const [tagEntryRevision, setTagEntryRevision] = useState(0);
@@ -186,18 +186,6 @@ function EditTagPicker({
       onChange(selectedTagIds, newTags, { name: '', color: '' });
     }
   });
-  const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.label, expanded: showAllTags });
-
-  function toggleTag(tagId: string): void {
-    if (disabled) {
-      return;
-    }
-    if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId), newTags, entry);
-      return;
-    }
-    onChange([...selectedTagIds, tagId], newTags, entry);
-  }
 
   function addNewTag(): void {
     const displayName = newTagName.trim();
@@ -224,6 +212,8 @@ function EditTagPicker({
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.inputLabel}>Tags</Text>
+      <AssetTagSelectionField scope={scope} disabled={disabled} tags={tags} selectedIds={selectedTagIds}
+        onChange={ids => onChange(ids, newTags, entry)} />
       <View style={styles.tagOptions}>
         {newTags.map((tag, index) => {
           const colorStyle = assetTagChipStylePresentation(tag);
@@ -248,36 +238,7 @@ function EditTagPicker({
             </Pressable>
           );
         })}
-        {choices.visibleTags.map((tag) => {
-          const isSelected = selected.has(tag.id);
-          const colorStyle = assetTagChipStylePresentation(tag);
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled, selected: isSelected }}
-              disabled={disabled}
-              key={tag.id}
-              onPress={() => toggleTag(tag.id)}
-              style={[
-                styles.tagOption,
-                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
-                isSelected ? styles.tagOptionSelected : null,
-                disabled ? styles.disabledAction : null
-              ]}
-            >
-              <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
-                {tag.label}
-              </Text>
-              {isSelected ? <Check color={palette.action} size={14} strokeWidth={2.4} /> : null}
-            </Pressable>
-          );
-        })}
       </View>
-      {choices.canDisclose ? <NativeCommandButton
-        label={showAllTags ? 'Show fewer tags' : 'Show all tags'}
-        disabled={disabled}
-        onPress={() => { if (!disabled) setShowAllTags(current => !current); }}
-      /> : null}
       {creationVisible ? <>
         <View style={styles.newTagRow}>
           <View style={styles.newTagNameInput}>

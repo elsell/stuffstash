@@ -1,3 +1,4 @@
+import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import { scrollCommandsForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
@@ -310,32 +311,22 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
   const context = { tenantId: 'tenant', tenantName: 'Home', inventoryId: 'inventory', inventoryName: 'Home', canAdd: true, assetTags: Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, displayName: `Tag ${index + 1}` })).reverse() };
   const draftContext = { tenantId: 'tenant', inventoryId: 'inventory', principalId: 'principal' };
   const saved: unknown[] = [];
-  const render = (h: MobileRenderHarness) => h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
+  const render = (h: MobileRenderHarness) => h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => context}><AppFeedbackProvider><AddAssetScreen
     inventoryAssetTypesQuery={{ execute: async () => [] }} addAssetContextQuery={new AddAssetContextQuery({ getAddAssetContext: async () => context })}
     addDraftScopeQuery={new AddDraftScopeQuery({ getCurrentPrincipal: async () => ({ id: 'principal' }) })} addAssetDraftStore={store}
     createAssetCommand={{ execute: async input => { saved.push(input); return { id: 'created', title: input.title, message: 'Saved' }; } }}
-    parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
+    parentLookupQuery={new ParentLookupQuery({ listParentCandidates: async () => [] })} photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider></AssetTagSelectionTaskProvider>);
   let h = new MobileRenderHarness();
   const settle = () => h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
   try {
     await render(h); await settle();
     await h.changeText(h.byLabel('Asset name'), 'Tent');
     await h.press(h.byText('More details')?.parent ?? undefined);
-    expect(h.byText('Tag 1')).toBeDefined();
-    expect(h.byText('Tag 13')).toBeUndefined();
-    await h.press(h.byLabel('Show all tags'));
-    await h.press(h.byText('Tag 14')?.parent ?? undefined);
-    await h.press(h.byLabel('Show fewer tags'));
-    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
-    await h.changeText(h.byLabel('Search tags'), '  tag 13  ');
-    expect(h.byText('Tag 13')).toBeDefined();
     expect(h.byText('Tag 1')).toBeUndefined();
-    expect(h.byText('Tag 14')).toBeDefined();
-    await h.changeText(h.byLabel('Search tags'), 'unknown tag');
-    expect(h.byText('No matching tags')).toBeDefined();
-    expect(h.byText('Tag 14')).toBeDefined();
-    await h.changeText(h.byLabel('Search tags'), '');
-    expect(h.byText('No matching tags')).toBeUndefined();
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Select tag Tag 14'));
+    await h.press(h.byLabel('Done selecting tags'));
+    expect(store.load(draftContext)?.selectedTagIds).toEqual(['tag-14']);
     expect(h.byLabel('New tag name')).toBeUndefined();
     await h.press(h.byLabel('New tag'));
     const cancelNewTag = h.byLabel('Cancel new tag')?.props.onPress;
@@ -344,7 +335,7 @@ it('retains unfinished Add tag input through disclosure and scoped draft restora
     await h.run(() => cancelNewTag?.());
     expect(h.byLabel('New tag name')).toBeUndefined();
     expect(store.load(draftContext)?.title).toBe('Camping tent');
-    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
+    expect(store.load(draftContext)?.selectedTagIds).toEqual(['tag-14']);
     await h.press(h.byLabel('New tag'));
     const overlongName = 'Camping'.repeat(20);
     await h.changeText(h.byLabel('New tag name'), overlongName);
@@ -428,3 +419,5 @@ it('waits for known parent suggestions before offering quick creation in Add', a
     expect(h.byText('Top level in this inventory')).toBeDefined();
   } finally { await h.unmount(); }
 });
+
+function SelectionContent() { const task = useAssetTagSelectionTask(); return <>{task?.content}</>; }

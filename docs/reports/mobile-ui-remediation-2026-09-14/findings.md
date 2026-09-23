@@ -3869,5 +3869,8 @@ list. Selecting a tag outside the first set makes Edit users scan the full grid.
 The decision in specs/platform/mobile-tag-selection.spec.md replaces the asset
 forms' unselected grids with a compact Tags summary and a shared searchable
 multi-selection view, preserving draft ownership and cancellation. This is a
-specified follow-up, not implemented or runtime verified. Keep outside the frozen
-release and the separately verified creation-disclosure fixes M264/M267.
+source-integrated follow-up: Add/Edit now use the shared selection visit with
+Done/Cancel, scope teardown and native-back cancellation. Remote mounted checks
+cover retained drafts, hidden selections, missing tag assignments and stale
+callbacks. Native runtime acceptance is pending. Keep outside the frozen release
+and the separately verified creation-disclosure fixes M264/M267.

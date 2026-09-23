@@ -1,6 +1,6 @@
 # Mobile Asset Tag Selection
 
-Status: specified follow-up to M268; implementation and native acceptance pending.
+Status: M268 source integration complete; native acceptance pending.
 This is outside the frozen M260–M264 release and M265–M267 candidates.
 
 ## Task and platform pattern
@@ -46,6 +46,11 @@ Small single-value choices elsewhere must retain their in-place native menus.
 - Use one shared selection model/presentation for Add and Edit; their ports,
   persistence and draft lifecycles remain independently owned. No business logic
   belongs in native navigation or transport adapters.
+- The root presentation provider carries only the current selection visit. The
+  Add/Edit field owns that visit and its committed callbacks. Removing the field
+  or changing its scope invalidates the visit. Native back/dismissal cancels it;
+  Done applies once and dismisses. Provider updates must not reset local search
+  or selection, and must not repush a route already open.
 
 ## Acceptance
 

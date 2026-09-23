@@ -1,3 +1,4 @@
+import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
@@ -479,24 +480,25 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
 });
 
 
-it('discloses large Edit tag sets without losing selections when collapsed', async () => {
+it('selects existing Edit tags in a separate visit and saves the parent draft', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
   const asset = { id: assetId('asset'), title: 'Tent', description: 'Keep description', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   const tags = Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, label: `Tag ${index + 1}` })).reverse();
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => tags }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Tag 13')).toBeUndefined();
-    expect(h.allText().filter(text => /^Tag \d+$/.test(text))).toEqual(Array.from({ length: 12 }, (_, index) => `Tag ${index + 1}`));
-    await h.press(h.byLabel('Show all tags'));
-    await h.press(h.byText('Tag 14')?.parent ?? undefined);
-    await h.press(h.byLabel('Show fewer tags'));
-    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
-    expect(h.byText('Tag 13')).toBeUndefined();
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Select tag Tag 14'));
+    await h.press(h.byLabel('Cancel selecting tags'));
+    await h.press(h.byLabel('Choose tags'));
+    expect(h.byLabel('Select tag Tag 14')?.props.accessibilityState.checked).toBe(false);
+    await h.press(h.byLabel('Select tag Tag 14'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['tag-14'], description: 'Keep description' })]);
   } finally { await h.unmount(); }
@@ -669,15 +671,17 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
       locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
   }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
         inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     expect(h.byLabel('New tag name')).toBeUndefined();
     expect(h.byLabel('New tag color')).toBeUndefined();
-    await h.press(h.byText('Camping')?.parent ?? undefined);
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Select tag Camping'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.changeText(h.byLabel('Description'), 'Ready');
     await h.press(h.byLabel('New tag'));
     const cancelCreation = h.byLabel('Cancel new tag')!.props.onPress;
@@ -696,3 +700,5 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
     expect(saved).toEqual([expect.objectContaining({ description: 'Ready for the weekend', tagIds: ['camping'], newTags: [{ displayName: 'Outdoors' }] })]);
   } finally { await h.unmount(); client.clear(); }
 });
+
+function SelectionContent() { const task = useAssetTagSelectionTask(); return <>{task?.content}</>; }

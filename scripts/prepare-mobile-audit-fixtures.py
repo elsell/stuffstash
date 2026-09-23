@@ -46,6 +46,7 @@ exports = {
     "add": "HomeAddProbeDestination",
     "settings": "HomeProfileProbeDestination",
     "home-return-details": "HomeReturnDetailsRoute",
+    "asset-tag-selection": "AssetTagSelectionRoute",
     "audit-detail-commands": "AssetDetailCommandsFixture",
     "audit-contents-search": "AssetContentsSearchFixture",
     "audit-contents-search-preconfigured": "AssetContentsSearchFixture",

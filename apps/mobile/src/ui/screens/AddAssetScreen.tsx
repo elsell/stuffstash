@@ -1,5 +1,5 @@
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
-import { tagChoicePresentation } from '../components/TagChoicePresentation';
+import { AssetTagSelectionField } from '../components/AssetTagSelectionField';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { AddDraftNameField } from './AddDraftNameField';
@@ -674,7 +674,7 @@ function ScopedAddAssetScreen({
                       style={[styles.input, styles.textArea]}
                       value={description}
                     />
-                    <AssetTagPicker key={nameRevision} disabled={draftBusy}
+                    <AssetTagPicker key={nameRevision} disabled={draftBusy} scope={JSON.stringify([loadState.context.tenantId, loadState.context.inventoryId, nameRevision])}
                       tags={loadState.context.assetTags}
                       selectedTagIds={selectedTagIds}
                       newTags={newTags}
@@ -1036,6 +1036,7 @@ function ParentPicker({
 }
 
 function AssetTagPicker({
+  scope,
   disabled,
   newTags,
   entry,
@@ -1043,6 +1044,7 @@ function AssetTagPicker({
   selectedTagIds,
   onChange
 }: {
+  readonly scope: string;
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
   readonly entry: NonNullable<AddAssetDraft['inlineTag']>;
@@ -1050,7 +1052,6 @@ function AssetTagPicker({
   readonly selectedTagIds: readonly string[];
   readonly onChange: (tagIds: readonly string[], tags: readonly CreateAssetTagDraft[], entry: NonNullable<AddAssetDraft['inlineTag']>) => void;
 }) {
-  const [tagSearch, setTagSearch] = useState('');
   const [tagNameRevision, setTagNameRevision] = useState(0);
   const [creatingTag, setCreatingTag] = useState(false);
   const creationVisible = creatingTag || Boolean(entry.name.trim() || entry.color.trim());
@@ -1064,23 +1065,11 @@ function AssetTagPicker({
       onChange(selectedTagIds, newTags, { name: '', color: '' });
     }
   });
-  const [showAllTags, setShowAllTags] = useState(false);
-  const choices = tagChoicePresentation({ tags, selectedIds: selectedTagIds, label: tag => tag.displayName, expanded: showAllTags, query: tagSearch });
   const colors = useAppearanceAwarePalette();
   const styles = createStyles(colors);
   const { name: newTagName, color: newTagColor } = entry;
   function setNewTagName(name: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, name }); }
   function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
-  const selected = new Set(selectedTagIds);
-
-  function toggleTag(tagId: string): void {
-    if (disabled) return;
-    if (selected.has(tagId)) {
-      onChange(selectedTagIds.filter((current) => current !== tagId), newTags, entry);
-      return;
-    }
-    onChange([...selectedTagIds, tagId], newTags, entry);
-  }
 
   function addNewTag(): void {
     if (disabled) return;
@@ -1108,7 +1097,8 @@ function AssetTagPicker({
   return (
     <View style={styles.tagPicker}>
       <Text style={styles.tagPickerTitle}>Tags</Text>
-      <AppTextInput editable={!disabled} accessibilityLabel="Search tags" placeholder="Find a tag" value={tagSearch} onChangeText={value => { if (!disabled) { setTagSearch(value); setShowAllTags(false); } }} style={styles.input} />
+      <AssetTagSelectionField scope={scope} disabled={disabled} tags={tags.map(tag => ({ id: tag.id, label: tag.displayName }))} selectedIds={selectedTagIds}
+        onChange={ids => onChange(ids, newTags, entry)} />
       <View style={styles.tagOptions}>
         {newTags.map((tag, index) => {
           const colorStyle = assetTagChipStylePresentation(tag);
@@ -1133,32 +1123,7 @@ function AssetTagPicker({
             </Pressable>
           );
         })}
-        {choices.visibleTags.map((tag) => {
-          const isSelected = selected.has(tag.id);
-          const colorStyle = assetTagChipStylePresentation(tag);
-          return (
-            <Pressable
-              disabled={disabled}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              key={tag.id}
-              onPress={() => toggleTag(tag.id)}
-              style={[
-                styles.tagOption,
-                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
-                isSelected ? styles.tagOptionSelected : null
-              ]}
-            >
-              <Text style={[styles.tagOptionText, isSelected ? styles.tagOptionTextSelected : null]} numberOfLines={1}>
-                {tag.displayName}
-              </Text>
-              {isSelected ? <Check color={colors.action} size={14} strokeWidth={2.4} /> : null}
-            </Pressable>
-          );
-        })}
       </View>
-      {choices.noMatches ? <Text accessibilityLiveRegion="polite" style={styles.parentPromotionText}>No matching tags</Text> : null}
-      {choices.canDisclose ? <NativeCommandButton label={showAllTags ? 'Show fewer tags' : 'Show all tags'} disabled={disabled} onPress={() => { if (!disabled) setShowAllTags(current => !current); }} /> : null}
       {creationVisible ? <>
       <View style={styles.newTagRow}>
         <AddDraftNameField key={Platform.OS === 'ios' ? tagNameRevision : 'tag-name'} editable={!disabled}

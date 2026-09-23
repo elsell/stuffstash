@@ -1270,11 +1270,10 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertGreaterThanOrEqual(cancel.frame.minY, app.frame.minY)
       XCTAssertLessThanOrEqual(cancel.frame.maxY, app.frame.maxY)
     }
-    let retained = app.buttons["Tag 14"].firstMatch
-    XCTAssertTrue(retained.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["Tag 13"].exists)
-    reveal(retained)
-    XCTAssertTrue(retained.isSelected)
+    let chooseTags = app.buttons["Choose tags"].firstMatch
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Select tag Tag 13"].exists)
+    reveal(chooseTags)
     XCTAssertFalse(app.textFields["New tag name"].exists)
     let newTag = app.buttons["New tag"].firstMatch
     reveal(newTag); newTag.tap()
@@ -1308,22 +1307,31 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clearedEntry.value == nil || ["", "New tag"].contains(clearedEntry.value as? String ?? "unexpected"))
     XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
-    let expand = app.buttons["Show all tags"].firstMatch
-    reveal(expand)
-    expand.tap()
-    let extra = app.buttons["Tag 13"].firstMatch
+    reveal(chooseTags)
+    chooseTags.tap()
+    let extra = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
     XCTAssertTrue(extra.waitForExistence(timeout: 5))
-    reveal(extra)
+    let tagScroll = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    for _ in 0..<12 where !extra.isHittable { tagScroll.swipeUp() }
+    XCTAssertTrue(extra.isHittable)
     extra.tap()
-    XCTAssertTrue(extra.isSelected)
-    capture("edit-tags-expanded-\(captureSuffix)")
-    let collapse = app.buttons["Show fewer tags"].firstMatch
-    reveal(collapse)
-    collapse.tap()
-    reveal(extra)
-    XCTAssertTrue(extra.isSelected)
-    XCTAssertTrue(retained.isSelected)
-    capture("edit-tags-collapsed-selected-\(captureSuffix)")
+    let doneTags = app.buttons["Done selecting tags"].firstMatch
+    XCTAssertTrue(doneTags.isHittable)
+    doneTags.tap()
+    XCTAssertTrue(doneTags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Remove new tag Camping"].exists)
+    reveal(chooseTags)
+    chooseTags.tap()
+    XCTAssertTrue(extra.waitForExistence(timeout: 5))
+    XCTAssertEqual(extra.value as? String, "checkbox, checked")
+    let retained = app.descendants(matching: .any)["Select tag Tag 14"].firstMatch
+    XCTAssertEqual(retained.value as? String, "checkbox, checked")
+    capture("edit-tags-selection-retained-\(captureSuffix)")
+    let cancelTags = app.buttons["Cancel selecting tags"].firstMatch
+    cancelTags.tap()
+    XCTAssertTrue(cancelTags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
     cancel.tap()
     let discard = app.alerts.buttons["Discard"]
     XCTAssertTrue(discard.waitForExistence(timeout: 5))
