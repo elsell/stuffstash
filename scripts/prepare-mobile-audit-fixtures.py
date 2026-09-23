@@ -71,6 +71,8 @@ exports = {
     "audit-footer-appearance": "FooterAppearanceFixture",
     "audit-move-here-recovery": "MoveHereRecoveryFixture",
     "audit-move-destination": "MoveDestinationFixture",
+    "audit-edit-journey": "AssetEditJourneyDetailFixture",
+    "assets/[assetId]/edit": "AssetEditJourneyEditorFixture",
     "audit-edit-tags": "AssetEditTagsFixture",
     "audit-edit-recovery": "AssetEditRecoveryFixture",
     "audit-checkout-history": "CheckoutHistoryFixture",
@@ -82,9 +84,10 @@ if os.environ.get("AUDIT_TEST_CASE") == "filters":
     exports["audit-browse"] = "BrowseFilterGeometryFixture"
     exports["audit-expiration"] = "ExpirationFilterGeometryFixture"
 for route, component in exports.items():
-    (routes / f"{route}.tsx").write_text(
-        f"export {{ {component} as default }} from '../../native-audit/FixtureApplication';\n"
-    )
+    target = routes / f"{route}.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
+    target.write_text(f"export {{ {component} as default }} from '{source}';\n")
 
 # Preserve the exact production shell and nested stack layouts. Only their data
 # screens are replaced; no production services, session, or route root is mounted.

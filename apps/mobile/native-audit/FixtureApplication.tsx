@@ -1,3 +1,5 @@
+import { AssetEditJourneyProvider } from './AssetEditJourneyFixture';
+export { AssetEditJourneyDetailFixture, AssetEditJourneyEditorFixture } from './AssetEditJourneyFixture';
 import { CustomFieldChoicesFixture } from './CustomFieldChoicesFixture';
 export { NativeMenuOwnershipFixture } from './NativeMenuOwnershipFixture';
 import { FilterGeometryProbe } from './FilterGeometryProbe';
@@ -97,7 +99,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetEditJourneyProvider>
     <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
       headerBackTitle: 'Back', headerTintColor: palette.action,
@@ -145,6 +147,8 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-destination" options={sheets.move} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />
+      <Stack.Screen name="audit-edit-journey" options={{ title: 'Details' }} />
+      <Stack.Screen name="assets/[assetId]/edit" options={sheets.edit} />
       <Stack.Screen name="audit-edit-tags" options={sheets.edit} />
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
@@ -153,7 +157,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
-  </HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
+  </AssetEditJourneyProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'
@@ -243,6 +247,7 @@ export function FixtureMenu() {
     <Button title="Audit command height" onPress={() => router.push('/audit-command-height' as Href)} />
     <Button title="Audit Move destination" onPress={() => router.push('/audit-move-destination' as Href)} />
     <Button title="Audit Move here recovery" onPress={() => router.push('/audit-move-here-recovery' as Href)} />
+    <Button title="Audit asset Edit journey" onPress={() => router.push('/audit-edit-journey' as Href)} />
     <Button title="Audit Edit tags" onPress={() => router.push('/audit-edit-tags' as Href)} />
     <Button title="Audit Edit recovery" onPress={() => router.push('/audit-edit-recovery' as Href)} />
     <Button title="Audit contents recovery" onPress={() => router.push('/audit-region-recovery' as Href)} />

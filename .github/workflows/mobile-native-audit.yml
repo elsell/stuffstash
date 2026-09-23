@@ -26,6 +26,7 @@ on:
           - destination-and-field-choices
           - field-choices
           - enum-editing
+          - asset-edit-journey
           - edit-recovery
           - edit-tags
           - normal-detail-recovery
@@ -156,6 +157,12 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+              )
+              ;;
+            asset-edit-journey)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
               )
               ;;
             edit-recovery)

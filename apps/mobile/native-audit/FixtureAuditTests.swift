@@ -1324,6 +1324,43 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(app.state, .runningForeground)
   }
 
+  func testAssetEditSavesAndReturnsToUpdatedDetail() {
+    let open = app.buttons["Audit asset Edit journey"].firstMatch
+    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(app.staticTexts["Camping tent"].firstMatch.waitForExistence(timeout: 10))
+    let edit = app.buttons["Edit"].firstMatch
+    XCTAssertTrue(edit.waitForExistence(timeout: 5)); XCTAssertTrue(edit.isHittable)
+    capture("asset-edit-journey-detail-before")
+    edit.tap()
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let header = app.navigationBars["Edit asset"]
+    XCTAssertTrue(header.waitForExistence(timeout: 5))
+    let save = header.buttons["Save"].firstMatch
+    let cancel = header.buttons["Cancel"].firstMatch
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(cancel.isHittable)
+    capture("asset-edit-journey-editor")
+    name.tap(); waitForKeyboard(keyLabel: "space")
+    name.typeText(" kit")
+    XCTAssertEqual(name.value as? String, "Camping tent kit")
+    XCTAssertTrue(save.isHittable); XCTAssertTrue(cancel.isHittable)
+    capture("asset-edit-journey-keyboard")
+    save.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    let updated = app.staticTexts["Camping tent kit"].firstMatch
+    XCTAssertTrue(updated.waitForExistence(timeout: 10))
+    XCTAssertTrue(edit.isHittable)
+    capture("asset-edit-journey-saved-detail")
+    edit.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Camping tent kit")
+    XCTAssertTrue(cancel.isHittable); cancel.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(updated.isHittable)
+    XCTAssertFalse(app.alerts["Discard changes?"].exists)
+  }
+
   func testEditMetadataRecoveryRetainsNormalTextDraft() {
     let open = app.buttons["Audit Edit recovery"].firstMatch
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
