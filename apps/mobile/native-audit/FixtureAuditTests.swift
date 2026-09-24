@@ -1295,6 +1295,11 @@ final class FixtureAuditTests: XCTestCase {
     let header = app.navigationBars.firstMatch
     XCTAssertGreaterThanOrEqual(searchButton.frame.minY, header.frame.minY)
     XCTAssertLessThanOrEqual(searchButton.frame.maxY, header.frame.maxY)
+    let identity = app.staticTexts["Audit place"].firstMatch
+    XCTAssertTrue(identity.waitForExistence(timeout: 5))
+    XCTAssertGreaterThanOrEqual(identity.frame.minY, header.frame.maxY,
+      "Place identity must clear native navigation chrome on initial entry")
+    XCTAssertLessThanOrEqual(identity.frame.maxY, app.frame.maxY)
     capture("place-search-collapsed")
     searchButton.tap()
     let field = app.searchFields.firstMatch

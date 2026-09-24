@@ -1332,3 +1332,14 @@ Home row cards remain unchanged, and column changes recompute row membership.
 Verify mixed checkout/no-checkout rows, row regrouping, and accessible semantics
 before native title-baseline/visual acceptance. This is a project collection-layout
 decision; it does not change item checkout state or add a domain concept.
+
+### Place/detail entry clears native navigation chrome
+
+Run35979200078 place-search-collapsed captures on phone/iPad show the initial
+asset identity above the visible content edge while No photos is the first visible
+body label. AssetDetailView's FlatList must use automatic system content insets,
+like Browse, so native search/navigation owns top clearance without guessed header
+heights. On initial entry, before scrolling or opening search, verify the asset's
+identity header lies completely below navigation chrome and within the viewport.
+Preserve search filtering/clear/cancel, ordinary detail scrolling and bottom-tab
+return. This acceptance check supplements the existing functional search checks.

@@ -132,6 +132,7 @@ export function AssetDetailView({
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
       data={workspaceItems}
       keyExtractor={(item) => item.key}
