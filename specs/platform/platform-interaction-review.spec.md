@@ -1145,9 +1145,22 @@ at five seconds, but its final native capture shows Nothing inside yet and no
 Retry command. Observe the combined completed state for a bounded fifteen seconds;
 require both the command's disappearance and the recovered content without a
 second tap. This changes observation tolerance, not the production completion rule.
-The iPad first-match tab failure is covered by the existing duplicate-element
-correction. Its Settings creation reads Camngpi immediately after typing Camping;
+The focused iPad run35960677440 still fails after the duplicate-element
+correction; that correction does not close tab reachability. Its Settings creation reads Camngpi immediately after typing Camping;
 this remains an exact-text failure. Observe exact committed text for fifteen seconds
 without retyping or replacing it, then retain the exact save/reopen checks. A lasting
 wrong value still fails. Do not reopen provider/key-delivery experiments or claim
 these observation changes establish native acceptance before the focused run passes.
+
+### Distinguish tab touch and accessibility reachability
+
+Focused run35960677440 retains the exact Settings draft and visibly renders both
+iPad tabs, but neither the first-match correction nor waiting establishes native
+hit-test reachability. Before the final accessibility assertion, activate the visible
+native Browse and Home buttons at their observed centers on iPad, requiring Browse
+content and exact draft readback. Derive coordinates from finite on-screen native
+button bounds, never fixed screen coordinates. Capture before and after activation.
+Keep the separate final isHittable requirement: successful coordinate activation does
+not prove accessibility acceptance. A failed destination change identifies a touch
+failure; a successful roundtrip with failed hit-test keeps the narrower accessibility
+finding open. The focused tab-return selector runs this workflow alone.

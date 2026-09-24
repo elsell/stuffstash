@@ -2817,15 +2817,37 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-return")
   }
 
-  private func tab(_ name: String) -> XCUIElement {
+  private func tabCandidates(_ name: String) -> XCUIElementQuery {
     if UIDevice.current.userInterfaceIdiom == .pad {
       let strips = app.otherElements.containing(.button, identifier: "Home")
         .containing(.button, identifier: "Browse").allElementsBoundByIndex
       let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
-      let candidates = strip?.buttons.matching(identifier: name) ?? app.buttons.matching(identifier: name)
-      return candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) ?? candidates.firstMatch
+      return strip?.buttons.matching(identifier: name) ?? app.buttons.matching(identifier: name)
     }
-    return app.tabBars.firstMatch.buttons[name].firstMatch
+    return app.tabBars.firstMatch.buttons.matching(identifier: name)
+  }
+
+  private func tab(_ name: String) -> XCUIElement {
+    let candidates = tabCandidates(name)
+    return candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) ?? candidates.firstMatch
+  }
+
+
+  private func activateVisibleTabForTouchObservation(_ name: String) {
+    if UIDevice.current.userInterfaceIdiom != .pad {
+      tab(name).tap()
+      return
+    }
+    let bounds = app.frame
+    let candidate = tabCandidates(name).allElementsBoundByIndex.first { element in
+      let frame = element.frame
+      return !frame.isEmpty && !frame.isInfinite && !frame.isNull && bounds.contains(frame)
+    }
+    guard let candidate else {
+      XCTFail("No on-screen native tab bounds for \(name)")
+      return
+    }
+    candidate.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 
 
@@ -2862,15 +2884,25 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
     XCTAssertTrue(browse.waitForExistence(timeout: 10)); tab("Home").tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency")
+    capture("persistent-tabs-settings-draft-before-touch")
+    activateVisibleTabForTouchObservation("Browse")
+    XCTAssertTrue(browse.waitForExistence(timeout: 10), "Visible Browse tab must switch destinations")
+    XCTAssertTrue(browse.isHittable)
+    XCTAssertTrue(tab("Browse").isSelected)
+    XCTAssertFalse(name.isHittable)
+    capture("persistent-tabs-settings-browse-touch")
+    activateVisibleTabForTouchObservation("Home")
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertTrue(name.isHittable)
+    XCTAssertTrue(tab("Home").isSelected)
+    XCTAssertFalse(browse.isHittable)
+    XCTAssertEqual(name.value as? String, "Tools emergency")
+    capture("persistent-tabs-settings-draft-return")
     let tabsReturned = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       self.tab("Home").isHittable && self.tab("Browse").isHittable
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [tabsReturned], timeout: 10), .completed,
-      "Both tabs must remain reachable after returning to the draft editor")
-    capture("persistent-tabs-settings-draft-return")
-    tab("Browse").tap(); XCTAssertTrue(browse.waitForExistence(timeout: 10))
-    tab("Home").tap(); XCTAssertTrue(name.waitForExistence(timeout: 10))
-    XCTAssertEqual(name.value as? String, "Tools emergency")
+      "Both tabs must remain accessibility-hittable after returning to the draft editor")
   }
 
   func testExpirationFiltersReturnToTheirOwningTab() {
