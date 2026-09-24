@@ -1,0 +1,36 @@
+Broad native refresh35980094051, product ref c7c44b45.
+Completed2026-09-24. These results precede container grouping and automatic detail insets.
+Phone121 cases/14 failures; iPad121 cases/6 failures.
+Onboarding: iPad passed; phone keyboard dismissal timing failed (tracked M20).
+Do not rerun historical diagnostics to rediscover known input/provider limitations.
+Normal-text release decisions use the changed connected workflows and native captures.
+
+phone:
+  testAssetRegionRecoveryAtAccessibilityTextSize: XCTAssertTrue failed
+  testColorFirstTapWithoutPreTapCapture: XCTAssertTrue failed - One ordinary tap must present the system picker
+  testCommandHeightComparisonAtAccessibilityTextSize: XCTAssertTrue failed
+  testControlledAddressEntry: XCTAssertEqual failed: ("Optional("h//example.invalid")") is not equal to ("Optional("https://example.invalid")")
+  testControlledTextEntryWithoutAccessory: XCTAssertEqual failed: ("Optional("N draft name")") is not equal to ("Optional("Native draft name")")
+  testDetailCommandsRemainReachableAtAccessibilityTextSize: XCTAssertTrue failed
+  testDetailCommandsRemainReachableAtNormalTextSize: XCTAssertGreaterThanOrEqual failed: ("32.0") is less than ("44.0") - Move items here
+  testEditMetadataRecoveryAtAccessibilityTextSize: XCTAssertTrue failed
+  testEditTagDisclosureAtAccessibilityTextSize: XCTAssertTrue failed
+  testFooterAppearanceAtAccessibilityTextSize: XCTAssertTrue failed
+  testFooterFullSheetLayout: XCTAssertTrue failed
+  testMoveHereRecoveryAtAccessibilityTextSize: XCTAssertTrue failed
+  testNestedFullSheetLayout: XCTAssertTrue failed
+  testOrdinaryControlledTextEntry: XCTAssertEqual failed: ("Optional("Ne draft name")") is not equal to ("Optional("Native draft name")")
+
+ipad:
+  testAddDestinationSelectionPreservesDraftAndRecoversCreation: XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)") - Typing requires an interactive keyboard
+  testControlledTextEntryWithoutAccessory: XCTAssertEqual failed: ("Optional("N")") is not equal to ("Optional("Native draft name")")
+  testDetailCommandsRemainReachableAtNormalTextSize: XCTAssertGreaterThanOrEqual failed: ("32.0") is less than ("44.0") - Move items here
+  testEditMetadataRecoveryAtAccessibilityTextSize: XCTAssertTrue failed
+  testEditTagDisclosureAtAccessibilityTextSize: XCTAssertTrue failed
+  testMoveHereRecoveryAtAccessibilityTextSize: XCTAssertTrue failed
+
+Decisions:32pt Move items here is confirmed and addressed by PR182 pending native verification.
+Add destination iPad readiness remains unverified; broad run stopped at keyboard readiness,
+frozen run stopped before field observation. Do not equate these with successful task recovery.
+Large-text cases stay tracked after ordinary structure/workflows. Diagnostic sheet/input failures
+do not establish current product defects. M51 first-tap remains an existing bounded investigation.

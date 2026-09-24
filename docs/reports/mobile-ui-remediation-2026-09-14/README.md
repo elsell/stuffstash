@@ -61,7 +61,9 @@ runtime defects. [Current diagnosis and evidence](evidence/container-organizatio
 Broad refresh35980094051 atc7c44b45: phone completed121 tests with14 failures.
 Failures include historical controlled-input and sheet diagnostics, enlarged-text
 cases, color first-tap and the same32pt Move-items command. Do not treat them as14
-new product defects or repeat the diagnostic experiments. iPad remains pending.
+new product defects or repeat the diagnostic experiments.
+iPad completed121 tests with6 failures, including Add keyboard readiness.
+[Terminal results and decisions](evidence/native-full-359800.txt).
 The broad sweep is not a prerequisite for this bounded release. [Detail evidence](evidence/detail-entry-insets.txt),
 [alignment evidence](evidence/checkout-row-alignment.txt),
 [Android appearance evidence](evidence/android-live-appearance-header.txt).
