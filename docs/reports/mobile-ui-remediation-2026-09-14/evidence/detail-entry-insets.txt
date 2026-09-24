@@ -1,0 +1,27 @@
+Detail entry inset correction, 2026-09-24, product3c0ba0ff.
+Baseline35979200078 phone/iPad place-search-collapsed captures hide Audit place
+identity under native chrome; No photos is first visible body content. This was
+missed by functional search assertions. Native test now asserts initial identity
+bounds below the navigation bar before search/scroll. FlatList uses automatic
+insets, with no guessed header height.68 detail tests, TypeScript, structural
+checks and critic pass. iOS acceptance pending35983649762 (followup-release).
+
+Android API36 Pixel6 emulator-5580 normal text/light:
+APK61119d1a5d056c8e44689dd0d653cc59503d60a1e549d88e94f159f21e652c29.
+Scoped disposable fixture archive with updated AssetDetailView and Browse fixes.
+Item identity bounds42,338–1038,444; Edit and Move reachable above photo status.
+Edit Camping tent to Camping tent kit, Save with keyboard, reopen exact draft,
+Cancel, choose Garage, native toolbar Move, detail shows Garage, reopen current
+Garage, Cancel returns: pass. Initial and moved screenshots reviewed.
+Old verify-android-workflow-journey.py stopped on its generic clickable-parent
+locator for native toolbar Move after Edit passed. Established
+android-move-connected-save.py targets delivered native bounds and completed;
+this was a script limitation, not a product correction.
+Local captures /tmp/android-detail-inset-initial.png and
+/tmp/android-detail-inset-moved.png. In-memory persistence only; no production
+mutation, root-tab, physical-device or iOS acceptance inferred.
+
+Reviewed35979200078 phone/iPad in-workflow filter captures: last tag clears footer;
+expanded expiration body and actions remain visible; overview short choices use
+native menus, searchable tags use a list. Final captures that show the audit
+launcher after dismissal are not product layout evidence.

@@ -40,8 +40,11 @@ Notifications selection pass.26 focused tests, TypeScript, structural checks and
 review pass. PR181 remains draft. Connected iOS Browse/filter regression35979200078
 at77c4738d passed6/6 on both phone and iPad. Reviewed return captures exposed
 misaligned compact-card titles with mixed checkout status; the row-space correction
-passes Android native alignment and48 focused tests, with iOS candidate verification
-pending. [Alignment evidence](evidence/checkout-row-alignment.txt). Broad native
+passes Android native alignment and48 focused tests. Place entry also hid its
+identity under native chrome; automatic detail insets now have68 passing detail
+tests and Android entry/Edit/save/Move/return verification. Combined iOS candidate
+run35983649762 at3c0ba0ff is pending; it replaces canceled queued35983255710.
+[Detail evidence](evidence/detail-entry-insets.txt). [Alignment evidence](evidence/checkout-row-alignment.txt). Broad native
 refresh35980094051 atc7c44b45 remains in progress; prioritize ordinary workflow
 failures. Its pending result is not acceptance evidence. [Evidence](evidence/android-live-appearance-header.txt).
 
