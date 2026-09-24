@@ -2876,7 +2876,7 @@ final class FixtureAuditTests: XCTestCase {
 
 
   func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
-    guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
+    guard openFixtureURL("audit-tabs/(home)/assets/footer-clearance") else { return }
     let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Updated '")).firstMatch
     verifyFooterClearsPersistentChrome(footer)
     capture("detail-footer-above-native-tabs")

@@ -1375,3 +1375,8 @@ fully into the unobstructed content area. This is a representative ScrollView
 consumer of the same layout contract as detail's FlatList. Use delivered tab,
 accessory and header bounds on iPhone and iPad rather than fixed bottom padding.
 An isolated sharing fixture without tabs cannot establish this acceptance.
+
+Native bottom-clearance fixtures must contain the metadata used by their locator
+and enough real contents rows to require scrolling on iPad. An absent synthetic
+label is a fixture failure, not proof of product clipping. Detail uses a populated
+container with a final Updated label; verify fixture data before dispatch.

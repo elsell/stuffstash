@@ -21,9 +21,16 @@ const unsupported = async () => { throw new Error('Outside the isolated asset jo
 const scope = { tenantId: 'audit-tenant', inventoryId: 'audit-inventory' };
 
 /** In-memory ports shared by actual detail, Edit and Move routes. */
-export function createAssetEditJourney() {
+export function createAssetEditJourney(variant: 'item' | 'populated-container' = 'item') {
   let asset: AssetSummary = { id: assetId('audit-edit-item'), title: 'Camping tent', description: '', kind: 'item',
     lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false, tags: [] };
+  if (variant === 'populated-container') asset = { ...asset, kind: 'container',
+    title: 'Garage shelves and seasonal storage', updatedAtLabel: 'Updated today' };
+  const contents: AssetSummary[] = variant === 'populated-container'
+    ? Array.from({ length: 12 }, (_, index) => ({ ...asset,
+      id: assetId(`clearance-item-${index}`), title: `Stored item ${index + 1}`,
+      kind: 'item', parentAssetId: asset.id, updatedAtLabel: '', description: 'Stored supplies'
+    })) : [];
   const tags: AssetTagSummary[] = [];
   let writes = 0;
   const client = createMobileQueryClient();
@@ -59,7 +66,7 @@ export function createAssetEditJourney() {
       return { tenantId: tenantId(scope.tenantId), inventoryId: inventoryId(scope.inventoryId),
         permissions: ['view', 'edit_asset'], revision: String(writes), asset };
     } }),
-    contents: new AssetContentsQuery({ getAssetContents: async () => ({ asset, allAssets: [] }) }),
+    contents: new AssetContentsQuery({ getAssetContents: async () => ({ asset, allAssets: contents }) }),
     photos: new AssetPhotosQuery({ getAssetPhotos: async () => [] }),
     selection: new PhotoSelectionQuery({ selectFromLibrary: unsupported, captureFromCamera: unsupported }),
     tags: { execute: async () => tags.map(tag => ({ ...tag, label: tag.displayName })) },
@@ -77,8 +84,8 @@ export function createAssetEditJourney() {
 }
 
 const JourneyContext = createContext<ReturnType<typeof createAssetEditJourney> | undefined>(undefined);
-export function AssetEditJourneyProvider({ children }: PropsWithChildren) {
-  const [journey] = useState(createAssetEditJourney);
+export function AssetEditJourneyProvider({ children, variant = 'item' }: PropsWithChildren<{ variant?: 'item' | 'populated-container' }>) {
+  const [journey] = useState(() => createAssetEditJourney(variant));
   useEffect(() => () => journey.client.clear(), [journey]);
   return <JourneyContext.Provider value={journey}>{children}</JourneyContext.Provider>;
 }
@@ -114,4 +121,8 @@ export function AssetEditJourneyMoveFixture() {
   return <JourneyServerState><AssetMoveSheetRouteScreen assetId={params.assetId} assetCoreQuery={journey.core}
     assetPlacementQuery={journey.placement} parentLookupQuery={journey.parents}
     createAssetCommand={{ execute: unsupported }} moveAssetCommand={journey.move} /></JourneyServerState>;
+}
+
+export function AssetFooterClearanceFixture() {
+  return <AssetEditJourneyProvider variant="populated-container"><AssetEditJourneyDetailFixture /></AssetEditJourneyProvider>;
 }

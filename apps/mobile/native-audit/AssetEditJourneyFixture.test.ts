@@ -53,3 +53,13 @@ it('rejects unknown destinations without changing the asset', async () => {
   await expect(journey.move.execute({ assetId: 'audit-edit-item', parentAssetId: 'missing' })).rejects.toThrow();
   expect(journey.writeCount()).toBe(0);
 });
+
+it('provides a populated container and real final metadata for tab clearance', async () => {
+  const journey = createAssetEditJourney('populated-container');
+  const core = await journey.core.execute('audit-edit-item');
+  expect(core.view.updatedAtLabel).toBe('Updated today');
+  expect(core.view.canContainAssets).toBe(true);
+  const contents = await journey.contents.execute(core.snapshot);
+  expect(contents.containedAssets).toHaveLength(12);
+  expect(contents.containedAssets.every(child => !child.updatedAtLabel.startsWith('Updated '))).toBe(true);
+});

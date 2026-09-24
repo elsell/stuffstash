@@ -18,6 +18,7 @@ on:
           - add-draft
           - persistent-tabs
           - persistent-tab-return
+          - tab-content-clearance
           - home-header
           - browse-journey
           - browse-filter-journey
@@ -241,6 +242,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            tab-content-clearance)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailFooterClearsPersistentTabsAndVoiceAccessory'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingFooterClearsPersistentTabsAndVoiceAccessory'
               )
               ;;
             add-destination)
