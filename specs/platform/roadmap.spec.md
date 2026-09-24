@@ -5,11 +5,10 @@
 Persistent Home/Browse stacks and bounded commands are merged in main262f27f6
 with PR178/179. Scoped native gates and integrated CI35976251247 pass; release
 35976929170 still needs terminal TestFlight/changelog verification. Continue the
-normal-text audit independently. Android live appearance loses Browse controls;
-bounded native traces exclude screen remount in the failing sequence. A separate
-query-adapter identity reset has a failing-then-passing mounted regression and is
-verified for Android query retention through appearance changes. Keep remaining rendering findings open and follow the
-single current summary rather than repeating diagnostic candidates.
+normal-text audit independently. Android Browse appearance and query retention now pass scoped native replay after
+query ownership and native control appearance corrections. Verify the shared
+route-state change on iOS before batching this follow-up; follow the single current
+summary rather than repeating diagnostic candidates.
 
 ## Purpose
 

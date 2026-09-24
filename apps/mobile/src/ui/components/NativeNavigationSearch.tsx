@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Stack, useFocusEffect } from 'expo-router';
+import { Platform } from 'react-native';
+import { useAppearancePalette } from '../theme/AppearanceContext';
 import type { SearchBarCommands } from 'react-native-screens';
 import type { HeaderOptions } from './NativeHeaderActions.types';
 
@@ -8,6 +10,9 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
  readonly placement?:'integratedButton'|'stacked'; readonly enabled?:boolean; readonly query:string; readonly placeholder:string;
  readonly onChange:(text:string)=>void; readonly onSubmit:(text:string)=>void; readonly onClear:()=>void;
 }) {
+ const palette=useAppearancePalette();
+ const textColor=Platform.OS==='android'?palette.text:undefined;
+ const hintTextColor=Platform.OS==='android'?palette.textMuted:undefined;
  const ref=useRef<SearchBarCommands|null>(null);
  const nativeText=useRef(query);
  const active=useRef(false);
@@ -28,13 +33,13 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
  const editor=()=>editing.current?owner():undefined;
  function clear(){const handlers=editor();if(!handlers)return;editing.current=false;nativeText.current='';ref.current?.clearText();handlers.onClear();}
  return {headerSearchBarOptions:enabled?{
-  ref,placeholder,placement,allowToolbarIntegration:false,hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
+  ref,placeholder,placement,textColor,hintTextColor,tintColor:textColor,headerIconColor:textColor,allowToolbarIntegration:false,hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
   onFocus:begin,onOpen:begin,
   onChangeText:event=>{const handlers=editor();if(!handlers)return;nativeText.current=event.nativeEvent.text;if(!event.nativeEvent.text.trim())handlers.onClear();else handlers.onChange(event.nativeEvent.text);},
   onSearchButtonPress:event=>{const handlers=editor();if(!handlers)return;nativeText.current=event.nativeEvent.text;handlers.onSubmit(event.nativeEvent.text);ref.current?.blur();},
 
   onCancelButtonPress:clear,onClose:clear,
  }:undefined};
- },[enabled,placeholder,placement]);
+ },[enabled,placeholder,placement,textColor,hintTextColor]);
  return <Stack.Screen options={options} />;
 }

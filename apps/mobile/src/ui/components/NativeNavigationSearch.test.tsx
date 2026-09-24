@@ -110,3 +110,28 @@ it('allows selection tasks to show stacked native search without changing the de
  } finally { await h.unmount(); resetNavigation(); }
 
 });
+
+
+it('updates Android search colors without replacing the retained query', async () => {
+ const { AppearanceProvider } = await import('../theme/AppearanceContext');
+ const { AppearancePreferenceController } = await import('../../application/settings/AppearancePreference');
+ const { setSystemColorSchemeForTest, resetNativeTestState } = await import('../../test-support/react-native');
+ const { darkPalette, lightPalette } = await import('../theme/tokens');
+ const { Platform } = await import('react-native');
+ const original = Platform.OS; (Platform as { OS: string }).OS = 'android';
+ const controller = new AppearancePreferenceController({ load: async () => 'system', save: async () => {} });
+ const h = new MobileRenderHarness(); const events: string[] = [];
+ const render = () => <AppearanceProvider controller={controller}><NativeNavigationSearch query="Camping" placeholder="Search"
+   onChange={value=>events.push(value)} onSubmit={()=>{}} onClear={()=>events.push('clear')} /></AppearanceProvider>;
+ const options = () => (navigationOptions().at(-1) as {headerSearchBarOptions:{textColor:string;hintTextColor:string;headerIconColor:string;onFocus:()=>void;onChangeText:(event:{nativeEvent:{text:string}})=>void}}).headerSearchBarOptions;
+ try {
+  resetNavigation(); setSystemColorSchemeForTest('light'); await h.render(render());
+  expect(options().textColor).toBe(lightPalette.text);
+  await h.run(()=>options().onFocus());
+  setSystemColorSchemeForTest('dark'); await h.render(render());
+  expect(options()).toMatchObject({textColor:darkPalette.text,headerIconColor:darkPalette.text,hintTextColor:darkPalette.textMuted});
+  expect(events).toEqual([]);
+  await h.run(()=>options().onChangeText({nativeEvent:{text:'Camping gear'}}));
+  expect(events).toEqual(['Camping gear']);
+ } finally { await h.unmount(); (Platform as { OS: string }).OS = original; resetNativeTestState(); resetNavigation(); }
+});

@@ -1,61 +1,50 @@
-Current diagnosis: Android API36 Browse does not reliably retain native header
-controls/search during live appearance changes. Cold dark launch works. Normal-text
-regression remains unresolved; no appearance candidate is accepted or committed.
+Current outcome (2026-09-24): scoped Android API36 Browse appearance acceptance
+passes on candidate APK
+dac0ad4f13e4b4117139c6a43593af80ef99e6f081244b2e1f3d9bcb732dc21e.
+This is fixture/emulator evidence, not physical-device or whole-app certification.
 
-Observed baseline1fa57a5f: light→dark removes List/Map from the native tree and leaves
-Search dark against dark chrome. Captures: /tmp/photo-row-dark-settled.png and
-/tmp/browse-dark-cold.png. Cards theme correctly.
+Corrections:
+- Route synchronization no longer depends on query-adapter identity. A mounted
+  failing-then-passing test proves replacement retains Camping while real route
+  query changes still apply. Native replay confirms the prior Map query loss fixed.
+- Android segmented hosts recreate only on semantic palette changes; controlled
+  selection/callbacks remain. iOS host identity is unchanged.
+- Android native search gets semantic text/hint/tint/header-icon colors. No query
+  reseed, screen remount, native dependency patch or provider removal is used.
 
-Bounded attempts:
-1. Android-only native segmented host palette key restores Map through light/dark/
-light. Explicit search header tint changes fail open Camping text retention.
-2. Appearance-triggered JS text reseed also fails: final dark-query capture lacks
-the open field/result; prior query-before contains Camping and Found Camping tent.
-3. Narrow native toolbar guard preserving an installed SearchView still fails the
-same Camping assertion. Build /tmp/search-menu-build.log succeeded in54s; terminal
-/tmp/search-menu-replay.log records Missing Camping at line38. Native guard not
-established as root-cause fix. Source7 adapter tests/typecheck passed but do not
-establish native lifecycle behavior.
+Acceptance on the named clean APK:
+- Map selected → dark → light retains visible List/Map and inventory content.
+- Open Camping → dark → light retains query/results; append gear and clear pass.
+- Reviewed dark Map/query images show visible controls and readable search text.
+- Initial runner incorrectly expected one Android Back to close search; its capture
+  shows only the keyboard dismissed. Focused clear → keyboard dismissal → native
+  empty-search close restores toolbar; selecting List works. No production change
+  or removed assertion was used to hide a close failure.
+- Notifications Unread → dark → light retains selection and excludes read item;
+  All restores Emergency batteries. Reviewed dark capture shows readable segments.
+-26 focused source tests, TypeScript, structural checks and critic review pass.
 
-Decision: investigation budget exhausted. Withdraw all unverified appearance code,
-native patch and lock changes together. Keep product at9fb6280f. Do not ship palette
-host/tint changes independently without search-retention verification. Do not repeat
-these candidates, global provider experiments, or infer a proven parent-query reset
-from screenshots alone. Future investigation needs native lifecycle event evidence
-that distinguishes screen remount from native search close/replacement before a
-new implementation. This unrelated follow-up does not expand PR178 release gates.
-Rejected candidate preserved locally: /tmp/android-appearance-rejected-candidate.patch.
+Native evidence on paul and local copies:
+/tmp/android-header-palette-build.log and android-header-palette-replay.log
+/tmp/verify-live-appearance.py (final Back-only close expectation fails as above)
+/tmp/verify-search-close.py and /tmp/verify-segmented-inbox.py (pass)
+/tmp/header-dark-map.png, /tmp/header-dark-query.png, /tmp/header-close.png,
+/tmp/inbox-dark.png (local reviewed captures).
 
-Native lifecycle observation (2026-09-24, disposable API36 emulator):
-Relevant NativeNavigationSearch and BrowseSurfaceHeader source hashes match main
-262f27f6. Instrumented pinned react-native-screens4.23.0; at most256 events,
-identities/query length only. Both traces remained below the cap.
+Bounded diagnosis retained to prevent rediscovery:
+Baseline1fa57a5f lost List/Map on live dark change and retained dark Search icons;
+cold dark worked. Early palette key, JS reseed and native menu guard candidates
+were not accepted because query retention failed. The native lifecycle trace then
+showed stable fragment/header/search identities, no detach/stop/close, and query
+length7→0 before final header/menu updates. List-only sequence retained query.
+Traces android-header-lifecycle-events.json (29 events) and
+android-header-map-lifecycle-events.json (38 events) contain identities/lengths only.
+Source review and the mounted regression identified adapter-dependent route resets.
+After correcting that confound, the integrated rendering correction above passes.
+Do not repeat provider removal, query reseed or the rejected native menu guard.
+Recorder was removed; all three original dependency hashes verified; clean APK
+rebuilt/reinstalled before acceptance. No instrumentation enters production.
 
-List → open Camping → dark: query remains visible,29 events.
-Map → dark → light → open Camping → dark: Map label absent after both closed
-appearance transitions; final native search field empty,38 events. Reviewed final
-capture confirms poor dark search contrast and empty field. This is a reproduced
-failure, not acceptance. No fragment/header/search identity replacement, detach,
-stop or search-close event occurred. Query length changes7→0 before the final
-header update/menu rebuild. This rules out native screen remount in this replay;
-it does not prove which caller caused the clear or that menu behavior is innocent.
-Traces: android-header-lifecycle-events.json and
-android-header-map-lifecycle-events.json.
-
-Query ownership correction: source review identifies SearchScreen's route-sync effect depending on locationsQuery and
-searchAssetsQuery identities; BrowseJourneyFixture creates locationsQuery inline.
-A mounted regression proves equivalent adapter replacement resets Camping to
-All items. Removing the two adapter identities from route synchronization fixes
-that regression while actual route changes still apply. All12 Browse behavior
-tests, TypeScript, structural checks and code review pass. Do not repeat provider removal or native menu guards.
-
-Recorder removed and all three original dependency source hashes verified after
-observation. Clean APK rebuild completed in50s and reinstall succeeded; no recorder enters production.
-
-Clean candidate APK87e5ca3c92e1e5f7aa5f73536b7cbef24f6576f3bbc43e86d24fa662469cac4d
-built in41s and installed on API36 emulator. The same Map→dark→light→Camping→dark
-sequence now retains Camping; light return, continued typing Camping gear and clear
-also pass. Reviewed final image confirms the query/result remain, but dark text
-contrast and absent List/Map after appearance changes remain failures. Accept only
-query retention, not overall appearance. Capture /tmp/android-route-ownership-after.png;
-runner /tmp/verify-route-ownership.py. No iOS or physical-device claim.
+Remaining scope: iOS regression gate for the shared Browse route-state change,
+other device/window/assistive configurations and the comprehensive audit remain
+open. This follow-up is separate from already-merged release35976929170.

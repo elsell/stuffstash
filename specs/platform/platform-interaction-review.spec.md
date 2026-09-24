@@ -1291,3 +1291,17 @@ Verify a mounted searched Browse survives equivalent adapter replacement and sti
 applies an actual changed route query. This regression test distinguishes a source
 state-reset defect from the remaining native appearance/rendering failure; passing
 it alone does not accept Android live appearance.
+
+### Android header appearance after query-ownership correction
+
+The native trace and mounted regression separated query loss from header rendering:
+query retention now passes the original Map appearance sequence without native
+patches. With that confound corrected, apply the previously observed Android-only
+segmented host recreation on semantic palette changes, preserving controlled value
+and callbacks. Supply native search text, hint, tint and header-icon semantic colors
+on Android. iOS keeps system search colors and host identity. Do not reseed search
+on appearance, patch native menus, or recreate the screen. One integrated native
+replay must now keep Map available through light/dark/light, search text/results,
+continued editing, clear/close and view switching; inspect captures for contrast.
+Verify a representative segmented consumer outside the header as well. This is a
+new acceptance run after a proven ownership fix, not repetition of a failed reseed.

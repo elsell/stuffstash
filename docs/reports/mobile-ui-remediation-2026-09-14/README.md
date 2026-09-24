@@ -64,11 +64,12 @@ TestFlight delivery remains unverified.
 
 ## Current follow-up
 
-Android live appearance still loses native Browse controls. A bounded lifecycle
-trace excludes native screen recreation in the reproduced Map sequence. A separate
-mounted regression proves query-adapter replacement incorrectly resets Browse
-state; its correction passes12 behavior tests and TypeScript. Android native replay now retains the query through dark/light changes, continued
-typing and clear. Missing List/Map and poor search contrast remain unaccepted. [Single diagnosis](evidence/android-live-appearance-header.txt).
+Android Browse now retains List/Map and search through light/dark changes on the
+named emulator APK. Corrected adapter-driven route resets and native control
+appearance; reviewed captures, continued editing/clear/close, return to List and
+Notifications selection pass.26 focused tests, TypeScript, structural checks and
+review pass. Shared Browse route-state iOS regression verification remains before
+including this follow-up in a release. [Evidence](evidence/android-live-appearance-header.txt).
 
 ## Separate unresolved decisions
 

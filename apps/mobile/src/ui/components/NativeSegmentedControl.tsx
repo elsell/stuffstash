@@ -1,5 +1,5 @@
 import SegmentedControl from '@expo/ui/community/segmented-control';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { Platform, type StyleProp, type ViewStyle } from 'react-native';
 import type { MobileColorPalette } from '../theme/tokens';
 
 export type NativeSegment<Value extends string = string> = {
@@ -25,6 +25,7 @@ export function NativeSegmentedControl<Value extends string>({
   const selectedIndex = Math.max(0, segments.findIndex((segment) => segment.value === value));
 
   return <SegmentedControl
+    key={Platform.OS === 'android' ? `${colors.selected}:${colors.text}` : undefined}
     enabled={!disabled}
     onValueChange={(label) => {
       const segment = segments.find((candidate) => candidate.label === label);
