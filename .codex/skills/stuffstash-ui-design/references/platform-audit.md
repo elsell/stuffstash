@@ -59,6 +59,13 @@ Evidence labels: **source-confirmed**, **runtime-observed** (name build/device),
 A source-confirmed pattern choice is not a source-confirmed rendering defect.
 Historical screenshots do not establish current-build failures.
 
+Before implementing a visual correction, inspect the full-screen baseline at the
+named build and state. Element-only captures and accessibility snapshots can
+contradict the visible composition; resolve that discrepancy before calling it a
+product defect. Compare the candidate with the same full-screen baseline state.
+Retain counterevidence and withdraw unsupported changes. A different renderer or
+a passing test does not itself establish an improvement.
+
 ## Findings and acceptance
 
 Use stable IDs. State priority, actual behavior, user cost, source location,
