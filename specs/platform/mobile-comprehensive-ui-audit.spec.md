@@ -2270,3 +2270,24 @@ Place search acceptance uses real typing, exact text, matching/nonmatching resul
 clear/retype/cancel and return. Like Add destination, it does not require a separate
 keyboard-key tree query before typing;35930669612 iPad failed that query while the
 search field was focused and the keyboard visible. Actual entry remains required.
+
+## Standard modal filter presentation (M279 decision)
+
+Run35934741356 passes eleven iPad workflows but still observes a580×650
+Expiration viewport after replacing Filters. Neither candidate Screens ownership
+guard resolves it. Remove those unproven dependency changes, retaining only the
+previously verified search-attachment patch.
+
+Use the platform's standard adaptive modal presentation for iOS Browse and
+Expiration filters, rather than the resizable formSheet adapter. These filters
+already open at their largest detent; choosing a compact detent adds no task
+capability and exposes the pinned adapter's frame-coercion path. Preserve native
+navigation, search, grouped choices, dismissal, and the accessible action footer.
+Android retains its native stack route. This intentionally removes custom filter
+detents; it does not replace sheets with a bespoke navigation coordinator.
+
+Keep the connected Browse→Filters→Expiration→detail→back viewport and selection
+checks unchanged, and verify both filter consumers, keyboard, footer and dismissal
+on phone/iPad. The medium-sheet fixture remains an explicitly resizable diagnostic
+for other form-sheet consumers; it does not describe production Filters.
+Reference: https://developer.apple.com/design/human-interface-guidelines/sheets

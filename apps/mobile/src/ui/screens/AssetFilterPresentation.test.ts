@@ -9,10 +9,11 @@ it('uses an Android native stack filter route without sheet footer lifecycle', (
   expect(filters).not.toHaveProperty('sheetAllowedDetents');
 });
 
-it('opens the iOS filter task at the large detent while allowing resizing', () => {
+it('uses a standard adaptive iOS modal without custom sheet sizing', () => {
   expect(createAssetNativeSheetOptions(colors, 'ios').filters).toMatchObject({
-    presentation: 'formSheet', headerShown: true, sheetAllowedDetents: [0.7, 1], sheetInitialDetentIndex: 1
+    presentation: 'modal', headerShown: true, title: 'Filters'
   });
+  expect(createAssetNativeSheetOptions(colors, 'ios').filters).not.toHaveProperty('sheetAllowedDetents');
 });
 
 it('keeps Android asset actions out of partial sheet geometry', () => {

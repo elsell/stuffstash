@@ -54,24 +54,18 @@ Sharing review also corrected inline feedback alignment and grouped Share/Copy
 completion actions (M278). Android controlled recovery and visual review pass;
 phone/iPad sharing verification is combined with the filter and detail workflows.
 
-Run35930669612 atc8f18ce3 passes10/12 phone and9/12 iPad cases. Sharing
-form containment and recovery pass; reviewed iPad creation/completion controls are
-unclipped and grouped. Detail variants, empty-photo hierarchy, recovery, Map context
-and the other filter journeys pass. The remaining decisions are:
+Run35934741356 at7236f442 passes11/12 iPad workflows. Sharing, detail commands,
+Place search, Map and the other filter journeys pass. Expiration still inherits a
+580×650 viewport after Filters. Neither dependency ownership guard corrected it.
+Phone completion is pending in that same run.
 
-- iPad Expiration still has a580×650 viewport. The initial invalidation guard
-  did not fix it. A bounded source review finds that KVO still resizes an observed
-  scroll view without checking ancestry before either sizing branch. The next
-  candidate guards that ownership; the unchanged viewport/all-mode checks decide
-  acceptance. No frame padding or timing workaround is introduced.
-- Detail Move is48 points high but41.5–41.7 wide.13f38ce7 adds a48-point native
-  minimum label/button width; existing44-point acceptance remains unchanged.
-- iPad Place search stopped in the separate keyboard-tree readiness query with
-  a focused field and visible keyboard. Use direct native typing with exact text,
-  result, clear/retype/cancel and return assertions, as established for Add.
-- Phone Expiration did not reach Filters at its initial fixture readiness check;
-  its final capture shows Browse with Filters. Retain the gate and distinguish
-  this entry failure from the confirmed iPad viewport defect.
+The concrete M279 decision is standard adaptive iOS modal presentation for both
+filter tasks. They already opened at the largest detent; remove custom resizing
+and the unproven Screens patches rather than adding more ownership guesses.
+Retain the verified search patch and synchronized locks. Android stays a card.
+The explicit medium-sheet fixture remains an iOS-only diagnostic for other sheet
+consumers. Keep connected viewport, all modes, detail/back, search and footer
+checks unchanged; native acceptance of the new presentation remains pending.
 
 The earlier native bootstrap failure is resolved by synchronized Podfile source
 paths. Every new patch identity must update both dependency and external-source

@@ -47,10 +47,9 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
       contentStyle: { backgroundColor: palette.background },
       presentation: 'card' as const, headerShown: true, title: 'Filters'
     } : {
-      ...baseOptions,
+      contentStyle: { backgroundColor: palette.surface },
+      presentation: 'modal' as const,
       headerShown: true,
-      sheetAllowedDetents: [0.7, 1],
-      sheetInitialDetentIndex: 1,
       title: 'Filters'
     },
     edit: platform === 'android' ? {
