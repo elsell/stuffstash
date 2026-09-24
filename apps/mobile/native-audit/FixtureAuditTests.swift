@@ -2894,6 +2894,38 @@ final class FixtureAuditTests: XCTestCase {
   }
 
 
+  func testSettingsOverviewNavigationAndFooterClearance() {
+    guard openFixtureURL("audit-tabs/(home)/settings") else { return }
+    let account = app.buttons["Open Account settings for household.member@example.invalid"]
+    XCTAssertTrue(account.waitForExistence(timeout: 10))
+    XCTAssertTrue(account.isHittable)
+    capture("settings-overview-root")
+    account.tap()
+    XCTAssertTrue(app.buttons["Sign Out"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["household.member@example.invalid"].waitForExistence(timeout: 10))
+    capture("settings-overview-account")
+    app.navigationBars.buttons.firstMatch.tap()
+    let inventory = app.buttons["Open inventory settings for Main Inventory, in Family household"]
+    XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+    XCTAssertTrue(inventory.isHittable); inventory.tap()
+    XCTAssertTrue(app.buttons["Open Notifications for Main Inventory"].waitForExistence(timeout: 10))
+    capture("settings-overview-inventory")
+    app.navigationBars.buttons.firstMatch.tap()
+    let diagnostics = app.buttons["Open developer and connection Diagnostics"]
+    XCTAssertTrue(diagnostics.waitForExistence(timeout: 10))
+    for _ in 0..<5 where !diagnostics.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(diagnostics.isHittable); diagnostics.tap()
+    let version = app.staticTexts["overview-audit-1"]
+    XCTAssertTrue(version.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(version)
+    capture("settings-overview-diagnostics-clearance")
+    tab("Browse").tap()
+    XCTAssertTrue(app.buttons["Open Browse asset"].waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(version.waitForExistence(timeout: 10))
+    capture("settings-overview-tab-return")
+  }
+
   func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
     guard openFixtureURL("audit-tabs/(home)/assets/footer-clearance") else { return }
     let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Updated '")).firstMatch

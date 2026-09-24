@@ -64,6 +64,16 @@ only Profile is visible. Viewer regression failed before the change; six width
 checks, structural checks and critic review pass. Native one-action/three-action
 geometry remains unverified. This is outside frozen PR184 and is not released.
 
+## Next connected review
+
+Settings overview coverage now walks real root, Account, Inventory Settings and
+Diagnostics screens inside the tab/voice shell, including final-content clearance
+and tab return. Existing editor/session-action evidence does not establish this
+composition. Route preparation12, TypeScript and structural checks pass; native
+review is pending. Fixture navigation covers only these destinations; it does not
+certify production route callbacks or inventory leaf commands. No Settings layout
+change or new clipping claim is made before this walkthrough is reviewed.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting

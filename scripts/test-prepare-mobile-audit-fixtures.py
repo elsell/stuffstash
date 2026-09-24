@@ -31,6 +31,13 @@ class FixtureRouteIsolationTests(unittest.TestCase):
                "AUDIT_SUITE": "fixtures", "AUDIT_TEST_CASE": "all", **settings}
         return subprocess.run(["python3", str(self.script)], env=env, capture_output=True, text=True)
 
+    def test_settings_overview_installs_real_screens_under_tab_shell(self):
+        self.assertEqual(self.run_script(AUDIT_TEST_CASE="settings-overview").returncode, 0)
+        for page, component in {"index": "SettingsRootOverviewFixture", "account": "SettingsAccountOverviewFixture",
+                                "inventory/index": "SettingsInventoryOverviewFixture", "diagnostics": "SettingsDiagnosticsOverviewFixture"}.items():
+            path = self.routes / "audit-tabs/(home,search)/settings" / f"{page}.tsx"
+            self.assertIn(f"{component} as default", path.read_text())
+
     def test_home_collections_use_production_tab_paths_without_competing_search(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="home-collections").returncode, 0)
         for layout in self.tab_layouts:

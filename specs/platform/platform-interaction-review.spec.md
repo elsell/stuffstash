@@ -1424,3 +1424,18 @@ keep all actual shortcut assertions. The legacy `all` arrangement cannot host th
 production-path scenario because its root Search/detail fixtures intercept those
 paths. Exclude this one scenario explicitly from that arrangement and run it via
 `home-collections`; neither selector alone establishes full-app acceptance.
+
+### Connected Settings overview review
+
+Review the Settings root, Account, inventory settings and Diagnostics at normal
+text size inside the delivered tab/voice shell. Existing editor and session-action
+fixtures do not establish the overview's visual hierarchy or bottom clearance.
+Use production screen components with controlled query data; fixture navigation
+must be identified as such and does not certify production route callbacks.
+Capture root entry and each destination, reveal the final Diagnostics version
+above persistent controls, then switch tabs and return to the same destination.
+Inspect current-account, current-household and current-inventory context, repeated
+labels, row grouping, back behavior and command placement as a whole. Missing
+inset props are a source risk, not proof of runtime overlap. Change layout only
+when the walkthrough establishes a defect; retain separate acceptance for session
+commands and editing rather than repeating those suites unchanged.
