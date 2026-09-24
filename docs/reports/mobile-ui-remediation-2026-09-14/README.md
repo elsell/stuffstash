@@ -80,6 +80,22 @@ captures confirm hierarchy, footer clearance and tab return; Account/Connection
 recovery checks also pass. PR186 is accepted for release, not yet delivered.
 [Diagnosis and evidence](evidence/settings-overview.txt).
 
+## Current workflow investigation
+
+History is the next connected structural review: its list owns a separate heading
+and its detail scroll view lacks explicit automatic insets. This is a source risk,
+not confirmed clipping. Candidate5068ae30 adds the production-tab walkthrough;
+13 fixture preparation tests, TypeScript, structural checks and critic review pass.
+Review corrected actual-Home startup readiness and waits for Browse before tab
+return. Native36027545902 is running; watcher session58712 writes
+`/tmp/history-native-result.json`. One baseline must determine actual header/footer
+geometry before changing product code. Revert/server authorization are out of scope.
+
+PR186 final CI36026968447 is observed by session84216; auto-merge is enabled.
+Release watcher session16214 writes `/tmp/settings-release-terminal.json` when
+its matching main release terminates. Do not start duplicate watchers or treat
+an observation timeout as a release failure.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
