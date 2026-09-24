@@ -1,5 +1,6 @@
 import { Button, Host, HStack, Image, List, Section, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import { accessibilityLabel, accessibilityValue, buttonStyle, contentShape, shapes, disabled, font, foregroundStyle, frame, listStyle } from '@expo/ui/swift-ui/modifiers';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import { spacing } from '../theme/tokens';
 import { useFocusedSheetActions } from './useFocusedSheetActions';
 import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus } from './MoveSelectionList.types';
@@ -11,13 +12,16 @@ const readableSelectionWidth = 720;
 
 /** System List owns scrolling, section spacing, separators and row insets. */
 export function MoveSelectionList(props: MoveSelectionListProps) {
+  const palette = useAppearanceAwarePalette();
+  const subjectColor = foregroundStyle(palette.text);
+  const contextColor = foregroundStyle(palette.textMuted);
   const subject = <VStack alignment="leading" spacing={spacing.md}>
     <VStack alignment="leading" spacing={spacing.xs}>
-      <Text modifiers={[secondary]}>{props.subjectLabel}</Text>
-      <Text modifiers={[font({ weight: 'semibold' }), foregroundStyle({ type: 'hierarchical', style: 'primary' })]}>{props.subject}</Text>
-      <Text modifiers={[secondary]}>{props.context}</Text>
+      <Text modifiers={[contextColor]}>{props.subjectLabel}</Text>
+      <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
+      <Text modifiers={[contextColor]}>{props.context}</Text>
     </VStack>
-    <Text>{props.retainedSelection ? 'Selected' : props.title}</Text>
+    <Text modifiers={[contextColor]}>{props.retainedSelection ? 'Selected' : props.title}</Text>
   </VStack>;
   return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>

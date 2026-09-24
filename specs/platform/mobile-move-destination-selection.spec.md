@@ -232,3 +232,9 @@ a requirement to imitate its storage hierarchy. Native entry, search, selected,
 retained selection and rejected-command captures on phone and iPad must be judged
 before visual acceptance. Mounted tests establish retained context and behavior,
 not whether this layout looks right.
+
+Native visual review of35947975650 passes all four connected workflows on phone
+and tablet, but the subject header inherits SwiftUI section-header attenuation.
+Do not accept low-contrast subject/context as native correctness. Set explicit
+appearance-aware text colors for the custom section header while preserving the
+system List's row layout and scrolling. Recheck both appearances on native devices.
