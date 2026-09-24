@@ -1,0 +1,6 @@
+Focused Add destination creation layout
+25 focused source tests passed; TypeScript and mobile structural check passed.
+Documentation build passed. Code critic blockers corrected and re-reviewed.
+Android release build and controlled native Add workflow passed: search/cancel, existing destination, retained item name, rejected item save, creation failure/retry and return.
+Reviewed Android creation-failure screenshot: name form and header actions visible, no selection rows or clipped inline Cancel.
+iPhone/iPad matching-source visual acceptance remains pending.

@@ -2291,3 +2291,16 @@ checks unchanged, and verify both filter consumers, keyboard, footer and dismiss
 on phone/iPad. The medium-sheet fixture remains an explicitly resizable diagnostic
 for other form-sheet consumers; it does not describe production Filters.
 Reference: https://developer.apple.com/design/human-interface-guidelines/sheets
+### Add destination search keyboard observation
+
+The iPad job107346778966 in run35909892208 completes three selection cases but
+stops before destination creation when search is reopened. The five-second
+keyboard readiness observation contains one 4.21-second false sample; final
+native evidence shows the visible keyboard and requested key both hittable with
+valid bounds. Give only this destination-search helper the existing bounded
+30-second keyboard-readiness budget, as already used for Move creation. Preserve
+actual typing, complete query equality, native selection, failure/retry and return
+assertions. This corrects an observation boundary, not proof of application
+acceptance or a reason to replace native search. The corrected run still must
+complete and its focused creation layout must be visually reviewed.
+

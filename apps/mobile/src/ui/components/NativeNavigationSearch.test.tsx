@@ -101,3 +101,12 @@ it('preserves retained search through inactive header events before and after na
   expect(events).toEqual(['draft']);
  } finally {await h.unmount();resetNavigation();}
 });
+
+it('allows selection tasks to show stacked native search without changing the default', async () => {
+ resetNavigation(); const h = new MobileRenderHarness();
+ try {
+  await h.render(<NativeNavigationSearch placement="stacked" query="" placeholder="Find a destination" onChange={()=>{}} onSubmit={()=>{}} onClear={()=>{}} />);
+  expect((navigationOptions().at(-1) as {headerSearchBarOptions:{placement:string}}).headerSearchBarOptions.placement).toBe('stacked');
+ } finally { await h.unmount(); resetNavigation(); }
+
+});

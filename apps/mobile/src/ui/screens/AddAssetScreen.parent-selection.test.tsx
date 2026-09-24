@@ -1,6 +1,7 @@
+import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import { assetId } from '../../domain/assets/AssetSummary';
 import { AddDestinationTaskProvider, useAddDestinationTask } from '../navigation/AddDestinationTask';
-import { navigationOptions, resetNavigation, setScreenFocused } from '../../test-support/navigation';
+import { resetNavigation, setScreenFocused } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
 import { AddAssetScreen as AddScreen } from './AddAssetScreen';
 import { AddAssetContextQuery } from '../../application/add/AddAssetContextQuery';
@@ -40,7 +41,7 @@ it.each(['cancel', 'existing', 'top-level', 'create', 'permission'] as const)('p
       await h.run(() => setScreenFocused(true));
     }
     await h.press(chooser);
-    await h.run(() => {const search = Object.assign({}, ...navigationOptions()).headerSearchBarOptions; search.onFocus(); search.onChangeText({ nativeEvent: { text: 'Another place' } });});
+    await h.run(() => typeInNativeSearch('Another place'));
     expect(store.load(scope)).toMatchObject({ parentAssetId: 'garage', parentQuery: 'Garage', title: 'Tent', description: 'Packed' });
     await h.run(() => new Promise(resolve => setTimeout(resolve, 350)));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));

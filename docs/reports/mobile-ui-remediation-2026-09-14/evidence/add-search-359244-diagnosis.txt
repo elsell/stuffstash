@@ -1,0 +1,9 @@
+Run35924460431, source53521aeb: Add destination passes iPad.
+Phone initial search, exact Shelf14 input/result, cancel and retained draft pass.
+Second search: keyboard readiness predicate performs one observation:
+start=1.004376s, duration=29.296866s, matched=false; wait=30.302755s.
+Subsequent failure diagnostic: keyboard frame(0,583,402,233), hittable=true;
+t key frame(162.6667,590,39.3333,54), hittable=true. Screenshot shows keyboard.
+Decision: type into native search field and assert exact text/matching result;
+omit prerequisite keyboard-key query for this helper. Preserve complete workflow.
+No production cause or performance acceptance is inferred from AX latency.

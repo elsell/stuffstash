@@ -1,5 +1,8 @@
 import { Stack } from 'expo-router';
-import { SettingsChoiceRow } from './SettingsList';
+import { SettingsSection, useSettingsListStyles } from './SettingsList';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { MoveSelectionList } from '../components/MoveSelectionList';
+import type { MoveSelectionRowModel, MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { NativeFilterSearch } from '../components/NativeFilterSearch.android';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
@@ -43,7 +46,6 @@ import {
   canSaveMoveAsset,
   moveIntoCandidateRow,
   moveIntoEmptyState,
-  moveDestinationCreateButtonLabel,
   moveDestinationCreateKindHelp,
   moveDestinationCreatePlacement,
   moveDestinationCreatePlacementLabel,
@@ -305,7 +307,7 @@ export function MoveAssetSheet({
   readonly onBeginCreation: () => void;
   readonly onCancelCreation: () => void;
   readonly onChangeCreationName: (name: string) => void;
-  readonly candidateStatus?: ReactNode;
+  readonly candidateStatus?: MoveSelectionStatus;
   readonly isSaving: boolean;
   readonly isCreatingDestination?: boolean;
   readonly onChangeCreateKind: (kind: MoveDestinationCreateKind) => void;
@@ -316,6 +318,8 @@ export function MoveAssetSheet({
   readonly onSelectParent: (parent: ParentLookupResult) => void;
   readonly onSelectRoot: () => void;
 }) {
+  const headerHeight = useHeaderHeight();
+  const { styles: settingsStyles } = useSettingsListStyles();
   const creationExpanded = draft?.creationName !== undefined;
   const palette = useAppearancePalette();
   const styles = createStyles(palette);
@@ -341,63 +345,67 @@ export function MoveAssetSheet({
   });
   const actions = useFocusedSheetActions({ primaryLabel: 'Move', secondaryLabel: 'Cancel',
     disabled: !canSaveMove, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
-  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
-    disabled: isSaving, onPress: actions.onBack }], 'left');
-  const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Move',
-    disabled: !canSaveMove, onPress: actions.onApply }]);
-  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
-    ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close',
+    label: creationExpanded ? 'Cancel new destination' : 'Cancel',
+    disabled: isSaving, onPress: creationExpanded ? creationActions.onBack : actions.onBack }], 'left');
+  const moveOptions = useNativeHeaderActionOptions(creationExpanded ? [{ kind: 'save', label: 'Create destination',
+    disabled: creationActions.disabled, onPress: creationActions.onApply }] : [
+    { kind: 'add', label: 'New destination', disabled: disabled || !candidatesAvailable, onPress: onBeginCreation },
+    { kind: 'save', label: 'Move', disabled: !canSaveMove, onPress: actions.onApply }
+  ]);
+  const headerOptions = useMemo(() => ({ title: creationExpanded ? 'New destination' : 'Move',
+    headerShown: true, headerBackVisible: false, ...cancelOptions, ...moveOptions }),
+    [creationExpanded, cancelOptions, moveOptions]);
   const searchEnabled = !disabled && !creationExpanded;
   const search = { query: draft?.query ?? '', placeholder: 'Search places, boxes, shelves',
     onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
+  function toRow(match: ParentLookupResult): MoveSelectionRowModel {
+    return { id: match.id, label: match.title,
+      context: match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`,
+      kind: match.kind, selected: draft?.selectedParent?.id === match.id,
+      disabled: disabled || match.canSelectAsParent === false,
+      accessibilityLabel: `Choose destination ${match.title}`, onPress: () => onSelectParent(match) };
+  }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <Frame style={styles.editor}>
+    <Frame style={[Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor,
+      creationExpanded ? { backgroundColor: palette.background } : undefined,
+      Platform.OS === 'ios' && creationExpanded ? { paddingTop: headerHeight + spacing.sm } : undefined]}>
       <Stack.Screen options={headerOptions} />
-      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} enabled={searchEnabled} />
+      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
-      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {readOnly ? <ActionEligibilityNotice /> : null}
-        <Text style={styles.moveSubject}>{asset.title}</Text>
-        {placement ? <Text style={styles.sheetSubtitle}>{`Current location: ${placement.currentLocationLabel || 'Inventory root'}`}</Text> : null}
-        {placement?.hasChanged ? <Text style={styles.sheetSubtitle}>{`Selected: ${placement.proposedLocationLabel}`}</Text> : null}
-        {creationExpanded ? null : candidateStatus}
-        {isSaving && !isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
-        <MoveSelectionRow label="Inventory root" context="Top level · No containing location"
-          accessibilityLabel="Choose inventory root" disabled={disabled}
-          selected={draft?.selectedParent === null} onPress={onSelectRoot} />
-        {draft?.matches.map(match => (
-          <MoveSelectionRow key={match.id} label={match.title}
-            context={match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`}
-            accessibilityLabel={`Choose destination ${match.title}`}
-            disabled={disabled || match.canSelectAsParent === false}
-            selected={draft.selectedParent?.id === match.id} onPress={() => onSelectParent(match)} />
-        ))}
-        {candidatesAvailable && !creationExpanded ? <NativeCommandButton label="New destination" disabled={disabled}
-          onPress={() => { if (!disabled) onBeginCreation(); }} /> : null}
+      {!creationExpanded ? <MoveSelectionList subjectLabel="Moving" subject={asset.title}
+        context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title="Destinations"
+        statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
+        rows={[{ id: 'inventory-root', label: 'Inventory root', context: 'Top level', kind: 'root',
+          selected: draft?.selectedParent === null, disabled, accessibilityLabel: 'Choose inventory root', onPress: onSelectRoot },
+          ...(draft?.matches ?? []).map(toRow)]}
+        retainedSelection={draft?.selectedParent && !draft.matches.some(match => match.id === draft.selectedParent?.id)
+          ? toRow(draft.selectedParent) : undefined} /> :
+      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {creationExpanded ? (
-          <View style={styles.createDestinationPanel}>
-            <Text style={styles.inputLabel}>Name</Text>
-            <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
-              editable={!disabled} placeholder="Place or container name" style={styles.input}
-              onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
+          <>
+            <SettingsSection title="Name">
+              <View style={settingsStyles.navigationRow}>
+                <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
+                  editable={!disabled} placeholder="Place or container name"
+                  style={[settingsStyles.rowLabel, { minHeight: 48, flex: 1 }]}
+                  onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
+              </View>
+            </SettingsSection>
+            <SettingsSection footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
+              <View style={settingsStyles.navigationRow}>
+                <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
+                  value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+                  includeEmptyOption={false} disabled={disabled}
+                  onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
+              </View>
+            </SettingsSection>
             {creationStatus}
-            <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
-              value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
-              includeEmptyOption={false} disabled={disabled}
-              onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
-            <Text style={styles.createKindHelp}>{moveDestinationCreateKindHelp(createKind)}</Text>
-            <Text style={styles.createPlacementText}>
-              {moveDestinationCreatePlacementLabel(createPlacement)}
-            </Text>
-            <NativeCommandButton label={moveDestinationCreateButtonLabel(createKind, createTitle)}
-              disabled={creationActions.disabled} onPress={creationActions.onApply} />
-            <Text style={styles.parentSubtitle}>The new destination will be selected for this move.</Text>
             {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Creating destination…</Text> : null}
-            <NativeCommandButton label="Cancel new destination" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
-          </View>
+          </>
         ) : null}
-      </ScrollView>
+      </ScrollView>}
     </Frame>
   );
 }
@@ -416,7 +424,7 @@ export function MoveThingsHereSheet({
   readonly readOnly?: boolean;
   readonly draft: MoveIntoDraft | undefined;
   readonly candidatesAvailable?: boolean;
-  readonly candidateStatus?: ReactNode;
+  readonly candidateStatus?: MoveSelectionStatus;
   readonly isSaving: boolean;
   readonly onChangeQuery: (query: string) => void;
   readonly onClose: () => void;
@@ -438,33 +446,25 @@ export function MoveThingsHereSheet({
     ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
   const search = { query: draft?.query ?? '', placeholder: 'Search your inventory',
     onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
+  function toRow(match: ParentLookupResult): MoveSelectionRowModel {
+    const row = moveIntoCandidateRow(match);
+    return { id: match.id, label: row.title, context: `${row.kindLabel} · ${row.pathLabel || row.title}`,
+      kind: match.kind, selected: draft?.selectedAsset?.id === match.id, disabled,
+      accessibilityLabel: `Choose item ${row.title}`, onPress: () => onSelectAsset(match) };
+  }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
-    <Frame style={styles.editor}>
+    <Frame style={Platform.OS === 'ios' ? styles.nativeSelection : styles.editor}>
       <Stack.Screen options={headerOptions} />
-      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} enabled={!disabled} />
+      {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!disabled} />
         : !disabled ? <NativeFilterSearch {...search} /> : null}
-      <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
-        {readOnly ? <ActionEligibilityNotice /> : null}
-        <Text style={styles.moveSubject}>{`Destination: ${draft?.target.title ?? 'this place'}`}</Text>
-        <Text style={styles.sheetSubtitle}>Choose an item, box, or place to move here.</Text>
-        {draft?.selectedAsset ? <Text style={styles.sheetSubtitle}>{`Selected: ${draft.selectedAsset.title}`}</Text> : null}
-        {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Moving…</Text> : null}
-        {candidateStatus}
-        {candidatesAvailable && draft?.matches.length === 0 ? (
-          <View style={styles.parentEmptyState}>
-            <Text style={styles.parentTitle}>{emptyState.title}</Text>
-            <Text style={styles.parentSubtitle}>{emptyState.message}</Text>
-          </View>
-        ) : null}
-        {draft?.matches.map(match => {
-          const row = moveIntoCandidateRow(match);
-          return <MoveSelectionRow key={match.id} label={row.title}
-            context={`${row.kindLabel} · ${row.pathLabel || row.title}`}
-            accessibilityLabel={`Choose item ${row.title}`} disabled={disabled}
-            selected={draft.selectedAsset?.id === match.id} onPress={() => onSelectAsset(match)} />;
-        })}
-      </ScrollView>
+      <MoveSelectionList subjectLabel="Destination" subject={draft?.target.title ?? 'This place'}
+        context="Choose an item to move here." title="Items"
+        statuses={[...moveSelectionStatuses(readOnly, isSaving, candidateStatus),
+          ...(candidatesAvailable && draft?.matches.length === 0 ? [{ title: emptyState.title, message: emptyState.message }] : [])]}
+        rows={(draft?.matches ?? []).map(toRow)}
+        retainedSelection={draft?.selectedAsset && !draft.matches.some(match => match.id === draft.selectedAsset?.id)
+          ? toRow(draft.selectedAsset) : undefined} />
     </Frame>
   );
 }
@@ -477,11 +477,6 @@ function ActionEligibilityNotice() {
   </Text>;
 }
 
-function MoveSelectionRow(props: Parameters<typeof SettingsChoiceRow>[0]) {
-  const selection = useFocusedSheetActions({ primaryLabel: props.accessibilityLabel ?? props.label,
-    secondaryLabel: '', disabled: props.disabled ?? false, onApply: props.onPress, onBack: () => {} });
-  return <SettingsChoiceRow {...props} onPress={selection.onApply} />;
-}
 
 function useStyles() {
   return createStyles(useAppearancePalette());
@@ -489,16 +484,12 @@ function useStyles() {
 
 function createStyles(colors: MobileColorPalette) {
   return StyleSheet.create({
+  nativeSelection: { flex: 1 },
   editor: {
     backgroundColor: colors.surface,
     flex: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm
-  },
-  moveSubject: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '500'
   },
   sheetSubtitle: {
     color: colors.textMuted,
@@ -582,41 +573,6 @@ function createStyles(colors: MobileColorPalette) {
     width: 96
   },
 
-  createDestinationPanel: {
-    backgroundColor: colors.brandDustyBlueSoft,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-    marginVertical: spacing.xs,
-    padding: spacing.sm
-  },
-  createKindHelp: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    paddingHorizontal: spacing.xs
-  },
-  createPlacementText: {
-    color: colors.accentStrong,
-    fontSize: 13,
-    fontWeight: '900',
-    letterSpacing: 0,
-    lineHeight: 18,
-    paddingHorizontal: spacing.xs
-  },
-  parentEmptyState: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.md,
-    gap: spacing.xs,
-    marginVertical: spacing.xs,
-    padding: spacing.md
-  },
-  parentTitle: {
-    color: colors.text,
-    flexShrink: 1,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
   parentSubtitle: {
     color: colors.textMuted,
     fontSize: 13,
@@ -626,4 +582,12 @@ function createStyles(colors: MobileColorPalette) {
     opacity: 0.55
   }
   });
+}
+
+function moveSelectionStatuses(readOnly: boolean, isSaving: boolean, candidate?: MoveSelectionStatus): readonly MoveSelectionStatus[] {
+  return [
+    ...(readOnly ? [{ message: 'This item cannot be changed here. Your draft is kept while this screen is open.' }] : []),
+    ...(candidate ? [{ ...candidate, retry: candidate.retry ? { ...candidate.retry, disabled: readOnly || isSaving } : undefined }] : []),
+    ...(isSaving ? [{ message: 'Moving…' }] : [])
+  ];
 }

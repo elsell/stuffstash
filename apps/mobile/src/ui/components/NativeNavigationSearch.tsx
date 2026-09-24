@@ -4,8 +4,8 @@ import type { SearchBarCommands } from 'react-native-screens';
 import type { HeaderOptions } from './NativeHeaderActions.types';
 
 /** Platform search field; callers own search scheduling and result semantics. */
-export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onClear,enabled=true}:{
- readonly enabled?:boolean; readonly query:string; readonly placeholder:string;
+export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onClear,enabled=true,placement='integratedButton'}:{
+ readonly placement?:'integratedButton'|'stacked'; readonly enabled?:boolean; readonly query:string; readonly placeholder:string;
  readonly onChange:(text:string)=>void; readonly onSubmit:(text:string)=>void; readonly onClear:()=>void;
 }) {
  const ref=useRef<SearchBarCommands|null>(null);
@@ -28,12 +28,13 @@ export function NativeNavigationSearch({query,placeholder,onChange,onSubmit,onCl
  const editor=()=>editing.current?owner():undefined;
  function clear(){const handlers=editor();if(!handlers)return;editing.current=false;nativeText.current='';ref.current?.clearText();handlers.onClear();}
  return {headerSearchBarOptions:enabled?{
-  ref,placeholder,placement:'integratedButton',allowToolbarIntegration:false,hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
+  ref,placeholder,placement,allowToolbarIntegration:false,hideWhenScrolling:false,hideNavigationBar:false,obscureBackground:false,autoCapitalize:'none',
   onFocus:begin,onOpen:begin,
   onChangeText:event=>{const handlers=editor();if(!handlers)return;nativeText.current=event.nativeEvent.text;if(!event.nativeEvent.text.trim())handlers.onClear();else handlers.onChange(event.nativeEvent.text);},
   onSearchButtonPress:event=>{const handlers=editor();if(!handlers)return;nativeText.current=event.nativeEvent.text;handlers.onSubmit(event.nativeEvent.text);ref.current?.blur();},
+
   onCancelButtonPress:clear,onClose:clear,
  }:undefined};
- },[enabled,placeholder]);
+ },[enabled,placeholder,placement]);
  return <Stack.Screen options={options} />;
 }

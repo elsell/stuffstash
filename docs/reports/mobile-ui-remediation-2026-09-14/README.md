@@ -4,72 +4,44 @@ The comprehensive audit is **incomplete**. Prioritize stable screen structure,
 connected everyday tasks, visual coherence, then detailed states. Normal text comes
 first. The surface/axis inventory checks omissions; it is not a separate test queue.
 
-## Delivery and frozen batch
+## Delivery
 
-Latest verified TestFlight: **0.24.32 (123.1)** — M260–M264, with Apple processing
-and exact [changelog readback](evidence/workflow-release-358899-results.txt).
-[PR171](https://github.com/elsell/stuffstash/pull/171) merged as690ee8e4;
-release35889902851 succeeded. Final Browse run35887017924 passed on phone/iPad,
-and required CI passed on ddcb700c before merge.
+Latest verified TestFlight remains **0.24.32 (123.1)**, with Apple processing and
+exact [changelog readback](evidence/workflow-release-358899-results.txt).
 
-The next batch is frozen to **M265–M273**, [draft PR173](https://github.com/elsell/stuffstash/pull/173):
-Map/detail hierarchy, optional Add tag creation, Add/Edit tag selection, Add
-destination selection, independent Move creation drafts, retained native text,
-selection presentation above modal editors, and consistent Move Here controls.
-See the [batch contract](../../../specs/platform/mobile-selection-batch.spec.md).
-Unrelated findings do not block either release.
+**M265–M273 is merged** in [PR173](https://github.com/elsell/stuffstash/pull/173),
+e0d63ad5. Release35938987211 is in progress with eight TestFlight notes. Required
+CI35936948141 passed at4b98eac2. Final Add35936945060 passes phone/iPad, including
+search, cancel/reopen, destination creation/retry and bounded form spacing; final
+creation and returned-draft captures were reviewed. Move35920806955 passes all
+four workflows on both devices; tag/draft35920079319 passes three on both devices.
+Android grouped creation and recovery were reviewed. This closes the scoped Move
+and Add design holds, not the comprehensive audit or physical-device verification.
 
-## Current diagnosis and next decisions
+## Current follow-up diagnosis and decisions
 
-Browse List/Map structure shipped in0.24.32 after native verification. The frozen
-M265–M273 selection batch is tracked independently in PR173; its current Move
-grouped-creation and Add destination entry runs remain release gates. The preceding Move run passed all four workflows on both devices.
+M274–M279 covers filter navigation and density, retained search, contextual detail
+actions and Sharing recovery. Source7236f442 in35934741356 passes all12 phone
+workflows and11/12 iPad workflows. Reviewed phone detail and Sharing captures show
+contextual commands, unclipped completion actions and appropriate grouping.
 
-The filter follow-up run35911930846 passed all six iPad cases and five of six phone
-cases, including overview/menu, tag footer, search and Browse/detail return. Phone
-Expiration entry renders its list at y750 with height62 in an874-point screen;
-results exist but are offscreen. The candidate correction removes the redundant
-flex wrapper so FlatList is the native screen's direct scrolling body, preserving
-automatic insets and background. The connected result-tap-and-return test stays
-unchanged. The precise UIKit transition cause and corrected native behavior remain
-unproven; no extra swipe or timeout is used to hide the defect. Search ownership preserves queries across filter application; the connected Android journey and scoped native search checks are recorded in [the evidence](evidence/android-search-ownership-results.txt).
+The remaining native defect is iPad Expiration inheriting a580×650 viewport after
+Filters. Neither dependency ownership guard corrected it. Sourcef69eae7e removes
+those unproven patches and uses standard adaptive iOS modals for both filter tasks;
+Android stays a card. Filters previously opened at their largest custom detent.
+Keep the verified search patch and all connected viewport/mode/detail/back gates.
+Native35937584242 is verifying this decision. The explicit medium-sheet fixture
+remains an iOS-only diagnostic for other form-sheet consumers.
 
-## Detail action hierarchy follow-up
+The follow-up now integrates PR173's final Add/Move selection and stacked search
+with its own search focus ownership and detail hierarchy. Review removed a duplicate
+empty-photo caption introduced by the merge. The full1989-test mobile suite,
+TypeScript, structural checks and10 fixture preparation checks pass; critic review
+is complete. These source checks do not establish integrated native acceptance.
 
-M277 now groups Move with Location and availability with its command, keeps Edit
-in the native header, pairs photo status with Add photos, and groups contents
-commands directly before the list. Empty sibling sections no longer push actual
-contents below the fold; empty places and no-result searches retain one useful
-recovery state. Android representative captures show the revised
-[photo row](evidence/android-detail-photo.png) and
-[place contents](evidence/android-detail-place.png). Populated-photo, checked-out,
-read-only and place header checks pass on the rebuilt Android fixture. The bundled
-image establishes gallery layout, not real-photo crop quality.
-
-Phone/iPad verification of the final composition remains open. This is outside
-the frozen selection batch and is not a prerequisite for its release. Source
-checks and Android review do not establish iOS visual acceptance.
-
-Sharing review also corrected inline feedback alignment and grouped Share/Copy
-completion actions (M278). Android controlled recovery and visual review pass;
-phone/iPad sharing verification is combined with the filter and detail workflows.
-
-Run35934741356 at7236f442 passes11/12 iPad workflows. Sharing, detail commands,
-Place search, Map and the other filter journeys pass. Expiration still inherits a
-580×650 viewport after Filters. Neither dependency ownership guard corrected it.
-Phone completion is pending in that same run.
-
-The concrete M279 decision is standard adaptive iOS modal presentation for both
-filter tasks. They already opened at the largest detent; remove custom resizing
-and the unproven Screens patches rather than adding more ownership guesses.
-Retain the verified search patch and synchronized locks. Android stays a card.
-The explicit medium-sheet fixture remains an iOS-only diagnostic for other sheet
-consumers. Keep connected viewport, all modes, detail/back, search and footer
-checks unchanged; native acceptance of the new presentation remains pending.
-
-The earlier native bootstrap failure is resolved by synchronized Podfile source
-paths. Every new patch identity must update both dependency and external-source
-entries before dispatch; preserve deployment-mode enforcement.
+Connected Settings readback is a subsequent batch. Its fixture now uses production
+cache invalidation;35937082802 failed and its terminal evidence is being reviewed.
+This does not block the selection release or expand the frozen follow-up.
 
 ## Separate unresolved decisions
 
@@ -99,6 +71,7 @@ The last full native sweep, [352471](native-full-352471.md), passed phone74/92 a
 iPad84/92 fixture cases. It predates subsequent fixes and is neither a current
 failure count nor whole-app certification. Verify shared controls once, representative
 compositions and critical connected workflows; add coverage when ownership differs.
+
 
 This is the sole current status summary. Update it in place. Keep exact diagnoses,
 decisions and durable evidence; historical pending-run statements elsewhere are not

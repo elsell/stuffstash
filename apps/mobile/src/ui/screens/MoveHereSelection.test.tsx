@@ -27,7 +27,8 @@ it.each(['ios', 'android'] as const)('keeps Move Here selection through search a
         moveAssetCommand={{ execute: async input => { submitted.push(input); throw new Error('Keep selection for retry'); } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    expect(h.byText('Destination: Garage')).toBeDefined();
+    expect(h.byText('Garage')).toBeDefined();
+    expect(h.byText('Destination')).toBeDefined();
     const choice = h.byLabel('Choose item Tent');
     expect(choice?.props.accessibilityRole).toBe('radio');
     expect(choice?.props.accessibilityState.checked).toBe(false);
@@ -36,8 +37,9 @@ it.each(['ios', 'android'] as const)('keeps Move Here selection through search a
     expect(h.byLabel('Choose item Tent')?.props.accessibilityState.checked).toBe(true);
     expect(submitted).toEqual([]);
     await changeSearch('unmatched'); await settle(h, 350); await settle(h);
-    expect(h.byLabel('Choose item Tent')).toBeUndefined();
-    expect(h.byText('Selected: Tent')).toBeDefined();
+    expect(h.byLabel('Choose item Tent')?.props.accessibilityState.checked).toBe(true);
+    expect(h.byText('Selected')).toBeDefined();
+    expect(h.byText('Selected: Tent')).toBeUndefined();
     expect(h.byLabel('Move here')?.props.disabled).toBe(false);
     await changeSearch(''); await settle(h, 350); await settle(h);
     expect(h.byLabel('Choose item Tent')?.props.accessibilityState.checked).toBe(true);

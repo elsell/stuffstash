@@ -434,6 +434,7 @@ describe('AssetDetailView', () => {
     expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
     expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
     expect(addHereIndex).toBeLessThan(text.indexOf('Move items here'));
+
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
 

@@ -125,7 +125,7 @@ it('creates the move destination with the kind selected in the native menu', asy
     await h.press(h.byLabel('New destination'));
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
+    const create = h.byLabel('Create destination');
     await h.press(create ?? undefined);
     expect(latestAlert()?.title).toBe('Could not create destination');
     expect(moveSearch.options).toBeUndefined();
@@ -135,20 +135,20 @@ it('creates the move destination with the kind selected in the native menu', asy
     expect(moveSearch.options).toBeDefined();
     expect(moveSearch.text).toBe('Camping box');
     expect(h.allText().join(' ')).toContain('Camping box');
-    expect(h.byLabel('Create container "Camping box"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.checked === true);
     expect(selectedRows()).toHaveLength(1);
     await h.run(() => moveSearch.change('Kitchen'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    expect(selectedRows()).toHaveLength(0);
+    expect(selectedRows()).toHaveLength(1);
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
     await h.press(h.byLabel('New destination'));
-    expect(h.byLabel('Create container "Kitchen"')).toBeDefined();
+    expect(h.byLabel('Create destination')).toBeDefined();
     await h.press(h.byLabel('Cancel new destination'));
     await h.run(() => moveSearch.change('  CAMPING box  '));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     expect(selectedRows()).toHaveLength(1);
-    expect(h.byLabel('Create container "CAMPING box"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     lookupResults = [{ id: 'box', title: 'Camping box', kind: 'container', subtitle: '', pathLabel: 'Garage / Camping box', selectionHint: 'Container', willPromoteToContainer: false }];
     await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.parentCandidates('scope', 'tenant', 'inventory', 'CAMPING box') }));
     await settle(h);
@@ -186,7 +186,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     await h.run(() => moveSearch.change('Camping')); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const candidateRow = h.byLabel(mode === 'move' ? 'Choose destination Camping box' : 'Choose item Camping box');
     await h.press(candidateRow ?? undefined);
-    if (mode === 'move') expect(h.byText('Selected: Camping box')).toBeDefined();
+    if (mode === 'move') expect(h.byLabel('Choose destination Camping box')?.props.accessibilityState.checked).toBe(true);
     const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
     expect(save?.props.disabled).toBe(false);
     const submit = save!.props.onPress;
@@ -232,14 +232,15 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await settle(h); await settle(h);
     await h.run(() => moveSearch.change('New box'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
+    const move = h.byLabel('Move');
     await h.press(h.byLabel('New destination'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    const create = h.byLabel('Create location "New box"');
+    const create = h.byLabel('Create destination');
     expect(create).toBeDefined();
-    const move = h.byLabel('Move');
+    expect(h.byLabel('Move')).toBeUndefined();
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
-    expect(h.byLabel('Create location "New box"')?.props.disabled).toBe(true);
+    expect(h.byLabel('Create destination')?.props.disabled).toBe(true);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.byLabel('New destination name'), 'Changed');
@@ -249,7 +250,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     if (returned) expect(latestAlert()).toBe(alertBefore);
     expect(h.byLabel('New destination name')?.props.value).toBe('New box');
     expect(h.byText('Created destination')).toBeUndefined();
-    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel new destination')?.props.disabled).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
 
@@ -407,19 +408,19 @@ it('waits for known Move suggestions before offering destination creation', asyn
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
     await h.run(() => moveSearch.change('New room'));
-    expect(h.byText('Create location "New room"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
     const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
     expect(moveSearch.options).toBeDefined();
     expect(h.byLabel('Put in')).toBeUndefined();
     expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
-    expect(h.byText('Create location "New room"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
     await h.press(h.byLabel('New destination'));
-    expect(h.byText('Create location "New room"')).toBeDefined();
+    expect(h.byLabel('Create destination')).toBeDefined();
     expect(moveSearch.text).toBe('New room');
   } finally { await h.unmount(); }
 });

@@ -83,6 +83,7 @@ export function AssetDetailPhotoGallery({
 
   if (photos.length === 0) return caption;
 
+
   return (
     <View style={styles.gallery}>
       <ScrollView

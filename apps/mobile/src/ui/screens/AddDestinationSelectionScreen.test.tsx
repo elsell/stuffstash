@@ -1,3 +1,4 @@
+import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { navigationOptions, resetNavigation } from '../../test-support/navigation';
@@ -9,7 +10,7 @@ it('keeps the current destination through search and applies one eligible choice
   const h = new MobileRenderHarness(); const selected: unknown[] = []; const queries: string[] = []; resetNavigation();
   try {
     await h.render(<AddDestinationSelectionScreen {...base} onQuery={q => queries.push(q)} onSelect={p => selected.push(p?.id)} />);
-    await h.run(() => {const search = Object.assign({}, ...navigationOptions()).headerSearchBarOptions; search.onFocus(); search.onChangeText({ nativeEvent: { text: 'another' } });});
+    await h.run(() => typeInNativeSearch('another'));
     expect(queries).toEqual(['another']); expect(selected).toEqual([]);
     await h.render(<AddDestinationSelectionScreen {...base} query="another" matches={[]} onSelect={p => selected.push(p?.id)} />);
     expect(h.byText('Current: House / Garage')).toBeDefined();
@@ -54,5 +55,39 @@ it('keeps failed creation editable and rejects late name edits while creation is
     await h.run(h.byLabel('Create place')!.props.onPress); expect(created).toBe(1);
     await render({});
     await h.press(h.byLabel('Create place')); expect(created).toBe(2);
+  } finally { await h.unmount(); }
+});
+
+it('separates destination selection from creation and returns without closing the picker', async () => {
+ resetNavigation(); const h = new MobileRenderHarness(); let closed = 0; let created = 0;
+ const title = () => (Object.assign({}, ...navigationOptions()) as {title?:string}).title;
+ try {
+  await h.render(<AddDestinationSelectionScreen {...base} query="Shed" canCreate onClose={()=>closed++} onCreate={()=>created++} />);
+  await h.press(h.byLabel('New place'));
+  expect(title()).toBe('New place');
+  expect(h.byLabel('Choose inventory top level')).toBeUndefined();
+  expect(h.byLabel('Choose destination Garage')).toBeUndefined();
+  expect(h.byLabel('New place name')?.props.value).toBe('Shed');
+  const create = h.byLabel('Create place')!.props.onPress;
+  await h.press(h.byLabel('Cancel new place'));
+  expect(title()).toBe('Put in');
+  expect(h.byLabel('Choose destination Garage')).toBeDefined();
+  expect(closed).toBe(0);
+  await h.run(create); expect(created).toBe(0);
+ } finally {await h.unmount();resetNavigation();}
+});
+
+it('rejects retained destination rows while creating a place', async () => {
+  const h = new MobileRenderHarness(); const selected: unknown[] = [];
+  try {
+    await h.render(<AddDestinationSelectionScreen {...base} onSelect={parent => selected.push(parent)} />);
+    const choose = h.byLabel('Choose destination Garage')!.props.onPress;
+    const topLevel = h.byLabel('Choose inventory top level')!.props.onPress;
+    await h.press(h.byLabel('New place'));
+    await h.run(choose); await h.run(topLevel);
+    expect(selected).toEqual([]);
+    await h.press(h.byLabel('Cancel new place'));
+    await h.press(h.byLabel('Choose destination Garage'));
+    expect(selected).toEqual([garage]);
   } finally { await h.unmount(); }
 });

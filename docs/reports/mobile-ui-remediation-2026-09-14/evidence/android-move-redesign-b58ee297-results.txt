@@ -1,0 +1,7 @@
+Production overlay: bca78c94 plus b58ee297 on existing Android audit fixture checkout.
+Native Android emulator-5580, release APK, rebuilt offline on paul.
+Passed: existing selection, search, kind/name editing, cancellation retains independent creation draft, creation rejection/retry, Move rejection retains selected destination, retry returns.
+Initial test stopped at Move because text lookup matched the new navigation title. XML confirmed a distinct accessible Move action; corrected helper prefers action content-description. Full workflow then passed.
+Visual review: original side-by-side subject/current-location was crowded; corrected stacked summary inspected on native runtime. iOS is unchanged by b58ee297; phone/iPad redesigned Move screenshots remain required.
+Five focused behavior checks, structural rules, and critic review passed.
+Move Here also passed lookup retry, retained selection through search, rejected command recovery and explicit retry/return on the same APK. Selected-state and creation-form screenshots inspected: distinct subject/choices and toolbar actions remain visible; no clipped field or overlapping action observed. This is sampled normal-text Android evidence, not whole-app certification.

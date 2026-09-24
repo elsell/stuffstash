@@ -4047,3 +4047,4 @@ passes, but does not establish mode-switch reachability. The native tree establi
 the picker width is correct. Backport upstream Screens4652 to prevent a deleted
 sheet resizing a recycled scroll view. Verify the full viewport and all modes.
 This structural finding belongs to the follow-up batch; PR173 stays frozen.
+

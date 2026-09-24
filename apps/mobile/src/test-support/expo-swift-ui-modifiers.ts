@@ -22,3 +22,7 @@ export const autocorrectionDisabled=(value=true)=>({type:'autocorrectionDisabled
 export const accessibilityValue=modifier('accessibilityValue');
 export const contentShape=modifier('contentShape');
 export const shapes={rectangle:()=>({type:'rectangle'})};
+
+export const font=modifier('font');
+export const foregroundStyle=modifier('foregroundStyle');
+export const listStyle=modifier('listStyle');

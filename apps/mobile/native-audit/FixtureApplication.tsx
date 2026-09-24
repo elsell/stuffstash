@@ -1,5 +1,6 @@
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
 export { BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
+
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
 import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider } from '../src/ui/navigation/AssetTagSelectionTask';
@@ -107,6 +108,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
   return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider><BrowseFilterJourneyProvider>
+
     <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
       headerBackTitle: 'Back', headerTintColor: palette.action,
@@ -173,6 +175,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
   </BrowseFilterJourneyProvider></AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
+
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'

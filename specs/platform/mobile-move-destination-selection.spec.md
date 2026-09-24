@@ -76,3 +76,108 @@ command payload assertions. Shared choice acceptance verifies single selection, 
 mutation on selection, retired callbacks after a row disappears, explicit Move,
 and retained selection after rejection. This does not establish native presentation
 or complete M270.
+
+## Visual redesign after user rejection
+
+Functional native run35895924050 does not establish design acceptance. The user
+rejected the flat text hierarchy, unexplained row indentation and floating text
+creation command. Current MoveSelectionRow wraps a custom SettingsChoiceRow inside
+formScrollContent: both own horizontal inset. Replace this composition.
+
+For iOS Move and Move Here, use the pinned Expo UI SwiftUI List and Section
+primitives as the scrolling body, with one owner of native row insets/separators.
+Show a compact subject/current-location section and a separately labelled choices
+section. Candidate rows use an appropriate SF Symbol, primary name, secondary
+location path, and trailing selection checkmark. Selecting proposes the move;
+the persistent native confirmation command commits it. Keep an existing selected
+candidate understandable through search refinement without redundant free-floating
+Selected paragraphs. Preserve disabled candidates and their reasons.
+
+Native search uses a deliberate stacked navigation placement for these selection
+tasks on both phone and iPad. Browse retains its existing compact search icon;
+this is task-specific, not a global search redesign. The pinned screens adapter
+supports stacked placement and disables toolbar integration for it. Compare
+matching idle/search/selected states across devices.
+
+Move creation is a secondary native toolbar action, not a centered body text
+button. Entering creation should present one coherent bounded form with native
+Cancel/Create commands; do not leave competing Move controls active or scatter
+creation below the destination list. Preserve independent creation name, kind,
+placement explanation, validation, rejection/retry and return with the created
+destination selected. No new dependency is required: pinned Expo UI supports
+List/Section/HStack/VStack/Image/Text/Button and RNHostView for existing status
+content where necessary. Validate navigation safe areas and bridged content on a
+native runtime before adopting it; source support is not rendering evidence.
+
+Android follows its platform list/search/action conventions and the same information
+hierarchy; do not inject SwiftUI or copy iOS appearance into Android. Acceptance
+requires retained functional scenarios plus matching normal-text screenshots of
+entry, search, selected destination, creation and recovery judged as a whole.
+
+Android subject summary uses the asset name above its secondary current-location
+text, aligned with the choice text. It is descriptive context, not a setting's
+label/value row; long names and paths must wrap independently without competing
+for horizontal space. Android runtime review of bca78c94 exposed this distinction.
+
+### Native list inset and status ownership
+
+Native run35901635030 exposed a second inset from the old editor wrapper,
+zero-gap icon/text composition, and a clipped RN status view inside a SwiftUI
+list cell. The selection body must occupy the full available sheet width; the
+system List alone owns grouped-list margins. Keep form padding only for creation
+and the Android editor. Specify a readable icon/text gap and a smaller title/path
+gap rather than relying on the bridge's zero-spacing defaults.
+
+Render typed recovery content inside the native list using native text/buttons.
+Do not use a React Native sibling above the list or an intrinsically measured
+RNHostView inside its cells: the former falls behind native headers and the latter
+can exceed the cell width. Preserve retry focus guards and command behavior.
+Capture phone and iPad recovery as well as idle selection before acceptance.
+
+The entire candidate row, including empty space between its text and checkmark,
+must select the candidate. The pinned SwiftUI plain button needs an explicit
+rectangular content shape on its label stack. The iPad center-row taps in the
+existing connected native scenarios are the regression check; do not move those
+taps onto the text to hide a deficient touch target.
+
+## Status ownership correction
+
+Run35907123046 phone captures confirm the React Native status sibling renders
+under the native header; Retry suggestions has no hittable point. Replace the
+arbitrary ReactNode status slot with typed message/retry data rendered inside
+the platform list. On iOS use SwiftUI text and buttons so List owns width, safe
+area, scrolling and hit testing. Android retains inline recovery in its scroll
+body. Preserve current retry handlers, lock/focus guards and read-only/busy/empty
+messages. Do not add header-height padding or another unconstrained RNHostView.
+The connected move/detail/reopen case passes; creation search shows exact Audit
+in the failure capture, so its five-second observation timeout is separate from
+this demonstrated status-placement defect.
+
+Reuse the existing bounded 30-second exact-text observation, with elapsed timing,
+for the demonstrated Move creation-search observation timeout. Retain exact Audit
+and all subsequent creation/retry assertions; do not retype or change providers.
+
+The same run's iPad creation case stops before typing: its sole readiness check
+took4.23 seconds and returned false before the five-second deadline. Recorded
+post-failure state confirms finite, hittable keyboard and t key. Permit the same
+bounded30-second readiness observation for this case, retaining all geometry,
+hittability and exact-text checks. Leave other readiness deadlines unchanged.
+
+
+## Creation form header ownership
+
+Run35911803207 confirms the iPhone new-destination field starts at y99 while the
+native header ends at y116. The focused React Native creation form must reserve
+the current measured native header height on iOS, with automatic scroll content
+insets disabled so there is one inset owner. Keep SwiftUI selection-list inset
+ownership unchanged. The form must remain reachable after choosing Kind and
+returning from cancellation, with keyboard avoidance and retained draft intact.
+No hard-coded device/header height is allowed. Existing native creation checks
+must reach and edit the name, create after a rejected attempt, and return to Move.
+For stacked Move Here search, test cleanup clears the search field directly;
+it must not use an unscoped Cancel lookup that can dismiss the task itself.
+
+Move Here keyboard cleanup observes either native dismissal after clearing or a
+hittable dismissal command, then still requires the keyboard to disappear. The
+iPad failure in run35911803207 captured no keyboard immediately after an earlier
+existence snapshot; this is a transition race, not evidence of a missing command.
