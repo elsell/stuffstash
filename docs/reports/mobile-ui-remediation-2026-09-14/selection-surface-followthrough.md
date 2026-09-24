@@ -18,9 +18,19 @@ previously unreviewed source axes without treating each matrix cell as a test.
 | Privacy | These presentation routes receive editor-owned data; they do not fetch arbitrary inventory IDs. Tag completion checks the original scope and owner availability. This is presentation ownership evidence, not API authorization certification. |
 | Lifecycle | Providers assign each visit an owner; clearing an old owner cannot erase another visit. Tags rejects obsolete visits/scope changes. Destination cancellation checks the active visit and blocked state; route removal cancels the task and routes with no task exit. Native background and gesture races remain scoped to existing evidence, not newly certified here. |
 
+| Adaptation | Selection routes use fullScreenModal on iOS and card navigation on Android. Shared rows are flexible; they have no fixed screen width. Tablet/window composition is not established by source. |
+| Typography | RN text keeps default font scaling, labels can wrap, and SettingsList stacks row contents at fontScale1.3. SwiftUI footer labels use vertical fixedSize for wrapping. No maximum text size is imposed here; enlarged-text runtime remains open. |
+| Localization | Labels are English literals; tag ordering/search use locale-aware string operations. The views have no date/time formatting. RTL visual order and translations are not established; this source review does not imply localization support. |
+| Imagery | Selection state uses the shared20pt checkmark and explicit checked semantics, without photos or color-only distinctions. System header/search imagery is delegated to existing native adapters. |
+| Targets | SettingsChoiceRow specifies minimum52pt height/44pt width; the segmented adapter specifies44pt height. iOS footer uses large native bordered controls and Android uses Compose Button/OutlinedButton. These are configured dimensions, not measured delivered touch regions. |
+| Gestures | Explicit Cancel is available in both tasks. Destination route removal invokes owned cancellation and respects blocked work; selection uses platform presentation. Both scroll bodies support drag keyboard dismissal. Native gesture/back races still require scoped evidence. |
+| Accessibility | Choice rows expose checkbox/radio with checked/disabled state and explicit labels. Footer commands have explicit native labels; headers expose heading roles and tag count uses a live region. Screen-reader traversal and announcement quality require VoiceOver/TalkBack verification. |
+| Motion | These consumers introduce no custom animations; transitions and search use platform adapters. This avoids a new custom-motion owner but does not certify Reduce Motion behavior of the delivered presentation. |
+
 Sources: `AssetTagSelectionScreen`, `AddDestinationSelectionScreen`, their route
-screens, `AssetTagSelectionTask`, `AddDestinationTask`, and both NativeFilterSheet
-adapters. Typography, window adaptation, localization, imagery, touch-region
-geometry, gestures, screen-reader order and motion remain explicitly unreviewed
-in this follow-through. Existing iPad Add readiness and physical/assistive gaps
-remain open in README; no new runtime claim or product fix is made.
+screens, `AssetTagSelectionTask`, `AddDestinationTask`, both NativeFilterSheet
+adapters, `AssetNativeSheetOptions`, `SettingsScreen.styles`,
+`SettingsScreenPresentation`, `NativeSegmentedControl` and native NativeSheetActions.
+All previously unreviewed axes now have source review; none is promoted to runtime
+acceptance by this report. Existing iPad Add readiness and physical/assistive gaps
+remain open in README. No new product correction is justified by this source pass.

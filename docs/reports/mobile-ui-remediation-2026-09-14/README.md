@@ -6,10 +6,12 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.39 (130.1)**. PR188 mergedb45c5e96;
-release36037058030, iOS upload107763065488 and Apple changelog readback passed.
-History summaries, Before/After values, mode selection and footer clearance are
-delivered. [Release evidence](evidence/release-130.txt).
+Latest verified TestFlight is **0.24.40 (132.1)**. PR191 merged2a447c2b;
+release36052329679, iOS upload107814803060 and Apple changelog readback passed.
+The retained inventory collection now scrolls its final card above tabs/voice.
+[Release evidence](evidence/release-132.txt).
+Prior130 delivered History summaries, Before/After values, mode selection and
+footer clearance. [Prior release](evidence/release-130.txt).
 Prior129 delivered Settings labels/grouping/insets and Home inventory name spacing.
 [Prior release](evidence/release-129.txt).
 Prior128 delivered Home collection shortcuts through Browse and scoped Android
@@ -108,7 +110,8 @@ Retained inventory collection: baseline36045543667 confirmed the iPhone final ta
 behind persistent controls. Automatic insets fix it: candidatebe7d0f9a passes
 unchanged native36048916536 on phone/iPad. Reviewed full-screen entry/final captures
 confirm heading and final-tag clearance; source checks and critic review pass.
-PR191 holds the correction for release. Root invitation acceptance is outside tabs
+PR191 merged2a447c2b after final CI36051578009 passedfb3a4901; release36052329679
+delivered132.1 with verified TestFlight notes. Root invitation acceptance is outside tabs
 and is not implicated by this finding.
 [Bounded diagnosis](evidence/inventory-collection-clearance.txt).
 
@@ -116,6 +119,12 @@ PR190 verification/policy merged296f7d6a after CI36045074264 passed1398cdad.
 It contains no production renderer change and does not justify a TestFlight build.
 
 ## Separate unresolved decisions
+
+Normal-size decision boundary: no unchanged color/input diagnostic runs are
+queued. M51 remains unreleased; one physical first-tap observation on132.1 has
+been requested to distinguish device behavior from the inconsistent simulator
+evidence. iPad Add readiness remains unverified. These limits do not reopen the
+released inventory clearance fix or establish whole-app acceptance.
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
   keyboard disappearance; final capture/tree shows it dismissed and address intact.
@@ -147,8 +156,9 @@ It contains no production renderer change and does not justify a TestFlight buil
 
 [Surfaces](surfaces.json), [axes](axes.json) and [matrix](matrix.csv) enumerate144
 surfaces ×24 axes. Matrix classifications describe evidence, not3,456 separate test
-requirements. The two recent selection routes are now included; `unreviewed`
-marks axes that their scoped workflow evidence does not establish. [Findings](findings.md) retain stable IDs and historical evidence.
+requirements. The two recent selection routes now have source reviews for every axis;
+[source follow-through](selection-surface-followthrough.md) preserves runtime gaps.
+Source review does not establish native acceptance. [Findings](findings.md) retain stable IDs and historical evidence.
 The older [whole-workflow review](everyday-workflow-review.md) records design
 rationale; this file supplies current acceptance status.
 
