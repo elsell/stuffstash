@@ -2351,3 +2351,26 @@ using XCTest device orientation, then open that same named photo. Restore portra
 on exit; iPhone retains its production portrait orientation. The other five
 hierarchy workflows retain their existing assertions. Fixture dimensions and
 source tests do not substitute for reviewing the resulting captures.
+
+### Contextual command emphasis and detail recovery
+
+Apple supports borderless buttons but does not require them for standalone commands.
+Choose emphasis from context, rather than treating native control provenance as design
+acceptance. Keep quiet row/toolbar actions where their grouping explains them; use a
+bounded secondary command for standalone recovery; reserve primary emphasis for the
+main task. Reference: https://developer.apple.com/design/human-interface-guidelines/buttons
+
+The shared command adapter adds explicit secondary prominence (SwiftUI bordered,
+Compose outlined). Secondary recovery controls align with their explanatory text,
+without filling the whole content width. Per user direction, secondary is the default. Borderless requires an explicit
+standard prominence choice justified by an enclosing row or toolbar. Existing
+primary emphasis remains unchanged; inspect affected consumers before release.
+On asset detail, identity precedes photo loading/failure information. Each failed
+region groups its message with a bounded Retry action. Retrying one region must not
+hide or reset the other; disabled callbacks must not execute and current handlers
+must be used. Verify native retry completion and visual hierarchy on phone/tablet.
+
+Current native detail evidence35948366265 passes five of six workflows on each
+device, including gallery selection/rotation. Region recovery fails after photo
+Retry on phone and contents Retry on tablet. Do not mark this candidate accepted;
+keep those exact completion assertions while correcting the affected presentation.

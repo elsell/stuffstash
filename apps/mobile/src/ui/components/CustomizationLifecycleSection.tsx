@@ -16,7 +16,7 @@ export function CustomizationLifecycleSection({
   if (kind === 'tag' && lifecycle === 'archived') return null;
   return <SettingsSection title="Lifecycle">
     {lifecycle === 'active'
-      ? <NativeCommandButton role="destructive" disabled={busy} label={busy ? 'Working…' : 'Archive'} onPress={() => onAction('archive')} />
-      : <><NativeCommandButton disabled={busy} label={busy ? 'Working…' : 'Restore'} onPress={() => onAction('restore')} /><SettingsSeparator /><NativeCommandButton role="destructive" disabled={busy} label="Delete permanently" onPress={() => onAction('delete')} /></>}
+      ? <NativeCommandButton prominence="standard" role="destructive" disabled={busy} label={busy ? 'Working…' : 'Archive'} onPress={() => onAction('archive')} />
+      : <><NativeCommandButton prominence="standard" disabled={busy} label={busy ? 'Working…' : 'Restore'} onPress={() => onAction('restore')} /><SettingsSeparator /><NativeCommandButton prominence="standard" role="destructive" disabled={busy} label="Delete permanently" onPress={() => onAction('delete')} /></>}
   </SettingsSection>;
 }
