@@ -2739,6 +2739,26 @@ final class FixtureAuditTests: XCTestCase {
     capture("detail-empty-photo-hierarchy")
   }
 
+  func testBrowsePhotoFreeRowsKeepMixedMediaAligned() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let garage = app.otherElements["asset-card-journey-0"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10))
+    XCTAssertLessThan(garage.frame.height, garage.frame.width,
+      "Confirmed photo-free grid cards must not reserve a square media panel")
+    capture("browse-photo-free-compact")
+    guard openFixtureURL("audit-browse-journey?photoMix=true") else { return }
+    let mixed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      garage.exists && garage.frame.height > garage.frame.width
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [mixed], timeout: 10), .completed)
+    let garageTitle = app.buttons["Open asset Garage"].firstMatch
+    let kitchenTitle = app.buttons["Open asset Kitchen"].firstMatch
+    XCTAssertTrue(kitchenTitle.waitForExistence(timeout: 10))
+    XCTAssertEqual(garageTitle.frame.minY, kitchenTitle.frame.minY, accuracy: 1,
+      "Photo-free peers must align their titles with the photo card")
+    capture("browse-mixed-photo-alignment")
+  }
+
   func testBrowseGridFitsDeviceWidth() {
     guard openFixtureURL("audit-browse-journey") else { return }
     let garage = app.otherElements["asset-card-journey-0"].firstMatch

@@ -1143,3 +1143,9 @@ The existing Browse journey fixture may accept photoMix=true to show one real lo
 image, one photo-bearing asset without a resolved thumbnail, and confirmed photo-free
 peers. The normal fixture stays photo-free. Review both grids with List/Map return and
 scrolling; source geometry assertions alone do not accept mixed-row density.
+
+The focused Browse native suite verifies compact confirmed-empty card geometry and
+then mixed-row title alignment on the same route with a changed fixture variant.
+It retains existing responsive width and List/Map scroll-return checks. Photo-free
+card height must be smaller than its grid width at normal text; mixed media cards
+retain the image area. Capture both states for visual judgment.

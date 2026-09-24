@@ -259,6 +259,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
