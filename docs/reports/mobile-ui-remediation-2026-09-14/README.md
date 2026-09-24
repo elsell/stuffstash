@@ -33,42 +33,31 @@ These scoped results do not certify every route or the whole app.
 
 ## Current follow-up
 
-Android Browse now retains List/Map and search through light/dark changes on the
-named emulator APK. Corrected adapter-driven route resets and native control
-appearance; reviewed captures, continued editing/clear/close, return to List and
-Notifications selection pass.26 focused tests, TypeScript, structural checks and
-review pass. PR181 remains draft. Connected iOS Browse/filter regression35979200078
-at77c4738d passed6/6 on both phone and iPad. Reviewed return captures exposed
-misaligned compact-card titles with mixed checkout status; the row-space correction
-passes Android native alignment and48 focused tests. Place entry also hid its
-identity under native chrome; automatic detail insets now have68 passing detail
-tests and Android entry/Edit/save/Move/return verification. Frozen iOS run35987800972 at3c0ba0ff
-replaced canceled pending35983649762 on an independent verification branch.
-iPad passed14/16: reviewed captures confirm Place identity below the header and
-aligned Browse titles. Its32pt Move-items command fails the44pt gate; PR182
-addresses that control. Add destination stopped at entry readiness although the
-final capture shows its correctly labeled field; the recovery workflow remains
-unverified. Phone passed15/16, failing only the same32pt Move-items command; reviewed Place
-identity and Browse alignment captures pass.
+Combined PR182 includes PR181: Browse search retention/appearance, neighboring card
+alignment, detail header insets and grouped container actions. Standard CI36000041858,
+focused source tests, TypeScript, structural checks and critic review pass.
 
-PR182 groups availability with identity and places bounded contents commands under
-a short heading.80 focused tests, TypeScript, structural checks and review pass;
-Android capture confirms both commands after rejecting a recycled-row candidate
-that hid them. iOS run35994194799 passed6/7 on both: hierarchy and commands pass, but the new
-footer locator had no fixture metadata and could not test clearance. Corrected
-populated detail and Sharing run35999237093 at28bc9b3c is pending; no overlap
-acceptance is claimed. Sharing/list missing-inset source risks are not confirmed
-runtime defects. [Current diagnosis and evidence](evidence/container-organization.txt).
+Native acceptance: Browse/filter workflows35979200078 pass6/6 both. Frozen
+35987800972 passes phone15/16 and iPad14/16: its32pt Move-items target is corrected
+by PR182 and passes in hierarchy35994194799 (six existing cases pass both).
+The initial footer test had missing fixture metadata, not demonstrated clipping.
+Corrected populated Detail/Sharing35999231112 at28bc9b3c passes2/2 both; iPhone
+needed one retry after Xcode failed before app launch. Reviewed screenshots show
+final content above delivered tabs/voice chrome. Product code is unchanged since
+that native revision. Sharing needs no speculative inset change on this evidence.
+[Evidence](evidence/container-organization.txt).
 
-Broad refresh35980094051 atc7c44b45: phone completed121 tests with14 failures.
-Failures include historical controlled-input and sheet diagnostics, enlarged-text
-cases, color first-tap and the same32pt Move-items command. Do not treat them as14
-new product defects or repeat the diagnostic experiments.
-iPad completed121 tests with6 failures, including Add keyboard readiness.
-[Terminal results and decisions](evidence/native-full-359800.txt).
-The broad sweep is not a prerequisite for this bounded release. [Detail evidence](evidence/detail-entry-insets.txt),
-[alignment evidence](evidence/checkout-row-alignment.txt),
-[Android appearance evidence](evidence/android-live-appearance-header.txt).
+Android appearance and connected Edit/Move checks pass on the named audit APK.
+[Appearance](evidence/android-live-appearance-header.txt),
+[alignment](evidence/checkout-row-alignment.txt),
+[detail entry](evidence/detail-entry-insets.txt).
+
+Frozen iPad Add entry readiness remains unverified; phone Add/Move recovery passes.
+No product rewrite or broader acceptance is inferred from the timing failure.
+Recent-assets/invitation inset risks and unrelated findings remain in the audit.
+Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6),
+including old diagnostics and enlarged-text cases; it is not a release gate for
+this verified batch. [Terminal decisions](evidence/native-full-359800.txt).
 
 ## Separate unresolved decisions
 

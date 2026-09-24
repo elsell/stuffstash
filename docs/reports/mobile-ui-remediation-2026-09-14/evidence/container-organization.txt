@@ -66,3 +66,12 @@ shows identity/availability together, short Contents heading and both bounded
 contents commands without clipping. detail-empty-photo-hierarchy keeps the item
 identity primary and uses a compact No photos row. Final-state for the command
 journey is the audit launcher, so only named intermediate captures support review.
+
+Final clearance: actual dispatch35999231112 at28bc9b3c (35999237093 was a
+separate cancelled automatic PR run). iPad2/2 pass, artifact10807984927 reviewed.
+Phone first attempt failed in Xcode launch before any test interaction; failed-job
+retry107647436731 passes2/2, artifact10810786294 reviewed. Populated container
+Updated metadata and Sharing explanation both clear native tabs/voice. No Sharing
+product inset change is justified by this passed representative state. Product
+source diff28bc9b3c..9f86640e is empty. Standard CI36000041858 passes. Combined
+PR182 targets main to avoid separately auto-releasing the earlier32pt command.
