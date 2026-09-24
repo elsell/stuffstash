@@ -1,4 +1,6 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { Stack } from 'expo-router';
@@ -6,7 +8,7 @@ import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useCustomizationReads } from '../serverState/useCustomizationReads';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import type { CustomizationContextQuery } from '../../application/customization/CustomizationContextQuery';
 import type { CustomizationCollectionQuery } from '../../application/customization/CustomizationQueries';
@@ -38,6 +40,9 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
   const feedback = useAppFeedback();
   const colors = useAppearancePalette();
   const settings = useSettingsListStyles();
+  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
+  const ownsViewport = Platform.OS === 'ios';
   const styles = createStyles(colors);
   const requestRef = useRef(0);
   const [context, setContext] = useState<Awaited<ReturnType<CustomizationContextQuery['execute']>>>();
@@ -124,13 +129,17 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
     {body}
   </>;
 
-  const withScrollContent = (body: ReactNode, refreshable = false) => withHeader(
-    <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic"
+  const withScrollContent = (body: ReactNode, refreshable = false) => {
+    const scroll = <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior={ownsViewport ? 'never' : 'automatic'}
+      automaticallyAdjustContentInsets={!ownsViewport}
       contentContainerStyle={status === 'error' ? [settings.styles.errorContainer, { flexGrow: 1 }] : settings.styles.content}
       keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled"
       refreshControl={refreshable ? <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} /> : undefined}
-      style={settings.styles.shell}>{body}</ScrollView>
-  );
+      style={settings.styles.shell}>{body}</ScrollView>;
+    return withHeader(ownsViewport
+      ? <View style={[settings.styles.shell, { paddingTop: headerHeight, paddingBottom: insets.bottom }]}>{scroll}</View>
+      : scroll);
+  };
 
   if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
   if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label="Loading settings…" />);

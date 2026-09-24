@@ -3184,7 +3184,11 @@ final class FixtureAuditTests: XCTestCase {
   func testSettingsSaveReadsBackFromTheSameCollection() {
     guard openFixtureURL("audit-settings-readback") else { return }
     let original = app.buttons["Tools, No color"].firstMatch
-    XCTAssertTrue(original.waitForExistence(timeout: 10)); original.tap()
+    XCTAssertTrue(original.waitForExistence(timeout: 10)); XCTAssertTrue(original.isHittable)
+    XCTAssertGreaterThanOrEqual(original.frame.minY, app.navigationBars["Tags"].frame.maxY)
+    XCTAssertLessThanOrEqual(original.frame.minY, app.navigationBars["Tags"].frame.maxY + 48)
+    capture("settings-connected-collection-entry")
+    original.tap()
     let name = app.textFields["Name"].firstMatch
     XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools")
     name.tap(); name.typeText(" emergency supplies")
@@ -3200,6 +3204,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(original.exists)
     XCTAssertTrue(updated.isHittable)
     XCTAssertGreaterThanOrEqual(updated.frame.minY, app.navigationBars["Tags"].frame.maxY)
+    XCTAssertLessThanOrEqual(updated.frame.minY, app.navigationBars["Tags"].frame.maxY + 48)
     capture("settings-connected-collection-readback")
     updated.tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency supplies")

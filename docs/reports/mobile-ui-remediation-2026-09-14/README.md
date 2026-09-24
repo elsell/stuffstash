@@ -6,11 +6,11 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight remains **0.24.32 (123.1)**, with Apple processing and
-exact [changelog readback](evidence/workflow-release-358899-results.txt).
+Latest verified TestFlight is **0.24.33 (124.1)**, with Apple processing and
+exact [changelog readback](evidence/selection-release-359389-results.txt).
 
 **M265–M273 is merged** in [PR173](https://github.com/elsell/stuffstash/pull/173),
-e0d63ad5. Release35938987211 is in progress with eight TestFlight notes. Required
+e0d63ad5. Release35938987211 completed with eight TestFlight notes. Required
 CI35936948141 passed at4b98eac2. Final Add35936945060 passes phone/iPad, including
 search, cancel/reopen, destination creation/retry and bounded form spacing; final
 creation and returned-draft captures were reviewed. Move35920806955 passes all
@@ -29,12 +29,14 @@ actions and Sharing recovery. Source7236f442 in35934741356 passes all12 phone
 workflows and11/12 iPad workflows. Reviewed phone detail and Sharing captures show
 contextual commands, unclipped completion actions and appropriate grouping.
 
-The remaining native defect is iPad Expiration inheriting a580×650 viewport after
+The last reproduced native defect was iPad Expiration inheriting a580×650 viewport after
 Filters. Neither dependency ownership guard corrected it. Sourcef69eae7e removes
 those unproven patches and uses standard adaptive iOS modals for both filter tasks;
 Android stays a card. Filters previously opened at their largest custom detent.
 Keep the verified search patch and all connected viewport/mode/detail/back gates.
-Native35937584242 is verifying this decision. The explicit medium-sheet fixture
+Native35937584242 passes all twelve workflows on both devices. Reviewed captures
+confirm full Expiration viewport and three reachable modes, plus filter/tag footer
+clearance. The explicit medium-sheet fixture
 remains an iOS-only diagnostic for other form-sheet consumers.
 
 The follow-up now integrates PR173's final Add/Move selection and stacked search
@@ -44,28 +46,26 @@ TypeScript, structural checks and10 fixture preparation checks pass; critic revi
 is complete. These source checks do not establish integrated native acceptance.
 The integrated release subset adds three representative Add destination, Add tag
 and Move creation workflows to the twelve follow-up workflows for shared search
-and return behavior; it retains all existing assertions.
+and return behavior; it retains all existing assertions. Native35941028517 at
+b605b6e9 is running this integrated subset. PR174 stays draft until it passes and
+its visual review is complete.
 
 Connected Settings readback is a subsequent batch. Its fixture now uses production
 cache invalidation;35937082802 confirms the updated row exists but is behind the
-native header on both devices. Candidate35bba93c preserves one ScrollView across
-loading/ready/retry instead of replacing its root. Source checks pass; native
-35939654846 is verifying it. This is a candidate correction, not a proven fix.
+native header on both devices. Run35939654846 disproves stable scroll ownership alone: the phone row still
+starts at y24 behind the header. PR176 now reserves an explicit measured iOS
+viewport and disables automatic content insets; Android keeps its hierarchy.
+The122 affected tests, TypeScript, structural checks and critic review pass.
+Native acceptance remains open; entry/return bounds also reject doubled spacing.
 This does not block the selection release or expand the frozen follow-up.
+PR176 stacks Settings readback and clearer action grouping with native primary
+emphasis for Move completion. Its1,993 integrated tests and source checks pass;
+its six-workflow native verification waits for the integrated follow-up. The
+failed Settings candidate is superseded, not rerun. Check Settings search/Add as
+well as collection readback and the four Move workflows.
 
 ## Separate unresolved decisions
 
-- **Move completion emphasis:** current phone35920806955 captures confirm visible
-  stacked search, grouped subject/choices and consistent icon/label alignment.
-  New destination and Move still share equal-weight plain toolbar presentation.
-  The next `codex/mobile-settings-move-batch` candidate opts Move, Move here and
-  Create destination into native prominent styling with separate background
-  ownership. It includes the Settings collection correction and removes the
-  redundant Lifecycle label. Integrated validation passes1,993 tests, TypeScript,
-  structural checks and10 fixture checks; critic review found no blocker. Its
-  five-workflow native subset covers Settings and both Move tasks. Native visual
-  verification remains open; do not fold this candidate into the already running
-  integrated follow-up or call it released.
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
   remains draft at aa9fbd9e. The explicit system color-picker candidate passes
   ordinary opening on both devices, but phone coordinate activation and timely Add
