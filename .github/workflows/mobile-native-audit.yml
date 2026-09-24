@@ -17,6 +17,7 @@ on:
           - text-entry-no-provider
           - add-draft
           - persistent-tabs
+          - persistent-tab-return
           - home-header
           - browse-journey
           - browse-filter-journey
@@ -37,6 +38,7 @@ on:
           - hierarchy-followup
           - command-emphasis
           - native-patterns-release
+          - native-completion
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -48,6 +50,7 @@ on:
           - edit-and-move-drafts
           - settings-editing
           - settings-readback
+          - settings-tab-return
           - settings-move-release
           - enum-and-settings
   pull_request:
@@ -147,9 +150,20 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
               )
               ;;
+            persistent-tab-return)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+              ) ;;
             persistent-tabs)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=("${persistent_tab_test_args[@]}") ;;
+            native-completion)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+              ) ;;
             native-patterns-release)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=("${command_emphasis_test_args[@]}" "${persistent_tab_test_args[@]}"
@@ -194,6 +208,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              ) ;;
+            settings-tab-return)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
               ) ;;
             settings-readback)
               test "$AUDIT_SUITE" = fixtures || exit 1

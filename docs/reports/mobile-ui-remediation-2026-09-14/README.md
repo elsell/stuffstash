@@ -53,7 +53,7 @@ while retaining48-point outer commands. Four adapter checks, TypeScript,
 structural checks and critic review pass. Native35971374386 must establish separate
 hit areas, successful Retry/Discard and long-label activation before acceptance.
 See [command evidence](evidence/bounded-settings-actions.txt). This follow-up does
-not expand PR178's release gates; integrate its final base fixes before merging.
+not expand PR178's release gates. Its Settings name/key corrections are integrated.
 
 ## Separate unresolved decisions
 

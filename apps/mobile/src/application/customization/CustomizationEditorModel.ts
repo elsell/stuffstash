@@ -27,11 +27,11 @@ export function emptyCustomizationEditorDraft(): CustomizationEditorDraft {
   };
 }
 
-export function withEditorName(draft: CustomizationEditorDraft, name: string): CustomizationEditorDraft {
+export function withEditorName(draft: CustomizationEditorDraft, name: string, mode: 'create' | 'edit'): CustomizationEditorDraft {
   return {
     ...draft,
     name,
-    key: draft.keyManuallyEdited ? draft.key : suggestedCustomizationKey(name)
+    key: mode === 'edit' || draft.keyManuallyEdited ? draft.key : suggestedCustomizationKey(name)
   };
 }
 

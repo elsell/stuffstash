@@ -1194,3 +1194,54 @@ as primary commands so native padding fits the measured command. Preserve native
 bounded styling, multiline growth, and disabled behavior. Acceptance requires the
 existing paired recovery test to prove separate hit frames and successful Retry
 and Discard on iPhone and iPad; source tests cannot establish native geometry.
+
+### Integrated native batch completion observations
+
+Run35958732480 passes12/13 phone and11/13 iPad workflows. Both pass Add and
+independent expiration search return. The phone Retry contents assertion expires
+at five seconds, but its final native capture shows Nothing inside yet and no
+Retry command. Observe the combined completed state for a bounded fifteen seconds;
+require both the command's disappearance and the recovered content without a
+second tap. This changes observation tolerance, not the production completion rule.
+The focused iPad run35960677440 still fails after the duplicate-element
+correction; that correction does not close tab reachability. Its Settings creation reads Camngpi immediately after typing Camping;
+this remains an exact-text failure. Observe exact committed text for fifteen seconds
+without retyping or replacing it, then retain the exact save/reopen checks. A lasting
+wrong value still fails. Do not reopen provider/key-delivery experiments or claim
+these observation changes establish native acceptance before the focused run passes.
+
+### Distinguish tab touch and accessibility reachability
+
+Focused run35960677440 retains the exact Settings draft and visibly renders both
+iPad tabs, but neither the first-match correction nor waiting establishes native
+hit-test reachability. Before the final accessibility assertion, activate the visible
+native Browse and Home buttons at their observed centers on iPad, requiring Browse
+content and exact draft readback. Derive coordinates from finite on-screen native
+button bounds, never fixed screen coordinates. Capture before and after activation.
+Keep the separate final isHittable requirement: successful coordinate activation does
+not prove accessibility acceptance. A failed destination change identifies a touch
+failure; a successful roundtrip with failed hit-test keeps the narrower accessibility
+finding open. The focused tab-return selector runs this workflow alone.
+
+### Settings name input retention
+
+Run35961716802 passes contents Retry on both devices and Settings save/readback
+on iPad, but iPhone New Tag retains Cngampi after typing Camping and waiting15s.
+Do not extend the observation budget or alter typed text. Use the existing
+DraftTextField adapter for customization display names (tags, asset types, fields):
+iOS owns its editing text and publishes complete drafts; Android preserves its
+current adapter. Keep the current validation/name-to-key behavior, busy/access
+locks, failed-save retention, tab return and exact save/reopen verification.
+Loaded-resource transitions must unmount the old field before seeding a new name.
+Multiline descriptions and the explicitly focused technical key remain unchanged.
+The native failing workflow is the regression reproduction; source tests cannot
+establish correct iOS character order. Rerun Settings readback and persistent-tab
+draft return after this correction.
+
+Editing an existing customization definition must preserve its saved stable key
+when the native Name field reports either its initial value or a later rename.
+Automatic key suggestions apply only during creation until manually overridden.
+Replaying an unchanged loaded name must leave the editor clean; renaming and then
+restoring the saved name must also restore clean state. Back must not ask to discard
+changes solely because a native field appeared. Verify this with a saved display
+name that differs from its original key, then retain the native save/reopen gate.
