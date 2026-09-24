@@ -1157,7 +1157,13 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertTrue(edit.waitForExistence(timeout: 5)); XCTAssertTrue(edit.isHittable)
       }
       if variant == "photo" {
-        XCTAssertTrue(app.buttons["Open photo 1 of 1"].firstMatch.waitForExistence(timeout: 5))
+        let photo = app.buttons["Open photo 1 of 1"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(photo.frame.width, 0)
+        XCTAssertLessThanOrEqual(photo.frame.width, 688 + 1)
+        XCTAssertGreaterThanOrEqual(photo.frame.minX, 0)
+        XCTAssertLessThanOrEqual(photo.frame.maxX, app.frame.maxX)
+        XCTAssertEqual(photo.frame.midX, app.frame.midX, accuracy: 2)
         XCTAssertFalse(app.staticTexts["No photos"].exists)
       }
       if variant == "place" {

@@ -305,7 +305,7 @@ function ContainedAssetRowView({
 
 function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
-    spatialActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, maxWidth: 560 },
+    spatialActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     spatialCommand: { width: 160, maxWidth: '100%' },
     maintenanceSection: {
       borderTopColor: palette.border,

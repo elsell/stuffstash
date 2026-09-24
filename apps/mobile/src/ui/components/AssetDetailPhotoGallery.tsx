@@ -65,7 +65,8 @@ export function AssetDetailPhotoGallery({
   const appearancePalette = useAppearanceAwarePalette();
   const palette = paletteOverride ?? appearancePalette;
   const { width: viewportWidth } = useWindowDimensions();
-  const photoWidth = assetDetailPhotoWidth(viewportWidth, contentHorizontalPadding);
+  const [galleryWidth, setGalleryWidth] = useState<number>();
+  const photoWidth = galleryWidth ?? assetDetailPhotoWidth(viewportWidth, contentHorizontalPadding);
   const pages = assetDetailPhotoPages(photos);
   const canUseAddPhotos = canAddPhotos && onAddPhotos !== undefined;
 
@@ -88,6 +89,9 @@ export function AssetDetailPhotoGallery({
     <View style={styles.gallery}>
       <ScrollView
         accessibilityLabel={`Asset photos, ${photos.length.toString()} total`}
+        onLayout={({ nativeEvent }) => {
+          if (nativeEvent.layout.width > 0) setGalleryWidth(nativeEvent.layout.width);
+        }}
         contentContainerStyle={styles.photoStrip}
         decelerationRate="fast"
         horizontal
@@ -145,7 +149,7 @@ function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
 
 const styles = StyleSheet.create({
   previewFailure: { padding: spacing.lg, gap: spacing.sm },
-  caption: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, maxWidth: 560, width: '100%' },
+  caption: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, width: '100%' },
   captionCommand: { width: 120, maxWidth: '100%' },
   gallery: {
     gap: spacing.sm

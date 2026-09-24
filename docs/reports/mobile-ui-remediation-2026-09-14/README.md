@@ -60,6 +60,12 @@ PR176 stacks Settings readback and clearer action grouping with native primary
 emphasis for Move completion. Its1,993 integrated tests and source checks pass;
 native verification is conditional on the existing Settings and follow-up runs.
 
+A subsequent detail-layout candidate addresses M280: independent tablet row caps
+produce unrelated trailing edges. One centered content column and gallery viewport
+measurement are implemented separately on `codex/mobile-detail-readable-layout`.
+Source checks pass; native visual and resized-gallery verification remain open.
+This does not expand either frozen batch.
+
 ## Separate unresolved decisions
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)

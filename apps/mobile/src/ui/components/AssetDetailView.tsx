@@ -334,6 +334,9 @@ function createStyles(palette: MobileColorPalette) {
     justifyContent: 'space-between'
   },
   content: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 720,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl * 2

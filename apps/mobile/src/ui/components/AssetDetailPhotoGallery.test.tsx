@@ -10,6 +10,26 @@ const photos: readonly AssetPhotoViewModel[] = [
 ];
 
 describe('asset gallery', () => {
+  it('sizes and snaps photo pages to the laid-out gallery after resizing', async () => {
+    const harness = new MobileRenderHarness(); const opened: string[] = [];
+    try {
+      await harness.render(<AssetDetailPhotoGallery canAddPhotos={false} photos={photos}
+        onPhotoPress={id => opened.push(id)} />);
+      for (const width of [688, 338]) {
+        const gallery = harness.byLabel('Asset photos, 2 total');
+        expect(gallery?.props.onLayout).toBeTypeOf('function');
+        await harness.run(() => gallery?.props.onLayout?.({ nativeEvent: { layout: { width } } }));
+        const first = harness.byLabel('Open photo 1 of 2');
+        const second = harness.byLabel('Open photo 2 of 2');
+        expect(first?.props.style).toContainEqual(expect.objectContaining({ width }));
+        expect(second?.props.style).toContainEqual(expect.objectContaining({ width }));
+        expect(harness.byLabel('Asset photos, 2 total')?.props.snapToInterval).toBe(width + 10);
+      }
+      await harness.press(harness.byLabel('Open photo 2 of 2'));
+      expect(opened).toEqual(['two']);
+    } finally { await harness.unmount(); }
+  });
+
   it('explains a failed preview and keeps opening the original photo available', async () => {
     const harness = new MobileRenderHarness(); const opened: string[] = [];
     try {

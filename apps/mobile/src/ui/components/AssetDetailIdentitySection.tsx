@@ -256,7 +256,7 @@ function createStyles(palette: MobileColorPalette) {
   },
   maintenanceCommand: { width: 160, maxWidth: '100%' },
   contextCommand: { width: 120, maxWidth: '100%' },
-  contextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: 560 },
+  contextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md },
   contextText: { gap: spacing.xs, flexGrow: 1, flexShrink: 1, flexBasis: 160 }
 
   });

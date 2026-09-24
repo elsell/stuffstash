@@ -4048,3 +4048,20 @@ the picker width is correct. Backport upstream Screens4652 to prevent a deleted
 sheet resizing a recycled scroll view. Verify the full viewport and all modes.
 This structural finding belongs to the follow-up batch; PR173 stays frozen.
 
+
+
+### M280 — Tablet detail has unrelated content widths
+
+Normal-text iPad [detail capture](evidence/ipad-detail-mixed-columns-359347.png)
+from35934741356 shows location, photo and availability actions ending inside a
+full-width detail page. Source confirms independent560-point row caps while
+identity, contents and separators use the full viewport. This is a composition
+finding; the commands remain operable.
+
+Candidate uses one centered720-point detail column, including existing padding,
+and removes independent caps from contextual, caption and containment action rows.
+Photo pages and snapping now follow their measured gallery viewport. The new
+resize regression failed before implementation; affected tests and TypeScript
+pass. Critic caught the remaining containment cap, now removed. Native visual
+acceptance is pending, including empty/populated detail, contained lists and
+resizing while on a later photo. This follows the frozen PR174/176 batches.

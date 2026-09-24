@@ -2320,3 +2320,26 @@ destination hierarchy, deliberate alignment and action prominence. The latest us
 rejection keeps Move visually open until that review is explicit; older recorded
 passes must not silently override it. Existing grouped-list and stacked-search
 implementation should be assessed before deciding another implementation is needed.
+
+
+### M280: One readable asset-detail column
+
+The reviewed normal-text iPad detail capture from run35934741356 has command
+rows capped at560 points inside an otherwise full-width page. Identity, contents,
+separators and the photo caption therefore have inconsistent trailing edges.
+This is a visual-composition finding, not an operation failure. Apple's
+[layout tips](https://developer.apple.com/design/tips/) recommend readable layouts
+and controls close to the content they modify.
+
+Use one centered detail content column, capped at720 points including its existing
+horizontal padding. This width is a project choice, not an Apple requirement.
+Narrow screens retain their existing available width. Identity, media, location,
+availability and contained rows share that column; remove independent row caps.
+Keep the native scrolling viewport full-screen. Do not add a sheet, sidebar,
+extra navigation, or new command for this correction.
+
+Photo pages and snapping must use the actual gallery viewport, including after
+window resizing, rather than assuming device width. Preserve opening the chosen
+photo and its authenticated source. Verify actual phone/tablet empty and populated
+detail, twenty-item contents, search and scroll return before visual acceptance.
+The existing release batch remains frozen; this is a subsequent candidate.
