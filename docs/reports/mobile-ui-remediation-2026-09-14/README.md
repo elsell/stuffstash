@@ -94,6 +94,13 @@ Xcode launch before interaction; one failed-job retry is active, watcher17492
 writes `/tmp/history-corrected-retry-result.json`. PR188 stays draft until iPad
 acceptance. Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
+The separate accessory observation6cb68543 is dispatched as36035027845; watcher8216
+writes `/tmp/voice-accessory-native-result.json`. It records two-second settled
+list/detail/tab-return captures and command crops.14 route-preparation tests,
+structural checks and critic review pass. No renderer change or visual acceptance
+is inferred before reviewing those images. History final CI36034561755 is owned
+by watcher73645 (`/tmp/history-final-ci-result.json`).
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
