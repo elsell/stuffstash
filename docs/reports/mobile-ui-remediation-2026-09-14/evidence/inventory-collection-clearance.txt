@@ -1,13 +1,12 @@
-Inventory collection clearance — source risk, not confirmed defect
-The retained /assets collection has a separate FlatList without automatic insets.
-Home shortcuts now use Browse, but this destination remains routable. Review it
-under actual production tabs/accessory before changing layout ownership.
-One baseline native observation: populated24-item repository, real screen/query,
-entry heading and final unique tag. Use full-screen entry/final captures and the
-existing chrome geometry helper; mid-scroll content under chrome is not failure.
-If final content clears, retain existing ownership. If not, fix only this consumer
-and repeat the same acceptance. No Map or blanket inset changes are presumed.
-Fixture route isolation failed before setup implementation;15 tests now pass.
-TypeScript/structural checks pass. Critic caught an incorrect helper name before
-dispatch; corrected to existing verifyFooterClearsPersistentChrome. Its failure
-still retains a full-screen tearDown capture. No runtime result yet.
+Inventory collection clearance — confirmed iPhone defect; candidate pending native check
+Baseline36045543667 at9afc3fd7: iPhone job107788070230 fails final-content
+clearance; iPad job107788070375 passes. Reviewed full-screen phone final capture
+shows item24/tag behind voice/tabs after eight upward swipes. Final tag y789.7–821.7;
+voice button y732–786. Entry heading clears the header. iPad final tag is visible.
+Phone artifact10829347957; iPad10828489131. Relevant full screenshots retained here.
+Fix: request automatic system content insets on this FlatList, preserving visual
+padding. No guessed tab height and no shared Map change. The unchanged native
+case provides failing baseline and candidate acceptance.15 fixture-preparation
+checks, TypeScript and mobile structural checks pass. Critic finds no blocker.
+Invitation acceptance is a root-stack route outside tabs, with an ordinary opaque
+header: its missing inset prop does not establish this same tab-overlap defect.

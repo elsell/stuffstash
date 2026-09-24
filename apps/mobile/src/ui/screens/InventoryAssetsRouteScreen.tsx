@@ -71,6 +71,7 @@ export function InventoryAssetList({
     <>
       <Stack.Screen options={{ title: 'Assets' }} />
       <FlatList
+        contentInsetAdjustmentBehavior="automatic"
         data={inventoryAssets.assets}
         keyExtractor={(asset) => asset.id}
         columnWrapperStyle={styles.cardRow}

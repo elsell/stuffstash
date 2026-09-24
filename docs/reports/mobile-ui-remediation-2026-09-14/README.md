@@ -104,11 +104,11 @@ shows the same screenshot discrepancy. Withdraw the renderer change; retain
 full-screen observation and document the evidence limitation. PR190 now contains
 verification/process changes only. [Diagnosis](evidence/voice-symbol-navigation.txt).
 
-Retained inventory collection: baseline9afc3fd7 is dispatched as36045543667 on
-phone/iPad. It uses the real /assets screen in production tabs and checks entry
-heading and final-tag clearance.15 preparation tests, TypeScript, structural
-checks and review pass. No product defect or inset fix is claimed yet. Watcher64767
-writes `/tmp/inventory-clearance-baseline-result.json`.
+Retained inventory collection: baseline36045543667 confirms the iPhone final tag
+remains behind persistent controls; iPad passes. The candidate adds automatic
+system insets to this FlatList. Entry/final-tag native recheck is required; source
+checks and critic review pass. Root invitation acceptance is outside tabs and is
+not implicated by this finding.
 [Bounded diagnosis](evidence/inventory-collection-clearance.txt).
 
 PR190 verification/policy merged296f7d6a after CI36045074264 passed1398cdad.

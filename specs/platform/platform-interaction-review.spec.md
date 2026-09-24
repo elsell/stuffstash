@@ -1476,3 +1476,10 @@ geometrically clear. Do not infer overflow from content behind floating chrome
 mid-scroll. If the final content is reachable, retain existing ownership; if it
 is not, correct this scroll consumer and repeat the same check. Do not change Map
 or other consumers that own their own insets based on this observation.
+
+Baseline36045543667 at9afc3fd7 confirms the iPhone final tag remains behind
+the persistent bottom controls after scrolling; the iPad baseline passes. The
+collection FlatList must request automatic system content-inset adjustment, as
+the other ordinary tab-stack lists do, preserving its existing visual padding.
+Do not add device-specific bottom heights. Repeat the unchanged native entry and
+final-tag acceptance on iPhone and iPad before claiming this correction verified.
