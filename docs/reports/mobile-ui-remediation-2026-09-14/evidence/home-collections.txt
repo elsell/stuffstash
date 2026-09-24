@@ -1,0 +1,9 @@
+Run36013639520 at84aba372, phone107680435289 / iPad107680435589.
+Both tests failed FixtureAuditTests.swift:9 in setUp before the workflow ran.
+Expected Audit Browse filters, but dedicated production-route arrangement opens
+Home at /. Phone screenshot/tree confirms real Home with both tabs and See all.
+This is a fixture setup mismatch, not demonstrated shortcut failure.
+Correction: named test expects Home SeeAll at setup; every workflow assertion stays.
+Legacy all arrangement explicitly excludes this production-path-only scenario;
+its dedicated home-collections selector remains necessary. Reviewer found no blocker.
+Source routing/product unchanged. Corrected native run pending.

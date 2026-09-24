@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       test_case:
-        description: 'Diagnostic selection; only all can support full native acceptance'
+        description: 'Workflow coverage selection; no single run certifies the whole app'
         type: choice
         required: true
         default: all
@@ -18,6 +18,7 @@ on:
           - add-draft
           - persistent-tabs
           - persistent-tab-return
+          - home-collections
           - tab-content-clearance
           - home-header
           - browse-journey
@@ -136,7 +137,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
               )
           case "$AUDIT_TEST_CASE" in
-            all) ;;
+            all)
+              # This journey requires production tab paths; the legacy fixture
+              # arrangement owns competing root Search/detail routes.
+              audit_test_args=(
+                '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
+              )
+              ;;
             command-emphasis)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=("${command_emphasis_test_args[@]}") ;;
@@ -235,6 +242,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            home-collections)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
               )
               ;;
             tab-content-clearance)

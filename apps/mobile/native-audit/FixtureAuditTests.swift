@@ -6,7 +6,9 @@ final class FixtureAuditTests: XCTestCase {
   override func setUpWithError() throws {
     continueAfterFailure = false
     app.launch()
-    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let entry = name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
+      ? "View all recently changed assets" : "Audit Browse filters"
+    XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
     let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
     providerEvidence.name = "keyboard-provider-configuration"
@@ -2910,6 +2912,44 @@ final class FixtureAuditTests: XCTestCase {
     }
     for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
     XCTAssertTrue(clearOfChrome(), "Final content must clear persistent navigation surfaces")
+  }
+
+  func testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs() {
+    guard openFixtureURL("(tabs)/(search)/search?surface=map&query=Kitchen&checkoutState=available") else { return }
+    let control = app.segmentedControls.firstMatch
+    XCTAssertTrue(control.waitForExistence(timeout: 10))
+    XCTAssertTrue(control.buttons["Map"].isSelected)
+    tab("Home").tap()
+    let recent = app.buttons["View all recently changed assets"].firstMatch
+    XCTAssertTrue(recent.waitForExistence(timeout: 10)); recent.tap()
+    let first = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch
+    let second = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 02")).firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertTrue(second.exists)
+    XCTAssertTrue(tab("Browse").isSelected)
+    XCTAssertTrue(control.buttons["List"].isSelected)
+    capture("home-recent-browse-list")
+    first.tap()
+    let title = app.staticTexts["Camping item 01"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    guard openFixtureURL("(tabs)/(search)/search?query=Kitchen&scope=containers&tagId=outdoors&lifecycleState=archived&sort=id_asc") else { return }
+    XCTAssertTrue(app.staticTexts["No results for “Kitchen”"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertFalse(first.exists)
+    tab("Home").tap()
+    let checked = app.buttons["View all checked-out assets"].firstMatch
+    XCTAssertTrue(checked.waitForExistence(timeout: 10))
+    if !checked.isHittable { app.swipeUp() }
+    XCTAssertTrue(checked.isHittable); checked.tap()
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertFalse(second.exists)
+    XCTAssertTrue(tab("Browse").isSelected)
+    capture("home-checked-out-browse-list")
+    tab("Home").tap(); XCTAssertTrue(recent.waitForExistence(timeout: 10))
+    tab("Browse").tap(); XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertFalse(second.exists, "Ordinary tab return preserves the checked-out collection")
   }
 
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {

@@ -1392,3 +1392,35 @@ for visual/lifecycle changes and must link the dispatched run and inspected
 artifacts. The full sweep remains available through the explicit all selection.
 Resolve a dispatched run by event=workflow_dispatch and exact head SHA, never the
 most recent workflow result alone; PR and dispatched runs can share a branch.
+
+## Home collection shortcut acceptance
+
+Use a focused Home/Browse fixture with one shared inventory dataset and the actual
+production `(tabs)` route paths. A root `/search` test route or a Browse placeholder
+cannot prove cross-tab shortcut behavior. Verify a previously refined Map becomes
+unfiltered recent List through Home See all; open and return from a real detail;
+verify Home Checked out replaces unrelated refinements; verify ordinary tab return
+preserves the resulting Browse context. Keep historical tab fixtures unchanged for
+their existing scenarios. Run phone/iPad acceptance with the next frozen batch.
+
+#### Dialog-owned photo system bars
+
+The Android photo viewer must use light system-bar glyphs on its fixed dark canvas.
+A local Expo native view inside the library's modal owns that dialog's appearance:
+apply on window attachment and window focus, after React Native's dialog setup.
+Use the attached view's WindowInsetsController on API30+, with system UI appearance
+flags on older supported Android. Never reach into the Activity window or use a
+JS timer; refuse Activity-root attachment. Dialog disposal leaves the underlying
+screen's appearance untouched. This small native adapter is needed because React
+Native StatusBar targets the Activity, not this separate dialog. It adds no runtime
+dependency. Verify light/dark entry and restoration on Close, Back, swipe and
+last-photo removal on the native build; source checks alone do not close M251.
+
+Home shortcut run36013639520 stopped in shared setup on both devices: the focused
+production-path fixture correctly opens Home at `/`, while setup expected the
+legacy audit-menu button. The retained phone screenshot/tree confirms real Home
+and both tabs. Match the named workflow's expected entry before exercising it;
+keep all actual shortcut assertions. The legacy `all` arrangement cannot host this
+production-path scenario because its root Search/detail fixtures intercept those
+paths. Exclude this one scenario explicitly from that arrangement and run it via
+`home-collections`; neither selector alone establishes full-app acceptance.

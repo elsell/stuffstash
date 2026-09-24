@@ -5,21 +5,22 @@ import { assetPhotoViewerModel } from '../src/ui/components/AssetPhotoWorkspaceP
 import { useAppFeedback } from '../src/ui/feedback/AppFeedback';
 
 /** Runner-only modal composition; no service, credentials or real photo deletion. */
-export function PhotoRecoveryFixture({ onBack, missingImage = false }: { readonly onBack: () => void; readonly missingImage?: boolean }) {
+export function PhotoRecoveryFixture({ onBack, missingImage = false, removeSucceeds = false }: { readonly onBack: () => void; readonly missingImage?: boolean; readonly removeSucceeds?: boolean }) {
   const feedback = useAppFeedback();
   const [selected, setSelected] = useState<string | undefined>('audit-photo');
   const [pending, setPending] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  const [photos] = useState(() => [{ id: 'audit-photo', label: 'Audit photo', fileName: 'audit-photo.png',
+  const [photos, setPhotos] = useState(() => [{ id: 'audit-photo', label: 'Audit photo', fileName: 'audit-photo.png',
     uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri + (missingImage ? '.missing' : '') }]);
   useEffect(() => {
     if (!pending) return;
     const timer = setTimeout(() => {
       setPending(false);
+      if (removeSucceeds) { setPhotos([]); setSelected(undefined); return; }
       feedback.showDialog({ title: 'Could not remove photo', message: 'Synthetic removal failed. The photo remains.', primaryAction: { label: 'OK' } });
     }, 2000);
     return () => clearTimeout(timer);
-  }, [pending, feedback]);
+  }, [pending, feedback, removeSucceeds]);
   return <View>
     <Button title="Back to audit menu" onPress={onBack} />
     <Text>{`Removal attempts: ${attempts}`}</Text>

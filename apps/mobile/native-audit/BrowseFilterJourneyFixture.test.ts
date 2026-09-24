@@ -23,3 +23,14 @@ it('rejects foreign inventory reads and unknown asset details', async () => {
   await expect(journey.expiration.list('filter-tenant', 'another-inventory', { mode: 'all' })).rejects.toThrow();
   await expect(journey.core.execute('not-in-fixture')).rejects.toThrow();
 });
+
+it('uses the same Home collection and Browse assets in the connected shortcut fixture', async () => {
+  const journey = createBrowseFilterJourney();
+  const home = await journey.home.execute();
+  const browse = await journey.search.execute({ query: '', kind: 'all', lifecycleState: 'active',
+    checkoutState: 'checked_out', sort: 'updated_desc', tagIds: [] });
+  expect(home.checkedOutAssets.map(asset => asset.id)).toEqual(browse.assets.map(asset => asset.id));
+  expect(home.recentAssets[0]?.id).toBe(browse.assets[0]?.id);
+  expect(home.canReturn).toBe(false);
+  journey.client.clear();
+});

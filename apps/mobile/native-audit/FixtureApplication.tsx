@@ -1,7 +1,7 @@
 import { SettingsReadbackProvider } from './SettingsReadbackFixture';
 export { SettingsReadbackFixture } from './SettingsReadbackFixture';
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
-export { TabExpirationFiltersFixture, BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
+export { BrowseFilterJourneyHome, TabExpirationFiltersFixture, BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
 
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
 import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
@@ -133,6 +133,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-inventory-switcher" options={inventorySwitcherNativeOptions(palette)} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />
@@ -197,14 +198,14 @@ export function FixtureMenu() {
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState<'scroll' | 'fixed'>();
   const [draftPhotos, setDraftPhotos] = useState(false);
-  const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
+  const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing' | 'last-removal'>();
   const [inputMode, setInputMode] = useState<InputFixtureMode>();
   if (inputMode) return <FixturePage key={`input-${inputMode}`} persistHandledTaps>
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
   </FixturePage>;
   if (fieldChoices) return <CustomFieldChoicesFixture onBack={() => setFieldChoices(false)} />;
-  if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
+  if (photoRecovery) return <PhotoRecoveryFixture removeSucceeds={photoRecovery === 'last-removal'} missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture scrollEnabled={settingsControls === 'scroll'} onBack={() => setSettingsControls(undefined)} />;
@@ -263,6 +264,7 @@ export function FixtureMenu() {
     <Button title="Audit plain-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-no-accessory'); }} />
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
+    <Button title="Audit final photo removal" onPress={() => setPhotoRecovery('last-removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
     <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit menu ownership" onPress={() => router.push('/audit-menu-ownership' as Href)} />

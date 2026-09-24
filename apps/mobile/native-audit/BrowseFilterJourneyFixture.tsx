@@ -1,3 +1,6 @@
+import { AssetCheckoutCommand } from '../src/application/assets/AssetCheckoutCommand';
+import { HomeScreen } from '../src/ui/screens/HomeScreen';
+import { HomeDashboardQuery } from '../src/application/home/HomeDashboardQuery';
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
@@ -43,7 +46,17 @@ export function createBrowseFilterJourney() {
   const client = createMobileQueryClient();
   const tags = { execute: async () => [] };
   return {
-    client, tags,
+    client, tags, checkout: new AssetCheckoutCommand({}),
+    home: new HomeDashboardQuery({ getHomeDashboardSnapshot: async () => ({
+      checkedOutAssets: assets.filter(asset => !!asset.currentCheckout),
+      workspace: {
+        tenants: [{ id: tenantId(scope.tenantId), name: 'Home' }],
+        defaultInventoryId: inventoryId(scope.inventoryId),
+        inventories: [{ id: inventoryId(scope.inventoryId), tenantId: tenantId(scope.tenantId),
+          name: 'Camping inventory', role: 'viewer', permissions: ['view'], description: '',
+          updatedAtLabel: '', locationCount: 0, locations: [], assets }]
+      }
+    }) }),
     search: new SearchAssetsQuery({ browseAssets: async input => ({
       assets: input.lifecycleState === 'archived' || input.tagIds?.length ? [] : assets.filter(asset => matches(asset, input.query, input.checkoutState, input.kind)), hasMore: false
     }) }),
@@ -80,6 +93,11 @@ function useJourney() {
 function JourneyState({ children }: PropsWithChildren) {
   const journey = useJourney();
   return <MobileServerStateProvider client={journey.client} scopeId="filter-journey" loadInventoryScope={async () => scope}>{children}</MobileServerStateProvider>;
+}
+export function BrowseFilterJourneyHome() {
+  const journey = useJourney();
+  return <JourneyState><HomeScreen dashboardQuery={journey.home}
+    assetCheckoutCommand={journey.checkout} /></JourneyState>;
 }
 export function BrowseFilterJourneySearch() {
   const journey = useJourney(); const params = useLocalSearchParams();
