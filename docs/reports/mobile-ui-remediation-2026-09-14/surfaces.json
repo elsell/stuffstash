@@ -1056,5 +1056,27 @@
       "apps/mobile/src/ui/screens/VoicePlanLocationScreen.tsx",
       "apps/mobile/src/ui/screens/VoicePlanLocationChoices.ts"
     ]
+  },
+  {
+    "id": "R143",
+    "surface": "add-destination.tsx",
+    "source": "apps/mobile/src/app/add-destination.tsx",
+    "sources": [
+      "apps/mobile/src/app/add-destination.tsx",
+      "apps/mobile/src/ui/screens/AddDestinationRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AddDestinationSelectionScreen.tsx",
+      "apps/mobile/src/ui/navigation/AddDestinationTask.tsx"
+    ]
+  },
+  {
+    "id": "R144",
+    "surface": "asset-tag-selection.tsx",
+    "source": "apps/mobile/src/app/asset-tag-selection.tsx",
+    "sources": [
+      "apps/mobile/src/app/asset-tag-selection.tsx",
+      "apps/mobile/src/ui/screens/AssetTagSelectionRouteScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetTagSelectionScreen.tsx",
+      "apps/mobile/src/ui/navigation/AssetTagSelectionTask.tsx"
+    ]
   }
 ]

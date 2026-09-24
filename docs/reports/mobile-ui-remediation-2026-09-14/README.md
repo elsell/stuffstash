@@ -84,9 +84,10 @@ This does not expand either frozen batch.
 
 ## Coverage and evidence limits
 
-[Surfaces](surfaces.json), [axes](axes.json) and [matrix](matrix.csv) enumerate142
-surfaces ×24 axes. Matrix classifications describe evidence, not3,408 separate test
-requirements. [Findings](findings.md) retain stable IDs and historical evidence.
+[Surfaces](surfaces.json), [axes](axes.json) and [matrix](matrix.csv) enumerate144
+surfaces ×24 axes. Matrix classifications describe evidence, not3,456 separate test
+requirements. The two recent selection routes are now included; `unreviewed`
+marks axes that their scoped workflow evidence does not establish. [Findings](findings.md) retain stable IDs and historical evidence.
 The older [whole-workflow review](everyday-workflow-review.md) records design
 rationale; this file supplies current acceptance status.
 
