@@ -1,0 +1,16 @@
+Source7ee10632, product35a79fe5. Run35960677440 completed failure.
+iPhone job107510473354: all3 passed.
+iPad job107510473564: expiration owning-tab filters and Home actions/accessory passed;
+Settings final tab reachability failed at line2865 after exact Tools emergency readback.
+Artifact10793113137 final-state PNG and hierarchy reviewed.
+Both Home/Browse tabs visible, native strip bounds(0,32,744,44), duplicated native
+button bounds Home(287.8,36,78.5,36), Browse(366.2,36,90,36).
+Tag navigation bar bounds(0,32,744,108). Keyboard absent, draft preserved.
+The hittable-candidate selection did not resolve failure. Do not call this solely
+a first-match problem or infer that invisible tabs caused it.
+Bounded next distinction: physical activation at the visible native Browse control
+must display Browse and Home return must retain the exact draft; preserve a separate
+accessibility reachability assertion. If activation fails, investigate native header/
+tab hit-test ownership; if it succeeds, retain the accessibility discrepancy as a
+finding instead of changing product layout based only on XCTest isHittable.
+No additional broad native rerun is justified by this finding.
