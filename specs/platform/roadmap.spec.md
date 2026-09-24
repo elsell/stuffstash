@@ -2,13 +2,15 @@
 
 ## Current structural priority: connected workflow stability
 
-Persistent Home/Browse stacks and bounded commands are merged in main262f27f6
-with PR178/179. Scoped native gates and integrated CI35976251247 pass; release
-35976929170 delivered TestFlight0.24.35(126.1), with changelog readback verified. Continue the
-normal-text audit independently. Android Browse appearance and query retention now pass scoped native replay after
-query ownership and native control appearance corrections. Verify the shared
-route-state change on iOS before batching this follow-up; follow the single current
-summary rather than repeating diagnostic candidates.
+TestFlight0.24.36(127.1) is delivered from main0bb1f24e (combined PR182).
+Browse search/appearance, card alignment, detail header clearance and container
+organization passed scoped review; populated Detail/Sharing final content clears
+persistent navigation on phone and iPad. Release36008181746 and Apple changelog
+readback passed. Continue the normal-text connected workflow audit; retain iPad
+Add readiness timing and unverified Recent-assets/invitation layouts as specific
+follow-ups. Native audit runs are deliberately dispatched for frozen scopes;
+PR updates must not spawn duplicate full diagnostic sweeps. The single current
+summary is docs/reports/mobile-ui-remediation-2026-09-14/README.md.
 
 ## Purpose
 

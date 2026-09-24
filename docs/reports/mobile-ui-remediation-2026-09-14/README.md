@@ -6,34 +6,16 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.35 (126.1)**. PR178/179 merged into
-main262f27f6; integrated CI35976251247 passed. Release35976929170 completed and
-changelog job107568033135 verified Apple readback. [Release evidence](evidence/release-126.txt).
+Latest verified TestFlight is **0.24.36 (127.1)**. Combined PR182 merged as
+main0bb1f24e; candidate CI36007310510 and release36008181746 passed. Apple changelog
+readback was verified2026-09-24 at14:18UTC. [Release evidence](evidence/release-127.txt).
+This delivers Browse retention/alignment, detail header insets and clearer
+container identity/contents grouping with bounded commands. The prior persistent
+tabs, filters and editing batch remains recorded in [release126](evidence/release-126.txt).
 
-This batch delivers persistent Home/Browse stacks for41 ordinary routes, bounded
-native commands, detail hierarchy, compact photo-free Browse rows, expiration
-search retention, Settings name/key corrections and filter/footer fixes. Add,
-Edit, Move and Filters remain modal tasks. Scoped acceptance:
+## Shipped batch acceptance
 
-- Persistent tab switching/draft return35973624529 passed phone/iPad after correcting
-  the transient ancestor locator; all hit-test assertions remain. Settings
-  creation/save/reopen35970467285 passed both devices.
-- Browse density35964382077 passed3/3 both; filters35965504659 passed6/6 both.
-- Paired native Settings command hit regions/recovery35971374386 passed both after
-  sizing correction. Captures reviewed for spacing and legibility.
-- Add/expiration35958732480 and contents Retry35961716802 passed both. Android
-  connected Edit/save/reopen and Move/save/reopen passed on the named audit APK.
-- Integrated2,006 mobile tests, TypeScript, structural checks and review passed.
-
-Evidence: [tabs](evidence/persistent-tab-touch.txt),
-[commands](evidence/bounded-settings-actions.txt),
-[density](evidence/photo-free-grid-review.txt),
-[Android connected tasks](evidence/android-connected-edit-move.txt).
-These scoped results do not certify every route or the whole app.
-
-## Current follow-up
-
-Combined PR182 includes PR181: Browse search retention/appearance, neighboring card
+PR182 included PR181: Browse search retention/appearance, neighboring card
 alignment, detail header insets and grouped container actions. Standard CI36000041858,
 focused source tests, TypeScript, structural checks and critic review pass.
 

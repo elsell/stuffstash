@@ -1,0 +1,18 @@
+TestFlight0.24.36 (127.1), released2026-09-24.
+Combined PR182 squash merged0bb1f24e02c8fe7403711ee165b1c540f6379685.
+PR181 closed as included in182, avoiding an intermediate release.
+Exact candidate CI36007310510 passed; release36008181746 succeeded.
+iOS upload job107665515168 succeeded. Changelog job107673438178 logged:
+2026-09-24T14:18:53.2739343Z Verified TestFlight changelog for v0.24.36 (127.1).
+
+Notes: Browse search retention, aligned neighboring titles, detail header clearance,
+grouped container availability/contents actions, bounded Move-items command.
+Native: hierarchy35994194799 six existing cases pass both; corrected populated
+Detail/Sharing35999231112 passes both with reviewed screenshots. Phone needed one
+retry after Xcode launch failed before product interaction. Application source
+unchanged between verified28bc9b3c and final candidatea5b97d9a.
+
+Remaining scope: comprehensive audit incomplete. iPad Add readiness timing,
+Recent-assets/invitation inset source risks, M20/M51/M251 and other normal-text
+findings remain tracked. Neither this release nor fixture success certifies all
+surfaces, device states, physical integrations or accessibility cases.
