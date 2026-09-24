@@ -89,9 +89,10 @@ launch before UI interaction. Android confirmed dense change paragraphs; candida
 uses concise list summaries and separated Before/After values. Candidatef8cea8e0
 also adopts automatic scroll insets and shared native choice picker.30 focused
 tests, TypeScript,13 fixture tests, structural checks and critic review pass.
-Corrected native36031360544 is running; watcher70560 writes
-`/tmp/history-corrected-native-result.json`. PR188 stays draft until visual/connected
-acceptance. [Current diagnosis](evidence/history-structure.txt).
+Corrected native36031360544 passes on iPhone with reviewed captures. iPad failed
+Xcode launch before interaction; one failed-job retry is active, watcher17492
+writes `/tmp/history-corrected-retry-result.json`. PR188 stays draft until iPad
+acceptance. Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
 ## Separate unresolved decisions
 
