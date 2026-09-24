@@ -1439,3 +1439,16 @@ labels, row grouping, back behavior and command placement as a whole. Missing
 inset props are a source risk, not proof of runtime overlap. Change layout only
 when the walkthrough establishes a defect; retain separate acceptance for session
 commands and editing rather than repeating those suites unchanged.
+
+## Connected History structure acceptance
+
+Review asset History and a change detail at normal text inside the production tab
+stacks, with the persistent voice accessory present. Use a controlled paginated
+activity repository and the real History query/screens. Open a change through the
+production href, expand Technical details, scroll the last metadata above the
+accessory, return to History, and switch tabs/back without losing the destination.
+Check the History heading and mode control against the native header. This is a
+structure/presentation review; it does not certify server authorization or Revert.
+Do not infer clipping from missing source inset props alone. One baseline native
+run must distinguish actual header/footer overlap from a safe native automatic
+inset, and its screenshots determine whether a product correction is needed.
