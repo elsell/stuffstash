@@ -9,30 +9,23 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 Latest verified TestFlight is **0.24.34 (125.1)**. Release35954982498 completed;
 changelog job107497620643 verified exact readback after Apple processing.
 
-**M265–M273 is merged** in [PR173](https://github.com/elsell/stuffstash/pull/173),
-e0d63ad5. Release35938987211 completed with eight TestFlight notes. Required
-CI35936948141 passed at4b98eac2. Final Add35936945060 passes phone/iPad, including
-search, cancel/reopen, destination creation/retry and bounded form spacing; final
-creation and returned-draft captures were reviewed. Move35920806955 passes all
-four workflows on both devices; tag/draft35920079319 passes three on both devices.
-Android grouped creation and recovery were reviewed. Add's scoped design hold was
-closed. Move remains visually open following user feedback; functional passes do
-not override that judgment. Current source already has grouped native rows,
-toolbar actions and stacked iPhone/iPad search; assess those actual captures before
-repeating the same redesign. The comprehensive audit and physical-device checks
-remain incomplete.
+Earlier release evidence remains in the findings ledger and linked release records.
+Current release acceptance below supersedes historical pending statements.
 
 ## Persistent tab navigation candidate
 
-The user requested persistent Home/Browse navigation on ordinary screens. The
-`codex/mobile-persistent-tabs` candidate moves41 ordinary routes into shared tab
-stacks, retaining URLs and root modal tasks. The real Expo route expansion test
-reproduced the old ownership and passes for both tabs; source guards and fixture
-preparation remain checked. Run35952669886 passes Home header, detail/Move cancel,
-Browse history and Settings draft retention on both devices. Phone final Settings
-capture lacks visible tabs;35955427236 adds explicit final tab visibility and
-Expiration Filters origin checks. Those acceptance gaps remain open. Surface paths reflect the new ownership;
-older matrix runtime evidence does not establish this navigation structure.
+PR178 (`codex/mobile-native-patterns-batch`) contains persistent Home/Browse
+stacks for41 ordinary routes, bounded native commands, readable detail layout and
+expiration search retention. Add/Edit/Move/Filters remain modal tasks. Product
+source is35a79fe5;7ee10632 strengthens native observation without changing the app.
+
+The iPhone Settings draft/tab-return check passed in35955427236. Its iPad capture
+shows tabs, but nested duplicate accessibility buttons made first-match hit testing
+ambiguous. The correction chooses a hittable native match and requires an actual
+Browse/Home roundtrip with exact draft readback. Focused run35960677440 verifies
+that correction. Combined13-workflow run35958732480 remains the batch's native gate.
+Required CI35959208262 passed at35a79fe5; CI35960682844 covers the observation update.
+Do not treat earlier route/source checks as native acceptance of all41 screens.
 
 ## Current expiration search correction
 
@@ -52,51 +45,25 @@ contextual commands are readable and bounded (see evidence/native-command-width-
 Combined13-workflow run35958732480 at35a79fe5 is pending; persistent-tab final-state
 coverage and the phone Add workflow remain release gates.
 
-## Current follow-up diagnosis and decisions
+## Accepted corrections and remaining release gates
 
-PR174 merged as98d29649 and release35954982498 delivered0.24.34(125.1),
-including verified changelog readback. PR174 consolidates
-M274–M279 plus Settings current-save/readback and Move hierarchy/contrast into one
-release candidate. The combined source passes1,995 mobile checks, TypeScript,
-structural checks and ten fixture-preparation checks. Its product source matches da791006; the additional Add test
-observation fix does not change product code. M274–M279 covers filter navigation/density, retained search, contextual detail actions and
-Sharing recovery. Standard adaptive filters corrected the iPad viewport defect;
-do not repeat rejected dependency ownership patches. Integrated35941028517 passed
-14/15 phone and15/15 tablet cases. The conditional keyboard-dismiss observation
-fix16501db7 passed focused Add/Move35945429162 on both devices; required
-CI35945384623 passed. Phone/iPad Add creation and return captures are reviewed: native actions are
-reachable, the item draft survives and the new destination is selected.
+Released0.24.34 includes M274–M279 filter density/navigation, retained Browse
+search, contextual detail actions and Sharing recovery. Settings save/readback
+35948277688 passed on both devices, including failed-save retry, exact full-name
+persistence, reopening, creation and archiving. Move35951755320 passed all four
+workflows on both devices; reviewed selection/creation captures close the scoped
+normal-text hierarchy/contrast hold. These checks do not close all Settings design
+findings or the comprehensive audit.
 
-Settings current-save246edefd passes connected readback35948277688 on both devices,
-including exact full-name persistence after failure/retry, reopen/create/archive.
-Phone and tablet collection/reopened-editor captures confirm header clearance and
-complete names. This closes those scoped defects, not all Settings design findings.
-
-Move8e79997c passes all four workflows on both devices in35947975650. Visual review
-found the custom section header too faint. Contrast correctionda791006 is in
-35951755320 on `codex/mobile-move-contrast`; all four workflows pass both devices.
-Reviewed phone/tablet selection and creation captures show readable context,
-grouped destinations and reachable actions. The scoped normal-text Move hold is closed.
-
-Detail M280 at a7ea4ac5 passed five of six cases per device in35948366265, including
-resized gallery selection. Photo Retry failed to disappear on phone; contents Retry
-failed on tablet. Preserve the assertions. Candidate615485f5 adds bounded native
-buttons by default and puts identity before photo recovery. Run35951671413 passes
-all nine phone workflows; iPad has two application-launch failures before Add and
-region recovery, with seven workflow passes. The phone capture nevertheless shows
-Retry contents compressed into a three-line oval. Correction5dc08f9c gives the
-native host the available width and keeps the button leading-aligned inside it;
-normal-text Retry geometry assertions accompany the existing completion checks.
-Its1,992 source tests, TypeScript, structural checks and review pass;35954709640
-is the required new native check. Preserve the sizing diagnosis; do not rediscover
-provider or key-delivery hypotheses. This candidate is not visually accepted.
-
-Persistent tabs a1d7d825 is in35951026134. Source checks establish route ownership,
-not native retention. A subsequent source correction carries the originating tab
-through Expiration Filters because root modal segments cannot disambiguate shared
-routes. That correction still needs a native roundtrip. Android, dark appearance,
-long command labels and the wider surface audit remain open. The next candidate combines buttons, detail and tabs on98d29649 in
-`codex/mobile-native-patterns-batch`, outside the publishing release.
+The next batch corrects compressed Retry labels by giving the native host the
+available width while keeping its button leading-aligned. Reviewed phone/iPad
+captures establish readable bounded commands in the named detail states; see
+[evidence](evidence/native-command-width-review.txt). Do not repeat provider or
+key-delivery experiments. The remaining phone Add keyboard-readiness observation
+and combined navigation checks are explicit release gates, not reasons to reopen
+accepted button geometry. The focused tab run strengthens final Settings return.
+Android light/dark expiration return and Edit/Move cancellation passed; these do
+not establish successful Edit/Move execution or app-wide appearance acceptance.
 
 ## Separate unresolved decisions
 
