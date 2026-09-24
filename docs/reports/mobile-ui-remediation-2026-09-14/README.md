@@ -106,8 +106,9 @@ verification/process changes only. [Diagnosis](evidence/voice-symbol-navigation.
 
 Retained inventory collection: baseline36045543667 confirms the iPhone final tag
 remains behind persistent controls; iPad passes. The candidate adds automatic
-system insets to this FlatList. Entry/final-tag native recheck is required; source
-checks and critic review pass. Root invitation acceptance is outside tabs and is
+system insets to this FlatList. Candidatebe7d0f9a runs as36048916536 on iPhone/iPad;
+source checks and critic review pass. The sleeping script writes terminal status
+to `/tmp/inventory-clearance-candidate-result.json`. Root invitation acceptance is outside tabs and is
 not implicated by this finding.
 [Bounded diagnosis](evidence/inventory-collection-clearance.txt).
 
