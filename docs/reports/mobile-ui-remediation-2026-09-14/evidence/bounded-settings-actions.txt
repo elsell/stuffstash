@@ -1,7 +1,9 @@
 Current acceptance: bounded Settings filter actions pass on iPhone, iPad and
 Android at normal text. Android reminder recovery and the divider correction also
-pass. iOS reminder composition/divider verification remains open in run35967919825
-at final product source a0874586. This is follow-up PR179, separate from PR178.
+pass. iOS reminder composition failed35967919825 at a0874586:62pt native button
+hit frames exceeded48pt hosts and overlapped.1661a240 reduces label minimums
+to32pt, retaining48pt outer commands. Four adapter checks, TypeScript, structural
+checks and critic review pass; native35971374386 remains the acceptance gate. This is follow-up PR179, separate from PR178.
 
 SettingsActionRow uses the shared bounded secondary command adapter, retaining
 visible labels, descriptive accessible names, disabled guards and destructive role.

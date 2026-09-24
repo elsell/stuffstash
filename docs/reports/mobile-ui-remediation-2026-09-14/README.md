@@ -12,58 +12,48 @@ changelog job107497620643 verified exact readback after Apple processing.
 Earlier release evidence remains in the findings ledger and linked release records.
 Current release acceptance below supersedes historical pending statements.
 
-## Persistent tab navigation candidate
+## Frozen release — PR178
 
-PR178 (`codex/mobile-native-patterns-batch`) contains persistent Home/Browse
-stacks for41 ordinary routes, bounded native commands, readable detail layout and
-expiration search retention. Add/Edit/Move/Filters remain modal tasks. Product
-source is35a79fe5;7ee10632 strengthens native observation without changing the app.
+`codex/mobile-native-patterns-batch` at5040afd4 contains persistent Home/Browse
+stacks for41 ordinary routes, bounded native commands, readable detail layout,
+expiration search retention and Settings name/key corrections. Add/Edit/Move/Filters
+remain modal tasks. Required CI35970458935 passed. The remaining release gate is
+native settings-tab-return35970467285 on iPhone and iPad, including exact creation,
+save/reopen and tab-return behavior. Do not infer acceptance of all41 routes.
 
-The iPhone Settings draft/tab-return check passed in35955427236. Its iPad capture
-shows tabs, but nested duplicate accessibility buttons made first-match hit testing
-ambiguous. The correction chooses a hittable native match and requires an actual
-Browse/Home roundtrip with exact draft readback. Focused run35960677440 verifies
-that correction. Combined13-workflow run35958732480 remains the batch's native gate.
-Required CI35959208262 passed at35a79fe5; CI35960682844 covers the observation update.
-Do not treat earlier route/source checks as native acceptance of all41 screens.
+The integrated baseline35958732480 passed Add and expiration on both devices;
+follow-up35961716802 closed contents Retry on both. Native Name uses a draft field
+to avoid keystroke reordering. Subsequent35965781821 passed iPad tab return and
+exposed false dirty state after reopening a renamed setting on both devices.
+5040afd4 preserves existing stable keys during name initialization/editing; a
+rendered regression reproduced the failure, then64 focused checks, TypeScript,
+structural checks and review passed. The iPhone tab check in35965781821 stopped
+on screenshot acquisition after exact draft return, not a demonstrated touch bug.
+The current native gate must close both remaining checks before release.
 
-## Current expiration search correction
+Android connected detail/Move/tab return, Settings draft retention and expiration
+query/filter return passed. Reviewed iOS command-width captures show readable
+bounded recovery actions. These scoped results do not certify the whole app.
 
-Android's parameter probe showed Home retaining its route but clearing Kitchen to
-an empty query on tab return, before Filters opened. This displayed unfiltered
-Camping items; it was not copying Browse's query. Expiration now reuses the shared
-native-search interaction guard, retaining its own debounce and pending draft.
-The final Android build without the probe passes Home/Browse/Apply with each
-query retained. Two regressions reproduced inactive clearing and draft
-reseeding, then passed; all2,002 mobile checks, TypeScript and review pass.
+## Follow-up — PR179
 
-Settings draft retention and detail/Move return passed on Android. iOS command
-width35954709640 passed9/9 iPad and8/9 phone. Phone Add stopped at keyboard readiness
-(line744); its capture shows the keyboard and focused Name field. Keep the workflow
-unresolved pending the combined run. Corrected phone/iPad command-width captures were reviewed: retry labels and
-contextual commands are readable and bounded (see evidence/native-command-width-review.txt).
-Combined13-workflow run35958732480 at35a79fe5 is pending; persistent-tab final-state
-coverage and the phone Add workflow remain release gates.
+`codex/mobile-photo-free-browse` is stacked on PR178. Sparse photo-free Browse rows
+compact without collapsing mixed-media rows. Native35964382077 passed all three
+List/Map geometry and return checks on both devices; Android sparse/mixed return
+also passed. Evidence: [Browse density](evidence/photo-free-grid-review.txt).
 
-## Accepted corrections and remaining release gates
+Shared Settings commands use bounded native buttons. Filter35965504659 passed
+six workflows on each iOS device; reviewed date, overview and last-tag captures
+show clear commands and footer clearance. Android ordinary/320dp filter reset and
+reminder Retry/Discard passed. Icon-free separators now use the normal row inset.
 
-Released0.24.34 includes M274–M279 filter density/navigation, retained Browse
-search, contextual detail actions and Sharing recovery. Settings save/readback
-35948277688 passed on both devices, including failed-save retry, exact full-name
-persistence, reopening, creation and archiving. Move35951755320 passed all four
-workflows on both devices; reviewed selection/creation captures close the scoped
-normal-text hierarchy/contrast hold. These checks do not close all Settings design
-findings or the comprehensive audit.
-
-The next batch corrects compressed Retry labels by giving the native host the
-available width while keeping its button leading-aligned. Reviewed phone/iPad
-captures establish readable bounded commands in the named detail states; see
-[evidence](evidence/native-command-width-review.txt). Do not repeat provider or
-key-delivery experiments. The remaining phone Add keyboard-readiness observation
-and combined navigation checks are explicit release gates, not reasons to reopen
-accepted button geometry. The focused tab run strengthens final Settings return.
-Android light/dark expiration return and Edit/Move cancellation passed; these do
-not establish successful Edit/Move execution or app-wide appearance acceptance.
+The paired reminder test35967919825 then exposed iOS button hit-area overlap:
+62-point styled buttons occupied48-point hosts.1661a240 reduces label minimums
+while retaining48-point outer commands. Four adapter checks, TypeScript,
+structural checks and critic review pass. Native35971374386 must establish separate
+hit areas, successful Retry/Discard and long-label activation before acceptance.
+See [command evidence](evidence/bounded-settings-actions.txt). This follow-up does
+not expand PR178's release gates; integrate its final base fixes before merging.
 
 ## Separate unresolved decisions
 
