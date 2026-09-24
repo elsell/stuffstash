@@ -53,6 +53,20 @@ describe('AssetActivityQuery', () => {
     expect(result.entries).toEqual([{ ...activityEntry(), technical: { count: '2' } }]);
   });
 
+  it('summarizes changed fields for scanning without losing detailed values', async () => {
+    const changes: AssetActivityEntry['changes'] = [
+      { field: 'title', previousValue: 'Old name', currentValue: 'New name' },
+      { field: 'description', currentValue: 'A long description that belongs in the detail view.' },
+      { field: 'parent', previousValue: 'Garage', currentValue: 'Shelf' },
+      { field: 'tags', currentValue: 'camping' },
+      { field: 'tags', currentValue: 'outdoors' }
+    ];
+    const query = new AssetActivityQuery({ listAssetActivity: async () => ({ entries: [{ ...activityEntry(), changes }], hasMore: false }) });
+    const result = await query.execute({ tenantId: 'tenant', inventoryId: 'inventory', assetId: 'asset' });
+    expect(result.records[0].summary).toBe('Name · Description · Location · Tags');
+    expect(result.entries[0].changes).toEqual(changes);
+  });
+
   it('forwards cancellation to each paginated activity read', async () => {
     const repository = new FakeActivityRepository();
     const query = new AssetActivityQuery(repository);

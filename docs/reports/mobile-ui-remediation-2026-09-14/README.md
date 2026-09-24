@@ -6,11 +6,12 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.37 (128.1)**. PR184 merged8bdcc289;
-release36020469905 and iOS upload107707509064 passed. Apple changelog readback
-was verified2026-09-24 at16:01UTC. Home collection shortcuts now use Browse with
-explicit collection criteria; Android photo dialog contrast is corrected within
-the recorded API36 scope. [Release evidence](evidence/release-128.txt).
+Latest verified TestFlight is **0.24.38 (129.1)**. PR186 merged51a0cabc;
+release36027753017 and iOS upload107731986680 passed. Apple changelog readback
+was verified2026-09-24 at17:00UTC. Settings labels/grouping/insets and Home inventory
+name spacing are delivered. [Release evidence](evidence/release-129.txt).
+Prior128 delivered Home collection shortcuts through Browse and scoped Android
+photo dialog contrast. [Prior release](evidence/release-128.txt).
 Prior127 delivered Browse retention/alignment and clearer container detail grouping
 with tab/voice clearance. [Prior release](evidence/release-127.txt).
 
@@ -66,7 +67,7 @@ to320pt instead of always capping at180pt, avoiding unnecessary truncation when
 only Profile is visible. Viewer regression failed before the change; six width
 checks, structural checks and critic review pass. Native36018428143 at452265ab passes five cases on each device; reviewed captures
 confirm one-action/three-action spacing and stable actions on scroll. This is
-outside PR184 and is not released. [Evidence](evidence/home-header-space.txt).
+delivered by PR186 in129.1. [Evidence](evidence/home-header-space.txt).
 
 ## Next connected review
 
@@ -77,8 +78,21 @@ tests, TypeScript,12 preparation tests, structural checks and critic review pass
 Native36019282915 reached Diagnostics but stopped on duplicate selectable-text
 AX nodes; the locator is corrected without relaxing geometry checks. Corrected36023217961 passes all three cases on each device. Reviewed final
 captures confirm hierarchy, footer clearance and tab return; Account/Connection
-recovery checks also pass. PR186 is accepted for release, not yet delivered.
+recovery checks also pass. PR186 delivered these changes in129.1.
 [Diagnosis and evidence](evidence/settings-overview.txt).
+
+## Current workflow investigation
+
+History baseline36027545902 confirmed iPhone final metadata hidden under persistent
+chrome and a selected-mode trigger collapsed into an ellipsis. iPad failed Xcode
+launch before UI interaction. Android confirmed dense change paragraphs; candidate
+uses concise list summaries and separated Before/After values. Candidatef8cea8e0
+also adopts automatic scroll insets and shared native choice picker.30 focused
+tests, TypeScript,13 fixture tests, structural checks and critic review pass.
+Corrected native36031360544 passes on iPhone with reviewed captures. iPad failed
+Xcode launch before interaction; one failed-job retry is active, watcher17492
+writes `/tmp/history-corrected-retry-result.json`. PR188 stays draft until iPad
+acceptance. Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
 ## Separate unresolved decisions
 

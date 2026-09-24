@@ -1,0 +1,53 @@
+History connected audit, candidate5068ae30 / hierarchy correction a07a25c5.
+Normal-text Android API36 Pixel6: real list → detail → expanded technical
+metadata → Back passes. Baseline capture confirms an information hierarchy defect:
+complete multi-field diffs repeat inside every list row, preventing quick scanning.
+Final metadata remains reachable above the voice accessory. iOS header/footer
+risk remains unconfirmed; baseline36027545902 is still owned by watcher58712.
+
+Spec-first candidate uses distinct changed-field names in multi-field summaries,
+two-line list previews and full Before/After detail values. Missing values retain
+None/Changed semantics. Two new assertions failed before implementation;23focused
+query/list/detail tests, TypeScript,13 route-preparation tests, structural checks
+and critic review pass. No product inset change is made without runtime evidence.
+
+Android corrected scoped APK sha256:
+1d84433c3212cf801ae4d0392bd1a5d8e5e1d762c5be74374104185a65e66eb3
+Reviewed list/detail captures show compact summaries and separated value groups;
+expanded metadata and return pass. This APK overlays named sources on the existing
+audit build; it is not an exact-head production build. Server authorization and
+Revert mutations are outside this fixture. iPhone/iPad candidate acceptance pending.
+
+Baseline36027545902 terminal: phone reaches detail and fails final-metadata clearance
+after eight swipes; reviewed final capture confirms metadata remains beneath the
+voice/tabs. List heading clears native header, but its label menu collapses to an
+ellipsis. iPad fails Xcode launch before app interaction (no layout evidence).
+Candidatef8cea8e0 uses automatic insets for list/detail and existing NativeChoicePicker
+for Changes/All events.30 focused tests, TypeScript,13 preparation tests, structural
+checks and critic review pass. Corrected native36031360544 is running, watcher70560
+writes /tmp/history-corrected-native-result.json. Prior watcher58712/cell10514 completed.
+Android rerun retains navigation and final metadata; reviewed selected mode now has
+its own visible label. PR188 remains draft until corrected native acceptance.
+
+Android final scoped APK96b12c46cb606141c59bab9be8017152a06cc0687e3fc4fb0f90b309e3129e33:
+list/detail/metadata/return and Changes → All events → Changes pass. Initial
+script expected an unduplicated accessibility label; adapter adds selected text,
+so replay uses the visible Show: Changes / Show: All events controls. No production
+failure is inferred from that locator mismatch. iOS acceptance still pending.
+
+Corrected36031360544: iPhone passes connected choice/detail/footer/pagination/tab
+return. Artifact10822849307 reviewed: selected mode is visible, list summaries
+scan clearly, full detail values and final request metadata clear the accessory,
+and Load older activity remains reachable. Other iOS label-menu consumer is Browse
+Review expiration; existing bounded-filters captures show its full label, so no
+shared menu rewrite is justified. iPad107740645486 failed Xcode launch before
+interaction again. One failed-job retry is active; watcher17492 writes
+/tmp/history-corrected-retry-result.json. Do not rerun the already accepted phone.
+
+Separate next review: the voice microphone is absent in detail captures but returns
+after tab navigation, as in baseline Settings captures. Source uses lucide SVG in
+the native tab accessory. One settled-navigation capture should distinguish a
+transition capture from a persistent redraw problem before changing that adapter.
+A single metadata row also clips its trailing source text after scrolling; retained
+captures record it. These are not evidence that History's corrected footer remains
+obscured, and are not assumed to be caused by the batch.

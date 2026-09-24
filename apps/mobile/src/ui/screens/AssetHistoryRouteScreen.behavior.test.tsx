@@ -10,6 +10,24 @@ import { setScreenFocused } from '../../test-support/navigation';
 
 const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((resolve) => setTimeout(resolve, 10)));
 describe('History query pages', () => {
+  it('changes the History view in place and keeps the selected value visible', async () => {
+    const client = createMobileQueryClient(); const h = new MobileRenderHarness();
+    const views: string[] = [];
+    const query = new AssetActivityQuery({ listAssetActivity: async ({ view }) => {
+      views.push(view); return { entries: [], hasMore: false };
+    } });
+    try {
+      await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryRouteScreen assetActivityQuery={query} tenantId="tenant" inventoryId="inventory" assetId="asset" assetTitle="Camping equipment" /></AppFeedbackProvider>
+      </MobileServerStateProvider>); await settle(h);
+      await h.press(h.byLabel('Show History, Changes'));
+      await h.press(h.byLabel('All events')); await settle(h);
+      expect(views).toEqual(['changes', 'all']);
+      expect(h.byLabel('Show History, All events')).toBeDefined();
+      expect(h.allText().join(' ')).toContain('Camping equipment');
+    } finally { await h.unmount(); client.clear(); }
+  });
+
   it('retries cached failure from its button without starting a pull indicator', async () => {
     const client = createMobileQueryClient(); const h = new MobileRenderHarness();
     let mode: 'ready' | 'fail' | 'retry' = 'ready'; let finish!: () => void;

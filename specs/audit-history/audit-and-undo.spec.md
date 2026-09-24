@@ -379,3 +379,22 @@ If that snapshot changes or its refresh fails before confirmation, the retained
 confirmation must not submit a reversal. A later successful refresh may expose a
 new confirmation for the current available operation. Preserve already-started
 commands, pending locks and existing focus-owned completion behavior.
+
+## Mobile History reading hierarchy
+
+The activity list is a scanning surface. Multi-field changes summarize the distinct
+changed fields in homeowner language (Name, Description, Tags, Location, Status,
+Checkout), preserving first-change order, rather than joining every before/after
+value into a paragraph. Single-field previews retain their meaningful value change;
+visually limit preview text to two lines while retaining complete detail values.
+Opening an entry shows each field with separately labeled Before and After values.
+Absent/blank values read None; an entry with neither value reads Changed without
+inventing a before/after state. Technical details remain a secondary disclosure.
+This is a product hierarchy decision, not an Apple prohibition on inline diffs.
+
+History list and detail scroll containers must use native automatic content inset
+adjustment so final rows/metadata can scroll above persistent tabs and voice
+controls. The list heading remains outside scrolling content and already clears
+the navigation header. The Show value is a short, in-place choice: use the shared
+native choice picker with Changes and All events, not an action-menu trigger that
+can collapse its selected label into an ellipsis. Keep the current value visible.

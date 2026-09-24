@@ -14,6 +14,26 @@ const settle = (harness: MobileRenderHarness) => harness.run(() => new Promise((
 const entry = { id: 'activity', principalId: 'person', action: 'asset.updated', category: 'change' as const, source: 'api', occurredAt: '2026-07-14T12:00:00Z', changes: [{ field: 'title' as const, currentValue: 'Cached name' }], technical: {} };
 
 describe('History detail cache', () => {
+  it('separates before and after values while keeping unrecorded changes honest', async () => {
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    const query = new AssetActivityQuery({ listAssetActivity: async () => ({ entries: [{ ...entry, changes: [
+      { field: 'title', previousValue: 'Old name', currentValue: 'New name' },
+      { field: 'description', currentValue: 'A complete description' },
+      { field: 'tags' }
+    ] }], hasMore: false }) });
+    try {
+      await harness.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <AppFeedbackProvider><AssetHistoryDetailRouteScreen assetActivityQuery={query} revertAssetChangeCommand={new RevertAssetChangeCommand({ reverseAssetOperation: async () => undefined })} activityId="activity" assetId="asset" assetTitle="Item" tenantId="tenant" inventoryId="inventory" /></AppFeedbackProvider>
+      </MobileServerStateProvider>);
+      await settle(harness);
+      const text = harness.allText().join(' ');
+      expect(text).toContain('Before Old name After New name');
+      expect(text).toContain('Before None After A complete description');
+      expect(text).toContain('Changed');
+    } finally { await harness.unmount(); client.clear(); }
+  });
+
   it.each([undefined, '', '   ', '  owner@example.test  '])('presents a readable actor for email %s', async (email) => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();

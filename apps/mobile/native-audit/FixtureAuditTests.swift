@@ -6,7 +6,8 @@ final class FixtureAuditTests: XCTestCase {
   override func setUpWithError() throws {
     continueAfterFailure = false
     app.launch()
-    let entry = name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
+    let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
+      || name.contains("testHistoryJourneyClearsPersistentChrome"))
       ? "View all recently changed assets" : "Audit Browse filters"
     XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
@@ -2927,6 +2928,51 @@ final class FixtureAuditTests: XCTestCase {
     tab("Home").tap()
     XCTAssertTrue(version.waitForExistence(timeout: 10))
     capture("settings-overview-tab-return")
+  }
+
+  func testHistoryJourneyClearsPersistentChrome() {
+    guard openFixtureURL("(tabs)/(home)/assets/history-item/history") else { return }
+    let title = app.staticTexts["Camping equipment"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    let mode = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Show History'")).firstMatch
+    XCTAssertTrue(mode.waitForExistence(timeout: 10))
+    XCTAssertTrue(mode.isHittable); mode.tap()
+    let allEvents = app.buttons["All events"].firstMatch
+    XCTAssertTrue(allEvents.waitForExistence(timeout: 5)); allEvents.tap()
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS 'Show History, All events'")).firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["History"].exists)
+    capture("history-all-events-choice")
+    mode.tap()
+    let changes = app.buttons["Changes"].firstMatch
+    XCTAssertTrue(changes.waitForExistence(timeout: 5)); changes.tap()
+    capture("history-list-entry")
+    let headingBelowHeader = title.frame.minY >= app.navigationBars.firstMatch.frame.maxY
+    let modeBelowHeader = mode.frame.minY >= app.navigationBars.firstMatch.frame.maxY
+    let firstChange = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Name · Description · Location · Tags'")).firstMatch
+    XCTAssertTrue(firstChange.waitForExistence(timeout: 10))
+    XCTAssertTrue(firstChange.isHittable); firstChange.tap()
+    let disclosure = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Technical details'")).firstMatch
+    XCTAssertTrue(disclosure.waitForExistence(timeout: 10))
+    capture("history-detail-entry")
+    let scroll = app.scrollViews.firstMatch
+    for _ in 0..<6 where !disclosure.isHittable { scroll.swipeUp() }
+    XCTAssertTrue(disclosure.isHittable); disclosure.tap()
+    let finalMetadata = app.staticTexts["history-request-0"].firstMatch
+    XCTAssertTrue(finalMetadata.waitForExistence(timeout: 10))
+    capture("history-detail-expanded")
+    verifyFooterClearsPersistentChrome(finalMetadata)
+    capture("history-detail-footer")
+    app.navigationBars.firstMatch.buttons.firstMatch.tap()
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(app.buttons["Load older activity"].firstMatch)
+    capture("history-pagination-footer")
+    tab("Browse").tap()
+    XCTAssertTrue(app.segmentedControls.firstMatch.buttons["List"].waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    capture("history-list-tab-return")
+    XCTAssertTrue(headingBelowHeader, "History title must clear the native header")
+    XCTAssertTrue(modeBelowHeader, "History mode must clear the native header")
   }
 
   func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {

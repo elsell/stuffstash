@@ -1,0 +1,11 @@
+TestFlight v0.24.38 (129.1), released 2026-09-24.
+PR186 merged main51a0cabc14915f6414500aa77b52f56c87d93616.
+Final CI36026968447 passes six checks. Release36027753017 succeeds, including
+iOS archive/upload107731986680 and changelog107739483487. Apple readback:
+2026-09-24T17:00:54.5634768Z Verified TestFlight changelog for v0.24.38 (129.1).
+
+Delivered readable Settings labels, consistent Appearance/session-command insets,
+non-repetitive scope context and more Home inventory-name space when fewer actions
+are present. Native Settings36023217961 passes3/3 per device; Home header36018428143
+passes5/5 per device. Named screenshots and scoped Android review are recorded in
+settings-overview.txt and home-header-space.txt. History remains a separate batch.

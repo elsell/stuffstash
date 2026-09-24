@@ -26,6 +26,7 @@ on:
           - filter-sharing-workflows
           - followup-release
           - filters
+          - history-journey
           - settings-overview
           - settings-commands
           - release-corrections
@@ -144,6 +145,7 @@ jobs:
               audit_test_args=(
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsOverviewNavigationAndFooterClearance'
+                '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testHistoryJourneyClearsPersistentChrome'
               )
               ;;
             command-emphasis)
@@ -420,6 +422,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
+              )
+              ;;
+            history-journey)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHistoryJourneyClearsPersistentChrome'
               )
               ;;
             settings-overview)
