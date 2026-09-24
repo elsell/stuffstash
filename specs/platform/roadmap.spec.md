@@ -38,18 +38,15 @@ measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
 interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.
 
-M260–M264 merged in PR171 at690ee8e4 after final Browse run35887017924
-passed on phone/iPad and required CI passed on ddcb700c. Release35889902851
-completed: TestFlight0.24.32(123.1) Apple processing and exact changelog readback
-verified. This batch is delivered.
-
-The next batch is frozen to M265–M273 on codex/mobile-selection-batch: hierarchy,
-Add/Edit selection, draft retention and consistent Move/Move Here interactions.
-See `mobile-selection-batch.spec.md` for current acceptance and
-`mobile-selection-lifecycle.spec.md` for the confirmed draft/presentation diagnosis.
-Its source integration is checked; grouped native acceptance remains pending.
-Do not expand this batch while native checks run. Unrelated findings stay tracked
-in the comprehensive audit. Resume connected normal-text workflows after delivery.
+M260–M273 are delivered through TestFlight0.24.33(124.1). Release35938987211
+verified Apple processing and exact changelog readback after PR173 merged.
+Continue normal-text workflow review with frozen PR174's filter/detail/Sharing
+batch. Its modal correction passes twelve native workflows on both devices;
+the integrated fifteen-workflow run35941028517 remains pending. PR176 then combines
+Settings collection return and Move completion emphasis. Keep their native and
+visual gates explicit; unrelated findings do not block these release batches.
+The audit's single current summary records evidence and remaining gaps:
+`docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a
