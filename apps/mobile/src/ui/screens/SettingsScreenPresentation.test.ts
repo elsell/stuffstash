@@ -100,6 +100,7 @@ describe('Settings Dynamic Type presentation', () => {
     expect(settingsLayoutMetrics).toEqual({
       bottomSpacing: 32,
       horizontalInset: 16,
+      leadingIconWidth: 30,
       minimumTouchTarget: 44,
       sectionSpacing: 24
     });

@@ -31,6 +31,7 @@ function useAssetCardStyles(paletteOverride?: MobileColorPalette) {
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
   readonly density?: 'standard' | 'compact' | 'row';
+  readonly reserveMediaSpace?: boolean;
   readonly footerAction?: {
     readonly accessibilityLabel?: string;
     readonly disabled?: boolean;
@@ -49,6 +50,7 @@ type AssetCardProps = {
 export function AssetCard({
   asset,
   density = 'standard',
+  reserveMediaSpace = false,
   footerAction,
   onParentLocationPress,
   palette: paletteOverride,
@@ -60,6 +62,7 @@ export function AssetCard({
 }: AssetCardProps) {
   const isCompact = density === 'compact';
   const isRow = density === 'row';
+  const photoFree = !reserveMediaSpace && !isRow && asset.hasPhoto === false && !asset.photo;
   const styles = useAssetCardStyles(paletteOverride);
 
   return (
@@ -77,7 +80,7 @@ export function AssetCard({
           pressed ? styles.openRegionPressed : undefined
         ]}
       >
-        <View style={[styles.imageFrame, isRow ? styles.rowImageFrame : undefined]}>
+        <View style={[styles.imageFrame, photoFree ? styles.photoFreeFrame : styles.squareMediaFrame, isRow ? styles.rowImageFrame : undefined]}>
           {asset.photo ? (
             <Image
               accessibilityIgnoresInvertColors
@@ -85,9 +88,9 @@ export function AssetCard({
               style={styles.assetImage}
             />
           ) : (
-            <Text style={styles.imagePlaceholder}>{asset.imagePlaceholderLabel}</Text>
+            <Text style={[styles.imagePlaceholder, photoFree ? styles.photoFreeLabel : undefined]}>{asset.imagePlaceholderLabel}</Text>
           )}
-          {asset.checkedOutLabel && !isRow ? <Text style={styles.checkoutImageBadge}>{asset.checkedOutLabel}</Text> : null}
+          {asset.checkedOutLabel && !isRow ? <Text style={[styles.checkoutImageBadge, photoFree ? styles.photoFreeStatus : undefined]}>{asset.checkedOutLabel}</Text> : null}
         </View>
       </Pressable>
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
@@ -263,12 +266,20 @@ function createStyles(colors: MobileColorPalette) {
   },
   imageFrame: {
     alignItems: 'center',
-    aspectRatio: 1,
     backgroundColor: colors.surfaceMuted,
     justifyContent: 'center',
     position: 'relative',
     width: '100%'
   },
+  squareMediaFrame: { aspectRatio: 1 },
+  photoFreeFrame: {
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+    minHeight: 48,
+    padding: spacing.sm
+  },
+  photoFreeLabel: { fontSize: 14, fontWeight: '500' },
+  photoFreeStatus: { position: 'relative', top: 0, right: 0 },
   openRegion: {
     width: '100%'
   },

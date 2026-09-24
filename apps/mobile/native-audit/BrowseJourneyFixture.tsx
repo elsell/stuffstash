@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Image } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { parseBrowseRouteParams } from '../src/ui/screens/BrowseRouteParams';
@@ -19,16 +20,36 @@ const assets: readonly AssetSummary[] = ['Garage', 'Kitchen', 'Camping tent', 'T
 /** Actual Browse screen and native header, with isolated read-only fixture data. */
 export function BrowseJourneyFixture() {
   const params = useLocalSearchParams();
-  const [fixture] = useState(() => ({
-    client: createMobileQueryClient(),
-    search: new SearchAssetsQuery({ browseAssets: async input => ({
-      assets: assets.filter(asset => asset.title.toLowerCase().includes(input.query.toLowerCase())), hasMore: false
-    }) }),
-    map: new InventoryMapQuery({ listActiveInventoryMapAssets: async () => ({
-      sessionScopeId: 'audit', tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'),
-      inventoryName: 'Main Inventory', permissions: ['view', 'create_asset'], assets
-    }) })
-  }));
+  const mixedPhotos = params.photoMix === 'true';
+  const dense = params.dense === 'true';
+  return <BrowseJourneyContent key={`${mixedPhotos}:${dense}`} params={params} mixedPhotos={mixedPhotos} dense={dense} />;
+}
+
+function BrowseJourneyContent({ params, mixedPhotos, dense }: {
+  readonly params: ReturnType<typeof useLocalSearchParams>;
+  readonly mixedPhotos: boolean;
+  readonly dense: boolean;
+}) {
+  const [fixture] = useState(() => {
+    const sourceAssets = dense ? [...assets, ...Array.from({ length: 24 }, (_, index) => ({
+      ...assets[2]!, id: assetId(`journey-extra-${index}`), title: `Stored item ${index + 13}`
+    }))] : assets;
+    const fixtureAssets = mixedPhotos ? sourceAssets.map((asset, index) => ({
+      ...asset,
+      hasPhoto: index === 0 || index === 2,
+      ...(index === 0 ? { photo: { uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri } } : {})
+    })) : sourceAssets;
+    return {
+      client: createMobileQueryClient(),
+      search: new SearchAssetsQuery({ browseAssets: async input => ({
+        assets: fixtureAssets.filter(asset => asset.title.toLowerCase().includes(input.query.toLowerCase())), hasMore: false
+      }) }),
+      map: new InventoryMapQuery({ listActiveInventoryMapAssets: async () => ({
+        sessionScopeId: 'audit', tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'),
+        inventoryName: 'Main Inventory', permissions: ['view', 'create_asset'], assets: fixtureAssets
+      }) })
+    };
+  });
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
     <SearchScreen {...parseBrowseRouteParams(params)} searchAssetsQuery={fixture.search} inventoryMapQuery={fixture.map}

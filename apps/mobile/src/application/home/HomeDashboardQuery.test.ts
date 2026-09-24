@@ -185,6 +185,7 @@ describe('HomeDashboardQuery', () => {
         parentLocationTrail: [{ id: 'asset-kitchen', title: 'Kitchen', isImmediateParent: true }],
         updatedAtLabel: 'Updated just now',
         photoLabel: 'Needs photo',
+        hasPhoto: false,
         imagePlaceholderLabel: 'Item'
       },
       {
@@ -197,6 +198,7 @@ describe('HomeDashboardQuery', () => {
         parentLocationTrail: [],
         updatedAtLabel: 'Updated today',
         photoLabel: 'Photo ready',
+        hasPhoto: true,
         imagePlaceholderLabel: 'Place'
       },
       {
@@ -209,6 +211,7 @@ describe('HomeDashboardQuery', () => {
         parentLocationTrail: [],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
+        hasPhoto: false,
         imagePlaceholderLabel: 'Box',
         checkedOutLabel: 'Checked out'
       }
@@ -226,6 +229,7 @@ describe('HomeDashboardQuery', () => {
         parentLocationTrail: [],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
+        hasPhoto: false,
         imagePlaceholderLabel: 'Box',
         checkedOutLabel: 'Checked out'
       }

@@ -186,10 +186,12 @@ describe('AssetDetailQuery', () => {
         ],
         updatedAtLabel: 'Updated yesterday',
         photoLabel: 'Needs photo',
+        hasPhoto: false,
         imagePlaceholderLabel: 'Item'
       }],
       updatedAtLabel: 'Updated today',
       photoLabel: 'Needs photo',
+      hasPhoto: false,
       photos: [],
       imagePlaceholderLabel: 'Box'
     });

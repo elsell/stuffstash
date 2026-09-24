@@ -12,71 +12,51 @@ changelog job107497620643 verified exact readback after Apple processing.
 Earlier release evidence remains in the findings ledger and linked release records.
 Current release acceptance below supersedes historical pending statements.
 
-## Persistent tab navigation candidate
+## Frozen release — PR178
 
-PR178 (`codex/mobile-native-patterns-batch`) contains persistent Home/Browse
-stacks for41 ordinary routes, bounded native commands, readable detail layout and
-expiration search retention. Add/Edit/Move/Filters remain modal tasks. Product
-source35a79fe5 is the integrated baseline; the current candidate also replaces
-the confirmed failing customization Name control with the existing DraftTextField.
+`codex/mobile-native-patterns-batch` at5040afd4 contains persistent Home/Browse
+stacks for41 ordinary routes, bounded native commands, readable detail layout,
+expiration search retention and Settings name/key corrections. Add/Edit/Move/Filters
+remain modal tasks. Required CI35970458935 passed. Run35970467285 now passes
+Settings creation/save/reopen on both devices and the complete iPhone tab workflow.
+iPad touch switching and exact draft return pass, but the final hit-point waiter
+fails while its ancestor locator repeatedly retries resolution. Test-only579fb767
+uses direct native tab labels and preserves every acceptance assertion. Focused
+35973624529 now passes both devices, with final captures reviewed. CI35973630755
+also passes. The verified follow-up will join this batch before final integrated CI. Do not repeat the old
+ancestor-query experiment or infer acceptance of all41 routes.
 
-Focused run35960677440 completed: iPhone3/3 passed; iPad2/3 passed.
-The iPad Settings draft remains exactly `Tools emergency` and both tabs are visibly
-present, but the revised hittable-match query still fails after return. Duplicate
-first-match selection alone is therefore insufficient to explain the failure.
-Keep the release gate open. The final native tree places the tab strip at y32–76
-and the Tag navigation bar at y32–140; this overlap is an observation, not proof
-of touch interception. Next verification must distinguish actual tap interception
-from an accessibility hit-test discrepancy by exercising the visible tab and
-requiring the destination change and exact draft return. Do not remove the
-reachability requirement or repeat the same selector-only adjustment.
-See [focused evidence](evidence/persistent-tabs-35960677440.txt).
-Required CI35961721094 passed at3fc47eaf. Completion run35961716802 passes Retry
-on both devices and Settings readback on iPad; phone New Tag still fails exact name
-entry (Cngampi rather than Camping). Do not treat
-route/source checks as native acceptance of all41 screens.
+The integrated baseline35958732480 passed Add and expiration on both devices;
+follow-up35961716802 closed contents Retry on both. Native Name avoids keystroke
+reordering, and5040afd4 preserves existing stable keys on name initialization/edit.
+Their exact create/save/reopen verification now passes on both iOS devices.
 
-## Current expiration search correction
+Android connected detail/Move/tab return, Settings draft retention and expiration
+query/filter return passed. Reviewed iOS command-width captures show readable
+bounded recovery actions. Android successful Edit/save/reopen and Move/save/reopen
+also pass on the named audit APK: [connected evidence](evidence/android-connected-edit-move.txt).
+These scoped results do not certify the whole app.
 
-Android's parameter probe showed Home retaining its route but clearing Kitchen to
-an empty query on tab return, before Filters opened. This displayed unfiltered
-Camping items; it was not copying Browse's query. Expiration now reuses the shared
-native-search interaction guard, retaining its own debounce and pending draft.
-The final Android build without the probe passes Home/Browse/Apply with each
-query retained. Two regressions reproduced inactive clearing and draft
-reseeding, then passed; all2,002 mobile checks, TypeScript and review pass.
+## Follow-up — PR179
 
-Settings draft retention and detail/Move return passed on Android. iOS command
-width35954709640 passed9/9 iPad and8/9 phone. Phone Add initially stopped at keyboard readiness
-(line744); the subsequent combined run passed Add on both devices. Corrected phone/iPad command-width captures were reviewed: retry labels and
-contextual commands are readable and bounded (see evidence/native-command-width-review.txt).
-Combined13-workflow run35958732480 at35a79fe5 passed12/13 phone and11/13 iPad.
-Add and expiration retention passed both. Follow-up35961716802 closes Retry recovery.
-Its phone capture confirms lasting wrong character order after15s; this is not a
-transient observation issue. The Name-only native draft correction preserves current
-validation, key derivation, resource loading, locks and rejected-save drafts. Existing
-2,002 source tests, TypeScript, structural checks and review pass. Exact native
-save/reopen and tab-return remain gates; no more typing delays/provider experiments.
+`codex/mobile-photo-free-browse` is stacked on PR178. Sparse photo-free Browse rows
+compact without collapsing mixed-media rows. Native35964382077 passed all three
+List/Map geometry and return checks on both devices; Android sparse/mixed return
+also passed. Evidence: [Browse density](evidence/photo-free-grid-review.txt).
 
-## Accepted corrections and remaining release gates
+Shared Settings commands use bounded native buttons. Filter35965504659 passed
+six workflows on each iOS device; reviewed date, overview and last-tag captures
+show clear commands and footer clearance. Android ordinary/320dp filter reset and
+reminder Retry/Discard passed. Icon-free separators now use the normal row inset.
 
-Released0.24.34 includes M274–M279 filter density/navigation, retained Browse
-search, contextual detail actions and Sharing recovery. Settings save/readback
-35948277688 passed on both devices, including failed-save retry, exact full-name
-persistence, reopening, creation and archiving. Move35951755320 passed all four
-workflows on both devices; reviewed selection/creation captures close the scoped
-normal-text hierarchy/contrast hold. These checks do not close all Settings design
-findings or the comprehensive audit.
-
-The next batch corrects compressed Retry labels by giving the native host the
-available width while keeping its button leading-aligned. Reviewed phone/iPad
-captures establish readable bounded commands in the named detail states; see
-[evidence](evidence/native-command-width-review.txt). Do not repeat provider or
-key-delivery experiments. Add now passes on both devices. Remaining native gates are iPad Settings tab
-reachability and exact Settings create/readback after the Name control correction. These do not
-reopen accepted button geometry.
-Android light/dark expiration return and Edit/Move cancellation passed; these do
-not establish successful Edit/Move execution or app-wide appearance acceptance.
+The paired reminder test35967919825 exposed overlapping iOS command hit areas.
+1661a240 corrects sizing; native35971374386 now passes Retry, Discard, separate hit
+frames and long-label activation on both devices. Captures reviewed for spacing
+and legibility: [command evidence](evidence/bounded-settings-actions.txt).
+Integrated source passes2,006 mobile tests, TypeScript, structural checks and
+review. The branch includes PR178's product fixes and current test-only locator
+correction. Its scoped native gates and the base tab gate now pass; final integrated CI and
+TestFlight delivery remain before release completion.
 
 ## Separate unresolved decisions
 

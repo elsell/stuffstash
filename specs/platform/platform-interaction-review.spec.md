@@ -1137,6 +1137,64 @@ is hittable. Keep the final reachability assertion and add actual Browse/Home
 activation with exact Settings draft readback. This observation correction does
 not by itself establish iPad task acceptance or justify a production layout change.
 
+### Photo-free grid native comparison
+
+The existing Browse journey fixture may accept photoMix=true to show one real local
+image, one photo-bearing asset without a resolved thumbnail, and confirmed photo-free
+peers. The normal fixture stays photo-free. Review both grids with List/Map return and
+scrolling; source geometry assertions alone do not accept mixed-row density.
+
+The focused Browse native suite verifies compact confirmed-empty card geometry and
+then mixed-row title alignment on the same route with a changed fixture variant.
+It retains existing responsive width and List/Map scroll-return checks. Photo-free
+card height must be smaller than its grid width at normal text; mixed media cards
+retain the image area. Capture both states for visual judgment.
+
+### Browse density observation prerequisites
+
+Run35962300873 passes phone Browse checks but the compact twelve-card iPad fixture
+fits entirely without scrolling. The scroll-retention scenario must use a distinct
+36-asset variant with stable identities; keep sparse and mixed-photo density cases
+unchanged. Require actual list movement and retained control placement. The focused
+browse-journey selection must include the mixed-photo comparison itself; its prior
+omission means that run provides no mixed-photo acceptance evidence.
+
+### Bounded Settings commands
+
+SettingsActionRow issues a command rather than navigating or selecting a value.
+Use the shared bounded secondary NativeCommandButton within the existing grouped
+row, preserving concise visible labels, optional descriptive accessibility labels,
+disabled guards and destructive roles. Preserve navigation/choice row conventions;
+do not add button borders to those rows. Group padding must accommodate the native
+button without truncation or nested press targets. Apply to filter resets, reminder
+retry/discard, device-settings commands and voice profile actions. Verify shared
+source consumers and representative native filter/reminder screens before release.
+NativeCommandButton accepts a separate accessibility label, defaulting to its visible
+label, consistently on iOS, Android and the preview renderer.
+
+Native acceptance for bounded Settings commands includes a runner-only reminder
+recovery fixture using the production editor: the first save fails, Retry commits
+the retained choice, and Discard restores the saved choice. Include the longer
+Open device settings label for layout/activation observation only; a fixture
+activation is not evidence that OS settings opened or push permission changed.
+
+Settings dividers align with the following row's content: ordinary text, choice,
+switch and command rows use the shared row inset; navigation rows with leading
+icons explicitly include the icon width and row gap. Do not apply an icon gutter
+to icon-free rows. Stacked layouts retain the ordinary inset. This changes visual
+grouping only, preserving interaction and accessibility semantics.
+
+### Native command content sizing
+
+The paired reminder recovery fixture at a0874586 exposed iOS bordered buttons
+whose 48-point label minimum acquired native style padding, yielding 62-point
+hit frames inside 48-point measured hosts. Retry and Discard overlapped. Keep the
+48-point minimum on the outer command, but use the same 32-point label minimum
+as primary commands so native padding fits the measured command. Preserve native
+bounded styling, multiline growth, and disabled behavior. Acceptance requires the
+existing paired recovery test to prove separate hit frames and successful Retry
+and Discard on iPhone and iPad; source tests cannot establish native geometry.
+
 ### Integrated native batch completion observations
 
 Run35958732480 passes12/13 phone and11/13 iPad workflows. Both pass Add and

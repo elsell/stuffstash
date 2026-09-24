@@ -4,6 +4,7 @@ import { spacing } from '../theme/tokens';
 export const settingsLayoutMetrics = {
   bottomSpacing: spacing.xl,
   horizontalInset: spacing.md,
+  leadingIconWidth: 30,
   minimumTouchTarget: 44,
   sectionSpacing: spacing.lg
 } as const;

@@ -2742,6 +2742,26 @@ final class FixtureAuditTests: XCTestCase {
     capture("detail-empty-photo-hierarchy")
   }
 
+  func testBrowsePhotoFreeRowsKeepMixedMediaAligned() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let garage = app.otherElements["asset-card-journey-0"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10))
+    XCTAssertLessThan(garage.frame.height, garage.frame.width,
+      "Confirmed photo-free grid cards must not reserve a square media panel")
+    capture("browse-photo-free-compact")
+    guard openFixtureURL("audit-browse-journey?photoMix=true") else { return }
+    let mixed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      garage.exists && garage.frame.height > garage.frame.width
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [mixed], timeout: 10), .completed)
+    let garageTitle = app.buttons["Open asset Garage"].firstMatch
+    let kitchenTitle = app.buttons["Open asset Kitchen"].firstMatch
+    XCTAssertTrue(kitchenTitle.waitForExistence(timeout: 10))
+    XCTAssertEqual(garageTitle.frame.minY, kitchenTitle.frame.minY, accuracy: 1,
+      "Photo-free peers must align their titles with the photo card")
+    capture("browse-mixed-photo-alignment")
+  }
+
   func testBrowseGridFitsDeviceWidth() {
     guard openFixtureURL("audit-browse-journey") else { return }
     let garage = app.otherElements["asset-card-journey-0"].firstMatch
@@ -2768,7 +2788,7 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
-    guard openFixtureURL("audit-browse-journey") else { return }
+    guard openFixtureURL("audit-browse-journey?dense=true") else { return }
     let control = app.segmentedControls.firstMatch
     XCTAssertTrue(control.waitForExistence(timeout: 10))
     let list = control.buttons["List"]
@@ -2804,7 +2824,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-scrolled")
     map.tap()
     XCTAssertTrue(map.isSelected)
-    let overview = app.staticTexts["12 active assets · 2 root items"].firstMatch
+    let overview = app.staticTexts["36 active assets · 2 root items"].firstMatch
     XCTAssertTrue(overview.waitForExistence(timeout: 10))
     XCTAssertFalse(app.buttons["Filters"].exists)
     verifyAnchor()
@@ -3184,6 +3204,31 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Appearance value: dark"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Back to audit menu"].isHittable)
     capture("appearance-in-place-dark")
+  }
+
+  func testSettingsCommandsRecoverReminderDraft() {
+    guard openFixtureURL("audit-settings-commands") else { return }
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+    app.buttons["Off"].tap()
+    let retry = app.buttons["Retry saving reminders"].firstMatch
+    let discard = app.buttons["Discard reminder changes"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 5))
+    XCTAssertTrue(retry.isHittable); XCTAssertTrue(discard.isHittable)
+    XCTAssertFalse(retry.frame.intersects(discard.frame))
+    XCTAssertTrue(app.staticTexts["Saved reminders: defaults"].exists)
+    capture("settings-reminder-recovery-pair")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].waitForExistence(timeout: 5))
+    app.buttons["Fail next save"].tap(); choice.tap(); app.buttons["Custom"].tap()
+    XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.tap()
+    XCTAssertTrue(discard.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].exists)
+    XCTAssertFalse(app.buttons["Before expiration"].exists)
+    let device = app.buttons["Open device settings"].firstMatch
+    XCTAssertTrue(device.isHittable); device.tap()
+    XCTAssertTrue(app.staticTexts["Device settings activations: 1"].waitForExistence(timeout: 5))
+    capture("settings-command-long-label")
   }
 
   func testReminderModeUsesMenuWithoutNavigation() {

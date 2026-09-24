@@ -1,0 +1,27 @@
+Current diagnosis: Android API36 Browse does not reliably retain native header
+controls/search during live appearance changes. Cold dark launch works. Normal-text
+regression remains unresolved; no appearance candidate is accepted or committed.
+
+Observed baseline1fa57a5f: light→dark removes List/Map from the native tree and leaves
+Search dark against dark chrome. Captures: /tmp/photo-row-dark-settled.png and
+/tmp/browse-dark-cold.png. Cards theme correctly.
+
+Bounded attempts:
+1. Android-only native segmented host palette key restores Map through light/dark/
+light. Explicit search header tint changes fail open Camping text retention.
+2. Appearance-triggered JS text reseed also fails: final dark-query capture lacks
+the open field/result; prior query-before contains Camping and Found Camping tent.
+3. Narrow native toolbar guard preserving an installed SearchView still fails the
+same Camping assertion. Build /tmp/search-menu-build.log succeeded in54s; terminal
+/tmp/search-menu-replay.log records Missing Camping at line38. Native guard not
+established as root-cause fix. Source7 adapter tests/typecheck passed but do not
+establish native lifecycle behavior.
+
+Decision: investigation budget exhausted. Withdraw all unverified appearance code,
+native patch and lock changes together. Keep product at9fb6280f. Do not ship palette
+host/tint changes independently without search-retention verification. Do not repeat
+these candidates, global provider experiments, or infer a proven parent-query reset
+from screenshots alone. Future investigation needs native lifecycle event evidence
+that distinguishes screen remount from native search close/replacement before a
+new implementation. This unrelated follow-up does not expand PR178 release gates.
+Rejected candidate preserved locally: /tmp/android-appearance-rejected-candidate.patch.
