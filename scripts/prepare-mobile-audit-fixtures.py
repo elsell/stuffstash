@@ -147,3 +147,16 @@ if os.environ.get("AUDIT_TEST_CASE") == "home-collections":
         target.parent.mkdir(parents=True, exist_ok=True)
         source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
         target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+
+# A bounded overview walkthrough; retain real tab chrome and screen components.
+if os.environ.get("AUDIT_TEST_CASE") == "settings-overview":
+    for page, component in {
+        "index": "SettingsRootOverviewFixture",
+        "account": "SettingsAccountOverviewFixture",
+        "inventory/index": "SettingsInventoryOverviewFixture",
+        "diagnostics": "SettingsDiagnosticsOverviewFixture",
+    }.items():
+        target = routes / "audit-tabs/(home,search)/settings" / f"{page}.tsx"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = os.path.relpath(root / "apps/mobile/native-audit/SettingsOverviewFixture", target.parent)
+        target.write_text(f"export {{ {component} as default }} from '{source}';\n")

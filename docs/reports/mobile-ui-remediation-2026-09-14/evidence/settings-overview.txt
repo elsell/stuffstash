@@ -1,0 +1,39 @@
+Settings overview at20e73669, native36019282915, 2026-09-24.
+Both devices reach root, Account, Inventory Settings and Diagnostics. Captures
+reviewed: iPhone root Account label is squeezed away by trailing email; server/
+about labels wrap into narrow columns. iPad has width but Appearance sits flush
+against the group edge on both. Scope rows redundantly repeat the header name.
+Footer helper stopped because selectable version exposes identical nested
+StaticText nodes, not observed clipping. Phone final tree has both at
+(100.7,478,122,19.3). Artifact10816798525 phone,10816898589 iPad. Use firstMatch,
+retain geometry checks, finish tab return. Do not rerun unchanged diagnostics.
+
+Spec-first correction: descriptive root values become subtitles; native Appearance
+uses shared inset row in root/legacy screen; Account/Connection commands use shared
+inset action row; scope header carries the inventory/household name once.
+Presentation tests4red before correction,83focused tests green; TypeScript,
+12preparation tests, structural checks and critic review pass. Native visual
+acceptance remains pending. Account/Connection native recovery checks join this
+batch because their command wrappers changed. No global inset change is justified
+by the captured footer state.
+
+Android API36 Pixel6 emulator5580, APK
+c33a925dbfd4ad2d8567d5339a521e89e9806a80cd00ca1afcf6e082c71d74ab:
+root/Account/Inventory/Diagnostics navigation passes in light and dark. Reviewed
+captures show visible destination labels with descriptive subtitles, consistent
+appearance/action inset and scope names no longer repeated. Build uses existing
+Android audit source with scoped production-screen overlays, not a full exact-head
+production build. Session mutations and inventory leaf actions are not exercised.
+iOS correction candidate b81f73ef is running as36023217961. Baseline merge5e539aa9
+has an identical tree to b81f73ef. Draft PR186 contains this and accepted Home
+header spacing; both remain unreleased pending native/CI review.
+
+Corrected native36023217961 at b81f73ef passes all three cases on iPhone and
+iPad: connected overview/footer/tab return, Account recovery and Connection
+recovery. Reviewed final captures show readable root labels, consistent Appearance
+insets, reduced scope repetition and Diagnostics content clear of persistent
+navigation and voice controls after tab return. Artifacts10819103385 (phone) and
+10819413693 (iPad). Product/native source remains identical after baseline merge
+and evidence-only commits. Earlier Account transition captures omit the microphone
+glyph in both baseline and candidate; final tab-return captures show it again.
+Do not infer a persistent regression without a settled-navigation observation.

@@ -1,4 +1,5 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { AppearancePicker } from '../components/AppearancePicker';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Switch, Text, useWindowDimensions, View } from 'react-native';
 import { Check, ChevronRight } from 'lucide-react-native';
@@ -39,6 +40,11 @@ export function SettingsSection({
 export function SettingsSeparator({ hasLeadingIcon = false }: { readonly hasLeadingIcon?: boolean }) {
   const { styles } = useSettingsListStyles();
   return <View accessibilityElementsHidden importantForAccessibility="no" style={[styles.separator, hasLeadingIcon && styles.separatorWithIcon]} />;
+}
+
+export function SettingsAppearanceRow() {
+  const { styles } = useSettingsListStyles();
+  return <View style={styles.navigationRow}><AppearancePicker /></View>;
 }
 
 export function SettingsLoadingRow({ label }: { readonly label: string }) {

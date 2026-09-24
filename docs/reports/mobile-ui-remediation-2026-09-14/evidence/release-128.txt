@@ -1,0 +1,12 @@
+TestFlight0.24.37 (128.1), released2026-09-24.
+PR184 merged8bdcc28928415af37600d20c51d76133650a0073.
+Candidate3f7485e3: CI36017423895 passed and native Home/Browse36017420318
+passed on both devices with reviewed collection/tab/filter captures.
+Release36020469905 succeeded: upload107707509064; notes107715699202.
+Apple readback log2026-09-24T16:01:10.9168833Z:
+Verified TestFlight changelog for v0.24.37 (128.1).
+Notes describe Recently changed opening Browse and collection shortcuts clearing
+unrelated filters. Android dialog contrast correction is also in the source batch;
+API36 native acceptance is scoped in android-photo-status.txt. Swipe and older
+Android remain unverified. Home spacing and Settings corrections belong to PR186,
+not this release. Comprehensive audit remains incomplete.

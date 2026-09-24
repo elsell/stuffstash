@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, ScrollView, Text } from 'react-native';
-import { router, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { AssetCheckoutCommand } from '../src/application/assets/AssetCheckoutCommand';
 import { HomeDashboardQuery } from '../src/application/home/HomeDashboardQuery';
 import type { HomeDashboardSnapshot } from '../src/application/home/InventorySummaryRepository';
@@ -24,7 +24,10 @@ const headerAssets: readonly AssetSummary[] = [drill, ...['Audit camping equipme
   currentCheckout: { ...drill.currentCheckout!, id: `audit-header-checkout-${index}` }
 }))];
 
-export function HomeHeaderFixture() { return <HomeReturnFixture headerAudit />; }
+export function HomeHeaderFixture() {
+  const { viewer } = useLocalSearchParams<{ viewer?: string }>();
+  return <HomeReturnFixture key={viewer} headerAudit viewer={viewer === 'true'} />;
+}
 export function HomeTabShellFixture() { return <HomeReturnFixture headerAudit diagnostics={false} onOpenExpiration={() => router.push({
   pathname: '/audit-tabs/(home)/expiration', params: { tenantId: 'filter-tenant', inventoryId: 'filter-inventory', mode: 'expired', query: 'Kitchen' }
 } as Href)} />; }
@@ -41,7 +44,7 @@ export function TabShellBrowsePlaceholder() {
 export function HomeAddProbeDestination() { return <Text>Header Add destination</Text>; }
 export function HomeProfileProbeDestination() { return <Text>Header Profile destination</Text>; }
 
-export function HomeReturnFixture({ headerAudit = false, diagnostics = true, onOpenExpiration }: { readonly headerAudit?: boolean; readonly diagnostics?: boolean; readonly onOpenExpiration?: () => void }) {
+export function HomeReturnFixture({ headerAudit = false, viewer = false, diagnostics = true, onOpenExpiration }: { readonly headerAudit?: boolean; readonly viewer?: boolean; readonly diagnostics?: boolean; readonly onOpenExpiration?: () => void }) {
   const [notificationActivations, setNotificationActivations] = useState(0);
   const [fixture] = useState(() => {
     let returned = false;
@@ -51,7 +54,7 @@ export function HomeReturnFixture({ headerAudit = false, diagnostics = true, onO
       checkedOutAssets: returned ? [] : headerAudit ? headerAssets : [drill], workspace: {
         tenants: [{ id: tenantId('audit-tenant'), name: 'Audit home' }], defaultInventoryId: inventoryId('audit-inventory'),
         inventories: [{ id: inventoryId('audit-inventory'), tenantId: tenantId('audit-tenant'), name: headerAudit ? 'Main inventory with a long household name' : 'Audit inventory',
-          role: 'owner', permissions: ['view', 'create_asset', 'edit_asset'], description: '', updatedAtLabel: '',
+          role: viewer ? 'viewer' : 'owner', permissions: viewer ? ['view'] : ['view', 'create_asset', 'edit_asset'], description: '', updatedAtLabel: '',
           locationCount: 0, locations: [], assets: headerAudit ? headerAssets : [drill] }]
       }
     }) });
@@ -68,7 +71,7 @@ export function HomeReturnFixture({ headerAudit = false, diagnostics = true, onO
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
     <HomeScreen dashboardQuery={fixture.query} assetCheckoutCommand={fixture.command}
-      notificationAction={headerAudit ? { kind: 'notifications', label: 'Notifications, 2 unread', badgeCount: 2, onPress: () => setNotificationActivations(count => count + 1) } : undefined}
+      notificationAction={headerAudit && !viewer ? { kind: 'notifications', label: 'Notifications, 2 unread', badgeCount: 2, onPress: () => setNotificationActivations(count => count + 1) } : undefined}
       expirationSection={headerAudit ? <ExpirationHomeSection data={{ items: headerAssets.map(toAssetCardViewModel), counts: { expired: 3, soon: 0, all: 3 }, timezone: 'UTC' }} onOpen={() => onOpenExpiration?.()} onOpenAsset={() => undefined} onRetry={() => undefined} /> : undefined}
     />
     {diagnostics ? <QueryReadinessDiagnostics client={fixture.client} /> : null}

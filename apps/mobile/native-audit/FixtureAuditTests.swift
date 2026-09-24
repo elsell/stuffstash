@@ -2664,6 +2664,23 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-keyboard-go-submission")
   }
 
+  func testHomeViewerHeaderUsesSpaceWithoutOverlappingProfile() {
+    guard openFixtureURL("audit-home-header?viewer=true") else { return }
+    let profile = app.buttons["Open account and settings"]
+    let selector = app.buttons["Current inventory Main inventory with a long household name, tenant Audit home. Switch inventory"]
+    XCTAssertTrue(selector.waitForExistence(timeout: 10))
+    XCTAssertTrue(selector.isHittable)
+    XCTAssertTrue(profile.isHittable)
+    XCTAssertFalse(app.buttons["Add an asset"].exists)
+    XCTAssertFalse(app.buttons["Notifications, 2 unread"].exists)
+    XCTAssertGreaterThan(selector.frame.width, 220)
+    XCTAssertLessThanOrEqual(selector.frame.maxX, profile.frame.minX)
+    XCTAssertTrue(app.frame.contains(selector.frame))
+    capture("home-viewer-header-available-space")
+    profile.tap()
+    XCTAssertTrue(app.staticTexts["Header Profile destination"].waitForExistence(timeout: 5))
+  }
+
   func testHomeHeaderKeepsAllActionsAboveScrollingContent() {
     let open = app.buttons["Audit Home header"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))
@@ -2876,6 +2893,41 @@ final class FixtureAuditTests: XCTestCase {
     candidate.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 
+
+  func testSettingsOverviewNavigationAndFooterClearance() {
+    guard openFixtureURL("audit-tabs/(home)/settings") else { return }
+    let account = app.buttons["Open Account settings for household.member@example.invalid"]
+    XCTAssertTrue(account.waitForExistence(timeout: 10))
+    XCTAssertTrue(account.isHittable)
+    // RN groups this row into one AX button; review visible label/subtitle in
+    // the capture rather than asserting child text that AX does not expose.
+    capture("settings-overview-root")
+    account.tap()
+    XCTAssertTrue(app.buttons["Sign Out"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["household.member@example.invalid"].waitForExistence(timeout: 10))
+    capture("settings-overview-account")
+    app.navigationBars.buttons.firstMatch.tap()
+    let inventory = app.buttons["Open inventory settings for Main Inventory, in Family household"]
+    XCTAssertTrue(inventory.waitForExistence(timeout: 10))
+    XCTAssertTrue(inventory.isHittable); inventory.tap()
+    XCTAssertTrue(app.buttons["Open Notifications for Main Inventory"].waitForExistence(timeout: 10))
+    capture("settings-overview-inventory")
+    app.navigationBars.buttons.firstMatch.tap()
+    let diagnostics = app.buttons["Open developer and connection Diagnostics"]
+    XCTAssertTrue(diagnostics.waitForExistence(timeout: 10))
+    for _ in 0..<5 where !diagnostics.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(diagnostics.isHittable); diagnostics.tap()
+    // Selectable text exposes parent and child AX labels with identical frames.
+    let version = app.staticTexts["overview-audit-1"].firstMatch
+    XCTAssertTrue(version.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(version)
+    capture("settings-overview-diagnostics-clearance")
+    tab("Browse").tap()
+    XCTAssertTrue(app.buttons["Open Browse asset"].waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(version.waitForExistence(timeout: 10))
+    capture("settings-overview-tab-return")
+  }
 
   func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
     guard openFixtureURL("audit-tabs/(home)/assets/footer-clearance") else { return }

@@ -1,5 +1,4 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
-import { AppearancePicker } from '../components/AppearancePicker';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -8,6 +7,7 @@ import type { SettingsQuery } from '../../application/settings/SettingsQuery';
 import { useAppearance } from '../theme/AppearanceContext';
 import {
   SettingsNavigationRow,
+  SettingsAppearanceRow,
   SettingsSection,
   SettingsSeparator,
   useSettingsListStyles
@@ -63,7 +63,7 @@ export function SettingsScreen({
           {section.rows.map((row, index) => (
             <View key={row.id}>
               {index > 0 ? <SettingsSeparator hasLeadingIcon={row.id !== 'appearance'} /> : null}
-              {row.id === 'appearance' ? <AppearancePicker /> : <SettingsNavigationRow
+              {row.id === 'appearance' ? <SettingsAppearanceRow /> : <SettingsNavigationRow
                 accessibilityLabel={row.accessibilityLabel}
                 context={row.context}
                 icon={iconForRow(row.id, palette.action)}

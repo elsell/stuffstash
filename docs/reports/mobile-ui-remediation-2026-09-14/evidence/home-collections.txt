@@ -7,3 +7,11 @@ Correction: named test expects Home SeeAll at setup; every workflow assertion st
 Legacy all arrangement explicitly excludes this production-path-only scenario;
 its dedicated home-collections selector remains necessary. Reviewer found no blocker.
 Source routing/product unchanged. Corrected native run pending.
+
+Corrected native36017420318 at3f7485e3 passes on iPhone17 and iPad mini.
+Reviewed artifacts10815449944 and10815469998: Recently changed shows25items in
+Browse List, Checked out shows6 and its single filter chip; Browse selected.
+Connected assertions verify prior refinements are cleared, detail return and
+ordinary tab return preserve context. CI36017423895 also passes exacthead.
+PR184 merged8bdcc289 on2026-09-24; release36020469905 started, upload pending.
+No claim of new footer-clearance coverage from these entry captures.

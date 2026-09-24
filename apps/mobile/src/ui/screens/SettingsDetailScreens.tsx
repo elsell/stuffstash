@@ -6,11 +6,12 @@ import { isAccessFailure } from '../serverState/isAccessFailure';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useRef, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
-import { AppearancePicker } from '../components/AppearancePicker';
 import type { SettingsQuery, SettingsViewModel } from '../../application/settings/SettingsQuery';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import {
   SettingsSection,
+  SettingsActionRow,
+  SettingsAppearanceRow,
   SettingsSeparator,
   SettingsValueRow,
   SettingsLoadingRow,
@@ -58,7 +59,7 @@ export function AccountSettingsScreen({
             <SettingsValueRow label="Signed in as" value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
-            <NativeCommandButton
+            <SettingsActionRow
               disabled={working}
               label={working ? 'Signing Out…' : 'Sign Out'}
               onPress={() => confirmSignOut(principalLabel, ownConfirmation(capturePresentation(), signOut))}
@@ -72,7 +73,7 @@ export function AppearanceSettingsScreen() {
   const { styles } = useSettingsListStyles();
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
     <SettingsSection footer="System follows your device’s appearance setting.">
-      <AppearancePicker />
+      <SettingsAppearanceRow />
     </SettingsSection>
   </ScrollView>;
 }
@@ -119,7 +120,7 @@ export function ConnectionSettingsScreen({
         <SettingsValueRow label="Address" value={diagnostics.apiBaseUrl} />
       </SettingsSection>
       <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
-        <NativeCommandButton
+        <SettingsActionRow
           disabled={working}
           label={working ? 'Changing Server…' : 'Change Server'}
           onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, ownConfirmation(capturePresentation(), changeServer))}

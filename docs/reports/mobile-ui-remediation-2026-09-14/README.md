@@ -6,12 +6,13 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.36 (127.1)**. Combined PR182 merged as
-main0bb1f24e; candidate CI36007310510 and release36008181746 passed. Apple changelog
-readback was verified2026-09-24 at14:18UTC. [Release evidence](evidence/release-127.txt).
-This delivers Browse retention/alignment, detail header insets and clearer
-container identity/contents grouping with bounded commands. The prior persistent
-tabs, filters and editing batch remains recorded in [release126](evidence/release-126.txt).
+Latest verified TestFlight is **0.24.37 (128.1)**. PR184 merged8bdcc289;
+release36020469905 and iOS upload107707509064 passed. Apple changelog readback
+was verified2026-09-24 at16:01UTC. Home collection shortcuts now use Browse with
+explicit collection criteria; Android photo dialog contrast is corrected within
+the recorded API36 scope. [Release evidence](evidence/release-128.txt).
+Prior127 delivered Browse retention/alignment and clearer container detail grouping
+with tab/voice clearance. [Prior release](evidence/release-127.txt).
 
 ## Shipped batch acceptance
 
@@ -41,7 +42,7 @@ Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6)
 including old diagnostics and enlarged-text cases; it is not a release gate for
 this verified batch. [Terminal decisions](evidence/native-full-359800.txt).
 
-## Next batch in progress
+## Home collection batch acceptance
 
 Home Recently changed → See all now targets existing Browse List with explicit
 all-active/recent ordering and clears prior query/tags/kind/availability criteria.
@@ -55,8 +56,29 @@ Checked out now uses the same explicit reset contract, differing only in availab
 Home28 and shared fixture3 tests pass; fixture preparation11 tests pass. Focused
 `home-collections` acceptance uses production tab paths and shared real screens,
 with no competing root Search route or placeholder. Critic's root-header and
-stale-state observation findings were corrected. Native36013639520 stopped in setup on both devices before the workflow: the focused fixture correctly opened Home, but shared setup expected the legacy audit menu. Retained phone capture confirms Home/tabs; setup now matches this entry. All workflow assertions remain unchanged; corrected native execution remains pending. CI36015199509 at9ad2ec8f passed all six jobs.
-Include these in the next meaningful batch, not isolated releases.
+stale-state observation findings were corrected. Native36013639520 stopped in fixture setup; corrected36017420318 passes on both
+devices at3f7485e3. Reviewed captures show the correct List/tab,25 recent items and6
+checked-out items with only the intended filter. CI36017423895 passes the same
+revision. PR184 merged8bdcc289; release36020469905 delivered128.1 with verified notes. [Evidence](evidence/home-collections.txt).
+
+Separate follow-up: Home's inventory switcher now uses available header space up
+to320pt instead of always capping at180pt, avoiding unnecessary truncation when
+only Profile is visible. Viewer regression failed before the change; six width
+checks, structural checks and critic review pass. Native36018428143 at452265ab passes five cases on each device; reviewed captures
+confirm one-action/three-action spacing and stable actions on scroll. This is
+outside PR184 and is not released. [Evidence](evidence/home-header-space.txt).
+
+## Next connected review
+
+Settings overview review confirmed iPhone root labels crowded out by long values,
+Appearance flush with the group edge, and repetitive scope subtitles. Candidate
+uses descriptive subtitles, shared inset rows and scope context once.83 focused
+tests, TypeScript,12 preparation tests, structural checks and critic review pass.
+Native36019282915 reached Diagnostics but stopped on duplicate selectable-text
+AX nodes; the locator is corrected without relaxing geometry checks. Corrected36023217961 passes all three cases on each device. Reviewed final
+captures confirm hierarchy, footer clearance and tab return; Account/Connection
+recovery checks also pass. PR186 is accepted for release, not yet delivered.
+[Diagnosis and evidence](evidence/settings-overview.txt).
 
 ## Separate unresolved decisions
 
@@ -65,13 +87,12 @@ Include these in the next meaningful batch, not isolated releases.
   iPad passed. Timing remains unverified; no input rewrite or unchanged rerun.
   [Evidence](evidence/onboarding-current-dismissal.txt).
 
-- **M251 Android photo status:** dialog-owned native adapter now builds and shows
+- **M251 Android photo status:** dialog-owned native adapter shipped in128.1 and shows
   readable light glyphs on the dark canvas in reviewed API36 captures. Close and
   Android Back restore the underlying screen in light/dark appearance. Final-photo
   disposal/restoration also passes both. Reviewed captures are retained with the
   evidence. Swipe replay failed both directions and remains unverified after the
-  bounded investigation; older Android is not certified. Candidate is not released; no
-  Activity-level style workaround was restored. [Evidence](evidence/android-photo-status.txt).
+  bounded investigation; older Android is not certified. No Activity-level style workaround was restored. [Evidence](evidence/android-photo-status.txt).
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
   remains draft at aa9fbd9e. The explicit system color-picker candidate passes

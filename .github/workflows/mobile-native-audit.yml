@@ -26,6 +26,7 @@ on:
           - filter-sharing-workflows
           - followup-release
           - filters
+          - settings-overview
           - settings-commands
           - release-corrections
           - menu-ownership
@@ -142,6 +143,7 @@ jobs:
               # arrangement owns competing root Search/detail routes.
               audit_test_args=(
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
+                '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsOverviewNavigationAndFooterClearance'
               )
               ;;
             command-emphasis)
@@ -420,9 +422,18 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
               )
               ;;
+            settings-overview)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsOverviewNavigationAndFooterClearance'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAccountNativeCommandCancelAndRecovery'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testConnectionNativeCommandCancelAndRecovery'
+              )
+              ;;
             home-header)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeViewerHeaderUsesSpaceWithoutOverlappingProfile'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeHeaderKeepsAllActionsAboveScrollingContent'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
