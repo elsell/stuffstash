@@ -1158,3 +1158,16 @@ fits entirely without scrolling. The scroll-retention scenario must use a distin
 unchanged. Require actual list movement and retained control placement. The focused
 browse-journey selection must include the mixed-photo comparison itself; its prior
 omission means that run provides no mixed-photo acceptance evidence.
+
+### Bounded Settings commands
+
+SettingsActionRow issues a command rather than navigating or selecting a value.
+Use the shared bounded secondary NativeCommandButton within the existing grouped
+row, preserving concise visible labels, optional descriptive accessibility labels,
+disabled guards and destructive roles. Preserve navigation/choice row conventions;
+do not add button borders to those rows. Group padding must accommodate the native
+button without truncation or nested press targets. Apply to filter resets, reminder
+retry/discard, device-settings commands and voice profile actions. Verify shared
+source consumers and representative native filter/reminder screens before release.
+NativeCommandButton accepts a separate accessibility label, defaulting to its visible
+label, consistently on iOS, Android and the preview renderer.

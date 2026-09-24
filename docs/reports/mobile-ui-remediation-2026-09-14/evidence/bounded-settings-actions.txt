@@ -1,0 +1,16 @@
+SettingsActionRow now uses the existing bounded native command adapter. Visible
+labels and descriptive accessible names are separate; destructive role/disabled
+behavior preserved. Navigation and selection rows remain unchanged.
+Shared consumers: Browse/Expiration reset; expiration date reset; reminder save
+retry/discard; notification load/back/device-settings actions; Browse filter
+load retry/cancel; voice profile action.
+Regression: NativeCommandButton accessibility test failed before implementation
+because iOS exposed Retry instead of Retry saving reminders. After implementation,
+all2005 mobile tests passed, TypeScript and structural checks passed. Critic found
+no source blocker; long-label wrapping/native composition remain acceptance work.
+Android API36 Pixel6 normal text: build /tmp/settings-bounded-build.log succeeded
+in54s. Reviewed /tmp/settings-bounded-filter.png shows bounded Reset all with no
+clipping and separate footer. Native tree preserves Reset all filters description.
+/tmp/settings-bounded-replay.log passes actual Type→Items→Reset all→All types.
+This verifies the representative filter consumer, not all reminder states, narrow
+screens, iOS or assistive traversal. Native iOS acceptance still required.

@@ -60,7 +60,7 @@ export function createSettingsScreenStyles(
     separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: 56 },
     iconButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
     choiceRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-    actionRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+    actionRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
     actionGroup: { flexDirection: layout.stacked ? 'column' : 'row', gap: spacing.sm },
     choiceGroup: { flexDirection: layout.stacked ? 'column' : 'row', gap: spacing.sm },
     detailHeader: { paddingHorizontal: settingsLayoutMetrics.horizontalInset, paddingTop: spacing.lg },
