@@ -1,3 +1,4 @@
+import { PhotoViewerSystemBars } from './PhotoViewerSystemBars';
 import React, { useEffect, useMemo } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NativeCommandButton } from './NativeCommandButton';
@@ -77,7 +78,7 @@ export function FullScreenPhotoViewer({
 }
 
 // The safe-area-aware footer owns Close; omit the library's duplicate header.
-function PhotoViewerHeader() { return null; }
+function PhotoViewerHeader() { return <PhotoViewerSystemBars />; }
 
 export function PhotoViewerLoadError({ onRetry }: { readonly onRetry: () => void }) {
   return <View style={styles.loadError}>

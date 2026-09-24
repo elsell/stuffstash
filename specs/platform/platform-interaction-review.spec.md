@@ -1402,3 +1402,16 @@ unfiltered recent List through Home See all; open and return from a real detail;
 verify Home Checked out replaces unrelated refinements; verify ordinary tab return
 preserves the resulting Browse context. Keep historical tab fixtures unchanged for
 their existing scenarios. Run phone/iPad acceptance with the next frozen batch.
+
+#### Dialog-owned photo system bars
+
+The Android photo viewer must use light system-bar glyphs on its fixed dark canvas.
+A local Expo native view inside the library's modal owns that dialog's appearance:
+apply on window attachment and window focus, after React Native's dialog setup.
+Use the attached view's WindowInsetsController on API30+, with system UI appearance
+flags on older supported Android. Never reach into the Activity window or use a
+JS timer; refuse Activity-root attachment. Dialog disposal leaves the underlying
+screen's appearance untouched. This small native adapter is needed because React
+Native StatusBar targets the Activity, not this separate dialog. It adds no runtime
+dependency. Verify light/dark entry and restoration on Close, Back, swipe and
+last-photo removal on the native build; source checks alone do not close M251.

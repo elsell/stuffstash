@@ -65,10 +65,12 @@ Include these in the next meaningful batch, not isolated releases.
   iPad passed. Timing remains unverified; no input rewrite or unchanged rerun.
   [Evidence](evidence/onboarding-current-dismissal.txt).
 
-- **M251 Android photo status:** normal-text native review confirms dark status
-  glyphs on the black photo canvas. Activity-level styling does not fix the modal;
-  that candidate was withdrawn. Close/return works. Next correction needs dialog
-  ownership. [Bounded evidence](evidence/android-photo-status.txt).
+- **M251 Android photo status:** dialog-owned native adapter now builds and shows
+  readable light glyphs on the dark canvas in reviewed API36 captures. Close and
+  Android Back restore the light underlying screen. Dark appearance/final-photo
+  replay is in progress; swipe replay failed in both directions and remains
+  unverified after the bounded investigation. Candidate is not released; no
+  Activity-level style workaround was restored. [Evidence](evidence/android-photo-status.txt).
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
   remains draft at aa9fbd9e. The explicit system color-picker candidate passes

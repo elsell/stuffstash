@@ -4,7 +4,7 @@ import { Platform } from '../../test-support/react-native';
 import { MobileRenderHarness } from '../../test-support/render';
 import { FullScreenPhotoViewer } from './FullScreenPhotoViewer';
 
-it('owns light status content only during a valid iOS photo presentation', async () => {
+it('scopes platform status ownership to valid photo presentations', async () => {
   const h = new MobileRenderHarness();
   const platform = Platform.OS;
   const photos = [{ id: 'photo', label: 'Photo', uri: 'https://example.invalid/photo' }];
@@ -21,5 +21,8 @@ it('owns light status content only during a valid iOS photo presentation', async
     await h.render(render(3)); expect(h.allByType('StatusBar')).toHaveLength(0);
     Platform.OS = 'android';
     await h.render(render(0)); expect(h.allByType('StatusBar')).toHaveLength(0);
+    expect(h.allByType('StuffStashPhotoSystemBars')).toHaveLength(1);
+    await h.render(render(undefined));
+    expect(h.allByType('StuffStashPhotoSystemBars')).toHaveLength(0);
   } finally { await h.unmount(); Platform.OS = platform; }
 });

@@ -18,3 +18,17 @@ Captures: /tmp/android-photo-review-viewer.png (baseline),
 /tmp/android-photo-status-returned.png (restoration).
 Replay /tmp/review-photo-viewer.py; native source /tmp/ReactModalHostView.kt.
 No physical-device, saved-asset backend, swipe or dark-appearance acceptance claim.
+
+Dialog-owned candidate, 2026-09-24:
+Local Expo view mounted inside ImageViewing HeaderComponent sets its attached
+window's status/navigation glyph appearance on attach/focus, refusing Activity root.
+APK d2879b269d639d861420d96d4bb9725f208a4c8c30a609ed3a0baf6e081b76d6
+compiled on paul; API36 emulator5580 light Close/Back pass. Reviewed
+/tmp/android-photo-dialog-viewer.png shows white glyphs against black canvas;
+/tmp/android-photo-dialog-returned.png shows restored gray glyphs on light screen.
+18 focused ownership/confirmation/draft tests, tsc, structural and critic pass.
+Successful final-photo removal fixture added, preserving default failed-removal case.
+Final build/replay in progress (shell96641, functions cell10312).
+Swipe down then source-informed upward replay both failed to dismiss; stop further
+unchanged gesture experiments. Do not claim swipe acceptance or real deletion API.
+Remaining dark/final-removal observations are distinct from confirmed light contrast.

@@ -198,14 +198,14 @@ export function FixtureMenu() {
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
   const [settingsControls, setSettingsControls] = useState<'scroll' | 'fixed'>();
   const [draftPhotos, setDraftPhotos] = useState(false);
-  const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing'>();
+  const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing' | 'last-removal'>();
   const [inputMode, setInputMode] = useState<InputFixtureMode>();
   if (inputMode) return <FixturePage key={`input-${inputMode}`} persistHandledTaps>
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
   </FixturePage>;
   if (fieldChoices) return <CustomFieldChoicesFixture onBack={() => setFieldChoices(false)} />;
-  if (photoRecovery) return <PhotoRecoveryFixture missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
+  if (photoRecovery) return <PhotoRecoveryFixture removeSucceeds={photoRecovery === 'last-removal'} missingImage={photoRecovery === 'missing'} onBack={() => setPhotoRecovery(undefined)} />;
   if (onboardingSubmission) return <OnboardingSubmissionFixture />;
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture scrollEnabled={settingsControls === 'scroll'} onBack={() => setSettingsControls(undefined)} />;
@@ -264,6 +264,7 @@ export function FixtureMenu() {
     <Button title="Audit plain-no-accessory input" onPress={() => { setKeyboardAccessoryEnabled(false); setInputMode('plain-no-accessory'); }} />
     <Button title="Audit multiline input" onPress={() => setInputMode('multiline')} />
     <Button title="Audit photo removal recovery" onPress={() => setPhotoRecovery('removal')} />
+    <Button title="Audit final photo removal" onPress={() => setPhotoRecovery('last-removal')} />
     <Button title="Audit unavailable photo" onPress={() => setPhotoRecovery('missing')} />
     <Button title="Audit footer appearance" onPress={() => router.push('/audit-footer-appearance' as Href)} />
     <Button title="Audit menu ownership" onPress={() => router.push('/audit-menu-ownership' as Href)} />
