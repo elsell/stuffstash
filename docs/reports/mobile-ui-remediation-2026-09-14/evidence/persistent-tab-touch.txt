@@ -1,4 +1,14 @@
-Current diagnosis:35970467285 at5040afd4 passes both iPhone workflows and iPad
+Accepted: focused35973624529 at579fb767 passes the full tab-return workflow on
+both iPhone and iPad, including the unchanged final both-tabs isHittable assertion.
+Reviewed final captures retain Tools emergency and visible native Home/Browse tabs.
+iPad artifact10798052431, phone10797333974; captures /tmp/move-layout-review/direct-tabs-*.
+The direct native button locator supersedes the failing ancestor-chain observation;
+no production layout change was needed. Settings create/save/reopen already passed
+on both devices at5040afd4. These results close the scoped release gates, not full
+VoiceOver or all41-route acceptance.
+
+Historical diagnosis and correction:
+35970467285 at5040afd4 passes both iPhone workflows and iPad
 Settings creation/save/reopen. The stable-key correction is natively accepted.
 iPad tab touch roundtrip and exact Tools emergency draft return pass; the final
 both-tabs isHittable waiter fails. Capture shows both native tabs clearly present.

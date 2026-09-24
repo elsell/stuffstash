@@ -22,7 +22,8 @@ Settings creation/save/reopen on both devices and the complete iPhone tab workfl
 iPad touch switching and exact draft return pass, but the final hit-point waiter
 fails while its ancestor locator repeatedly retries resolution. Test-only579fb767
 uses direct native tab labels and preserves every acceptance assertion. Focused
-35973624529 and CI35973630755 remain the release gates. Do not repeat the old
+35973624529 now passes both devices, with final captures reviewed. CI35973630755
+also passes. The verified follow-up will join this batch before final integrated CI. Do not repeat the old
 ancestor-query experiment or infer acceptance of all41 routes.
 
 The integrated baseline35958732480 passed Add and expiration on both devices;
@@ -54,7 +55,8 @@ frames and long-label activation on both devices. Captures reviewed for spacing
 and legibility: [command evidence](evidence/bounded-settings-actions.txt).
 Integrated source passes2,006 mobile tests, TypeScript, structural checks and
 review. The branch includes PR178's product fixes and current test-only locator
-correction. Its release remains dependent on the base branch's native tab gate.
+correction. Its scoped native gates and the base tab gate now pass; final integrated CI and
+TestFlight delivery remain before release completion.
 
 ## Separate unresolved decisions
 
