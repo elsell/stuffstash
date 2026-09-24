@@ -21,19 +21,24 @@ const assets: readonly AssetSummary[] = ['Garage', 'Kitchen', 'Camping tent', 'T
 export function BrowseJourneyFixture() {
   const params = useLocalSearchParams();
   const mixedPhotos = params.photoMix === 'true';
-  return <BrowseJourneyContent key={mixedPhotos ? 'mixed' : 'empty'} params={params} mixedPhotos={mixedPhotos} />;
+  const dense = params.dense === 'true';
+  return <BrowseJourneyContent key={`${mixedPhotos}:${dense}`} params={params} mixedPhotos={mixedPhotos} dense={dense} />;
 }
 
-function BrowseJourneyContent({ params, mixedPhotos }: {
+function BrowseJourneyContent({ params, mixedPhotos, dense }: {
   readonly params: ReturnType<typeof useLocalSearchParams>;
   readonly mixedPhotos: boolean;
+  readonly dense: boolean;
 }) {
   const [fixture] = useState(() => {
-    const fixtureAssets = mixedPhotos ? assets.map((asset, index) => ({
+    const sourceAssets = dense ? [...assets, ...Array.from({ length: 24 }, (_, index) => ({
+      ...assets[2]!, id: assetId(`journey-extra-${index}`), title: `Stored item ${index + 13}`
+    }))] : assets;
+    const fixtureAssets = mixedPhotos ? sourceAssets.map((asset, index) => ({
       ...asset,
       hasPhoto: index === 0 || index === 2,
       ...(index === 0 ? { photo: { uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri } } : {})
-    })) : assets;
+    })) : sourceAssets;
     return {
       client: createMobileQueryClient(),
       search: new SearchAssetsQuery({ browseAssets: async input => ({

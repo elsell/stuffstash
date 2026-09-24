@@ -380,6 +380,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
               )
               ;;
             home-header)

@@ -3,3 +3,12 @@ Android API36 Pixel6 normal/light: initial compact-per-card candidate f39d5e15 r
 Reviewed corrected mixed /tmp/photo-row-aligned.png and entirely photo-free /tmp/photo-free-browse-ready.png. Titles align in mixed rows; later photo-free rows compact. Mixed row positions and native selector bounds are identical before/after Map/List return, verified by accessibility bounds in /tmp/android-mixed-row-return-{scrolled,returned}.xml and corresponding PNGs.
 Source: initial full run2002/2003, only Home view-model expected metadata failed; corrected exact projection passes targeted test. Latest45 Browse/card checks plus TypeScript and structural checks pass. Critic found no blocker. Do not describe this as a rerun of all2004 current tests.
 Pending: focused iOS Browse native acceptance, mixed-row captures, dark/large-text scoped checks. Fixture photoMix variant is keyed to reset data/cache on navigation parameter changes.
+
+Run35962300873 atb1ba1535: phone2/2 passed; iPad width passed, scroll assertion
+failed because all12 compact cards fit in the viewport. Reviewed iPad final PNG
+from artifact10793342682 confirms the complete sparse grid without overflow.
+The focused selector omitted the mixed-photo test (it was present only in
+workflow-batch); no mixed-photo iOS acceptance follows from this run.
+Correction: dedicated36-asset dense fixture for scroll retention, unchanged sparse
+and mixed fixtures, explicit mixed comparison in browse-journey. Critic found no
+blocker; structural/workflow syntax checks passed. Native rerun required.

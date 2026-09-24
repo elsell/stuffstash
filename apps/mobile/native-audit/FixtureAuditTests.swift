@@ -2785,7 +2785,7 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
-    guard openFixtureURL("audit-browse-journey") else { return }
+    guard openFixtureURL("audit-browse-journey?dense=true") else { return }
     let control = app.segmentedControls.firstMatch
     XCTAssertTrue(control.waitForExistence(timeout: 10))
     let list = control.buttons["List"]
@@ -2821,7 +2821,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-scrolled")
     map.tap()
     XCTAssertTrue(map.isSelected)
-    let overview = app.staticTexts["12 active assets · 2 root items"].firstMatch
+    let overview = app.staticTexts["36 active assets · 2 root items"].firstMatch
     XCTAssertTrue(overview.waitForExistence(timeout: 10))
     XCTAssertFalse(app.buttons["Filters"].exists)
     verifyAnchor()

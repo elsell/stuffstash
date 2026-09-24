@@ -1149,3 +1149,12 @@ then mixed-row title alignment on the same route with a changed fixture variant.
 It retains existing responsive width and List/Map scroll-return checks. Photo-free
 card height must be smaller than its grid width at normal text; mixed media cards
 retain the image area. Capture both states for visual judgment.
+
+### Browse density observation prerequisites
+
+Run35962300873 passes phone Browse checks but the compact twelve-card iPad fixture
+fits entirely without scrolling. The scroll-retention scenario must use a distinct
+36-asset variant with stable identities; keep sparse and mixed-photo density cases
+unchanged. Require actual list movement and retained control placement. The focused
+browse-journey selection must include the mixed-photo comparison itself; its prior
+omission means that run provides no mixed-photo acceptance evidence.
