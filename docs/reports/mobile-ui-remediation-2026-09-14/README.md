@@ -89,7 +89,9 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 Notification tab journey now targets the standalone-fixture gap: real tab layout,
 inbox/application queries, asset detail/Back and paginated final-content clearance.
-No product defect is claimed before native evidence.
+Candidate4b64bbd7 is running as36057807116 on phone/iPad; terminal status goes to
+`/tmp/notification-tab-journey-result.json`. No product defect is claimed before
+native evidence.
 [Bounded check](evidence/notification-tab-journey.txt).
 
 History baseline36027545902 confirmed iPhone final metadata hidden under persistent
