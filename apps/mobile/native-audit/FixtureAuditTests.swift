@@ -1295,6 +1295,11 @@ final class FixtureAuditTests: XCTestCase {
     let header = app.navigationBars.firstMatch
     XCTAssertGreaterThanOrEqual(searchButton.frame.minY, header.frame.minY)
     XCTAssertLessThanOrEqual(searchButton.frame.maxY, header.frame.maxY)
+    let identity = app.staticTexts["Audit place"].firstMatch
+    XCTAssertTrue(identity.waitForExistence(timeout: 5))
+    XCTAssertGreaterThanOrEqual(identity.frame.minY, header.frame.maxY,
+      "Place identity must clear native navigation chrome on initial entry")
+    XCTAssertLessThanOrEqual(identity.frame.maxY, app.frame.maxY)
     capture("place-search-collapsed")
     searchButton.tap()
     let field = app.searchFields.firstMatch
@@ -2869,6 +2874,43 @@ final class FixtureAuditTests: XCTestCase {
     candidate.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 
+
+  func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
+    guard openFixtureURL("audit-tabs/(home)/assets/footer-clearance") else { return }
+    let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Updated '")).firstMatch
+    verifyFooterClearsPersistentChrome(footer)
+    capture("detail-footer-above-native-tabs")
+  }
+
+  func testSharingFooterClearsPersistentTabsAndVoiceAccessory() {
+    guard openFixtureURL("audit-tabs/(home)/settings/sharing?access=populated") else { return }
+    let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Invitation links are shown only'")).firstMatch
+    XCTAssertTrue(footer.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(footer)
+    capture("sharing-footer-above-native-tabs")
+  }
+
+  private func verifyFooterClearsPersistentChrome(_ footer: XCUIElement) {
+    let voice = app.buttons["Start voice interaction"].firstMatch
+    let tabs = app.tabBars.firstMatch
+    XCTAssertTrue(voice.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    let scroll = app.scrollViews.firstMatch
+    XCTAssertTrue(scroll.exists)
+    func clearOfChrome() -> Bool {
+      let tabBounds = tabs.exists ? tabs.frame : tab("Home").frame.union(tab("Browse").frame)
+      // iPad can put its tab strip at the top; use the delivered chrome positions.
+      let chrome = [tabBounds, voice.frame]
+      let upper = chrome.filter { $0.midY < app.frame.midY }
+        .reduce(app.navigationBars.firstMatch.frame.maxY) { max($0, $1.maxY) }
+      let lower = chrome.filter { $0.midY >= app.frame.midY }
+        .reduce(app.frame.maxY) { min($0, $1.minY) }
+      return footer.exists && app.frame.contains(footer.frame) &&
+        footer.frame.maxY <= lower && footer.frame.minY >= upper
+    }
+    for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
+    XCTAssertTrue(clearOfChrome(), "Final content must clear persistent navigation surfaces")
+  }
 
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
     guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }

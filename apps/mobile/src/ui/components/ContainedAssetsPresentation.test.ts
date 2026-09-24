@@ -53,7 +53,7 @@ describe('ContainedAssetsPresentation', () => {
       title: 'Garage cabinet',
       containedAssetsLabel: '4 things inside'
     })).toEqual({
-      title: 'Inside Garage cabinet',
+      title: 'Contents',
       summary: '4 things inside'
     });
   });

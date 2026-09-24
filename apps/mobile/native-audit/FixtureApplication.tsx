@@ -407,3 +407,5 @@ function DraftPhotosFixture({ onBack }: { readonly onBack: () => void }) {
     <Button title={readOnly ? 'Enable photo editing' : 'Make photos read only'} onPress={() => setReadOnly(value => !value)} />
   </FixturePage>;
 }
+
+export { AssetFooterClearanceFixture } from './AssetEditJourneyFixture';

@@ -17,16 +17,21 @@ const scope: InventorySharingScope = {
 /** Runner-only controlled ports: no remote invitations, system clipboard, or real share action. */
 export function InventorySharingFixture() {
   const { access } = useLocalSearchParams<{ access?: string }>();
-  const scenario = access === 'permissionless' || access === 'denied' || access === 'unavailable' ? access : 'normal';
+  const scenario = access === 'permissionless' || access === 'denied' || access === 'unavailable' || access === 'populated' ? access : 'normal';
   return <SharingScenario key={scenario} scenario={scenario} />;
 }
 
-function SharingScenario({ scenario }: { readonly scenario: 'normal' | 'permissionless' | 'denied' | 'unavailable' }) {
+function SharingScenario({ scenario }: { readonly scenario: 'normal' | 'permissionless' | 'denied' | 'unavailable' | 'populated' }) {
   const selectedScope = scenario === 'permissionless' ? { ...scope, permissions: [] } : scope;
   const [fixture] = useState(() => {
     const client = createMobileQueryClient();
     let creations = 0; let copies = 0; let cancellations = 0; let reads = 0;
-    let items: InventoryInvitationSummary[] = [];
+    let items: InventoryInvitationSummary[] = scenario === 'populated'
+      ? Array.from({ length: 12 }, (_, index) => ({
+        id: `audit-existing-${index}`, email: `household-${index}@example.invalid`,
+        relationship: 'viewer', status: 'pending', isExpired: false,
+        expiresAt: '2027-01-01T00:00:00Z'
+      })) : [];
     const repository: InventoryInvitationManagementRepository = {
       list: async () => {
         if (++reads === 1 && scenario === 'denied') throw Object.assign(new Error('Audit access unavailable'), { status: 403 });

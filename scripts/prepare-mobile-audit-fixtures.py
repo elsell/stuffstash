@@ -118,7 +118,9 @@ for route, component in {
 # Representative real destination screens under both production tab stacks.
 for route, component in {
     "assets/[assetId]/index": "AssetEditJourneyDetailFixture",
+    "assets/footer-clearance": "AssetFooterClearanceFixture",
     "settings/inventory/tags/[resourceId]": "CustomizationEditorFixture",
+    "settings/sharing": "InventorySharingFixture",
     "expiration": "BrowseFilterJourneyExpiration",
 }.items():
     target = routes / "audit-tabs/(home,search)" / f"{route}.tsx"

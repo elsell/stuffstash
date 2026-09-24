@@ -1261,3 +1261,134 @@ remove the assertion. One focused tab-return run distinguishes locator resolutio
 from an outstanding native hit-point failure; if it fails, retain that failure
 without repeating this locator experiment. Settings readback is already accepted
 at5040afd4 and need not be rerun for this test-only change.
+
+### Android appearance lifecycle observation
+
+Before another appearance correction, record whether the native screen/header is
+recreated or its existing toolbar replaces/closes search during a light/dark switch.
+Use only the marked disposable Android fixture archive and the pinned installed
+react-native-screens sources. A runner-only recorder may emit at most256 structured
+native diagnostic events: event kind, object identity, search-view identity and
+query length, never query contents. Observe fragment creation/start/stop, header
+attach/detach/update, menu rebuild, search open/close/focus and text changes. This
+recorder is test instrumentation, must never enter production dependencies, and
+source backups must permit restoration. Refuse Git checkouts, ambiguous dependency
+roots, mismatched source hashes and existing instrumentation before any write.
+
+One replay compares the same open synthetic Camping query before and after a live
+appearance change. A new fragment identity directs the fix toward remount ownership;
+stable identities plus menu/close events direct it toward native toolbar lifecycle.
+If neither appears, retain the failure and inspect native rendering ownership rather
+than repeat provider removal, key delivery, palette keys or JS query reseeding.
+No appearance fix is accepted from this observation alone.
+
+### Browse route state owns navigation, not adapter identity
+
+Recreating a query adapter without changing Browse route parameters must not clear
+the current search, filters or selected List/Map view. Route synchronization reacts
+to route values; inventory-scoped query keys continue to isolate inventory results.
+Verify a mounted searched Browse survives equivalent adapter replacement and still
+applies an actual changed route query. This regression test distinguishes a source
+state-reset defect from the remaining native appearance/rendering failure; passing
+it alone does not accept Android live appearance.
+
+### Android header appearance after query-ownership correction
+
+The native trace and mounted regression separated query loss from header rendering:
+query retention now passes the original Map appearance sequence without native
+patches. With that confound corrected, apply the previously observed Android-only
+segmented host recreation on semantic palette changes, preserving controlled value
+and callbacks. Supply native search text, hint, tint and header-icon semantic colors
+on Android. iOS keeps system search colors and host identity. Do not reseed search
+on appearance, patch native menus, or recreate the screen. One integrated native
+replay must now keep Map available through light/dark/light, search text/results,
+continued editing, clear/close and view switching; inspect captures for contrast.
+Verify a representative segmented consumer outside the header as well. This is a
+new acceptance run after a proven ownership fix, not repetition of a failed reseed.
+
+### Android photo canvas status contrast — rejected activity override
+
+Normal-text API36 photo walkthrough shows black status glyphs on the fixed black
+viewer canvas. The Android library's activity-level hide call does not hide them
+in this modal. Extending the iOS declarative light-content StatusBar to Android
+passes mounted ownership tests but fails the native screenshot; withdraw it.
+ReactModalHostView0.83.6 copies activity appearance only at dialog show via
+updateSystemAppearance. The next correction must own the dialog's system-bar style
+or establish style before presentation with a native lifecycle guarantee, not a
+timeout, repeated JS override or global preference. Preserve restoration on Close,
+system Back, swipe dismissal and last-photo removal. This P3 appearance finding
+remains separate from the verified Browse batch; no Android correction is accepted.
+
+### Photo-free Browse rows align checkout status space
+
+Run35979200078 passes connected Browse behavior on phone/iPad, but reviewed
+expiration-return captures show checked-out photo-free cards with lower title
+baselines than their peers. Each compact grid row must reserve the same status
+space when any peer has a checkout label, using actual label text for native
+measurement rather than a fixed height. A peer without checkout remains visually
+blank in that slot and must not expose a false checkout label to accessibility.
+Rows without checkout remain compact; photo-bearing rows retain square media,
+Home row cards remain unchanged, and column changes recompute row membership.
+Verify mixed checkout/no-checkout rows, row regrouping, and accessible semantics
+before native title-baseline/visual acceptance. This is a project collection-layout
+decision; it does not change item checkout state or add a domain concept.
+
+### Place/detail entry clears native navigation chrome
+
+Run35979200078 place-search-collapsed captures on phone/iPad show the initial
+asset identity above the visible content edge while No photos is the first visible
+body label. AssetDetailView's FlatList must use automatic system content insets,
+like Browse, so native search/navigation owns top clearance without guessed header
+heights. On initial entry, before scrolling or opening search, verify the asset's
+identity header lies completely below navigation chrome and within the viewport.
+Preserve search filtering/clear/cancel, ordinary detail scrolling and bottom-tab
+return. This acceptance check supplements the existing functional search checks.
+
+### Container details group identity, contents and commands
+
+User capture2026-09-24 shows container checkout under the native tab/accessory
+layer, contents commands detached above their heading, and borderless Move items
+here. Keep availability/check-out with identity/location, before media and contents;
+do not repeat it in the footer. Place Add/Move contents commands directly after
+the first contents heading, using bounded native secondary styling for Move.
+When a location has an empty/search-empty list, keep its contents commands grouped
+with that state. Do not render an empty command group when permission offers none.
+Keep ordinary item/location behavior and callbacks intact, and preserve native
+automatic insets for navigation, tabs and the voice accessory. Verify final content
+can scroll fully above those bars in the real tab shell; isolated fixtures cannot
+establish bottom clearance. Inspect ordinary routed scrolling consumers for the
+same missing-inset failure, rather than adding guessed universal bottom padding.
+Apple layout guidance requires accounting for overlaid navigation controls:
+https://developer.apple.com/design/human-interface-guidelines/layout
+Container contents use the short heading Contents rather than repeating the full
+asset name; separate groups use one spacing interval, avoiding stacked section
+padding between the contents commands and empty state. Native Android observation
+shows composed commands are reliable in the list header; keep the first section
+and its controls there while virtualizing subsequent content rows.
+
+### Sharing participates in persistent-navigation clearance review
+
+Verify the ordinary Sharing destination inside the production tab stacks, with
+its actual voice accessory and a populated invitation list long enough to scroll.
+Its final invitation-link explanation must scroll
+fully into the unobstructed content area. This is a representative ScrollView
+consumer of the same layout contract as detail's FlatList. Use delivered tab,
+accessory and header bounds on iPhone and iPad rather than fixed bottom padding.
+An isolated sharing fixture without tabs cannot establish this acceptance.
+
+Native bottom-clearance fixtures must contain the metadata used by their locator
+and enough real contents rows to require scrolling on iPad. An absent synthetic
+label is a fixture failure, not proof of product clipping. Detail uses a populated
+container with a final Updated label; verify fixture data before dispatch.
+
+### Explicit native audit dispatch
+
+Native simulator workflows are explicitly dispatched for the affected journeys
+and frozen revision. Pull-request updates must not automatically start the full
+onboarding/fixture matrix: this duplicated focused runs, replayed historical
+diagnostics and delayed release acceptance on limited macOS capacity. Ordinary
+CI continues source, fixture and type checks; native acceptance remains required
+for visual/lifecycle changes and must link the dispatched run and inspected
+artifacts. The full sweep remains available through the explicit all selection.
+Resolve a dispatched run by event=workflow_dispatch and exact head SHA, never the
+most recent workflow result alone; PR and dispatched runs can share a branch.

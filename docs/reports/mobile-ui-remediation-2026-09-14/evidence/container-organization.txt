@@ -1,0 +1,77 @@
+Container organization follow-up, 2026-09-24.
+User screenshot: long container title repeated in contents heading, commands above
+their section, borderless Move items here, and availability under voice/tabs.
+Spec-first candidate groups availability with identity and contents commands below
+a short Contents heading. Move items here uses bounded secondary native styling.
+No empty command group; unavailable contents retain permitted commands.
+80 focused tests/TypeScript/mobile structural checks pass. Critic identified and
+resolved unavailable-contents command loss and iPad tab-strip geometry in the
+native footer test. Runtime acceptance remains required.
+Android API36 normal-text: first candidate placed native controls in recycled rows
+and they disappeared. Rejected. First section/controls now compose in ListHeader;
+final screenshot /tmp/container-organization-final-android.png shows both commands,
+clear availability group and short heading. This isolated fixture does NOT prove
+bottom-tab clearance. New native test opens real audit-tabs detail and requires
+final metadata above delivered tab/voice surfaces, handling iPad's top tab strip.
+Shared inset audit source candidates: InventoryAssetsRouteScreen FlatList,
+InventorySharingScreen ready/error ScrollViews, InventoryInvitationScreen ScrollView
+lack automatic content insets. Do not label clipping confirmed without native
+entry/bottom/keyboard checks. Map intentionally uses a separate layout owner and
+must not receive a blanket automatic inset change. Home/Browse/Notifications already
+have automatic ownership; shared-detail correction is in frozen PR181.
+
+Follow-up evidence, frozen iPad run35987800972 / job107594471001:
+14/16 tests passed. Detail commands failed because Move items here measured32pt
+(minimum44); this is the control changed to bounded secondary in PR182. Do not
+call PR181 fully accepted or rerun that unchanged control to obtain a pass.
+Add destination failed before interaction: Asset name was absent during the10s
+entry observation, but final screenshot and accessibility tree show it at
+(24,340,696,34), correctly labeled and visibly unobstructed. This proves neither
+successful destination recovery nor a persistent missing-field defect. Keep the
+workflow unverified; next bounded observation must distinguish delayed entry/
+accessibility readiness from a repeatable user-visible loading issue. Do not
+change the field layout or silently increase timeout on this evidence.
+Artifact10805267268; selected final capture downloaded by ZIP range, no xcresult.
+
+Inset ownership trace: InventoryAssetsRouteScreen and InventorySharingScreen are
+ordinary destinations under PrimaryTabStack and NativeTabs.BottomAccessory.
+iOS26 VoiceTabContent returns children directly, so those scroll consumers must
+cooperate with system insets. InventorySharingGuard error ScrollView is another
+consumer to include. InventoryInvitationScreen is outside tabs; inspect root
+presentation before treating it as the same bottom-tab defect. Missing automatic
+props remain source risks, not runtime-confirmed clipping.
+
+Reviewed named frozen iPad captures: detail-context-place-entry now shows Garage
+identity fully below the navigation header (previous clipping corrected).
+connected-browse-filter-detail-return preserves the scrolled results and aligns
+neighboring titles. These isolated fixtures omit persistent tabs/accessory and
+therefore cannot accept the user's bottom-clearance report. PR182's real-tab
+footer test remains the relevant gate.
+
+Terminal run35994194799 atb891a13e:6/7 pass on phone and iPad; all existing
+hierarchy/command checks pass, including corrected Move-items target. New footer
+check is INVALID evidence: audit-edit-item had updatedAtLabel='', so its locator
+never existed. No overlap conclusion from that failure. Corrected fixture28bc9b3c
+uses a dedicated populated container with12 children and a real, unique final
+Updated label. Critic caught children inheriting that label; fixed with distinct
+child metadata and red/green coverage.6 fixture tests,10 preparation tests,
+TypeScript and structural checks pass. Narrow run35999237093 verifies only
+corrected detail and populated Sharing clearance; sleeping watcher owns outcome.
+Frozen phone35987800972 finished15/16; only old32pt Move-items target failed.
+Reviewed Place identity and Browse alignment captures pass; Add/Move recovery
+passes on phone. Frozen iPad Add readiness remains unverified (no product rewrite).
+
+Reviewed named iPhone captures from b891a13e: detail-command-move-items-here-normal-size
+shows identity/availability together, short Contents heading and both bounded
+contents commands without clipping. detail-empty-photo-hierarchy keeps the item
+identity primary and uses a compact No photos row. Final-state for the command
+journey is the audit launcher, so only named intermediate captures support review.
+
+Final clearance: actual dispatch35999231112 at28bc9b3c (35999237093 was a
+separate cancelled automatic PR run). iPad2/2 pass, artifact10807984927 reviewed.
+Phone first attempt failed in Xcode launch before any test interaction; failed-job
+retry107647436731 passes2/2, artifact10810786294 reviewed. Populated container
+Updated metadata and Sharing explanation both clear native tabs/voice. No Sharing
+product inset change is justified by this passed representative state. Product
+source diff28bc9b3c..9f86640e is empty. Standard CI36000041858 passes. Combined
+PR182 targets main to avoid separately auto-releasing the earlier32pt command.

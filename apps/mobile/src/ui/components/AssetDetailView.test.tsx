@@ -271,6 +271,24 @@ describe('AssetDetailView', () => {
     expect(text).toContain('No photos');
   });
 
+  it('keeps container availability with identity before its contents commands', () => {
+    const text = collectText(AssetDetailView({
+      asset: { ...assetDetail(), kind: 'container', canContainAssets: true, canAddContainedAssets: true },
+      onCheckout: () => undefined, onAddHere: () => undefined, onMoveThingsHere: () => undefined
+    }));
+    expect(text.indexOf('Available')).toBeLessThan(text.indexOf('Add item here'));
+    expect(text.filter(value => value === 'Available')).toHaveLength(1);
+  });
+
+  it('keeps permitted contents commands available during contents recovery', () => {
+    const text = collectText(AssetDetailView({
+      asset: placeDetail(), contentsAvailable: false,
+      onAddHere: () => undefined, onMoveThingsHere: () => undefined
+    }));
+    expect(text).toContain('Add item here');
+    expect(text).toContain('Move items here');
+  });
+
   it('uses place route language only for locations', () => {
     expect(assetDetailNavigationTitle({ kind: 'location' })).toBe('Place');
     expect(assetDetailNavigationTitle({ kind: 'container' })).toBe('Details');
@@ -293,7 +311,8 @@ describe('AssetDetailView', () => {
     });
     const text = collectText(tree);
 
-    expect(text.indexOf('Add item here')).toBeLessThan(text.indexOf('Spaces in Garage'));
+    expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Add item here'));
+    expect(text.indexOf('Add item here')).toBeLessThan(text.indexOf('Utility shelf'));
     expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Utility shelf'));
     expect(text.indexOf('Items in Garage')).toBeLessThan(text.indexOf('Cordless drill'));
     expect(text.indexOf('Cordless drill')).toBeLessThan(text.lastIndexOf('Item'));
@@ -418,7 +437,7 @@ describe('AssetDetailView', () => {
     expect(findFirstTextNode(tree, 'Container')?.props?.allowFontScaling).toBe(false);
   });
 
-  it('puts the primary spatial action before quieter container utility actions', () => {
+  it('groups container commands by identity and contents', () => {
     const text = collectText(AssetDetailView({
       asset: {
         ...assetDetail(),
@@ -437,8 +456,8 @@ describe('AssetDetailView', () => {
 
     const addHereIndex = text.indexOf('Add item here');
     expect(addHereIndex).toBeGreaterThan(-1);
-    expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
-    expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
+    expect(text.indexOf('Check out')).toBeLessThan(addHereIndex);
+    expect(text.indexOf('Edit')).toBeLessThan(addHereIndex);
     expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
     expect(addHereIndex).toBeLessThan(text.indexOf('Move items here'));
 

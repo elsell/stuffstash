@@ -53,6 +53,7 @@ import {
   browseColumnCount,
   browseGridCardWidth,
   browseRowReservesMedia,
+  browseRowCheckoutLabel,
   BrowseFilterToken,
   BrowsePlaceItemViewModel,
   BrowseScope,
@@ -250,9 +251,7 @@ export function SearchScreen({
     initialLifecycleState,
     initialCheckoutState,
     initialSort,
-    initialTagIds.join('|'),
-    locationsQuery,
-    searchAssetsQuery
+    initialTagIds.join('|')
   ]);
 
   function loadFirstPage(next: { readonly query?: string } = {}): void {
@@ -474,6 +473,7 @@ export function SearchScreen({
         ) : (
           <AssetCard
             asset={item.asset}
+            reservedCheckoutLabel={browseRowCheckoutLabel(state.results.assets, index, numColumns)}
             reserveMediaSpace={state.results.scope !== 'places' && browseRowReservesMedia(state.results.assets, index, numColumns)}
             palette={palette}
             style={gridCardWidth

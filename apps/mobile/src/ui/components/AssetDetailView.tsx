@@ -23,7 +23,6 @@ import {
 import {
   ContainedSpatialActions,
   ContainedWorkspaceListItemView,
-  ContainedWorkspaceMaintenance,
   containedWorkspaceItems,
   shouldShowContainedContentsSearch
 } from './AssetContainedWorkspace';
@@ -119,6 +118,9 @@ export function AssetDetailView({
     ? containedWorkspaceItems(asset, showContentsSearch ? contentsQuery : '')
     : [];
   const updatedMetadata = assetDetailUpdatedMetadata(asset);
+  const contentsActions = <ContainedSpatialActions asset={asset}
+    isActionPending={isActionPending} onAddHere={onAddHere}
+    onMoveThingsHere={onMoveThingsHere} />;
   const photoGallery = photosAvailable ? (
     <AssetDetailPhotoGallery
       canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
@@ -132,8 +134,9 @@ export function AssetDetailView({
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
-      data={workspaceItems}
+      data={workspaceItems.slice(1)}
       keyExtractor={(item) => item.key}
       keyboardDismissMode={appKeyboardDismissMode()}
       keyboardShouldPersistTaps="handled"
@@ -169,8 +172,6 @@ export function AssetDetailView({
             onParentLocationPress={onParentLocationPress}
             onReturn={onReturn}
             onTagPress={onTagPress}
-            showAvailability={!asset.canContainAssets}
-            showMaintenance={!asset.canContainAssets}
           />
 
           {photosRecovery}
@@ -189,31 +190,14 @@ export function AssetDetailView({
           />
 
           {asset.photos.length === 0 ? photoGallery : null}
-
-          {asset.canContainAssets ? (
-            <ContainedSpatialActions
-              asset={asset}
-              isActionPending={isActionPending}
-              onAddHere={onAddHere}
-              onMoveThingsHere={onMoveThingsHere}
-            />
-          ) : null}
-
+          {workspaceItems[0] ? <ContainedWorkspaceListItemView item={workspaceItems[0]}
+            actions={contentsActions} onChildPress={onChildPress}
+            onClearSearch={onClearContentsSearch} />
+            : asset.canContainAssets && !contentsAvailable ? contentsActions : null}
         </View>
       )}
       ListFooterComponent={(
         <View style={styles.footerStack}>
-          {asset.canContainAssets ? (
-            <ContainedWorkspaceMaintenance
-              asset={asset}
-              isActionPending={isActionPending}
-              onCheckout={onCheckout}
-              showEditAction={showEditAction}
-              onEdit={onEdit}
-              onMove={onMove}
-              onReturn={onReturn}
-            />
-          ) : null}
           <Text accessibilityLabel={updatedMetadata.value} style={styles.updatedText}>
             {updatedMetadata.value}
           </Text>

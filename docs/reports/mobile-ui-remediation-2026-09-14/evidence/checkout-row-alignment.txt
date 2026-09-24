@@ -1,0 +1,16 @@
+Checkout row alignment — 2026-09-24
+Baseline: focused iOS35979200078 passed6/6 phone and iPad; reviewed Browse return
+captures show photo-free title misalignment where only one card has checkout.
+Android API36 Pixel6 emulator-5580 normal text, synthetic Camping query:
+baseline title tops702/649; candidate702/702. Screenshot reviewed; status-free
+second row remains compact. UIAutomator exposes exactly the two visible real
+Checked out labels, none for their unchecked peers.
+Candidate APK SHA256:95fae831417610b56e62751b31c32e6c7f3b57b3d4db73b6483ad44fa03b1112
+Disposable fixture archive carries current AssetCard/SearchScreen/Presentation;
+this is scoped layout evidence, not whole-current-app acceptance.
+Mounted row regrouping/accessibility and Browse tests:48 passed; TypeScript and
+mobile structural checks pass. Critic found no confirmed issue.
+iOS candidate alignment remains pending. Local before/after captures:
+/tmp/android-checkout-alignment-before.png
+/tmp/android-checkout-alignment-after.png
+/tmp/android-checkout-alignment-after.xml

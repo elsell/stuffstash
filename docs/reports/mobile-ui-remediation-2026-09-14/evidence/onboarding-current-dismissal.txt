@@ -1,0 +1,18 @@
+Onboarding refresh35980094051, c7c44b45, 2026-09-24.
+iPad onboarding job passed. iPhone testConnectionHelpAndKeyboardKeepActionsReachable
+failed at OnboardingAuditTests.swift127: five-second keyboard-existence predicate
+did not complete. Full address entry assertions passed before the downward drag.
+Log: event synthesized162s, idle164s, keyboard checks165/169s, failure170.89s.
+Final capture171.92s and AX tree172.10s show keyboard absent, exact visible URL
+https://example.invalid and Connect visible. Post-dismissal Help/Connect assertions
+were not reached. Artifact10801960450, final-state attachment87E62807-5B55-4319-B5A0-3CD571D9CD15.png.
+
+Current diagnosis: deadline miss with eventual dismissal; evidence does not
+separate slow native transition from delayed XCTest snapshot. Do not classify as
+persistent keyboard obstruction or accepted timing. Historical M20 passing runs
+remain scoped history, not evidence for this run. Source still uses interactive
+iOS dismissal, and input retention is intact. No product change or unchanged rerun.
+One focused replay may compare delivered drag, native visibility and AX timing if
+needed; do not repeat provider/key experiments or simply extend timeout to pass.
+This unchanged onboarding limitation is separate from frozen PR181 Browse/detail
+release acceptance. Broad audit remains incomplete.

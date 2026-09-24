@@ -146,6 +146,16 @@ export function browseRowReservesMedia(
   return assets.slice(start, start + columnCount).some(asset => asset.hasPhoto !== false || !!asset.photo);
 }
 
+/** Checkout wording is shared; reserve its measured space only among row peers. */
+export function browseRowCheckoutLabel(
+  assets: readonly Pick<AssetCardViewModel, 'checkedOutLabel'>[],
+  index: number,
+  columnCount: number
+): string | undefined {
+  const start = Math.floor(index / columnCount) * columnCount;
+  return assets.slice(start, start + columnCount).find(asset => asset.checkedOutLabel)?.checkedOutLabel;
+}
+
 export function browseGridCardWidth(width: number, columnCount: number): number | undefined {
   return columnCount > 1
     ? Math.floor((width - (spacing.md * 2) - spacing.sm * (columnCount - 1)) / columnCount)

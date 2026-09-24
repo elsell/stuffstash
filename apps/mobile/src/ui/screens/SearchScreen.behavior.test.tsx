@@ -48,6 +48,33 @@ function propsFor(overrides: Partial<React.ComponentProps<typeof SearchScreen>>)
 }
 
 describe('mounted Browse server state', () => {
+  it('retains a searched query across adapter replacement and applies actual route changes', async () => {
+    resetNavigation();
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    const repository = { browseAssets: async (input: { query: string }) => ({ assets: [asset(input.query || 'All items')], hasMore: false }) };
+    let props = propsFor({ searchAssetsQuery: new SearchAssetsQuery(repository) });
+    const render = () => harness.render(<MobileServerStateProvider client={client} scopeId="adapter-replacement"
+      loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <SearchScreen {...props} />
+    </MobileServerStateProvider>);
+    try {
+      await render(); await settle(harness); await settle(harness);
+      await harness.run(() => latestNativeSearch().onFocus());
+      await harness.run(() => latestNativeSearch().onChangeText({ nativeEvent: { text: 'Camping' } }));
+      await harness.run(() => new Promise(resolve => setTimeout(resolve, 350)));
+      await settle(harness);
+      expect(harness.byType('FlatList')!.props.data[0].asset.title).toBe('Camping');
+      props = { ...props, searchAssetsQuery: new SearchAssetsQuery(repository),
+        locationsQuery: { execute: async () => ({ inventoryName: 'Home', tenantName: 'Tenant', canAdd: true, locations: [] }) } };
+      await render(); await settle(harness); await settle(harness);
+      expect(harness.byType('FlatList')!.props.data[0].asset.title).toBe('Camping');
+      props = { ...props, initialQuery: 'Tools' };
+      await render(); await settle(harness); await settle(harness);
+      expect(harness.byType('FlatList')!.props.data[0].asset.title).toBe('Tools');
+    } finally { await harness.unmount(); client.clear(); }
+  });
+
   it('adapts the grid on resize without replacing results or losing its scroll offset', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();
