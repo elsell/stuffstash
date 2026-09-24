@@ -2899,6 +2899,8 @@ final class FixtureAuditTests: XCTestCase {
     let account = app.buttons["Open Account settings for household.member@example.invalid"]
     XCTAssertTrue(account.waitForExistence(timeout: 10))
     XCTAssertTrue(account.isHittable)
+    // RN groups this row into one AX button; review visible label/subtitle in
+    // the capture rather than asserting child text that AX does not expose.
     capture("settings-overview-root")
     account.tap()
     XCTAssertTrue(app.buttons["Sign Out"].waitForExistence(timeout: 10))
@@ -2915,7 +2917,8 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(diagnostics.waitForExistence(timeout: 10))
     for _ in 0..<5 where !diagnostics.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(diagnostics.isHittable); diagnostics.tap()
-    let version = app.staticTexts["overview-audit-1"]
+    // Selectable text exposes parent and child AX labels with identical frames.
+    let version = app.staticTexts["overview-audit-1"].firstMatch
     XCTAssertTrue(version.waitForExistence(timeout: 10))
     verifyFooterClearsPersistentChrome(version)
     capture("settings-overview-diagnostics-clearance")

@@ -125,7 +125,7 @@ function row(
   return {
     id,
     label,
-    value,
+    ...(id === 'appearance' ? { value } : { context: value }),
     destination,
     accessibilityRole: 'button',
     accessibilityLabel,

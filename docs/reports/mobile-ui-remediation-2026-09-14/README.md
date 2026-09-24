@@ -70,13 +70,14 @@ outside PR184 and is not released. [Evidence](evidence/home-header-space.txt).
 
 ## Next connected review
 
-Settings overview coverage now walks real root, Account, Inventory Settings and
-Diagnostics screens inside the tab/voice shell, including final-content clearance
-and tab return. Existing editor/session-action evidence does not establish this
-composition. Route preparation12, TypeScript and structural checks pass; native
-review is pending. Fixture navigation covers only these destinations; it does not
-certify production route callbacks or inventory leaf commands. No Settings layout
-change or new clipping claim is made before this walkthrough is reviewed.
+Settings overview review confirmed iPhone root labels crowded out by long values,
+Appearance flush with the group edge, and repetitive scope subtitles. Candidate
+uses descriptive subtitles, shared inset rows and scope context once.83 focused
+tests, TypeScript,12 preparation tests, structural checks and critic review pass.
+Native36019282915 reached Diagnostics but stopped on duplicate selectable-text
+AX nodes; the locator is corrected without relaxing geometry checks. Recheck the
+whole layout and tab return, plus changed Account/Connection command wrappers.
+[Diagnosis and evidence](evidence/settings-overview.txt).
 
 ## Separate unresolved decisions
 

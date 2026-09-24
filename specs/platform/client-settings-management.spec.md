@@ -484,3 +484,26 @@ editable fields without an implementation-oriented “Lifecycle” heading. The
 action labels explain the available operations; keep existing destructive
 semantics, permissions, confirmation and draft recovery unchanged. This applies
 to tags, custom fields and asset types.
+
+### Settings overview hierarchy correction
+
+At normal text size, root navigation rows must keep the destination label visible
+and put descriptive account, household, inventory, server and version information
+beneath it. These descriptions are subtitles, not competing trailing value
+columns. Appearance remains an in-place native choice with its short current
+value; wrap it in the same row inset used by neighboring settings content, in both
+its root and legacy destination. Account and Connection commands use the shared
+inset action row rather than placing a button flush against a grouped background.
+Scope pages identify the household/inventory once in their header; do not repeat
+that same name as a subtitle on every row. Keep useful distinct context such as
+“Your reminders” and preserve scope-rich accessibility labels.
+
+This applies Apple's guidance to preserve readable list text and give essential
+information sufficient space: [Lists and tables](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables)
+and [Layout](https://developer.apple.com/design/human-interface-guidelines/layout).
+Subtitle placement is this product's pattern choice; it does not assert that all
+native settings rows require subtitles. Other short status values and pickers
+retain their existing arrangements. Native36019282915 at20e73669 shows Account
+hidden and server labels compressed on iPhone. The later footer observation failed
+on duplicate selectable-text accessibility nodes with equal geometry; use one
+matching version node, retain the geometry check and finish the tab-return gate.

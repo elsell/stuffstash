@@ -37,7 +37,7 @@ describe('Settings root presentation', () => {
       expect.objectContaining({
         id: 'server',
         label: 'Stuff Stash server',
-        value: 'stash.home.test',
+        context: 'stash.home.test',
         destination: 'connection',
         showsDisclosure: true
       })
@@ -53,9 +53,17 @@ describe('Settings root presentation', () => {
       }
     }));
     expect(configurable.flatMap((section) => section.rows)).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'tenant-settings', label: 'Home', value: 'Household settings' }),
-      expect.objectContaining({ id: 'inventory-settings', label: 'Household', value: 'In Home' })
+      expect.objectContaining({ id: 'tenant-settings', label: 'Home', context: 'Household settings' }),
+      expect.objectContaining({ id: 'inventory-settings', label: 'Household', context: 'In Home' })
     ]));
+  });
+
+  it('keeps long account identity as supporting context rather than a competing value column', () => {
+    const email = 'household.member@example.invalid';
+    const account = buildSettingsRootSections(input({ principal: { id: 'principal', primaryLabel: email } }))
+      .flatMap(section => section.rows).find(row => row.id === 'account');
+    expect(account).toMatchObject({ label: 'Account', context: email, destination: 'account' });
+    expect(account?.value).toBeUndefined();
   });
 
   it('keeps the inventory settings destination readable for viewers', () => {
@@ -75,7 +83,7 @@ describe('Settings root presentation', () => {
 
     expect(rootRows.find((row) => row.id === 'account')).toMatchObject({
       label: 'Account',
-      value: 'john@example.com',
+      context: 'john@example.com',
       destination: 'account'
     });
     expect(rootRows.find((row) => row.id === 'diagnostics')).toMatchObject({

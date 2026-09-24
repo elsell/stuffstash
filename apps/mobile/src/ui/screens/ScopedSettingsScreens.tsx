@@ -26,18 +26,18 @@ function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<
   const settings = model.state.settings;
   const name = scope === 'tenant' ? settings.selectedTenant.name : settings.selectedInventory.name;
   const tenantCanConfigure = settings.selectedTenant.permissions.includes('configure');
-  const rows: Array<{ id: ScopedDestination; label: string; context: string }> = scope === 'tenant'
+  const rows: Array<{ id: ScopedDestination; label: string; context?: string }> = scope === 'tenant'
     ? tenantCanConfigure ? [
-        { id: 'fields', label: 'Custom fields', context: `Shared by ${name}` },
-        { id: 'asset-types', label: 'Asset types', context: `Shared by ${name}` },
-        { id: 'voice', label: 'Voice setup', context: `Shared by ${name}` }
+        { id: 'fields', label: 'Custom fields' },
+        { id: 'asset-types', label: 'Asset types' },
+        { id: 'voice', label: 'Voice setup' }
       ] : []
     : [
-        ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: 'Sharing', context: name }] : []),
+        ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: 'Sharing' }] : []),
         { id: 'notifications', label: 'Notifications', context: 'Your reminders' },
-        { id: 'tags', label: 'Tags', context: name },
-        { id: 'fields', label: 'Custom fields', context: name },
-        { id: 'asset-types', label: 'Asset types', context: name }
+        { id: 'tags', label: 'Tags' },
+        { id: 'fields', label: 'Custom fields' },
+        { id: 'asset-types', label: 'Asset types' }
       ];
   if (scope === 'tenant' && !tenantCanConfigure) return <DeniedSettingsState message="You don’t have permission to manage settings shared by this household." />;
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
