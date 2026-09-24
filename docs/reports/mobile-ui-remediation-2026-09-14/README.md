@@ -67,9 +67,10 @@ Include these in the next meaningful batch, not isolated releases.
 
 - **M251 Android photo status:** dialog-owned native adapter now builds and shows
   readable light glyphs on the dark canvas in reviewed API36 captures. Close and
-  Android Back restore the light underlying screen. Dark appearance/final-photo
-  replay is in progress; swipe replay failed in both directions and remains
-  unverified after the bounded investigation. Candidate is not released; no
+  Android Back restore the underlying screen in light/dark appearance. Final-photo
+  disposal/restoration also passes both. Reviewed captures are retained with the
+  evidence. Swipe replay failed both directions and remains unverified after the
+  bounded investigation; older Android is not certified. Candidate is not released; no
   Activity-level style workaround was restored. [Evidence](evidence/android-photo-status.txt).
 
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
