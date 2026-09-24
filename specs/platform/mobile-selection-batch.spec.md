@@ -79,3 +79,14 @@ tasks so search offsets cannot carry into the form; do not add a second manual
 header-height padding. Verify Name clears the native header and starts within
 96 points of its lower edge at normal text, on both phone and iPad. Retain full
 cancel/reopen, selection, rejected creation and retry checks.
+
+### Bounded search observation
+
+Run35931014259 completes Add on iPad; the phone exact-query waiter times out
+before creation, with the subsequent native capture showing the complete Shelf14
+query and matching result. This is not proof the query arrived within the deadline.
+Evaluate Add search's exact-value predicate immediately and record observation
+durations, spending only the remainder of the existing five-second budget waiting.
+A match evaluated after that deadline must fail. Preserve typing, results and the
+full connected workflow; do not extend the deadline or retry typing. Other native
+observers retain their existing scheduling.

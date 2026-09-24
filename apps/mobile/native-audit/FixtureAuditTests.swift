@@ -726,23 +726,34 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
   }
 
-  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?, timeout: TimeInterval = 5) -> XCTWaiter.Result {
+  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?, timeout: TimeInterval = 5, immediately: Bool = false) -> XCTWaiter.Result {
     let started = ProcessInfo.processInfo.systemUptime
     var observations: [String] = []
-    let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+    func evaluate() -> Bool {
       let before = ProcessInfo.processInfo.systemUptime
       let matched = predicate.evaluate(with: object)
       let after = ProcessInfo.processInfo.systemUptime
       observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
       return matched
-    }, object: nil)
-    let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
-    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
+    }
+    let initialMatch = immediately && evaluate()
+    let elapsed = ProcessInfo.processInfo.systemUptime - started
+    let result: XCTWaiter.Result
+    if immediately && elapsed >= timeout {
+      result = .timedOut
+    } else if initialMatch {
+      result = .completed
+    } else {
+      let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in evaluate() }, object: nil)
+      result = XCTWaiter.wait(for: [expectation], timeout: immediately ? timeout - elapsed : timeout)
+    }
+    let boundedResult: XCTWaiter.Result = immediately && ProcessInfo.processInfo.systemUptime - started > timeout ? .timedOut : result
+    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(boundedResult.rawValue)")
     let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
-    return result
+    return boundedResult
   }
 
   private func recordHitTestState(_ name: String, elements: [XCUIElement]) {
@@ -2000,8 +2011,8 @@ final class FixtureAuditTests: XCTestCase {
       // Verify native input through the entered text and matching results below.
       // A separate keyboard-key snapshot can itself exhaust the wait budget.
       field.tap(); field.typeText(query)
-      let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", query), object: field)
-      XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+      let entered = NSPredicate(format: "value == %@", query)
+      XCTAssertEqual(observePredicate("add-search-exact-query", predicate: entered, object: field, immediately: true), .completed)
       app.buttons["Dismiss keyboard"].firstMatch.tap()
     }
     name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
