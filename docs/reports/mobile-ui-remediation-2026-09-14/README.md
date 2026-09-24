@@ -24,47 +24,45 @@ remain incomplete.
 
 ## Current follow-up diagnosis and decisions
 
-M274–M279 covers filter navigation and density, retained search, contextual detail
-actions and Sharing recovery. Source7236f442 in35934741356 passes all12 phone
-workflows and11/12 iPad workflows. Reviewed phone detail and Sharing captures show
-contextual commands, unclipped completion actions and appropriate grouping.
+The release hold remains open for Move's visual acceptance. PR174 consolidates
+M274–M279 plus Settings current-save/readback and Move hierarchy/contrast into one
+release candidate. The combined source passes1,995 mobile checks, TypeScript,
+structural checks and ten fixture-preparation checks. Its product source matches da791006; the additional Add test
+observation fix does not change product code. M274–M279 covers filter navigation/density, retained search, contextual detail actions and
+Sharing recovery. Standard adaptive filters corrected the iPad viewport defect;
+do not repeat rejected dependency ownership patches. Integrated35941028517 passed
+14/15 phone and15/15 tablet cases. The conditional keyboard-dismiss observation
+fix16501db7 passed focused Add/Move35945429162 on both devices; required
+CI35945384623 passed. Phone/iPad Add creation and return captures are reviewed: native actions are
+reachable, the item draft survives and the new destination is selected.
 
-The last reproduced native defect was iPad Expiration inheriting a580×650 viewport after
-Filters. Neither dependency ownership guard corrected it. Sourcef69eae7e removes
-those unproven patches and uses standard adaptive iOS modals for both filter tasks;
-Android stays a card. Filters previously opened at their largest custom detent.
-Keep the verified search patch and all connected viewport/mode/detail/back gates.
-Native35937584242 passes all twelve workflows on both devices. Reviewed captures
-confirm full Expiration viewport and three reachable modes, plus filter/tag footer
-clearance. The explicit medium-sheet fixture
-remains an iOS-only diagnostic for other form-sheet consumers.
+Settings current-save246edefd passes connected readback35948277688 on both devices,
+including exact full-name persistence after failure/retry, reopen/create/archive.
+Phone and tablet collection/reopened-editor captures confirm header clearance and
+complete names. This closes those scoped defects, not all Settings design findings.
 
-The follow-up now integrates PR173's final Add/Move selection and stacked search
-with its own search focus ownership and detail hierarchy. Review removed a duplicate
-empty-photo caption introduced by the merge. The full1989-test mobile suite,
-TypeScript, structural checks and10 fixture preparation checks pass; critic review
-is complete. These source checks do not establish integrated native acceptance.
-The integrated release subset adds three representative Add destination, Add tag
-and Move creation workflows to the twelve follow-up workflows for shared search
-and return behavior; it retains all existing assertions. Native35941028517 at
-b605b6e9 is running this integrated subset. PR174 stays draft until it passes and
-its visual review is complete.
+Move8e79997c passes all four workflows on both devices in35947975650. Visual review
+found the custom section header too faint. Contrast correctionda791006 is in
+35951755320 on `codex/mobile-move-contrast`; native acceptance remains open.
 
-Connected Settings readback is a subsequent batch. Its fixture now uses production
-cache invalidation;35937082802 confirms the updated row exists but is behind the
-native header on both devices. Candidate35bba93c preserves one ScrollView across
-loading/ready/retry instead of replacing its root. Source checks pass; native
-35939654846 is verifying it. This is a candidate correction, not a proven fix.
-This does not block the selection release or expand the frozen follow-up.
-PR176 stacks Settings readback and clearer action grouping with native primary
-emphasis for Move completion. Its1,993 integrated tests and source checks pass;
-native verification is conditional on the existing Settings and follow-up runs.
+Detail M280 at a7ea4ac5 passed five of six cases per device in35948366265, including
+resized gallery selection. Photo Retry failed to disappear on phone; contents Retry
+failed on tablet. Preserve the assertions. Candidate615485f5 adds bounded native
+buttons by default and puts identity before photo recovery. Run35951671413 passes
+all nine phone workflows; iPad has two application-launch failures before Add and
+region recovery, with seven workflow passes. The phone capture nevertheless shows
+Retry contents compressed into a three-line oval. Correction5dc08f9c gives the
+native host the available width and keeps the button leading-aligned inside it;
+normal-text Retry geometry assertions accompany the existing completion checks.
+Its1,992 source tests, TypeScript, structural checks and review pass;35954709640
+is the required new native check. Preserve the sizing diagnosis; do not rediscover
+provider or key-delivery hypotheses. This candidate is not visually accepted.
 
-A subsequent detail-layout candidate addresses M280: independent tablet row caps
-produce unrelated trailing edges. One centered content column and gallery viewport
-measurement are implemented separately on `codex/mobile-detail-readable-layout`.
-Source checks pass; native visual and resized-gallery verification remain open.
-This does not expand either frozen batch.
+Persistent tabs a1d7d825 is in35951026134. Source checks establish route ownership,
+not native retention. A subsequent source correction carries the originating tab
+through Expiration Filters because root modal segments cannot disambiguate shared
+routes. That correction still needs a native roundtrip. Android, dark appearance,
+long command labels and the wider surface audit remain open. The button/detail and tab candidates remain outside this frozen release batch.
 
 ## Separate unresolved decisions
 
@@ -78,7 +76,7 @@ This does not expand either frozen batch.
   a general correction. Fix reproduced consumers using the established native
   draft field, preserving reset and ownership semantics. Do not repeat the same
   provider/key experiments. [Consolidated evidence](native-text-entry-352471.md).
-- Settings persisted collection readback, physical integrations, assistive behavior
+- Remaining Settings design findings, physical integrations, assistive behavior
   and wider device adaptations remain tracked in the full findings and surface
   reports. Passed fixture workflows do not close them.
 
