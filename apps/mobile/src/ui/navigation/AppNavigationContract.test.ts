@@ -32,7 +32,7 @@ const nativeTabTriggerNames = (source: string): string[] =>
 
 describe('mobile navigation contract', () => {
   it('uses native tabs for Home and Browse navigation only', () => {
-    expect(nativeTabTriggerNames(tabLayoutSource)).toEqual(['(home)', 'search']);
+    expect(nativeTabTriggerNames(tabLayoutSource)).toEqual(['(home)', '(search)']);
     expect(appSources).toHaveProperty('../../app/(tabs)/(home)/index.tsx');
     expect(appSources).toHaveProperty('../../app/(tabs)/(home)/_layout.tsx');
     expect(tabLayoutSource).not.toContain('name="add"');
@@ -55,15 +55,15 @@ describe('mobile navigation contract', () => {
     expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']add-destination["']/);
   });
 
-  it('keeps Settings as a non-tab stack route', () => {
+  it('keeps Settings inside both tabs without adding a Settings tab', () => {
     expect(nativeTabTriggerNames(tabLayoutSource)).not.toContain('settings');
-    expect(rootLayoutSource).toMatch(/<Stack\.Screen\s+name=["']settings\/index["']/);
-    expect(appSources).toHaveProperty('../../app/settings/account.tsx');
-    expect(appSources).toHaveProperty('../../app/settings/appearance.tsx');
-    expect(appSources).toHaveProperty('../../app/settings/connection.tsx');
-    expect(appSources).toHaveProperty('../../app/settings/voice/index.tsx');
-    expect(appSources).toHaveProperty('../../app/settings/voice/profiles/index.tsx');
-    expect(appSources).toHaveProperty('../../app/settings/voice/profiles/add.tsx');
+    expect(rootLayoutSource).not.toMatch(/<Stack\.Screen\s+name=["']settings\/index["']/);
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/account.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/appearance.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/connection.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/voice/index.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/voice/profiles/index.tsx');
+    expect(appSources).toHaveProperty('../../app/(tabs)/(home,search)/settings/voice/profiles/add.tsx');
     expect(appSources).not.toHaveProperty('../../app/settings.tsx');
     expect(voiceScreenSource).toContain("router.push('/settings/voice')");
   });

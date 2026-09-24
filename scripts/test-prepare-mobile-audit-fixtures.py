@@ -18,7 +18,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         self.routes = self.root / "apps/mobile/src/app"
         self.routes.mkdir(parents=True)
         (self.routes / "index.tsx").write_text("production route\n")
-        self.tab_layouts = ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/search/_layout.tsx")
+        self.tab_layouts = ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/(search)/_layout.tsx")
         for layout in self.tab_layouts:
             target = self.routes / layout
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -64,9 +64,9 @@ class FixtureRouteIsolationTests(unittest.TestCase):
             self.assertEqual((self.routes / layout.replace("(tabs)/", "audit-tabs/", 1)).read_text(), f"production layout {layout}\n")
             self.assertEqual((self.runner / "production-mobile-routes" / layout).read_text(), f"production layout {layout}\n")
         self.assertEqual({str(p.relative_to(self.routes)) for p in (self.routes / "audit-tabs").rglob("*.tsx")},
-                         {*[p.replace("(tabs)/", "audit-tabs/", 1) for p in self.tab_layouts], "audit-tabs/(home)/index.tsx", "audit-tabs/search/index.tsx"})
+                         {*[p.replace("(tabs)/", "audit-tabs/", 1) for p in self.tab_layouts], "audit-tabs/(home)/index.tsx", "audit-tabs/(search)/search.tsx"})
         self.assertIn("HomeTabShellFixture as default", (self.routes / "audit-tabs/(home)/index.tsx").read_text())
-        self.assertIn("TabShellBrowsePlaceholder as default", (self.routes / "audit-tabs/search/index.tsx").read_text())
+        self.assertIn("TabShellBrowsePlaceholder as default", (self.routes / "audit-tabs/(search)/search.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)
         self.assertEqual((self.runner / "production-mobile-routes/index.tsx").read_text(), "production route\n")
 

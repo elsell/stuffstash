@@ -16,13 +16,13 @@
   },
   {
     "id": "R004",
-    "surface": "(tabs)/search/_layout.tsx",
-    "source": "apps/mobile/src/app/(tabs)/search/_layout.tsx"
+    "surface": "(tabs)/(search)/_layout.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(search)/_layout.tsx"
   },
   {
     "id": "R005",
-    "surface": "(tabs)/search/index.tsx",
-    "source": "apps/mobile/src/app/(tabs)/search/index.tsx"
+    "surface": "(tabs)/(search)/search.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(search)/search.tsx"
   },
   {
     "id": "R006",
@@ -46,18 +46,18 @@
   },
   {
     "id": "R010",
-    "surface": "assets/[assetId]/history/[activityId].tsx",
-    "source": "apps/mobile/src/app/assets/[assetId]/history/[activityId].tsx"
+    "surface": "(tabs)/(home,search)/assets/[assetId]/history/[activityId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/assets/[assetId]/history/[activityId].tsx"
   },
   {
     "id": "R011",
-    "surface": "assets/[assetId]/history/index.tsx",
-    "source": "apps/mobile/src/app/assets/[assetId]/history/index.tsx"
+    "surface": "(tabs)/(home,search)/assets/[assetId]/history/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/assets/[assetId]/history/index.tsx"
   },
   {
     "id": "R012",
-    "surface": "assets/[assetId]/index.tsx",
-    "source": "apps/mobile/src/app/assets/[assetId]/index.tsx"
+    "surface": "(tabs)/(home,search)/assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/assets/[assetId]/index.tsx"
   },
   {
     "id": "R013",
@@ -71,8 +71,8 @@
   },
   {
     "id": "R015",
-    "surface": "assets/index.tsx",
-    "source": "apps/mobile/src/app/assets/index.tsx",
+    "surface": "(tabs)/(home,search)/assets/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/assets/index.tsx",
     "sources": [
       "apps/mobile/src/app/assets/index.tsx",
       "apps/mobile/src/ui/screens/InventoryAssetsRouteScreen.tsx"
@@ -90,8 +90,8 @@
   },
   {
     "id": "R018",
-    "surface": "expiration.tsx",
-    "source": "apps/mobile/src/app/expiration.tsx"
+    "surface": "(tabs)/(home,search)/expiration.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/expiration.tsx"
   },
   {
     "id": "R019",
@@ -100,13 +100,13 @@
   },
   {
     "id": "R020",
-    "surface": "locations/[locationId]/assets/[assetId]/index.tsx",
-    "source": "apps/mobile/src/app/locations/[locationId]/assets/[assetId]/index.tsx"
+    "surface": "(tabs)/(home,search)/locations/[locationId]/assets/[assetId]/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/locations/[locationId]/assets/[assetId]/index.tsx"
   },
   {
     "id": "R021",
-    "surface": "locations/[locationId]/index.tsx",
-    "source": "apps/mobile/src/app/locations/[locationId]/index.tsx",
+    "surface": "(tabs)/(home,search)/locations/[locationId]/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/locations/[locationId]/index.tsx",
     "sources": [
       "apps/mobile/src/app/locations/[locationId]/index.tsx",
       "apps/mobile/src/ui/screens/LocationAssetsRouteScreen.tsx"
@@ -114,173 +114,173 @@
   },
   {
     "id": "R022",
-    "surface": "notifications.tsx",
-    "source": "apps/mobile/src/app/notifications.tsx"
+    "surface": "(tabs)/(home,search)/notifications.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/notifications.tsx"
   },
   {
     "id": "R023",
-    "surface": "settings/about.tsx",
-    "source": "apps/mobile/src/app/settings/about.tsx"
+    "surface": "(tabs)/(home,search)/settings/about.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/about.tsx"
   },
   {
     "id": "R024",
-    "surface": "settings/account.tsx",
-    "source": "apps/mobile/src/app/settings/account.tsx"
+    "surface": "(tabs)/(home,search)/settings/account.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/account.tsx"
   },
   {
     "id": "R025",
-    "surface": "settings/appearance.tsx",
-    "source": "apps/mobile/src/app/settings/appearance.tsx"
+    "surface": "(tabs)/(home,search)/settings/appearance.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/appearance.tsx"
   },
   {
     "id": "R026",
-    "surface": "settings/connection.tsx",
-    "source": "apps/mobile/src/app/settings/connection.tsx"
+    "surface": "(tabs)/(home,search)/settings/connection.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/connection.tsx"
   },
   {
     "id": "R027",
-    "surface": "settings/diagnostics.tsx",
-    "source": "apps/mobile/src/app/settings/diagnostics.tsx"
+    "surface": "(tabs)/(home,search)/settings/diagnostics.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/diagnostics.tsx"
   },
   {
     "id": "R028",
-    "surface": "settings/household/asset-types/[resourceId].tsx",
-    "source": "apps/mobile/src/app/settings/household/asset-types/[resourceId].tsx"
+    "surface": "(tabs)/(home,search)/settings/household/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/asset-types/[resourceId].tsx"
   },
   {
     "id": "R029",
-    "surface": "settings/household/asset-types/index.tsx",
-    "source": "apps/mobile/src/app/settings/household/asset-types/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/household/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/asset-types/index.tsx"
   },
   {
     "id": "R030",
-    "surface": "settings/household/asset-types/new.tsx",
-    "source": "apps/mobile/src/app/settings/household/asset-types/new.tsx"
+    "surface": "(tabs)/(home,search)/settings/household/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/asset-types/new.tsx"
   },
   {
     "id": "R031",
-    "surface": "settings/household/fields/[resourceId].tsx",
-    "source": "apps/mobile/src/app/settings/household/fields/[resourceId].tsx"
+    "surface": "(tabs)/(home,search)/settings/household/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/fields/[resourceId].tsx"
   },
   {
     "id": "R032",
-    "surface": "settings/household/fields/index.tsx",
-    "source": "apps/mobile/src/app/settings/household/fields/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/household/fields/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/fields/index.tsx"
   },
   {
     "id": "R033",
-    "surface": "settings/household/fields/new.tsx",
-    "source": "apps/mobile/src/app/settings/household/fields/new.tsx"
+    "surface": "(tabs)/(home,search)/settings/household/fields/new.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/fields/new.tsx"
   },
   {
     "id": "R034",
-    "surface": "settings/household/index.tsx",
-    "source": "apps/mobile/src/app/settings/household/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/household/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/household/index.tsx"
   },
   {
     "id": "R035",
-    "surface": "settings/index.tsx",
-    "source": "apps/mobile/src/app/settings/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/index.tsx"
   },
   {
     "id": "R036",
-    "surface": "settings/inventory/asset-types/[resourceId].tsx",
-    "source": "apps/mobile/src/app/settings/inventory/asset-types/[resourceId].tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/asset-types/[resourceId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/asset-types/[resourceId].tsx"
   },
   {
     "id": "R037",
-    "surface": "settings/inventory/asset-types/index.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/asset-types/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/asset-types/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/asset-types/index.tsx"
   },
   {
     "id": "R038",
-    "surface": "settings/inventory/asset-types/new.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/asset-types/new.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/asset-types/new.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/asset-types/new.tsx"
   },
   {
     "id": "R039",
-    "surface": "settings/inventory/fields/[resourceId].tsx",
-    "source": "apps/mobile/src/app/settings/inventory/fields/[resourceId].tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/fields/[resourceId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/fields/[resourceId].tsx"
   },
   {
     "id": "R040",
-    "surface": "settings/inventory/fields/index.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/fields/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/fields/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/fields/index.tsx"
   },
   {
     "id": "R041",
-    "surface": "settings/inventory/fields/new.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/fields/new.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/fields/new.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/fields/new.tsx"
   },
   {
     "id": "R042",
-    "surface": "settings/inventory/index.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/index.tsx"
   },
   {
     "id": "R043",
-    "surface": "settings/inventory/notification-editor.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/notification-editor.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/notification-editor.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/notification-editor.tsx"
   },
   {
     "id": "R044",
-    "surface": "settings/inventory/notifications.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/notifications.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/notifications.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/notifications.tsx"
   },
   {
     "id": "R045",
-    "surface": "settings/inventory/tags/[resourceId].tsx",
-    "source": "apps/mobile/src/app/settings/inventory/tags/[resourceId].tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/tags/[resourceId].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/tags/[resourceId].tsx"
   },
   {
     "id": "R046",
-    "surface": "settings/inventory/tags/index.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/tags/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/tags/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/tags/index.tsx"
   },
   {
     "id": "R047",
-    "surface": "settings/inventory/tags/new.tsx",
-    "source": "apps/mobile/src/app/settings/inventory/tags/new.tsx"
+    "surface": "(tabs)/(home,search)/settings/inventory/tags/new.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/inventory/tags/new.tsx"
   },
   {
     "id": "R048",
-    "surface": "settings/sharing.tsx",
-    "source": "apps/mobile/src/app/settings/sharing.tsx"
+    "surface": "(tabs)/(home,search)/settings/sharing.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/sharing.tsx"
   },
   {
     "id": "R049",
-    "surface": "settings/voice/[capability].tsx",
-    "source": "apps/mobile/src/app/settings/voice/[capability].tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/[capability].tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/[capability].tsx"
   },
   {
     "id": "R050",
-    "surface": "settings/voice/index.tsx",
-    "source": "apps/mobile/src/app/settings/voice/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/index.tsx"
   },
   {
     "id": "R051",
-    "surface": "settings/voice/profiles/[providerProfileId]/credential.tsx",
-    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/credential.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/credential.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/credential.tsx"
   },
   {
     "id": "R052",
-    "surface": "settings/voice/profiles/[providerProfileId]/index.tsx",
-    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/index.tsx"
   },
   {
     "id": "R053",
-    "surface": "settings/voice/profiles/[providerProfileId]/prompt.tsx",
-    "source": "apps/mobile/src/app/settings/voice/profiles/[providerProfileId]/prompt.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/prompt.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/profiles/[providerProfileId]/prompt.tsx"
   },
   {
     "id": "R054",
-    "surface": "settings/voice/profiles/add.tsx",
-    "source": "apps/mobile/src/app/settings/voice/profiles/add.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/profiles/add.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/profiles/add.tsx"
   },
   {
     "id": "R055",
-    "surface": "settings/voice/profiles/index.tsx",
-    "source": "apps/mobile/src/app/settings/voice/profiles/index.tsx"
+    "surface": "(tabs)/(home,search)/settings/voice/profiles/index.tsx",
+    "source": "apps/mobile/src/app/(tabs)/(home,search)/settings/voice/profiles/index.tsx"
   },
   {
     "id": "R056",

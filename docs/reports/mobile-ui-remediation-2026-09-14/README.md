@@ -22,6 +22,16 @@ toolbar actions and stacked iPhone/iPad search; assess those actual captures bef
 repeating the same redesign. The comprehensive audit and physical-device checks
 remain incomplete.
 
+## Persistent tab navigation candidate
+
+The user requested persistent Home/Browse navigation on ordinary screens. The
+`codex/mobile-persistent-tabs` candidate moves41 ordinary routes into shared tab
+stacks, retaining URLs and root modal tasks. The real Expo route expansion test
+reproduced the old ownership and passes for both tabs; source guards and fixture
+preparation remain checked. Native history, modal return, editor draft retention
+and bar clearance are not yet verified. Surface paths reflect the new ownership;
+older matrix runtime evidence does not establish this navigation structure.
+
 ## Current follow-up diagnosis and decisions
 
 M274–M279 covers filter navigation and density, retained search, contextual detail
