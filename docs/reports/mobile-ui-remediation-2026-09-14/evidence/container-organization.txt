@@ -1,0 +1,21 @@
+Container organization follow-up, 2026-09-24.
+User screenshot: long container title repeated in contents heading, commands above
+their section, borderless Move items here, and availability under voice/tabs.
+Spec-first candidate groups availability with identity and contents commands below
+a short Contents heading. Move items here uses bounded secondary native styling.
+No empty command group; unavailable contents retain permitted commands.
+80 focused tests/TypeScript/mobile structural checks pass. Critic identified and
+resolved unavailable-contents command loss and iPad tab-strip geometry in the
+native footer test. Runtime acceptance remains required.
+Android API36 normal-text: first candidate placed native controls in recycled rows
+and they disappeared. Rejected. First section/controls now compose in ListHeader;
+final screenshot /tmp/container-organization-final-android.png shows both commands,
+clear availability group and short heading. This isolated fixture does NOT prove
+bottom-tab clearance. New native test opens real audit-tabs detail and requires
+final metadata above delivered tab/voice surfaces, handling iPad's top tab strip.
+Shared inset audit source candidates: InventoryAssetsRouteScreen FlatList,
+InventorySharingScreen ready/error ScrollViews, InventoryInvitationScreen ScrollView
+lack automatic content insets. Do not label clipping confirmed without native
+entry/bottom/keyboard checks. Map intentionally uses a separate layout owner and
+must not receive a blanket automatic inset change. Home/Browse/Notifications already
+have automatic ownership; shared-detail correction is in frozen PR181.

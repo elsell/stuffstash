@@ -1343,3 +1343,25 @@ heights. On initial entry, before scrolling or opening search, verify the asset'
 identity header lies completely below navigation chrome and within the viewport.
 Preserve search filtering/clear/cancel, ordinary detail scrolling and bottom-tab
 return. This acceptance check supplements the existing functional search checks.
+
+### Container details group identity, contents and commands
+
+User capture2026-09-24 shows container checkout under the native tab/accessory
+layer, contents commands detached above their heading, and borderless Move items
+here. Keep availability/check-out with identity/location, before media and contents;
+do not repeat it in the footer. Place Add/Move contents commands directly after
+the first contents heading, using bounded native secondary styling for Move.
+When a location has an empty/search-empty list, keep its contents commands grouped
+with that state. Do not render an empty command group when permission offers none.
+Keep ordinary item/location behavior and callbacks intact, and preserve native
+automatic insets for navigation, tabs and the voice accessory. Verify final content
+can scroll fully above those bars in the real tab shell; isolated fixtures cannot
+establish bottom clearance. Inspect ordinary routed scrolling consumers for the
+same missing-inset failure, rather than adding guessed universal bottom padding.
+Apple layout guidance requires accounting for overlaid navigation controls:
+https://developer.apple.com/design/human-interface-guidelines/layout
+Container contents use the short heading Contents rather than repeating the full
+asset name; separate groups use one spacing interval, avoiding stacked section
+padding between the contents commands and empty state. Native Android observation
+shows composed commands are reliable in the list header; keep the first section
+and its controls there while virtualizing subsequent content rows.

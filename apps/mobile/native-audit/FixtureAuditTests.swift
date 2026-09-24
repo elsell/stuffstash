@@ -2875,6 +2875,31 @@ final class FixtureAuditTests: XCTestCase {
   }
 
 
+  func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
+    guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
+    let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Updated '")).firstMatch
+    let voice = app.buttons["Start voice interaction"].firstMatch
+    let tabs = app.tabBars.firstMatch
+    XCTAssertTrue(voice.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    let scroll = app.scrollViews.firstMatch
+    XCTAssertTrue(scroll.exists)
+    func clearOfChrome() -> Bool {
+      let tabBounds = tabs.exists ? tabs.frame : tab("Home").frame.union(tab("Browse").frame)
+      // iPad can put its tab strip at the top; use the delivered chrome positions.
+      let chrome = [tabBounds, voice.frame]
+      let upper = chrome.filter { $0.midY < app.frame.midY }
+        .reduce(app.navigationBars.firstMatch.frame.maxY) { max($0, $1.maxY) }
+      let lower = chrome.filter { $0.midY >= app.frame.midY }
+        .reduce(app.frame.maxY) { min($0, $1.minY) }
+      return footer.exists && app.frame.contains(footer.frame) &&
+        footer.frame.maxY <= lower && footer.frame.minY >= upper
+    }
+    for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
+    XCTAssertTrue(clearOfChrome(), "Final detail content must scroll above both persistent bottom surfaces")
+    capture("detail-footer-above-native-tabs")
+  }
+
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
     guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
     let move = app.buttons["Move"].firstMatch

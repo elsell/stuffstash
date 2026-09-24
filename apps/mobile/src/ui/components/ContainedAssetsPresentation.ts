@@ -56,7 +56,7 @@ export function containedAssetsSectionHeading(
   asset: Pick<AssetDetailViewModel, 'title' | 'containedAssetsLabel'>
 ): ContainedAssetsSectionHeading {
   return {
-    title: `Inside ${asset.title}`,
+    title: 'Contents',
     summary: asset.containedAssetsLabel
   };
 }

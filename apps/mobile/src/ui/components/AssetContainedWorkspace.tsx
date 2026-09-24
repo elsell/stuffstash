@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import type {
@@ -6,13 +7,7 @@ import type {
 } from '../../application/assets/AssetViewModels';
 import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
-import {
-  AssetDetailAvailabilityButton,
-  AssetDetailMaintenanceBar
-} from './AssetDetailIdentitySection';
-import {
-  assetDetailMaintenanceActions
-} from './AssetDetailPresentation';
+
 import {
   canUseContainedAssetAction,
   containedAssetActions,
@@ -130,6 +125,7 @@ export function ContainedSpatialActions({
 }) {
   const styles = createStyles(useAppearanceAwarePalette());
   const actions = containedAssetActions(asset);
+  if (actions.length === 0) return null;
   return (
     <View
       accessibilityLabel={asset.kind === 'location' ? 'Place items in this place' : 'Place items in this container'}
@@ -148,50 +144,6 @@ export function ContainedSpatialActions({
   );
 }
 
-export function ContainedWorkspaceMaintenance({
-  asset,
-  isActionPending,
-  onCheckout,
-  showEditAction = true,
-  onEdit,
-  onMove,
-  onReturn
-}: {
-  readonly asset: AssetDetailViewModel;
-  readonly isActionPending: boolean;
-  readonly onCheckout?: () => void;
-  readonly showEditAction?: boolean;
-  readonly onEdit?: () => void;
-  readonly onMove?: () => void;
-  readonly onReturn?: () => void;
-}) {
-  const styles = createStyles(useAppearanceAwarePalette());
-  const hasAvailabilityStatus = asset.kind !== 'location';
-  const hasMaintenanceAction = assetDetailMaintenanceActions(asset)
-    .some((action) => showEditAction && action.id === 'edit');
-  if (!hasAvailabilityStatus && !hasMaintenanceAction) {
-    return null;
-  }
-  return (
-    <View accessibilityLabel="Manage this asset" style={styles.maintenanceSection}>
-      <AssetDetailAvailabilityButton
-        asset={asset}
-        isActionPending={isActionPending}
-        onCheckout={onCheckout}
-        onReturn={onReturn}
-      />
-      <AssetDetailMaintenanceBar
-        asset={asset}
-        isActionPending={isActionPending}
-        showMoveAction={false}
-        showEditAction={showEditAction}
-        onEdit={onEdit}
-        onMove={onMove}
-      />
-    </View>
-  );
-}
-
 function ContainedAssetActionButton({
   action,
   isActionPending,
@@ -203,15 +155,17 @@ function ContainedAssetActionButton({
 }) {
   const enabled = canUseContainedAssetAction({ isActionPending, onPress });
   return <NativeCommandButton label={action.label} disabled={!enabled}
-    prominence={action.isPrimary ? 'primary' : 'standard'} onPress={() => onPress?.()} />;
+    prominence={action.isPrimary ? 'primary' : 'secondary'} onPress={() => onPress?.()} />;
 }
 
 export function ContainedWorkspaceListItemView({
   item,
+  actions,
   onChildPress,
   onClearSearch
 }: {
   readonly item: ContainedWorkspaceListItem;
+  readonly actions?: ReactElement;
   readonly onChildPress?: (assetId: string) => void;
   readonly onClearSearch: () => void;
 }) {
@@ -221,15 +175,19 @@ export function ContainedWorkspaceListItemView({
       <View style={styles.sectionHeading}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>{item.heading.title}</Text>
         <Text style={styles.sectionSummary}>{item.heading.summary}</Text>
+        {actions}
       </View>
     );
   }
   if (item.kind === 'empty') {
     return (
-      <ContainedAssetsEmptyState
-        emptyState={item.emptyState}
-        onClearSearch={item.canClearSearch ? onClearSearch : undefined}
-      />
+      <View style={styles.emptySection}>
+        {actions}
+        <ContainedAssetsEmptyState
+          emptyState={item.emptyState}
+          onClearSearch={item.canClearSearch ? onClearSearch : undefined}
+        />
+      </View>
     );
   }
   return (
@@ -307,13 +265,7 @@ function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
     spatialActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     spatialCommand: { width: 160, maxWidth: '100%' },
-    maintenanceSection: {
-      borderTopColor: palette.border,
-      borderTopWidth: 1,
-      gap: spacing.md,
-      paddingTop: spacing.lg
-    },
-    sectionHeading: { gap: 3, paddingBottom: spacing.sm, paddingTop: spacing.lg },
+    sectionHeading: { gap: spacing.xs, paddingBottom: spacing.sm, paddingTop: spacing.sm },
     sectionTitle: { color: palette.text, fontSize: 22, fontWeight: '700' },
     sectionSummary: { color: palette.textMuted, fontSize: 14, fontWeight: '500' },
     childRow: {
@@ -347,6 +299,7 @@ function createStyles(palette: MobileColorPalette) {
     childEyebrow: { color: palette.textMuted, fontSize: 13, fontWeight: '500' },
     childTitle: { color: palette.text, fontSize: 17, fontWeight: '600' },
     childSupporting: { color: palette.textMuted, fontSize: 14 },
+    emptySection: { gap: spacing.sm },
     emptyContainer: { gap: spacing.xs, paddingBottom: spacing.md, paddingTop: spacing.sm },
     emptyContainerTitle: { color: palette.text, fontSize: 17, fontWeight: '600' },
     emptyContainerText: { color: palette.textMuted, fontSize: 15 },
