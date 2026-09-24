@@ -1,0 +1,11 @@
+Home header space correction, 2026-09-24.
+Native36018428143 at452265ab passes five tests on each device.
+iPhone job107696844498 artifact10816982047; iPad job107696845062 artifact10817215817.
+Reviewed viewer and three-action captures: the viewer selector uses available
+space while Profile remains distinct; Add/Notifications/Profile stay in order,
+non-overlapping and fixed while content scrolls. Actual action probes pass.
+Long titles still ellipsize at the bounded width; this is deliberate, not a claim
+that arbitrary titles fit. Diagnostic labels at the bottom are fixture-only.
+These isolated header fixtures do not establish tab/voice bottom clearance.
+Source width regression: red180>220, then six checks pass; TypeScript, structural
+checks and critic review pass. Product change is unreleased and outside PR184.

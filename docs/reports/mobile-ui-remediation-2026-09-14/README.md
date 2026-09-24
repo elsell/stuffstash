@@ -64,8 +64,9 @@ is not yet verified. [Evidence](evidence/home-collections.txt).
 Separate follow-up: Home's inventory switcher now uses available header space up
 to320pt instead of always capping at180pt, avoiding unnecessary truncation when
 only Profile is visible. Viewer regression failed before the change; six width
-checks, structural checks and critic review pass. Native one-action/three-action
-geometry remains unverified. This is outside frozen PR184 and is not released.
+checks, structural checks and critic review pass. Native36018428143 at452265ab passes five cases on each device; reviewed captures
+confirm one-action/three-action spacing and stable actions on scroll. This is
+outside PR184 and is not released. [Evidence](evidence/home-header-space.txt).
 
 ## Next connected review
 
