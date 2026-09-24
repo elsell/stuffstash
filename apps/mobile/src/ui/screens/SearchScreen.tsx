@@ -53,6 +53,7 @@ import {
   browseColumnCount,
   browseGridCardWidth,
   browseRowReservesMedia,
+  browseRowCheckoutLabel,
   BrowseFilterToken,
   BrowsePlaceItemViewModel,
   BrowseScope,
@@ -472,6 +473,7 @@ export function SearchScreen({
         ) : (
           <AssetCard
             asset={item.asset}
+            reservedCheckoutLabel={browseRowCheckoutLabel(state.results.assets, index, numColumns)}
             reserveMediaSpace={state.results.scope !== 'places' && browseRowReservesMedia(state.results.assets, index, numColumns)}
             palette={palette}
             style={gridCardWidth

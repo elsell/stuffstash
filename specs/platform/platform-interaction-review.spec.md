@@ -1318,3 +1318,17 @@ or establish style before presentation with a native lifecycle guarantee, not a
 timeout, repeated JS override or global preference. Preserve restoration on Close,
 system Back, swipe dismissal and last-photo removal. This P3 appearance finding
 remains separate from the verified Browse batch; no Android correction is accepted.
+
+### Photo-free Browse rows align checkout status space
+
+Run35979200078 passes connected Browse behavior on phone/iPad, but reviewed
+expiration-return captures show checked-out photo-free cards with lower title
+baselines than their peers. Each compact grid row must reserve the same status
+space when any peer has a checkout label, using actual label text for native
+measurement rather than a fixed height. A peer without checkout remains visually
+blank in that slot and must not expose a false checkout label to accessibility.
+Rows without checkout remain compact; photo-bearing rows retain square media,
+Home row cards remain unchanged, and column changes recompute row membership.
+Verify mixed checkout/no-checkout rows, row regrouping, and accessible semantics
+before native title-baseline/visual acceptance. This is a project collection-layout
+decision; it does not change item checkout state or add a domain concept.

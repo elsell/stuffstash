@@ -37,10 +37,13 @@ Android Browse now retains List/Map and search through light/dark changes on the
 named emulator APK. Corrected adapter-driven route resets and native control
 appearance; reviewed captures, continued editing/clear/close, return to List and
 Notifications selection pass.26 focused tests, TypeScript, structural checks and
-review pass. PR181 remains draft. Connected iOS Browse/filter regression35979200078 at77c4738d
-and broad native refresh35980094051 atc7c44b45 are running; their sleeping scripts
-retain terminal results. Prioritize structural/ordinary workflow failures first.
-Neither pending run is acceptance evidence. [Evidence](evidence/android-live-appearance-header.txt).
+review pass. PR181 remains draft. Connected iOS Browse/filter regression35979200078
+at77c4738d passed6/6 on both phone and iPad. Reviewed return captures exposed
+misaligned compact-card titles with mixed checkout status; the row-space correction
+passes Android native alignment and48 focused tests, with iOS candidate verification
+pending. [Alignment evidence](evidence/checkout-row-alignment.txt). Broad native
+refresh35980094051 atc7c44b45 remains in progress; prioritize ordinary workflow
+failures. Its pending result is not acceptance evidence. [Evidence](evidence/android-live-appearance-header.txt).
 
 ## Separate unresolved decisions
 

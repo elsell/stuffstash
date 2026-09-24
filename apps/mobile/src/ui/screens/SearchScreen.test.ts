@@ -7,6 +7,7 @@ import {
   browseContinuationCriteria,
   browseGridCardWidth,
   browseRowReservesMedia,
+  browseRowCheckoutLabel,
   browseLoadingFlagsForRefresh,
   buildBrowseScopeOptions,
   buildBrowseFilterTokens,
@@ -27,6 +28,12 @@ import { createBrowseHeaderStyles } from './BrowseHeader';
 import { darkPalette, lightPalette, spacing } from '../theme/tokens';
 
 describe('Browse media row alignment', () => {
+  it('reserves a checkout slot only for peers in the same responsive row', () => {
+    const assets = [{ checkedOutLabel: 'Checked out' }, {}, {}, {}];
+    expect(assets.map((_, index) => browseRowCheckoutLabel(assets, index, 2))).toEqual(['Checked out', 'Checked out', undefined, undefined]);
+    expect(browseRowCheckoutLabel(assets, 2, 3)).toBe('Checked out');
+    expect(browseRowCheckoutLabel(assets, 1, 1)).toBeUndefined();
+  });
   it('compacts only photo-free rows and recalculates grouping when columns change', () => {
     const assets = [{ hasPhoto: true }, { hasPhoto: false }, { hasPhoto: false }, { hasPhoto: false }];
     expect(assets.map((_, index) => browseRowReservesMedia(assets, index, 2))).toEqual([true, true, false, false]);

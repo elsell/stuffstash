@@ -32,6 +32,7 @@ type AssetCardProps = {
   readonly asset: AssetCardViewModel;
   readonly density?: 'standard' | 'compact' | 'row';
   readonly reserveMediaSpace?: boolean;
+  readonly reservedCheckoutLabel?: string;
   readonly footerAction?: {
     readonly accessibilityLabel?: string;
     readonly disabled?: boolean;
@@ -51,6 +52,7 @@ export function AssetCard({
   asset,
   density = 'standard',
   reserveMediaSpace = false,
+  reservedCheckoutLabel,
   footerAction,
   onParentLocationPress,
   palette: paletteOverride,
@@ -64,6 +66,8 @@ export function AssetCard({
   const isRow = density === 'row';
   const photoFree = !reserveMediaSpace && !isRow && asset.hasPhoto === false && !asset.photo;
   const styles = useAssetCardStyles(paletteOverride);
+  const checkoutSlot = asset.checkedOutLabel ?? (photoFree ? reservedCheckoutLabel : undefined);
+  const hidesCheckoutSlot = !asset.checkedOutLabel;
 
   return (
     <View testID={`asset-card-${asset.id}`} style={[
@@ -90,7 +94,11 @@ export function AssetCard({
           ) : (
             <Text style={[styles.imagePlaceholder, photoFree ? styles.photoFreeLabel : undefined]}>{asset.imagePlaceholderLabel}</Text>
           )}
-          {asset.checkedOutLabel && !isRow ? <Text style={[styles.checkoutImageBadge, photoFree ? styles.photoFreeStatus : undefined]}>{asset.checkedOutLabel}</Text> : null}
+          {checkoutSlot && !isRow ? <Text
+            accessible={!hidesCheckoutSlot} accessibilityElementsHidden={hidesCheckoutSlot}
+            importantForAccessibility={hidesCheckoutSlot ? 'no-hide-descendants' : 'auto'}
+            style={[styles.checkoutImageBadge, photoFree ? styles.photoFreeStatus : undefined,
+              hidesCheckoutSlot ? styles.hiddenCheckoutSlot : undefined]}>{checkoutSlot}</Text> : null}
         </View>
       </Pressable>
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
@@ -280,6 +288,7 @@ function createStyles(colors: MobileColorPalette) {
   },
   photoFreeLabel: { fontSize: 14, fontWeight: '500' },
   photoFreeStatus: { position: 'relative', top: 0, right: 0 },
+  hiddenCheckoutSlot: { opacity: 0 },
   openRegion: {
     width: '100%'
   },
