@@ -23,3 +23,12 @@ prove rejected commands keep cached reads intact and successful commands invalid
 and refresh them. Never directly set the collection after save. Also require the
 returned row to clear the header and remain hittable; the failed capture shows an
 old row behind the header, which needs verification after correcting the wiring.
+
+Run35937082802 now returns the updated tag on both devices, proving the corrected
+fixture follows cache invalidation. The row remains at y24 behind the native
+header and is not hittable. Keep this distinct from persistence. The collection
+currently replaces a non-scrolling loading root with a scroll view. Preserve one
+scrolling root through loading, ready and retry states so native inset ownership
+is stable; do not add a guessed header-height offset or force a navigation-return
+scroll. Keep the native row hittability/header-clearance and full reopen/create/
+archive journey unchanged. This candidate requires native verification.
