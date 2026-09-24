@@ -87,12 +87,11 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Notification tab journey now targets the standalone-fixture gap: real tab layout,
-inbox/application queries, asset detail/Back and paginated final-content clearance.
-Candidate4b64bbd7 is running as36057807116 on phone/iPad; terminal status goes to
-`/tmp/notification-tab-journey-result.json`. No product defect is claimed before
-native evidence.
-[Bounded check](evidence/notification-tab-journey.txt).
+Notification tab journey36057807116 at4b64bbd7 passes on phone/iPad. Reviewed
+full-screen detail, pagination and final-row captures confirm tab/Back continuity,
+read-state reconciliation and final content/action clearance. No product change
+is justified. Physical push and route guard behavior are outside this fixture.
+[Scoped evidence](evidence/notification-tab-journey.txt).
 
 History baseline36027545902 confirmed iPhone final metadata hidden under persistent
 chrome and a selected-mode trigger collapsed into an ellipsis. iPad failed Xcode
