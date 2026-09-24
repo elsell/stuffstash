@@ -89,17 +89,19 @@ launch before UI interaction. Android confirmed dense change paragraphs; candida
 uses concise list summaries and separated Before/After values. Candidatef8cea8e0
 also adopts automatic scroll insets and shared native choice picker.30 focused
 tests, TypeScript,13 fixture tests, structural checks and critic review pass.
-Corrected native36031360544 passes on iPhone with reviewed captures. iPad failed
-Xcode launch before interaction; one failed-job retry is active, watcher17492
-writes `/tmp/history-corrected-retry-result.json`. PR188 stays draft until iPad
-acceptance. Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
+Corrected native36031360544 passes on both devices after one iPad Xcode-launch
+retry. Reviewed list/detail/final-metadata/pagination captures confirm hierarchy
+and clearance. Exact-head CI36034561755 passes. PR188 mergedb45c5e96; release
+36037058030 is active, with terminal result at `/tmp/history-release-result.json`.
+TestFlight delivery remains unverified until upload and changelog readback pass.
+Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
 The separate accessory observation6cb68543 is dispatched as36035027845; watcher8216
 writes `/tmp/voice-accessory-native-result.json`. It records two-second settled
 list/detail/tab-return captures and command crops.14 route-preparation tests,
 structural checks and critic review pass. No renderer change or visual acceptance
-is inferred before reviewing those images. History final CI36034561755 is owned
-by watcher73645 (`/tmp/history-final-ci-result.json`).
+is inferred before reviewing those images. History final CI36034561755 passed
+(`/tmp/history-final-ci-result.json`).
 
 ## Separate unresolved decisions
 

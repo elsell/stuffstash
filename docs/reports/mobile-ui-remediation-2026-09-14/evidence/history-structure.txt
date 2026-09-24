@@ -51,3 +51,11 @@ transition capture from a persistent redraw problem before changing that adapter
 A single metadata row also clips its trailing source text after scrolling; retained
 captures record it. These are not evidence that History's corrected footer remains
 obscured, and are not assumed to be caused by the batch.
+
+Final native acceptance: iPad failed-job retry107750631165 in36031360544 passed.
+Artifact10825007515 reviewed: list summary/mode, separated Before/After values,
+final history-request-0 and Load older activity are readable and clear persistent
+chrome. Existing phone success remains valid. iPad detail also shows absent Mic
+glyph; bounded separate observation36035027845 owns that diagnosis.
+Exact-head CI36034561755 passes4c8b95d2; PR188 mergedb45c5e96 with TestFlight
+notes. Release36037058030 is running; upload/Apple notes are not yet verified.
