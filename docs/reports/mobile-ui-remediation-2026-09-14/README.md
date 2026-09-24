@@ -34,16 +34,21 @@ capture lacks visible tabs;35955427236 adds explicit final tab visibility and
 Expiration Filters origin checks. Those acceptance gaps remain open. Surface paths reflect the new ownership;
 older matrix runtime evidence does not establish this navigation structure.
 
-## Current expiration return defect
+## Current expiration search correction
 
-Android in-app entry confirms independent Home Kitchen / Browse Camping results
-before Filters. Applying Browse filters then overwrites Home's Kitchen result with
-Camping. This is a confirmed candidate defect, not solely external-link setup.
-Next fix must return to the originating screen instance without resolving another
-tab's shared pathname. The fixture now uses in-app entry; production is unchanged.
+Android's parameter probe showed Home retaining its route but clearing Kitchen to
+an empty query on tab return, before Filters opened. This displayed unfiltered
+Camping items; it was not copying Browse's query. Expiration now reuses the shared
+native-search interaction guard, retaining its own debounce and pending draft.
+The final Android build without the probe passes Home/Browse/Apply with each
+query retained. Two regressions reproduced inactive clearing and draft
+reseeding, then passed; all2,002 mobile checks, TypeScript and review pass.
+
 Settings draft retention and detail/Move return passed on Android. iOS command
-width run35954709640 passed9/9 iPad and8/9 phone; the remaining phone failure still
-needs classification and corrected-width captures need visual review.
+width35954709640 passed9/9 iPad and8/9 phone. Phone Add stopped at keyboard readiness
+(line744); its capture shows the keyboard and focused Name field. Keep the workflow
+unresolved pending the combined run. Corrected command-width captures still need
+full visual review. Persistent-tab iOS final-state coverage remains pending.
 
 ## Current follow-up diagnosis and decisions
 

@@ -1107,21 +1107,21 @@ Settings save command. Do not weaken exact native text/persistence assertions or
 insert typing delays to make this journey pass. This source correction does not
 prove the native cause; the existing readback journey must still pass unchanged.
 
-### Distinguish expiration tab entry from modal return
+### Expiration search ownership across tab return
 
-Android candidate f1c52312 preserved Settings drafts and ordinary detail tabs, but
-successive externally delivered group-qualified expiration URLs did not establish
-independent Home and Browse stacks: Home returned to its previous Settings draft.
-Do not infer a production filter-return defect from that setup. Verify entry via
-in-app router actions from each selected tab, assert the distinct Kitchen and
-Camping results before opening filters, then preserve both results across Apply
-and tab switches. The audit Home expiration section and Browse fixture entry may
-supply deterministic queries while using real native navigation and route screens.
-Keep external-link behavior tracked separately; do not count this change as its fix.
+Native Android evidence shows the Home expiration route retaining its identity
+while its Kitchen query becomes empty on tab return, before Filters opens. Native
+close/empty callbacks outside a search interaction must not clear retained queries.
+Expiration must reuse NativeNavigationSearch, whose editing guard owns native
+callbacks, while its hook owns debounce and filter-flush semantics. Deliberate
+clear/cancel continues to clear the query.
 
-The in-app Android walkthrough reproduced the defect with Home selected on Kitchen
-and Browse selected on Camping before opening Filters. After Apply, Browse retained
-Camping but switching Home also showed Camping. This confirms cross-tab state loss
-independently of external links. Filter completion must target the originating
-screen instance, not resolve a shared pathname to another tab's screen. Keep the
-independent-query runtime assertion as the acceptance gate.
+Keep the displayed draft separate from the debounced applied query. Switching tabs
+before debounce completes must restore the draft on native focus. Verify this with
+the shared adapter and its native field driver, not only the debounce hook.
+
+The native journey enters expiration through in-app actions on each selected tab,
+asserts independent Home Kitchen and Browse Camping results before opening Filters,
+and preserves both after Apply. External-link setup is separate coverage; this
+journey does not certify qualified deep-link behavior. Diagnostic overlays must
+not ship. Preserve the existing origin-tab modal return contract.

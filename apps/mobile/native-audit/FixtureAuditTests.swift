@@ -2877,6 +2877,10 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(browseExpiration.waitForExistence(timeout: 10)); browseExpiration.tap()
     let camping = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch
     XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10)); XCTAssertFalse(camping.exists,
+      "Tab return must retain Home's query before Filters is opened")
+    tab("Browse").tap(); XCTAssertTrue(camping.waitForExistence(timeout: 10))
     let filters = app.buttons["Filter expiration items"].firstMatch
     XCTAssertTrue(filters.isHittable); filters.tap()
     let apply = app.buttons["Apply expiration filters"].firstMatch

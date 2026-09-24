@@ -1,3 +1,4 @@
+import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { NativeCommandButtonProps } from '../components/NativeCommandButton.types';
 import { Stack } from 'expo-router';
@@ -30,15 +31,8 @@ export function ExpirationWorkspaceScreen({ mode, items, query = '', filtered = 
    {fontScale > 1.3 || width < 340 ? <NativeActionMenu accessibilityLabel="Expiration status" trigger={{kind:'label',label:mode==='soon'?'Expiring soon':mode==='expired'?'Expired':'All dates'}} groups={[{id:'expiration-mode',items:([{id:'soon',label:'Expiring soon'},{id:'expired',label:'Expired'},{id:'all',label:'All dates'}] as const).map(option=>({...option,isSelected:mode===option.id,onPress:()=>onMode(option.id)}))}]} /> : <NativeSegmentedControl colors={colors} value={mode} onChange={onMode} segments={[{ value: 'soon', label: 'Expiring soon' }, { value: 'expired', label: 'Expired' }, { value: 'all', label: 'All dates' }]} />}
   </View>;
  return <>
-  <Stack.Screen options={{ ...expirationFilterHeaderOptions({active: refinementsActive, onPress: () => { const value = search.flush(); search.ref.current?.blur(); onFilters(value); }}),
-   headerSearchBarOptions: {
-    ref: search.ref, placeholder: 'Search items', placement: 'integratedButton', allowToolbarIntegration: false, hideWhenScrolling: false,
-    hideNavigationBar: false, obscureBackground: false, autoCapitalize: 'none',
-    onChangeText: event => search.change(event.nativeEvent.text),
-    onSearchButtonPress: event => { search.submit(event.nativeEvent.text); search.ref.current?.blur(); },
-    onCancelButtonPress: search.clear, onClose: search.clear,
-   },
-  }} />
+  <Stack.Screen options={expirationFilterHeaderOptions({active: refinementsActive, onPress: () => onFilters(search.flush())})} />
+  <NativeNavigationSearch query={search.draft} placeholder="Search items" onChange={search.change} onSubmit={search.submit} onClear={search.clear} />
   <FlatList<Row> style={[styles.shell, { backgroundColor: colors.background }]} contentContainerStyle={styles.content} data={rows} keyExtractor={row => row.key} alwaysBounceVertical keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentInsetAdjustmentBehavior="automatic"
    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.action} />}
    renderItem={({ item }) => 'heading' in item ? <Text accessibilityRole="header" style={[styles.heading, { color: colors.text }]}>{item.heading}</Text> : <AssetCard asset={item.asset} density="row" palette={colors} onPress={() => { search.flush(); onOpenAsset(item.asset.id); }} onParentLocationPress={parent => { search.flush(); onOpenAsset(parent.id); }} />}
