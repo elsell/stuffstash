@@ -46,3 +46,13 @@ Build /tmp/settings-command-composition-build.log succeeded; replay
 composition gap above. It does not verify real device Settings launch, assistive
 traversal or iOS composition. The new focused settings-commands native case retains
 those same state assertions and capture points for the next iOS verification.
+
+Divider alignment correction: the reviewed failed-save capture exposed the shared
+56pt icon gutter on icon-free recovery rows. SettingsSeparator now defaults to the
+16pt row inset; the Settings root and scoped icon-navigation groups explicitly
+retain the derived icon gutter. Other separator consumers were inspected and have
+no leading icon. Stacked rows use the ordinary inset. Before/after Android capture:
+/tmp/settings-command-failed-save.png → /tmp/settings-divider-after.png. Reviewed
+after image aligns the divider with command bounds. The full recovery replay still
+passes after the rebuild; 73 Settings tests, TypeScript, structural checks and critic
+review pass. iOS visual verification of this spacing correction remains pending.

@@ -1177,3 +1177,9 @@ recovery fixture using the production editor: the first save fails, Retry commit
 the retained choice, and Discard restores the saved choice. Include the longer
 Open device settings label for layout/activation observation only; a fixture
 activation is not evidence that OS settings opened or push permission changed.
+
+Settings dividers align with the following row's content: ordinary text, choice,
+switch and command rows use the shared row inset; navigation rows with leading
+icons explicitly include the icon width and row gap. Do not apply an icon gutter
+to icon-free rows. Stacked layouts retain the ordinary inset. This changes visual
+grouping only, preserving interaction and accessibility semantics.

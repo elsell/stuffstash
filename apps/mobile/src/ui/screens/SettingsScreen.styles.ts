@@ -50,14 +50,15 @@ export function createSettingsScreenStyles(
       borderRadius: radius.sm,
       height: 30,
       justifyContent: 'center',
-      width: 30
+      width: settingsLayoutMetrics.leadingIconWidth
     },
     rowText: { flex: 1, minWidth: 0 },
     rowLabel: { color: colors.text, fontSize: 17, fontWeight: '500' },
     rowContext: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
     rowValue: { color: colors.textMuted, fontSize: 16, flexShrink: 1 },
     rowTrailing: { alignItems: 'center', flexDirection: 'row', flexShrink: 1, gap: spacing.xs },
-    separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: 56 },
+    separator: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: spacing.md },
+    separatorWithIcon: { marginLeft: layout.stacked ? spacing.md : spacing.md + settingsLayoutMetrics.leadingIconWidth + spacing.sm },
     iconButton: { alignItems: 'center', justifyContent: 'center', minHeight: 44, minWidth: 44 },
     choiceRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     actionRow: { justifyContent: 'center', minHeight: 52, minWidth: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },

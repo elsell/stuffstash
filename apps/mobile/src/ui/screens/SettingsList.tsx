@@ -36,9 +36,9 @@ export function SettingsSection({
   );
 }
 
-export function SettingsSeparator() {
+export function SettingsSeparator({ hasLeadingIcon = false }: { readonly hasLeadingIcon?: boolean }) {
   const { styles } = useSettingsListStyles();
-  return <View accessibilityElementsHidden importantForAccessibility="no" style={styles.separator} />;
+  return <View accessibilityElementsHidden importantForAccessibility="no" style={[styles.separator, hasLeadingIcon && styles.separatorWithIcon]} />;
 }
 
 export function SettingsLoadingRow({ label }: { readonly label: string }) {
