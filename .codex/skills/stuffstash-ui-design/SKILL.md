@@ -51,6 +51,15 @@ follows browser semantics and accessible web patterns. Brand styling must not
 replace the platform's interaction vocabulary. Preserve explicit user preferences
 and record intentional departures as project choices rather than Apple rules.
 
+## Stuff Stash command emphasis
+
+The product preference is bounded native buttons by default. Borderless commands
+require an explicit contextual choice, such as an action inside a clearly grouped
+row or toolbar. This is a project preference, not a claim that Apple forbids text
+buttons. Choose primary emphasis only for the main task. Review placement,
+alignment and grouping with the affected content; changing button style alone
+does not establish a coherent hierarchy.
+
 ## Review and completion
 
 Review connected everyday workflows before isolated controls. Prioritize screen
