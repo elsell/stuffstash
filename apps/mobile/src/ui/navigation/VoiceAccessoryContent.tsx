@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { router, usePathname } from 'expo-router';
-import { VoiceAccessorySymbol } from './VoiceAccessorySymbol';
+import { Mic, SendHorizontal } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
@@ -107,10 +107,10 @@ export function VoiceAccessoryContent({ placement }: { readonly placement: 'regu
               level={state.status === 'ready' ? state.realtime?.recordingLevel ?? 0 : 0}
               size="compact"
             />
-            <VoiceAccessorySymbol name="send" color={palette.onAction} size={isInline ? 18 : 19} />
+            <SendHorizontal color={palette.onAction} size={isInline ? 18 : 19} strokeWidth={2.6} />
           </View>
         ) : (
-          <VoiceAccessorySymbol name="microphone" color={palette.onAction} size={isInline ? 22 : 23} />
+          <Mic color={palette.onAction} size={isInline ? 22 : 23} strokeWidth={2.5} />
         )}
       </Pressable>
     </View>

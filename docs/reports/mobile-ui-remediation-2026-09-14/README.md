@@ -95,17 +95,14 @@ Corrected native36031360544 passes on both devices after one iPad Xcode-launch
 retry. Reviewed list/detail/final-metadata/pagination captures confirm hierarchy
 and clearance. Exact-head CI36034561755 passes. PR188 mergedb45c5e96; release
 36037058030 delivered130.1 with verified Apple changelog readback.
-Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
+Accessory follow-up is resolved as an evidence limitation below; no renderer fix is justified. [Current diagnosis](evidence/history-structure.txt).
 
-The accessory observation36035027845 confirms settled iPhone glyph loss after
-navigation and tab return; iPad settled detail retains the glyph. Candidate76cdc62d
-uses existing native iOS SF Symbols with command behavior unchanged. Start/send/
-return behavior, TypeScript, structural checks and critic review pass. Native
-candidate36038163099 passed iPad navigation but rendered the glyph black; phone
-stopped before detail. Correct the native Image color property, then repeat the
-same bounded journey. No glyph acceptance or phone navigation fix is claimed. [Diagnosis](evidence/voice-symbol-navigation.txt).
-Accessory CI36038289905 passede186d664 before the color correction. PR190
-remains draft until corrected native and source verification.
+Accessory review correction: full-screen baseline36035027845 shows the microphone
+on list, settled detail and tab return. The element-only crops omit it and were
+incorrectly treated as proof of a product defect. Native-symbol candidate36041316716
+shows the same screenshot discrepancy. Withdraw the renderer change; retain
+full-screen observation and document the evidence limitation. PR190 now contains
+verification/process changes only. [Diagnosis](evidence/voice-symbol-navigation.txt).
 
 ## Separate unresolved decisions
 

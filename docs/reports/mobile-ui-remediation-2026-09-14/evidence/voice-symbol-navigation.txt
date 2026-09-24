@@ -1,30 +1,26 @@
-Voice accessory glyph, 2026-09-24
-Current diagnosis: settled iPhone glyph disappearance confirmed; exact native
-cause remains unproven. Observation36035027845 at6cb68543 completed on both devices.
-Artifacts10824713686(phone),10824828895(iPad). Phone list shows Mic; detail after
-2 seconds and detail after tab round trip show a blank blue command. iPad settled
-detail shows Mic. Accessibility/tappability pass does not mean visual pass.
-Baseline command crops retained beside this evidence.
+Accessory appearance — corrected diagnosis, 2026-09-24
+No persistent glyph defect is established by the bounded baseline. Full-screen
+captures show the original microphone on list, settled detail and tab return.
+Element-only command.screenshot() images omit it in the same workflow; those crops
+were incorrectly treated as authoritative evidence. All prior claims of confirmed
+persistent glyph loss from this observation are withdrawn.
 
-One source pass: lucide SVG is nested in a persistent Pressable; no command/state
-change explains its disappearance. Upstream screens issue3797 and merged PR4196
-report regular/inline accessory visibility conflicts, but these describe whole
-content overlays and do not establish this glyph-only cause. No dependency patch
-or upgrade is justified on that indirect evidence.
-https://github.com/software-mansion/react-native-screens/issues/3797
-https://github.com/software-mansion/react-native-screens/pull/4196
+Baseline36035027845 at6cb68543: artifacts10824713686(phone),10824828895(iPad).
+Corrected native-symbol experiment36041316716 atd91746a6: artifacts10827502358
+(phone),10827398258(iPad). Both completed navigation; original and candidate full
+screens show their respective glyphs while button-only screenshots can be blank.
+The discrepancy does not establish exact native internals, only an unreliable
+observation for the rendered composition. Full screenshots retained here provide
+counterevidence alongside misleading crops. Earlier History captures showed
+transient absence but did not establish a settled persistent defect.
 
-Decision: test existing native SwiftUI Image/SF Symbols for iOS mic/send only,
-inside fixed noninteractive hidden-from-accessibility glyph host. Keep state,
-command label/handler, Android SVG and placement behavior. Native baseline is red
-visual evidence. Existing behavior test and native re-observation must verify
-candidate; reject it if glyph still disappears. No remount/timing workaround.
+Decision: withdraw the native-symbol renderer experiment. Keep existing product
+renderer. Remove element screenshots from the diagnostic and review full-screen
+compositions. Do not dispatch another unchanged renderer experiment. PR190 is
+verification/process only, not a product fix or TestFlight release.
 
-Candidate76cdc62d: start/send/return mounted behavior passes, TypeScript and
-structural checks pass, critic found no source blocker. Native36038163099 completed: iPad passed navigation; iPhone stopped waiting
-for History detail after its first row tap. Final phone capture remains the list.
-No phone glyph-retention conclusion is established. iPad glyph stays visible but
-is black: reject that contrast result. Pinned Expo UI Image has explicit color;
-use it rather than foregroundStyle. Preserve the same destination timeout and
-add pre-tap hittability assertion for the bounded corrected observation. Listening/send native appearance and
-physical voice remain unverified; do not infer them from ready-state captures.
+Superseded experiment76cdc62d: iPad glyph black because Image needed explicit
+color; phone stopped before detail. Corrected color22161648 was tested ind91746a6,
+but neither candidate is justified as a fix for a persistent product defect.
+Upstream screens3797/4196 were indirect and do not prove this issue's cause.
+Physical voice, transient animation and listening/send remain separately scoped.

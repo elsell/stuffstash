@@ -83,35 +83,16 @@ navigation defect; an earlier successful tap does not establish final visibility
 
 The persistent voice command must retain its visible microphone in ready state
 when navigating into a destination and returning through tabs. An accessible name
-and tappable blue background alone do not establish visual acceptance. Captures
-from Settings and History show a missing glyph that returns after tab switching.
-Before changing its renderer, use one controlled normal-text navigation observation:
-capture list, detail after a two-second stationary settling interval, and detail
-after a tab round trip. Keep the same ready voice fixture state and actual tab
-accessory. Review the glyph visually; passing navigation assertions only establishes
-that the observation completed. This distinguishes a transitional capture from a
-persistent rendering defect without repeating provider or input experiments.
+and tappable blue background alone do not establish visual acceptance. Use one
+controlled normal-text navigation observation: capture the full screen on the
+list, on detail after a two-second settling interval, and after a tab round trip.
+Keep the same ready fixture state and actual tab accessory.
 
-The settled observation36035027845 confirms iPhone ready-state glyph loss after
-pushing History detail; it remains absent after the tab round trip. iPad's settled
-detail glyph is visible. Keep this distinct from transient iPad captures. Candidate:
-render the iOS accessory's microphone/send glyphs using the existing Expo SwiftUI
-Image adapter and SF Symbols, in a fixed-size noninteractive, accessibility-hidden
-host inside the existing command. Preserve the command's accessible label, ready/
-listening/processing behavior, placement and press handler. Android retains its
-current SVG renderer. No new dependency, route-triggered remount or state reset.
-The native observation is the visual regression evidence; repeat it for the
-candidate, including full-screen and command crops, before visual acceptance.
-Existing start/send/return behavior tests must still pass. Physical audio is not
-certified by these fixtures. If the native symbol still disappears, reject this
-renderer candidate and investigate accessory ownership rather than piling on
-remount or timing workarounds.
-
-Candidate76cdc62d keeps the iPad glyph visible but renders it black. Expo UI's
-Image owns a `color` property; preserve on-action contrast through that property
-rather than an inherited foreground modifier. iPhone observation stopped at the
-History-to-detail transition, leaving glyph retention unverified. Repeat the same
-bounded journey with corrected color and an explicit pre-tap hittability assertion;
-retain the existing destination timeout and no retry-tap loop. This distinguishes
-successful corrected rendering from a repeatable navigation failure. Do not merge
-on iPad evidence alone or accept the black glyph as the intended appearance.
+Element-only XCTest screenshots are not authoritative for the layered native tab
+accessory. Baseline36035027845 shows a visible glyph in full-screen captures while
+`command.screenshot()` yields a blank blue button for the same journey. The native
+symbol experiment36041316716 has the same discrepancy. This does not establish a
+persistent product rendering defect or justify changing its renderer. Retain the
+existing renderer; use full-screen captures for appearance review. Passing
+navigation assertions establishes only that the observation completed. Physical
+audio and transient animation behavior remain outside this scoped acceptance.

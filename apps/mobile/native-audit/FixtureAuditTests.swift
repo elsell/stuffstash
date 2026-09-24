@@ -2942,10 +2942,8 @@ final class FixtureAuditTests: XCTestCase {
       // Its image must be reviewed; the accessible button name cannot prove a drawn glyph.
       RunLoop.current.run(until: Date().addingTimeInterval(2))
       capture(label)
-      let attachment = XCTAttachment(screenshot: command.screenshot())
-      attachment.name = label + "-command"
-      attachment.lifetime = .keepAlways
-      add(attachment)
+      // Element screenshots can omit a glyph visible in the full-screen capture.
+      // Review the full-screen composition above; the discrepancy's cause is unproven.
     }
     captureSettledAccessory("voice-navigation-list")
     XCTAssertTrue(change.isHittable, "History change must be interactive before opening its detail")
