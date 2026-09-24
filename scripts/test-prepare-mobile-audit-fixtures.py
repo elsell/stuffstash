@@ -64,7 +64,7 @@ class FixtureRouteIsolationTests(unittest.TestCase):
             self.assertEqual((self.routes / layout.replace("(tabs)/", "audit-tabs/", 1)).read_text(), f"production layout {layout}\n")
             self.assertEqual((self.runner / "production-mobile-routes" / layout).read_text(), f"production layout {layout}\n")
         self.assertEqual({str(p.relative_to(self.routes)) for p in (self.routes / "audit-tabs").rglob("*.tsx")},
-                         {*[p.replace("(tabs)/", "audit-tabs/", 1) for p in self.tab_layouts], "audit-tabs/(home)/index.tsx", "audit-tabs/(search)/search.tsx", "audit-tabs/(home,search)/assets/[assetId]/index.tsx", "audit-tabs/(home,search)/settings/inventory/tags/[resourceId].tsx", "audit-tabs/(home,search)/expiration.tsx"})
+                         {*[p.replace("(tabs)/", "audit-tabs/", 1) for p in self.tab_layouts], "audit-tabs/(home)/index.tsx", "audit-tabs/(search)/search.tsx", "audit-tabs/(home,search)/assets/[assetId]/index.tsx", "audit-tabs/(home,search)/settings/inventory/tags/[resourceId].tsx", "audit-tabs/(home,search)/expiration.tsx", "audit-tabs/(home,search)/settings/sharing.tsx"})
         self.assertIn("HomeTabShellFixture as default", (self.routes / "audit-tabs/(home)/index.tsx").read_text())
         self.assertIn("TabShellBrowsePlaceholder as default", (self.routes / "audit-tabs/(search)/search.tsx").read_text())
         self.assertNotEqual(self.run_script().returncode, 0)

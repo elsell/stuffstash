@@ -119,6 +119,7 @@ for route, component in {
 for route, component in {
     "assets/[assetId]/index": "AssetEditJourneyDetailFixture",
     "settings/inventory/tags/[resourceId]": "CustomizationEditorFixture",
+    "settings/sharing": "InventorySharingFixture",
     "expiration": "BrowseFilterJourneyExpiration",
 }.items():
     target = routes / "audit-tabs/(home,search)" / f"{route}.tsx"

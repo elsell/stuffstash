@@ -122,6 +122,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/native-audit"
           audit_test_args=()
           hierarchy_test_args=(
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingFooterClearsPersistentTabsAndVoiceAccessory'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailFooterClearsPersistentTabsAndVoiceAccessory'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailGalleryKeepsLaterPhotoInReadableColumn'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'

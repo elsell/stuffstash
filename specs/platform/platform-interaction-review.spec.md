@@ -1365,3 +1365,13 @@ asset name; separate groups use one spacing interval, avoiding stacked section
 padding between the contents commands and empty state. Native Android observation
 shows composed commands are reliable in the list header; keep the first section
 and its controls there while virtualizing subsequent content rows.
+
+### Sharing participates in persistent-navigation clearance review
+
+Verify the ordinary Sharing destination inside the production tab stacks, with
+its actual voice accessory and a populated invitation list long enough to scroll.
+Its final invitation-link explanation must scroll
+fully into the unobstructed content area. This is a representative ScrollView
+consumer of the same layout contract as detail's FlatList. Use delivered tab,
+accessory and header bounds on iPhone and iPad rather than fixed bottom padding.
+An isolated sharing fixture without tabs cannot establish this acceptance.

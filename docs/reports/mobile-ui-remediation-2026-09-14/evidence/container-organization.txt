@@ -19,3 +19,31 @@ lack automatic content insets. Do not label clipping confirmed without native
 entry/bottom/keyboard checks. Map intentionally uses a separate layout owner and
 must not receive a blanket automatic inset change. Home/Browse/Notifications already
 have automatic ownership; shared-detail correction is in frozen PR181.
+
+Follow-up evidence, frozen iPad run35987800972 / job107594471001:
+14/16 tests passed. Detail commands failed because Move items here measured32pt
+(minimum44); this is the control changed to bounded secondary in PR182. Do not
+call PR181 fully accepted or rerun that unchanged control to obtain a pass.
+Add destination failed before interaction: Asset name was absent during the10s
+entry observation, but final screenshot and accessibility tree show it at
+(24,340,696,34), correctly labeled and visibly unobstructed. This proves neither
+successful destination recovery nor a persistent missing-field defect. Keep the
+workflow unverified; next bounded observation must distinguish delayed entry/
+accessibility readiness from a repeatable user-visible loading issue. Do not
+change the field layout or silently increase timeout on this evidence.
+Artifact10805267268; selected final capture downloaded by ZIP range, no xcresult.
+
+Inset ownership trace: InventoryAssetsRouteScreen and InventorySharingScreen are
+ordinary destinations under PrimaryTabStack and NativeTabs.BottomAccessory.
+iOS26 VoiceTabContent returns children directly, so those scroll consumers must
+cooperate with system insets. InventorySharingGuard error ScrollView is another
+consumer to include. InventoryInvitationScreen is outside tabs; inspect root
+presentation before treating it as the same bottom-tab defect. Missing automatic
+props remain source risks, not runtime-confirmed clipping.
+
+Reviewed named frozen iPad captures: detail-context-place-entry now shows Garage
+identity fully below the navigation header (previous clipping corrected).
+connected-browse-filter-detail-return preserves the scrolled results and aligns
+neighboring titles. These isolated fixtures omit persistent tabs/accessory and
+therefore cannot accept the user's bottom-clearance report. PR182's real-tab
+footer test remains the relevant gate.

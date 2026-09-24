@@ -2878,6 +2878,19 @@ final class FixtureAuditTests: XCTestCase {
   func testDetailFooterClearsPersistentTabsAndVoiceAccessory() {
     guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
     let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Updated '")).firstMatch
+    verifyFooterClearsPersistentChrome(footer)
+    capture("detail-footer-above-native-tabs")
+  }
+
+  func testSharingFooterClearsPersistentTabsAndVoiceAccessory() {
+    guard openFixtureURL("audit-tabs/(home)/settings/sharing?access=populated") else { return }
+    let footer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Invitation links are shown only'")).firstMatch
+    XCTAssertTrue(footer.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(footer)
+    capture("sharing-footer-above-native-tabs")
+  }
+
+  private func verifyFooterClearsPersistentChrome(_ footer: XCUIElement) {
     let voice = app.buttons["Start voice interaction"].firstMatch
     let tabs = app.tabBars.firstMatch
     XCTAssertTrue(voice.waitForExistence(timeout: 10))
@@ -2896,8 +2909,7 @@ final class FixtureAuditTests: XCTestCase {
         footer.frame.maxY <= lower && footer.frame.minY >= upper
     }
     for _ in 0..<8 where !clearOfChrome() { scroll.swipeUp() }
-    XCTAssertTrue(clearOfChrome(), "Final detail content must scroll above both persistent bottom surfaces")
-    capture("detail-footer-above-native-tabs")
+    XCTAssertTrue(clearOfChrome(), "Final content must clear persistent navigation surfaces")
   }
 
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
