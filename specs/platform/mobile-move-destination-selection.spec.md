@@ -182,3 +182,28 @@ Move Here keyboard cleanup observes either native dismissal after clearing or a
 hittable dismissal command, then still requires the keyboard to disappear. The
 iPad failure in run35911803207 captured no keyboard immediately after an earlier
 existence snapshot; this is a transition race, not evidence of a missing command.
+
+## Completion action prominence
+
+Normal-text phone capture35920806955 shows New destination and Move sharing one
+plain toolbar group. Their roles differ: creation is optional; Move completes the
+task. Keep the existing native list, visible search and explicit selection model.
+Give Move, Move here and Create destination the platform's primary completion
+emphasis, while New destination and Cancel remain ordinary actions. No mutation
+occurs merely from selection, and disabled/pending/retired handlers remain guarded.
+
+The shared header action model accepts an optional primary emphasis. Only these
+Move consumers opt in; do not infer emphasis from the save icon or change Home,
+Browse, Add and Settings automatically. iOS maps it to UIBarButtonItem prominent
+and separate native background ownership. Android retains its existing native
+toolbar action presentation. Reuse the pinned native-stack adapter without a
+custom button or dependency change.
+
+Apple describes prominent bar items as appropriate for completing a task and
+visually separate from other bar items:
+https://developer.apple.com/documentation/uikit/uibarbuttonitem/style-swift.enum/prominent
+
+Verify enabled/disabled Move, New destination, creation Cancel/Create and rejected
+command retry on iPhone/iPad. Source adapter checks do not establish native color,
+separation or hierarchy. Include the change in a subsequent reviewed batch; keep
+the already-running integrated follow-up source frozen.

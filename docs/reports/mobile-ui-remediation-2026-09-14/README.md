@@ -55,6 +55,14 @@ This does not block the selection release or expand the frozen follow-up.
 
 ## Separate unresolved decisions
 
+- **Move completion emphasis:** current phone35920806955 captures confirm visible
+  stacked search, grouped subject/choices and consistent icon/label alignment.
+  New destination and Move still share equal-weight plain toolbar presentation.
+  The isolated `codex/mobile-move-emphasis` candidate opts Move, Move here and
+  Create destination into native prominent styling with separate background
+  ownership. Thirteen focused tests, TypeScript and critic review pass. Native
+  visual verification remains open; do not fold this candidate into the already
+  running integrated follow-up or call it released.
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
   remains draft at aa9fbd9e. The explicit system color-picker candidate passes
   ordinary opening on both devices, but phone coordinate activation and timely Add

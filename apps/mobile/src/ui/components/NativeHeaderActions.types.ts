@@ -4,6 +4,7 @@ export type HeaderOptions = NonFunction<NonNullable<StackScreenProps['options']>
 export type NativeHeaderAction = {
   readonly kind: 'notifications' | 'add' | 'account' | 'close' | 'back' | 'save' | 'settings' | 'mark-read' | 'compose';
   readonly label: string;
+  readonly emphasis?: 'primary';
   readonly disabled?: boolean;
   readonly badgeCount?: number;
   readonly onPress: () => void;
