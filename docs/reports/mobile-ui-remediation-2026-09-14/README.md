@@ -60,8 +60,11 @@ Native acceptance remains open; entry/return bounds also reject doubled spacing.
 This does not block the selection release or expand the frozen follow-up.
 PR176 stacks Settings readback and clearer action grouping with native primary
 emphasis for Move completion. Its1,993 integrated tests and source checks pass;
-run35945430640 is checking its six workflows; the phone job has failed and
-the iPad job is still running. Do not rerun that candidate without a diagnosis. The
+run35945430640 passes the phone edited-row return geometry, then persists
+Campin after the native field reported Camping. A retained Save event reproduces
+stale submission in the mounted editor. The scoped committed-action guard passes
+59 Settings tests, TypeScript and structural checks; exact native persistence
+acceptance remains open. Keep provider experiments closed. The
 failed Settings candidate is superseded, not rerun. Check Settings search/Add as
 well as collection readback and the four Move workflows.
 The user rejected Move visual acceptance. The next layout replaces its static

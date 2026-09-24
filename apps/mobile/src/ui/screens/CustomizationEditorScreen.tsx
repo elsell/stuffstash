@@ -1,3 +1,4 @@
+import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppSwitchField } from '../components/AppSwitchField';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
@@ -152,6 +153,9 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   const valid = customizationEditorIsValid(editorDraft, kind, mode);
   const editorMutable = canMutate && lifecycle === 'active';
   const draftEditable = editorMutable && !saving && !lifecycleBusy;
+  const saveActions = useFocusedSheetActions({ primaryLabel: 'Save', secondaryLabel: '',
+    disabled: !draftEditable || completed || !valid || (mode === 'edit' && !dirty),
+    onApply: () => void save(), onBack: onDone });
 
   useEffect(() => {
     const keyBlocksCreate = kind !== 'tag' && mode === 'create' && nameTouched && validation.nameValid && !validation.keyValid;
@@ -271,7 +275,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     {kind !== 'tag' ? <SettingsSection title="Details"><Pressable accessibilityRole="button" onPress={() => setAdvanced((value) => !value)} style={styles.disclosure}><Text style={styles.disclosureText}>{advanced ? 'Hide technical details' : 'Show technical details'}</Text><ChevronDown color={colors.textMuted} size={18} style={{ transform: [{ rotate: advanced ? '180deg' : '0deg' }] }} /></Pressable>{advanced ? <>{mode === 'create' ? <CustomizationLabeledInput editable={draftEditable} error={!validation.keyValid ? validation.keyMessage : undefined} inputRef={keyInputRef} label="Stable key" onChangeText={(value) => { const next = withManualEditorKey(editorDraft, value); setKey(next.key); setKeyManuallyEdited(next.keyManuallyEdited); }} value={key} /> : <><SettingsSeparator /><SettingsValueRow label="Key" value={key} /></>}<SettingsSeparator /><SettingsValueRow label="Scope" value={scope === 'tenant' || effectiveInherited ? context.tenantName : context.inventoryName} /></> : null}</SettingsSection> : null}
     {effectiveInherited ? <Text style={styles.readOnly}>{`Inherited from ${context.tenantName}. Manage it from household settings.`}</Text> : null}
     {effectiveInherited && context.tenantPermissions.includes('configure') && onManageInherited ? <SettingsSection><NativeCommandButton label={`Manage in ${context.tenantName}`} onPress={onManageInherited} /></SettingsSection> : null}
-    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? 'Saving…' : 'Save'} disabled={!valid || saving || lifecycleBusy || (mode === 'edit' && !dirty)} onPress={() => void save()} /></View> : null}
+    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? 'Saving…' : 'Save'} disabled={saveActions.disabled} onPress={saveActions.onApply} /></View> : null}
     {mode === 'edit' && canMutate ? <CustomizationLifecycleSection busy={lifecycleBusy || saving} kind={kind} lifecycle={lifecycle} onAction={lifecycleAction} /> : null}
     <SettingsRefreshNotice visible={reads.resource.isRefetchError || reads.types.isRefetchError} onRetry={reads.refreshDefinitions} />
     {dirty ? <Text style={styles.unsaved}>Unsaved changes</Text> : null}
