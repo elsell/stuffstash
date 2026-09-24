@@ -2839,10 +2839,9 @@ final class FixtureAuditTests: XCTestCase {
 
   private func tabCandidates(_ name: String) -> XCUIElementQuery {
     if UIDevice.current.userInterfaceIdiom == .pad {
-      let strips = app.otherElements.containing(.button, identifier: "Home")
-        .containing(.button, identifier: "Browse").allElementsBoundByIndex
-      let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
-      return strip?.buttons.matching(identifier: name) ?? app.buttons.matching(identifier: name)
+      // The fixture gives these labels only to native tabs. Ancestor indices can
+      // become stale as UIKit replaces its iPad tab/navigation containers.
+      return app.buttons.matching(identifier: name)
     }
     return app.tabBars.firstMatch.buttons.matching(identifier: name)
   }

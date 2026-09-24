@@ -1,25 +1,19 @@
-Current release diagnosis, run35965781821 at995c0859:
-- iPad persistent-tab workflow passes, including the final both-tabs hit-point gate.
-- iPhone reaches the exact draft return but screenshot acquisition times out at
-  line795 before the final gate. This is incomplete evidence, not a new touch bug.
-- Settings save/reopen fails on both devices at3375: Back opens Discard changes
-  despite no edit after reopening. Screenshots confirm the false dirty state.
+Current diagnosis:35970467285 at5040afd4 passes both iPhone workflows and iPad
+Settings creation/save/reopen. The stable-key correction is natively accepted.
+iPad tab touch roundtrip and exact Tools emergency draft return pass; the final
+both-tabs isHittable waiter fails. Capture shows both native tabs clearly present.
 
-Cause: native Name initialization republishes the loaded name. withEditorName
-regenerated the hidden stable key even for an existing record whose display name
-had changed. Correction preserves the saved key in edit mode; creation retains
-automatic suggestions and manual-key ownership. A rendered regression failed on
-unchanged-name replay before the correction and passes afterward, including a real
-rename, reverting to the saved name, and clean Back.64 focused checks, TypeScript,
-structural checks and critic review pass. Native exact create/readback and tab gates
-remain required; the previous run stops before New Tag typing.
+New discriminating evidence: near t288 the XCTest log repeatedly retries Other
+ancestor resolution, followed by Find Browse retries. The helper selected a minimum
+height container from ancestor matches bound by index. Direct button lookup avoids
+that transient ancestor chain; Home/Browse labels identify only native tabs in this
+isolated fixture. Keep hittable duplicate selection, actual touch/selected state,
+exact draft and the final both-tabs assertion unchanged. One focused tab-return
+run is required; a further failure must not trigger unchanged locator experiments.
+No production tab layout change is justified by these observations.
 
-Artifacts: phone10795886346, iPad10794884384. Reviewed phone false-discard capture
-/tmp/move-layout-review/settings-name-phone-testSettingsSaveReadsBackFromTheSameCollection-final.png.
-Logs: /tmp/settings-name-{phone,ipad}.log.gz.
-
-Earlier35964187818 atf5d7961b: phone passed; iPad touch roundtrip preserved the exact
-draft but the final isHittable assertion failed. The new iPad result supersedes it.
-isHittable measures computed hit points, not complete VoiceOver acceptance:
-https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable
-Do not repeat coordinate-selector or header-overlap experiments from that old result.
+Phone artifact10797211012, iPad10796169375; log /tmp/stable-key-ipad.log.gz.
+Reviewed /tmp/move-layout-review/stable-key-ipad-testPersistentTabsRetainDestinationsDraftsAndModalReturn-final.png.
+Earlier995c0859 iPad tab pass and f5d7961b phone tab pass do not supersede this
+current failure. isHittable describes a computed hit point, not complete VoiceOver
+acceptance: https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable

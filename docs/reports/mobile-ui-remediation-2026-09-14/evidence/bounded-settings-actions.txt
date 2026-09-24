@@ -1,9 +1,13 @@
 Current acceptance: bounded Settings filter actions pass on iPhone, iPad and
-Android at normal text. Android reminder recovery and the divider correction also
-pass. iOS reminder composition failed35967919825 at a0874586:62pt native button
-hit frames exceeded48pt hosts and overlapped.1661a240 reduces label minimums
-to32pt, retaining48pt outer commands. Four adapter checks, TypeScript, structural
-checks and critic review pass; native35971374386 remains the acceptance gate. This is follow-up PR179, separate from PR178.
+Android at normal text. Reminder recovery and corrected command sizing pass on
+both iOS devices in35971374386 at1661a240 and on Android. Reviewed paired buttons
+and long-label captures: distinct bounded controls, aligned divider, readable text.
+Artifacts phone10797265964 and iPad10796783503; captures locally in
+/tmp/move-layout-review/commands-fixed-{phone,ipad}-*.png.
+The prior35967919825 overlap is superseded: label minimum32 retains outer48-point
+commands while allowing native padding. Four adapter checks, TypeScript,
+structural checks and critic review passed. This is follow-up PR179, separate
+from PR178's unresolved iPad tab locator gate.
 
 SettingsActionRow uses the shared bounded secondary command adapter, retaining
 visible labels, descriptive accessible names, disabled guards and destructive role.
@@ -35,7 +39,7 @@ That screenshot exposed a56pt icon gutter on icon-free dividers. Correction uses
 16pt by default and preserves the derived icon inset in Settings root/scoped icon
 navigation groups. Reviewed /tmp/settings-divider-after.png against the original;
 the recovery replay still passes. Other separator consumers have no leading icon.
-Stacked rows use the ordinary inset. iOS spacing acceptance remains pending.
+Stacked rows use the ordinary inset. The current iOS captures confirm spacing.
 
 Validation:2005 mobile tests, TypeScript and structural checks passed for bounded
 commands; after the divider correction,73 relevant Settings tests, TypeScript and

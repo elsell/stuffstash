@@ -17,19 +17,18 @@ Current release acceptance below supersedes historical pending statements.
 `codex/mobile-native-patterns-batch` at5040afd4 contains persistent Home/Browse
 stacks for41 ordinary routes, bounded native commands, readable detail layout,
 expiration search retention and Settings name/key corrections. Add/Edit/Move/Filters
-remain modal tasks. Required CI35970458935 passed. The remaining release gate is
-native settings-tab-return35970467285 on iPhone and iPad, including exact creation,
-save/reopen and tab-return behavior. Do not infer acceptance of all41 routes.
+remain modal tasks. Required CI35970458935 passed. Run35970467285 now passes
+Settings creation/save/reopen on both devices and the complete iPhone tab workflow.
+iPad touch switching and exact draft return pass, but the final hit-point waiter
+fails while its ancestor locator repeatedly retries resolution. Test-only579fb767
+uses direct native tab labels and preserves every acceptance assertion. Focused
+35973624529 and CI35973630755 remain the release gates. Do not repeat the old
+ancestor-query experiment or infer acceptance of all41 routes.
 
 The integrated baseline35958732480 passed Add and expiration on both devices;
-follow-up35961716802 closed contents Retry on both. Native Name uses a draft field
-to avoid keystroke reordering. Subsequent35965781821 passed iPad tab return and
-exposed false dirty state after reopening a renamed setting on both devices.
-5040afd4 preserves existing stable keys during name initialization/editing; a
-rendered regression reproduced the failure, then64 focused checks, TypeScript,
-structural checks and review passed. The iPhone tab check in35965781821 stopped
-on screenshot acquisition after exact draft return, not a demonstrated touch bug.
-The current native gate must close both remaining checks before release.
+follow-up35961716802 closed contents Retry on both. Native Name avoids keystroke
+reordering, and5040afd4 preserves existing stable keys on name initialization/edit.
+Their exact create/save/reopen verification now passes on both iOS devices.
 
 Android connected detail/Move/tab return, Settings draft retention and expiration
 query/filter return passed. Reviewed iOS command-width captures show readable
@@ -49,13 +48,13 @@ six workflows on each iOS device; reviewed date, overview and last-tag captures
 show clear commands and footer clearance. Android ordinary/320dp filter reset and
 reminder Retry/Discard passed. Icon-free separators now use the normal row inset.
 
-The paired reminder test35967919825 then exposed iOS button hit-area overlap:
-62-point styled buttons occupied48-point hosts.1661a240 reduces label minimums
-while retaining48-point outer commands. Four adapter checks, TypeScript,
-structural checks and critic review pass. Native35971374386 must establish separate
-hit areas, successful Retry/Discard and long-label activation before acceptance.
-See [command evidence](evidence/bounded-settings-actions.txt). This follow-up does
-not expand PR178's release gates. Its Settings name/key corrections are integrated.
+The paired reminder test35967919825 exposed overlapping iOS command hit areas.
+1661a240 corrects sizing; native35971374386 now passes Retry, Discard, separate hit
+frames and long-label activation on both devices. Captures reviewed for spacing
+and legibility: [command evidence](evidence/bounded-settings-actions.txt).
+Integrated source passes2,006 mobile tests, TypeScript, structural checks and
+review. The branch includes PR178's product fixes and current test-only locator
+correction. Its release remains dependent on the base branch's native tab gate.
 
 ## Separate unresolved decisions
 
