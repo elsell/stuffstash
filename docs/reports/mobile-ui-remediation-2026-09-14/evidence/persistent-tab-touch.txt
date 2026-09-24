@@ -1,19 +1,25 @@
-Current diagnosis: native iPad tab touch works after Settings draft return, but
-XCTest cannot compute a hit point for both tabs. Do not describe this result alone
-as a proven VoiceOver failure. Apple defines isHittable as hit-point computation:
+Current release diagnosis, run35965781821 at995c0859:
+- iPad persistent-tab workflow passes, including the final both-tabs hit-point gate.
+- iPhone reaches the exact draft return but screenshot acquisition times out at
+  line795 before the final gate. This is incomplete evidence, not a new touch bug.
+- Settings save/reopen fails on both devices at3375: Back opens Discard changes
+  despite no edit after reopening. Screenshots confirm the false dirty state.
+
+Cause: native Name initialization republishes the loaded name. withEditorName
+regenerated the hidden stable key even for an existing record whose display name
+had changed. Correction preserves the saved key in edit mode; creation retains
+automatic suggestions and manual-key ownership. A rendered regression failed on
+unchanged-name replay before the correction and passes afterward, including a real
+rename, reverting to the saved name, and clean Back.64 focused checks, TypeScript,
+structural checks and critic review pass. Native exact create/readback and tab gates
+remain required; the previous run stops before New Tag typing.
+
+Artifacts: phone10795886346, iPad10794884384. Reviewed phone false-discard capture
+/tmp/move-layout-review/settings-name-phone-testSettingsSaveReadsBackFromTheSameCollection-final.png.
+Logs: /tmp/settings-name-{phone,ipad}.log.gz.
+
+Earlier35964187818 atf5d7961b: phone passed; iPad touch roundtrip preserved the exact
+draft but the final isHittable assertion failed. The new iPad result supersedes it.
+isHittable measures computed hit points, not complete VoiceOver acceptance:
 https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable
-
-Run 35964187818, source f5d7961b: iPhone passed its complete workflow. iPad passed
-both coordinate-touch transitions, selected-tab assertions, visible destination
-checks, hidden previous destination checks and exact Tools emergency draft readback.
-Its only failure is line 2904, the final both-tabs isHittable expectation.
-This rules out the proposed general touch interception after Settings return.
-The final screenshot still shows native tabs overlapping the navigation bar's
-reported frame; that observation does not establish the cause of hit-point failure.
-
-Artifacts: iPad 10794283987; iPhone 10793979744. Final captures extracted under
-/tmp/move-layout-review/tab-touch-{ipad,phone}-*. iPad final screenshot reviewed.
-Job logs: /tmp/native-tab-{ipad,phone}-touch.log. No production change or weakened
-acceptance introduced in response. The already queued settings-tab-return run
-35965781821 at 995c0859 includes the Name native-draft correction and repeats this
-exact tab gate. Inspect that result before another diagnostic or layout experiment.
+Do not repeat coordinate-selector or header-overlap experiments from that old result.

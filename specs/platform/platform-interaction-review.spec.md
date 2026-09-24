@@ -1179,3 +1179,11 @@ Multiline descriptions and the explicitly focused technical key remain unchanged
 The native failing workflow is the regression reproduction; source tests cannot
 establish correct iOS character order. Rerun Settings readback and persistent-tab
 draft return after this correction.
+
+Editing an existing customization definition must preserve its saved stable key
+when the native Name field reports either its initial value or a later rename.
+Automatic key suggestions apply only during creation until manually overridden.
+Replaying an unchanged loaded name must leave the editor clean; renaming and then
+restoring the saved name must also restore clean state. Back must not ask to discard
+changes solely because a native field appeared. Verify this with a saved display
+name that differs from its original key, then retain the native save/reopen gate.

@@ -543,6 +543,20 @@ describe('rendered mobile customization production states', () => {
     }
   });
 
+  it('keeps a renamed saved tag clean when native name initialization is replayed', async () => {
+    const record = tag('tools', 'Tools emergency supplies');
+    const screen = await renderEditor({ mode: 'edit', resourceId: 'tools', query: collectionQuery({ tags: [record] }) });
+    await screen.changeText(screen.byLabel('Name'), record.displayName);
+    expect(screen.allText()).not.toContain('Unsaved changes');
+    expect(screen.byLabel('Save')?.props.disabled).toBe(true);
+    await screen.changeText(screen.byLabel('Name'), 'Changed name');
+    expect(screen.allText()).toContain('Unsaved changes');
+    await screen.changeText(screen.byLabel('Name'), record.displayName);
+    expect(screen.allText()).not.toContain('Unsaved changes');
+    attemptNavigation({ type: 'RETURN_COLLECTION' });
+    expect(alertCount()).toBe(0);
+  });
+
   it('keeps dirty navigation in place, disables gestures, and dispatches discard exactly once', async () => {
     const action = { type: 'RETURN_COLLECTION' };
     const screen = await renderEditor({ onDone: () => attemptNavigation(action) });
