@@ -120,6 +120,12 @@ It contains no production renderer change and does not justify a TestFlight buil
 
 ## Separate unresolved decisions
 
+Normal-size decision boundary: no unchanged color/input diagnostic runs are
+queued. M51 remains unreleased; one physical first-tap observation on132.1 has
+been requested to distinguish device behavior from the inconsistent simulator
+evidence. iPad Add readiness remains unverified. These limits do not reopen the
+released inventory clearance fix or establish whole-app acceptance.
+
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
   keyboard disappearance; final capture/tree shows it dismissed and address intact.
   iPad passed. Timing remains unverified; no input rewrite or unchanged rerun.
