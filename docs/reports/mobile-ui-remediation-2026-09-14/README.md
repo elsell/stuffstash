@@ -104,6 +104,17 @@ shows the same screenshot discrepancy. Withdraw the renderer change; retain
 full-screen observation and document the evidence limitation. PR190 now contains
 verification/process changes only. [Diagnosis](evidence/voice-symbol-navigation.txt).
 
+Retained inventory collection: baseline36045543667 confirmed the iPhone final tag
+behind persistent controls. Automatic insets fix it: candidatebe7d0f9a passes
+unchanged native36048916536 on phone/iPad. Reviewed full-screen entry/final captures
+confirm heading and final-tag clearance; source checks and critic review pass.
+PR191 holds the correction for release. Root invitation acceptance is outside tabs
+and is not implicated by this finding.
+[Bounded diagnosis](evidence/inventory-collection-clearance.txt).
+
+PR190 verification/policy merged296f7d6a after CI36045074264 passed1398cdad.
+It contains no production renderer change and does not justify a TestFlight build.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting

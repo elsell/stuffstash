@@ -1,0 +1,13 @@
+Notification list — ordinary hierarchy review, no new correction justified
+Reviewed full-screen long-row and unread-empty evidence from35980094051, sourcec7c44b45, phone artifact10805146387 and
+ iPad10806201894. Inbox, segmented control and read-state adapter have no source
+changes between that revision and30119599. The phone wraps the long title;
+read-state command remains separate and location breadcrumbs retain a coherent
+row. Tablet list/action alignment is readable. All/Unread is an appropriate peer
+selection; settings and mark-all remain contextual header commands. Do not replace
+these patterns merely to make another visual change.
+The fixture checks read/unread, mark-all, asset/location navigation return and
+empty unread results. Its destination is a placeholder outside production tabs:
+these captures do not certify tab/footer clearance or real destination integration.
+This gap remains separate from the verified inventory-list defect. Physical push
+notification delivery is outside this visual evidence.

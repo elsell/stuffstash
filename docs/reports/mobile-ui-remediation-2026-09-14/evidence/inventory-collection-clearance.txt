@@ -1,0 +1,17 @@
+Inventory collection clearance — confirmed iPhone defect; candidate verified on iPhone/iPad
+Baseline36045543667 at9afc3fd7: iPhone job107788070230 fails final-content
+clearance; iPad job107788070375 passes. Reviewed full-screen phone final capture
+shows item24/tag behind voice/tabs after eight upward swipes. Final tag y789.7–821.7;
+voice button y732–786. Entry heading clears the header. iPad final tag is visible.
+Phone artifact10829347957; iPad10828489131. Relevant full screenshots retained here.
+Fix: request automatic system content insets on this FlatList, preserving visual
+padding. No guessed tab height and no shared Map change. The unchanged native
+case provides failing baseline and candidate acceptance.15 fixture-preparation
+checks, TypeScript and mobile structural checks pass. Critic finds no blocker.
+Invitation acceptance is a root-stack route outside tabs, with an ordinary opaque
+header: its missing inset prop does not establish this same tab-overlap defect.
+
+Candidatebe7d0f9a:36048916536 succeeds on phone107799272244 and iPad107799272119.
+Full-screen entry/final captures reviewed: heading remains clear, final tag is
+visible above voice/tabs. Phone artifact10830966159; iPad10830866487. No product
+change after this candidate. Final-head CI remains the merge gate.

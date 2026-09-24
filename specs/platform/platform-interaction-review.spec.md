@@ -1462,3 +1462,24 @@ screen, resolve the observation discrepancy before claiming a rendering defect.
 Compare the candidate with the same full-screen baseline state. Preserve useful
 counterevidence and withdraw unsupported changes rather than treating a different
 renderer or passing test as proof of improvement.
+
+## Remaining inventory collection clearance
+
+The retained `/assets` collection route must keep its heading and final card
+commands reachable inside the production tab stack and voice accessory. Home now
+uses Browse, but the retained route still has its own scroll owner. Its missing
+automatic-inset prop is a source risk, not proof of clipping. Use a controlled
+populated repository and the real InventoryAssetsRouteScreen in the production
+tab layout. Capture full-screen entry and final-tag positions before asserting
+header and bottom-control clearance. Verify the final tag is hittable as well as
+geometrically clear. Do not infer overflow from content behind floating chrome
+mid-scroll. If the final content is reachable, retain existing ownership; if it
+is not, correct this scroll consumer and repeat the same check. Do not change Map
+or other consumers that own their own insets based on this observation.
+
+Baseline36045543667 at9afc3fd7 confirms the iPhone final tag remains behind
+the persistent bottom controls after scrolling; the iPad baseline passes. The
+collection FlatList must request automatic system content-inset adjustment, as
+the other ordinary tab-stack lists do, preserving its existing visual padding.
+Do not add device-specific bottom heights. Repeat the unchanged native entry and
+final-tag acceptance on iPhone and iPad before claiming this correction verified.
