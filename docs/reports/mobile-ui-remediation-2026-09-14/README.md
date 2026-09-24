@@ -12,7 +12,11 @@ changelog job107497620643 verified exact readback after Apple processing.
 Earlier release evidence remains in the findings ledger and linked release records.
 Current release acceptance below supersedes historical pending statements.
 
-## Frozen release — PR178
+## Merged release batch — PR178/179
+
+Both PRs are merged into main262f27f6. Integrated CI35976251247 passed;
+release35976929170 is pending terminal verification. The scoped evidence below
+is accepted for this batch; unrelated findings remain open.
 
 `codex/mobile-native-patterns-batch` at5040afd4 contains persistent Home/Browse
 stacks for41 ordinary routes, bounded native commands, readable detail layout,
@@ -23,7 +27,7 @@ iPad touch switching and exact draft return pass, but the final hit-point waiter
 fails while its ancestor locator repeatedly retries resolution. Test-only579fb767
 uses direct native tab labels and preserves every acceptance assertion. Focused
 35973624529 now passes both devices, with final captures reviewed. CI35973630755
-also passes. The verified follow-up will join this batch before final integrated CI. Do not repeat the old
+also passes. The follow-up is merged and final integrated CI passed. Do not repeat the old
 ancestor-query experiment or infer acceptance of all41 routes.
 
 The integrated baseline35958732480 passed Add and expiration on both devices;
@@ -55,8 +59,16 @@ frames and long-label activation on both devices. Captures reviewed for spacing
 and legibility: [command evidence](evidence/bounded-settings-actions.txt).
 Integrated source passes2,006 mobile tests, TypeScript, structural checks and
 review. The branch includes PR178's product fixes and current test-only locator
-correction. Its scoped native gates and the base tab gate now pass; final integrated CI and
-TestFlight delivery remain before release completion.
+correction. Its scoped native gates and the base tab gate now pass; final integrated CI passed;
+TestFlight delivery remains unverified.
+
+## Current follow-up
+
+Android live appearance still loses native Browse controls. A bounded lifecycle
+trace excludes native screen recreation in the reproduced Map sequence. A separate
+mounted regression proves query-adapter replacement incorrectly resets Browse
+state; its correction passes12 behavior tests and TypeScript. Android native replay now retains the query through dark/light changes, continued
+typing and clear. Missing List/Map and poor search contrast remain unaccepted. [Single diagnosis](evidence/android-live-appearance-header.txt).
 
 ## Separate unresolved decisions
 

@@ -1261,3 +1261,33 @@ remove the assertion. One focused tab-return run distinguishes locator resolutio
 from an outstanding native hit-point failure; if it fails, retain that failure
 without repeating this locator experiment. Settings readback is already accepted
 at5040afd4 and need not be rerun for this test-only change.
+
+### Android appearance lifecycle observation
+
+Before another appearance correction, record whether the native screen/header is
+recreated or its existing toolbar replaces/closes search during a light/dark switch.
+Use only the marked disposable Android fixture archive and the pinned installed
+react-native-screens sources. A runner-only recorder may emit at most256 structured
+native diagnostic events: event kind, object identity, search-view identity and
+query length, never query contents. Observe fragment creation/start/stop, header
+attach/detach/update, menu rebuild, search open/close/focus and text changes. This
+recorder is test instrumentation, must never enter production dependencies, and
+source backups must permit restoration. Refuse Git checkouts, ambiguous dependency
+roots, mismatched source hashes and existing instrumentation before any write.
+
+One replay compares the same open synthetic Camping query before and after a live
+appearance change. A new fragment identity directs the fix toward remount ownership;
+stable identities plus menu/close events direct it toward native toolbar lifecycle.
+If neither appears, retain the failure and inspect native rendering ownership rather
+than repeat provider removal, key delivery, palette keys or JS query reseeding.
+No appearance fix is accepted from this observation alone.
+
+### Browse route state owns navigation, not adapter identity
+
+Recreating a query adapter without changing Browse route parameters must not clear
+the current search, filters or selected List/Map view. Route synchronization reacts
+to route values; inventory-scoped query keys continue to isolate inventory results.
+Verify a mounted searched Browse survives equivalent adapter replacement and still
+applies an actual changed route query. This regression test distinguishes a source
+state-reset defect from the remaining native appearance/rendering failure; passing
+it alone does not accept Android live appearance.

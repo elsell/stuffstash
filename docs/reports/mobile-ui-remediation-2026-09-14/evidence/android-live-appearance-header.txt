@@ -25,3 +25,37 @@ from screenshots alone. Future investigation needs native lifecycle event eviden
 that distinguishes screen remount from native search close/replacement before a
 new implementation. This unrelated follow-up does not expand PR178 release gates.
 Rejected candidate preserved locally: /tmp/android-appearance-rejected-candidate.patch.
+
+Native lifecycle observation (2026-09-24, disposable API36 emulator):
+Relevant NativeNavigationSearch and BrowseSurfaceHeader source hashes match main
+262f27f6. Instrumented pinned react-native-screens4.23.0; at most256 events,
+identities/query length only. Both traces remained below the cap.
+
+List → open Camping → dark: query remains visible,29 events.
+Map → dark → light → open Camping → dark: Map label absent after both closed
+appearance transitions; final native search field empty,38 events. Reviewed final
+capture confirms poor dark search contrast and empty field. This is a reproduced
+failure, not acceptance. No fragment/header/search identity replacement, detach,
+stop or search-close event occurred. Query length changes7→0 before the final
+header update/menu rebuild. This rules out native screen remount in this replay;
+it does not prove which caller caused the clear or that menu behavior is innocent.
+Traces: android-header-lifecycle-events.json and
+android-header-map-lifecycle-events.json.
+
+Query ownership correction: source review identifies SearchScreen's route-sync effect depending on locationsQuery and
+searchAssetsQuery identities; BrowseJourneyFixture creates locationsQuery inline.
+A mounted regression proves equivalent adapter replacement resets Camping to
+All items. Removing the two adapter identities from route synchronization fixes
+that regression while actual route changes still apply. All12 Browse behavior
+tests, TypeScript, structural checks and code review pass. Do not repeat provider removal or native menu guards.
+
+Recorder removed and all three original dependency source hashes verified after
+observation. Clean APK rebuild completed in50s and reinstall succeeded; no recorder enters production.
+
+Clean candidate APK87e5ca3c92e1e5f7aa5f73536b7cbef24f6576f3bbc43e86d24fa662469cac4d
+built in41s and installed on API36 emulator. The same Map→dark→light→Camping→dark
+sequence now retains Camping; light return, continued typing Camping gear and clear
+also pass. Reviewed final image confirms the query/result remain, but dark text
+contrast and absent List/Map after appearance changes remain failures. Accept only
+query retention, not overall appearance. Capture /tmp/android-route-ownership-after.png;
+runner /tmp/verify-route-ownership.py. No iOS or physical-device claim.

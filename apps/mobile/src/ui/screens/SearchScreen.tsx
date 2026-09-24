@@ -250,9 +250,7 @@ export function SearchScreen({
     initialLifecycleState,
     initialCheckoutState,
     initialSort,
-    initialTagIds.join('|'),
-    locationsQuery,
-    searchAssetsQuery
+    initialTagIds.join('|')
   ]);
 
   function loadFirstPage(next: { readonly query?: string } = {}): void {

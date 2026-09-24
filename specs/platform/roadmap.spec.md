@@ -1,13 +1,15 @@
 # Roadmap Spec
 
-## Current structural priority: persistent tabs
+## Current structural priority: connected workflow stability
 
-The user requested Home/Browse navigation on ordinary mobile screens. Implement
-shared destination stacks within the native tabs, preserving URLs, independent
-history and drafts; modal tasks may cover the bar. Source route ownership and
-existing guards are checked, but native history, modal return and clearance remain
-acceptance gates. See `mobile-persistent-tabs.spec.md`. Keep the current release
-hold and ongoing Move/detail verification separate from this new candidate.
+Persistent Home/Browse stacks and bounded commands are merged in main262f27f6
+with PR178/179. Scoped native gates and integrated CI35976251247 pass; release
+35976929170 still needs terminal TestFlight/changelog verification. Continue the
+normal-text audit independently. Android live appearance loses Browse controls;
+bounded native traces exclude screen remount in the failing sequence. A separate
+query-adapter identity reset has a failing-then-passing mounted regression and is
+verified for Android query retention through appearance changes. Keep remaining rendering findings open and follow the
+single current summary rather than repeating diagnostic candidates.
 
 ## Purpose
 
@@ -42,7 +44,7 @@ close the effort after only fixing the original ten audit examples.
 The next mobile review follows everyday workflows: Home → Browse List/Map →
 asset → Edit/Move → Filters and back. Prioritize stable screen structure and
 controls, appropriate task patterns, visual coherence, then detailed states.
-The142-surface/24-axis ledger checks omissions; it must not drive work toward easy
+The144-surface/24-axis ledger checks omissions; it must not drive work toward easy
 measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
 interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.

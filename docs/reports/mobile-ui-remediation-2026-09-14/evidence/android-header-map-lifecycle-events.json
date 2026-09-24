@@ -1,0 +1,268 @@
+[
+  {
+    "sequence": 1,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 2,
+    "event": "fragment.create",
+    "owner": 111812929,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 3,
+    "event": "fragment.onStart",
+    "owner": 111812929,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 4,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 5,
+    "event": "header.attach",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 6,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 7,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 8,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 9,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 10,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 11,
+    "event": "search.attach",
+    "owner": 103061027,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 12,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 13,
+    "event": "search.attach",
+    "owner": 103061027,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 14,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 15,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 16,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 17,
+    "event": "search.attach",
+    "owner": 103061027,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 18,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 19,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 20,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 21,
+    "event": "search.attach",
+    "owner": 103061027,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 22,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 23,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 24,
+    "event": "search.focus",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 1
+  },
+  {
+    "sequence": 25,
+    "event": "search.open",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": -1
+  },
+  {
+    "sequence": 26,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 27,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 1
+  },
+  {
+    "sequence": 28,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 2
+  },
+  {
+    "sequence": 29,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 3
+  },
+  {
+    "sequence": 30,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 4
+  },
+  {
+    "sequence": 31,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 5
+  },
+  {
+    "sequence": 32,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 6
+  },
+  {
+    "sequence": 33,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 7
+  },
+  {
+    "sequence": 34,
+    "event": "search.change",
+    "owner": 103061027,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 35,
+    "event": "header.update",
+    "owner": 37522305,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 36,
+    "event": "search.attach",
+    "owner": 103061027,
+    "search": 0,
+    "value": -1
+  },
+  {
+    "sequence": 37,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  },
+  {
+    "sequence": 38,
+    "event": "menu.rebuild",
+    "owner": 111812929,
+    "search": 132596069,
+    "value": 0
+  }
+]
