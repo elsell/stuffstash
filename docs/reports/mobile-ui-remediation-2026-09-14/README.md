@@ -104,6 +104,16 @@ shows the same screenshot discrepancy. Withdraw the renderer change; retain
 full-screen observation and document the evidence limitation. PR190 now contains
 verification/process changes only. [Diagnosis](evidence/voice-symbol-navigation.txt).
 
+Retained inventory collection: baseline9afc3fd7 is dispatched as36045543667 on
+phone/iPad. It uses the real /assets screen in production tabs and checks entry
+heading and final-tag clearance.15 preparation tests, TypeScript, structural
+checks and review pass. No product defect or inset fix is claimed yet. Watcher64767
+writes `/tmp/inventory-clearance-baseline-result.json`.
+[Bounded diagnosis](evidence/inventory-collection-clearance.txt).
+
+PR190 verification/policy head1398cdad awaits CI36045074264; watcher3315 writes
+`/tmp/ui-evidence-policy-ci-result.json`. It contains no production renderer change.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
