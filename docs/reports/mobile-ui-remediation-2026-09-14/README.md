@@ -22,6 +22,18 @@ toolbar actions and stacked iPhone/iPad search; assess those actual captures bef
 repeating the same redesign. The comprehensive audit and physical-device checks
 remain incomplete.
 
+## Persistent tab navigation candidate
+
+The user requested persistent Home/Browse navigation on ordinary screens. The
+`codex/mobile-persistent-tabs` candidate moves41 ordinary routes into shared tab
+stacks, retaining URLs and root modal tasks. The real Expo route expansion test
+reproduced the old ownership and passes for both tabs; source guards and fixture
+preparation remain checked. Run35952669886 passes Home header, detail/Move cancel,
+Browse history and Settings draft retention on both devices. Phone final Settings
+capture lacks visible tabs;35955427236 adds explicit final tab visibility and
+Expiration Filters origin checks. Those acceptance gaps remain open. Surface paths reflect the new ownership;
+older matrix runtime evidence does not establish this navigation structure.
+
 ## Current follow-up diagnosis and decisions
 
 PR174 merged as98d29649 and release35954982498 is publishing; TestFlight processing
@@ -65,7 +77,8 @@ Persistent tabs a1d7d825 is in35951026134. Source checks establish route ownersh
 not native retention. A subsequent source correction carries the originating tab
 through Expiration Filters because root modal segments cannot disambiguate shared
 routes. That correction still needs a native roundtrip. Android, dark appearance,
-long command labels and the wider surface audit remain open. The button/detail and tab candidates remain outside this frozen release batch.
+long command labels and the wider surface audit remain open. The next candidate combines buttons, detail and tabs on98d29649 in
+`codex/mobile-native-patterns-batch`, outside the publishing release.
 
 ## Separate unresolved decisions
 

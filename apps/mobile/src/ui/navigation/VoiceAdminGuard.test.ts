@@ -32,7 +32,7 @@ vi.mock('../theme/AppearanceContext', () => ({
 }));
 
 // @ts-expect-error Vitest's Vite transform provides raw source imports to structural tests.
-const voiceRouteSources = import.meta.glob('../../app/settings/voice/**/*.tsx', {
+const voiceRouteSources = import.meta.glob('../../app/**/settings/voice/**/*.tsx', {
   eager: true,
   import: 'default',
   query: '?raw'

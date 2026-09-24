@@ -1,5 +1,14 @@
 # Roadmap Spec
 
+## Current structural priority: persistent tabs
+
+The user requested Home/Browse navigation on ordinary mobile screens. Implement
+shared destination stacks within the native tabs, preserving URLs, independent
+history and drafts; modal tasks may cover the bar. Source route ownership and
+existing guards are checked, but native history, modal return and clearance remain
+acceptance gates. See `mobile-persistent-tabs.spec.md`. Keep the current release
+hold and ongoing Move/detail verification separate from this new candidate.
+
 ## Purpose
 
 Stuff Stash needs a durable place to record what work should happen next.

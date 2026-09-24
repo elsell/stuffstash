@@ -2390,3 +2390,17 @@ button at the leading edge with remaining space outside the button. Preserve
 wrapping for genuinely long labels without compressing short normal-text labels.
 The existing native recovery workflow must check short Retry button geometry as
 well as successful recovery; review actual phone and tablet captures before acceptance.
+
+
+### Next native-pattern batch
+
+Combine persistent ordinary-screen tabs, M280's coherent detail column and bounded
+command emphasis on the released98d29649 baseline. Keep the corrected Settings
+committed-save, Add search observation and Move contrast. Verify the combined
+source using the existing nine command-emphasis workflows, three tab workflows
+(including Expiration Filters origin and final Settings tab visibility), and the
+connected Settings readback workflow. This is thirteen representative workflows,
+not a whole-app certificate. Reuse the same assertions and review captures;
+individual candidate passes do not establish integration acceptance. Complete
+Android, dark appearance, longer-label and remaining route coverage before claiming
+those axes; don't expand the already publishing release with these candidates.

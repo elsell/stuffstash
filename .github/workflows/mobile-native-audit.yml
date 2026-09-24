@@ -16,6 +16,7 @@ on:
           - text-entry
           - text-entry-no-provider
           - add-draft
+          - persistent-tabs
           - home-header
           - browse-journey
           - browse-filter-journey
@@ -34,6 +35,7 @@ on:
           - workflow-batch
           - hierarchy-followup
           - command-emphasis
+          - native-patterns-release
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -123,21 +125,34 @@ jobs:
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
           )
+          command_emphasis_test_args=("${hierarchy_test_args[@]}"
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInvitationAcceptanceRetainsAccessAfterOpeningFailure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+              )
+          persistent_tab_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
+              )
           case "$AUDIT_TEST_CASE" in
             all) ;;
             command-emphasis)
               test "$AUDIT_SUITE" = fixtures || exit 1
-              audit_test_args=("${hierarchy_test_args[@]}"
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInvitationAcceptanceRetainsAccessAfterOpeningFailure'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
-              ) ;;
+              audit_test_args=("${command_emphasis_test_args[@]}") ;;
             archive-notice)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
               )
               ;;
+            persistent-tabs)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${persistent_tab_test_args[@]}") ;;
+            native-patterns-release)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${command_emphasis_test_args[@]}" "${persistent_tab_test_args[@]}"
+                "-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection") ;;
             move-selection-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
