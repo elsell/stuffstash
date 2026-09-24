@@ -194,7 +194,13 @@ function DashboardHeader({
         <Pressable
           accessibilityLabel="View all recently changed assets"
           accessibilityRole="button"
-          onPress={() => router.push('/assets')}
+          onPress={() => router.navigate({
+            pathname: '/search',
+            params: {
+              surface: 'list', scope: 'all', query: '', tagId: '',
+              lifecycleState: 'active', checkoutState: 'any', sort: 'updated_desc'
+            }
+          })}
           style={styles.sectionActionButton}
         >
           <Text style={styles.sectionAction}>See all</Text>

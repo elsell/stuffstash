@@ -41,6 +41,18 @@ Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6)
 including old diagnostics and enlarged-text cases; it is not a release gate for
 this verified batch. [Terminal decisions](evidence/native-full-359800.txt).
 
+## Next batch in progress
+
+Home Recently changed → See all now targets existing Browse List with explicit
+all-active/recent ordering and clears prior query/tags/kind/availability criteria.
+This removes the everyday entry to the older reduced-function asset grid; its
+legacy route remains available. Home navigation test failed before implementation;
+Home28, route6 and mounted Browse13 tests pass. TypeScript/structural checks pass;
+critic found no source blocker. Native connected acceptance remains required:
+start with refined Browse, return Home, use See all, open an asset and return;
+verify selected tab, criteria, scroll clearance and ordinary tab context retention.
+Include this in the next meaningful batch, not an isolated release.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting

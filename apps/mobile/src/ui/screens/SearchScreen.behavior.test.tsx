@@ -75,6 +75,33 @@ describe('mounted Browse server state', () => {
     } finally { await harness.unmount(); client.clear(); }
   });
 
+  it('replaces earlier refinements with the recent-assets shortcut criteria', async () => {
+    const client = createMobileQueryClient();
+    const harness = new MobileRenderHarness();
+    const requests: unknown[] = [];
+    const props = propsFor({ searchAssetsQuery: new SearchAssetsQuery({ browseAssets: async input => {
+      requests.push(input);
+      return { assets: [asset(input.query || 'Recent bowl')], hasMore: false };
+    } }) });
+    const render = (refined: boolean) => harness.render(
+      <MobileServerStateProvider client={client} scopeId="recent-shortcut"
+        loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+        <SearchScreen {...props} initialQuery={refined ? 'Camping' : ''}
+          initialScope={refined ? 'containers' : 'all'} initialTagIds={refined ? ['outdoors'] : []}
+          initialLifecycleState={refined ? 'archived' : 'active'}
+          initialCheckoutState={refined ? 'checked_out' : 'any'}
+          initialSort={refined ? 'id_asc' : 'updated_desc'} />
+      </MobileServerStateProvider>
+    );
+    try {
+      await render(true); await settle(harness); await settle(harness);
+      await render(false); await settle(harness); await settle(harness);
+      expect(requests.at(-1)).toMatchObject({ query: '', kind: 'all', lifecycleState: 'active',
+        checkoutState: 'any', sort: 'updated_desc', tagIds: [] });
+      expect(harness.byType('FlatList')!.props.data[0].asset.title).toBe('Recent bowl');
+    } finally { await harness.unmount(); client.clear(); }
+  });
+
   it('adapts the grid on resize without replacing results or losing its scroll offset', async () => {
     const client = createMobileQueryClient();
     const harness = new MobileRenderHarness();
