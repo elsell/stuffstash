@@ -1,0 +1,21 @@
+Voice accessory glyph, 2026-09-24
+Current diagnosis: settled iPhone glyph disappearance confirmed; exact native
+cause remains unproven. Observation36035027845 at6cb68543 completed on both devices.
+Artifacts10824713686(phone),10824828895(iPad). Phone list shows Mic; detail after
+2 seconds and detail after tab round trip show a blank blue command. iPad settled
+detail shows Mic. Accessibility/tappability pass does not mean visual pass.
+Baseline command crops retained beside this evidence.
+
+One source pass: lucide SVG is nested in a persistent Pressable; no command/state
+change explains its disappearance. Upstream screens issue3797 and merged PR4196
+report regular/inline accessory visibility conflicts, but these describe whole
+content overlays and do not establish this glyph-only cause. No dependency patch
+or upgrade is justified on that indirect evidence.
+https://github.com/software-mansion/react-native-screens/issues/3797
+https://github.com/software-mansion/react-native-screens/pull/4196
+
+Decision: test existing native SwiftUI Image/SF Symbols for iOS mic/send only,
+inside fixed noninteractive hidden-from-accessibility glyph host. Keep state,
+command label/handler, Android SVG and placement behavior. Native baseline is red
+visual evidence. Existing behavior test and native re-observation must verify
+candidate; reject it if glyph still disappears. No remount/timing workaround.

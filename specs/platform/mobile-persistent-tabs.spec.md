@@ -91,3 +91,18 @@ after a tab round trip. Keep the same ready voice fixture state and actual tab
 accessory. Review the glyph visually; passing navigation assertions only establishes
 that the observation completed. This distinguishes a transitional capture from a
 persistent rendering defect without repeating provider or input experiments.
+
+The settled observation36035027845 confirms iPhone ready-state glyph loss after
+pushing History detail; it remains absent after the tab round trip. iPad's settled
+detail glyph is visible. Keep this distinct from transient iPad captures. Candidate:
+render the iOS accessory's microphone/send glyphs using the existing Expo SwiftUI
+Image adapter and SF Symbols, in a fixed-size noninteractive, accessibility-hidden
+host inside the existing command. Preserve the command's accessible label, ready/
+listening/processing behavior, placement and press handler. Android retains its
+current SVG renderer. No new dependency, route-triggered remount or state reset.
+The native observation is the visual regression evidence; repeat it for the
+candidate, including full-screen and command crops, before visual acceptance.
+Existing start/send/return behavior tests must still pass. Physical audio is not
+certified by these fixtures. If the native symbol still disappears, reject this
+renderer candidate and investigate accessory ownership rather than piling on
+remount or timing workarounds.
