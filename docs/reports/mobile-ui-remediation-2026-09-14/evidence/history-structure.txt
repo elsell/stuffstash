@@ -1,0 +1,19 @@
+History connected audit, candidate5068ae30 / hierarchy correction a07a25c5.
+Normal-text Android API36 Pixel6: real list → detail → expanded technical
+metadata → Back passes. Baseline capture confirms an information hierarchy defect:
+complete multi-field diffs repeat inside every list row, preventing quick scanning.
+Final metadata remains reachable above the voice accessory. iOS header/footer
+risk remains unconfirmed; baseline36027545902 is still owned by watcher58712.
+
+Spec-first candidate uses distinct changed-field names in multi-field summaries,
+two-line list previews and full Before/After detail values. Missing values retain
+None/Changed semantics. Two new assertions failed before implementation;23focused
+query/list/detail tests, TypeScript,13 route-preparation tests, structural checks
+and critic review pass. No product inset change is made without runtime evidence.
+
+Android corrected scoped APK sha256:
+1d84433c3212cf801ae4d0392bd1a5d8e5e1d762c5be74374104185a65e66eb3
+Reviewed list/detail captures show compact summaries and separated value groups;
+expanded metadata and return pass. This APK overlays named sources on the existing
+audit build; it is not an exact-head production build. Server authorization and
+Revert mutations are outside this fixture. iPhone/iPad candidate acceptance pending.
