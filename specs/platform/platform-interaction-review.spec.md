@@ -1415,3 +1415,12 @@ screen's appearance untouched. This small native adapter is needed because React
 Native StatusBar targets the Activity, not this separate dialog. It adds no runtime
 dependency. Verify light/dark entry and restoration on Close, Back, swipe and
 last-photo removal on the native build; source checks alone do not close M251.
+
+Home shortcut run36013639520 stopped in shared setup on both devices: the focused
+production-path fixture correctly opens Home at `/`, while setup expected the
+legacy audit-menu button. The retained phone screenshot/tree confirms real Home
+and both tabs. Match the named workflow's expected entry before exercising it;
+keep all actual shortcut assertions. The legacy `all` arrangement cannot host this
+production-path scenario because its root Search/detail fixtures intercept those
+paths. Exclude this one scenario explicitly from that arrangement and run it via
+`home-collections`; neither selector alone establishes full-app acceptance.

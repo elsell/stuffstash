@@ -6,7 +6,9 @@ final class FixtureAuditTests: XCTestCase {
   override func setUpWithError() throws {
     continueAfterFailure = false
     app.launch()
-    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+    let entry = name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
+      ? "View all recently changed assets" : "Audit Browse filters"
+    XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
     let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
     providerEvidence.name = "keyboard-provider-configuration"
