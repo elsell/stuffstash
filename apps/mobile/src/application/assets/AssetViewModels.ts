@@ -1,6 +1,8 @@
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 
 export type AssetCardViewModel = {
+  /** Undefined means photo presence has not been established. */
+  readonly hasPhoto?: boolean;
   readonly expiration?: AssetSummary['expiration'];
   readonly expirationContext?: AssetSummary['expirationContext'];
   readonly id: string;
@@ -125,6 +127,7 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     parentLocationTrail: parentLocationTrail(asset),
     updatedAtLabel: asset.updatedAtLabel,
     photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
+    hasPhoto: asset.hasPhoto,
     ...(asset.currentCheckout ? { checkedOutLabel: 'Checked out' } : {}),
     ...(tags.length > 0 ? { tags } : {}),
     imagePlaceholderLabel: placeholderForKind(asset.kind),

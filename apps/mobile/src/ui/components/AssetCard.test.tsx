@@ -43,6 +43,24 @@ vi.mock('../theme/AppearanceContext', () => ({
 }));
 
 describe('AssetCard', () => {
+  it('reserves square media only when photos exist or their presence is unknown', () => {
+    const asset = { id: 'plain', title: 'Toolbox', kindLabel: 'Container', description: '',
+      locationTrailLabel: '', parentLocationTrail: [], updatedAtLabel: '',
+      photoLabel: 'Translated status', imagePlaceholderLabel: 'Box', checkedOutLabel: 'Checked out' };
+    const render = (hasPhoto?: boolean, photo?: { uri: string }) => AssetCard({
+      asset: { ...asset, hasPhoto, photo }, onPress: vi.fn(), onParentLocationPress: vi.fn()
+    });
+    const empty = render(false);
+    expect(findFirstByStyleValue(empty, 'aspectRatio', 1)).toBeUndefined();
+    expect(collectText(empty)).toEqual(expect.arrayContaining(['Toolbox', 'Box', 'Checked out']));
+    expect(findFirstByStyleValue(render(true), 'aspectRatio', 1)).toBeDefined();
+    expect(findFirstByStyleValue(render(), 'aspectRatio', 1)).toBeDefined();
+    expect(findFirstByType(render(true, { uri: 'https://example.invalid/photo.jpg' }), 'Image')).toBeDefined();
+    const row = AssetCard({ asset: { ...asset, hasPhoto: false }, density: 'row',
+      onPress: vi.fn(), onParentLocationPress: vi.fn() });
+    expect(findFirstByStyleValue(row, 'height', 64)).toBeDefined();
+  });
+
   it('does not reserve a blank supporting-details row for assets without details', () => {
     const asset = {
       id: 'asset-empty',

@@ -56,6 +56,7 @@ describe('InventoryAssetsQuery', () => {
           parentLocationTrail: [],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
+          hasPhoto: false,
           imagePlaceholderLabel: 'Place'
         },
         {
@@ -68,6 +69,7 @@ describe('InventoryAssetsQuery', () => {
           parentLocationTrail: [{ id: 'asset-garage', title: 'Garage', isImmediateParent: true }],
           updatedAtLabel: 'Updated today',
           photoLabel: 'Needs photo',
+          hasPhoto: false,
           tags: [{ id: 'tag-workshop', label: 'Workshop', color: '#2F80ED' }],
           imagePlaceholderLabel: 'Item'
         }
