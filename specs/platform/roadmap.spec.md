@@ -4,7 +4,7 @@
 
 Persistent Home/Browse stacks and bounded commands are merged in main262f27f6
 with PR178/179. Scoped native gates and integrated CI35976251247 pass; release
-35976929170 still needs terminal TestFlight/changelog verification. Continue the
+35976929170 delivered TestFlight0.24.35(126.1), with changelog readback verified. Continue the
 normal-text audit independently. Android Browse appearance and query retention now pass scoped native replay after
 query ownership and native control appearance corrections. Verify the shared
 route-state change on iOS before batching this follow-up; follow the single current

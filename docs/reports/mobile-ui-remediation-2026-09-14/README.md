@@ -6,61 +6,30 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.34 (125.1)**. Release35954982498 completed;
-changelog job107497620643 verified exact readback after Apple processing.
+Latest verified TestFlight is **0.24.35 (126.1)**. PR178/179 merged into
+main262f27f6; integrated CI35976251247 passed. Release35976929170 completed and
+changelog job107568033135 verified Apple readback. [Release evidence](evidence/release-126.txt).
 
-Earlier release evidence remains in the findings ledger and linked release records.
-Current release acceptance below supersedes historical pending statements.
+This batch delivers persistent Home/Browse stacks for41 ordinary routes, bounded
+native commands, detail hierarchy, compact photo-free Browse rows, expiration
+search retention, Settings name/key corrections and filter/footer fixes. Add,
+Edit, Move and Filters remain modal tasks. Scoped acceptance:
 
-## Merged release batch — PR178/179
+- Persistent tab switching/draft return35973624529 passed phone/iPad after correcting
+  the transient ancestor locator; all hit-test assertions remain. Settings
+  creation/save/reopen35970467285 passed both devices.
+- Browse density35964382077 passed3/3 both; filters35965504659 passed6/6 both.
+- Paired native Settings command hit regions/recovery35971374386 passed both after
+  sizing correction. Captures reviewed for spacing and legibility.
+- Add/expiration35958732480 and contents Retry35961716802 passed both. Android
+  connected Edit/save/reopen and Move/save/reopen passed on the named audit APK.
+- Integrated2,006 mobile tests, TypeScript, structural checks and review passed.
 
-Both PRs are merged into main262f27f6. Integrated CI35976251247 passed;
-release35976929170 is pending terminal verification. The scoped evidence below
-is accepted for this batch; unrelated findings remain open.
-
-`codex/mobile-native-patterns-batch` at5040afd4 contains persistent Home/Browse
-stacks for41 ordinary routes, bounded native commands, readable detail layout,
-expiration search retention and Settings name/key corrections. Add/Edit/Move/Filters
-remain modal tasks. Required CI35970458935 passed. Run35970467285 now passes
-Settings creation/save/reopen on both devices and the complete iPhone tab workflow.
-iPad touch switching and exact draft return pass, but the final hit-point waiter
-fails while its ancestor locator repeatedly retries resolution. Test-only579fb767
-uses direct native tab labels and preserves every acceptance assertion. Focused
-35973624529 now passes both devices, with final captures reviewed. CI35973630755
-also passes. The follow-up is merged and final integrated CI passed. Do not repeat the old
-ancestor-query experiment or infer acceptance of all41 routes.
-
-The integrated baseline35958732480 passed Add and expiration on both devices;
-follow-up35961716802 closed contents Retry on both. Native Name avoids keystroke
-reordering, and5040afd4 preserves existing stable keys on name initialization/edit.
-Their exact create/save/reopen verification now passes on both iOS devices.
-
-Android connected detail/Move/tab return, Settings draft retention and expiration
-query/filter return passed. Reviewed iOS command-width captures show readable
-bounded recovery actions. Android successful Edit/save/reopen and Move/save/reopen
-also pass on the named audit APK: [connected evidence](evidence/android-connected-edit-move.txt).
-These scoped results do not certify the whole app.
-
-## Follow-up — PR179
-
-`codex/mobile-photo-free-browse` is stacked on PR178. Sparse photo-free Browse rows
-compact without collapsing mixed-media rows. Native35964382077 passed all three
-List/Map geometry and return checks on both devices; Android sparse/mixed return
-also passed. Evidence: [Browse density](evidence/photo-free-grid-review.txt).
-
-Shared Settings commands use bounded native buttons. Filter35965504659 passed
-six workflows on each iOS device; reviewed date, overview and last-tag captures
-show clear commands and footer clearance. Android ordinary/320dp filter reset and
-reminder Retry/Discard passed. Icon-free separators now use the normal row inset.
-
-The paired reminder test35967919825 exposed overlapping iOS command hit areas.
-1661a240 corrects sizing; native35971374386 now passes Retry, Discard, separate hit
-frames and long-label activation on both devices. Captures reviewed for spacing
-and legibility: [command evidence](evidence/bounded-settings-actions.txt).
-Integrated source passes2,006 mobile tests, TypeScript, structural checks and
-review. The branch includes PR178's product fixes and current test-only locator
-correction. Its scoped native gates and the base tab gate now pass; final integrated CI passed;
-TestFlight delivery remains unverified.
+Evidence: [tabs](evidence/persistent-tab-touch.txt),
+[commands](evidence/bounded-settings-actions.txt),
+[density](evidence/photo-free-grid-review.txt),
+[Android connected tasks](evidence/android-connected-edit-move.txt).
+These scoped results do not certify every route or the whole app.
 
 ## Current follow-up
 
@@ -68,8 +37,10 @@ Android Browse now retains List/Map and search through light/dark changes on the
 named emulator APK. Corrected adapter-driven route resets and native control
 appearance; reviewed captures, continued editing/clear/close, return to List and
 Notifications selection pass.26 focused tests, TypeScript, structural checks and
-review pass. Shared Browse route-state iOS regression verification remains before
-including this follow-up in a release. [Evidence](evidence/android-live-appearance-header.txt).
+review pass. PR181 remains draft. Connected iOS Browse/filter regression35979200078 at77c4738d
+and broad native refresh35980094051 atc7c44b45 are running; their sleeping scripts
+retain terminal results. Prioritize structural/ordinary workflow failures first.
+Neither pending run is acceptance evidence. [Evidence](evidence/android-live-appearance-header.txt).
 
 ## Separate unresolved decisions
 

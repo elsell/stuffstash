@@ -1,0 +1,12 @@
+Verified delivery: TestFlight0.24.35 (126.1), 2026-09-24.
+PR178/179 merged into main262f27f6; integrated CI35976251247 passed.
+Release35976929170 completed successfully:
+- Validate release inputs107559507854: success
+- Publish release images/attestations107561562558: success
+- Build/upload tagged iOS release107562548312: success
+- Publish build changelog107568033135: success
+Changelog job at09:12:26.549UTC reports:
+Verified TestFlight changelog for v0.24.35 (126.1).
+The release body carries13 TestFlight notes covering the frozen batch.
+This is Apple delivery/changelog evidence, not physical-device acceptance.
+PR181 Browse/Android appearance follow-up is not included.
