@@ -50,6 +50,11 @@ failures. Its pending result is not acceptance evidence. [Evidence](evidence/and
 
 ## Separate unresolved decisions
 
+- **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
+  keyboard disappearance; final capture/tree shows it dismissed and address intact.
+  iPad passed. Timing remains unverified; no input rewrite or unchanged rerun.
+  [Evidence](evidence/onboarding-current-dismissal.txt).
+
 - **M251 Android photo status:** normal-text native review confirms dark status
   glyphs on the black photo canvas. Activity-level styling does not fix the modal;
   that candidate was withdrawn. Close/return works. Next correction needs dialog
