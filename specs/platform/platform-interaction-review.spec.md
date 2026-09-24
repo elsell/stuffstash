@@ -1187,3 +1187,19 @@ Replaying an unchanged loaded name must leave the editor clean; renaming and the
 restoring the saved name must also restore clean state. Back must not ask to discard
 changes solely because a native field appeared. Verify this with a saved display
 name that differs from its original key, then retain the native save/reopen gate.
+
+### Resolve native tabs without transient ancestor chains
+
+Run35970467285 passes Settings creation/save/reopen on both devices and the
+iPhone tab workflow. iPad completes actual tab switching and exact draft return,
+then fails the hit-point waiter. Its log repeatedly retries resolution of Other
+ancestors before failing to find Browse, while the final tree retains both native
+buttons. The smallest-container locator binds transient ancestor indices and is
+not established as reliable. In this isolated fixture, resolve iPad Home/Browse
+buttons directly by their unique labels, retaining hittable-candidate selection,
+finite on-screen bounds for touch observation, selected state, exact draft checks
+and the final both-tabs isHittable requirement. Do not change production layout or
+remove the assertion. One focused tab-return run distinguishes locator resolution
+from an outstanding native hit-point failure; if it fails, retain that failure
+without repeating this locator experiment. Settings readback is already accepted
+at5040afd4 and need not be rerun for this test-only change.
