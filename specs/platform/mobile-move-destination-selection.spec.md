@@ -207,3 +207,28 @@ Verify enabled/disabled Move, New destination, creation Cancel/Create and reject
 command retry on iPhone/iPad. Source adapter checks do not establish native color,
 separation or hierarchy. Include the change in a subsequent reviewed batch; keep
 the already-running integrated follow-up source frozen.
+
+## Compact context and destination-first hierarchy
+
+The latest visual rejection reopens acceptance independently of functional passes.
+The captured native list still gives the static subject a separate rounded card,
+which competes with the selectable destinations. On iPad, the rows span almost
+all available width. Replace the static card with a compact native section header:
+subject label, emphasized asset name, then secondary current-location context.
+Keep choice sections and retained selection explicit; only choices use list rows.
+Do not duplicate the subject as both a card and a heading.
+
+Constrain the iOS list viewport to a centered readable column of at most720 points,
+using available width on smaller screens. This is a project layout choice, not an
+Apple-prescribed measurement. SwiftUI remains the sole owner of row/section insets,
+scrolling and separators. Symbols occupy a consistent leading column; title/path
+text share an alignment, and selection stays trailing. Preserve visible native
+stacked search, separate prominent completion and secondary creation commands.
+This shared layout applies to Move and Move Here. Android remains unchanged.
+
+This refines the scoped selection pattern described by Apple's Sheets and Lists
+and tables guidance; Files is prior art for destination-oriented selection, not
+a requirement to imitate its storage hierarchy. Native entry, search, selected,
+retained selection and rejected-command captures on phone and iPad must be judged
+before visual acceptance. Mounted tests establish retained context and behavior,
+not whether this layout looks right.

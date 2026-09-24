@@ -60,9 +60,14 @@ Native acceptance remains open; entry/return bounds also reject doubled spacing.
 This does not block the selection release or expand the frozen follow-up.
 PR176 stacks Settings readback and clearer action grouping with native primary
 emphasis for Move completion. Its1,993 integrated tests and source checks pass;
-its six-workflow native verification waits for the integrated follow-up. The
+run35945430640 is checking its six workflows; the phone job has failed and
+the iPad job is still running. Do not rerun that candidate without a diagnosis. The
 failed Settings candidate is superseded, not rerun. Check Settings search/Add as
 well as collection readback and the four Move workflows.
+The user rejected Move visual acceptance. The next layout replaces its static
+subject card with a compact section heading and constrains the iPad list to a
+readable column. Search remains visible and completion prominent. Source checks
+and critic review pass; native visual acceptance and release remain on hold.
 
 ## Separate unresolved decisions
 
