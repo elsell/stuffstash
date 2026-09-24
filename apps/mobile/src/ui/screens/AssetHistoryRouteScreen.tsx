@@ -150,7 +150,7 @@ function HistoryRow({ record, onPress, styles }: { readonly record: AssetActivit
     <View style={styles.row}>
       <Pressable accessibilityHint="Shows exact time and technical details" accessibilityRole="button" onPress={onPress} style={styles.rowMain}>
         <Text style={styles.rowTitle}>{record.title}</Text>
-        <Text style={styles.rowSummary}>{record.summary}</Text>
+        <Text numberOfLines={2} style={styles.rowSummary}>{record.summary}</Text>
         <Text style={styles.rowMeta}>{record.occurredAtLabel} · {record.actorLabel} · {record.sourceLabel}</Text>
       </Pressable>
     </View>

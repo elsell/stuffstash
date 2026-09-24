@@ -156,6 +156,8 @@ function activitySummary(entry: AssetActivityEntry): string {
   if (entry.changes.length === 0) {
     return `${entry.principal?.email?.trim() || 'Someone with access'} · ${sourceLabel(entry.source)}`;
   }
+  const fields = [...new Set(entry.changes.map(change => change.field))];
+  if (fields.length > 1) return fields.map(activityFieldLabel).join(' · ');
   return entry.changes.map((change) => {
     if (change.previousValue !== undefined || change.currentValue !== undefined) {
       return `${displayValue(change.previousValue)} → ${displayValue(change.currentValue)}`;
@@ -186,5 +188,16 @@ function sourceLabel(source: string): string {
     case 'voice': return 'Voice';
     case 'import': return 'Import';
     default: return 'Stuff Stash';
+  }
+}
+
+export function activityFieldLabel(field: AssetActivityField): string {
+  switch (field) {
+    case 'title': return 'Name';
+    case 'description': return 'Description';
+    case 'tags': return 'Tags';
+    case 'parent': return 'Location';
+    case 'lifecycle_state': return 'Status';
+    case 'checkout_state': return 'Checkout';
   }
 }

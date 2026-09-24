@@ -2939,7 +2939,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("history-list-entry")
     let headingBelowHeader = title.frame.minY >= app.navigationBars.firstMatch.frame.maxY
     let modeBelowHeader = mode.frame.minY >= app.navigationBars.firstMatch.frame.maxY
-    let firstChange = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Updated camping equipment 0'")).firstMatch
+    let firstChange = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Name · Description · Location · Tags'")).firstMatch
     XCTAssertTrue(firstChange.waitForExistence(timeout: 10))
     XCTAssertTrue(firstChange.isHittable); firstChange.tap()
     let disclosure = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Technical details'")).firstMatch

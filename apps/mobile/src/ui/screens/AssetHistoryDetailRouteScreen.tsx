@@ -9,7 +9,7 @@ import type { AssetActivityViewModel } from '../../application/assets/AssetActiv
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AssetActivityQuery } from '../../application/assets/AssetActivityQuery';
+import { AssetActivityQuery, activityFieldLabel } from '../../application/assets/AssetActivityQuery';
 import { RevertAssetChangeCommand } from '../../application/assets/RevertAssetChangeCommand';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { historyLoadError, technicalDetailRows } from './AssetHistoryPresentation';
@@ -159,8 +159,13 @@ export function AssetHistoryDetailRouteScreen({
           <Text accessibilityRole="header" style={styles.sectionTitle}>What changed</Text>
           {entry.changes.map((change, index) => (
             <View key={`${change.field}-${index.toString()}`} style={styles.detailRow}>
-              <Text style={styles.label}>{fieldLabel(change.field)}</Text>
-              <Text style={styles.value}>{changeSummary(change.previousValue, change.currentValue)}</Text>
+              <Text accessibilityRole="header" style={styles.changeField}>{activityFieldLabel(change.field)}</Text>
+              {change.previousValue?.trim() || change.currentValue?.trim() ? <>
+                <Text style={styles.label}>Before</Text>
+                <Text style={styles.value}>{change.previousValue?.trim() || 'None'}</Text>
+                <Text style={styles.label}>After</Text>
+                <Text style={styles.value}>{change.currentValue?.trim() || 'None'}</Text>
+              </> : <Text style={styles.value}>Changed</Text>}
             </View>
           ))}
         </View>
@@ -200,25 +205,6 @@ function detailTitle(action: string): string {
   }
 }
 
-function fieldLabel(field: string): string {
-  switch (field) {
-    case 'title': return 'Name';
-    case 'description': return 'Description';
-    case 'tags': return 'Tags';
-    case 'parent': return 'Location';
-    case 'lifecycle_state': return 'Status';
-    case 'checkout_state': return 'Checkout';
-    default: return field;
-  }
-}
-
-function changeSummary(previousValue: string | undefined, currentValue: string | undefined): string {
-  const previous = previousValue?.trim();
-  const current = currentValue?.trim();
-  if (!previous && !current) return 'Changed';
-  return `${previous || 'None'} → ${current || 'None'}`;
-}
-
 function sourceLabel(source: string): string {
   if (source === 'api') return 'App';
   if (source === 'conversation' || source === 'voice') return 'Voice';
@@ -236,6 +222,7 @@ function createStyles(colors: MobileColorPalette) {
     muted: { color: colors.textMuted, fontSize: 14, lineHeight: 21 },
     sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '800' },
     detailRow: { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth, gap: 3, paddingTop: spacing.sm },
+    changeField: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: spacing.xs },
     label: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
     value: { color: colors.text, fontSize: 16, lineHeight: 23 },
     technicalValue: { color: colors.text, fontFamily: 'Courier', fontSize: 13, lineHeight: 19 },
