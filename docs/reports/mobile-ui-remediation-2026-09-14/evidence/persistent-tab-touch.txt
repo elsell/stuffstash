@@ -1,0 +1,19 @@
+Current diagnosis: native iPad tab touch works after Settings draft return, but
+XCTest cannot compute a hit point for both tabs. Do not describe this result alone
+as a proven VoiceOver failure. Apple defines isHittable as hit-point computation:
+https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable
+
+Run 35964187818, source f5d7961b: iPhone passed its complete workflow. iPad passed
+both coordinate-touch transitions, selected-tab assertions, visible destination
+checks, hidden previous destination checks and exact Tools emergency draft readback.
+Its only failure is line 2904, the final both-tabs isHittable expectation.
+This rules out the proposed general touch interception after Settings return.
+The final screenshot still shows native tabs overlapping the navigation bar's
+reported frame; that observation does not establish the cause of hit-point failure.
+
+Artifacts: iPad 10794283987; iPhone 10793979744. Final captures extracted under
+/tmp/move-layout-review/tab-touch-{ipad,phone}-*. iPad final screenshot reviewed.
+Job logs: /tmp/native-tab-{ipad,phone}-touch.log. No production change or weakened
+acceptance introduced in response. The already queued settings-tab-return run
+35965781821 at 995c0859 includes the Name native-draft correction and repeats this
+exact tab gate. Inspect that result before another diagnostic or layout experiment.
