@@ -2948,6 +2948,7 @@ final class FixtureAuditTests: XCTestCase {
       add(attachment)
     }
     captureSettledAccessory("voice-navigation-list")
+    XCTAssertTrue(change.isHittable, "History change must be interactive before opening its detail")
     change.tap()
     XCTAssertTrue(app.navigationBars["History detail"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["What changed"].waitForExistence(timeout: 10))

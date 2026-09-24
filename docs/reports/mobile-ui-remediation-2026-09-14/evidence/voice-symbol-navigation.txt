@@ -21,6 +21,10 @@ visual evidence. Existing behavior test and native re-observation must verify
 candidate; reject it if glyph still disappears. No remount/timing workaround.
 
 Candidate76cdc62d: start/send/return mounted behavior passes, TypeScript and
-structural checks pass, critic found no source blocker. Native36038163099 is
-running; watcher55959 owns terminal output. Listening/send native appearance and
+structural checks pass, critic found no source blocker. Native36038163099 completed: iPad passed navigation; iPhone stopped waiting
+for History detail after its first row tap. Final phone capture remains the list.
+No phone glyph-retention conclusion is established. iPad glyph stays visible but
+is black: reject that contrast result. Pinned Expo UI Image has explicit color;
+use it rather than foregroundStyle. Preserve the same destination timeout and
+add pre-tap hittability assertion for the bounded corrected observation. Listening/send native appearance and
 physical voice remain unverified; do not infer them from ready-state captures.

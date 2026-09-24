@@ -106,3 +106,12 @@ Existing start/send/return behavior tests must still pass. Physical audio is not
 certified by these fixtures. If the native symbol still disappears, reject this
 renderer candidate and investigate accessory ownership rather than piling on
 remount or timing workarounds.
+
+Candidate76cdc62d keeps the iPad glyph visible but renders it black. Expo UI's
+Image owns a `color` property; preserve on-action contrast through that property
+rather than an inherited foreground modifier. iPhone observation stopped at the
+History-to-detail transition, leaving glyph retention unverified. Repeat the same
+bounded journey with corrected color and an explicit pre-tap hittability assertion;
+retain the existing destination timeout and no retry-tap loop. This distinguishes
+successful corrected rendering from a repeatable navigation failure. Do not merge
+on iPad evidence alone or accept the black glyph as the intended appearance.
