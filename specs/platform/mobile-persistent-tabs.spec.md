@@ -46,3 +46,12 @@ list-bottom clearance, and no duplicate headers or tabs. Reuse existing workflow
 checks and add route-ownership/retention coverage before implementation. Native
 phone/iPad/Android evidence is required; route structure alone cannot prove layout
 or restoration. This structural change does not silently expand the frozen batch.
+
+## Returning from root modal filters
+
+Expo resolves shared unqualified URLs using the current route segments. A root
+modal has no tab segment, so Expiration Filters must carry its originating tab as
+navigation metadata and return to that qualified shared destination. Validate the
+metadata against Home/Browse; missing or malformed origin uses Home. Preserve all
+filter parameters. Browse Filters targets the unique Browse URL and needs no
+shared-destination disambiguation. Back/cancel continues to pop the modal.

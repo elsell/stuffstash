@@ -1,6 +1,7 @@
+import { expirationOriginTab } from './ExpirationTabReturn';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, useSegments } from 'expo-router';
 import type { ExpirationWorkspaceQuery } from '../../application/expiration/ExpirationWorkspaceQuery';
 import { useMobileServerStateScope } from '../navigation/MobileServerStateProvider';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -11,6 +12,7 @@ import { parseExpirationRoute, expirationRouteParams, type ExpirationRouteParams
 import { assetDetailHref } from '../screens/AssetDetailNavigation';
 
 export function ExpirationRouteScreen({ expirationWorkspaceQuery }: { readonly expirationWorkspaceQuery: Pick<ExpirationWorkspaceQuery, 'list'> }) {
+ const originTab = expirationOriginTab(useSegments());
  const params = useLocalSearchParams<ExpirationRouteParams>();
  const { tenantId = '', inventoryId = '', filter } = parseExpirationRoute(params);
  const scope = useMobileServerStateScope(); const router = useRouter();
@@ -32,5 +34,5 @@ export function ExpirationRouteScreen({ expirationWorkspaceQuery }: { readonly e
  const error = inventory.isError ? 'The inventory could not be loaded. Try again.' : inventory.isSuccess && !matches ? 'This expiration view belongs to another inventory. Return to Home and open it again.' : state.error ? 'Expiration could not be loaded. Refresh and try again.' : undefined;
  return <><Stack.Screen options={{ title: 'Expiration' }} /><ExpirationWorkspaceScreen mode={filter.mode} query={filter.query} refinementsActive={!!(filter.kind || filter.checkoutState || filter.typeId || filter.locationId || filter.tagIds?.length || filter.fromDate || filter.throughDate)} items={items} filtered={!!(filter.kind || filter.checkoutState || filter.query || filter.typeId || filter.locationId || filter.tagIds?.length || filter.fromDate || filter.throughDate)} loading={inventory.isPending || matches && state.isPending} refreshing={pullRefresh.refreshing} appending={state.isFetchingNextPage} hasMore={state.hasNextPage} error={error} recovery={recovery}
   onMode={mode => router.setParams(expirationRouteParams(tenantId, inventoryId, { ...filter, mode }))} onSearch={query => router.setParams(expirationRouteParams(tenantId, inventoryId, { ...filter, query }))}
-  onFilters={query => router.push({ pathname: '/expiration-filters', params: expirationRouteParams(tenantId, inventoryId, { ...filter, query }) })} onRefresh={() => { void pullRefresh.refresh(); }} onMore={() => { if (!state.isFetching) void state.fetchNextPage(); }} onOpenAsset={id => router.push(assetDetailHref(id))} /></>;
+  onFilters={query => router.push({ pathname: '/expiration-filters', params: { ...expirationRouteParams(tenantId, inventoryId, { ...filter, query }), originTab } })} onRefresh={() => { void pullRefresh.refresh(); }} onMore={() => { if (!state.isFetching) void state.fetchNextPage(); }} onOpenAsset={id => router.push(assetDetailHref(id))} /></>;
 }
