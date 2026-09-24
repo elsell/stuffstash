@@ -33,7 +33,9 @@ The current native gate must close both remaining checks before release.
 
 Android connected detail/Move/tab return, Settings draft retention and expiration
 query/filter return passed. Reviewed iOS command-width captures show readable
-bounded recovery actions. These scoped results do not certify the whole app.
+bounded recovery actions. Android successful Edit/save/reopen and Move/save/reopen
+also pass on the named audit APK: [connected evidence](evidence/android-connected-edit-move.txt).
+These scoped results do not certify the whole app.
 
 ## Follow-up — PR179
 
