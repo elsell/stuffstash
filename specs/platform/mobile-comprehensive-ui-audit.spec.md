@@ -2304,3 +2304,19 @@ assertions. This corrects an observation boundary, not proof of application
 acceptance or a reason to replace native search. The corrected run still must
 complete and its focused creation layout must be visually reviewed.
 
+## Integrated follow-up acceptance
+
+The follow-up merges the released selection workflows with native search focus
+ownership. Its release subset must therefore include the existing twelve follow-up
+workflows plus Add destination creation/recovery, Add tag draft/recovery and Move
+destination creation/recovery. These three representative consumers cover shared
+stacked and compact search ownership, retained drafts, explicit commit and return.
+Reuse their existing assertions; do not substitute component checks or dispatch a
+full-surface sweep. Keep unrelated Settings readback in its subsequent batch.
+
+Visual acceptance remains separate from functional completion. Review corresponding
+iPhone and iPad entry, search, selected and recovery captures for a clear subject,
+destination hierarchy, deliberate alignment and action prominence. The latest user
+rejection keeps Move visually open until that review is explicit; older recorded
+passes must not silently override it. Existing grouped-list and stacked-search
+implementation should be assessed before deciding another implementation is needed.

@@ -15,8 +15,12 @@ CI35936948141 passed at4b98eac2. Final Add35936945060 passes phone/iPad, includi
 search, cancel/reopen, destination creation/retry and bounded form spacing; final
 creation and returned-draft captures were reviewed. Move35920806955 passes all
 four workflows on both devices; tag/draft35920079319 passes three on both devices.
-Android grouped creation and recovery were reviewed. This closes the scoped Move
-and Add design holds, not the comprehensive audit or physical-device verification.
+Android grouped creation and recovery were reviewed. Add's scoped design hold was
+closed. Move remains visually open following user feedback; functional passes do
+not override that judgment. Current source already has grouped native rows,
+toolbar actions and stacked iPhone/iPad search; assess those actual captures before
+repeating the same redesign. The comprehensive audit and physical-device checks
+remain incomplete.
 
 ## Current follow-up diagnosis and decisions
 
@@ -38,9 +42,15 @@ with its own search focus ownership and detail hierarchy. Review removed a dupli
 empty-photo caption introduced by the merge. The full1989-test mobile suite,
 TypeScript, structural checks and10 fixture preparation checks pass; critic review
 is complete. These source checks do not establish integrated native acceptance.
+The integrated release subset adds three representative Add destination, Add tag
+and Move creation workflows to the twelve follow-up workflows for shared search
+and return behavior; it retains all existing assertions.
 
 Connected Settings readback is a subsequent batch. Its fixture now uses production
-cache invalidation;35937082802 failed and its terminal evidence is being reviewed.
+cache invalidation;35937082802 confirms the updated row exists but is behind the
+native header on both devices. Candidate35bba93c preserves one ScrollView across
+loading/ready/retry instead of replacing its root. Source checks pass; native
+35939654846 is verifying it. This is a candidate correction, not a proven fix.
 This does not block the selection release or expand the frozen follow-up.
 
 ## Separate unresolved decisions

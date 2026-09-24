@@ -28,8 +28,9 @@ small flat choices such as Kind continue to use the in-place native picker.
 
 - Existing-destination search belongs to NativeNavigationSearch on iOS and the
   existing Android search adapter. Retain the current destination and any selected
-  proposal when changing, clearing or closing search. Search starts collapsed on
-  iOS and does not consume a permanent form row.
+  proposal when changing, clearing or closing search. Search is visible in the
+  native stacked navigation placement on entry on iPhone and iPad; it is not a
+  separate custom form row. Browse retains its compact search entry.
 - Use the shared checkmarked selection rows with path/type context. Preserve the
   explicit inventory-root choice, eligibility explanations, pending lock and
   current/proposed location feedback. Keep the Move mutation separate from choice.

@@ -328,6 +328,11 @@ jobs:
               fi
               if [ "$AUDIT_TEST_CASE" = followup-release ]; then
                 audit_test_args+=("${hierarchy_test_args[@]}")
+                audit_test_args+=(
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure'
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                )
               fi
               ;;
             browse-journey)
