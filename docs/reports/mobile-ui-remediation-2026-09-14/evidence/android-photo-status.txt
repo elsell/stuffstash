@@ -1,0 +1,20 @@
+M251 Android follow-up, API36 Pixel6, normal text/light, 2026-09-24.
+PhotoRecoveryFixture uses production AssetPhotoViewerSheet and shared viewer.
+Named baseline APKdac0ad4f13e4b4117139c6a43593af80ef99e6f081244b2e1f3d9bcb732dc21e.
+Open and explicit Close pass, retaining the photo. Reviewed capture shows black
+clock/status glyphs on fixed black photo canvas. Commands and photo remain visible.
+
+One candidate: extend valid-visible local StatusBar light-content ownership from
+iOS to Android. Android mounted test failed first; four tests/typecheck/structural
+and critic passed after change. Native candidate capture still shows black status
+icons. Close restores underlying light-screen status normally. Candidate withdrawn.
+Pinned ReactModalHostView.kt0.83.6 updateSystemAppearance copies Activity window
+style to Dialog at show; this does not establish later activity-style propagation.
+Next correction needs dialog-window ownership/presentation ordering, not another
+JS style/reseed/timing experiment. P3, not a Browse release prerequisite.
+
+Captures: /tmp/android-photo-review-viewer.png (baseline),
+/tmp/android-photo-status-candidate.png (failed candidate),
+/tmp/android-photo-status-returned.png (restoration).
+Replay /tmp/review-photo-viewer.py; native source /tmp/ReactModalHostView.kt.
+No physical-device, saved-asset backend, swipe or dark-appearance acceptance claim.

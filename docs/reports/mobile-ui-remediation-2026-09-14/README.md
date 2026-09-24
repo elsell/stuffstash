@@ -73,6 +73,11 @@ including this follow-up in a release. [Evidence](evidence/android-live-appearan
 
 ## Separate unresolved decisions
 
+- **M251 Android photo status:** normal-text native review confirms dark status
+  glyphs on the black photo canvas. Activity-level styling does not fix the modal;
+  that candidate was withdrawn. Close/return works. Next correction needs dialog
+  ownership. [Bounded evidence](evidence/android-photo-status.txt).
+
 - **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
   remains draft at aa9fbd9e. The explicit system color-picker candidate passes
   ordinary opening on both devices, but phone coordinate activation and timely Add

@@ -1305,3 +1305,16 @@ replay must now keep Map available through light/dark/light, search text/results
 continued editing, clear/close and view switching; inspect captures for contrast.
 Verify a representative segmented consumer outside the header as well. This is a
 new acceptance run after a proven ownership fix, not repetition of a failed reseed.
+
+### Android photo canvas status contrast — rejected activity override
+
+Normal-text API36 photo walkthrough shows black status glyphs on the fixed black
+viewer canvas. The Android library's activity-level hide call does not hide them
+in this modal. Extending the iOS declarative light-content StatusBar to Android
+passes mounted ownership tests but fails the native screenshot; withdraw it.
+ReactModalHostView0.83.6 copies activity appearance only at dialog show via
+updateSystemAppearance. The next correction must own the dialog's system-bar style
+or establish style before presentation with a native lifecycle guarantee, not a
+timeout, repeated JS override or global preference. Preserve restoration on Close,
+system Back, swipe dismissal and last-photo removal. This P3 appearance finding
+remains separate from the verified Browse batch; no Android correction is accepted.
