@@ -17,7 +17,8 @@ Current release acceptance below supersedes historical pending statements.
 PR178 (`codex/mobile-native-patterns-batch`) contains persistent Home/Browse
 stacks for41 ordinary routes, bounded native commands, readable detail layout and
 expiration search retention. Add/Edit/Move/Filters remain modal tasks. Product
-source is35a79fe5;7ee10632 strengthens native observation without changing the app.
+source35a79fe5 is the integrated baseline; the current candidate also replaces
+the confirmed failing customization Name control with the existing DraftTextField.
 
 Focused run35960677440 completed: iPhone3/3 passed; iPad2/3 passed.
 The iPad Settings draft remains exactly `Tools emergency` and both tabs are visibly
@@ -30,8 +31,9 @@ from an accessibility hit-test discrepancy by exercising the visible tab and
 requiring the destination change and exact draft return. Do not remove the
 reachability requirement or repeat the same selector-only adjustment.
 See [focused evidence](evidence/persistent-tabs-35960677440.txt).
-Required CI35961721094 passed at3fc47eaf. Completion run35961716802 covers the
-remaining Retry and exact Settings create/readback observations. Do not treat
+Required CI35961721094 passed at3fc47eaf. Completion run35961716802 passes Retry
+on both devices and Settings readback on iPad; phone New Tag still fails exact name
+entry (Cngampi rather than Camping). Do not treat
 route/source checks as native acceptance of all41 screens.
 
 ## Current expiration search correction
@@ -49,11 +51,12 @@ width35954709640 passed9/9 iPad and8/9 phone. Phone Add initially stopped at key
 (line744); the subsequent combined run passed Add on both devices. Corrected phone/iPad command-width captures were reviewed: retry labels and
 contextual commands are readable and bounded (see evidence/native-command-width-review.txt).
 Combined13-workflow run35958732480 at35a79fe5 passed12/13 phone and11/13 iPad.
-Add and expiration retention passed both. Phone contents Retry failed its five-second
-observation, but the final capture shows recovery. iPad failed tab reachability
-plus immediate Camping input read as Camngpi. Reviewed bounded
-completion observations preserve exact outcomes; focused native verification remains
-required. Do not interpret the text mismatch as proven transient.
+Add and expiration retention passed both. Follow-up35961716802 closes Retry recovery.
+Its phone capture confirms lasting wrong character order after15s; this is not a
+transient observation issue. The Name-only native draft correction preserves current
+validation, key derivation, resource loading, locks and rejected-save drafts. Existing
+2,002 source tests, TypeScript, structural checks and review pass. Exact native
+save/reopen and tab-return remain gates; no more typing delays/provider experiments.
 
 ## Accepted corrections and remaining release gates
 
@@ -70,7 +73,7 @@ available width while keeping its button leading-aligned. Reviewed phone/iPad
 captures establish readable bounded commands in the named detail states; see
 [evidence](evidence/native-command-width-review.txt). Do not repeat provider or
 key-delivery experiments. Add now passes on both devices. Remaining native gates are iPad Settings tab
-reachability and the focused Retry/create-readback completion checks. These do not
+reachability and exact Settings create/readback after the Name control correction. These do not
 reopen accepted button geometry.
 Android light/dark expiration return and Edit/Move cancellation passed; these do
 not establish successful Edit/Move execution or app-wide appearance acceptance.

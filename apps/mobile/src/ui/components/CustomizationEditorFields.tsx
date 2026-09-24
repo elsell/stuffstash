@@ -1,4 +1,4 @@
-import { useState, type RefObject } from 'react';
+import { useState, type ReactNode, type RefObject } from 'react';
 import { Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
 import type { CustomAssetTypeDefinition, CustomFieldApplicability, CustomFieldType } from '../../domain/customization/Customization';
 import { suggestedCustomizationKey } from '../../domain/customization/Customization';
@@ -66,7 +66,37 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
   </>;
 }
 
-export function CustomizationLabeledInput({ editable, error, inputRef, label, multiline = false, onChangeText, required = false, value }: { readonly editable: boolean; readonly error?: string; readonly inputRef?: RefObject<TextInput | null>; readonly label: string; readonly multiline?: boolean; readonly onChangeText: (value: string) => void; readonly required?: boolean; readonly value: string }) { const styles = createStyles(useAppearancePalette()); return <View style={styles.formRow}><View style={styles.labelRow}><Text style={styles.label}>{label}</Text>{required ? <Text style={styles.required}>Required</Text> : null}</View><AppTextInput accessibilityHint={error ?? (required ? 'Required' : undefined)} accessibilityLabel={label} editable={editable} multiline={multiline} onChangeText={onChangeText} ref={inputRef} style={[styles.input, multiline && styles.multiline, !editable && styles.disabled]} value={value} />{error ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{error}</Text> : null}</View>; }
+type LabeledInputFrameProps = { readonly label: string; readonly required?: boolean; readonly error?: string; readonly children: ReactNode };
+function LabeledInputFrame({ label, required, error, children }: LabeledInputFrameProps) {
+  const styles = createStyles(useAppearancePalette());
+  return <View style={styles.formRow}>
+    <View style={styles.labelRow}><Text style={styles.label}>{label}</Text>{required ? <Text style={styles.required}>Required</Text> : null}</View>
+    {children}
+    {error ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{error}</Text> : null}
+  </View>;
+}
+
+export function CustomizationNameInput({ editable, error, onChangeText, value }: {
+  readonly editable: boolean; readonly error?: string; readonly onChangeText: (value: string) => void; readonly value: string;
+}) {
+  const styles = createStyles(useAppearancePalette());
+  return <LabeledInputFrame label="Name" required error={error}>
+    <DraftTextField accessibilityLabel="Name" accessibilityHint={error ?? 'Required'}
+      editable={editable} onChangeText={onChangeText} value={value} style={[styles.input, !editable && styles.disabled]} />
+  </LabeledInputFrame>;
+}
+
+export function CustomizationLabeledInput({ editable, error, inputRef, label, multiline = false, onChangeText, required = false, value }: {
+  readonly editable: boolean; readonly error?: string; readonly inputRef?: RefObject<TextInput | null>; readonly label: string;
+  readonly multiline?: boolean; readonly onChangeText: (value: string) => void; readonly required?: boolean; readonly value: string;
+}) {
+  const styles = createStyles(useAppearancePalette());
+  return <LabeledInputFrame label={label} required={required} error={error}>
+    <AppTextInput accessibilityHint={error ?? (required ? 'Required' : undefined)} accessibilityLabel={label}
+      editable={editable} multiline={multiline} onChangeText={onChangeText} ref={inputRef}
+      style={[styles.input, multiline && styles.multiline, !editable && styles.disabled]} value={value} />
+  </LabeledInputFrame>;
+}
 export function CustomizationReadOnlyValue({ label, value }: { readonly label: string; readonly value: string }) { const styles = createStyles(useAppearancePalette()); return <View style={styles.formRow}><Text style={styles.label}>{label}</Text><Text selectable style={styles.readOnlyValue}>{value}</Text></View>; }
 
 function SingleChoicePicker<Value extends string>({ disabled, label, onChange, options, value }: { readonly disabled: boolean; readonly label: string; readonly onChange: (value: Value) => void; readonly options: readonly { readonly label: string; readonly value: Value }[]; readonly value: Value }) {

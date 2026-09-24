@@ -1164,3 +1164,18 @@ Keep the separate final isHittable requirement: successful coordinate activation
 not prove accessibility acceptance. A failed destination change identifies a touch
 failure; a successful roundtrip with failed hit-test keeps the narrower accessibility
 finding open. The focused tab-return selector runs this workflow alone.
+
+### Settings name input retention
+
+Run35961716802 passes contents Retry on both devices and Settings save/readback
+on iPad, but iPhone New Tag retains Cngampi after typing Camping and waiting15s.
+Do not extend the observation budget or alter typed text. Use the existing
+DraftTextField adapter for customization display names (tags, asset types, fields):
+iOS owns its editing text and publishes complete drafts; Android preserves its
+current adapter. Keep the current validation/name-to-key behavior, busy/access
+locks, failed-save retention, tab return and exact save/reopen verification.
+Loaded-resource transitions must unmount the old field before seeding a new name.
+Multiline descriptions and the explicitly focused technical key remain unchanged.
+The native failing workflow is the regression reproduction; source tests cannot
+establish correct iOS character order. Rerun Settings readback and persistent-tab
+draft return after this correction.
