@@ -2664,6 +2664,23 @@ final class FixtureAuditTests: XCTestCase {
     capture("onboarding-keyboard-go-submission")
   }
 
+  func testHomeViewerHeaderUsesSpaceWithoutOverlappingProfile() {
+    guard openFixtureURL("audit-home-header?viewer=true") else { return }
+    let profile = app.buttons["Open account and settings"]
+    let selector = app.buttons["Current inventory Main inventory with a long household name, tenant Audit home. Switch inventory"]
+    XCTAssertTrue(selector.waitForExistence(timeout: 10))
+    XCTAssertTrue(selector.isHittable)
+    XCTAssertTrue(profile.isHittable)
+    XCTAssertFalse(app.buttons["Add an asset"].exists)
+    XCTAssertFalse(app.buttons["Notifications, 2 unread"].exists)
+    XCTAssertGreaterThan(selector.frame.width, 220)
+    XCTAssertLessThanOrEqual(selector.frame.maxX, profile.frame.minX)
+    XCTAssertTrue(app.frame.contains(selector.frame))
+    capture("home-viewer-header-available-space")
+    profile.tap()
+    XCTAssertTrue(app.staticTexts["Header Profile destination"].waitForExistence(timeout: 5))
+  }
+
   func testHomeHeaderKeepsAllActionsAboveScrollingContent() {
     let open = app.buttons["Audit Home header"]
     XCTAssertTrue(open.waitForExistence(timeout: 5))

@@ -423,6 +423,7 @@ jobs:
             home-header)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeViewerHeaderUsesSpaceWithoutOverlappingProfile'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeHeaderKeepsAllActionsAboveScrollingContent'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
