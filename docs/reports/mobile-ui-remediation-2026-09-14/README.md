@@ -6,10 +6,12 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.38 (129.1)**. PR186 merged51a0cabc;
-release36027753017 and iOS upload107731986680 passed. Apple changelog readback
-was verified2026-09-24 at17:00UTC. Settings labels/grouping/insets and Home inventory
-name spacing are delivered. [Release evidence](evidence/release-129.txt).
+Latest verified TestFlight is **0.24.39 (130.1)**. PR188 mergedb45c5e96;
+release36037058030, iOS upload107763065488 and Apple changelog readback passed.
+History summaries, Before/After values, mode selection and footer clearance are
+delivered. [Release evidence](evidence/release-130.txt).
+Prior129 delivered Settings labels/grouping/insets and Home inventory name spacing.
+[Prior release](evidence/release-129.txt).
 Prior128 delivered Home collection shortcuts through Browse and scoped Android
 photo dialog contrast. [Prior release](evidence/release-128.txt).
 Prior127 delivered Browse retention/alignment and clearer container detail grouping
@@ -92,19 +94,18 @@ tests, TypeScript,13 fixture tests, structural checks and critic review pass.
 Corrected native36031360544 passes on both devices after one iPad Xcode-launch
 retry. Reviewed list/detail/final-metadata/pagination captures confirm hierarchy
 and clearance. Exact-head CI36034561755 passes. PR188 mergedb45c5e96; release
-36037058030 is active, with terminal result at `/tmp/history-release-result.json`.
-TestFlight delivery remains unverified until upload and changelog readback pass.
+36037058030 delivered130.1 with verified Apple changelog readback.
 Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
 The accessory observation36035027845 confirms settled iPhone glyph loss after
 navigation and tab return; iPad settled detail retains the glyph. Candidate76cdc62d
 uses existing native iOS SF Symbols with command behavior unchanged. Start/send/
 return behavior, TypeScript, structural checks and critic review pass. Native
-candidate36038163099 is active; watcher55959 writes
-`/tmp/voice-symbol-candidate-result.json`. Passing capture assertions alone will
-not establish visual acceptance. [Diagnosis](evidence/voice-symbol-navigation.txt).
-History release36037058030 is owned by watcher77913; its upload/notes result is
-`/tmp/history-release-result.json`.
+candidate36038163099 passed iPad navigation but rendered the glyph black; phone
+stopped before detail. Correct the native Image color property, then repeat the
+same bounded journey. No glyph acceptance or phone navigation fix is claimed. [Diagnosis](evidence/voice-symbol-navigation.txt).
+Accessory CI36038289905 passede186d664 before the color correction. PR190
+remains draft until corrected native and source verification.
 
 ## Separate unresolved decisions
 
