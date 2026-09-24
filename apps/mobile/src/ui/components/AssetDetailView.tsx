@@ -159,10 +159,6 @@ export function AssetDetailView({
           ) : null}
 
           {asset.photos.length > 0 ? photoGallery : null}
-          {photosRecovery}
-
-          {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
-
           <AssetDetailIdentitySection
             asset={asset}
             isActionPending={isActionPending}
@@ -176,6 +172,9 @@ export function AssetDetailView({
             showAvailability={!asset.canContainAssets}
             showMaintenance={!asset.canContainAssets}
           />
+
+          {photosRecovery}
+          {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
 
           {isContentsLoading ? <WorkspaceLoadingState label="Loading location and contents" /> : null}
           {contentsRecovery}

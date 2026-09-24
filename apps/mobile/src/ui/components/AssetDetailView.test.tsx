@@ -132,6 +132,13 @@ describe('AssetDetailView', () => {
     expect(placementIndex).toBeLessThan(text.indexOf('Sleeps four.'));
   });
 
+  it('keeps asset identity ahead of independent photo recovery', () => {
+    const text = collectText(AssetDetailView({ asset: assetDetail(),
+      photosRecovery: createElement('Text', {}, 'Could not load photos.') }));
+    expect(text.indexOf('Family tent')).toBeGreaterThanOrEqual(0);
+    expect(text.indexOf('Could not load photos.')).toBeGreaterThan(text.indexOf('Family tent'));
+  });
+
   it.each(['item', 'container', 'location'] as const)('keeps %s commands contextual without duplicate body Edit', (kind) => {
     const asset = { ...assetDetail(), kind, canContainAssets: kind !== 'item',
       canCheckout: kind !== 'location', canReturn: false };

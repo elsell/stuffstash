@@ -2374,3 +2374,9 @@ Current native detail evidence35948366265 passes five of six workflows on each
 device, including gallery selection/rotation. Region recovery fails after photo
 Retry on phone and contents Retry on tablet. Do not mark this candidate accepted;
 keep those exact completion assertions while correcting the affected presentation.
+
+The command-emphasis native subset reuses the six connected detail/map checks,
+Settings archive, invitation recovery and Add draft recovery to inspect shared
+button consumers. Retain the region Retry completion assertions. This subset does
+not certify every button consumer; long labels, Android geometry and dark appearance
+remain explicit acceptance gaps until captured on their respective runtimes.

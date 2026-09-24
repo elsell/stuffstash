@@ -33,6 +33,7 @@ on:
           - enum-editing
           - workflow-batch
           - hierarchy-followup
+          - command-emphasis
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -122,6 +123,13 @@ jobs:
           )
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            command-emphasis)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${hierarchy_test_args[@]}"
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInvitationAcceptanceRetainsAccessAfterOpeningFailure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+              ) ;;
             archive-notice)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
