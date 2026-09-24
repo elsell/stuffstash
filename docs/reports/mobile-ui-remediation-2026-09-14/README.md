@@ -111,8 +111,8 @@ checks and review pass. No product defect or inset fix is claimed yet. Watcher64
 writes `/tmp/inventory-clearance-baseline-result.json`.
 [Bounded diagnosis](evidence/inventory-collection-clearance.txt).
 
-PR190 verification/policy head1398cdad awaits CI36045074264; watcher3315 writes
-`/tmp/ui-evidence-policy-ci-result.json`. It contains no production renderer change.
+PR190 verification/policy merged296f7d6a after CI36045074264 passed1398cdad.
+It contains no production renderer change and does not justify a TestFlight build.
 
 ## Separate unresolved decisions
 
