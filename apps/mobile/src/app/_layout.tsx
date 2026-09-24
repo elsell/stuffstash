@@ -19,6 +19,8 @@ import {
 import { AppKeyboardAccessory } from '../ui/components/AppKeyboardAccessory';
 import { AppKeyboardProvider } from '../ui/components/AppKeyboardProvider';
 
+export const unstable_settings = { anchor: '(tabs)' };
+
 export default function RootLayout() {
   return (
     <AppKeyboardProvider>
@@ -58,7 +60,6 @@ function ThemedApp() {
           }
         }}
       >
-        <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
         <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
         <Stack.Screen name="browse-filters" options={sheetOptions.filters} />
         <Stack.Screen name="expiration-filters" options={sheetOptions.filters} />
@@ -67,41 +68,7 @@ function ThemedApp() {
           name="voice"
           options={voiceNativeSheetOptions(palette)}
         />
-        <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
-        <Stack.Screen name="settings/account" options={{ title: 'Account' }} />
-        <Stack.Screen name="settings/appearance" options={{ title: 'Appearance' }} />
-        <Stack.Screen name="settings/sharing" options={{ title: 'Sharing' }} />
-        <Stack.Screen name="settings/connection" options={{ title: 'Stuff Stash Server' }} />
-        <Stack.Screen name="settings/about" options={{ title: 'About' }} />
-        <Stack.Screen name="settings/diagnostics" options={{ title: 'Diagnostics' }} />
-        <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
-        <Stack.Screen name="settings/inventory/notification-editor" options={{ title: 'Reminders' }} />
-        <Stack.Screen name="settings/inventory/notifications" options={{ title: 'Notifications' }} />
-        <Stack.Screen name="settings/inventory/index" options={{ title: 'Inventory Settings' }} />
-        <Stack.Screen name="settings/household/index" options={{ title: 'Household Settings' }} />
-        <Stack.Screen name="settings/inventory/tags/index" options={{ title: 'Tags' }} />
-        <Stack.Screen name="settings/inventory/tags/new" options={{ title: 'Add Tag' }} />
-        <Stack.Screen name="settings/inventory/tags/[resourceId]" options={{ title: 'Tag' }} />
-        <Stack.Screen name="settings/inventory/fields/index" options={{ title: 'Custom Fields' }} />
-        <Stack.Screen name="settings/inventory/fields/new" options={{ title: 'Add Field' }} />
-        <Stack.Screen name="settings/inventory/fields/[resourceId]" options={{ title: 'Custom Field' }} />
-        <Stack.Screen name="settings/inventory/asset-types/index" options={{ title: 'Asset Types' }} />
-        <Stack.Screen name="settings/inventory/asset-types/new" options={{ title: 'Add Asset Type' }} />
-        <Stack.Screen name="settings/inventory/asset-types/[resourceId]" options={{ title: 'Asset Type' }} />
-        <Stack.Screen name="settings/household/fields/index" options={{ title: 'Custom Fields' }} />
-        <Stack.Screen name="settings/household/fields/new" options={{ title: 'Add Field' }} />
-        <Stack.Screen name="settings/household/fields/[resourceId]" options={{ title: 'Custom Field' }} />
-        <Stack.Screen name="settings/household/asset-types/index" options={{ title: 'Asset Types' }} />
-        <Stack.Screen name="settings/household/asset-types/new" options={{ title: 'Add Asset Type' }} />
-        <Stack.Screen name="settings/household/asset-types/[resourceId]" options={{ title: 'Asset Type' }} />
         <Stack.Screen name="invitations/accept" options={{ title: 'Invitation' }} />
-        <Stack.Screen name="settings/voice/index" options={{ title: 'Voice Setup' }} />
-        <Stack.Screen name="settings/voice/[capability]" options={{ title: 'Voice Stage' }} />
-        <Stack.Screen name="settings/voice/profiles/index" options={{ title: 'Provider Profiles' }} />
-        <Stack.Screen name="settings/voice/profiles/add" options={{ title: 'Add Profile' }} />
-        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/index" options={{ title: 'Provider Profile' }} />
-        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/credential" options={{ title: 'Credential' }} />
-        <Stack.Screen name="settings/voice/profiles/[providerProfileId]/prompt" options={{ title: 'Prompt Guidance' }} />
         <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
         <Stack.Screen
@@ -116,8 +83,6 @@ function ThemedApp() {
           name="assets/[assetId]/move-here"
           options={sheetOptions.moveHere}
         />
-        <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
-        <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
         <Stack.Screen name="add-destination" options={{ ...sheetOptions.selection, title: 'Put in' }} />
         <Stack.Screen name="asset-tag-selection" options={{ ...sheetOptions.selection, title: 'Tags' }} />
         <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />

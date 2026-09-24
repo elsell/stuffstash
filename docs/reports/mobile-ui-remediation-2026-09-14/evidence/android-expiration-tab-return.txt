@@ -1,0 +1,19 @@
+Android API36 emulator-5580, f1c52312 plus in-app-entry fixture change.
+home-kitchen
+  Kitchen item; selected=false
+  Home; selected=true
+  Home; selected=true
+browse-camping
+  Camping item 01; selected=false
+  Browse; selected=true
+  Browse; selected=true
+home-retained
+  Camping item 01; selected=false
+  Home; selected=true
+  Home; selected=true
+
+Follow-up parameter probe: Home route key retained; query changed Kitchen -> empty
+before Filters. Shared NativeNavigationSearch correction preserves interaction
+ownership and pending draft. Final Android build without probe passes full in-app
+Home Kitchen -> Browse Camping -> Filters Apply -> Home Kitchen -> Browse Camping.
+Source checks: 2002 tests, TypeScript, structural; code critic reviewed.

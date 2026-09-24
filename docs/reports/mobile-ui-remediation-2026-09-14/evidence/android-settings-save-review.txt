@@ -1,0 +1,7 @@
+Android API36 Pixel6, installed fixture build35a79fe5, normal text/light.
+Connected production Settings collection/editor via audit-settings-readback, isolated in-memory repository.
+Tools -> edit Name to Tools audit -> Save rejected -> complete draft retained -> Save retry -> collection shows Tools audit -> reopen shows exact Tools audit, Save disabled.
+Observed captures: /tmp/settings-review.png, /tmp/android-settings-connected-rejected.png, /tmp/android-settings-connected-readback.png, /tmp/settings-reopened-settled.png.
+Error is grouped above the form; Name/Color are grouped; primary Save and separate destructive Archive remain visible without overlap in these states. Header returns after navigation transition; immediate pre-settled capture is not accepted as a missing-header defect.
+The initial observation expected the repository's private error string; the product correctly rendered Could not save / Tag was not saved. Resume used the actual user-facing error and completed retry/readback. No product correction was needed.
+Limits: standalone fixture does not establish tab-shell ownership. No acceptance claimed for color picker M51, other customization kinds, iOS, dark appearance, enlarged text, or all Settings design. Existing color-control decision remains separate.

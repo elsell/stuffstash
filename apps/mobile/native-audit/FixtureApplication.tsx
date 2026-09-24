@@ -1,7 +1,7 @@
 import { SettingsReadbackProvider } from './SettingsReadbackFixture';
 export { SettingsReadbackFixture } from './SettingsReadbackFixture';
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
-export { BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
+export { TabExpirationFiltersFixture, BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
 
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
 import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
@@ -33,6 +33,7 @@ export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveDestinationFixture } from './MoveDestinationFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
+export { SettingsCommandFixture } from './SettingsCommandFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
 export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecoveryFixture';
@@ -121,6 +122,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
       <Stack.Screen name="search" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="browse-filters" options={sheets.filters} />
+      <Stack.Screen name="expiration-filters" options={sheets.filters} />
       <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
       <Stack.Screen name="assets/[assetId]/index" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-browse-journey" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
@@ -161,6 +163,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
+      <Stack.Screen name="audit-settings-commands" options={{ title: 'Reminder recovery' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-destination" options={sheets.move} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />

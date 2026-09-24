@@ -3780,44 +3780,24 @@ Focused tests cover opt-in creation, cancellation, staging and existing rejectio
 dirty-draft guards; native normal-text verification is still required.
 ### M260 — Browse relocates its peer-view switcher between List and Map
 
-P1 structural consistency defect reported by the user and confirmed in source:
-List puts the segmented control first in its scrolling results header, while Map
-places it after a flexible summary in a separate fixed header. Users must relocate
-the same command after using it; sharing the control component did not preserve
-its placement or scroll ownership.
-
-Decision: one persistent native navigation-title owner for the Browse switcher,
-independent of view content. Preserve existing Add/search controls and applied
-query/filter state. Remove the duplicate content-owned switchers. The native
-header retains its compact scroll-edge behavior without adding a content row.
-The mounted ownership regression failed first;32 focused checks, TypeScript,
-structural checks and10 fixture preparation tests pass. Native phone/iPad header
-fit and the List→scroll→Map→List experience require capture review before release.
-The Browse fixture does not certify asset/edit/move/filter navigation; the broader
-connected workflow review remains open.
-
-
-M260 runtime follow-up: [35863725725](evidence/native-browse-358637-results.txt)
-shows the candidate header fitting on phone/iPad. Both tests stop before scroll
-because they target static title text instead of the card's accessible Open asset
-button. Correct that selector; switching/scroll stability remains unverified.
+Normal-text acceptance is established for the current Browse candidate by run
+35964382077 on iPhone 17 and iPad mini, plus the Android walkthrough. The shared
+native header owns one List/Map control. Tests require an actual list scroll,
+unchanged control bounds, both choices reachable, Add/Search reachable, and return
+to List. Reviewed List, Map and scrolled-return captures support this scoped
+structural acceptance. They do not establish every asset/edit/filter return path.
+See [current Browse evidence](evidence/photo-free-grid-review.txt).
 
 ### M263 — Browse tablet cards remain a sparse two-column phone layout
 
-P2 visual-coherence finding observed in native358637 iPad screenshot at normal
-text. Two large square images consume most of the viewport; only two rows fit
-below the header. Review width-adaptive grid columns with a readable minimum card
-width and preserved query, selection and scroll behavior during resize. This is
-separate from the M260 switcher correction and does not block scoped text fixes.
-Candidate uses available safe-area width, adding columns at a 220-point minimum
-beyond the existing phone pair. Resize retains offset scoped to the loaded inventory
-and criteria; Places and enlarged-text layouts remain one column. Focused source
-checks pass. Native phone/iPad density and scrolling acceptance remains open; the
-app is portrait-locked, so no rotation support is claimed.
-
-M260 scoped native acceptance now passes on phone and iPad in
-[run35867740920](evidence/native-browse-358677-results.txt). Combined batch
-verification remains required.
+Normal-text density acceptance is established by run 35964382077 on iPhone 17 and
+iPad mini. Phone uses two columns; the tested tablet uses three. Confirmed photo-free
+rows are compact, while mixed rows reserve media space consistently for photos and
+unknown photo state. Reviewed sparse/mixed captures and the dense scrolling fixture
+verify these layouts together. Android sparse/mixed List/Map return also passes.
+See [current Browse evidence](evidence/photo-free-grid-review.txt). This is scoped
+light/normal-text acceptance; other appearances, large text and wider adaptation
+remain separate audit work. The app is portrait-locked; no rotation support claimed.
 
 ### M265 — Map repeats the inventory title at its root
 
@@ -4048,3 +4028,20 @@ the picker width is correct. Backport upstream Screens4652 to prevent a deleted
 sheet resizing a recycled scroll view. Verify the full viewport and all modes.
 This structural finding belongs to the follow-up batch; PR173 stays frozen.
 
+
+
+### M280 — Tablet detail has unrelated content widths
+
+Normal-text iPad [detail capture](evidence/ipad-detail-mixed-columns-359347.png)
+from35934741356 shows location, photo and availability actions ending inside a
+full-width detail page. Source confirms independent560-point row caps while
+identity, contents and separators use the full viewport. This is a composition
+finding; the commands remain operable.
+
+Candidate uses one centered720-point detail column, including existing padding,
+and removes independent caps from contextual, caption and containment action rows.
+Photo pages and snapping now follow their measured gallery viewport. The new
+resize regression failed before implementation; affected tests and TypeScript
+pass. Critic caught the remaining containment cap, now removed. Native visual
+acceptance is pending, including empty/populated detail, contained lists and
+resizing while on a later photo. This follows the frozen PR174/176 batches.

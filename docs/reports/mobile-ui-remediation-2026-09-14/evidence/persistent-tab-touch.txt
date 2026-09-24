@@ -1,0 +1,29 @@
+Accepted: focused35973624529 at579fb767 passes the full tab-return workflow on
+both iPhone and iPad, including the unchanged final both-tabs isHittable assertion.
+Reviewed final captures retain Tools emergency and visible native Home/Browse tabs.
+iPad artifact10798052431, phone10797333974; captures /tmp/move-layout-review/direct-tabs-*.
+The direct native button locator supersedes the failing ancestor-chain observation;
+no production layout change was needed. Settings create/save/reopen already passed
+on both devices at5040afd4. These results close the scoped release gates, not full
+VoiceOver or all41-route acceptance.
+
+Historical diagnosis and correction:
+35970467285 at5040afd4 passes both iPhone workflows and iPad
+Settings creation/save/reopen. The stable-key correction is natively accepted.
+iPad tab touch roundtrip and exact Tools emergency draft return pass; the final
+both-tabs isHittable waiter fails. Capture shows both native tabs clearly present.
+
+New discriminating evidence: near t288 the XCTest log repeatedly retries Other
+ancestor resolution, followed by Find Browse retries. The helper selected a minimum
+height container from ancestor matches bound by index. Direct button lookup avoids
+that transient ancestor chain; Home/Browse labels identify only native tabs in this
+isolated fixture. Keep hittable duplicate selection, actual touch/selected state,
+exact draft and the final both-tabs assertion unchanged. One focused tab-return
+run is required; a further failure must not trigger unchanged locator experiments.
+No production tab layout change is justified by these observations.
+
+Phone artifact10797211012, iPad10796169375; log /tmp/stable-key-ipad.log.gz.
+Reviewed /tmp/move-layout-review/stable-key-ipad-testPersistentTabsRetainDestinationsDraftsAndModalReturn-final.png.
+Earlier995c0859 iPad tab pass and f5d7961b phone tab pass do not supersede this
+current failure. isHittable describes a computed hit point, not complete VoiceOver
+acceptance: https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable

@@ -1,0 +1,32 @@
+Current acceptance: normal-text Browse density/placement accepted for the named
+Android and iOS fixtures. Separate branch codex/mobile-photo-free-browse; not part
+of frozen PR178. Product row-reservation source1fa57a5f; native fixture9fb6280f.
+
+Run35964382077 passed3/3 workflows on iPhone17 and iPad mini(A17Pro): adaptive grid,
+compact/mixed-media comparison, and actual scrolling plus List/Map return. Reviewed
+final sparse/mixed/scrolled PNGs and intermediate Map PNGs from artifacts10793674112
+(phone) and10793744099(tablet), extracted as /tmp/move-layout-review/density-fixed-*.
+Photo-free rows compact; photo-bearing and unknown peers reserve aligned media.
+Titles align within mixed rows. The List/Map selector remains in place across mode
+changes and scroll return. Phone uses two columns; iPad uses three. Map rows remain
+readable below native chrome, with no clipping from the header.
+
+Android API36 Pixel6 normal/light: reviewed /tmp/photo-row-aligned.png and
+/tmp/photo-free-browse-ready.png. Mixed-row positions and native selector bounds
+match across Map/List return (/tmp/android-mixed-row-return-{scrolled,returned}.xml
+and PNG). Initial per-card compaction f39d5e15 was rejected because mixed-photo
+rows stretched photo-free peers into blank white panels; row reservation fixes it.
+
+Source tests cover resize, unknown presence and actual-photo precedence. Latest
+full2005 mobile tests, TypeScript and structural checks passed with the subsequent
+bounded Settings command change. Critic found no source blocker.
+
+Earlier run35962300873 is superseded: its sparse12-card iPad scene could not scroll,
+and its selector omitted mixed-media comparison. Dedicated36-asset dense data and
+explicit selection corrected those observation gaps; no production scrolling fix
+was inferred or introduced from that failure.
+
+Limits: this is scoped normal-text/light acceptance, not all appearances or large
+text. Android live appearance remains separately unresolved; rejected candidates
+were withdrawn (android-live-appearance-header.txt). Physical-device/assistive and
+broader platform audit gates remain open.

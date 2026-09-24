@@ -12,13 +12,13 @@ import {
 describe('CustomizationEditorModel', () => {
   it('tracks the complete multiword name until stable key is explicitly edited', () => {
     let draft = emptyCustomizationEditorDraft();
-    draft = withEditorName(draft, 'W');
+    draft = withEditorName(draft, 'W', 'create');
     expect(draft.key).toBe('w');
-    draft = withEditorName(draft, 'Winter clothing');
+    draft = withEditorName(draft, 'Winter clothing', 'create');
     expect(draft.key).toBe('winter-clothing');
 
     draft = withManualEditorKey(draft, 'seasonal-gear');
-    draft = withEditorName(draft, 'Winter clothing and shoes');
+    draft = withEditorName(draft, 'Winter clothing and shoes', 'create');
     expect(draft.key).toBe('seasonal-gear');
   });
 

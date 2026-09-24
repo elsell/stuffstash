@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { ExpirationFiltersScreen } from '../src/ui/expiration/ExpirationFiltersScreen';
+import { parseExpirationRoute, expirationRouteParams, type ExpirationRouteParams } from '../src/ui/expiration/ExpirationRouteState';
+import { expirationReturnPath } from '../src/ui/expiration/ExpirationTabReturn';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { BrowseFiltersRouteScreen } from '../src/ui/screens/BrowseFiltersRouteScreen';
 import { ExpirationRouteScreen } from '../src/ui/expiration/ExpirationRouteScreen';
@@ -99,4 +102,16 @@ export function BrowseFilterJourneyDetail() {
     assetCheckoutCommand={{ execute: unsupported }} assetLifecycleCommand={{ execute: unsupported }}
     undoAssetEditCommand={{ execute: unsupported }} deleteAssetPhotoCommand={{ execute: unsupported }}
     addAssetPhotosCommand={{ execute: unsupported }} /></JourneyState>;
+}
+
+/** Real native filters/router; only choices and route namespace are fixture-owned. */
+export function TabExpirationFiltersFixture() {
+  const router = useRouter();
+  const params = useLocalSearchParams<ExpirationRouteParams & { originTab?: string | string[] }>();
+  const { tenantId = '', inventoryId = '', filter } = parseExpirationRoute(params);
+  return <ExpirationFiltersScreen initial={filter} choices={{ types: [], tags: [], locations: [] }}
+    onCancel={() => router.back()} onApply={draft => router.dismissTo({
+      pathname: expirationReturnPath(params.originTab).replace('/(tabs)/', '/audit-tabs/'),
+      params: expirationRouteParams(tenantId, inventoryId, draft)
+    } as Href)} />;
 }

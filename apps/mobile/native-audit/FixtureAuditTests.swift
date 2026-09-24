@@ -1157,7 +1157,13 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertTrue(edit.waitForExistence(timeout: 5)); XCTAssertTrue(edit.isHittable)
       }
       if variant == "photo" {
-        XCTAssertTrue(app.buttons["Open photo 1 of 1"].firstMatch.waitForExistence(timeout: 5))
+        let photo = app.buttons["Open photo 1 of 1"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(photo.frame.width, 0)
+        XCTAssertLessThanOrEqual(photo.frame.width, 688 + 1)
+        XCTAssertGreaterThanOrEqual(photo.frame.minX, 0)
+        XCTAssertLessThanOrEqual(photo.frame.maxX, app.frame.maxX)
+        XCTAssertEqual(photo.frame.midX, app.frame.midX, accuracy: 2)
         XCTAssertFalse(app.staticTexts["No photos"].exists)
       }
       if variant == "place" {
@@ -1183,6 +1189,36 @@ final class FixtureAuditTests: XCTestCase {
         capture("detail-context-" + variant + "-availability")
       }
     }
+  }
+
+  func testDetailGalleryKeepsLaterPhotoInReadableColumn() {
+    guard openFixtureURL("audit-detail-commands?variant=gallery") else { return }
+    let first = app.buttons["Open photo 1 of 3"].firstMatch
+    let second = app.buttons["Open photo 2 of 3"].firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertTrue(first.isHittable)
+    first.swipeLeft(velocity: .slow)
+    let secondCentered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      second.isHittable && abs(second.frame.midX - self.app.frame.midX) < 3
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [secondCentered], timeout: 5), .completed)
+    XCTAssertLessThanOrEqual(second.frame.width, 689)
+    capture("detail-gallery-second-portrait")
+    defer { XCUIDevice.shared.orientation = .portrait }
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      XCUIDevice.shared.orientation = .landscapeLeft
+      let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        self.app.frame.width > self.app.frame.height && second.isHittable
+          && abs(second.frame.midX - self.app.frame.midX) < 3
+      }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 10), .completed)
+      XCTAssertLessThanOrEqual(second.frame.width, 689)
+      capture("detail-gallery-second-landscape")
+    }
+    second.tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Fixture image 2.png"].waitForExistence(timeout: 5))
+    app.buttons["Close photo viewer"].tap()
   }
 
   func testDetailCommandsRemainReachableAtNormalTextSize() {
@@ -1441,6 +1477,9 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(visible())
     }
     reveal(photos)
+    if captureSuffix == "normal-size" {
+      XCTAssertGreaterThan(photos.frame.width, photos.frame.height * 1.5, "Short Retry label must not collapse into a narrow oval")
+    }
     capture("asset-region-photo-error-\(captureSuffix)")
     photos.tap()
     XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
@@ -1448,12 +1487,18 @@ final class FixtureAuditTests: XCTestCase {
     reveal(app.staticTexts["No photos"].firstMatch)
     capture("asset-region-photo-recovered-\(captureSuffix)")
     reveal(contents)
+    if captureSuffix == "normal-size" {
+      XCTAssertGreaterThan(contents.frame.width, contents.frame.height * 1.5, "Short Retry label must not collapse into a narrow oval")
+    }
     capture("asset-region-contents-error-\(captureSuffix)")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
-    XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
     let empty = app.staticTexts["Nothing inside yet"].firstMatch
-    XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    let recovered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !contents.exists && empty.exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [recovered], timeout: 15), .completed,
+      "Contents retry must disappear and show recovered content after one tap")
     reveal(empty)
     capture("asset-region-recovered-\(captureSuffix)")
     let back = app.navigationBars.buttons.firstMatch
@@ -2697,6 +2742,26 @@ final class FixtureAuditTests: XCTestCase {
     capture("detail-empty-photo-hierarchy")
   }
 
+  func testBrowsePhotoFreeRowsKeepMixedMediaAligned() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let garage = app.otherElements["asset-card-journey-0"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 10))
+    XCTAssertLessThan(garage.frame.height, garage.frame.width,
+      "Confirmed photo-free grid cards must not reserve a square media panel")
+    capture("browse-photo-free-compact")
+    guard openFixtureURL("audit-browse-journey?photoMix=true") else { return }
+    let mixed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      garage.exists && garage.frame.height > garage.frame.width
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [mixed], timeout: 10), .completed)
+    let garageTitle = app.buttons["Open asset Garage"].firstMatch
+    let kitchenTitle = app.buttons["Open asset Kitchen"].firstMatch
+    XCTAssertTrue(kitchenTitle.waitForExistence(timeout: 10))
+    XCTAssertEqual(garageTitle.frame.minY, kitchenTitle.frame.minY, accuracy: 1,
+      "Photo-free peers must align their titles with the photo card")
+    capture("browse-mixed-photo-alignment")
+  }
+
   func testBrowseGridFitsDeviceWidth() {
     guard openFixtureURL("audit-browse-journey") else { return }
     let garage = app.otherElements["asset-card-journey-0"].firstMatch
@@ -2723,7 +2788,7 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll() {
-    guard openFixtureURL("audit-browse-journey") else { return }
+    guard openFixtureURL("audit-browse-journey?dense=true") else { return }
     let control = app.segmentedControls.firstMatch
     XCTAssertTrue(control.waitForExistence(timeout: 10))
     let list = control.buttons["List"]
@@ -2759,7 +2824,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-scrolled")
     map.tap()
     XCTAssertTrue(map.isSelected)
-    let overview = app.staticTexts["12 active assets · 2 root items"].firstMatch
+    let overview = app.staticTexts["36 active assets · 2 root items"].firstMatch
     XCTAssertTrue(overview.waitForExistence(timeout: 10))
     XCTAssertFalse(app.buttons["Filters"].exists)
     verifyAnchor()
@@ -2770,6 +2835,121 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(overview.exists)
     verifyAnchor()
     capture("browse-journey-list-return")
+  }
+
+  private func tabCandidates(_ name: String) -> XCUIElementQuery {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // The fixture gives these labels only to native tabs. Ancestor indices can
+      // become stale as UIKit replaces its iPad tab/navigation containers.
+      return app.buttons.matching(identifier: name)
+    }
+    return app.tabBars.firstMatch.buttons.matching(identifier: name)
+  }
+
+  private func tab(_ name: String) -> XCUIElement {
+    let candidates = tabCandidates(name)
+    return candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) ?? candidates.firstMatch
+  }
+
+
+  private func activateVisibleTabForTouchObservation(_ name: String) {
+    if UIDevice.current.userInterfaceIdiom != .pad {
+      tab(name).tap()
+      return
+    }
+    let bounds = app.frame
+    let candidate = tabCandidates(name).allElementsBoundByIndex.first { element in
+      let frame = element.frame
+      return !frame.isEmpty && !frame.isInfinite && !frame.isNull && bounds.contains(frame)
+    }
+    guard let candidate else {
+      XCTFail("No on-screen native tab bounds for \(name)")
+      return
+    }
+    candidate.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+  }
+
+
+  func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
+    guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
+    let move = app.buttons["Move"].firstMatch
+    XCTAssertTrue(move.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    capture("persistent-tabs-home-detail")
+    move.tap()
+    let cancel = app.buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(move.isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    tab("Browse").tap()
+    let browse = app.staticTexts["Tab shell Browse placeholder"].firstMatch
+    XCTAssertTrue(browse.waitForExistence(timeout: 10))
+    let openBrowseAsset = app.buttons["Open Browse asset"].firstMatch
+    XCTAssertTrue(openBrowseAsset.isHittable)
+    XCTAssertGreaterThanOrEqual(openBrowseAsset.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+    openBrowseAsset.tap()
+    XCTAssertTrue(move.waitForExistence(timeout: 10))
+    tab("Home").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
+    tab("Browse").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
+    capture("persistent-tabs-browse-detail-return")
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    XCTAssertTrue(browse.waitForExistence(timeout: 10), "Browse must retain its own destination stack")
+    guard openFixtureURL("audit-tabs/(home)/settings/inventory/tags/tools") else { return }
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText(" emergency")
+    XCTAssertEqual(name.value as? String, "Tools emergency")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
+    XCTAssertTrue(browse.waitForExistence(timeout: 10)); tab("Home").tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency")
+    capture("persistent-tabs-settings-draft-before-touch")
+    activateVisibleTabForTouchObservation("Browse")
+    XCTAssertTrue(browse.waitForExistence(timeout: 10), "Visible Browse tab must switch destinations")
+    XCTAssertTrue(browse.isHittable)
+    XCTAssertTrue(tab("Browse").isSelected)
+    XCTAssertFalse(name.isHittable)
+    capture("persistent-tabs-settings-browse-touch")
+    activateVisibleTabForTouchObservation("Home")
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertTrue(name.isHittable)
+    XCTAssertTrue(tab("Home").isSelected)
+    XCTAssertFalse(browse.isHittable)
+    XCTAssertEqual(name.value as? String, "Tools emergency")
+    capture("persistent-tabs-settings-draft-return")
+    let tabsReturned = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      self.tab("Home").isHittable && self.tab("Browse").isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [tabsReturned], timeout: 10), .completed,
+      "Both tabs must remain accessibility-hittable after returning to the draft editor")
+  }
+
+  func testExpirationFiltersReturnToTheirOwningTab() {
+    guard openFixtureURL("audit-tabs") else { return }
+    let homeExpiration = app.buttons["View all expiration dates"].firstMatch
+    XCTAssertTrue(homeExpiration.waitForExistence(timeout: 10)); homeExpiration.tap()
+    let kitchen = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Kitchen item")).firstMatch
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
+    let browseExpiration = app.buttons["Open Browse expiration"].firstMatch
+    XCTAssertTrue(browseExpiration.waitForExistence(timeout: 10)); browseExpiration.tap()
+    let camping = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch
+    XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10)); XCTAssertFalse(camping.exists,
+      "Tab return must retain Home's query before Filters is opened")
+    tab("Browse").tap(); XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    let filters = app.buttons["Filter expiration items"].firstMatch
+    XCTAssertTrue(filters.isHittable); filters.tap()
+    let apply = app.buttons["Apply expiration filters"].firstMatch
+    XCTAssertTrue(apply.waitForExistence(timeout: 10)); XCTAssertTrue(apply.isHittable); apply.tap()
+    XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); tab("Home").tap()
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10)); XCTAssertFalse(camping.exists)
+    tab("Browse").tap()
+    XCTAssertTrue(camping.waitForExistence(timeout: 10)); XCTAssertFalse(kitchen.exists)
+    capture("expiration-filters-browse-origin-retained")
   }
 
   func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {
@@ -3026,6 +3206,31 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testSettingsCommandsRecoverReminderDraft() {
+    guard openFixtureURL("audit-settings-commands") else { return }
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+    app.buttons["Off"].tap()
+    let retry = app.buttons["Retry saving reminders"].firstMatch
+    let discard = app.buttons["Discard reminder changes"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 5))
+    XCTAssertTrue(retry.isHittable); XCTAssertTrue(discard.isHittable)
+    XCTAssertFalse(retry.frame.intersects(discard.frame))
+    XCTAssertTrue(app.staticTexts["Saved reminders: defaults"].exists)
+    capture("settings-reminder-recovery-pair")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].waitForExistence(timeout: 5))
+    app.buttons["Fail next save"].tap(); choice.tap(); app.buttons["Custom"].tap()
+    XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.tap()
+    XCTAssertTrue(discard.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].exists)
+    XCTAssertFalse(app.buttons["Before expiration"].exists)
+    let device = app.buttons["Open device settings"].firstMatch
+    XCTAssertTrue(device.isHittable); device.tap()
+    XCTAssertTrue(app.staticTexts["Device settings activations: 1"].waitForExistence(timeout: 5))
+    capture("settings-command-long-label")
+  }
+
   func testReminderModeUsesMenuWithoutNavigation() {
     openSettingsControls()
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
@@ -3214,7 +3419,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(updated.waitForExistence(timeout: 10))
     app.buttons["Add Tag"].firstMatch.tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText("Camping")
-    XCTAssertEqual(name.value as? String, "Camping")
+    let committedName = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      name.value as? String == "Camping"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [committedName], timeout: 15), .completed,
+      "The complete typed name must settle without retyping before Save")
     app.buttons["Dismiss keyboard"].firstMatch.tap(); save.tap()
     let created = app.buttons["Camping, No color"].firstMatch
     XCTAssertTrue(created.waitForExistence(timeout: 10)); created.tap()

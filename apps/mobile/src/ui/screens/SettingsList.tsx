@@ -1,3 +1,4 @@
+import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Switch, Text, useWindowDimensions, View } from 'react-native';
 import { Check, ChevronRight } from 'lucide-react-native';
@@ -35,9 +36,9 @@ export function SettingsSection({
   );
 }
 
-export function SettingsSeparator() {
+export function SettingsSeparator({ hasLeadingIcon = false }: { readonly hasLeadingIcon?: boolean }) {
   const { styles } = useSettingsListStyles();
-  return <View accessibilityElementsHidden importantForAccessibility="no" style={styles.separator} />;
+  return <View accessibilityElementsHidden importantForAccessibility="no" style={[styles.separator, hasLeadingIcon && styles.separatorWithIcon]} />;
 }
 
 export function SettingsLoadingRow({ label }: { readonly label: string }) {
@@ -125,20 +126,10 @@ export function SettingsActionRow({
 }) {
   const { styles } = useSettingsListStyles();
   return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityRole="button"
-      accessibilityState={{ busy: disabled, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.actionRow,
-        pressed && !disabled && styles.navigationRowPressed,
-        disabled && { opacity: 0.55 }
-      ]}
-    >
-      <Text style={destructive ? styles.dangerText : styles.actionText}>{label}</Text>
-    </Pressable>
+    <View style={styles.actionRow}>
+      <NativeCommandButton label={label} accessibilityLabel={accessibilityLabel}
+        disabled={disabled} role={destructive ? 'destructive' : 'default'} onPress={onPress} />
+    </View>
   );
 }
 

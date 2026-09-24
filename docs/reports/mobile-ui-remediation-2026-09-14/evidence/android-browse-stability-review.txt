@@ -1,0 +1,5 @@
+Android API36 Pixel6, installed fixture build35a79fe5, normal text/light; audit-browse-journey.
+List top -> scroll to Picnic blanket/Travel bag -> Map -> List retains the same scrolled cards and header control bounds.
+Selector container bounds [354,138][727,264] before/after scroll and Map/List return. The native selected checkmark shifts text within each segment; comparing text bounds alone falsely reports movement. Actual shared control remains anchored. No product correction needed for this scoped observation.
+Reviewed actual screenshots /tmp/android-browse-stability-list-top.png, /tmp/android-browse-stability-list-scrolled.png, /tmp/android-browse-map-review.png, /tmp/android-browse-stability-list-return.png.
+Limits: standalone Browse fixture does not establish tab-shell integration, search/filter retention or iOS behavior. Large empty thumbnails still dominate photo-free grid density; this review accepts anchor/scroll retention only, not full Browse visual coherence.

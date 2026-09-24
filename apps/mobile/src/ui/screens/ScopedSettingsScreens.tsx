@@ -43,7 +43,7 @@ function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
     <SettingsRefreshNotice visible={model.hasRefreshError} onRetry={model.load} />
     <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? 'Household settings' : `Inventory in ${settings.selectedTenant.name}`}</Text></View>
-    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
+    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
   </ScrollView>;
 }
 

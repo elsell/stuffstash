@@ -136,6 +136,16 @@ export function browseColumnCount({
   return Math.max(2, Math.floor((availableWidth + spacing.sm) / (minimumTabletCardWidth + spacing.sm)));
 }
 
+/** A regular grid aligns media and titles within each responsive row. */
+export function browseRowReservesMedia(
+  assets: readonly Pick<AssetCardViewModel, 'hasPhoto' | 'photo'>[],
+  index: number,
+  columnCount: number
+): boolean {
+  const start = Math.floor(index / columnCount) * columnCount;
+  return assets.slice(start, start + columnCount).some(asset => asset.hasPhoto !== false || !!asset.photo);
+}
+
 export function browseGridCardWidth(width: number, columnCount: number): number | undefined {
   return columnCount > 1
     ? Math.floor((width - (spacing.md * 2) - spacing.sm * (columnCount - 1)) / columnCount)

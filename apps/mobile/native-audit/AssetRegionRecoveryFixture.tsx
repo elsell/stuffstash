@@ -22,14 +22,14 @@ export function AssetContentsSearchFixture() {
   return <AssetDetailFixture mode="search" />;
 }
 
-type DetailVariant = 'default' | 'photo' | 'checked-out' | 'read-only' | 'place';
+type DetailVariant = 'default' | 'photo' | 'gallery' | 'checked-out' | 'read-only' | 'place';
 const detailTitles: Record<DetailVariant, string> = {
-  default: 'Garage shelves and seasonal storage', photo: 'Camping tent',
+  default: 'Garage shelves and seasonal storage', photo: 'Camping tent', gallery: 'Camping photos',
   'checked-out': 'Camping gear', 'read-only': 'Spare camping gear', place: 'Garage'
 };
 export function AssetDetailCommandsFixture() {
   const { variant } = useLocalSearchParams<{ variant?: string }>();
-  const selected: DetailVariant = variant === 'photo' || variant === 'checked-out'
+  const selected: DetailVariant = variant === 'photo' || variant === 'gallery' || variant === 'checked-out'
     || variant === 'read-only' || variant === 'place' ? variant : 'default';
   return <AssetDetailFixture key={selected} mode="commands" variant={selected} />;
 }
@@ -40,9 +40,9 @@ function AssetDetailFixture({ mode, variant = 'default' }: { readonly mode: 'rec
     const defaults = client.getDefaultOptions();
     client.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
     const asset = { id: assetId('audit-place'), title: mode === 'commands' ? detailTitles[variant] : 'Audit place',
-      kind: variant === 'photo' ? 'item' as const : mode === 'commands' && variant !== 'place' ? 'container' as const : 'location' as const,
+      kind: variant === 'photo' || variant === 'gallery' ? 'item' as const : mode === 'commands' && variant !== 'place' ? 'container' as const : 'location' as const,
       lifecycleState: 'active' as const, description: '', locationLabel: '', locationTrail: [],
-      parentLocationTrail: [], updatedAtLabel: '', hasPhoto: variant === 'photo',
+      parentLocationTrail: [], updatedAtLabel: '', hasPhoto: variant === 'photo' || variant === 'gallery',
       currentCheckout: variant === 'checked-out' || variant === 'read-only' ? {
         id: 'audit-checkout', state: 'checked_out', checkedOutAt: '2026-09-01T10:00:00Z',
         checkedOutByPrincipalId: 'Alex'
@@ -61,8 +61,11 @@ function AssetDetailFixture({ mode, variant = 'default' }: { readonly mode: 'rec
       } }),
       photos: new AssetPhotosQuery({ getAssetPhotos: async () => {
         if (++photoReads === 1 && mode === 'recovery') throw new Error('Audit photos unavailable');
-        return variant === 'photo' ? [{ id: 'audit-detail-photo', fileName: 'Fixture image.png',
-          uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri }] : [];
+        return variant === 'photo' || variant === 'gallery'
+          ? Array.from({ length: variant === 'gallery' ? 3 : 1 }, (_, index) => ({
+            id: `audit-detail-photo-${index}`, fileName: `Fixture image ${index + 1}.png`,
+            uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri
+          })) : [];
       } }),
       selection: new PhotoSelectionQuery({ selectFromLibrary: noMutation, captureFromCamera: noMutation })
     };

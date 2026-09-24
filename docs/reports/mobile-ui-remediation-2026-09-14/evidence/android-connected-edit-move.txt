@@ -1,0 +1,23 @@
+Android API36 Pixel6, normal text/light, 1080x2400 at420dpi.
+APK SHA256: ccdbe18249bd4e13dcf69416a9fb705142d908c11d0925538f36db4a013ca527.
+Installed audit build contains a0874586 product changes; later iOS command sizing
+and Settings-name changes are not in this APK. This verifies the unchanged asset
+workflow only, not the final integrated follow-up build or production server writes.
+
+Production detail/Edit/Move routes share the AssetEditJourneyFixture in-memory
+repository, update command and query invalidation. Starting from Camping tent:
+1. Edit, append kit, verify exact Camping tent kit.
+2. Save with software keyboard visible; detail displays Camping tent kit.
+3. Reopen Edit, exact value retained, Cancel returns without Discard changes.
+4. Move, select Garage, activate native toolbar Move.
+5. Detail displays Garage; reopen Move shows Current location: Garage.
+6. Cancel returns to the same renamed item and saved location.
+Both sequences passed. Capture review confirms reachable keyboard-open Save,
+legible form grouping, visible destination checkmark and separated task commands.
+
+Captures retained locally in /tmp/android-edit-connected-{open,keyboard,saved,return}.png
+and /tmp/android-move-connected-{selected,saved,reopened}.png. Replay scripts:
+/tmp/android-edit-connected-save.py and /tmp/android-move-connected-save.py.
+The shared fixture is an isolated route: missing root tabs here is not evidence
+about production tab visibility. Physical keyboard/assistive, dark appearance,
+large text, live-server persistence and full Browse return are outside this check.

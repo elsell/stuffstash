@@ -3,7 +3,7 @@ import type { SettingsLoadState } from '../screens/SettingsScreenState';
 import { decideInventorySharingAccess } from './InventorySharingAccess';
 
 // @ts-expect-error Vitest provides raw route sources to structural boundary tests.
-const sharingRouteSources = import.meta.glob('../../app/settings/sharing.tsx', {
+const sharingRouteSources = import.meta.glob('../../app/(tabs)/(home,search)/settings/sharing.tsx', {
   eager: true,
   import: 'default',
   query: '?raw'

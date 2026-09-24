@@ -1,3 +1,4 @@
+import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import React from 'react';
 import { navigationOptions } from '../../test-support/navigation';
 import { expect, it } from 'vitest';
@@ -30,8 +31,7 @@ it('settles typed search before opening filters and does not write after navigat
  const harness=new MobileRenderHarness(); const events:string[]=[];
  try {
   await harness.render(<ExpirationWorkspaceScreen mode="all" items={[]} loading={false} refreshing={false} hasMore={false} onMode={()=>{}} onSearch={value=>events.push(`search:${value}`)} onFilters={value=>events.push(`filters:${value}`)} onRefresh={()=>{}} onMore={()=>{}} onOpenAsset={()=>{}} />);
-  const options=navigationOptions().at(-1) as {headerSearchBarOptions:{onChangeText:(event:{nativeEvent:{text:string}})=>void}};
-  await harness.run(()=>options.headerSearchBarOptions.onChangeText({nativeEvent:{text:'Medicine'}}));
+  await harness.run(()=>typeInNativeSearch('Medicine'));
   await harness.press(harness.byLabel('Filter expiration items'));
   expect(events).toEqual(['search:Medicine','filters:Medicine']);
  } finally { await harness.unmount(); }

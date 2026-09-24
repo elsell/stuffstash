@@ -2320,3 +2320,87 @@ destination hierarchy, deliberate alignment and action prominence. The latest us
 rejection keeps Move visually open until that review is explicit; older recorded
 passes must not silently override it. Existing grouped-list and stacked-search
 implementation should be assessed before deciding another implementation is needed.
+
+
+### M280: One readable asset-detail column
+
+The reviewed normal-text iPad detail capture from run35934741356 has command
+rows capped at560 points inside an otherwise full-width page. Identity, contents,
+separators and the photo caption therefore have inconsistent trailing edges.
+This is a visual-composition finding, not an operation failure. Apple's
+[layout tips](https://developer.apple.com/design/tips/) recommend readable layouts
+and controls close to the content they modify.
+
+Use one centered detail content column, capped at720 points including its existing
+horizontal padding. This width is a project choice, not an Apple requirement.
+Narrow screens retain their existing available width. Identity, media, location,
+availability and contained rows share that column; remove independent row caps.
+Keep the native scrolling viewport full-screen. Do not add a sheet, sidebar,
+extra navigation, or new command for this correction.
+
+Photo pages and snapping must use the actual gallery viewport, including after
+window resizing, rather than assuming device width. Preserve opening the chosen
+photo and its authenticated source. Verify actual phone/tablet empty and populated
+detail, twenty-item contents, search and scroll return before visual acceptance.
+The existing release batch remains frozen; this is a subsequent candidate.
+
+
+M280 native acceptance extends the existing hierarchy subset with a three-photo
+fixture. Select the second photo, verify its centered bounded frame, rotate iPad
+using XCTest device orientation, then open that same named photo. Restore portrait
+on exit; iPhone retains its production portrait orientation. The other five
+hierarchy workflows retain their existing assertions. Fixture dimensions and
+source tests do not substitute for reviewing the resulting captures.
+
+### Contextual command emphasis and detail recovery
+
+Apple supports borderless buttons but does not require them for standalone commands.
+Choose emphasis from context, rather than treating native control provenance as design
+acceptance. Keep quiet row/toolbar actions where their grouping explains them; use a
+bounded secondary command for standalone recovery; reserve primary emphasis for the
+main task. Reference: https://developer.apple.com/design/human-interface-guidelines/buttons
+
+The shared command adapter adds explicit secondary prominence (SwiftUI bordered,
+Compose outlined). Secondary recovery controls align with their explanatory text,
+without filling the whole content width. Per user direction, secondary is the default. Borderless requires an explicit
+standard prominence choice justified by an enclosing row or toolbar. Existing
+primary emphasis remains unchanged; inspect affected consumers before release.
+On asset detail, identity precedes photo loading/failure information. Each failed
+region groups its message with a bounded Retry action. Retrying one region must not
+hide or reset the other; disabled callbacks must not execute and current handlers
+must be used. Verify native retry completion and visual hierarchy on phone/tablet.
+
+Current native detail evidence35948366265 passes five of six workflows on each
+device, including gallery selection/rotation. Region recovery fails after photo
+Retry on phone and contents Retry on tablet. Do not mark this candidate accepted;
+keep those exact completion assertions while correcting the affected presentation.
+
+The command-emphasis native subset reuses the six connected detail/map checks,
+Settings archive, invitation recovery and Add draft recovery to inspect shared
+button consumers. Retain the region Retry completion assertions. This subset does
+not certify every button consumer; long labels, Android geometry and dark appearance
+remain explicit acceptance gaps until captured on their respective runtimes.
+
+
+The phone capture from35951671413 exposes a secondary-button sizing defect despite
+successful command completion: Retry contents wraps into a narrow oval. A Host
+that measures both dimensions cannot establish the available inline width here.
+Give the native host the parent width and measure only height; lay out the bounded
+button at the leading edge with remaining space outside the button. Preserve
+wrapping for genuinely long labels without compressing short normal-text labels.
+The existing native recovery workflow must check short Retry button geometry as
+well as successful recovery; review actual phone and tablet captures before acceptance.
+
+
+### Next native-pattern batch
+
+Combine persistent ordinary-screen tabs, M280's coherent detail column and bounded
+command emphasis on the released98d29649 baseline. Keep the corrected Settings
+committed-save, Add search observation and Move contrast. Verify the combined
+source using the existing nine command-emphasis workflows, three tab workflows
+(including Expiration Filters origin and final Settings tab visibility), and the
+connected Settings readback workflow. This is thirteen representative workflows,
+not a whole-app certificate. Reuse the same assertions and review captures;
+individual candidate passes do not establish integration acceptance. Complete
+Android, dark appearance, longer-label and remaining route coverage before claiming
+those axes; don't expand the already publishing release with these candidates.

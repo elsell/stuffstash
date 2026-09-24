@@ -86,3 +86,12 @@ limitation; substitute; accessibility/keyboard/dismissal behavior; consumer list
 verification evidence; condition for revisiting. “Easier in React Native,” matching
 an old screen, or copying another app's screenshot is not sufficient justification.
 Do not require a new dependency merely to remove every custom visual element.
+
+## Command appearance preference
+
+Stuff Stash defaults commands to bounded native buttons. Use the existing secondary
+native style for ordinary commands and primary emphasis for the task's main action.
+Borderless commands require a contextual reason, such as established navigation-bar
+placement; do not use blue text as a blanket default. Navigation rows and selection
+rows retain their platform conventions. This is an explicit product preference,
+not a claim that Apple's HIG forbids borderless controls.

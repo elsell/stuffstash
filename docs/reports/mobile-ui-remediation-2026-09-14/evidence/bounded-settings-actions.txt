@@ -1,0 +1,50 @@
+Current acceptance: bounded Settings filter actions pass on iPhone, iPad and
+Android at normal text. Reminder recovery and corrected command sizing pass on
+both iOS devices in35971374386 at1661a240 and on Android. Reviewed paired buttons
+and long-label captures: distinct bounded controls, aligned divider, readable text.
+Artifacts phone10797265964 and iPad10796783503; captures locally in
+/tmp/move-layout-review/commands-fixed-{phone,ipad}-*.png.
+The prior35967919825 overlap is superseded: label minimum32 retains outer48-point
+commands while allowing native padding. Four adapter checks, TypeScript,
+structural checks and critic review passed. This is follow-up PR179, separate
+from PR178's unresolved iPad tab locator gate.
+
+SettingsActionRow uses the shared bounded secondary command adapter, retaining
+visible labels, descriptive accessible names, disabled guards and destructive role.
+Consumer source review: Browse/Expiration/date reset; reminder Retry/Discard;
+notification loading/back/device Settings; Browse loading Retry/Cancel; voice setup.
+Navigation and selection rows are unchanged. Commands stay with their task state;
+filter completion remains the primary footer action.
+
+Run35965504659 at769016a3: all6 filter workflows passed on each of iPhone17 and
+iPad mini(A17Pro). Reviewed overview, final-tag clearance and date-range captures
+from artifacts10794703494(phone) and10794943594(tablet). Bounded Reset all and Clear
+date range are readable; the last tag clears the footer; date controls are reachable.
+Files: /tmp/move-layout-review/bounded-filters-{phone,ipad}-*.
+Logs: /tmp/bounded-filter-phone.log and /tmp/bounded-filter-ipad.log.gz.
+
+Android API36 Pixel6: Type → Items → Reset all → All types passed at ordinary width
+and320dp normal text; bounded Reset all remained clear of the footer after scrolling.
+Reviewed /tmp/settings-bounded-filter.png and /tmp/settings-bounded-narrow-reset.png.
+The native tree retains Reset all filters as its description; this is not TalkBack
+traversal evidence. Emulator size restored to1080×2400/420dpi.
+
+Production ExpirationReminderEditor in isolated SettingsCommandFixture passed
+failed-save → Retry(saved Off), then failed Custom save → Discard(restored Off).
+The longer Open device settings layout probe activates once; it does not open OS
+Settings. Reviewed /tmp/settings-command-{failed-save,recovered}.png. Build/replay
+logs are /tmp/settings-command-composition-{build,replay}.log.
+
+That screenshot exposed a56pt icon gutter on icon-free dividers. Correction uses
+16pt by default and preserves the derived icon inset in Settings root/scoped icon
+navigation groups. Reviewed /tmp/settings-divider-after.png against the original;
+the recovery replay still passes. Other separator consumers have no leading icon.
+Stacked rows use the ordinary inset. The current iOS captures confirm spacing.
+
+Validation:2005 mobile tests, TypeScript and structural checks passed for bounded
+commands; after the divider correction,73 relevant Settings tests, TypeScript and
+structural checks passed. Critic reviewed both changes without remaining blockers.
+Ten fixture-route isolation tests pass. The focused settings-commands iOS scenario
+requires retained failed state, Retry, Discard, distinct reachable buttons and a
+single long-label activation. Do not infer physical push, OS Settings integration,
+all appearances, large-text or assistive traversal from these results.

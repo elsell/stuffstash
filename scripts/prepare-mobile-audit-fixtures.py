@@ -55,6 +55,7 @@ exports = {
     "audit-region-recovery": "AssetRegionRecoveryFixture",
     "audit-menu-ownership": "NativeMenuOwnershipFixture",
     "audit-command-height": "CommandHeightFixture",
+    "audit-settings-commands": "SettingsCommandFixture",
     "audit-notice": "NoticePlacementFixture",
     "audit-notice-sheet": "NoticePlacementFixture",
     "audit-provider-editor": "ProviderEditorFixture",
@@ -70,6 +71,7 @@ exports = {
     "audit-browse-journey": "BrowseJourneyFixture",
     "search": "BrowseFilterJourneySearch",
     "browse-filters": "BrowseFilterJourneyFilters",
+    "expiration-filters": "TabExpirationFiltersFixture",
     "expiration": "BrowseFilterJourneyExpiration",
     "assets/[assetId]/index": "BrowseFilterJourneyDetail",
     "audit-android-header-composition": "AndroidHeaderCompositionFixture",
@@ -101,14 +103,25 @@ for route, component in exports.items():
 
 # Preserve the exact production shell and nested stack layouts. Only their data
 # screens are replaced; no production services, session, or route root is mounted.
-for layout in ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/search/_layout.tsx"):
+for layout in ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/(search)/_layout.tsx"):
     target = routes / layout.replace("(tabs)/", "audit-tabs/", 1)
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(backup / layout, target)
 for route, component in {
     "audit-tabs/(home)/index.tsx": "HomeTabShellFixture",
-    "audit-tabs/search/index.tsx": "TabShellBrowsePlaceholder",
+    "audit-tabs/(search)/search.tsx": "TabShellBrowsePlaceholder",
 }.items():
     (routes / route).write_text(
         f"export {{ {component} as default }} from '../../../../native-audit/FixtureApplication';\n"
     )
+
+# Representative real destination screens under both production tab stacks.
+for route, component in {
+    "assets/[assetId]/index": "AssetEditJourneyDetailFixture",
+    "settings/inventory/tags/[resourceId]": "CustomizationEditorFixture",
+    "expiration": "BrowseFilterJourneyExpiration",
+}.items():
+    target = routes / "audit-tabs/(home,search)" / f"{route}.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
+    target.write_text(f"export {{ {component} as default }} from '{source}';\n")

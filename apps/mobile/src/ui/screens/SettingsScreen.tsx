@@ -62,7 +62,7 @@ export function SettingsScreen({
         <SettingsSection key={section.id} title={section.title}>
           {section.rows.map((row, index) => (
             <View key={row.id}>
-              {index > 0 ? <SettingsSeparator /> : null}
+              {index > 0 ? <SettingsSeparator hasLeadingIcon={row.id !== 'appearance'} /> : null}
               {row.id === 'appearance' ? <AppearancePicker /> : <SettingsNavigationRow
                 accessibilityLabel={row.accessibilityLabel}
                 context={row.context}

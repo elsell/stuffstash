@@ -1106,3 +1106,158 @@ unfocused or unmounted state. Reuse the focused committed-action guard for the
 Settings save command. Do not weaken exact native text/persistence assertions or
 insert typing delays to make this journey pass. This source correction does not
 prove the native cause; the existing readback journey must still pass unchanged.
+
+### Expiration search ownership across tab return
+
+Native Android evidence shows the Home expiration route retaining its identity
+while its Kitchen query becomes empty on tab return, before Filters opens. Native
+close/empty callbacks outside a search interaction must not clear retained queries.
+Expiration must reuse NativeNavigationSearch, whose editing guard owns native
+callbacks, while its hook owns debounce and filter-flush semantics. Deliberate
+clear/cancel continues to clear the query.
+
+Keep the displayed draft separate from the debounced applied query. Switching tabs
+before debounce completes must restore the draft on native focus. Verify this with
+the shared adapter and its native field driver, not only the debounce hook.
+
+The native journey enters expiration through in-app actions on each selected tab,
+asserts independent Home Kitchen and Browse Camping results before opening Filters,
+and preserves both after Apply. External-link setup is separate coverage; this
+journey does not certify qualified deep-link behavior. Diagnostic overlays must
+not ship. Preserve the existing origin-tab modal return contract.
+
+### Native tab accessibility duplicates
+
+Run35955427236 passes final Settings-tab return on iPhone. The iPad capture shows
+both tabs, but the native accessibility tree exposes nested duplicate Home/Browse
+buttons with identical bounds; selecting the first match is not proof of the
+interactive control. Within the native tab strip, choose a hittable matching
+button when available, retaining the first match only to report failure if none
+is hittable. Keep the final reachability assertion and add actual Browse/Home
+activation with exact Settings draft readback. This observation correction does
+not by itself establish iPad task acceptance or justify a production layout change.
+
+### Photo-free grid native comparison
+
+The existing Browse journey fixture may accept photoMix=true to show one real local
+image, one photo-bearing asset without a resolved thumbnail, and confirmed photo-free
+peers. The normal fixture stays photo-free. Review both grids with List/Map return and
+scrolling; source geometry assertions alone do not accept mixed-row density.
+
+The focused Browse native suite verifies compact confirmed-empty card geometry and
+then mixed-row title alignment on the same route with a changed fixture variant.
+It retains existing responsive width and List/Map scroll-return checks. Photo-free
+card height must be smaller than its grid width at normal text; mixed media cards
+retain the image area. Capture both states for visual judgment.
+
+### Browse density observation prerequisites
+
+Run35962300873 passes phone Browse checks but the compact twelve-card iPad fixture
+fits entirely without scrolling. The scroll-retention scenario must use a distinct
+36-asset variant with stable identities; keep sparse and mixed-photo density cases
+unchanged. Require actual list movement and retained control placement. The focused
+browse-journey selection must include the mixed-photo comparison itself; its prior
+omission means that run provides no mixed-photo acceptance evidence.
+
+### Bounded Settings commands
+
+SettingsActionRow issues a command rather than navigating or selecting a value.
+Use the shared bounded secondary NativeCommandButton within the existing grouped
+row, preserving concise visible labels, optional descriptive accessibility labels,
+disabled guards and destructive roles. Preserve navigation/choice row conventions;
+do not add button borders to those rows. Group padding must accommodate the native
+button without truncation or nested press targets. Apply to filter resets, reminder
+retry/discard, device-settings commands and voice profile actions. Verify shared
+source consumers and representative native filter/reminder screens before release.
+NativeCommandButton accepts a separate accessibility label, defaulting to its visible
+label, consistently on iOS, Android and the preview renderer.
+
+Native acceptance for bounded Settings commands includes a runner-only reminder
+recovery fixture using the production editor: the first save fails, Retry commits
+the retained choice, and Discard restores the saved choice. Include the longer
+Open device settings label for layout/activation observation only; a fixture
+activation is not evidence that OS settings opened or push permission changed.
+
+Settings dividers align with the following row's content: ordinary text, choice,
+switch and command rows use the shared row inset; navigation rows with leading
+icons explicitly include the icon width and row gap. Do not apply an icon gutter
+to icon-free rows. Stacked layouts retain the ordinary inset. This changes visual
+grouping only, preserving interaction and accessibility semantics.
+
+### Native command content sizing
+
+The paired reminder recovery fixture at a0874586 exposed iOS bordered buttons
+whose 48-point label minimum acquired native style padding, yielding 62-point
+hit frames inside 48-point measured hosts. Retry and Discard overlapped. Keep the
+48-point minimum on the outer command, but use the same 32-point label minimum
+as primary commands so native padding fits the measured command. Preserve native
+bounded styling, multiline growth, and disabled behavior. Acceptance requires the
+existing paired recovery test to prove separate hit frames and successful Retry
+and Discard on iPhone and iPad; source tests cannot establish native geometry.
+
+### Integrated native batch completion observations
+
+Run35958732480 passes12/13 phone and11/13 iPad workflows. Both pass Add and
+independent expiration search return. The phone Retry contents assertion expires
+at five seconds, but its final native capture shows Nothing inside yet and no
+Retry command. Observe the combined completed state for a bounded fifteen seconds;
+require both the command's disappearance and the recovered content without a
+second tap. This changes observation tolerance, not the production completion rule.
+The focused iPad run35960677440 still fails after the duplicate-element
+correction; that correction does not close tab reachability. Its Settings creation reads Camngpi immediately after typing Camping;
+this remains an exact-text failure. Observe exact committed text for fifteen seconds
+without retyping or replacing it, then retain the exact save/reopen checks. A lasting
+wrong value still fails. Do not reopen provider/key-delivery experiments or claim
+these observation changes establish native acceptance before the focused run passes.
+
+### Distinguish tab touch and accessibility reachability
+
+Focused run35960677440 retains the exact Settings draft and visibly renders both
+iPad tabs, but neither the first-match correction nor waiting establishes native
+hit-test reachability. Before the final accessibility assertion, activate the visible
+native Browse and Home buttons at their observed centers on iPad, requiring Browse
+content and exact draft readback. Derive coordinates from finite on-screen native
+button bounds, never fixed screen coordinates. Capture before and after activation.
+Keep the separate final isHittable requirement: successful coordinate activation does
+not prove accessibility acceptance. A failed destination change identifies a touch
+failure; a successful roundtrip with failed hit-test keeps the narrower accessibility
+finding open. The focused tab-return selector runs this workflow alone.
+
+### Settings name input retention
+
+Run35961716802 passes contents Retry on both devices and Settings save/readback
+on iPad, but iPhone New Tag retains Cngampi after typing Camping and waiting15s.
+Do not extend the observation budget or alter typed text. Use the existing
+DraftTextField adapter for customization display names (tags, asset types, fields):
+iOS owns its editing text and publishes complete drafts; Android preserves its
+current adapter. Keep the current validation/name-to-key behavior, busy/access
+locks, failed-save retention, tab return and exact save/reopen verification.
+Loaded-resource transitions must unmount the old field before seeding a new name.
+Multiline descriptions and the explicitly focused technical key remain unchanged.
+The native failing workflow is the regression reproduction; source tests cannot
+establish correct iOS character order. Rerun Settings readback and persistent-tab
+draft return after this correction.
+
+Editing an existing customization definition must preserve its saved stable key
+when the native Name field reports either its initial value or a later rename.
+Automatic key suggestions apply only during creation until manually overridden.
+Replaying an unchanged loaded name must leave the editor clean; renaming and then
+restoring the saved name must also restore clean state. Back must not ask to discard
+changes solely because a native field appeared. Verify this with a saved display
+name that differs from its original key, then retain the native save/reopen gate.
+
+### Resolve native tabs without transient ancestor chains
+
+Run35970467285 passes Settings creation/save/reopen on both devices and the
+iPhone tab workflow. iPad completes actual tab switching and exact draft return,
+then fails the hit-point waiter. Its log repeatedly retries resolution of Other
+ancestors before failing to find Browse, while the final tree retains both native
+buttons. The smallest-container locator binds transient ancestor indices and is
+not established as reliable. In this isolated fixture, resolve iPad Home/Browse
+buttons directly by their unique labels, retaining hittable-candidate selection,
+finite on-screen bounds for touch observation, selected state, exact draft checks
+and the final both-tabs isHittable requirement. Do not change production layout or
+remove the assertion. One focused tab-return run distinguishes locator resolution
+from an outstanding native hit-point failure; if it fails, retain that failure
+without repeating this locator experiment. Settings readback is already accepted
+at5040afd4 and need not be rerun for this test-only change.

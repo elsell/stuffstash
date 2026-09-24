@@ -16,12 +16,15 @@ on:
           - text-entry
           - text-entry-no-provider
           - add-draft
+          - persistent-tabs
+          - persistent-tab-return
           - home-header
           - browse-journey
           - browse-filter-journey
           - filter-sharing-workflows
           - followup-release
           - filters
+          - settings-commands
           - release-corrections
           - menu-ownership
           - archive-notice
@@ -33,6 +36,9 @@ on:
           - enum-editing
           - workflow-batch
           - hierarchy-followup
+          - command-emphasis
+          - native-patterns-release
+          - native-completion
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -44,6 +50,7 @@ on:
           - edit-and-move-drafts
           - settings-editing
           - settings-readback
+          - settings-tab-return
           - settings-move-release
           - enum-and-settings
   pull_request:
@@ -115,20 +122,52 @@ jobs:
           mkdir -p "$RUNNER_TEMP/native-audit"
           audit_test_args=()
           hierarchy_test_args=(
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailGalleryKeepsLaterPhotoInReadableColumn'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailContextVariantsKeepNativeCommandsAndStatus'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
             '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
           )
+          command_emphasis_test_args=("${hierarchy_test_args[@]}"
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInvitationAcceptanceRetainsAccessAfterOpeningFailure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftRetainsTextAndRecoversAfterRejectedSave'
+              )
+          persistent_tab_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
+              )
           case "$AUDIT_TEST_CASE" in
             all) ;;
+            command-emphasis)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${command_emphasis_test_args[@]}") ;;
             archive-notice)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
               )
               ;;
+            persistent-tab-return)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+              ) ;;
+            persistent-tabs)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${persistent_tab_test_args[@]}") ;;
+            native-completion)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+              ) ;;
+            native-patterns-release)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("${command_emphasis_test_args[@]}" "${persistent_tab_test_args[@]}"
+                "-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection") ;;
             move-selection-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -169,6 +208,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              ) ;;
+            settings-tab-return)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
               ) ;;
             settings-readback)
               test "$AUDIT_SUITE" = fixtures || exit 1
@@ -235,6 +280,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetEditSavesAndReturnsToUpdatedDetail'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryRetainsNormalTextDraft'
@@ -355,6 +401,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseViewSwitcherStaysAnchoredAcrossListMapAndScroll'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseGridFitsDeviceWidth'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowsePhotoFreeRowsKeepMixedMediaAligned'
               )
               ;;
             home-header)
@@ -374,6 +421,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            settings-commands)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCommandsRecoverReminderDraft'
               )
               ;;
             filters)
