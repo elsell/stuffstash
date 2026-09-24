@@ -1183,3 +1183,14 @@ switch and command rows use the shared row inset; navigation rows with leading
 icons explicitly include the icon width and row gap. Do not apply an icon gutter
 to icon-free rows. Stacked layouts retain the ordinary inset. This changes visual
 grouping only, preserving interaction and accessibility semantics.
+
+### Native command content sizing
+
+The paired reminder recovery fixture at a0874586 exposed iOS bordered buttons
+whose 48-point label minimum acquired native style padding, yielding 62-point
+hit frames inside 48-point measured hosts. Retry and Discard overlapped. Keep the
+48-point minimum on the outer command, but use the same 32-point label minimum
+as primary commands so native padding fits the measured command. Preserve native
+bounded styling, multiline growth, and disabled behavior. Acceptance requires the
+existing paired recovery test to prove separate hit frames and successful Retry
+and Discard on iPhone and iPad; source tests cannot establish native geometry.

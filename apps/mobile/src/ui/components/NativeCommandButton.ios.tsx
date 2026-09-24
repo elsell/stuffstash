@@ -9,7 +9,7 @@ export function NativeCommandButton({ label, accessibilityLabel: accessibleName 
     ]}>
       {prominence === 'primary' ? <HStack><Spacer />
         <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 32 })]}>{label}</Text>
-        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 48 })]}>{label}</Text>}
+        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 32 })]}>{label}</Text>}
     </Button>;
   return <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
     {prominence === 'secondary' ? <HStack>{command}<Spacer /></HStack> : command}
