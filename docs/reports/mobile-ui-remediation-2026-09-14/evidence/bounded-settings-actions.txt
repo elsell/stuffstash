@@ -14,3 +14,9 @@ clipping and separate footer. Native tree preserves Reset all filters descriptio
 /tmp/settings-bounded-replay.log passes actual Type→Items→Reset all→All types.
 This verifies the representative filter consumer, not all reminder states, narrow
 screens, iOS or assistive traversal. Native iOS acceptance still required.
+Narrow Android follow-through: normal text at840×1920/420dpi (320dp wide), same
+installed build. Reviewed /tmp/settings-bounded-narrow-reset.png after scrolling:
+Reset all fully visible above the fixed footer, with no horizontal clipping.
+Actual Type→Items→Reset all→All types passed. System size restored to1080×2400.
+This supplements the representative filter evidence; remaining consumer/iOS limits
+above still apply.

@@ -1,14 +1,32 @@
-Separate follow-up branch codex/mobile-photo-free-browse, product1fa57a5f. Not part of frozen release PR178.
-Android API36 Pixel6 normal/light: initial compact-per-card candidate f39d5e15 rejected after mixed-photo capture showed stretched white panels (/tmp/photo-mix-grid.png). Chosen correction groups media reservation by current grid row: photo-bearing/unknown peers retain aligned media, fully photo-free rows compact. Source tests cover resize, unknown presence and actual-photo precedence.
-Reviewed corrected mixed /tmp/photo-row-aligned.png and entirely photo-free /tmp/photo-free-browse-ready.png. Titles align in mixed rows; later photo-free rows compact. Mixed row positions and native selector bounds are identical before/after Map/List return, verified by accessibility bounds in /tmp/android-mixed-row-return-{scrolled,returned}.xml and corresponding PNGs.
-Source: initial full run2002/2003, only Home view-model expected metadata failed; corrected exact projection passes targeted test. Latest45 Browse/card checks plus TypeScript and structural checks pass. Critic found no blocker. Do not describe this as a rerun of all2004 current tests.
-Pending: focused iOS Browse native acceptance, mixed-row captures, dark/large-text scoped checks. Fixture photoMix variant is keyed to reset data/cache on navigation parameter changes.
+Current acceptance: normal-text Browse density/placement accepted for the named
+Android and iOS fixtures. Separate branch codex/mobile-photo-free-browse; not part
+of frozen PR178. Product row-reservation source1fa57a5f; native fixture9fb6280f.
 
-Run35962300873 atb1ba1535: phone2/2 passed; iPad width passed, scroll assertion
-failed because all12 compact cards fit in the viewport. Reviewed iPad final PNG
-from artifact10793342682 confirms the complete sparse grid without overflow.
-The focused selector omitted the mixed-photo test (it was present only in
-workflow-batch); no mixed-photo iOS acceptance follows from this run.
-Correction: dedicated36-asset dense fixture for scroll retention, unchanged sparse
-and mixed fixtures, explicit mixed comparison in browse-journey. Critic found no
-blocker; structural/workflow syntax checks passed. Native rerun required.
+Run35964382077 passed3/3 workflows on iPhone17 and iPad mini(A17Pro): adaptive grid,
+compact/mixed-media comparison, and actual scrolling plus List/Map return. Reviewed
+final sparse/mixed/scrolled PNGs and intermediate Map PNGs from artifacts10793674112
+(phone) and10793744099(tablet), extracted as /tmp/move-layout-review/density-fixed-*.
+Photo-free rows compact; photo-bearing and unknown peers reserve aligned media.
+Titles align within mixed rows. The List/Map selector remains in place across mode
+changes and scroll return. Phone uses two columns; iPad uses three. Map rows remain
+readable below native chrome, with no clipping from the header.
+
+Android API36 Pixel6 normal/light: reviewed /tmp/photo-row-aligned.png and
+/tmp/photo-free-browse-ready.png. Mixed-row positions and native selector bounds
+match across Map/List return (/tmp/android-mixed-row-return-{scrolled,returned}.xml
+and PNG). Initial per-card compaction f39d5e15 was rejected because mixed-photo
+rows stretched photo-free peers into blank white panels; row reservation fixes it.
+
+Source tests cover resize, unknown presence and actual-photo precedence. Latest
+full2005 mobile tests, TypeScript and structural checks passed with the subsequent
+bounded Settings command change. Critic found no source blocker.
+
+Earlier run35962300873 is superseded: its sparse12-card iPad scene could not scroll,
+and its selector omitted mixed-media comparison. Dedicated36-asset dense data and
+explicit selection corrected those observation gaps; no production scrolling fix
+was inferred or introduced from that failure.
+
+Limits: this is scoped normal-text/light acceptance, not all appearances or large
+text. Android live appearance remains separately unresolved; rejected candidates
+were withdrawn (android-live-appearance-header.txt). Physical-device/assistive and
+broader platform audit gates remain open.
