@@ -42,11 +42,29 @@ at77c4738d passed6/6 on both phone and iPad. Reviewed return captures exposed
 misaligned compact-card titles with mixed checkout status; the row-space correction
 passes Android native alignment and48 focused tests. Place entry also hid its
 identity under native chrome; automatic detail insets now have68 passing detail
-tests and Android entry/Edit/save/Move/return verification. Combined iOS candidate
-run35983649762 at3c0ba0ff is pending; it replaces canceled queued35983255710.
-[Detail evidence](evidence/detail-entry-insets.txt). [Alignment evidence](evidence/checkout-row-alignment.txt). Broad native
-refresh35980094051 atc7c44b45 remains in progress; prioritize ordinary workflow
-failures. Its pending result is not acceptance evidence. [Evidence](evidence/android-live-appearance-header.txt).
+tests and Android entry/Edit/save/Move/return verification. Frozen iOS run35987800972 at3c0ba0ff
+replaced canceled pending35983649762 on an independent verification branch.
+iPad passed14/16: reviewed captures confirm Place identity below the header and
+aligned Browse titles. Its32pt Move-items command fails the44pt gate; PR182
+addresses that control. Add destination stopped at entry readiness although the
+final capture shows its correctly labeled field; the recovery workflow remains
+unverified. Phone result remains pending.
+
+PR182 groups availability with identity and places bounded contents commands under
+a short heading.80 focused tests, TypeScript, structural checks and review pass;
+Android capture confirms both commands after rejecting a recycled-row candidate
+that hid them. iOS run35994194799 atb891a13e verifies hierarchy and real-tab footer
+clearance. Later test-only8499d7c2 adds populated Sharing inside production tabs;
+it has not run natively. Sharing/list missing-inset source risks are not confirmed
+runtime defects. [Current diagnosis and evidence](evidence/container-organization.txt).
+
+Broad refresh35980094051 atc7c44b45: phone completed121 tests with14 failures.
+Failures include historical controlled-input and sheet diagnostics, enlarged-text
+cases, color first-tap and the same32pt Move-items command. Do not treat them as14
+new product defects or repeat the diagnostic experiments. iPad remains pending.
+The broad sweep is not a prerequisite for this bounded release. [Detail evidence](evidence/detail-entry-insets.txt),
+[alignment evidence](evidence/checkout-row-alignment.txt),
+[Android appearance evidence](evidence/android-live-appearance-header.txt).
 
 ## Separate unresolved decisions
 
