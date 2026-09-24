@@ -16,3 +16,14 @@ Presentation tests4red before correction,83focused tests green; TypeScript,
 acceptance remains pending. Account/Connection native recovery checks join this
 batch because their command wrappers changed. No global inset change is justified
 by the captured footer state.
+
+Android API36 Pixel6 emulator5580, APK
+c33a925dbfd4ad2d8567d5339a521e89e9806a80cd00ca1afcf6e082c71d74ab:
+root/Account/Inventory/Diagnostics navigation passes in light and dark. Reviewed
+captures show visible destination labels with descriptive subtitles, consistent
+appearance/action inset and scope names no longer repeated. Build uses existing
+Android audit source with scoped production-screen overlays, not a full exact-head
+production build. Session mutations and inventory leaf actions are not exercised.
+iOS correction candidate b81f73ef is running as36023217961. Baseline merge5e539aa9
+has an identical tree to b81f73ef. Draft PR186 contains this and accepted Home
+header spacing; both remain unreleased pending native/CI review.
