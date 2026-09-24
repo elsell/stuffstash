@@ -20,3 +20,17 @@ Reset all fully visible above the fixed footer, with no horizontal clipping.
 Actual Type→Items→Reset all→All types passed. System size restored to1080×2400.
 This supplements the representative filter evidence; remaining consumer/iOS limits
 above still apply.
+
+Consumer composition review (source at bc3ea7d4): reset/date commands stay inside
+their filter sections and remain secondary to Show results. Reminder Retry and
+Discard change remain paired with the retained-draft error. Notification device
+setup and Settings recovery stay adjacent to their switch/outcome. Voice setup
+exposes one readiness-dependent command, separate from service selection. The
+Browse load-error Retry/Cancel pair uses the same bounded adapter outside a group.
+No navigation or value-selection row was converted into a command button.
+
+Native acceptance still needs a representative paired recovery composition and
+the longest visible device-settings label, in addition to the running iOS filter
+check. Source review alone does not establish wrapping, touch or assistive behavior.
+The installed Android fixture has no notification-settings route; no notification
+runtime acceptance was inferred from an unavailable route or a different screen.
