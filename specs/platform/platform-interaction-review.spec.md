@@ -1125,3 +1125,14 @@ asserts independent Home Kitchen and Browse Camping results before opening Filte
 and preserves both after Apply. External-link setup is separate coverage; this
 journey does not certify qualified deep-link behavior. Diagnostic overlays must
 not ship. Preserve the existing origin-tab modal return contract.
+
+### Native tab accessibility duplicates
+
+Run35955427236 passes final Settings-tab return on iPhone. The iPad capture shows
+both tabs, but the native accessibility tree exposes nested duplicate Home/Browse
+buttons with identical bounds; selecting the first match is not proof of the
+interactive control. Within the native tab strip, choose a hittable matching
+button when available, retaining the first match only to report failure if none
+is hittable. Keep the final reachability assertion and add actual Browse/Home
+activation with exact Settings draft readback. This observation correction does
+not by itself establish iPad task acceptance or justify a production layout change.

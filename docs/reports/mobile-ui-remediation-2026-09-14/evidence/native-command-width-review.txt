@@ -1,0 +1,11 @@
+Run35954709640, source5dc08f9c, iPhone17/iPadmini A17Pro, normal text/light.
+Reviewed actual native captures: single/dual Retry photos/contents, empty/read-only place, item with photo, container location/photo/availability commands, and scrolled populated location.
+Width correction accepted for these cases: labels remain single-line and bounded, no narrow multi-line oval, command rows have visible separation, error/retry pairs remain associated. iPad content remains within intended readable column; long container title fits.
+Representative phone screenshots: C99CC58C (dual retry), A2E02678 (container), D7A8C851 (scrolled place), E92100B2 (photo item).
+Representative iPad screenshots: 1ED97DAA (dual retry), 57FC85E7 (container), FDAE90E8 (photo item).
+Paths under /tmp/move-layout-review, prefixed phone-width-fixed- or ipad-width-fixed-.
+This establishes scoped command geometry, not full-app visual acceptance. Dark/large-text and combined tab-shell screenshots remain outstanding.
+Run result: iPad9/9, phone8/9; phone Add keyboard-readiness failure remains unresolved. Combined run35958732480 at35a79fe5 covers that workflow again alongside persistent tabs and expiration query retention.
+
+Android API36 at35a79fe5: connected expiration tab/Apply journey also passes system dark appearance. Actual Home Kitchen and detail captures reviewed: selected tabs, expiration status, text hierarchy and outlined commands remain legible; no overlap observed. Restored emulator's original light setting. This is scoped dark evidence, not an app-wide contrast audit.
+Android35a79fe5 additional retained-stack checks: Edit asset -> append updated -> system Back -> Keep editing retains Camping tent updated; cancel -> Discard restores Camping tent with Home/Browse visible. Move -> choose Garage -> system Back restores original No location detail and both tabs. These are task cancellation checks, not save/move execution coverage.

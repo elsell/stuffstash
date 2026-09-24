@@ -2819,7 +2819,8 @@ final class FixtureAuditTests: XCTestCase {
       let strips = app.otherElements.containing(.button, identifier: "Home")
         .containing(.button, identifier: "Browse").allElementsBoundByIndex
       let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
-      return strip?.buttons[name].firstMatch ?? app.buttons[name].firstMatch
+      let candidates = strip?.buttons.matching(identifier: name) ?? app.buttons.matching(identifier: name)
+      return candidates.allElementsBoundByIndex.first(where: { $0.isHittable }) ?? candidates.firstMatch
     }
     return app.tabBars.firstMatch.buttons[name].firstMatch
   }
@@ -2864,6 +2865,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [tabsReturned], timeout: 10), .completed,
       "Both tabs must remain reachable after returning to the draft editor")
     capture("persistent-tabs-settings-draft-return")
+    tab("Browse").tap(); XCTAssertTrue(browse.waitForExistence(timeout: 10))
+    tab("Home").tap(); XCTAssertTrue(name.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools emergency")
   }
 
   func testExpirationFiltersReturnToTheirOwningTab() {

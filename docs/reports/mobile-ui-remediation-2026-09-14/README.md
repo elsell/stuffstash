@@ -47,8 +47,10 @@ reseeding, then passed; all2,002 mobile checks, TypeScript and review pass.
 Settings draft retention and detail/Move return passed on Android. iOS command
 width35954709640 passed9/9 iPad and8/9 phone. Phone Add stopped at keyboard readiness
 (line744); its capture shows the keyboard and focused Name field. Keep the workflow
-unresolved pending the combined run. Corrected command-width captures still need
-full visual review. Persistent-tab iOS final-state coverage remains pending.
+unresolved pending the combined run. Corrected phone/iPad command-width captures were reviewed: retry labels and
+contextual commands are readable and bounded (see evidence/native-command-width-review.txt).
+Combined13-workflow run35958732480 at35a79fe5 is pending; persistent-tab final-state
+coverage and the phone Add workflow remain release gates.
 
 ## Current follow-up diagnosis and decisions
 
