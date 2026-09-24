@@ -96,12 +96,15 @@ and clearance. Exact-head CI36034561755 passes. PR188 mergedb45c5e96; release
 TestFlight delivery remains unverified until upload and changelog readback pass.
 Next bounded review concerns accessory glyph redraw after navigation. [Current diagnosis](evidence/history-structure.txt).
 
-The separate accessory observation6cb68543 is dispatched as36035027845; watcher8216
-writes `/tmp/voice-accessory-native-result.json`. It records two-second settled
-list/detail/tab-return captures and command crops.14 route-preparation tests,
-structural checks and critic review pass. No renderer change or visual acceptance
-is inferred before reviewing those images. History final CI36034561755 passed
-(`/tmp/history-final-ci-result.json`).
+The accessory observation36035027845 confirms settled iPhone glyph loss after
+navigation and tab return; iPad settled detail retains the glyph. Candidate76cdc62d
+uses existing native iOS SF Symbols with command behavior unchanged. Start/send/
+return behavior, TypeScript, structural checks and critic review pass. Native
+candidate36038163099 is active; watcher55959 writes
+`/tmp/voice-symbol-candidate-result.json`. Passing capture assertions alone will
+not establish visual acceptance. [Diagnosis](evidence/voice-symbol-navigation.txt).
+History release36037058030 is owned by watcher77913; its upload/notes result is
+`/tmp/history-release-result.json`.
 
 ## Separate unresolved decisions
 

@@ -19,3 +19,8 @@ inside fixed noninteractive hidden-from-accessibility glyph host. Keep state,
 command label/handler, Android SVG and placement behavior. Native baseline is red
 visual evidence. Existing behavior test and native re-observation must verify
 candidate; reject it if glyph still disappears. No remount/timing workaround.
+
+Candidate76cdc62d: start/send/return mounted behavior passes, TypeScript and
+structural checks pass, critic found no source blocker. Native36038163099 is
+running; watcher55959 owns terminal output. Listening/send native appearance and
+physical voice remain unverified; do not infer them from ready-state captures.
