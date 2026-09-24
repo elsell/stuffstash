@@ -55,3 +55,9 @@ navigation metadata and return to that qualified shared destination. Validate th
 metadata against Home/Browse; missing or malformed origin uses Home. Preserve all
 filter parameters. Browse Filters targets the unique Browse URL and needs no
 shared-destination disambiguation. Back/cancel continues to pop the modal.
+
+Native35951026134 phone failure occurred before Browse navigation: fixture button
+bounds y65–103 overlapped the transparent navigation bar y62–116. The fixture
+must use automatic scroll insets like production Browse; assert full header
+clearance before activation. Home/detail tab visibility and modal cancel passed
+before this failure. Do not claim Browse history/draft acceptance until rerun.

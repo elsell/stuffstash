@@ -2795,7 +2795,10 @@ final class FixtureAuditTests: XCTestCase {
     tab("Browse").tap()
     let browse = app.staticTexts["Tab shell Browse placeholder"].firstMatch
     XCTAssertTrue(browse.waitForExistence(timeout: 10))
-    app.buttons["Open Browse asset"].firstMatch.tap()
+    let openBrowseAsset = app.buttons["Open Browse asset"].firstMatch
+    XCTAssertTrue(openBrowseAsset.isHittable)
+    XCTAssertGreaterThanOrEqual(openBrowseAsset.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+    openBrowseAsset.tap()
     XCTAssertTrue(move.waitForExistence(timeout: 10))
     tab("Home").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
     tab("Browse").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
