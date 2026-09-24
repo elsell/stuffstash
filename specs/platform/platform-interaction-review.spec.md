@@ -1093,3 +1093,16 @@ draft retention, creation cancellation, rejection/retry and returned-parent chec
 This is an observation correction, not evidence of a new application fix. Rerun
 the affected Add/Move selection subset; preserve the other fourteen passing phone
 and all fifteen iPad results without claiming whole-app acceptance.
+
+## Settings save reads the committed draft
+
+Native35945430640 passes the edited-row return geometry on iPhone, but creation
+persists Campin after the native field reported Camping. The retained final
+collection confirms truncated persisted content, not a missing row or refresh.
+Treat this as a data-loss defect. Test the concrete stale Save-handler hypothesis
+before changing text providers: a Save event retained before the final edit must
+submit the latest committed valid draft, and must reject invalid, pending,
+unfocused or unmounted state. Reuse the focused committed-action guard for the
+Settings save command. Do not weaken exact native text/persistence assertions or
+insert typing delays to make this journey pass. This source correction does not
+prove the native cause; the existing readback journey must still pass unchanged.

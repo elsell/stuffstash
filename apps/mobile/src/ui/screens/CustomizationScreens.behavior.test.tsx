@@ -63,6 +63,22 @@ describe('rendered mobile customization production states', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0][2]).toMatchObject({ enumOptions: ['high', 'low'] });
   });
+  it('saves the current draft through a retained Save event and rejects invalid or departed drafts', async () => {
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ manageTags: managerFake({ create: async (...args: unknown[]) => { calls.push(args); return {}; } }) });
+    await screen.changeText(screen.byLabel('Name'), 'Campin');
+    const save = screen.byLabel('Save')!.props.onPress;
+    await screen.changeText(screen.byLabel('Name'), '');
+    await screen.run(save); expect(calls).toEqual([]);
+    await screen.changeText(screen.byLabel('Name'), 'Camping');
+    await screen.run(() => setScreenFocused(false));
+    await screen.run(save); expect(calls).toEqual([]);
+    await screen.run(() => setScreenFocused(true));
+    await screen.run(save); expect(calls).toHaveLength(1);
+    expect(calls[0]).toContainEqual(expect.objectContaining({ displayName: 'Camping' }));
+    await screen.unmount(); await screen.run(save); expect(calls).toHaveLength(1);
+  });
+
   it('exposes a named Save command and prevents another save while pending', async () => {
     const pending = deferred<Record<string, never>>(); let calls = 0;
     const screen = await renderEditor({ manageTags: managerFake({ create: async () => { calls++; return pending.promise; } }) });

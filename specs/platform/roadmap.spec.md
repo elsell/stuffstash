@@ -40,11 +40,14 @@ scripts that report terminal results, not repeated unchanged waiting messages.
 
 M260–M273 are delivered through TestFlight0.24.33(124.1). Release35938987211
 verified Apple processing and exact changelog readback after PR173 merged.
-Continue normal-text workflow review with frozen PR174's filter/detail/Sharing
-batch. Its modal correction passes twelve native workflows on both devices;
-the integrated fifteen-workflow run35941028517 remains pending. PR176 then combines
-Settings collection return and Move completion emphasis. Keep their native and
-visual gates explicit; unrelated findings do not block these release batches.
+Continue normal-text workflow review with frozen PR174, consolidating filters,
+detail/Sharing, Settings current-save/readback and Move hierarchy/contrast into
+one release batch. Integrated35941028517 passed14/15 phone and15/15 iPad; the
+conditional keyboard-dismiss correction passed focused35945429162 on both.
+Settings35948277688 passes both devices. Move contrast35951755320 and combined
+required CI remain release gates. PR176 is superseded by this consolidation;
+persistent tabs and broader command emphasis remain separate candidates. Keep
+visual gates explicit; unrelated findings do not block this release batch.
 The audit's single current summary records evidence and remaining gaps:
 `docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
 
