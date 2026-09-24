@@ -1,0 +1,26 @@
+Accessory appearance — corrected diagnosis, 2026-09-24
+No persistent glyph defect is established by the bounded baseline. Full-screen
+captures show the original microphone on list, settled detail and tab return.
+Element-only command.screenshot() images omit it in the same workflow; those crops
+were incorrectly treated as authoritative evidence. All prior claims of confirmed
+persistent glyph loss from this observation are withdrawn.
+
+Baseline36035027845 at6cb68543: artifacts10824713686(phone),10824828895(iPad).
+Corrected native-symbol experiment36041316716 atd91746a6: artifacts10827502358
+(phone),10827398258(iPad). Both completed navigation; original and candidate full
+screens show their respective glyphs while button-only screenshots can be blank.
+The discrepancy does not establish exact native internals, only an unreliable
+observation for the rendered composition. Full screenshots retained here provide
+counterevidence alongside misleading crops. Earlier History captures showed
+transient absence but did not establish a settled persistent defect.
+
+Decision: withdraw the native-symbol renderer experiment. Keep existing product
+renderer. Remove element screenshots from the diagnostic and review full-screen
+compositions. Do not dispatch another unchanged renderer experiment. PR190 is
+verification/process only, not a product fix or TestFlight release.
+
+Superseded experiment76cdc62d: iPad glyph black because Image needed explicit
+color; phone stopped before detail. Corrected color22161648 was tested ind91746a6,
+but neither candidate is justified as a fix for a persistent product defect.
+Upstream screens3797/4196 were indirect and do not prove this issue's cause.
+Physical voice, transient animation and listening/send remain separately scoped.

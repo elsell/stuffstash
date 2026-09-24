@@ -1,0 +1,12 @@
+TestFlight0.24.39 (130.1), released2026-09-24.
+PR188 squash mergedb45c5e969757667c3c54468d1b437bafa8460404.
+Exact-head CI36034561755 passed4c8b95d2. Native36031360544 passed both devices;
+iPad required one failed-job retry after Xcode launch failed before interaction.
+Reviewed entry, list, detail, final metadata and pagination captures confirm
+History hierarchy and clearance. Scoped Android walkthrough also passed.
+Release36037058030 success: upload107763065488, changelog107770403700.
+2026-09-24T18:21:28.8111164Z Verified TestFlight changelog for v0.24.39 (130.1).
+Notes: concise History summaries, clear Before/After values, reachable History
+controls and final details above the tab bar. Accessory glyph finding remains
+separate in PR190. Comprehensive audit and physical integration verification
+remain incomplete.

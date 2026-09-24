@@ -78,3 +78,21 @@ despite earlier tab activation passing. The final draft assertion can settle
 before navigation presentation does. Explicitly wait for both native tab controls
 to be hittable after returning to the editor, then capture. A failure is a
 navigation defect; an earlier successful tap does not establish final visibility.
+
+## Accessory appearance after navigation
+
+The persistent voice command must retain its visible microphone in ready state
+when navigating into a destination and returning through tabs. An accessible name
+and tappable blue background alone do not establish visual acceptance. Use one
+controlled normal-text navigation observation: capture the full screen on the
+list, on detail after a two-second settling interval, and after a tab round trip.
+Keep the same ready fixture state and actual tab accessory.
+
+Element-only XCTest screenshots are not authoritative for the layered native tab
+accessory. Baseline36035027845 shows a visible glyph in full-screen captures while
+`command.screenshot()` yields a blank blue button for the same journey. The native
+symbol experiment36041316716 has the same discrepancy. This does not establish a
+persistent product rendering defect or justify changing its renderer. Retain the
+existing renderer; use full-screen captures for appearance review. Passing
+navigation assertions establishes only that the observation completed. Physical
+audio and transient animation behavior remain outside this scoped acceptance.

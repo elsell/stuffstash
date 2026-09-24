@@ -1452,3 +1452,13 @@ structure/presentation review; it does not certify server authorization or Rever
 Do not infer clipping from missing source inset props alone. One baseline native
 run must distinguish actual header/footer overlap from a safe native automatic
 inset, and its screenshots determine whether a product correction is needed.
+
+## Visual evidence contradictions
+
+Before implementing a screenshot-driven correction, review the baseline's complete
+visible composition at the named build and state. Element-only screenshots and
+accessibility snapshots are supporting diagnostics; when they contradict the full
+screen, resolve the observation discrepancy before claiming a rendering defect.
+Compare the candidate with the same full-screen baseline state. Preserve useful
+counterevidence and withdraw unsupported changes rather than treating a different
+renderer or passing test as proof of improvement.

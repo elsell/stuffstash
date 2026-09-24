@@ -40,6 +40,15 @@ class FixtureRouteIsolationTests(unittest.TestCase):
         for layout in self.tab_layouts:
             self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")
 
+    def test_voice_accessory_observation_uses_the_same_production_tabs(self):
+        self.assertEqual(self.run_script(AUDIT_TEST_CASE="voice-accessory-navigation").returncode, 0)
+        self.assertFalse((self.routes / "assets/[assetId]/index.tsx").exists())
+        for page, component in {"index": "HistoryListFixture", "[activityId]": "HistoryDetailFixture"}.items():
+            target = self.routes / "(tabs)/(home,search)/assets/[assetId]/history" / f"{page}.tsx"
+            self.assertIn(component, target.read_text())
+        for layout in self.tab_layouts:
+            self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")
+
     def test_settings_overview_installs_real_screens_under_tab_shell(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="settings-overview").returncode, 0)
         for page, component in {"index": "SettingsRootOverviewFixture", "account": "SettingsAccountOverviewFixture",
