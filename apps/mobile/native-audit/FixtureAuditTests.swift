@@ -9,7 +9,8 @@ final class FixtureAuditTests: XCTestCase {
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
       || name.contains("testHistoryJourneyClearsPersistentChrome")
       || name.contains("testVoiceAccessorySettledNavigationAppearance")
-      || name.contains("testInventoryCollectionClearsPersistentChrome"))
+      || name.contains("testInventoryCollectionClearsPersistentChrome")
+      || name.contains("testNotificationJourneyRetainsTabsAndClearsFooter"))
       ? "View all recently changed assets" : "Audit Browse filters"
     XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
@@ -2930,6 +2931,31 @@ final class FixtureAuditTests: XCTestCase {
     tab("Home").tap()
     XCTAssertTrue(version.waitForExistence(timeout: 10))
     capture("settings-overview-tab-return")
+  }
+
+  func testNotificationJourneyRetainsTabsAndClearsFooter() {
+    guard openFixtureURL("(tabs)/(home)/notifications") else { return }
+    let first = app.buttons["Open Camping item 01"].firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    capture("notifications-tab-entry")
+    first.tap()
+    XCTAssertTrue(app.navigationBars["Details"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Camping item 01"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    capture("notification-asset-detail")
+    app.navigationBars["Details"].buttons.firstMatch.tap()
+    XCTAssertTrue(app.buttons["Mark Camping item 01 unread"].firstMatch.waitForExistence(timeout: 10))
+    let more = app.buttons["Load more notifications"].firstMatch
+    verifyFooterClearsPersistentChrome(more)
+    capture("notification-pagination")
+    more.tap()
+    let finalContent = app.buttons["Open Camping item 24 with a long descriptive name"].firstMatch
+    verifyFooterClearsPersistentChrome(finalContent)
+    let final = app.buttons["Mark Camping item 24 with a long descriptive name read"].firstMatch
+    verifyFooterClearsPersistentChrome(final)
+    XCTAssertTrue(final.isHittable)
+    capture("notifications-final-row")
   }
 
   func testInventoryCollectionClearsPersistentChrome() {

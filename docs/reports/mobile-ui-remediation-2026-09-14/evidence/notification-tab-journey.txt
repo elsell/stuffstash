@@ -1,0 +1,12 @@
+Notification tab journey — coverage gap, no defect claimed
+Existing standalone inbox captures do not establish production tab navigation or
+footer clearance. One bounded native observation uses actual tab layouts, real
+NotificationInboxScreen/application queries,24 local notices with real pagination,
+and the existing real AssetDetailRouteScreen fixture. Verify open/detail/back,
+read-state reconciliation, pagination clearance and final wrapping text + action.
+Full-screen captures decide visual acceptance. Do not change product code merely
+because this coverage was missing. Device permission/push and route authorization
+are not covered by this isolated repository.
+Fixture installation test failed for missing route, then16 passed. TypeScript and
+structural checks pass. Critic's final-command-only gap corrected by asserting the
+Open row's full title/expiration bounds as well as its separate read action.
