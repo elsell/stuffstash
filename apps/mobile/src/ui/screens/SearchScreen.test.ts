@@ -6,6 +6,7 @@ import {
   browseColumnCount,
   browseContinuationCriteria,
   browseGridCardWidth,
+  browseRowReservesMedia,
   browseLoadingFlagsForRefresh,
   buildBrowseScopeOptions,
   buildBrowseFilterTokens,
@@ -24,6 +25,17 @@ import {
 } from './SearchScreenPresentation';
 import { createBrowseHeaderStyles } from './BrowseHeader';
 import { darkPalette, lightPalette, spacing } from '../theme/tokens';
+
+describe('Browse media row alignment', () => {
+  it('compacts only photo-free rows and recalculates grouping when columns change', () => {
+    const assets = [{ hasPhoto: true }, { hasPhoto: false }, { hasPhoto: false }, { hasPhoto: false }];
+    expect(assets.map((_, index) => browseRowReservesMedia(assets, index, 2))).toEqual([true, true, false, false]);
+    expect(browseRowReservesMedia(assets, 1, 1)).toBe(false);
+    expect(browseRowReservesMedia(assets, 2, 3)).toBe(true);
+    expect(browseRowReservesMedia([{ hasPhoto: false }, {}], 0, 2)).toBe(true);
+    expect(browseRowReservesMedia([{ hasPhoto: false, photo: { uri: 'file:///photo.png' } }], 0, 1)).toBe(true);
+  });
+});
 
 describe('SearchScreen presentation helpers', () => {
   it('uses calm Browse fields while native controls own refinement styling', () => {

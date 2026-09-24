@@ -31,6 +31,7 @@ function useAssetCardStyles(paletteOverride?: MobileColorPalette) {
 type AssetCardProps = {
   readonly asset: AssetCardViewModel;
   readonly density?: 'standard' | 'compact' | 'row';
+  readonly reserveMediaSpace?: boolean;
   readonly footerAction?: {
     readonly accessibilityLabel?: string;
     readonly disabled?: boolean;
@@ -49,6 +50,7 @@ type AssetCardProps = {
 export function AssetCard({
   asset,
   density = 'standard',
+  reserveMediaSpace = false,
   footerAction,
   onParentLocationPress,
   palette: paletteOverride,
@@ -60,7 +62,7 @@ export function AssetCard({
 }: AssetCardProps) {
   const isCompact = density === 'compact';
   const isRow = density === 'row';
-  const photoFree = !isRow && asset.hasPhoto === false && !asset.photo;
+  const photoFree = !reserveMediaSpace && !isRow && asset.hasPhoto === false && !asset.photo;
   const styles = useAssetCardStyles(paletteOverride);
 
   return (

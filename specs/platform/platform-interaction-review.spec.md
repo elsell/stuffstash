@@ -1136,3 +1136,10 @@ button when available, retaining the first match only to report failure if none
 is hittable. Keep the final reachability assertion and add actual Browse/Home
 activation with exact Settings draft readback. This observation correction does
 not by itself establish iPad task acceptance or justify a production layout change.
+
+### Photo-free grid native comparison
+
+The existing Browse journey fixture may accept photoMix=true to show one real local
+image, one photo-bearing asset without a resolved thumbnail, and confirmed photo-free
+peers. The normal fixture stays photo-free. Review both grids with List/Map return and
+scrolling; source geometry assertions alone do not accept mixed-row density.

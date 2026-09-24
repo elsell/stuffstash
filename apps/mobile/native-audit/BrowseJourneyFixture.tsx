@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Image } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { parseBrowseRouteParams } from '../src/ui/screens/BrowseRouteParams';
@@ -19,16 +20,31 @@ const assets: readonly AssetSummary[] = ['Garage', 'Kitchen', 'Camping tent', 'T
 /** Actual Browse screen and native header, with isolated read-only fixture data. */
 export function BrowseJourneyFixture() {
   const params = useLocalSearchParams();
-  const [fixture] = useState(() => ({
-    client: createMobileQueryClient(),
-    search: new SearchAssetsQuery({ browseAssets: async input => ({
-      assets: assets.filter(asset => asset.title.toLowerCase().includes(input.query.toLowerCase())), hasMore: false
-    }) }),
-    map: new InventoryMapQuery({ listActiveInventoryMapAssets: async () => ({
-      sessionScopeId: 'audit', tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'),
-      inventoryName: 'Main Inventory', permissions: ['view', 'create_asset'], assets
-    }) })
-  }));
+  const mixedPhotos = params.photoMix === 'true';
+  return <BrowseJourneyContent key={mixedPhotos ? 'mixed' : 'empty'} params={params} mixedPhotos={mixedPhotos} />;
+}
+
+function BrowseJourneyContent({ params, mixedPhotos }: {
+  readonly params: ReturnType<typeof useLocalSearchParams>;
+  readonly mixedPhotos: boolean;
+}) {
+  const [fixture] = useState(() => {
+    const fixtureAssets = mixedPhotos ? assets.map((asset, index) => ({
+      ...asset,
+      hasPhoto: index === 0 || index === 2,
+      ...(index === 0 ? { photo: { uri: Image.resolveAssetSource(require('../assets/brand/stuff-stash-glyph.png')).uri } } : {})
+    })) : assets;
+    return {
+      client: createMobileQueryClient(),
+      search: new SearchAssetsQuery({ browseAssets: async input => ({
+        assets: fixtureAssets.filter(asset => asset.title.toLowerCase().includes(input.query.toLowerCase())), hasMore: false
+      }) }),
+      map: new InventoryMapQuery({ listActiveInventoryMapAssets: async () => ({
+        sessionScopeId: 'audit', tenantId: tenantId('audit-tenant'), inventoryId: inventoryId('audit-inventory'),
+        inventoryName: 'Main Inventory', permissions: ['view', 'create_asset'], assets: fixtureAssets
+      }) })
+    };
+  });
   useEffect(() => () => fixture.client.clear(), [fixture]);
   return <MobileServerStateProvider client={fixture.client} scopeId="audit" loadInventoryScope={async () => ({ tenantId: 'audit-tenant', inventoryId: 'audit-inventory' })}>
     <SearchScreen {...parseBrowseRouteParams(params)} searchAssetsQuery={fixture.search} inventoryMapQuery={fixture.map}

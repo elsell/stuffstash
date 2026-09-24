@@ -52,6 +52,7 @@ import {
   browseFilterCount,
   browseColumnCount,
   browseGridCardWidth,
+  browseRowReservesMedia,
   BrowseFilterToken,
   BrowsePlaceItemViewModel,
   BrowseScope,
@@ -464,7 +465,7 @@ export function SearchScreen({
             <View style={styles.footer}><NativeCommandButton label="Continue loading results" onPress={() => void loadNextPage()} /></View>
           ) : null
         }
-        renderItem={({ item }) => item.type === 'place' ? (
+        renderItem={({ item, index }) => item.type === 'place' ? (
           <BrowsePlaceRow
             location={item.location}
             palette={palette}
@@ -473,6 +474,7 @@ export function SearchScreen({
         ) : (
           <AssetCard
             asset={item.asset}
+            reserveMediaSpace={state.results.scope !== 'places' && browseRowReservesMedia(state.results.assets, index, numColumns)}
             palette={palette}
             style={gridCardWidth
               ? { maxWidth: gridCardWidth, minWidth: gridCardWidth, width: gridCardWidth }
