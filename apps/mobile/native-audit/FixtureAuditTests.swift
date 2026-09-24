@@ -2867,11 +2867,14 @@ final class FixtureAuditTests: XCTestCase {
   }
 
   func testExpirationFiltersReturnToTheirOwningTab() {
-    let scope = "tenantId=filter-tenant&inventoryId=filter-inventory&mode=expired"
-    guard openFixtureURL("audit-tabs/(home)/expiration?\(scope)&query=Kitchen") else { return }
+    guard openFixtureURL("audit-tabs") else { return }
+    let homeExpiration = app.buttons["View all expiration dates"].firstMatch
+    XCTAssertTrue(homeExpiration.waitForExistence(timeout: 10)); homeExpiration.tap()
     let kitchen = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Kitchen item")).firstMatch
     XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
-    guard openFixtureURL("audit-tabs/(search)/expiration?\(scope)&query=Camping") else { return }
+    XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
+    let browseExpiration = app.buttons["Open Browse expiration"].firstMatch
+    XCTAssertTrue(browseExpiration.waitForExistence(timeout: 10)); browseExpiration.tap()
     let camping = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch
     XCTAssertTrue(camping.waitForExistence(timeout: 10))
     let filters = app.buttons["Filter expiration items"].firstMatch

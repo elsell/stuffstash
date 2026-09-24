@@ -1106,3 +1106,22 @@ unfocused or unmounted state. Reuse the focused committed-action guard for the
 Settings save command. Do not weaken exact native text/persistence assertions or
 insert typing delays to make this journey pass. This source correction does not
 prove the native cause; the existing readback journey must still pass unchanged.
+
+### Distinguish expiration tab entry from modal return
+
+Android candidate f1c52312 preserved Settings drafts and ordinary detail tabs, but
+successive externally delivered group-qualified expiration URLs did not establish
+independent Home and Browse stacks: Home returned to its previous Settings draft.
+Do not infer a production filter-return defect from that setup. Verify entry via
+in-app router actions from each selected tab, assert the distinct Kitchen and
+Camping results before opening filters, then preserve both results across Apply
+and tab switches. The audit Home expiration section and Browse fixture entry may
+supply deterministic queries while using real native navigation and route screens.
+Keep external-link behavior tracked separately; do not count this change as its fix.
+
+The in-app Android walkthrough reproduced the defect with Home selected on Kitchen
+and Browse selected on Camping before opening Filters. After Apply, Browse retained
+Camping but switching Home also showed Camping. This confirms cross-tab state loss
+independently of external links. Filter completion must target the originating
+screen instance, not resolve a shared pathname to another tab's screen. Keep the
+independent-query runtime assertion as the acceptance gate.

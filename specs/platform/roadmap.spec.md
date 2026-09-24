@@ -55,7 +55,7 @@ one release batch. Integrated35941028517 passed14/15 phone and15/15 iPad; the
 conditional keyboard-dismiss correction passed focused35945429162 on both.
 Settings35948277688 and Move contrast35951755320 pass both devices. Scoped Move
 captures were reviewed; required checks passed and PR174 merged as98d29649.
-Release35954982498 is publishing; TestFlight processing remains unverified. PR176 is superseded by this consolidation;
+Release35954982498 delivered TestFlight0.24.34(125.1); changelog job107497620643 verified exact readback. PR176 is superseded by this consolidation;
 persistent tabs and broader command emphasis remain separate candidates. Keep
 visual gates explicit; unrelated findings do not block this release batch.
 The audit's single current summary records evidence and remaining gaps:

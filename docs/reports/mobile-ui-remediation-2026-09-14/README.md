@@ -6,8 +6,8 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.33 (124.1)**, with Apple processing and
-exact [changelog readback](evidence/selection-release-359389-results.txt).
+Latest verified TestFlight is **0.24.34 (125.1)**. Release35954982498 completed;
+changelog job107497620643 verified exact readback after Apple processing.
 
 **M265–M273 is merged** in [PR173](https://github.com/elsell/stuffstash/pull/173),
 e0d63ad5. Release35938987211 completed with eight TestFlight notes. Required
@@ -34,10 +34,21 @@ capture lacks visible tabs;35955427236 adds explicit final tab visibility and
 Expiration Filters origin checks. Those acceptance gaps remain open. Surface paths reflect the new ownership;
 older matrix runtime evidence does not establish this navigation structure.
 
+## Current expiration return defect
+
+Android in-app entry confirms independent Home Kitchen / Browse Camping results
+before Filters. Applying Browse filters then overwrites Home's Kitchen result with
+Camping. This is a confirmed candidate defect, not solely external-link setup.
+Next fix must return to the originating screen instance without resolving another
+tab's shared pathname. The fixture now uses in-app entry; production is unchanged.
+Settings draft retention and detail/Move return passed on Android. iOS command
+width run35954709640 passed9/9 iPad and8/9 phone; the remaining phone failure still
+needs classification and corrected-width captures need visual review.
+
 ## Current follow-up diagnosis and decisions
 
-PR174 merged as98d29649 and release35954982498 is publishing; TestFlight processing
-and changelog readback remain pending. PR174 consolidates
+PR174 merged as98d29649 and release35954982498 delivered0.24.34(125.1),
+including verified changelog readback. PR174 consolidates
 M274–M279 plus Settings current-save/readback and Move hierarchy/contrast into one
 release candidate. The combined source passes1,995 mobile checks, TypeScript,
 structural checks and ten fixture-preparation checks. Its product source matches da791006; the additional Add test
