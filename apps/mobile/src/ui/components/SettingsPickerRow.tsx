@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { NativeChoicePicker } from './NativeChoicePicker';
 import { useSettingsListStyles } from '../screens/SettingsList';
 
@@ -9,8 +9,11 @@ export function SettingsPickerRow<Value extends string>({ label, accessibilityLa
   readonly disabled?: boolean; readonly onChange: (value: Value) => void;
 }) {
   const { styles } = useSettingsListStyles();
-  return <View style={styles.navigationRow}><NativeChoicePicker label={label} accessibilityLabel={accessibilityLabel}
+  return <View style={[styles.navigationRow, pickerRowStyle.nativeControl]}><NativeChoicePicker label={label} accessibilityLabel={accessibilityLabel}
     value={value} options={options} disabled={disabled} includeEmptyOption={false}
     onChange={next => { const option = options.find(item => item.value === next); if (!disabled && option) onChange(option.value); }} />
   </View>;
 }
+
+// The native control reserves its own height; retain only the row's minimum and horizontal inset.
+const pickerRowStyle = StyleSheet.create({ nativeControl: { paddingVertical: 0 } });

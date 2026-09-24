@@ -217,3 +217,19 @@ measures height only, preventing intrinsic-width feedback. Native labels may
 wrap for large text; do not clamp to an icon-sized or fixed-height host. Keep
 bottom safe-area handling and disabled Apply for invalid ranges. Add platform
 adapter contract and action regressions in addition to the existing sheet tests.
+
+### Browse review entry (M274)
+
+The Browse filter overview offers one native action menu labelled Review expiration
+with commands Expiring soon, Expired, and All dates. The trigger supplies the
+action context; avoid repeating it in each menu command. Do not add an intermediate page for these three destinations.
+Keep the active-items restriction visible beside the menu before selection as
+“Reviews active items only.” Menu
+dismissal changes neither filters nor navigation. A chosen command immediately
+opens the selected review with the current filter draft and submitted query;
+retain existing scope verification and original Browse return context. Disable
+the menu during verification, including callbacks retained from an earlier render.
+Use the existing platform NativeActionMenu adapters, not a new custom popup.
+Searchable Tags remains a separate multiselection page. This change is outside
+the frozen M265–M273 release batch. Native phone/iPad placement and connected Back
+context require explicit verification before this follow-up ships.

@@ -1,0 +1,42 @@
+Source b605b6e9fbb0da59b2efd6692fadbf9a161b4844; run35941028517. Product source remains unchanged by the observation correction.
+
+phone
+2026-09-24T01:25:48.0717430Z /Users/runner/work/stuffstash/stuffstash/apps/mobile/native-audit/FixtureAuditTests.swift:2192: error: -[StuffStashAuditTests.FixtureAuditTests testAddDestinationSelectionPreservesDraftAndRecoversCreation] : Failed to tap "Dismiss keyboard" Button: No matches found for first query match sequence: `Descendants matching type Button` -> `Elements matching predicate '"Dismiss keyboard" IN identifiers'`, given input App element pid: 35128
+2026-09-24T01:25:52.2152440Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAddDestinationSelectionPreservesDraftAndRecoversCreation]' failed (169.054 seconds).
+2026-09-24T01:27:24.9640210Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure]' passed (92.771 seconds).
+2026-09-24T01:28:36.8955570Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAssetRegionsRecoverAtNormalTextSize]' passed (71.912 seconds).
+2026-09-24T01:29:46.6802170Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseExpirationDetailAndBackPreserveContext]' passed (69.777 seconds).
+2026-09-24T01:30:12.6174530Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseExpirationReviewUsesOverviewMenu]' passed (25.950 seconds).
+2026-09-24T01:30:54.8387490Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseFiltersDetailAndBackPreserveContext]' passed (42.205 seconds).
+2026-09-24T01:32:13.4106630Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseLastTagClearsActionFooterAndApplies]' passed (78.602 seconds).
+2026-09-24T01:33:13.9991630Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testDetailCommandsRemainReachableAtNormalTextSize]' passed (60.578 seconds).
+2026-09-24T01:34:11.5238510Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testDetailContextVariantsKeepNativeCommandsAndStatus]' passed (57.522 seconds).
+2026-09-24T01:34:40.7893840Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testEmptyPhotoDetailPrioritizesIdentityAndActions]' passed (29.247 seconds).
+2026-09-24T01:35:02.1022450Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testExpirationSheetBodySurvivesExpansion]' passed (21.266 seconds).
+2026-09-24T01:35:30.1824190Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMapRootContextAndAncestorReturn]' passed (28.146 seconds).
+2026-09-24T01:36:52.6236550Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries]' passed (82.401 seconds).
+2026-09-24T01:38:00.8180760Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testPlaceContentsUseNativeSearchAndKeepNavigation]' passed (68.234 seconds).
+2026-09-24T01:39:21.1536880Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testSharingRecoveryKeepsHeaderAndCommandsReachable]' passed (80.319 seconds).
+2026-09-24T01:39:21.2633000Z 	 Executed 15 tests, with 1 failure (0 unexpected) in 977.984 (978.014) seconds
+2026-09-24T01:39:21.2636210Z 	 Executed 15 tests, with 1 failure (0 unexpected) in 977.984 (978.016) seconds
+2026-09-24T01:39:21.2794950Z 	 Executed 15 tests, with 1 failure (0 unexpected) in 977.984 (978.017) seconds
+
+ipad
+2026-09-24T01:41:45.4275270Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAddDestinationSelectionPreservesDraftAndRecoversCreation]' passed (132.746 seconds).
+2026-09-24T01:43:08.9097930Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure]' passed (82.012 seconds).
+2026-09-24T01:44:03.4447730Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testAssetRegionsRecoverAtNormalTextSize]' passed (56.023 seconds).
+2026-09-24T01:44:57.6712350Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseExpirationDetailAndBackPreserveContext]' passed (54.225 seconds).
+2026-09-24T01:45:18.0145790Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseExpirationReviewUsesOverviewMenu]' passed (20.325 seconds).
+2026-09-24T01:45:55.6980980Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseFiltersDetailAndBackPreserveContext]' passed (37.689 seconds).
+2026-09-24T01:47:17.4211020Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testBrowseLastTagClearsActionFooterAndApplies]' passed (81.710 seconds).
+2026-09-24T01:48:18.3860880Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testDetailCommandsRemainReachableAtNormalTextSize]' passed (60.707 seconds).
+2026-09-24T01:49:07.0470780Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testDetailContextVariantsKeepNativeCommandsAndStatus]' passed (48.938 seconds).
+2026-09-24T01:49:23.3911980Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testEmptyPhotoDetailPrioritizesIdentityAndActions]' passed (16.344 seconds).
+2026-09-24T01:49:36.6060860Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testExpirationSheetBodySurvivesExpansion]' passed (13.173 seconds).
+2026-09-24T01:50:01.2803540Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMapRootContextAndAncestorReturn]' passed (24.712 seconds).
+2026-09-24T01:51:19.3168040Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testMoveDestinationCreationRetainsDraftAndRetries]' passed (78.002 seconds).
+2026-09-24T01:52:24.0775420Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testPlaceContentsUseNativeSearchAndKeepNavigation]' passed (64.772 seconds).
+2026-09-24T01:53:28.6436140Z Test Case '-[StuffStashAuditTests.FixtureAuditTests testSharingRecoveryKeepsHeaderAndCommandsReachable]' passed (64.547 seconds).
+2026-09-24T01:53:28.6532300Z 	 Executed 15 tests, with 0 failures (0 unexpected) in 835.926 (835.952) seconds
+2026-09-24T01:53:28.6533890Z 	 Executed 15 tests, with 0 failures (0 unexpected) in 835.926 (835.956) seconds
+2026-09-24T01:53:28.6535140Z 	 Executed 15 tests, with 0 failures (0 unexpected) in 835.926 (835.957) seconds

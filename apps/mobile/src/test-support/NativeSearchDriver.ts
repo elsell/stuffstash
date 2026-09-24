@@ -4,6 +4,8 @@ type SearchOptions = {
   ref: { current: unknown };
   onChangeText: (event: { nativeEvent: { text: string } }) => void;
   onClose: () => void;
+  onFocus: () => void;
+
   placement: string;
 };
 
@@ -24,6 +26,8 @@ export class NativeSearchDriver {
   });
   change(text: string) {
     if (!this.options) throw new Error('Native search is unavailable');
+    this.options.onFocus();
+
     this.text = text;
     this.options.onChangeText({ nativeEvent: { text } });
   }
@@ -31,4 +35,12 @@ export class NativeSearchDriver {
     this.unsubscribe();
     if (this.options) this.options.ref.current = null;
   }
+}
+
+/** Model an explicit user search interaction, including native focus before input. */
+export function typeInNativeSearch(text: string): void {
+  const options = Object.assign({}, ...navigationOptions()).headerSearchBarOptions as SearchOptions | undefined;
+  if (!options) throw new Error('Native search is unavailable');
+  options.onFocus();
+  options.onChangeText({ nativeEvent: { text } });
 }

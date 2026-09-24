@@ -132,6 +132,30 @@ describe('AssetDetailView', () => {
     expect(placementIndex).toBeLessThan(text.indexOf('Sleeps four.'));
   });
 
+  it.each(['item', 'container', 'location'] as const)('keeps %s commands contextual without duplicate body Edit', (kind) => {
+    const asset = { ...assetDetail(), kind, canContainAssets: kind !== 'item',
+      canCheckout: kind !== 'location', canReturn: false };
+    const tree = AssetDetailView({ asset, showEditAction: false, onEdit: () => {},
+      onMove: () => {}, onCheckout: () => {} });
+    const text = collectText(tree);
+    expect(text).not.toContain('Edit');
+    expect(text.filter(value => value === (kind === 'location' ? 'Move place' : 'Move'))).toHaveLength(1);
+    if (kind !== 'location') expect(text).toContain(asset.checkoutLabel);
+    expect(collectText(AssetDetailView({ asset, onEdit: () => {} }))).toContain('Edit');
+  });
+
+  it('retains container availability status when commands are not permitted', () => {
+    const asset = { ...assetDetail(), kind: 'container' as const, canContainAssets: true,
+      canCheckout: false, canReturn: false, canEdit: false, canMove: false, isCheckedOut: true,
+      checkoutLabel: 'Checked out', checkoutActorLabel: 'Alex' };
+    const text = collectText(AssetDetailView({ asset, showEditAction: false }));
+    expect(text.filter(value => value === 'Availability')).toHaveLength(1);
+    expect(text).toContain('Checked out');
+    expect(text).toContain('Alex');
+    expect(text).not.toContain('Return');
+    expect(text).not.toContain('Check out');
+  });
+
   it('shows only the applicable availability action and hides unavailable maintenance actions', () => {
     const available = collectText(AssetDetailView({
       asset: assetDetail(),
@@ -208,7 +232,7 @@ describe('AssetDetailView', () => {
     expect(text).not.toContain('Inventory root');
   });
 
-  it('omits synthetic placement for a root place and keeps one gallery-level photo action', () => {
+  it('explains top-level placement for a movable root place and keeps one photo action', () => {
     const tree = AssetDetailView({
       asset: {
         ...assetDetail(),
@@ -234,6 +258,7 @@ describe('AssetDetailView', () => {
     expect(text.indexOf('Garage')).toBeLessThan(text.indexOf('Add photos'));
     expect(text).not.toContain('No location');
     expect(text).not.toContain('Inventory root');
+    expect(text).toContain('Top level');
     expect(text).toContain('Move place');
     expect(text).not.toContain('Move');
     expect(text).toContain('No photos');
@@ -266,7 +291,7 @@ describe('AssetDetailView', () => {
     expect(text.indexOf('Items in Garage')).toBeLessThan(text.indexOf('Cordless drill'));
     expect(text.indexOf('Cordless drill')).toBeLessThan(text.lastIndexOf('Item'));
     expect(text.lastIndexOf('Item')).toBeLessThan(text.lastIndexOf('Utility shelf'));
-    expect(text.indexOf('Move place')).toBeGreaterThan(text.indexOf('Cordless drill'));
+    expect(text.indexOf('Move place')).toBeLessThan(text.indexOf('Spaces in Garage'));
     expect(findFirstByProp(
       tree,
       'accessibilityLabel',
@@ -300,9 +325,26 @@ describe('AssetDetailView', () => {
       .toEqual(['1 space', '1 item']);
     expect(pathMatches.filter((item) => item.kind === 'row').map((item) => item.row.title))
       .toEqual(['Utility shelf', 'Cordless drill']);
-    expect(noMatches.filter((item) => item.kind === 'section').map((item) => item.heading.summary))
-      .toEqual(['0 of 1 space', '0 of 1 item']);
+    expect(noMatches.filter((item) => item.kind === 'empty')).toHaveLength(1);
+    expect(noMatches.filter((item) => item.kind === 'section')).toHaveLength(0);
     expect(noMatches.some((item) => item.kind === 'empty' && item.canClearSearch)).toBe(true);
+  });
+
+  it('shows populated place contents without empty sibling sections and one empty state when nothing exists', () => {
+    const itemsOnly = containedWorkspaceItems(placeDetail({
+      items: [{ ...containedCard('drill', 'Drill', 'item'), relativePath: [], relativePathLabel: undefined }]
+    }), '');
+    expect(itemsOnly.filter(item => item.kind === 'section').map(item => item.heading.title))
+      .toEqual(['Items in Garage']);
+    expect(itemsOnly.filter(item => item.kind === 'empty')).toHaveLength(0);
+    const spacesOnly = containedWorkspaceItems(placeDetail({
+      spaces: [containedCard('shelf', 'Shelf', 'container')]
+    }), '');
+    expect(spacesOnly.filter(item => item.kind === 'section').map(item => item.heading.title))
+      .toEqual(['Spaces in Garage']);
+    const empty = containedWorkspaceItems(placeDetail(), '');
+    expect(empty.filter(item => item.kind === 'empty')).toHaveLength(1);
+    expect(empty.some(item => item.kind === 'empty' && item.canClearSearch)).toBe(false);
   });
 
   it('keeps native search out of the scrollable contents header', () => {
@@ -390,7 +432,9 @@ describe('AssetDetailView', () => {
     expect(addHereIndex).toBeGreaterThan(-1);
     expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
     expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
-    expect(addHereIndex).toBeLessThan(text.indexOf('Add photos'));
+    expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
+    expect(addHereIndex).toBeLessThan(text.indexOf('Move items here'));
+
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
 

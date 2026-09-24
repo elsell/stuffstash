@@ -4,55 +4,68 @@ The comprehensive audit is **incomplete**. Prioritize stable screen structure,
 connected everyday tasks, visual coherence, then detailed states. Normal text comes
 first. The surface/axis inventory checks omissions; it is not a separate test queue.
 
-## Design acceptance
+## Delivery
 
-The rejected Move layout has been replaced with a native iOS list, grouped
-subject and destination choices, visible native search, and toolbar-owned
-creation. The creation form now uses aligned Name and Kind sections with one
-explanatory footer. Final source9b3ae737 passes all four Move workflows on phone
-and iPad in35920806955; the phone retry followed an Xcode launch failure.
-Android recovery and phone/iPad entry, selection and creation captures were
-reviewed. This closes the scoped Move design hold, not the comprehensive audit.
+Latest verified TestFlight is **0.24.33 (124.1)**, with Apple processing and
+exact [changelog readback](evidence/selection-release-359389-results.txt).
 
-## Delivery and frozen batch
+**M265–M273 is merged** in [PR173](https://github.com/elsell/stuffstash/pull/173),
+e0d63ad5. Release35938987211 completed with eight TestFlight notes. Required
+CI35936948141 passed at4b98eac2. Final Add35936945060 passes phone/iPad, including
+search, cancel/reopen, destination creation/retry and bounded form spacing; final
+creation and returned-draft captures were reviewed. Move35920806955 passes all
+four workflows on both devices; tag/draft35920079319 passes three on both devices.
+Android grouped creation and recovery were reviewed. Add's scoped design hold was
+closed. Move remains visually open following user feedback; functional passes do
+not override that judgment. Current source already has grouped native rows,
+toolbar actions and stacked iPhone/iPad search; assess those actual captures before
+repeating the same redesign. The comprehensive audit and physical-device checks
+remain incomplete.
 
-Latest verified TestFlight: **0.24.32 (123.1)** — M260–M264, with Apple processing
-and exact [changelog readback](evidence/workflow-release-358899-results.txt).
-[PR171](https://github.com/elsell/stuffstash/pull/171) merged as690ee8e4;
-release35889902851 succeeded. Final Browse run35887017924 passed on phone/iPad,
-and required CI passed on ddcb700c before merge.
+## Persistent tab navigation candidate
 
-The next batch is frozen to **M265–M273**, [draft PR173](https://github.com/elsell/stuffstash/pull/173):
-Map/detail hierarchy, optional Add tag creation, Add/Edit tag selection, Add
-destination selection, independent Move creation drafts, retained native text,
-selection presentation above modal editors, and consistent Move Here controls.
-See the [batch contract](../../../specs/platform/mobile-selection-batch.spec.md).
-Unrelated findings do not block either release.
+The user requested persistent Home/Browse navigation on ordinary screens. The
+`codex/mobile-persistent-tabs` candidate moves41 ordinary routes into shared tab
+stacks, retaining URLs and root modal tasks. The real Expo route expansion test
+reproduced the old ownership and passes for both tabs; source guards and fixture
+preparation remain checked. Native history, modal return, editor draft retention
+and bar clearance are not yet verified. Surface paths reflect the new ownership;
+older matrix runtime evidence does not establish this navigation structure.
 
-## Current diagnosis and next decisions
+## Current follow-up diagnosis and decisions
 
-| Workflow | Established evidence | Remaining acceptance |
-| --- | --- | --- |
-| Browse List/Map | Stable header/switcher, actual scrolling and outer-card tablet geometry passed in35887017924. | Delivered in0.24.32; no unchanged layout rerun. |
-| Map/detail hierarchy | M265/M266 scoped phone/iPad acceptance passed in35874901875; Android captures retained. | Preserve in the integrated batch; no claim of whole-detail acceptance. |
-| Add/Edit selection | Tag/draft cases pass on both devices in35920079319. Phone35928152275 completes destination search/cancel/reopen/create/retry, but its creation screenshot has excessive top spacing. | Correct duplicate inset ownership, then verify lower and upper Name/header spacing plus the full connected workflow. Functional success does not close visual acceptance. |
-| Move | Final grouped creation source9b3ae737 passes all four workflows on both devices in35920806955; Android recovery and phone/iPad screenshots reviewed. All six required CI pass on53521aeb in35924509167. | Scoped Move acceptance complete; preserve in the batch. |
-| Move Here | 35917033325 passes rejected-command/retry and suggestions recovery on phone/iPad. iPad error capture has clear destination, local feedback and a bordered retry action. | Reviewed phone/iPad normal-text recovery layout is coherent; preserve these results through final creation-form verification. |
+The release hold remains open for Move's visual acceptance. PR174 consolidates
+M274–M279 plus Settings current-save/readback and Move hierarchy/contrast into one
+release candidate. The combined source passes1,995 mobile checks, TypeScript,
+structural checks and ten fixture-preparation checks. Its product source matches da791006; the additional Add test
+observation fix does not change product code. M274–M279 covers filter navigation/density, retained search, contextual detail actions and
+Sharing recovery. Standard adaptive filters corrected the iPad viewport defect;
+do not repeat rejected dependency ownership patches. Integrated35941028517 passed
+14/15 phone and15/15 tablet cases. The conditional keyboard-dismiss observation
+fix16501db7 passed focused Add/Move35945429162 on both devices; required
+CI35945384623 passed. Phone/iPad Add creation and return captures are reviewed: native actions are
+reachable, the item draft survives and the new destination is selected.
 
-The integrated source run passed1,968/1,970 tests. The two failures enforced removed
-inline Add structure and a hidden Move Here header. Corrected expectations and all
-54 other tests in those files pass. TypeScript, structural checks, fixture preparation
-and critic review pass. All six CI35891523435 jobs passed at336e17ef. These checks
-do not establish native presentation or physical-device behavior.
+Settings current-save246edefd passes connected readback35948277688 on both devices,
+including exact full-name persistence after failure/retry, reopen/create/archive.
+Phone and tablet collection/reopened-editor captures confirm header clearance and
+complete names. This closes those scoped defects, not all Settings design findings.
 
-## Next connected workflow
+Move8e79997c passes all four workflows on both devices in35947975650. Visual review
+found the custom section header too faint. Contrast correctionda791006 is in
+35951755320 on `codex/mobile-move-contrast`; native acceptance remains open.
 
-Source review at b5eee60f of Browse → Filters → results/detail/Back retains in-place
-short choices and searchable tag selection. M274 recommends replacing the
-three-destination Expiration intermediate page with a native action menu; preserve
-inherited filters and original Browse return context. This is outside frozen
-M265–M273. Current connected native return/scroll evidence is still required;
-source state ownership does not certify the visual journey.
+Detail M280 at a7ea4ac5 passed five of six cases per device in35948366265, including
+resized gallery selection. Photo Retry failed to disappear on phone; contents Retry
+failed on tablet. Preserve the assertions. Candidate615485f5 adds bounded native
+buttons by default and puts identity before photo recovery;35951671413 checks nine
+representative workflows. This does not establish the retry failure's cause.
+
+Persistent tabs a1d7d825 is in35951026134. Source checks establish route ownership,
+not native retention. A subsequent source correction carries the originating tab
+through Expiration Filters because root modal segments cannot disambiguate shared
+routes. That correction still needs a native roundtrip. Android, dark appearance,
+long command labels and the wider surface audit remain open. The button/detail and tab candidates remain outside this frozen release batch.
 
 ## Separate unresolved decisions
 
@@ -66,7 +79,7 @@ source state ownership does not certify the visual journey.
   a general correction. Fix reproduced consumers using the established native
   draft field, preserving reset and ownership semantics. Do not repeat the same
   provider/key experiments. [Consolidated evidence](native-text-entry-352471.md).
-- Settings persisted collection readback, physical integrations, assistive behavior
+- Remaining Settings design findings, physical integrations, assistive behavior
   and wider device adaptations remain tracked in the full findings and surface
   reports. Passed fixture workflows do not close them.
 
@@ -82,6 +95,7 @@ The last full native sweep, [352471](native-full-352471.md), passed phone74/92 a
 iPad84/92 fixture cases. It predates subsequent fixes and is neither a current
 failure count nor whole-app certification. Verify shared controls once, representative
 compositions and critical connected workflows; add coverage when ownership differs.
+
 
 This is the sole current status summary. Update it in place. Keep exact diagnoses,
 decisions and durable evidence; historical pending-run statements elsewhere are not

@@ -14,6 +14,7 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
   const canArchive = props?.asset.canArchive;
   const canRestore = props?.asset.canRestore;
   const canDeletePermanently = props?.asset.canDeletePermanently;
+  const hasEdit = Boolean(props?.onEdit);
   const disabled = props?.disabled ?? false;
   return useMemo(() => {
     if (title === undefined) return { headerRight: undefined, unstable_headerRightItems: undefined };
@@ -21,6 +22,7 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
     return assetHeaderOverflowScreenOptions({
       asset: { title, canArchive: !!canArchive, canRestore: !!canRestore, canDeletePermanently: !!canDeletePermanently },
       disabled,
+      onEdit: hasEdit ? () => owner()?.onEdit?.() : undefined,
       onHistory: () => owner()?.onHistory(),
       onCheckoutHistory: () => owner()?.onCheckoutHistory(),
       onLifecycleAction: action => {
@@ -31,5 +33,5 @@ export function useAssetHeaderOverflowOptions(props: AssetHeaderOverflowProps | 
         if (permitted) value.onLifecycleAction(action);
       }
     });
-  }, [title, canArchive, canRestore, canDeletePermanently, disabled, current]);
+  }, [title, canArchive, canRestore, canDeletePermanently, disabled, hasEdit, current]);
 }

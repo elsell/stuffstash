@@ -998,7 +998,8 @@ does not certify Map-path return, all text sizes, or spatial command styling.
 M88 detail commands reuse NativeCommandButton with optional primary prominence.
 Default commands retain their existing native text-button appearance. Add item here
 uses native primary styling; Move items here and maintenance remain quiet. Direct
-item Check out/Return retains primary prominence, while contained-workspace
+item Check out/Return originally retained primary prominence; M277 below
+supersedes that emphasis with availability-context commands. Contained-workspace
 availability remains quiet. Authorization-derived visibility, missing-handler and
 pending disabling, action ordering and route destinations must be preserved.
 SwiftUI and Compose own button appearance and label measurement; preview styling
@@ -2052,6 +2053,244 @@ remain scoped evidence; the combined run verifies integration. Unrelated finding
 stay in the audit and must not silently expand this batch.
 
 
+## M277: Asset detail action hierarchy
+
+Task: inspect an asset and its location, then deliberately edit, relocate, or
+change availability. The detail page is not a checkout confirmation form.
+The observed phone/iPad detail layouts give a full-width Check out command more
+emphasis than identity and spread Edit/Move across a separate maintenance row.
+This is a project hierarchy judgment, not evidence of relative command usage.
+
+Use the existing native header adapters to expose Edit persistently for editable
+assets, alongside More and the existing Place search entry. Remove the duplicate
+body Edit command when the route supplies this header action. Preserve a body
+fallback for standalone detail consumers without native navigation. Read-only
+assets omit Edit; pending actions disable it. The retained header callback must
+use the current committed asset and permissions, and become inert after teardown.
+Do not replace the stable header action ownership mechanism.
+
+Group location and its Move command in one section with a shared leading edge.
+Keep Move directly discoverable; do not hide it in More just to reduce visible
+controls. A place uses Move place, and nested-place location breadcrumbs remain
+navigable. At inventory root, location context still explains what Move changes.
+Use a native secondary command, without spreading commands equally across the
+full tablet width. Preserve the selected asset and return context in the existing
+Move task.
+
+Present availability with its current status and a nearby Check out or Return
+command. This section owns checkout status and actor information; exception
+metadata retains lifecycle only, avoiding a duplicate Availability section. Available and checked-out states must be understandable without reading
+a button. Do not make Check out the page-wide primary action. Preserve checkout
+context already available in the view model and keep domain eligibility,
+permissions, pending locks, recovery and return behavior unchanged. Locations
+must not acquire an availability control they do not support.
+
+Keep photo commands with the photo section and containment commands with contents.
+Add item here remains the place workspace's primary creation command. Preserve
+history and destructive actions in their existing grouped More menu. Do not
+introduce a generic action dashboard or wrap every section in a new card.
+
+Apple's [toolbar guidance](https://developer.apple.com/design/human-interface-guidelines/toolbars)
+supports prioritizing direct commands and warns about discoverability of hidden
+menu actions. Its [button guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+relates prominence to the likely action; it does not prohibit text buttons.
+These sources inform the project-specific grouping above, not a claim that Apple
+requires these exact asset commands.
+
+Acceptance: compare item, container and place details, populated and empty photos,
+available and checked-out items and containers, read-only and pending states at normal text size on iPhone,
+iPad and Android. Visually review entry and scrolled content for clear hierarchy,
+consistent leading edges and contained action widths. Exercise header Edit and
+cancel/save return, Move and return, availability failure/retry and More, plus
+Place search without loss of header commands. Containers must retain both their
+contents commands and supported availability actions without duplicate Edit.
+Verify latest-owner and removed
+header callbacks in source tests. Native screenshots and connected task checks
+are both required; passing tests alone do not close M277. This follow-up is not a
+prerequisite for releasing independently accepted M265–M273 fixes.
+
+
+M277 representative native detail fixtures reuse the real detail route and
+controlled read ports for an item with a bundled image, a checked-out container,
+a read-only checked-out container, and an editable place with searchable contents.
+Fixture images establish occupied-gallery layout, not real-photo crop quality.
+They do not perform server mutations or establish authorization enforcement.
+The route variant remounts its query owner so one case cannot inherit another's
+permissions or state. Capture entry and the relevant contextual commands; keep
+whole-layout acceptance separate from assertions about command presence.
+
+### M277 content-first detail grouping
+
+Normal-text Android captures show the empty Spaces block ahead of twenty actual
+items and an unbounded Add photos command between media and identity. These are
+whole-page hierarchy defects. Keep the gallery's status/count and bounded Add
+photos command together in one wrapping caption row. Empty media uses the same
+compact row. Place that row before containment commands so photo controls do not
+split commands from their contents. Keep existing gallery paging and opening.
+
+Containment commands form a wrapping, bounded horizontal group: Add item here
+retains primary emphasis, Move items here is secondary. Native adapters own button
+appearance; this is a grouping correction, not a custom toolbar. Preserve native
+minimum targets and wrapping rather than squeezing long labels.
+
+For places, render sections with actual visible contents. An empty sibling section
+must not precede useful rows. When the entire place is empty, show one contents
+empty state with permission-appropriate guidance; when search has no matches, show
+one no-results state with Clear search. Retain relative-path matching, counts on
+visible sections, original ordering, and native search eligibility from total
+contents. Do not hide loading or failure behind an empty result.
+
+Validate populated/empty photo and twenty-item place fixtures as complete native
+screens, plus selection/opening and filtered no-result recovery. Source assertions
+about order or presence do not establish visual acceptance.
+
+### Expiration entry after filter review
+
+Run35911930846 passes all six iPad filter cases and five phone cases. The remaining
+phone capture confirms Expiration's ScrollView frame at y750 with height62 in an
+874-point screen; the first result exists below the viewport. Treat this as a
+layout failure, not a test needing a swipe or longer timeout.
+
+Make the Expiration FlatList the native screen's direct scrolling body, matching
+Browse's established structure. Remove the redundant flex View around the native
+header options and list; preserve the list background and automatic content inset.
+This removes an unnecessary native scroll-container boundary. The exact UIKit
+transition cause remains unproven; the existing connected filter→Expiration→detail
+and back scenario is the acceptance check and must retain immediate result
+hittability. Do not add fixed screen heights or measured-header padding here.
+
+### Sharing inline feedback alignment
+
+Normal-text Android creation and cancellation recovery captures show centered
+error paragraphs beneath leading-aligned titles inside the same form or invitation
+row. Inline feedback belongs to that local reading flow. Use leading-aligned text
+with the existing error-message typography and color for creation, link and
+cancellation feedback; reserve centered empty-state styling for standalone states.
+Preserve error wording, live announcements, retained input, permissions and retry
+commands. This is a visual-coherence correction, not a change to invitation safety
+or one-time link behavior. Review successful link and failure/retry captures as a
+whole, retaining the existing behavioral tests.
+
+The successful link capture also shows Copy link and Share invitation as widely
+separated centered text commands. Group them in a bounded wrapping row adjacent
+to the one-time link. Share invitation is the primary completion command; Copy
+link is its alternative. This project hierarchy choice preserves both direct
+paths and all pending/error ownership. It does not invoke external sharing
+without the user's command. Long labels wrap and controls retain native targets.
+
+Verify the filter follow-up and sharing refinement in one native build per device:
+`filter-sharing-workflows` composes the existing six connected filter cases with
+the existing sharing recovery case. Keep `browse-filter-journey` unchanged for
+focused diagnosis. Reuse the independent detail composition run; no sharing code
+changes its consumers. Do not require an all-fixture run for this scoped batch.
+
+## Follow-up batch native compilation gate
+
+Run35918141231 failed XCTest compilation before executing workflows: the
+Availability uniqueness assertion called count on XCUIElement. Preserve the
+uniqueness requirement using an exact-label element query. This run supplies no
+runtime acceptance evidence. Cancel superseded35919524865, whose same test source
+contains the compile error. Verify the final M274–M278 composition using one
+phone/iPad build per device: six filter/search/return cases, sharing recovery, and
+five representative detail/hierarchy cases. Keep focused suite choices available
+and share their test lists instead of maintaining divergent copies.
+
+Run35921268590 executes all twelve cases: nine pass on both devices, including
+connected filters/Expiration return, tag-footer clearance and Sharing recovery.
+Three detail assertions need alignment with inspected native evidence:
+- Recovery now displays the specified `Nothing inside yet` empty state, not the
+  removed `Nothing here yet` copy. Require the new state and retain retry/return.
+- RN exposes Availability as nested StaticText nodes at identical bounds. Require
+  one distinct heading rectangle, rather than one accessibility-tree node; source
+  tests independently guard duplicate status content. This does not establish
+  VoiceOver traversal, which remains a separate audit axis.
+- The system Edit bar item has a36-point AX glyph/control frame within its native
+  header. Keep its hittability, containment and horizontal bounds; reserve the
+  custom body-command44-point height check for body commands. Do not resize native
+  toolbar controls to satisfy a body-layout assertion. Connected Edit navigation
+  has its separate native workflow evidence; this check alone does not measure
+  the system's extended hit region.
+
+Rerun the five detail/hierarchy cases with these corrections. Preserve the nine
+passed follow-up workflows rather than re-running unchanged filter/sharing cases.
+
+## Sharing native content measurement
+
+Run35921268590 passes Sharing operations but phone/iPad captures clip Create
+Invitation at the bottom of its section. Phone section ends at548.6pt while the
+button ends at553.7pt. The54pt email host reports a34pt native field and the48pt
+command host a46pt native button: the22pt intrinsic/minimum difference matches
+the missing content space and bottom padding. Put these minimums in the measured
+SwiftUI content rather than only on the React Native Host. Preserve native button
+style, wrapping, email ownership, disabled guards and system keyboard behavior.
+Do not hide this with section overflow or extra compensating padding.
+
+Extend Sharing's native acceptance to require the full Create button rectangle
+inside its form with the intended bottom inset before creation and after failure.
+Review phone/iPad captures; source checks cannot prove cross-framework sizing.
+The shared command adapter also needs representative detail-command verification.
+This is a follow-up finding and does not expand PR173's frozen release scope.
+
+## Invalidated sheet scroll ownership (M279)
+
+The iPad expiration capture has a580×650 native viewport but744×1133 content.
+The native viewport retains the dismissed filter sheet's bounds; the mode picker
+itself has the correct content width. Backport the invalidated-screen guard from
+react-native-screens PR4652 (merge8b2163ba587a99eaba81aba09eb0e1153c028ade)
+to the existing pinned4.23.0 patch. In4.23, `invalidateImpl` clears `_controller`
+and no other code clears it; use that existing invalidation marker instead of
+introducing a second lifecycle flag. A deleted sheet must never discover or resize
+a recycled descendant scroll view. Keep the existing search-presentation patch.
+Source: https://github.com/software-mansion/react-native-screens/pull/4652
+
+Extend the connected Browse → Filters → Expiration journey to verify viewport
+width/height, all three visible modes and actual switching before detail/Back.
+Check the native Sharing and detail-command consumers in the same follow-up run.
+No navigation delay, forced rerender or screen-size padding workaround is allowed.
+
+## Follow-up native result35930669612
+
+Sharing's corrected form containment passes on both devices. Detail Move exposes
+a48-point-high but only41.5–41.7-point-wide native button. The short label needs
+a48-point minimum width inside the native label, rather than relying on the
+120-point React host width. Keep the native44-point target acceptance unchanged.
+The Screens invalidation backport does not correct the iPad580×650 expiration
+viewport. Do not claim that hypothesis proven or rerun it unchanged. The next
+implementation decision must address transition ownership from the filter sheet
+to the full-screen expiration task, while preserving Browse Back and filters.
+
+The bounded follow-up review identifies a separate KVO ownership gap: before
+`observeValueForKeyPath` resizes an observed scroll view (including the content
+wrapper branch), require that view to remain a descendant of the owning screen.
+Invalidation is deferred until after the mounting transaction; its existing guard
+alone cannot protect this callback. This is an ownership correction, not proof
+of M279's cause. Keep the native viewport and mode checks unchanged.
+
+Place search acceptance uses real typing, exact text, matching/nonmatching results,
+clear/retype/cancel and return. Like Add destination, it does not require a separate
+keyboard-key tree query before typing;35930669612 iPad failed that query while the
+search field was focused and the keyboard visible. Actual entry remains required.
+
+## Standard modal filter presentation (M279 decision)
+
+Run35934741356 passes eleven iPad workflows but still observes a580×650
+Expiration viewport after replacing Filters. Neither candidate Screens ownership
+guard resolves it. Remove those unproven dependency changes, retaining only the
+previously verified search-attachment patch.
+
+Use the platform's standard adaptive modal presentation for iOS Browse and
+Expiration filters, rather than the resizable formSheet adapter. These filters
+already open at their largest detent; choosing a compact detent adds no task
+capability and exposes the pinned adapter's frame-coercion path. Preserve native
+navigation, search, grouped choices, dismissal, and the accessible action footer.
+Android retains its native stack route. This intentionally removes custom filter
+detents; it does not replace sheets with a bespoke navigation coordinator.
+
+Keep the connected Browse→Filters→Expiration→detail→back viewport and selection
+checks unchanged, and verify both filter consumers, keyboard, footer and dismissal
+on phone/iPad. The medium-sheet fixture remains an explicitly resizable diagnostic
+for other form-sheet consumers; it does not describe production Filters.
+Reference: https://developer.apple.com/design/human-interface-guidelines/sheets
 ### Add destination search keyboard observation
 
 The iPad job107346778966 in run35909892208 completes three selection cases but
@@ -2064,3 +2303,20 @@ actual typing, complete query equality, native selection, failure/retry and retu
 assertions. This corrects an observation boundary, not proof of application
 acceptance or a reason to replace native search. The corrected run still must
 complete and its focused creation layout must be visually reviewed.
+
+## Integrated follow-up acceptance
+
+The follow-up merges the released selection workflows with native search focus
+ownership. Its release subset must therefore include the existing twelve follow-up
+workflows plus Add destination creation/recovery, Add tag draft/recovery and Move
+destination creation/recovery. These three representative consumers cover shared
+stacked and compact search ownership, retained drafts, explicit commit and return.
+Reuse their existing assertions; do not substitute component checks or dispatch a
+full-surface sweep. Keep unrelated Settings readback in its subsequent batch.
+
+Visual acceptance remains separate from functional completion. Review corresponding
+iPhone and iPad entry, search, selected and recovery captures for a clear subject,
+destination hierarchy, deliberate alignment and action prominence. The latest user
+rejection keeps Move visually open until that review is explicit; older recorded
+passes must not silently override it. Existing grouped-list and stacked-search
+implementation should be assessed before deciding another implementation is needed.

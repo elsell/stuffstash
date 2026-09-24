@@ -151,10 +151,7 @@ export function assetDetailExceptionMetadataRows(
 ): readonly AssetDetailMetadataRow[] {
   return [
     ...(!asset.isActive ? [{ label: 'Lifecycle', value: asset.lifecycleLabel }] : []),
-    ...(asset.isCheckedOut ? [{
-      label: 'Availability',
-      value: [asset.checkoutLabel, asset.checkoutActorLabel].filter(isPresent).join(' · ')
-    }] : [])
+
   ];
 }
 

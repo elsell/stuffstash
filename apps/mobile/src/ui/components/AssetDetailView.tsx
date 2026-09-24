@@ -58,6 +58,7 @@ type AssetDetailViewProps = {
   readonly workspaceStatusKind?: 'success' | 'working';
   readonly canRetryPhotos?: boolean;
   readonly onBack?: () => void;
+  readonly showEditAction?: boolean;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onCheckout?: () => void;
@@ -95,6 +96,7 @@ export function AssetDetailView({
   onBack,
   onCheckout,
   onChildPress,
+  showEditAction = true,
   onEdit,
   onMove,
   overflowMenu,
@@ -165,6 +167,7 @@ export function AssetDetailView({
             asset={asset}
             isActionPending={isActionPending}
             onCheckout={onCheckout}
+            showEditAction={showEditAction}
             onEdit={onEdit}
             onMove={onMove}
             onParentLocationPress={onParentLocationPress}
@@ -186,6 +189,8 @@ export function AssetDetailView({
             workspaceStatusMessage={workspaceStatusMessage}
           />
 
+          {asset.photos.length === 0 ? photoGallery : null}
+
           {asset.canContainAssets ? (
             <ContainedSpatialActions
               asset={asset}
@@ -195,7 +200,6 @@ export function AssetDetailView({
             />
           ) : null}
 
-          {asset.photos.length === 0 ? photoGallery : null}
         </View>
       )}
       ListFooterComponent={(
@@ -205,6 +209,7 @@ export function AssetDetailView({
               asset={asset}
               isActionPending={isActionPending}
               onCheckout={onCheckout}
+              showEditAction={showEditAction}
               onEdit={onEdit}
               onMove={onMove}
               onReturn={onReturn}

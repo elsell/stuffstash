@@ -1,0 +1,6 @@
+Release run: https://github.com/elsell/stuffstash/actions/runs/35938987211
+Source: e0d63ad597f378b590f8eafa4ca418de9af4bd37
+2026-09-24T01:03:24.7633574Z   STUFF_STASH_MOBILE_RELEASE_TAG: v0.24.33
+2026-09-24T01:03:24.7633977Z   MOBILE_BUILD_NUMBER: 124.1
+2026-09-24T01:05:26.7466020Z Verified TestFlight changelog for v0.24.33 (124.1).
+Apple publication checks require processingState VALID, exact version/build/platform and exact English notes readback.

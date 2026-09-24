@@ -1,0 +1,16 @@
+M276 Android connected search/Filters acceptance
+Baseline d7d7689b: Camping24 -> Available -> Show results incorrectly produced
+19 unscoped items and Recently changed. Filter screen had retained Camping.
+Corrected production NativeNavigationSearch SHA256: 2f22affb0e804928219556f749867875a88d1dac56c67a6b5325a64eb46a5bc2
+Fixture/routes: d7d7689b overlay; Android emulator5580, release APK rebuilt offline.
+PASSED: Camping + Available =18 results; actual scroll; detail/Back retains exact
+card position; Expiration inherits query and availability; detail/Back returns to
+Expiration; Back restores original Browse24 Camping.
+PASSED separate native interaction: open search seeds Camping, system clear button,
+type Kitchen, native submit ->1 result, Filters/Show results retains Kitchen.
+Reviewed matching result screenshots; no new overlap observed at normal text.
+Fixture dates/images are artificial and do not establish production content quality.
+154 shared-consumer tests +11 Browse +10 adapter/Move tests pass; TypeScript,
+structural check, code critic pass. Existing consumer tests now emit focus before
+user typing; inactive callbacks remain directly tested. iPhone/iPad connected
+acceptance remains required. This is separate from frozen M265-M273.

@@ -1,3 +1,4 @@
+import { nativeHeaderActionOptions } from '../components/NativeHeaderActions.ios';
 import type { StackScreenProps } from 'expo-router';
 import { assetOverflowMenuGroups } from './AssetOverflowMenu';
 import type { AssetHeaderOverflowProps } from './AssetHeaderOverflow.types';
@@ -15,6 +16,7 @@ type NativeSFSymbolIcon = Extract<NonNullable<NativeHeaderMenuAction['icon']>, {
 export function assetHeaderOverflowScreenOptions({
   asset,
   disabled = false,
+  onEdit,
   onCheckoutHistory,
   onHistory,
   onLifecycleAction
@@ -22,7 +24,9 @@ export function assetHeaderOverflowScreenOptions({
   const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction });
   return {
     headerShown: true as const,
-    unstable_headerRightItems: (): NativeHeaderMenuItem[] => [{
+    unstable_headerRightItems: (context): NativeHeaderItem[] => [
+      ...(onEdit ? nativeHeaderActionOptions([{ kind: 'compose', label: 'Edit', disabled,
+        onPress: onEdit }]).unstable_headerRightItems?.(context) ?? [] : []), {
       type: 'menu',
       label: '',
       accessibilityLabel: `More actions for ${asset.title}`,

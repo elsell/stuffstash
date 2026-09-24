@@ -106,7 +106,7 @@ describe('AssetDetailPresentation', () => {
     })).toEqual([]);
   });
 
-  it('shows only exceptional archived and checked-out state near its action', () => {
+  it('keeps lifecycle metadata separate from contextual availability', () => {
     const asset = {
       checkoutLabel: 'Checked out Jul 14, 2026',
       checkoutActorLabel: 'Checked out by Alex',
@@ -116,8 +116,7 @@ describe('AssetDetailPresentation', () => {
     };
 
     expect(assetDetailExceptionMetadataRows(asset)).toEqual([
-      { label: 'Lifecycle', value: 'Archived' },
-      { label: 'Availability', value: 'Checked out Jul 14, 2026 · Checked out by Alex' }
+      { label: 'Lifecycle', value: 'Archived' }
     ]);
     expect(assetDetailMetadataRows({ ...asset, updatedAtLabel: 'Updated yesterday' }))
       .toEqual(assetDetailExceptionMetadataRows(asset));

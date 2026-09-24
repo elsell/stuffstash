@@ -458,6 +458,7 @@ export function AssetDetailRouteScreen({
   const headerOverflow = screenState.status === 'ready' ? {
     asset: screenState.asset,
     disabled: pendingAction !== undefined,
+    onEdit: screenState.asset.canEdit ? () => router.push(`/assets/${screenState.asset.id}/edit`) : undefined,
     onCheckoutHistory: () => router.push(`/assets/${screenState.asset.id}/checkouts`),
     onHistory: () => openHistory(screenState.asset),
     onLifecycleAction: (action: AssetLifecycleActionKind) => requestLifecycleAction(action, screenState.asset)
@@ -498,6 +499,7 @@ export function AssetDetailRouteScreen({
             );
           })()}
           <AssetDetailView
+            showEditAction={false}
             asset={screenState.asset}
             contentsQuery={contentsQuery} onClearContentsSearch={() => changeContentsQuery('')}
             canRetryPhotos={photoStatus?.canRetry}

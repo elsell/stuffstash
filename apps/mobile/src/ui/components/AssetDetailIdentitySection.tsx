@@ -24,6 +24,7 @@ type AssetDetailIdentitySectionProps = {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onCheckout?: () => void;
+  readonly showEditAction?: boolean;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
   readonly onParentLocationPress?: (parent: AssetParentLocationCrumbViewModel) => void;
@@ -37,6 +38,7 @@ export function AssetDetailIdentitySection({
   asset,
   isActionPending,
   onCheckout,
+  showEditAction = true,
   onEdit,
   onMove,
   onParentLocationPress,
@@ -49,7 +51,7 @@ export function AssetDetailIdentitySection({
   const styles = createStyles(palette);
   const identity = assetDetailIdentity(asset);
   const placement = assetDetailPlacement(asset);
-  const showPlacement = asset.kind !== 'location' || placement.crumbs.length > 0;
+  const showPlacement = asset.kind !== 'location' || placement.crumbs.length > 0 || asset.canMove;
   const description = visibleAssetDescription(asset);
   const exceptionRows = assetDetailExceptionMetadataRows(asset);
 
@@ -62,7 +64,8 @@ export function AssetDetailIdentitySection({
 
       <AssetExpirationStatus expiration={asset.expiration} context={asset.expirationContext} />
 
-      {showPlacement ? <View style={styles.placement}>
+      {showPlacement ? <View style={styles.contextRow}>
+        <View style={styles.contextText}>
         <Text style={styles.placementLabel}>Location</Text>
         {placement.crumbs.length > 0 && onParentLocationPress ? (
           <AssetBreadcrumbTrail
@@ -73,9 +76,15 @@ export function AssetDetailIdentitySection({
           />
         ) : (
           <Text style={styles.placementFallback}>
-            {placement.fallbackLabel ?? placement.crumbs.map((crumb) => crumb.title).join(' / ')}
+            {asset.kind === 'location' && placement.crumbs.length === 0 ? 'Top level'
+              : placement.fallbackLabel ?? placement.crumbs.map((crumb) => crumb.title).join(' / ')}
           </Text>
         )}
+        </View>
+        {asset.canMove ? <View style={styles.contextCommand}>
+          <NativeCommandButton label={asset.kind === 'location' ? 'Move place' : 'Move'}
+            disabled={isActionPending || !onMove} onPress={() => { if (!isActionPending) onMove?.(); }} />
+        </View> : null}
       </View> : null}
 
       {showAvailability ? (
@@ -105,6 +114,8 @@ export function AssetDetailIdentitySection({
         <AssetDetailMaintenanceBar
           asset={asset}
           isActionPending={isActionPending}
+          showMoveAction={false}
+          showEditAction={showEditAction}
           onEdit={onEdit}
           onMove={onMove}
         />
@@ -116,22 +127,26 @@ export function AssetDetailIdentitySection({
 export function AssetDetailMaintenanceBar({
   asset,
   includeAddPhotos = false,
+  showMoveAction = true,
   isActionPending,
   onAddPhotos,
+  showEditAction = true,
   onEdit,
   onMove
 }: {
   readonly asset: AssetDetailViewModel;
   readonly includeAddPhotos?: boolean;
+  readonly showMoveAction?: boolean;
   readonly isActionPending: boolean;
   readonly onAddPhotos?: () => void;
+  readonly showEditAction?: boolean;
   readonly onEdit?: () => void;
   readonly onMove?: () => void;
 }) {
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
   const maintenanceActions = assetDetailMaintenanceActions(asset).filter(
-    (action) => includeAddPhotos || action.id !== 'add_photos'
+    (action) => (showMoveAction || action.id !== 'move') && (showEditAction || action.id !== 'edit') && (includeAddPhotos || action.id !== 'add_photos')
   );
   if (maintenanceActions.length === 0) {
     return null;
@@ -157,23 +172,28 @@ export function AssetDetailAvailabilityButton({
   asset,
   isActionPending,
   onCheckout,
-  onReturn,
-  quiet = false
+  onReturn
 }: {
   readonly asset: AssetDetailViewModel;
   readonly isActionPending: boolean;
   readonly onCheckout?: () => void;
   readonly onReturn?: () => void;
-  readonly quiet?: boolean;
 }) {
+  const styles = createStyles(useAppearanceAwarePalette());
+  if (asset.kind === 'location') return null;
   const action = assetDetailAvailabilityAction(asset);
-  if (!action) {
-    return null;
-  }
-  const handler = action.id === 'return' ? onReturn : onCheckout;
-  const disabled = isActionPending || !handler;
-  return <NativeCommandButton label={action.label} disabled={disabled}
-    prominence={quiet ? 'standard' : 'primary'} onPress={() => handler?.()} />;
+  const handler = action?.id === 'return' ? onReturn : onCheckout;
+  return <View accessibilityLabel="Availability" style={styles.contextRow}>
+    <View style={styles.contextText}>
+      <Text style={styles.placementLabel}>Availability</Text>
+      <Text style={styles.placementFallback}>{asset.checkoutLabel}</Text>
+      {asset.checkoutActorLabel ? <Text style={styles.classification}>{asset.checkoutActorLabel}</Text> : null}
+    </View>
+    {action ? <View style={styles.contextCommand}>
+      <NativeCommandButton label={action.label} disabled={isActionPending || !handler}
+        onPress={() => { if (!isActionPending) handler?.(); }} />
+    </View> : null}
+  </View>;
 }
 
 function createStyles(palette: MobileColorPalette) {
@@ -194,9 +214,6 @@ function createStyles(palette: MobileColorPalette) {
     color: palette.textMuted,
     fontSize: 15,
     fontWeight: '500'
-  },
-  placement: {
-    gap: spacing.sm
   },
   placementLabel: {
     color: palette.textMuted,
@@ -237,7 +254,10 @@ function createStyles(palette: MobileColorPalette) {
     flexWrap: 'wrap',
     gap: spacing.sm
   },
-  maintenanceCommand: { flexBasis: 140, flexGrow: 1 }
+  maintenanceCommand: { width: 160, maxWidth: '100%' },
+  contextCommand: { width: 120, maxWidth: '100%' },
+  contextRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, maxWidth: 560 },
+  contextText: { gap: spacing.xs, flexGrow: 1, flexShrink: 1, flexBasis: 160 }
 
   });
 }

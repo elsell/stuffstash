@@ -63,6 +63,22 @@ describe('rendered mobile customization production states', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0][2]).toMatchObject({ enumOptions: ['high', 'low'] });
   });
+  it('saves the current draft through a retained Save event and rejects invalid or departed drafts', async () => {
+    const calls: unknown[][] = [];
+    const screen = await renderEditor({ manageTags: managerFake({ create: async (...args: unknown[]) => { calls.push(args); return {}; } }) });
+    await screen.changeText(screen.byLabel('Name'), 'Campin');
+    const save = screen.byLabel('Save')!.props.onPress;
+    await screen.changeText(screen.byLabel('Name'), '');
+    await screen.run(save); expect(calls).toEqual([]);
+    await screen.changeText(screen.byLabel('Name'), 'Camping');
+    await screen.run(() => setScreenFocused(false));
+    await screen.run(save); expect(calls).toEqual([]);
+    await screen.run(() => setScreenFocused(true));
+    await screen.run(save); expect(calls).toHaveLength(1);
+    expect(calls[0]).toContainEqual(expect.objectContaining({ displayName: 'Camping' }));
+    await screen.unmount(); await screen.run(save); expect(calls).toHaveLength(1);
+  });
+
   it('exposes a named Save command and prevents another save while pending', async () => {
     const pending = deferred<Record<string, never>>(); let calls = 0;
     const screen = await renderEditor({ manageTags: managerFake({ create: async () => { calls++; return pending.promise; } }) });
@@ -151,7 +167,7 @@ describe('rendered mobile customization production states', () => {
   it('reconciles a mounted collection from query invalidation without discarding the local search', async () => {
     let rows = [tag('one', 'Tools')]; let reads = 0;
     const screen = await renderCollection({ query: { tags: async () => { reads++; return { items: rows, complete: true }; } } });
-    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } }));
+    await screen.run(() => {collectionSearch().onFocus(); collectionSearch().onChangeText({ nativeEvent: { text: 'Tool' } });});
     rows = [tag('two', 'Toolboxes'), tag('three', 'Garden')];
     await screen.run(() => queryClient.invalidateQueries({ queryKey: mobileQueryKeys.customization('scope', 'tenant-1', 'inventory-1', 'inventory', 'tag', 'active') }));
     await settleQueries(screen);
@@ -404,7 +420,7 @@ describe('rendered mobile customization production states', () => {
     await harness?.unmount(); harness = undefined;
     screen = await renderCollection({ query: { tags: async () => ({ items: [tag('tools', 'Tools')], complete: false }) } });
     expect(screen.allText()).toContain('Some settings may be missing');
-    await screen.run(() => collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } }));
+    await screen.run(() => {collectionSearch().onFocus(); collectionSearch().onChangeText({ nativeEvent: { text: 'missing' } });});
     expect(screen.allText()).toContain('No matches');
     expect(screen.allText()).toContain('No tags match “missing”.');
   });
@@ -678,7 +694,7 @@ function editorElement(overrides: Record<string, unknown> = {}) {
 
 function collectionSearch() {
   const options = navigationOptions().filter(value => Object.hasOwn(value as object, 'headerSearchBarOptions')).at(-1) as {
-    headerSearchBarOptions: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
+    headerSearchBarOptions: { onFocus: () => void; onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void }
   };
   return options?.headerSearchBarOptions;
 }

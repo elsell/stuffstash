@@ -1,3 +1,8 @@
+import { SettingsReadbackProvider } from './SettingsReadbackFixture';
+export { SettingsReadbackFixture } from './SettingsReadbackFixture';
+import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
+export { BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
+
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
 import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider } from '../src/ui/navigation/AssetTagSelectionTask';
@@ -104,7 +109,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider><BrowseFilterJourneyProvider><SettingsReadbackProvider>
     <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
       headerBackTitle: 'Back', headerTintColor: palette.action,
@@ -114,6 +119,10 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
     }}>
       <Stack.Screen name="voice" options={voiceNativeSheetOptions(palette)} />
       <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
+      <Stack.Screen name="search" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
+      <Stack.Screen name="browse-filters" options={sheets.filters} />
+      <Stack.Screen name="expiration" options={{ title: 'Expiration' }} />
+      <Stack.Screen name="assets/[assetId]/index" options={{ title: 'Details' }} />
       <Stack.Screen name="audit-browse-journey" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
@@ -162,11 +171,11 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-edit-recovery" options={sheets.edit} />
       <Stack.Screen name="audit-checkout-history" options={sheets.checkoutHistory} />
       <Stack.Screen name="audit-browse" options={sheets.filters} />
-      <Stack.Screen name="audit-expiration-medium" options={sheets.filters} />
+      <Stack.Screen name="audit-expiration-medium" options={Platform.OS === 'ios' ? { ...sheets.filters, presentation: 'formSheet', sheetAllowedDetents: [0.7, 1], sheetGrabberVisible: true, sheetInitialDetentIndex: 0 } : sheets.filters} />
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
-  </AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
+  </SettingsReadbackProvider></BrowseFilterJourneyProvider></AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'

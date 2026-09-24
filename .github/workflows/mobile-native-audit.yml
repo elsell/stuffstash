@@ -18,6 +18,9 @@ on:
           - add-draft
           - home-header
           - browse-journey
+          - browse-filter-journey
+          - filter-sharing-workflows
+          - followup-release
           - filters
           - release-corrections
           - menu-ownership
@@ -40,6 +43,8 @@ on:
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
+          - settings-readback
+          - settings-move-release
           - enum-and-settings
   pull_request:
     paths:
@@ -109,6 +114,13 @@ jobs:
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/native-audit"
           audit_test_args=()
+          hierarchy_test_args=(
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailContextVariantsKeepNativeCommandsAndStatus'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+            '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
+          )
           case "$AUDIT_TEST_CASE" in
             all) ;;
             archive-notice)
@@ -121,6 +133,7 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
@@ -147,6 +160,19 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
               )
               ;;
+            settings-move-release)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              ) ;;
+            settings-readback)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection") ;;
             settings-editing)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -201,12 +227,8 @@ jobs:
               ;;
             hierarchy-followup)
               test "$AUDIT_SUITE" = fixtures || exit 1
-              audit_test_args=(
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
-                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
-              )
+              audit_test_args=("${hierarchy_test_args[@]}")
+
               ;;
             workflow-batch)
               test "$AUDIT_SUITE" = fixtures || exit 1
@@ -306,6 +328,28 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
               )
               ;;
+            browse-filter-journey|filter-sharing-workflows|followup-release)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationDetailAndBackPreserveContext'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPlaceContentsUseNativeSearchAndKeepNavigation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationReviewUsesOverviewMenu'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSheetBodySurvivesExpansion'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
+              )
+              if [ "$AUDIT_TEST_CASE" != browse-filter-journey ]; then
+                audit_test_args+=('-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable')
+              fi
+              if [ "$AUDIT_TEST_CASE" = followup-release ]; then
+                audit_test_args+=("${hierarchy_test_args[@]}")
+                audit_test_args+=(
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure'
+                  '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                )
+              fi
+              ;;
             browse-journey)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -335,6 +379,7 @@ jobs:
             filters)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseExpirationReviewUsesOverviewMenu'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseUsesInPlaceAvailabilityMenuAndReachableActions'

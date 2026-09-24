@@ -1,0 +1,6 @@
+Run35904089984 iPad job107327266520 passes at cfe9f137. Matching overview
+screenshot still hides Sort below the initial viewport; duplicate padding removal
+alone does not close M275 visual acceptance. Initial large detent chosen; smaller
+detent remains available. Explicit medium fixture preserves expansion coverage.
+9 presentation tests pass after observed red; TypeScript and structural checks
+pass. Critic found no blocker. Native size/visual acceptance remains open.

@@ -3951,3 +3951,100 @@ Source review found explicit scope validation and shared query composition;
 of pagination or scroll loss. Filters are exposed only in List; forcing List on
 filter apply is not a confirmed Map-return defect. Current native connected
 filter/detail/Back continuity remains unverified. Separate from frozen M265–M273.
+
+
+M274 candidate is isolated on codex/mobile-filter-review. The existing iOS/Android
+NativeActionMenu replaces only the intermediate page; tags and scope verification
+stay unchanged. Four red source tests established the changed behavior;25 focused
+checks, TypeScript and structural checks pass remotely. Native overview-menu
+placement is prepared in the filters suite but not yet executed. Connected real
+route Back/scroll remains an explicit separate acceptance requirement. Do not add
+this candidate to the frozen M265–M273 release.
+
+
+M274 native candidate evidence: run35897564291 at07f03d61 passes the filters
+group on iPhone17/iPad mini. Matching menu screenshots were visually inspected;
+see [evidence](evidence/filter-menu-358975-results.txt). The menu removes the extra
+page, but repeated “Review” wording makes short choices wrap. Shorten the menu
+commands within their clearly labeled Expiration context before visual acceptance.
+Connected Browse/detail/Back continuity remains unverified.
+
+### M275 — Filter sheet hierarchy gives too much space to its footer
+
+P2 visual-coherence finding from the same phone/iPad captures. On iPad, the two
+full-width footer actions occupy a substantial portion of the sheet while Reset
+all falls below the initial content viewport. This does not establish overlap or
+an untappable control. Review the whole filter task: compact native row density,
+clear separation of filter values from expiration navigation, and one prominent
+results action with a subordinate dismissal affordance. Preserve the user's
+bottom results-action preference. Judge normal-text phone/iPad layouts and actual
+scroll access before changing shared sizing. This is outside frozen M265–M273.
+
+### M276 — Applying filters clears Browse search on Android
+
+P1 connected-workflow defect reproduced on d7d7689b: Camping24 results becomes
+19 unscoped Available results after applying Availability; it should show18
+matching Camping items. Native search accepted empty/close lifecycle callbacks
+without an active search interaction. Guard those callbacks with native focus/open
+ownership, retire ownership on navigation/disable/close, and seed retained text
+when the user reopens search. Preserve deliberate clear and submit behavior.
+
+The corrected Android connected journey and actual native typing/submit/return
+pass; [evidence](evidence/android-search-ownership-results.txt). Shared-consumer
+source checks and review pass. iPhone/iPad connected verification remains open.
+Keep this in the follow-up filter batch, separate from M265–M273.
+
+### M277 — Asset detail actions lack a coherent task hierarchy
+
+P2 design finding from normal-text phone/iPad captures in35907123046 at ebd1ef66,
+plus the Android connected-detail fixture. [Phone](evidence/phone-asset-detail-actions-359071.png)
+and [iPad](evidence/ipad-asset-detail-actions-359071.png) show a full-width prominent
+Check out action, separate unbounded Edit/Move row, and separate centered Add
+photos action. On tablet these controls spread across the content width without
+forming a compact task group. No operation failure is inferred from these images.
+
+This is an interaction/hierarchy judgment, not a claim that native text buttons
+violate Apple guidance. Apple's [buttons guidance](https://developer.apple.com/design/human-interface-guidelines/buttons)
+ties prominence to likely actions; [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout)
+asks for logical grouping and adaptation. The older spec explicitly made checkout
+primary, but the current whole-task review calls for reconsidering that choice.
+
+Next design decision: keep identity/location as the reading focus, give editing a
+familiar persistent toolbar command, group secondary asset operations deliberately,
+and keep availability/Return near its status. Preserve discoverability and
+one-step access where warranted; do not hide everything in More merely to reduce
+button count. Compare populated/empty-photo items, checked-out items and places
+on phone/iPad before choosing the final composition. Spec update must precede
+implementation. This follow-up does not gate frozen M265–M273.
+
+### M278 — Sharing feedback and completion actions break the reading flow
+
+Normal-text Android review confirms centered inline error paragraphs under leading
+headings and widely separated Copy/Share commands. The candidate aligns inline
+feedback with its form/row and groups primary Share invitation beside secondary
+Copy link. [Feedback](evidence/android-sharing-inline-feedback.png) and
+[link actions](evidence/android-sharing-link-actions.png) were reviewed after a
+native rebuild. The controlled journey passes access selection, missing-link draft
+retention, cancellation failure/retry, creation retry and copy failure/retry.
+22 sharing tests, TypeScript, structural checks and source review pass. These
+fixtures do not send invitations, exercise a system share destination or establish
+server authorization. Phone/iPad visual verification remains required; this
+belongs to the follow-up batch, not frozen M265–M273.
+
+M278 native visual review35921268590: feedback and Share/Copy grouping are clear,
+but Create Invitation is clipped at the New Invitation section's bottom on both
+devices ([phone](evidence/phone-sharing-clipped-action-359212.png)). Functional
+recovery passes do not close this finding. Candidate moves minimum control
+heights into native content measurement, retaining section clipping and padding.
+Native form-containment and shared detail-command checks remain required.
+
+### M279 — iPad Expiration mode control extends outside its content column
+
+Normal-text iPad35921268590 [capture](evidence/ipad-expiration-clipped-mode-359212.png)
+shows Expiring soon and Expired but clips All dates beyond the right edge of the
+bounded results column. Phone's three choices fit. Connected expired-item return
+passes, but does not establish mode-switch reachability. The native tree establishes a580×650 scroll viewport around744×1133 content;
+the picker width is correct. Backport upstream Screens4652 to prevent a deleted
+sheet resizing a recycled scroll view. Verify the full viewport and all modes.
+This structural finding belongs to the follow-up batch; PR173 stays frozen.
+

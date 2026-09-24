@@ -19,7 +19,7 @@ function latestNativeSearch() {
   // Other Stack.Screen calls update title/actions independently of search.
   // Read the latest explicit search update, including an explicit removal.
   const options = navigationOptions().findLast(value => Object.prototype.hasOwnProperty.call(value, 'headerSearchBarOptions')) as {
-    headerSearchBarOptions?: { onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void; placeholder: string }
+    headerSearchBarOptions?: { onFocus: () => void; onChangeText: (event: { nativeEvent: { text: string } }) => void; onCancelButtonPress: () => void; placeholder: string }
   } | undefined;
   expect(options?.headerSearchBarOptions).toBeDefined();
   return options!.headerSearchBarOptions!;
@@ -241,7 +241,7 @@ it('keeps native search and refinements across an immediate List/Map switch',asy
   await settle(h);await settle(h);
   expect(navigationOptions().some(options => typeof (options as {headerTitle?: unknown}).headerTitle === 'function')).toBe(true);
   const switcher = h.allByType('NativeSegmentedControl').find(node => node.props.values?.includes('Map'));
-  await h.run(()=>nativeSearch().onChangeText({nativeEvent:{text:'Tent'}}));
+  await h.run(()=>{nativeSearch().onFocus();nativeSearch().onChangeText({nativeEvent:{text:'Tent'}});});
   await switchTo('Map');await settle(h);
   expect(h.allByType('NativeSegmentedControl').filter(node => node.props.values?.includes('Map'))).toEqual([switcher]);
   expect(nativeSearch().placeholder).toBe('Find and expand path');
@@ -266,7 +266,7 @@ it('settles pending search and opens a scoped native filter sheet', async () => 
     await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}><SearchScreen {...props} /></MobileServerStateProvider>);
     await settle(h); await settle(h);
     const search = latestNativeSearch();
-    await h.run(() => search.onChangeText({ nativeEvent: { text: 'Fresh query' } }));
+    await h.run(() => {search.onFocus();search.onChangeText({ nativeEvent: { text: 'Fresh query' } });});
     await h.press(h.byLabel('Filters, 1 applied'));
     expect(dispatchedActions().filter(action => action.type === 'push').at(-1)).toMatchObject({
       href: { pathname: '/browse-filters', params: { query: 'Fresh query', tagId: ['tag'], tenantId: 'tenant', inventoryId: 'inventory', sessionScope: 'scope' } }
@@ -283,7 +283,7 @@ it('pauses pending Browse query on blur and resumes it on return', async () => {
  try {
   await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async()=>({tenantId:'tenant',inventoryId:'inventory'})}><AppFeedbackProvider><SearchScreen {...props}/></AppFeedbackProvider></MobileServerStateProvider>);await settle(h);await settle(h);
   const search=latestNativeSearch();
-  await h.run(()=>search.onChangeText({nativeEvent:{text:'retained'}}));
+  await h.run(()=>{search.onFocus();search.onChangeText({nativeEvent:{text:'retained'}});});
   await h.run(()=>setScreenFocused(false));
   await h.run(()=>new Promise(resolve=>setTimeout(resolve,350)));
   expect(requests).not.toContain('retained');
@@ -301,7 +301,7 @@ it('uses external Browse criteria instead of a paused draft after returning', as
  try {
   await h.render(view(''));await settle(h);await settle(h);
   const search=latestNativeSearch();
-  await h.run(()=>search.onChangeText({nativeEvent:{text:'abandoned'}}));
+  await h.run(()=>{search.onFocus();search.onChangeText({nativeEvent:{text:'abandoned'}});});
   await h.run(()=>setScreenFocused(false));
   await h.render(view('replacement'));await settle(h);
   await h.run(()=>setScreenFocused(true));

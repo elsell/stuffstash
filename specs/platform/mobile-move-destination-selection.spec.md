@@ -28,8 +28,9 @@ small flat choices such as Kind continue to use the in-place native picker.
 
 - Existing-destination search belongs to NativeNavigationSearch on iOS and the
   existing Android search adapter. Retain the current destination and any selected
-  proposal when changing, clearing or closing search. Search starts collapsed on
-  iOS and does not consume a permanent form row.
+  proposal when changing, clearing or closing search. Search is visible in the
+  native stacked navigation placement on entry on iPhone and iPad; it is not a
+  separate custom form row. Browse retains its compact search entry.
 - Use the shared checkmarked selection rows with path/type context. Preserve the
   explicit inventory-root choice, eligibility explanations, pending lock and
   current/proposed location feedback. Keep the Move mutation separate from choice.
@@ -181,3 +182,59 @@ Move Here keyboard cleanup observes either native dismissal after clearing or a
 hittable dismissal command, then still requires the keyboard to disappear. The
 iPad failure in run35911803207 captured no keyboard immediately after an earlier
 existence snapshot; this is a transition race, not evidence of a missing command.
+
+## Completion action prominence
+
+Normal-text phone capture35920806955 shows New destination and Move sharing one
+plain toolbar group. Their roles differ: creation is optional; Move completes the
+task. Keep the existing native list, visible search and explicit selection model.
+Give Move, Move here and Create destination the platform's primary completion
+emphasis, while New destination and Cancel remain ordinary actions. No mutation
+occurs merely from selection, and disabled/pending/retired handlers remain guarded.
+
+The shared header action model accepts an optional primary emphasis. Only these
+Move consumers opt in; do not infer emphasis from the save icon or change Home,
+Browse, Add and Settings automatically. iOS maps it to UIBarButtonItem prominent
+and separate native background ownership. Android retains its existing native
+toolbar action presentation. Reuse the pinned native-stack adapter without a
+custom button or dependency change.
+
+Apple describes prominent bar items as appropriate for completing a task and
+visually separate from other bar items:
+https://developer.apple.com/documentation/uikit/uibarbuttonitem/style-swift.enum/prominent
+
+Verify enabled/disabled Move, New destination, creation Cancel/Create and rejected
+command retry on iPhone/iPad. Source adapter checks do not establish native color,
+separation or hierarchy. Include the change in a subsequent reviewed batch; keep
+the already-running integrated follow-up source frozen.
+
+## Compact context and destination-first hierarchy
+
+The latest visual rejection reopens acceptance independently of functional passes.
+The captured native list still gives the static subject a separate rounded card,
+which competes with the selectable destinations. On iPad, the rows span almost
+all available width. Replace the static card with a compact native section header:
+subject label, emphasized asset name, then secondary current-location context.
+Keep choice sections and retained selection explicit; only choices use list rows.
+Do not duplicate the subject as both a card and a heading.
+
+Constrain the iOS list viewport to a centered readable column of at most720 points,
+using available width on smaller screens. This is a project layout choice, not an
+Apple-prescribed measurement. SwiftUI remains the sole owner of row/section insets,
+scrolling and separators. Symbols occupy a consistent leading column; title/path
+text share an alignment, and selection stays trailing. Preserve visible native
+stacked search, separate prominent completion and secondary creation commands.
+This shared layout applies to Move and Move Here. Android remains unchanged.
+
+This refines the scoped selection pattern described by Apple's Sheets and Lists
+and tables guidance; Files is prior art for destination-oriented selection, not
+a requirement to imitate its storage hierarchy. Native entry, search, selected,
+retained selection and rejected-command captures on phone and iPad must be judged
+before visual acceptance. Mounted tests establish retained context and behavior,
+not whether this layout looks right.
+
+Native visual review of35947975650 passes all four connected workflows on phone
+and tablet, but the subject header inherits SwiftUI section-header attenuation.
+Do not accept low-contrast subject/context as native correctness. Set explicit
+appearance-aware text colors for the custom section header while preserving the
+system List's row layout and scrolling. Recheck both appearances on native devices.

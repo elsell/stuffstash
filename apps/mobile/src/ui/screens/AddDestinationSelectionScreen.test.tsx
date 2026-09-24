@@ -1,3 +1,4 @@
+import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { navigationOptions, resetNavigation } from '../../test-support/navigation';
@@ -9,7 +10,7 @@ it('keeps the current destination through search and applies one eligible choice
   const h = new MobileRenderHarness(); const selected: unknown[] = []; const queries: string[] = []; resetNavigation();
   try {
     await h.render(<AddDestinationSelectionScreen {...base} onQuery={q => queries.push(q)} onSelect={p => selected.push(p?.id)} />);
-    await h.run(() => Object.assign({}, ...navigationOptions()).headerSearchBarOptions.onChangeText({ nativeEvent: { text: 'another' } }));
+    await h.run(() => typeInNativeSearch('another'));
     expect(queries).toEqual(['another']); expect(selected).toEqual([]);
     await h.render(<AddDestinationSelectionScreen {...base} query="another" matches={[]} onSelect={p => selected.push(p?.id)} />);
     expect(h.byText('Current: House / Garage')).toBeDefined();

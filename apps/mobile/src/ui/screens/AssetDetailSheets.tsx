@@ -349,9 +349,9 @@ export function MoveAssetSheet({
     label: creationExpanded ? 'Cancel new destination' : 'Cancel',
     disabled: isSaving, onPress: creationExpanded ? creationActions.onBack : actions.onBack }], 'left');
   const moveOptions = useNativeHeaderActionOptions(creationExpanded ? [{ kind: 'save', label: 'Create destination',
-    disabled: creationActions.disabled, onPress: creationActions.onApply }] : [
+    emphasis: 'primary', disabled: creationActions.disabled, onPress: creationActions.onApply }] : [
     { kind: 'add', label: 'New destination', disabled: disabled || !candidatesAvailable, onPress: onBeginCreation },
-    { kind: 'save', label: 'Move', disabled: !canSaveMove, onPress: actions.onApply }
+    { kind: 'save', label: 'Move', emphasis: 'primary', disabled: !canSaveMove, onPress: actions.onApply }
   ]);
   const headerOptions = useMemo(() => ({ title: creationExpanded ? 'New destination' : 'Move',
     headerShown: true, headerBackVisible: false, ...cancelOptions, ...moveOptions }),
@@ -441,7 +441,7 @@ export function MoveThingsHereSheet({
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
     disabled: isSaving, onPress: actions.onBack }], 'left');
   const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Move here',
-    disabled: !canSave, onPress: actions.onApply }]);
+    emphasis: 'primary', disabled: !canSave, onPress: actions.onApply }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
     ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
   const search = { query: draft?.query ?? '', placeholder: 'Search your inventory',

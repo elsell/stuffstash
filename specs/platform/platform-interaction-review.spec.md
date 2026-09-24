@@ -1031,3 +1031,78 @@ between the first two cards, away from card navigation targets. Preserve anchor,
 actual content movement, Map and return assertions. This one distinguishing run
 checks accidental gesture activation versus a repeatable scroll/navigation defect;
 do not start keyboard/provider experiments or alter production layout without evidence.
+
+### Connected Browse refinement verification
+
+Verify Browse → Filters → applied results → asset detail → Back, and Browse →
+Filters → Expiration → asset detail → Back → Browse using the production route
+controllers and navigation. Fixture callbacks alone cannot establish return
+context or scroll restoration. Keep application queries injectable at route-screen
+boundaries; the production route entrypoint only binds AppServices. Runner-only
+fixtures may replace query repositories with deterministic in-memory reads and
+must preserve scope validation, query keys, route parameters and commit/cancel
+semantics. Use actual matching and filtering in those repositories, not constant
+responses that make every selection appear valid. Verify fixture read isolation
+and requested filters, then inspect normal-text phone/iPad workflow captures.
+
+### Native search interaction ownership across return
+
+Connected Browse refinement on Android d7d7689b preserved Availability but lost
+Camping on return (19 unscoped items instead of18 matching items). The native
+adapter currently treats empty text/close callbacks as user commands even when
+no search interaction is active. A mounted/focused screen alone does not prove
+that a search callback represents editing.
+
+Native search must begin an editing interaction on native focus/open, seed the
+retained query, and retire that interaction when the screen loses focus, search
+is disabled, or the user closes it. Ignore text/submit/close callbacks outside
+that interaction. Within it, typing, deliberate clearing and cancellation retain
+their existing semantics. Navigation return must preserve query, filters and
+scroll context. Verify the shared adapter with representative Browse and Move
+consumers, then the connected native Browse refinement journey; source tests do
+not establish the Android root cause or native acceptance alone.
+
+Connected filter native verification must scroll the actual filter body when an
+entry is below its visible viewport, retaining hittability before activation.
+Run35905242914 confirms the iPad Expiration entry is below the fixed footer; its
+check stopped before any scroll. This is not evidence that scrolling fails, nor
+acceptance of the sheet's density. Preserve M275 visual review independently.
+
+### Initial filter task size
+
+M275 iPad evidence at cfe9f137 confirms removing duplicate picker padding alone
+still leaves Sort and expiration below the opening viewport while both bottom
+actions dominate the short sheet. Browse and Expiration filters must initially
+use the native large detent, keeping the smaller detent available for deliberate
+resizing and retaining the user-requested bottom results/cancel actions. Do not
+change unrelated asset sheets or Android stack presentation. Verify ordinary
+filter choices and the fixed actions in the initial normal-text phone/iPad view;
+retain explicit medium-to-large recovery coverage as a separately configured
+fixture. A larger sheet does not by itself certify hierarchy or accessibility.
+
+
+### Integrated Add destination search observation
+
+Run35941028517 passes15/15 iPad workflows and14/15 iPhone workflows. The remaining
+phone failure occurs after the complete `Audit shed` query is entered: the captured
+state has no keyboard and a reachable New place command, but the fixture requires
+an unconditional Dismiss keyboard tap. Reuse the native-search dismissal helper:
+wait for either keyboard absence or a reachable dismissal action; dismiss only
+when needed; assert the keyboard is absent before continuing. Keep exact query,
+draft retention, creation cancellation, rejection/retry and returned-parent checks.
+This is an observation correction, not evidence of a new application fix. Rerun
+the affected Add/Move selection subset; preserve the other fourteen passing phone
+and all fifteen iPad results without claiming whole-app acceptance.
+
+## Settings save reads the committed draft
+
+Native35945430640 passes the edited-row return geometry on iPhone, but creation
+persists Campin after the native field reported Camping. The retained final
+collection confirms truncated persisted content, not a missing row or refresh.
+Treat this as a data-loss defect. Test the concrete stale Save-handler hypothesis
+before changing text providers: a Save event retained before the final edit must
+submit the latest committed valid draft, and must reject invalid, pending,
+unfocused or unmounted state. Reuse the focused committed-action guard for the
+Settings save command. Do not weaken exact native text/persistence assertions or
+insert typing delays to make this journey pass. This source correction does not
+prove the native cause; the existing readback journey must still pass unchanged.
