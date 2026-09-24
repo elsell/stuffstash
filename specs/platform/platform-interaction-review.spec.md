@@ -1483,3 +1483,13 @@ collection FlatList must request automatic system content-inset adjustment, as
 the other ordinary tab-stack lists do, preserving its existing visual padding.
 Do not add device-specific bottom heights. Repeat the unchanged native entry and
 final-tag acceptance on iPhone and iPad before claiming this correction verified.
+
+## Notification list in persistent tabs
+
+The standalone inbox fixture does not verify production tab ownership. A connected
+normal-text check must use NotificationInboxScreen, its application queries and
+controlled paginated data in the production tab stack. Open an actual asset detail
+and return, confirm local read state, reach pagination above the voice/tab controls,
+and reach the final loaded row. Preserve existing query/scope/operation guards.
+Use full-screen entry and final captures on phone/iPad. No product change follows
+from the coverage gap alone; fix only a reproduced interaction or layout defect.

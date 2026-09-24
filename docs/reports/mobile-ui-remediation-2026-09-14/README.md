@@ -87,6 +87,12 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
+Notification tab journey36057807116 at4b64bbd7 passes on phone/iPad. Reviewed
+full-screen detail, pagination and final-row captures confirm tab/Back continuity,
+read-state reconciliation and final content/action clearance. No product change
+is justified. Physical push and route guard behavior are outside this fixture.
+[Scoped evidence](evidence/notification-tab-journey.txt).
+
 History baseline36027545902 confirmed iPhone final metadata hidden under persistent
 chrome and a selected-mode trigger collapsed into an ellipsis. iPad failed Xcode
 launch before UI interaction. Android confirmed dense change paragraphs; candidate
