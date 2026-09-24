@@ -1,5 +1,9 @@
 import React from 'react';
-import { expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { NativeSearchDriver } from '../../test-support/NativeSearchDriver';
+let search: NativeSearchDriver;
+beforeEach(() => { search = new NativeSearchDriver(); });
+afterEach(() => search.dispose());
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetId } from '../../domain/assets/AssetSummary';
 import { tenantId, inventoryId } from '../../domain/inventories/InventorySummary';
@@ -54,7 +58,7 @@ for (const route of routes) {
     const lookup = { execute: async () => [{ id: 'candidate', title: 'Candidate', kind: 'container' as const, subtitle: '', pathLabel: 'Candidate', selectionHint: '', willPromoteToContainer: false }] };
     const move = { execute: async () => { mutations.push('move'); return { id: 'asset', title: 'Box', message: 'Moved' }; } };
     const shared = { assetId: 'asset', assetCoreQuery: core };
-    const field = route === 'edit' ? 'Description' : route === 'move' ? 'Put in' : 'Find item, box, or place';
+    const field = 'Description';
     const action = route === 'edit' ? 'Save' : route === 'move' ? 'Move' : 'Move here';
     try {
       await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
@@ -66,7 +70,8 @@ for (const route of routes) {
       </MobileServerStateProvider>);
       await settle(h); await settle(h);
       if (deniedEntry) {
-        expect(h.byLabel(field)?.props.editable).toBe(false);
+        if (route === 'edit') expect(h.byLabel(field)?.props.editable).toBe(false);
+        else expect(search.options).toBeUndefined();
         expect(h.byLabel(action)?.props.disabled).toBe(true);
         expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
         expect(h.byText('This item cannot be changed here. Your draft is kept while this screen is open.')).toBeDefined();
@@ -74,25 +79,29 @@ for (const route of routes) {
         restricted = false;
         await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(h);
       }
-      await h.changeText(h.byLabel(field), 'Retained draft');
+      if (route === 'edit') await h.changeText(h.byLabel(field), 'Retained draft');
+      else await h.run(() => search.change('Retained draft'));
       if (route !== 'edit') {
         await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-        await h.press(h.byText('Candidate')?.parent?.parent?.parent ?? undefined);
+        await h.press(h.byLabel(route === 'move' ? 'Choose destination Candidate' : 'Choose item Candidate'));
       }
       expect(h.byLabel(action)?.props.disabled).toBe(false);
       const submit = h.byLabel(action)!.props.onPress;
-      const edit = h.byLabel(field)!.props.onChangeText;
+      const nativeSearch = search.options;
+      const edit = route === 'edit' ? h.byLabel(field)!.props.onChangeText : (text: string) => nativeSearch!.onChangeText({ nativeEvent: { text } });
       restricted = true;
       await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(h);
-      expect(h.byLabel(field)?.props.editable).toBe(false);
+      if (route === 'edit') expect(h.byLabel(field)?.props.editable).toBe(false);
+        else expect(search.options).toBeUndefined();
       expect(h.byLabel(action)?.props.disabled).toBe(true);
       expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
       await h.run(() => { edit('Stale overwrite'); submit(); }); await settle(h);
       expect(mutations).toEqual([]);
-      expect(h.byLabel(field)?.props.value).toBe('Retained draft');
+      expect(route === 'edit' ? h.byLabel(field)?.props.value : search.text).toBe('Retained draft');
       restricted = false;
       await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(h);
-      expect(h.byLabel(field)?.props.editable).toBe(true);
+      if (route === 'edit') expect(h.byLabel(field)?.props.editable).toBe(true);
+      else expect(search.options).toBeDefined();
       await h.press(h.byLabel(action)); await settle(h);
       expect(mutations).toEqual([route === 'edit' ? 'edit' : 'move']);
     } finally { await h.unmount(); client.clear(); resetNavigation(); }

@@ -31,6 +31,10 @@ function baseAssetNativeSheetOptions(palette: MobileColorPalette) {
 export function createAssetNativeSheetOptions(palette: MobileColorPalette, platform: string = Platform.OS) {
   const baseOptions = baseAssetNativeSheetOptions(palette);
   return {
+    selection: {
+      contentStyle: { backgroundColor: palette.surface }, headerShown: true,
+      presentation: platform === 'ios' ? 'fullScreenModal' as const : 'card' as const
+    },
     add: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.background },
       presentation: 'card' as const, headerShown: true, title: 'Add item'
@@ -62,7 +66,7 @@ export function createAssetNativeSheetOptions(palette: MobileColorPalette, platf
     moveHere: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const, headerShown: true
     } : {
-      ...baseOptions, sheetAllowedDetents: [0.6, 0.9]
+      ...baseOptions, headerShown: true, title: 'Move something here', sheetAllowedDetents: [1]
     } satisfies AssetNativeSheetOptions,
     checkoutHistory: platform === 'android' ? {
       contentStyle: { backgroundColor: palette.surface }, presentation: 'card' as const,

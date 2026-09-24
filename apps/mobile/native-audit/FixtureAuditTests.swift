@@ -456,49 +456,72 @@ final class FixtureAuditTests: XCTestCase {
 
   func testMoveDestinationCreationRetainsDraftAndRetries() {
     guard openFixtureURL("audit-move-destination") else { return }
-    let query = app.textFields["Put in"].firstMatch
-    XCTAssertTrue(query.waitForExistence(timeout: 10))
     func reveal(_ element: XCUIElement) {
-      for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      for _ in 0..<8 where !element.isHittable {
+        let scroll = app.scrollViews.firstMatch
+        if element.frame.minY < app.navigationBars.firstMatch.frame.maxY { scroll.swipeDown() }
+        else { scroll.swipeUp() }
+      }
       XCTAssertTrue(element.isHittable)
     }
-    let existing = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Camping box")).firstMatch
-    XCTAssertTrue(existing.waitForExistence(timeout: 5))
-    reveal(existing); existing.tap()
-    XCTAssertTrue(existing.label.contains("Selected"))
-    XCTAssertTrue(query.isHittable)
-    query.tap()
-    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-    query.typeText("Audit crate")
-    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "value == %@", "Audit crate"), object: query
-    )], timeout: 5), .completed)
+    let existing = app.descendants(matching: .any)["Choose destination Camping box"].firstMatch
+    XCTAssertTrue(existing.waitForExistence(timeout: 10))
+    existing.tap()
+    XCTAssertTrue(app.buttons["Move"].firstMatch.isEnabled)
+    XCTAssertFalse(app.textFields["Put in"].exists)
+    let query = app.searchFields.firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 5)); XCTAssertTrue(query.isHittable)
+    capture("move-selection-idle")
+    query.tap(); waitForKeyboard(keyLabel: "t", timeout: 30)
+    query.typeText("Audit")
+    waitForExactEnteredText("Audit", in: query)
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
     XCTAssertTrue(dismiss.isHittable); dismiss.tap()
-    XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch.exists)
     let newDestination = app.buttons["New destination"].firstMatch
     XCTAssertTrue(newDestination.waitForExistence(timeout: 5))
     reveal(newDestination); newDestination.tap()
+    let name = app.textFields["New destination name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
+    XCTAssertTrue(name.isHittable)
+    XCTAssertGreaterThanOrEqual(name.frame.minY, app.navigationBars["New destination"].frame.maxY)
     let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
-    XCTAssertTrue(kind.waitForExistence(timeout: 5))
+    XCTAssertTrue(kind.isHittable)
+    XCTAssertGreaterThanOrEqual(kind.frame.minY, name.frame.maxY)
+    capture("move-destination-creation-entry")
     reveal(kind); kind.tap()
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
-    XCTAssertTrue(app.navigationBars["Move asset"].exists)
-    XCTAssertTrue(query.exists)
-    let create = app.buttons["Create container \"Audit crate\""].firstMatch
+    func finishName() {
+      reveal(name); name.tap(); waitForKeyboard(keyLabel: "c"); name.typeText(" crate")
+      XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+        predicate: NSPredicate(format: "value == %@", "Audit crate"), object: name
+      )], timeout: 5), .completed)
+      XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+      XCTAssertTrue(kind.exists, "Editing the name must retain Kind")
+    }
+    finishName()
+    XCTAssertTrue(app.navigationBars["New destination"].exists)
+    XCTAssertFalse(app.buttons["Move"].exists)
+    capture("move-destination-creation")
+    let cancelCreation = app.buttons["Cancel new destination"].firstMatch
+    reveal(cancelCreation); cancelCreation.tap()
+    XCTAssertTrue(name.waitForNonExistence(timeout: 5))
+    reveal(newDestination); newDestination.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
+    finishName()
+    let create = app.buttons["Create destination"].firstMatch
     reveal(create); create.tap()
     let failure = app.alerts["Could not create destination"]
     XCTAssertTrue(failure.waitForExistence(timeout: 5))
     XCTAssertTrue(failure.staticTexts["Audit destination temporarily unavailable"].exists)
     failure.buttons["OK"].tap()
-    XCTAssertEqual(query.value as? String, "Audit crate")
+    XCTAssertEqual(name.value as? String, "Audit crate")
     reveal(create); create.tap()
     XCTAssertTrue(create.waitForNonExistence(timeout: 5))
-    let createdRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Audit crate", "Selected")).firstMatch
-    XCTAssertTrue(createdRow.waitForExistence(timeout: 5))
-    let selected = app.staticTexts["Selected: Audit crate"].firstMatch
+    let selected = app.descendants(matching: .any)["Choose destination Audit crate"].firstMatch
     XCTAssertTrue(selected.waitForExistence(timeout: 5))
+    XCTAssertEqual(selected.value as? String, "Selected")
+    XCTAssertTrue(app.descendants(matching: .any)["Choose destination Audit crate"].exists)
     let move = app.buttons["Move"].firstMatch
     reveal(move); move.tap()
     let rejected = app.alerts["Could not move asset"]
@@ -508,7 +531,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(selected.exists)
     capture("move-destination-rejected-selection-retained")
     reveal(move); move.tap()
-    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
   }
 
@@ -520,21 +542,40 @@ final class FixtureAuditTests: XCTestCase {
     let retry = app.buttons["Retry suggestions"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     retry.tap()
-    // Native accessibility groups title, kind and location into the candidate button.
-    let candidate = app.buttons["Audit tent, Item, Garage"].firstMatch
+    let candidate = app.descendants(matching: .any)["Choose item Audit tent"].firstMatch
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertTrue(candidate.isEnabled)
     XCTAssertTrue(candidate.isHittable)
     candidate.tap()
-    let move = app.buttons["Move here"].firstMatch
+    XCTAssertEqual(candidate.value as? String, "Selected")
+    let query = app.searchFields.firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 5)); XCTAssertTrue(query.isHittable)
+    capture("move-selection-idle")
+    query.tap(); waitForKeyboard(keyLabel: "t")
+    query.typeText("Tent")
+    let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: query)
+    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+    XCTAssertEqual(candidate.value as? String, "Selected")
+    let clear = query.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable); clear.tap()
+    dismissMoveSearchKeyboardIfNeeded()
+    XCTAssertTrue(candidate.waitForExistence(timeout: 5))
+    XCTAssertEqual(candidate.value as? String, "Selected")
+    let header = app.navigationBars["Move something here"]
+    let closeSearch = header.buttons["Close"].firstMatch
+    if closeSearch.exists && closeSearch.isHittable { closeSearch.tap() }
+    let move = header.buttons["Move here"].firstMatch
+    XCTAssertTrue(move.waitForExistence(timeout: 5))
+    XCTAssertTrue(move.isHittable)
     XCTAssertTrue(move.isEnabled)
     move.tap()
     XCTAssertTrue(app.alerts["Could not move asset here"].waitForExistence(timeout: 5))
     app.alerts.buttons["OK"].tap()
-    XCTAssertTrue(app.staticTexts["Audit tent -> Camping box"].firstMatch.exists)
+    XCTAssertEqual(candidate.value as? String, "Selected")
+    XCTAssertTrue(app.staticTexts["Camping box"].firstMatch.exists)
     XCTAssertTrue(move.isHittable)
     move.tap()
-    XCTAssertTrue(app.textFields["Find item, box, or place"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(move.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
     XCTAssertTrue(open.isHittable)
     XCTAssertEqual(app.state, .runningForeground)
@@ -553,27 +594,27 @@ final class FixtureAuditTests: XCTestCase {
     verifyMoveHereSuggestionsRecovery(captureSuffix: "accessibility-size")
   }
 
+  private func dismissMoveSearchKeyboardIfNeeded() {
+    let keyboard = app.keyboards.firstMatch
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    // Clearing native search can dismiss the keyboard before this snapshot settles.
+    let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !keyboard.exists || dismiss.isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 5), .completed)
+    if keyboard.exists && dismiss.isHittable { dismiss.tap() }
+    XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
+  }
+
   private func verifyMoveHereSuggestionsRecovery(captureSuffix: String) {
     let open = app.buttons["Audit Move here recovery"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()
-    let query = app.textFields["Find item, box, or place"]
-    XCTAssertTrue(query.waitForExistence(timeout: 10))
-    let form = app.scrollViews.containing(.textField, identifier: "Find item, box, or place").firstMatch
-    XCTAssertTrue(form.exists)
-    func queryVisible() -> Bool {
-      let bounds = form.frame.intersection(app.frame)
-      return query.isHittable && query.frame.minY >= bounds.minY && query.frame.maxY <= bounds.maxY
-    }
-    for _ in 0..<12 where !queryVisible() {
-      let above = query.frame.minY < form.frame.minY
-      form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
-        .press(forDuration: 0.05, thenDragTo: form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4)))
-    }
-    XCTAssertTrue(queryVisible())
-    query.tap()
-    waitForKeyboard()
+    let query = app.searchFields.firstMatch
+    XCTAssertTrue(query.waitForExistence(timeout: 10)); XCTAssertTrue(query.isHittable)
+    capture("move-here-idle")
+    query.tap(); waitForKeyboard(keyLabel: "t")
     query.typeText("Tent")
     XCTAssertEqual(query.value as? String, "Tent")
     let dismiss = app.buttons["Dismiss keyboard"]
@@ -583,18 +624,19 @@ final class FixtureAuditTests: XCTestCase {
     let retry = app.buttons["Retry suggestions"].firstMatch
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
     XCTAssertFalse(app.staticTexts["No movable matches"].exists)
-    let results = app.scrollViews.containing(.button, identifier: "Retry suggestions").firstMatch
-    XCTAssertTrue(results.exists)
-    for _ in 0..<8 where !retry.isHittable { results.swipeUp() }
     XCTAssertTrue(retry.isHittable)
-    XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     capture("move-here-suggestions-error-\(captureSuffix)")
     retry.tap()
-    XCTAssertTrue(app.buttons["Audit tent, Item, Garage"].firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any)["Choose item Audit tent"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertEqual(query.value as? String, "Tent")
     capture("move-here-suggestions-recovered-\(captureSuffix)")
-    app.buttons["Cancel"].firstMatch.tap()
-    XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    let clear = query.buttons["Clear text"].firstMatch
+    XCTAssertTrue(clear.isHittable); clear.tap()
+    dismissMoveSearchKeyboardIfNeeded()
+    let cancel = app.navigationBars["Move something here"].buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5)); XCTAssertTrue(cancel.isHittable)
+    cancel.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
     XCTAssertTrue(open.isHittable)
   }
 
@@ -663,7 +705,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard(keyLabel: String? = nil) {
+  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 5) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = NSPredicate { _, _ in
@@ -677,30 +719,41 @@ final class FixtureAuditTests: XCTestCase {
         return key.isHittable
       }
     }
-    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil)
+    let result = observePredicate("keyboard-readiness-timing", predicate: ready, object: nil, timeout: timeout)
     if result != .completed {
       recordHitTestState("keyboard-readiness", elements: [keyboard] + (keyLabel.map { [keyboard.keys[$0]] } ?? []))
     }
     XCTAssertEqual(result, .completed, "Typing requires an interactive keyboard")
   }
 
-  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?) -> XCTWaiter.Result {
+  private func observePredicate(_ name: String, predicate: NSPredicate, object: Any?, timeout: TimeInterval = 5, immediately: Bool = false) -> XCTWaiter.Result {
     let started = ProcessInfo.processInfo.systemUptime
     var observations: [String] = []
-    let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+    func evaluate() -> Bool {
       let before = ProcessInfo.processInfo.systemUptime
       let matched = predicate.evaluate(with: object)
       let after = ProcessInfo.processInfo.systemUptime
       observations.append("start=\(before - started), duration=\(after - before), matched=\(matched)")
       return matched
-    }, object: nil)
-    let result = XCTWaiter.wait(for: [expectation], timeout: 5)
-    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(result.rawValue)")
+    }
+    let initialMatch = immediately && evaluate()
+    let elapsed = ProcessInfo.processInfo.systemUptime - started
+    let result: XCTWaiter.Result
+    if immediately && elapsed >= timeout {
+      result = .timedOut
+    } else if initialMatch {
+      result = .completed
+    } else {
+      let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in evaluate() }, object: nil)
+      result = XCTWaiter.wait(for: [expectation], timeout: immediately ? timeout - elapsed : timeout)
+    }
+    let boundedResult: XCTWaiter.Result = immediately && ProcessInfo.processInfo.systemUptime - started > timeout ? .timedOut : result
+    observations.append("wait duration=\(ProcessInfo.processInfo.systemUptime - started), result=\(boundedResult.rawValue)")
     let attachment = XCTAttachment(string: observations.joined(separator: "\n"))
     attachment.name = name
     attachment.lifetime = .keepAlways
     add(attachment)
-    return result
+    return boundedResult
   }
 
   private func recordHitTestState(_ name: String, elements: [XCUIElement]) {
@@ -1272,11 +1325,10 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertGreaterThanOrEqual(cancel.frame.minY, app.frame.minY)
       XCTAssertLessThanOrEqual(cancel.frame.maxY, app.frame.maxY)
     }
-    let retained = app.buttons["Tag 14"].firstMatch
-    XCTAssertTrue(retained.waitForExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["Tag 13"].exists)
-    reveal(retained)
-    XCTAssertTrue(retained.isSelected)
+    let chooseTags = app.buttons["Choose tags"].firstMatch
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Select tag Tag 13"].exists)
+    reveal(chooseTags)
     XCTAssertFalse(app.textFields["New tag name"].exists)
     let newTag = app.buttons["New tag"].firstMatch
     reveal(newTag); newTag.tap()
@@ -1310,22 +1362,34 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(clearedEntry.value == nil || ["", "New tag"].contains(clearedEntry.value as? String ?? "unexpected"))
     XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
-    let expand = app.buttons["Show all tags"].firstMatch
-    reveal(expand)
-    expand.tap()
-    let extra = app.buttons["Tag 13"].firstMatch
+    reveal(chooseTags)
+    chooseTags.tap()
+    let visibleDone = app.buttons["Done selecting tags"].firstMatch
+    XCTAssertTrue(visibleDone.waitForExistence(timeout: 5))
+    XCTAssertTrue(visibleDone.isHittable, "Tag selection must appear above its editor")
+    let extra = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
     XCTAssertTrue(extra.waitForExistence(timeout: 5))
-    reveal(extra)
+    let tagScroll = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    for _ in 0..<12 where !extra.isHittable { tagScroll.swipeUp() }
+    XCTAssertTrue(extra.isHittable)
     extra.tap()
-    XCTAssertTrue(extra.isSelected)
-    capture("edit-tags-expanded-\(captureSuffix)")
-    let collapse = app.buttons["Show fewer tags"].firstMatch
-    reveal(collapse)
-    collapse.tap()
-    reveal(extra)
-    XCTAssertTrue(extra.isSelected)
-    XCTAssertTrue(retained.isSelected)
-    capture("edit-tags-collapsed-selected-\(captureSuffix)")
+    let doneTags = app.buttons["Done selecting tags"].firstMatch
+    XCTAssertTrue(doneTags.isHittable)
+    doneTags.tap()
+    XCTAssertTrue(doneTags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Remove new tag Camping"].exists)
+    reveal(chooseTags)
+    chooseTags.tap()
+    XCTAssertTrue(extra.waitForExistence(timeout: 5))
+    XCTAssertEqual(extra.value as? String, "checkbox, checked")
+    let retained = app.descendants(matching: .any)["Select tag Tag 14"].firstMatch
+    XCTAssertEqual(retained.value as? String, "checkbox, checked")
+    capture("edit-tags-selection-retained-\(captureSuffix)")
+    let cancelTags = app.buttons["Cancel selecting tags"].firstMatch
+    cancelTags.tap()
+    XCTAssertTrue(cancelTags.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
     cancel.tap()
     let discard = app.alerts.buttons["Discard"]
     XCTAssertTrue(discard.waitForExistence(timeout: 5))
@@ -1345,17 +1409,17 @@ final class FixtureAuditTests: XCTestCase {
     let moveFromDetail = app.buttons["Move"].firstMatch
     for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
-    let header = app.navigationBars["Move asset"]
+    let header = app.navigationBars["Move"]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     let commit = header.buttons["Move"].firstMatch
     let cancel = header.buttons["Cancel"].firstMatch
     XCTAssertTrue(commit.isHittable); XCTAssertTrue(cancel.isHittable)
     XCTAssertFalse(commit.isEnabled)
     capture("asset-move-journey-picker")
-    let garage = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Garage")).firstMatch
+    let garage = app.descendants(matching: .any)["Choose destination Garage"].firstMatch
     XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isHittable)
     garage.tap()
-    XCTAssertTrue(garage.isSelected); XCTAssertTrue(commit.isEnabled)
+    XCTAssertEqual(garage.value as? String, "Selected"); XCTAssertTrue(commit.isEnabled)
     capture("asset-move-journey-selected")
     commit.tap()
     XCTAssertTrue(header.waitForNonExistence(timeout: 10))
@@ -1366,7 +1430,7 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertTrue(garage.isSelected)
+    XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertEqual(garage.value as? String, "Selected")
     XCTAssertFalse(commit.isEnabled)
     capture("asset-move-journey-reopened")
     XCTAssertTrue(cancel.isHittable); cancel.tap()
@@ -1916,6 +1980,150 @@ final class FixtureAuditTests: XCTestCase {
   func testUncontrolledAddressEntry() { verifyAddressEntry("uncontrolled") }
   func testSystemAddressEntry() { verifyAddressEntry("system") }
 
+  private func waitForExactEnteredText(_ text: String, in field: XCUIElement) {
+    let started = Date()
+    let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", text), object: field)
+    let result = XCTWaiter.wait(for: [entered], timeout: 30)
+    let timing = XCTAttachment(string: "Exact text observation elapsed: \(Date().timeIntervalSince(started)) seconds; result: \(result.rawValue)")
+    timing.name = "selection-text-observation-timing"
+    timing.lifetime = .keepAlways
+    add(timing)
+    XCTAssertEqual(result, .completed)
+    XCTAssertEqual(field.value as? String, text)
+  }
+
+  func testAddDestinationSelectionPreservesDraftAndRecoversCreation() {
+    guard openFixtureURL("audit-add-destination") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
+      for _ in 0..<12 where !element.isHittable { scroll.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    func search(_ query: String) {
+      let field = app.searchFields.firstMatch
+      if !field.exists {
+        let button = app.buttons["Search"].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
+      }
+      XCTAssertTrue(field.waitForExistence(timeout: 5)); XCTAssertTrue(field.isHittable)
+      // Verify native input through the entered text and matching results below.
+      // A separate keyboard-key snapshot can itself exhaust the wait budget.
+      field.tap(); field.typeText(query)
+      let entered = NSPredicate(format: "value == %@", query)
+      XCTAssertEqual(observePredicate("add-search-exact-query", predicate: entered, object: field, immediately: true), .completed)
+      app.buttons["Dismiss keyboard"].firstMatch.tap()
+    }
+    name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
+    waitForExactEnteredText("Tent", in: name)
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let choose = app.buttons["Choose destination"].firstMatch
+    reveal(choose, in: form); choose.tap()
+    let topLevel = app.descendants(matching: .any)["Choose inventory top level"].firstMatch
+    XCTAssertTrue(topLevel.waitForExistence(timeout: 5))
+    XCTAssertTrue(topLevel.isHittable)
+    let pickerHeader = app.navigationBars["Put in"]
+    XCTAssertGreaterThanOrEqual(topLevel.frame.minY, pickerHeader.frame.maxY)
+    capture("add-destination-entry")
+    search("Shelf 14")
+    let shelf = app.descendants(matching: .any)["Choose destination Shelf 14"].firstMatch
+    XCTAssertTrue(shelf.waitForExistence(timeout: 5))
+    let closeSearch = app.navigationBars.buttons["Close"].firstMatch
+    if closeSearch.exists && closeSearch.isHittable { closeSearch.tap() }
+    let cancel = app.buttons["Cancel location selection"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+    XCTAssertTrue(cancel.isHittable)
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(choose.value as? String, "Garage")
+    XCTAssertEqual(name.value as? String, "Tent")
+    reveal(choose, in: form); choose.tap(); search("Shelf 14")
+    XCTAssertTrue(shelf.waitForExistence(timeout: 5)); XCTAssertTrue(shelf.isHittable); shelf.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(choose.value as? String, "Shelf 14")
+    app.buttons["Save item"].firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Could not save asset"].firstMatch.waitForExistence(timeout: 5))
+    if app.alerts.buttons["OK"].firstMatch.exists { app.alerts.buttons["OK"].firstMatch.tap() }
+    reveal(choose, in: form); choose.tap(); search("Audit shed")
+    let destinations = app.scrollViews.containing(.any, identifier: "Choose inventory top level").firstMatch
+    let newPlace = app.buttons["New place"].firstMatch
+    let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: newPlace)
+    XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+    reveal(newPlace, in: destinations); newPlace.tap()
+    XCTAssertEqual(app.textFields["New place name"].firstMatch.value as? String, "Audit shed")
+    XCTAssertTrue(app.navigationBars["New place"].exists)
+    let cancelCreation = app.navigationBars["New place"].buttons["Cancel new place"].firstMatch
+    XCTAssertTrue(cancelCreation.isHittable)
+    let creationName = app.textFields["New place name"].firstMatch
+    XCTAssertTrue(creationName.isHittable)
+    XCTAssertGreaterThanOrEqual(creationName.frame.minY, app.navigationBars["New place"].frame.maxY)
+    XCTAssertLessThanOrEqual(creationName.frame.minY - app.navigationBars["New place"].frame.maxY, 96, "Creation form must not inherit search/header spacing twice")
+    capture("add-destination-creation-entry")
+    cancelCreation.tap()
+    XCTAssertTrue(app.navigationBars["Put in"].waitForExistence(timeout: 5))
+    XCTAssertTrue(newPlace.isHittable); newPlace.tap()
+    XCTAssertTrue(app.navigationBars["New place"].waitForExistence(timeout: 5))
+    XCTAssertEqual(app.textFields["New place name"].firstMatch.value as? String, "Audit shed")
+    let create = app.navigationBars["New place"].buttons["Create place"].firstMatch
+    XCTAssertTrue(create.isHittable); create.tap()
+    XCTAssertTrue(app.staticTexts["Place creation unavailable. Try again."].firstMatch.waitForExistence(timeout: 5))
+    capture("add-destination-creation-retry")
+    XCTAssertTrue(create.isHittable); create.tap()
+    XCTAssertTrue(app.navigationBars["New place"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(create.waitForNonExistence(timeout: 5))
+    let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: choose)
+    XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
+    XCTAssertEqual(choose.value as? String, "Audit shed")
+    XCTAssertEqual(name.value as? String, "Tent")
+    capture("add-destination-created-and-returned")
+  }
+
+  func testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let form = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
+    func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
+      for _ in 0..<16 where !element.isHittable { scroll.swipeUp() }
+      XCTAssertTrue(element.isHittable)
+    }
+    name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
+    let typed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
+    XCTAssertEqual(XCTWaiter.wait(for: [typed], timeout: 5), .completed)
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let details = app.buttons["More details"].firstMatch
+    reveal(details, in: form); details.tap()
+    let choose = app.buttons["Choose tags"].firstMatch
+    reveal(choose, in: form); choose.tap()
+    let choice = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    var choices = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    reveal(choice, in: choices); choice.tap()
+    let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "checkbox, checked"), object: choice)
+    XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed)
+    let cancel = app.buttons["Cancel selecting tags"].firstMatch
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    reveal(choose, in: form); choose.tap()
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    choices = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
+    reveal(choice, in: choices)
+    XCTAssertNotEqual(choice.value as? String, "checkbox, checked")
+    choice.tap()
+    let done = app.buttons["Done selecting tags"].firstMatch
+    done.tap(); XCTAssertTrue(done.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Tent")
+    let save = app.buttons["Save item"].firstMatch
+    XCTAssertTrue(save.isEnabled); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save asset"].firstMatch.waitForExistence(timeout: 15))
+    if app.alerts.buttons["OK"].firstMatch.exists { app.alerts.buttons["OK"].firstMatch.tap() }
+    reveal(choose, in: form); choose.tap()
+    XCTAssertTrue(choice.waitForExistence(timeout: 5))
+    XCTAssertEqual(choice.value as? String, "checkbox, checked")
+    capture("add-tag-selection-after-rejected-save")
+    cancel.tap(); XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Tent")
+  }
+
   func testAddRetainsUnfinishedTagAcrossDetailsDisclosure() {
     let open = app.buttons["Audit Add configured header"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -1926,18 +2134,21 @@ final class FixtureAuditTests: XCTestCase {
     let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
     XCTAssertTrue(scroll.exists)
     func reveal(_ element: XCUIElement, requiresHit: Bool = true) {
-      func visible() -> Bool {
+      for attempt in 0...18 {
         let bounds = scroll.frame.intersection(app.frame)
         let top = max(bounds.minY, app.navigationBars["Add item"].frame.maxY)
-        return (!requiresHit || element.isHittable) && element.frame.minY >= top && element.frame.maxY <= bounds.maxY
-      }
-      for _ in 0..<18 where !visible() {
-        let above = element.frame.minY < app.navigationBars["Add item"].frame.maxY
+        let frame = element.frame
+        let contained = frame.minY >= top && frame.maxY <= bounds.maxY
+        if contained && (!requiresHit || element.isHittable) { return }
+        guard attempt < 18 else {
+          XCTFail("Target must be visible below the header and inside the scroll viewport")
+          return
+        }
+        let above = frame.minY < top
         let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
         let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
         start.press(forDuration: 0.05, thenDragTo: end)
       }
-      XCTAssertTrue(visible())
     }
     func dismissKeyboard() {
       let dismiss = app.buttons["Dismiss keyboard"].firstMatch
@@ -1947,11 +2158,9 @@ final class FixtureAuditTests: XCTestCase {
     }
     reveal(name)
     name.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "T")
     name.typeText("Tent")
-    let completeName = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Tent"), object: name)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeName], timeout: 5), .completed)
-    XCTAssertEqual(name.value as? String, "Tent")
+    waitForExactEnteredText("Tent", in: name)
     dismissKeyboard()
     let save = app.buttons["Save item"].firstMatch
     XCTAssertTrue(save.isEnabled)
@@ -1959,13 +2168,21 @@ final class FixtureAuditTests: XCTestCase {
     reveal(details)
     details.tap()
     let entry = app.textFields["New tag name"].firstMatch
+    XCTAssertFalse(entry.exists)
+    let newTag = app.buttons["New tag"].firstMatch
+    reveal(newTag); newTag.tap()
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
+    let cancelNewTag = app.buttons["Cancel new tag"].firstMatch
+    reveal(cancelNewTag); cancelNewTag.tap()
+    XCTAssertTrue(entry.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(save.isEnabled)
+    reveal(newTag); newTag.tap()
+    XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard()
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
-    let completeTag = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Camping"), object: entry)
-    XCTAssertEqual(XCTWaiter.wait(for: [completeTag], timeout: 5), .completed)
-    XCTAssertEqual(entry.value as? String, "Camping")
+    waitForExactEnteredText("Camping", in: entry)
     dismissKeyboard()
     XCTAssertFalse(save.isEnabled)
     reveal(details)
@@ -1985,12 +2202,13 @@ final class FixtureAuditTests: XCTestCase {
     add.tap()
     let staged = app.buttons["Remove new tag Camping"].firstMatch
     let stageComplete = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      guard entry.exists, staged.exists, save.exists else { return false }
+      guard staged.exists, save.exists else { return false }
+      if !entry.exists { return save.isEnabled }
       let value = entry.value
       return (value == nil || value as? String == "" || value as? String == "New tag") && save.isEnabled
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [stageComplete], timeout: 5), .completed,
-      "Staging must retain the tag, clear the existing entry and enable Save")
+      "Staging must retain the tag, clear or close creation and enable Save")
     capture("add-tag-staged")
     let clear = app.buttons["Clear draft"].firstMatch
     reveal(clear)
@@ -2253,6 +2471,50 @@ final class FixtureAuditTests: XCTestCase {
     verifyActions()
     XCTAssertEqual(add.frame.minY, headerTop, accuracy: 2)
     capture("home-header-after-scroll")
+  }
+
+  func testMapRootContextAndAncestorReturn() {
+    guard openFixtureURL("audit-browse-journey") else { return }
+    let control = app.segmentedControls.firstMatch
+    XCTAssertTrue(control.waitForExistence(timeout: 10))
+    control.buttons["Map"].tap()
+    let root = app.buttons["Open location Main Inventory"].firstMatch
+    XCTAssertTrue(app.staticTexts["Main Inventory"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertFalse(root.exists)
+    let garage = app.buttons["Garage, Place, 10 inside"].firstMatch
+    XCTAssertTrue(garage.waitForExistence(timeout: 5)); XCTAssertTrue(garage.isHittable)
+    capture("map-root-context")
+    garage.tap()
+    let breadcrumb = app.buttons["Open location Garage"].firstMatch
+    XCTAssertTrue(breadcrumb.waitForExistence(timeout: 5))
+    XCTAssertTrue(root.isHittable)
+    capture("map-garage-context")
+    root.tap()
+    XCTAssertTrue(breadcrumb.waitForNonExistence(timeout: 5))
+    XCTAssertFalse(root.exists)
+    XCTAssertTrue(garage.isHittable)
+    XCTAssertTrue(app.staticTexts["Main Inventory"].firstMatch.exists)
+    capture("map-root-return")
+  }
+
+  func testEmptyPhotoDetailPrioritizesIdentityAndActions() {
+    guard openFixtureURL("audit-edit-journey") else { return }
+    let title = app.staticTexts["Camping tent"].firstMatch
+    let status = app.staticTexts["No photos"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10))
+    XCTAssertTrue(status.waitForExistence(timeout: 5))
+    let edit = app.buttons["Edit"].firstMatch
+    let move = app.buttons["Move"].firstMatch
+    let add = app.buttons["Add photos"].firstMatch
+    XCTAssertTrue(edit.isHittable); XCTAssertTrue(move.isHittable)
+    XCTAssertTrue(add.isHittable)
+    XCTAssertGreaterThan(title.frame.height, 0)
+    XCTAssertGreaterThan(status.frame.height, 0)
+    XCTAssertLessThanOrEqual(title.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(edit.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(move.frame.maxY, status.frame.minY)
+    XCTAssertLessThanOrEqual(add.frame.maxY, app.frame.maxY)
+    capture("detail-empty-photo-hierarchy")
   }
 
   func testBrowseGridFitsDeviceWidth() {

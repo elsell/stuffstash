@@ -114,3 +114,28 @@ it('explains unsuccessful path search and clears stale feedback when criteria ch
     await render(''); expect(h.allText().join(' ')).not.toContain('Found Tent');
   } finally { await h.unmount(); }
 });
+
+
+it('shows root context once and exposes breadcrumb navigation after opening a place', async () => {
+  resetNativeTestState();
+  const h = new MobileRenderHarness(); const client = createMobileQueryClient();
+  const query = new InventoryMapQuery({ listActiveInventoryMapAssets: async () => ({
+    ...mapSnapshot, assets: [{ ...selectedAsset, id: assetId('garage'), title: 'Garage', kind: 'location' as const }]
+  }) });
+  try {
+    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+      <AppFeedbackProvider><InventoryMapScreen canAdd={false} inventoryMapQuery={query} pathStore={{ current: new Map() }} onAdd={() => undefined} /></AppFeedbackProvider>
+    </MobileServerStateProvider>);
+    await settle(h); await settle(h);
+    expect(h.byLabel('Open location Home')).toBeUndefined();
+    expect(h.allText().filter(text => text === 'Home')).toHaveLength(1);
+    await h.press(h.byLabel('Garage, Place, 0 inside'));
+    expect(h.byLabel('Open location Home')).toBeDefined();
+    expect(h.byLabel('Open location Garage')).toBeDefined();
+    await h.press(h.byLabel('Open location Home'));
+    expect(h.byLabel('Open location Home')).toBeUndefined();
+    expect(h.byLabel('Open location Garage')).toBeUndefined();
+    expect(h.allText().filter(text => text === 'Home')).toHaveLength(1);
+    expect(h.allText()).toContain('Garage');
+  } finally { await h.unmount(); }
+});

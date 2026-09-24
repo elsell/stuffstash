@@ -13,6 +13,18 @@ The corrected complete workflow still requires native acceptance. Edit metadata
 recovery and tag entry passed on both devices in this run; connected phone Edit
 stopped at keyboard readiness before typing and remains unverified by this run.
 
+## Map and empty-detail hierarchy acceptance
+
+M265/M266 follow-up acceptance uses existing Browse and connected Edit fixtures.
+Verify root Map has no ancestor button, opening Garage reveals breadcrumbs, and
+returning to the root removes them while retaining the column heading. On a
+photo-empty item, verify title, Edit and Move precede compact No photos status,
+with Add photos reachable in the initial viewport. Include normal-size detail
+commands and region recovery to check representative containable consumers and
+loading/error distinction. These checks do not certify populated photo paging,
+physical photo selection or unrelated Map gestures. Keep this follow-up separate
+from the frozen M260–M264 release.
+
 ## Custom-field choice acceptance
 
 M02/M11 need native evidence for their distinct control composition. Exercise the

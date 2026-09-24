@@ -117,6 +117,16 @@ export function AssetDetailView({
     ? containedWorkspaceItems(asset, showContentsSearch ? contentsQuery : '')
     : [];
   const updatedMetadata = assetDetailUpdatedMetadata(asset);
+  const photoGallery = photosAvailable ? (
+    <AssetDetailPhotoGallery
+      canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
+      contentHorizontalPadding={spacing.md}
+      onAddPhotos={onAddPhotos}
+      onPhotoPress={onPhotoPress}
+      photos={asset.photos}
+      palette={palette}
+    />
+  ) : null;
 
   return (
     <FlatList
@@ -146,15 +156,7 @@ export function AssetDetailView({
             </View>
           ) : null}
 
-          {photosAvailable ? <AssetDetailPhotoGallery
-            canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
-            contentHorizontalPadding={spacing.md}
-            imagePlaceholderLabel={asset.imagePlaceholderLabel}
-            onAddPhotos={onAddPhotos}
-            onPhotoPress={onPhotoPress}
-            photos={asset.photos}
-            palette={palette}
-          /> : null}
+          {asset.photos.length > 0 ? photoGallery : null}
           {photosRecovery}
 
           {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
@@ -193,6 +195,7 @@ export function AssetDetailView({
             />
           ) : null}
 
+          {asset.photos.length === 0 ? photoGallery : null}
         </View>
       )}
       ListFooterComponent={(

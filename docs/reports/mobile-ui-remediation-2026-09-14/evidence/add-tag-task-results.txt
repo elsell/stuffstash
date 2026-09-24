@@ -1,0 +1,14 @@
+M267 source a2480d92, separate follow-up branch, outside frozen release PR171.
+Android APK f4dda09fb853c8c763ee24c9c573e73ac62e1f45331c3fb90f7a53a252d8a662.
+Normal-text native Add flow passed: optional creation hidden initially, type Temporary,
+cancel, reopen empty, exact Camping input, stage, collapse creation, retain Camping
+and asset name Camping tent. Controlled fixture; no backend/save verification claim.
+Reviewed initial collapsed and settled staged screenshots. One immediate screenshot
+captured a transient header draw; retained XML had all header controls, and a fresh
+settled capture showed them in their expected positions. No production header
+correction is justified by that observation alone.
+24 Add tests, TypeScript and structural checks passed remotely; code critic found
+no source blocker and requested the applied retained-callback assertion correction.
+iOS/iPad Add acceptance is scheduled after hierarchy run35874901875, using existing
+add-draft selection. Native iOS, real draft persistence/storage and save workflow
+acceptance remain scoped separately; this does not close the full mobile audit.

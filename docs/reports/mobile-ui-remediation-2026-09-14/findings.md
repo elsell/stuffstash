@@ -3826,3 +3826,128 @@ a root breadcrumb label is immediately followed by a second inventory heading.
 Review breadcrumb/root-column hierarchy together; do not merely reduce spacing.
 Keep outside the frozen M260–M264 batch. This does not affect the switcher's
 confirmed stable anchor.
+
+### M266 — Empty photo panel dominates asset details
+
+P2 information-hierarchy finding observed on the Android normal-text connected
+journey for candidate da2516a9 (android-workflow-batch-moved-detail.png). With no
+photos, a large placeholder occupies the upper detail screen before the asset
+name and location. AssetDetailPhotoGallery.tsx gives its empty state a 240-point
+minimum height; AssetDetailView.tsx places it before item identity. The 4:3
+aspect ratio applies only to actual photos, not this empty panel. A compact empty-photo affordance should keep item
+identity and primary tasks prominent; preserve the full photo gallery when media
+exists. Review phone/iPad and Android consumers together. Keep outside the frozen
+M260–M264 release batch.
+
+M265/M266 follow-up source is isolated on `codex/mobile-detail-hierarchy`.
+Root breadcrumb correction passes23 focused tests and an Android root/Garage/root
+walkthrough. Empty-photo hierarchy passes26 focused tests and Android rendering.
+Both pass TypeScript, structural checks and code review. iOS/iPad acceptance is
+prepared as `hierarchy-followup`; findings remain open pending native acceptance.
+See evidence/map-hierarchy-results.txt and evidence/detail-hierarchy-results.txt.
+
+### M267 — Add and Edit disagree on optional tag creation
+
+P2 task-consistency finding from shared-consumer source review. AddAssetScreen's
+AssetTagPicker always exposed name/color creation while Edit's M264 correction
+requires New tag. Add now uses that same optional task: New tag reveals controls,
+Cancel new tag clears only unstaged entry, and restored unfinished entries reveal
+automatically. Current committed callbacks preserve current asset fields and tag
+selections. Red test reproduced initial exposure;24 Add tests, TypeScript and
+structural checks pass remotely. Code critic's retained-callback test correction
+was applied. Native Add acceptance now exercises disclosure/cancel/reopen before
+its existing exact input, collapse/restore, staging and draft-clear sequence.
+Native execution remains pending. Large tag-set selection remains a separate
+pattern review; this change does not certify or redesign that interaction.
+
+### M268 — Existing-tag selection diverges across asset tasks
+
+P2 pattern-selection finding from Add/Edit/Filters consumer review. Edit renders
+selected plus the first12 chip choices with Show all and no search. Add adds inline
+search but uses the same growing chip grid; Filters uses a searched checkmarked
+list. Selecting a tag outside the first set makes Edit users scan the full grid.
+The decision in specs/platform/mobile-tag-selection.spec.md replaces the asset
+forms' unselected grids with a compact Tags summary and a shared searchable
+multi-selection view, preserving draft ownership and cancellation. This is a
+source-integrated follow-up: Add/Edit now use the shared selection visit with
+Done/Cancel, scope teardown and native-back cancellation. Remote mounted checks
+cover retained drafts, hidden selections, missing tag assignments and stale
+callbacks. Native runtime acceptance is pending. Keep outside the frozen release
+and the separately verified creation-disclosure fixes M264/M267.
+
+### M269 — Add location search edits the draft before selection
+
+P2 core-interaction/pattern finding. Add's inline ParentPicker nests a scrolling
+result list in the asset form. Its search callback changes parentQuery and clears
+parentAssetId immediately; collapsing the picker offers no restoration boundary.
+Android normal-text review confirms the custom inline presentation; search stayed
+visible, so no offscreen-field defect is claimed. Move already uses a dedicated
+destination-first task. Decision: a native navigation-owned single-selection
+visit with local query, tap-to-apply, cancellation preserving the original parent,
+and explicit secondary creation. See mobile-add-location-selection.spec.md.
+Implementation and full native acceptance remain pending; not a release gate for
+M260–M264 or M265–M268.
+
+### M270 — Move conflates destination search with naming a new place
+
+P1 task continuity and consistency finding. MoveAssetSheet uses its Put in search
+field as the new destination name; typing in it closes the creation disclosure,
+so correcting the proposed name hides Kind/Create. This is source-confirmed.
+The normal-text iPad35874141371 capture also shows custom highlighted Selected
+rows and a persistent form-style search field, unlike the shared native search
+and choice vocabulary now used by Add. The passed M262 create/retry workflow
+remains valid; it did not exercise correcting the name after opening creation.
+
+Separate native destination search from the explicit creation name draft, retain
+Kind/Create while editing, and reuse the shared choice rows. Keep the explicit
+Move confirmation because selection changes a proposal, not asset containment.
+See mobile-move-destination-selection.spec.md. This follow-up does not expand the
+frozen M260–M264 release or invalidate its scoped acceptance evidence.
+
+
+### M271/M272 — Selection visits lose a draft or appear behind its editor
+
+Native run35880132749 confirms Add name loss after Tags and untappable Edit Tags
+behind its modal owner. Fixes are committed at2b7a7169/ad633cd4; grouped phone/iPad
+acceptance remains pending. Current diagnosis and verification contract:
+`specs/platform/mobile-selection-lifecycle.spec.md`.
+
+### M273 — Move Here retains the old custom action-sheet structure
+
+Source-confirmed P2 task/pattern consistency defect: partial-height iOS sheet,
+form search, custom selected badges and large arrow preview diverge from Move's
+selection task. Use native search/header commands and checked rows, retaining the
+chosen item through refinement and failed submission. 81 focused source checks
+pass; native acceptance remains pending. See
+`specs/platform/mobile-move-here-selection.spec.md` for scope and acceptance.
+
+
+### M274 — Expiration review adds an unnecessary intermediate filter page
+
+P2 pattern-selection recommendation; source inspected at b5eee60f. In
+`BrowseFiltersScreen.tsx`, the overview opens a local Expiration page containing
+only three navigation destinations (soon, expired, all dates). Each immediately
+opens the shared expiration workspace. This adds page/back chrome without a
+search, hierarchy, or draft choice requiring a separate task. The existing
+active-items explanation can remain beside the menu.
+
+Use the existing NativeActionMenu for these three clearly named review commands
+on the overview. Keep the active-items restriction visible before invocation,
+and preserve draft text/tags/kind/availability and prior Browse route as required
+by expiration-workspace.spec.md. Do not present it as a filter already applied or
+require an extra Show results after choosing the command. Tags still justify
+searchable multiselection; Type/Status/Availability/Sort already use native choices
+in place and should remain so. This is a project judgment informed by Apple's
+[menus](https://developer.apple.com/design/human-interface-guidelines/menus) and
+[modality](https://developer.apple.com/design/human-interface-guidelines/modality)
+guidance, not an Apple prohibition on selection pages.
+
+Acceptance: change availability and tags, open/dismiss the review menu without
+changing Browse or drafts, choose each review mode, verify inherited filters,
+then Back restores the original Browse query/sort/scroll context. Check menu
+placement on phone/iPad and disabled/current actions during scope verification.
+Source review found explicit scope validation and shared query composition;
+`loadFirstPage` only updates the submitted query, so its name alone is not evidence
+of pagination or scroll loss. Filters are exposed only in List; forcing List on
+filter apply is not a confirmed Map-return defect. Current native connected
+filter/detail/Back continuity remains unverified. Separate from frozen M265–M273.

@@ -1,0 +1,13 @@
+Run35895924050, source e15d31334cc04d85d41857caca64e5eb78cba256.
+Both iPhone17 and iPad mini(A17Pro) completed successfully.
+Three workflows each: destination creation/draft/rejected move/retry;
+Move Here selection/refinement/clear/rejected command/retry/return;
+Move Here lookup failure/retry/exact query/recovered item/cancel.
+Phone job107299722552, iPad job107299722285.
+Phone selected-destination and iPad recovered-search captures inspected:
+native header/checked row and destination/search/result context are readable,
+with no observed overlap. Native search temporarily owns navigation chrome;
+closing search restores task commands and is tested before Cancel/Move.
+Scope: isolated fixture repositories on iOS simulators, normal text.
+Not evidence for physical devices, real backend, all accessibility settings,
+or Android tablets. Production implementation unchanged by later harness commits.

@@ -1,3 +1,7 @@
+export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
+import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
+import { AssetTagSelectionTaskProvider } from '../src/ui/navigation/AssetTagSelectionTask';
+export { default as AssetTagSelectionRoute } from '../src/ui/screens/AssetTagSelectionRouteScreen';
 import { AssetEditJourneyProvider } from './AssetEditJourneyFixture';
 export { AssetEditJourneyDetailFixture, AssetEditJourneyEditorFixture, AssetEditJourneyMoveFixture } from './AssetEditJourneyFixture';
 export { BrowseJourneyFixture } from './BrowseJourneyFixture';
@@ -62,7 +66,7 @@ import { createAssetNativeSheetOptions } from '../src/ui/screens/AssetNativeShee
 export { SheetLayoutFixture } from './SheetLayoutFixture';
 
 export { InventoryQueryFixture } from './InventoryQueryFixture';
-export { AddAssetFixture } from './AddAssetFixture';
+export { AddAssetFixture, AddDestinationFixture } from './AddAssetFixture';
 export { CheckoutHistoryFixture } from './CheckoutHistoryFixture';
 
 // Runner-only composition. No production session, service, or credentials are loaded.
@@ -100,7 +104,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
   const [keyboardAccessoryEnabled, setKeyboardAccessoryEnabled] = useState(true);
   const sheets = createAssetNativeSheetOptions(palette);
   if (!isHydrated) return <View />;
-  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetEditJourneyProvider>
+  return <ResultContext.Provider value={{ result, setResult, keyboardAccessoryEnabled, setKeyboardAccessoryEnabled }}><AppFeedbackProvider noticePlacement="screen"><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider><AssetEditJourneyProvider>
     <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
       headerBackTitle: 'Back', headerTintColor: palette.action,
@@ -113,6 +117,8 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-browse-journey" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version), headerBackVisible: false }} />
       <Stack.Screen name="audit-home-return" options={{ title: 'Home' }} />
       <Stack.Screen name="audit-home-header" options={{ ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, palette.background), headerBackVisible: false }} />
+      <Stack.Screen name="add-destination" options={{ ...sheets.selection, title: 'Put in' }} />
+      <Stack.Screen name="asset-tag-selection" options={{ ...sheets.selection, title: 'Tags' }} />
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />
@@ -160,7 +166,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-expiration" options={sheets.filters} />
     </Stack>
     {keyboardProviderEnabled ? <AppKeyboardAccessory enabled={keyboardAccessoryEnabled} /> : null}
-  </AssetEditJourneyProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
+  </AssetEditJourneyProvider></AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppFeedbackProvider></ResultContext.Provider>;
 }
 
 type InputFixtureMode = 'controlled' | 'uncontrolled' | 'system' | 'plain' | 'multiline' | 'native-default'
@@ -224,6 +230,7 @@ export function FixtureMenu() {
     <Button title="Audit system input" onPress={() => setInputMode('system')} />
     <Button title="Audit Add navigation draft" onPress={() => router.push('/audit-add-push' as Href)} />
     <Button title="Audit Add configured header" onPress={() => router.push('/audit-add-header' as Href)} />
+    <Button title="Audit Add destination" onPress={() => router.push('/audit-add-destination' as Href)} />
     <Button title="Audit Add draft" onPress={() => router.push('/audit-add' as Href)} />
     <Button title="Audit onboarding submission" onPress={() => setOnboardingSubmission(true)} />
     <Button title="Audit settings controls" onPress={() => setSettingsControls('scroll')} />

@@ -1,0 +1,9 @@
+iPad job107346778966 at8935c8cc: three selection cases pass; Add destination
+stops at keyboard readiness after reopening search, before new-place creation.
+Failure line714 is shared readiness helper, not a command/data assertion.
+Timing attachment9B646E95: sample4.2074219167s false; wait5.2785996667s result2.
+Final readiness attachment: keyboard frame(0,848,744,282), hittabletrue;
+t key frame(268.5,855,66.5,64.5), hittabletrue. Final screenshot shows keyboard.
+Decision: only Add destination search gets existing30s readiness observation;
+retain complete actual input and all creation/cancel/retry/return assertions.
+No product change inferred. Creation layout acceptance remains pending.

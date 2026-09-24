@@ -560,7 +560,7 @@ export function InventoryMapScreen({
         {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
           <Text accessibilityLiveRegion="polite" style={styles.searchStatus}>{searchOutcome.message}</Text>
         ) : null}
-        {state.status === 'ready' ? (
+        {state.status === 'ready' && breadcrumbs.length > 1 ? (
           <>
             <ScrollView
               horizontal

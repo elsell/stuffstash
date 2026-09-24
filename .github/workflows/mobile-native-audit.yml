@@ -24,14 +24,19 @@ on:
           - archive-notice
           - onboarding-keyboard
           - move-destination
+          - move-selection-workflows
           - destination-and-field-choices
           - field-choices
           - enum-editing
           - workflow-batch
+          - hierarchy-followup
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
           - edit-tags
+          - add-destination
+          - tag-selection
+          - selection-lifecycle
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
@@ -112,6 +117,15 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
               )
               ;;
+            move-selection-workflows)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
             move-destination)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -156,10 +170,42 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
               )
               ;;
+            add-destination)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+              )
+              ;;
+            selection-lifecycle)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            tag-selection)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddTagSelectionRetainsDraftAcrossCancelAndSaveFailure'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+              )
+              ;;
             edit-tags)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+              )
+              ;;
+            hierarchy-followup)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMapRootContextAndAncestorReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
               )
               ;;
             workflow-batch)

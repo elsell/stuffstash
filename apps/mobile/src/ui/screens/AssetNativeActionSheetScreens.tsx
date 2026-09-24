@@ -1,3 +1,4 @@
+import type { MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePreventRemove } from '@react-navigation/native';
@@ -39,6 +40,7 @@ import {
 } from './AssetDetailEditPresentation';
 import { recordAssetActionCompletion } from './AssetActionCompletion';
 import {
+  canCreateMoveDestination,
   createdMoveDestinationParent,
   mergeCreatedMoveDestinations,
   isSelectableMoveDestination,
@@ -213,12 +215,16 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
   const operation = useAssetSheetOperation(asset.canMove);
   const isSaving = operation.busy;
   const candidates = useParentCandidates(draft.query, parentLookupQuery);
+  const creationCandidates = useParentCandidates(draft.creationName ?? '', parentLookupQuery, draft.creationName !== undefined);
+  const creationMatches = mergeCreatedMoveDestinations(creationCandidates.data ?? [], draft.matches, draft.creationName ?? '');
   const shownDraft = { ...draft, selectedParent: draft.selectedParent?.id === asset.parentAssetId && !asset.isPlacementLoading ? parentFromCurrentAssetPath(asset) : draft.selectedParent, matches: moveDestinationMatches(mergeCreatedMoveDestinations(candidates.data ?? [], draft.matches, draft.query), asset) };
 
   async function createDestination(asset: AssetDetailViewModel): Promise<void> {
-    const name = draft?.query.trim() ?? '';
+    const name = draft.creationName?.trim() ?? '';
     const createKind = draft?.createKind ?? 'location';
-    if (name.length === 0) {
+    if (draft.creationName === undefined || !creationCandidates.data || creationCandidates.isError
+      || !canCreateMoveDestination({ kind: createKind, matches: creationMatches,
+        parentAssetId: moveDestinationCreatePlacement(asset).parentAssetId, query: name })) {
       return;
     }
     if (!operation.begin('create')) return;
@@ -235,7 +241,6 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
       setDraft({
         createKind,
         query: created.title,
-        queryRevision: (draft.queryRevision ?? 0) + 1,
         matches: [createdParent, ...draft.matches.filter((match) => match.id !== createdParent.id)],
         selectedParent: createdParent
       });
@@ -267,12 +272,18 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
   }
 
   return (
-    <NativeSheetFrame title="Move asset" busy={isSaving}>
+    <NativeSheetFrame busy={isSaving}>
       {(
         <MoveAssetSheet
           readOnly={!asset.canMove}
           candidatesAvailable={candidates.data !== undefined}
-          candidateStatus={<CandidateStatus candidates={candidates} />}
+          candidateStatus={candidateSelectionStatus(candidates)}
+          creationCandidatesAvailable={creationCandidates.data !== undefined && !creationCandidates.isError}
+          creationMatches={creationMatches}
+          creationStatus={<CandidateStatus candidates={creationCandidates} />}
+          onBeginCreation={() => operation.change(() => setDraft(current => ({ ...current, creationName: current.query })))}
+          onCancelCreation={() => operation.change(() => setDraft(current => ({ ...current, creationName: undefined })))}
+          onChangeCreationName={creationName => operation.change(() => setDraft(current => ({ ...current, creationName })))}
           asset={asset}
           draft={shownDraft}
           isSaving={isSaving}
@@ -330,7 +341,7 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
         <MoveThingsHereSheet
           readOnly={!asset.canMove || !asset.canContainAssets}
           candidatesAvailable={candidates.data !== undefined}
-          candidateStatus={<CandidateStatus candidates={candidates} />}
+          candidateStatus={candidateSelectionStatus(candidates)}
           draft={shownDraft}
           isSaving={isSaving}
           onChangeQuery={(query) => operation.change(() => setDraft((current) => ({ ...current, query })))}
@@ -352,14 +363,14 @@ function NativeSheetFrame({
   title, busy, dismissible = true
 }: {
   readonly children: ReactNode;
-  readonly title: string;
+  readonly title?: string;
   readonly busy: boolean;
   readonly dismissible?: boolean;
 }) {
   const styles = useStyles();
   return (
     <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
-      <Stack.Screen options={{ title, gestureEnabled: dismissible && !busy }} />
+      <Stack.Screen options={{ ...(title ? { title } : {}), gestureEnabled: dismissible && !busy }} />
       {children}
     </SafeAreaView>
   );
@@ -395,6 +406,13 @@ function InlineQueryError({ message, retryLabel, onRetry }: {
     <Text accessibilityRole="alert" style={styles.inlineErrorText}>{message}</Text>
     <NativeCommandButton label={retryLabel} onPress={onRetry} />
   </View>;
+}
+
+function candidateSelectionStatus(candidates: ReturnType<typeof useParentCandidates>): MoveSelectionStatus | undefined {
+  if (candidates.isError) return { message: 'Suggestions could not be loaded.',
+    retry: { label: 'Retry suggestions', onPress: () => { void candidates.refetch(); } } };
+  if (!candidates.data) return { message: 'Loading suggestions…' };
+  return undefined;
 }
 
 function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {

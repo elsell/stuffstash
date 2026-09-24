@@ -123,7 +123,7 @@ This spec defines camera behavior only for attaching still photos during the Add
   - Recently added, full asset lists, and search results open the same asset-detail language.
   - Add creates one asset in the selected inventory and optional parent asset.
 - Mobile asset detail must be an asset workspace, not a read-only card or a pile of unrelated buttons:
-  - A photo-first hero area must support multiple visible photo positions, stable placeholder space, and an obvious `Add photos` affordance.
+  - When photos exist, a photo-first hero area must support multiple visible photo positions, stable preview space, and an obvious `Add photos` affordance. When no photos exist, render identity, placement and its primary actions first, then compact `No photos` status and the single authorized `Add photos` command. Do not reserve a hero-sized blank panel or repeat the asset kind as placeholder content. Keep loading/error recovery distinct from a confirmed empty gallery. This hierarchy is a product decision applying [Apple’s layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout), not an Apple-mandated empty-state layout.
   - Items, containers, and locations must use the same shared asset-detail
     photo gallery and full-screen viewer. Containable assets must not suppress
     the gallery-level add-photo affordance and recreate it later as a separate
@@ -346,7 +346,7 @@ This spec defines camera behavior only for attaching still photos during the Add
     scrolling must remain available.
   - Programmatic navigation, including selecting a row or tapping a breadcrumb, must animate smoothly to the relevant column unless the user has requested reduced motion.
   - Deeper containment columns should enter and leave with subtle native-feeling motion instead of flashing in and out. The first implementation should use a small spatial slide plus fade for normal motion, inspired by platform navigation/shared-axis transitions, and reduce that to a fade or instant update when reduced motion is enabled.
-  - Breadcrumbs must remain visible, clickable, and synchronized with the active column. Tapping a breadcrumb must move to that level without collapsing unrelated history unless the destination is intentionally reset.
+  - When a containment path is open, breadcrumbs must remain visible, clickable, and synchronized with the active column. At the root with no open path, omit the redundant root-only breadcrumb; the root column heading identifies the inventory. Tapping a breadcrumb must move to that level without collapsing unrelated history unless the destination is intentionally reset.
   - The main body of a row must select that asset as the current branch and reveal its immediate children in the next column when the asset is a location or container.
   - Rows that are part of the current expanded path must remain visually
     distinguished from sibling rows so users can identify the active branch when
@@ -549,3 +549,14 @@ only a 44-point React Native host around a small symbol. Keep its native Menu
 semantics and visible ellipsis; apply the hit region to the label content. Verify
 the rendered trigger bounds and cancellation flow on phone and iPad. This does
 not establish that all native menu geometry is correct from source declarations.
+
+## Consistent optional tag creation in Add and Edit
+
+Existing-tag selection is primary in both asset forms. A native `New tag` command
+reveals name/color creation controls; an unfinished restored entry reveals them
+automatically. `Cancel new tag` clears only that unstaged name/color and collapses
+creation, preserving selected tags, staged definitions and all other asset fields.
+Creation actions use current committed draft state and respect focus/pending locks.
+Keep exact tag input, normalization, staging and draft restore behavior unchanged.
+This addresses task consistency; large tag collections still require their own
+selection-pattern review. No extra route or modal is needed for this optional form.

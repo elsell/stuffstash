@@ -181,18 +181,12 @@ describe('addHereParams', () => {
 });
 
 describe('asset native sheet route options', () => {
-  it('uses stack-native form sheets with grabbers and detents for asset actions', () => {
-    for (const options of [
-      assetMoveHereNativeSheetOptions
-    ]) {
-      expect(options.presentation).toBe('formSheet');
-      if (options.presentation !== 'formSheet') throw new Error('Expected iOS form sheet options');
-      expect(options.headerShown).toBe(false);
-      expect(options.sheetGrabberVisible).toBe(true);
-      expect(options.sheetExpandsWhenScrolledToEdge).toBe(true);
-      expect(options.sheetLargestUndimmedDetentIndex).toBe('none');
-      expect(options.sheetAllowedDetents.length).toBeGreaterThan(1);
-    }
+  it('keeps Move Here as a full-height native task with its header commands', () => {
+    expect(assetMoveHereNativeSheetOptions).toMatchObject({
+      presentation: 'formSheet', headerShown: true, sheetGrabberVisible: true,
+      sheetExpandsWhenScrolledToEdge: true, sheetLargestUndimmedDetentIndex: 'none',
+      sheetAllowedDetents: [1]
+    });
   });
 
   it('keeps edit cancellation explicit until dirty native sheet dismissal can be intercepted', () => {

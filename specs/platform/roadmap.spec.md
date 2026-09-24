@@ -38,13 +38,18 @@ measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
 interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.
 
-Latest verified delivery is TestFlight0.24.31(122.1), with exact-build changelog
-verification in run35866654390 (M257/M258). The next frozen batch is M260–M264:
-stable Browse switching, task-focused Edit/Move, adaptive tablet density and
-explicit tag creation. Verify these changed workflows and critical regressions
-together, then ship independently of unrelated audit findings. Native M260
-switch/scroll acceptance passed on phone and iPad in run35867740920; remaining
-batch acceptance is open. Do not expand this batch while waiting.
+M260–M264 merged in PR171 at690ee8e4 after final Browse run35887017924
+passed on phone/iPad and required CI passed on ddcb700c. Release35889902851
+completed: TestFlight0.24.32(123.1) Apple processing and exact changelog readback
+verified. This batch is delivered.
+
+The next batch is frozen to M265–M273 on codex/mobile-selection-batch: hierarchy,
+Add/Edit selection, draft retention and consistent Move/Move Here interactions.
+See `mobile-selection-batch.spec.md` for current acceptance and
+`mobile-selection-lifecycle.spec.md` for the confirmed draft/presentation diagnosis.
+Its source integration is checked; grouped native acceptance remains pending.
+Do not expand this batch while native checks run. Unrelated findings stay tracked
+in the comprehensive audit. Resume connected normal-text workflows after delivery.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a
@@ -558,3 +563,9 @@ change. Retain M51 and other runtime findings independently. Current matrix has
 142 surfaces/3408 cells:2593 source-reviewed,576 finding,198 not-applicable,41
 runtime-partial. Source coverage does not imply native acceptance or audit closure.
 TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
+
+The next connected asset-task follow-up is M270: Move currently conflates search
+with creation naming and hides the creation controls when the name changes.
+Use shared native search/choice presentation and a separate creation draft after
+M269's scoped Android acceptance; preserve the frozen release batch and the
+independent iPhone/iPad verification already running for Add destination selection.

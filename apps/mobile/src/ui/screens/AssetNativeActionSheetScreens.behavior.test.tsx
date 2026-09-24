@@ -1,10 +1,15 @@
+import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import { consumeAssetActionCompletion } from './AssetActionCompletion';
 import { latestAlert, pressAlertButton } from '../../test-support/react-native';
 import React from 'react';
 import { Platform } from 'react-native';
 import { attemptNavigation, dispatchedActions, resetNavigation, navigationOptions, setScreenFocused, setCanGoBack } from '../../test-support/navigation';
-import { expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { NativeSearchDriver } from '../../test-support/NativeSearchDriver';
+let moveSearch: NativeSearchDriver;
+beforeEach(() => { moveSearch = new NativeSearchDriver(); });
+afterEach(() => moveSearch.dispose());
 import { AssetEditSheetRouteScreen, AssetMoveHereSheetRouteScreen, AssetMoveSheetRouteScreen } from './AssetNativeActionSheetScreens';
 import { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetId } from '../../domain/assets/AssetSummary';
@@ -68,10 +73,10 @@ it('keeps a Move draft mounted when background refresh discovers a different par
         createAssetCommand={{ execute: async () => { throw new Error('No create requested'); } }} moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => [] }} />
     </MobileServerStateProvider>);
     await settle(harness); await settle(harness);
-    await harness.changeText(harness.byLabel('Put in'), 'My destination');
+    await harness.run(() => moveSearch.change('My destination'));
     parent = 'new-parent';
     await harness.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(harness);
-    expect(harness.allByType('TextInput').some((input) => input.props.value === 'My destination')).toBe(true);
+    expect(moveSearch.text).toBe('My destination');
   } finally { await harness.unmount(); }
 });
 
@@ -107,41 +112,43 @@ it('creates the move destination with the kind selected in the native menu', asy
         moveAssetCommand={{ execute: async () => { throw new Error('No move requested'); } }} parentLookupQuery={{ execute: async () => lookupResults }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    const originalField = h.byLabel('Put in');
-    await h.changeText(originalField, 'camping box');
-    expect(h.byLabel('Put in')).toBe(originalField);
+    const originalSearch = moveSearch.options;
+    await h.run(() => moveSearch.change('camping box'));
+    expect(moveSearch.options).toBe(originalSearch);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
     await h.press(h.byLabel('New destination'));
     expect(h.byLabel('Choose destination kind')).toBeDefined();
     await h.press(h.byLabel('Cancel new destination'));
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
-    expect(h.byLabel('Put in')?.props.value).toBe('camping box');
+    expect(moveSearch.text).toBe('camping box');
     await h.press(h.byLabel('New destination'));
     await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
-    const create = h.allByType('Text').find(node => node.children.join('') === 'Create container "camping box"')?.parent;
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    const create = h.byLabel('Create destination');
     await h.press(create ?? undefined);
     expect(latestAlert()?.title).toBe('Could not create destination');
-    expect(h.byLabel('Put in')).toBe(originalField);
-    expect(h.byLabel('Put in')?.props.value).toBe('camping box');
+    expect(moveSearch.options).toBeUndefined();
+    expect(moveSearch.text).toBe('camping box');
     await h.press(create ?? undefined);
     expect(created).toEqual([expect.objectContaining({ kind: 'container', title: 'camping box' }), expect.objectContaining({ kind: 'container', title: 'camping box' })]);
-    expect(h.byLabel('Put in')).not.toBe(originalField);
-    expect(h.byLabel('Put in')?.props.value).toBe('Camping box');
+    expect(moveSearch.options).toBeDefined();
+    expect(moveSearch.text).toBe('Camping box');
     expect(h.allText().join(' ')).toContain('Camping box');
-    expect(h.byLabel('Create container "Camping box"')).toBeUndefined();
-    const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.selected === true);
+    expect(h.byLabel('Create destination')).toBeUndefined();
+    const selectedRows = () => h.allByType('Pressable').filter(row => row.props.accessibilityState?.checked === true);
     expect(selectedRows()).toHaveLength(1);
-    await h.changeText(h.byLabel('Put in'), 'Kitchen');
+    await h.run(() => moveSearch.change('Kitchen'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    expect(selectedRows()).toHaveLength(0);
+    expect(selectedRows()).toHaveLength(1);
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
     await h.press(h.byLabel('New destination'));
-    expect(h.byLabel('Create container "Kitchen"')).toBeDefined();
-    await h.changeText(h.byLabel('Put in'), '  CAMPING box  ');
+    expect(h.byLabel('Create destination')).toBeDefined();
+    await h.press(h.byLabel('Cancel new destination'));
+    await h.run(() => moveSearch.change('  CAMPING box  '));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     expect(selectedRows()).toHaveLength(1);
-    expect(h.byLabel('Create container "CAMPING box"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     lookupResults = [{ id: 'box', title: 'Camping box', kind: 'container', subtitle: '', pathLabel: 'Garage / Camping box', selectionHint: 'Container', willPromoteToContainer: false }];
     await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.parentCandidates('scope', 'tenant', 'inventory', 'CAMPING box') }));
     await settle(h);
@@ -175,11 +182,11 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
       expect(h.byText('Selected: Camping box')).toBeUndefined();
       expect(h.byLabel('Move')?.props.disabled).toBe(true);
     }
-    const input = h.byLabel(mode === 'move' ? 'Put in' : 'Find item, box, or place');
-    await h.changeText(input, 'Camping'); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
-    const candidateRow = h.byText('Camping box')?.parent?.parent?.parent;
+    const retainedSearch = moveSearch.options;
+    await h.run(() => moveSearch.change('Camping')); await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    const candidateRow = h.byLabel(mode === 'move' ? 'Choose destination Camping box' : 'Choose item Camping box');
     await h.press(candidateRow ?? undefined);
-    if (mode === 'move') expect(h.byText('Selected: Camping box')).toBeDefined();
+    if (mode === 'move') expect(h.byLabel('Choose destination Camping box')?.props.accessibilityState.checked).toBe(true);
     const save = h.byLabel(mode === 'move' ? 'Move' : 'Move here');
     expect(save?.props.disabled).toBe(false);
     const submit = save!.props.onPress;
@@ -189,9 +196,8 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     await h.run(() => attemptNavigation({ type: 'GO_BACK' }));
     expect(dispatchedActions()).toEqual([]);
     expect(h.byLabel('Cancel')?.props.disabled).toBe(true);
-    expect(h.allByType('TextInput')[0]?.props.editable).toBe(false);
-    await h.changeText(input, 'Wrong destination');
-    expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    expect(moveSearch.options).toBeUndefined();
+    await h.run(() => retainedSearch!.onChangeText({ nativeEvent: { text: 'Wrong destination' } }));
     const alertBefore = latestAlert();
     if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
     await h.run(() => outcome === 'failure' ? rejectSave(new Error('Failed')) : resolveSave({ id: 'asset', title: 'Tent', message: 'Moved' })); await settle(h);
@@ -201,7 +207,7 @@ it.each([['move', false, 'failure'], ['move-here', false, 'failure'], ['move', t
     if (outcome === 'success' && !returned) expect(completion?.action).toBe('move');
     else expect(completion).toBeUndefined();
     expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
-    expect(h.allByType('TextInput')[0]?.props.value).toBe('Camping');
+    expect(moveSearch.text).toBe('Camping');
     if (outcome === 'failure' && !returned) {
       const action = { type: 'GO_BACK', source: mode };
       await h.run(() => attemptNavigation(action));
@@ -224,25 +230,27 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
         moveAssetCommand={{ execute: async () => { moves++; return { id: 'asset', title: 'Tent', message: 'Moved' }; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.allByType('TextInput')[0], 'New box');
+    await h.run(() => moveSearch.change('New box'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
-    await h.press(h.byLabel('New destination'));
-    const create = h.byLabel('Create location "New box"');
-    expect(create).toBeDefined();
     const move = h.byLabel('Move');
+    await h.press(h.byLabel('New destination'));
+    await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
+    const create = h.byLabel('Create destination');
+    expect(create).toBeDefined();
+    expect(h.byLabel('Move')).toBeUndefined();
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
-    expect(h.byLabel('Create location "New box"')?.props.disabled).toBe(true);
+    expect(h.byLabel('Create destination')?.props.disabled).toBe(true);
     expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
     expect(h.allText()).toContain('Creating destination…');
-    await h.changeText(h.allByType('TextInput')[0], 'Changed');
+    await h.changeText(h.byLabel('New destination name'), 'Changed');
     const alertBefore = latestAlert();
     if (returned) { await h.run(() => setScreenFocused(false)); await h.run(() => setScreenFocused(true)); }
     await h.run(() => outcome === 'failure' ? rejectCreate(new Error('Failed')) : resolveCreate({ id: 'new', title: 'Created destination', message: 'Created' })); await settle(h);
     if (returned) expect(latestAlert()).toBe(alertBefore);
-    expect(h.allByType('TextInput')[0]?.props.value).toBe('New box');
+    expect(h.byLabel('New destination name')?.props.value).toBe('New box');
     expect(h.byText('Created destination')).toBeUndefined();
-    expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
+    expect(h.byLabel('Cancel new destination')?.props.disabled).toBe(false);
   } finally { await h.unmount(); setScreenFocused(true); }
 });
 
@@ -370,18 +378,18 @@ it('does not call failed move-here suggestions empty and recovers inside results
         moveAssetCommand={{ execute: async () => { throw new Error('Move not requested'); } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.byLabel('Find item, box, or place'), 'Tent');
+    await h.run(() => moveSearch.change('Tent'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
     const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
-    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Find item, box, or place').length).toBeGreaterThan(0);
+    expect(moveSearch.options).toBeDefined();
     expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
     expect(h.byText('No movable matches')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false;
     await h.press(h.byLabel('Retry suggestions')); await settle(h);
     expect(h.byText('No movable matches')).toBeDefined();
-    expect(h.byLabel('Find item, box, or place')?.props.value).toBe('Tent');
+    expect(moveSearch.text).toBe('Tent');
   } finally { await h.unmount(); }
 });
 
@@ -399,20 +407,21 @@ it('waits for known Move suggestions before offering destination creation', asyn
         parentLookupQuery={{ execute: async () => { if (unavailable) throw new Error('Unavailable'); return []; } }} />
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.changeText(h.byLabel('Put in'), 'New room');
-    expect(h.byText('Create location "New room"')).toBeUndefined();
+    await h.run(() => moveSearch.change('New room'));
+    expect(h.byLabel('Create destination')).toBeUndefined();
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
     expect(h.byLabel('Retry suggestions')).toBeDefined();
     const form = h.allByType('ScrollView').find(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0);
-    expect(form?.queryAll(child => child.props.accessibilityLabel === 'Put in').length).toBeGreaterThan(0);
+    expect(moveSearch.options).toBeDefined();
+    expect(h.byLabel('Put in')).toBeUndefined();
     expect(form?.queryAll(child => child.props.accessibilityLabel === 'Cancel')).toHaveLength(0);
-    expect(h.byText('Create location "New room"')).toBeUndefined();
+    expect(h.byLabel('Create destination')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);
     expect(h.byLabel('Choose destination kind')).toBeUndefined();
     await h.press(h.byLabel('New destination'));
-    expect(h.byText('Create location "New room"')).toBeDefined();
-    expect(h.byLabel('Put in')?.props.value).toBe('New room');
+    expect(h.byLabel('Create destination')).toBeDefined();
+    expect(moveSearch.text).toBe('New room');
   } finally { await h.unmount(); }
 });
 
@@ -479,24 +488,25 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
 });
 
 
-it('discloses large Edit tag sets without losing selections when collapsed', async () => {
+it('selects existing Edit tags in a separate visit and saves the parent draft', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
   const asset = { id: assetId('asset'), title: 'Tent', description: 'Keep description', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   const tags = Array.from({ length: 14 }, (_, index) => ({ id: `tag-${index + 1}`, key: `tag-${index + 1}`, label: `Tag ${index + 1}` })).reverse();
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => tags }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Tag 13')).toBeUndefined();
-    expect(h.allText().filter(text => /^Tag \d+$/.test(text))).toEqual(Array.from({ length: 12 }, (_, index) => `Tag ${index + 1}`));
-    await h.press(h.byLabel('Show all tags'));
-    await h.press(h.byText('Tag 14')?.parent ?? undefined);
-    await h.press(h.byLabel('Show fewer tags'));
-    expect(h.byText('Tag 14')?.parent?.props.accessibilityState.selected).toBe(true);
-    expect(h.byText('Tag 13')).toBeUndefined();
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Select tag Tag 14'));
+    await h.press(h.byLabel('Cancel selecting tags'));
+    await h.press(h.byLabel('Choose tags'));
+    expect(h.byLabel('Select tag Tag 14')?.props.accessibilityState.checked).toBe(false);
+    await h.press(h.byLabel('Select tag Tag 14'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ tagIds: ['tag-14'], description: 'Keep description' })]);
   } finally { await h.unmount(); }
@@ -621,10 +631,10 @@ it.each(['move', 'here'] as const)('retained %s footer uses current selection an
       {mode === 'move' ? <AssetMoveSheetRouteScreen {...props} createAssetCommand={{ execute: async () => { throw new Error('No creation requested'); } }} /> : <AssetMoveHereSheetRouteScreen {...props} />}
     </MobileServerStateProvider>);
     await settle(h); await settle(h);
-    await h.press(h.byText('First box')?.parent?.parent?.parent ?? undefined);
+    await h.press(h.byLabel(mode === 'move' ? 'Choose destination First box' : 'Choose item First box'));
     save = h.byLabel(mode === 'move' ? 'Move' : 'Move here')!.props.onPress;
     cancel = h.byLabel('Cancel')!.props.onPress;
-    await h.press(h.byText('Second box')?.parent?.parent?.parent ?? undefined);
+    await h.press(h.byLabel(mode === 'move' ? 'Choose destination Second box' : 'Choose item Second box'));
     await h.run(() => setScreenFocused(false));
     await h.run(save); await h.run(cancel);
     expect(submitted).toEqual([]); expect(dispatchedActions()).toEqual([]);
@@ -669,15 +679,17 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
       locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
   }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
         inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     expect(h.byLabel('New tag name')).toBeUndefined();
     expect(h.byLabel('New tag color')).toBeUndefined();
-    await h.press(h.byText('Camping')?.parent ?? undefined);
+    await h.press(h.byLabel('Choose tags'));
+    await h.press(h.byLabel('Select tag Camping'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.changeText(h.byLabel('Description'), 'Ready');
     await h.press(h.byLabel('New tag'));
     const cancelCreation = h.byLabel('Cancel new tag')!.props.onPress;
@@ -696,3 +708,5 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
     expect(saved).toEqual([expect.objectContaining({ description: 'Ready for the weekend', tagIds: ['camping'], newTags: [{ displayName: 'Outdoors' }] })]);
   } finally { await h.unmount(); client.clear(); }
 });
+
+function SelectionContent() { const task = useAssetTagSelectionTask(); return <>{task?.content}</>; }

@@ -1,0 +1,13 @@
+M266 follow-up, isolated from frozen PR171/M260–M264.
+Base da2516a9; changes limited to empty-photo hierarchy and compact empty status.
+Meaningful red check: root-place identity originally followed Add photos.
+After correction: 26 focused gallery/detail tests and TypeScript pass remotely.
+Code critic: no correctness blocker; removed reported unused gallery prop.
+Android release APK b83735ab6be65276b3cb025fde84ced443872dd0bec41d352ac95b2788d5fa23.
+APK includes hierarchy/layout change before unused-prop cleanup (no visual effect).
+Native normal-text item detail on emulator5580: title bounds [42,338,1038,444],
+Edit [254,946,315,989], Move [752,946,840,989], No photos [120,1093,306,1147].
+Reviewed screenshot confirms no empty hero, identity/actions precede photo status,
+and one Add photos affordance remains. Controlled in-memory fixture only.
+Native iOS/iPad, containable-asset layout, populated-gallery regression and photo
+interaction remain acceptance gaps; source tests do not close those gaps.

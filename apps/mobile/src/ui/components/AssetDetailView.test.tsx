@@ -231,12 +231,12 @@ describe('AssetDetailView', () => {
     const text = collectText(tree);
 
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
-    expect(text.indexOf('Add photos')).toBeLessThan(text.indexOf('Garage'));
+    expect(text.indexOf('Garage')).toBeLessThan(text.indexOf('Add photos'));
     expect(text).not.toContain('No location');
     expect(text).not.toContain('Inventory root');
     expect(text).toContain('Move place');
     expect(text).not.toContain('Move');
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'No photos')?.props?.style, 'width')).toBe(358);
+    expect(text).toContain('No photos');
   });
 
   it('uses place route language only for locations', () => {
@@ -390,7 +390,7 @@ describe('AssetDetailView', () => {
     expect(addHereIndex).toBeGreaterThan(-1);
     expect(addHereIndex).toBeLessThan(text.indexOf('Check out'));
     expect(addHereIndex).toBeLessThan(text.indexOf('Edit'));
-    expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
+    expect(addHereIndex).toBeLessThan(text.indexOf('Add photos'));
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
 

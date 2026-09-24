@@ -1,0 +1,12 @@
+M265 follow-up source a128d76b, isolated from frozen release PR171.
+23 focused Map behavior/presentation tests pass; TypeScript and structural checks pass.
+Code critic requested stronger return assertion; it now verifies breadcrumb removal
+and one root title after tapping the ancestor, with all7 behavior tests passing again.
+Android APK11e244a0ebe747184386e6684d743039f6840df9ff8ff909ebed65a61de6d67a
+includes both M265 and M266 final source. Native normal-text flow passed:
+List → Map: root title once, no root-only breadcrumb. Open Garage: root and Garage
+breadcrumbs appear. Tap Main Inventory: returns to root and removes breadcrumb row.
+Reviewed both root and Garage captures. Toolbar retains native List/Map/Add/Search.
+Fixture parent display trails are empty, so Unplaced text is synthetic data here;
+this does not establish a production placement defect. No backend/auth claim.
+iOS/iPad, other window sizes and full Map gesture acceptance remain pending.

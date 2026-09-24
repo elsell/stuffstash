@@ -1,3 +1,5 @@
+import { AddDestinationTaskProvider } from '../ui/navigation/AddDestinationTask';
+import { AssetTagSelectionTaskProvider } from '../ui/navigation/AssetTagSelectionTask';
 import { inventorySwitcherNativeOptions } from '../ui/screens/InventorySwitcherNativeOptions';
 import { AppNoticeScreenLayout } from '../ui/feedback/AppNoticeScreenLayout';
 import { voiceNativeSheetOptions } from '../ui/screens/VoiceNativeSheetOptions';
@@ -41,7 +43,7 @@ function ThemedApp() {
 
   return (
     <InventoryInvitationLinkProvider>
-    <AppServicesProvider><HomeReturnTaskProvider>
+    <AppServicesProvider><HomeReturnTaskProvider><AssetTagSelectionTaskProvider><AddDestinationTaskProvider>
       <StatusBar style={resolvedColorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenLayout={AppNoticeScreenLayout}
@@ -116,6 +118,8 @@ function ThemedApp() {
         />
         <Stack.Screen name="assets/[assetId]/history/index" options={{ title: 'History' }} />
         <Stack.Screen name="assets/[assetId]/history/[activityId]" options={{ title: 'History detail' }} />
+        <Stack.Screen name="add-destination" options={{ ...sheetOptions.selection, title: 'Put in' }} />
+        <Stack.Screen name="asset-tag-selection" options={{ ...sheetOptions.selection, title: 'Tags' }} />
         <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
@@ -126,7 +130,7 @@ function ThemedApp() {
       <PushNotificationNavigation />
       <VoiceConversationReturn />
       <AppKeyboardAccessory />
-    </HomeReturnTaskProvider></AppServicesProvider>
+    </AddDestinationTaskProvider></AssetTagSelectionTaskProvider></HomeReturnTaskProvider></AppServicesProvider>
     </InventoryInvitationLinkProvider>
   );
 }

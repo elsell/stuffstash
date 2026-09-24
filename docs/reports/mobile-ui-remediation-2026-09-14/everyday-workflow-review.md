@@ -1,6 +1,8 @@
 # Everyday mobile workflow review
 
-Baseline: source4aec43d1, existing user observations and retained native evidence.
+Historical design baseline: source4aec43d1. Current acceptance and delivery status
+are maintained in [the audit summary](README.md). Statements below describe the
+original decisions, not the current verification state.
 This is the first structural pass, not a completed runtime walkthrough of the
 current build. Review at normal text before detailed-state or large-text work.
 
