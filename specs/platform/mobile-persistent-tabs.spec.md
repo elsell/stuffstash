@@ -78,3 +78,16 @@ despite earlier tab activation passing. The final draft assertion can settle
 before navigation presentation does. Explicitly wait for both native tab controls
 to be hittable after returning to the editor, then capture. A failure is a
 navigation defect; an earlier successful tap does not establish final visibility.
+
+## Accessory appearance after navigation
+
+The persistent voice command must retain its visible microphone in ready state
+when navigating into a destination and returning through tabs. An accessible name
+and tappable blue background alone do not establish visual acceptance. Captures
+from Settings and History show a missing glyph that returns after tab switching.
+Before changing its renderer, use one controlled normal-text navigation observation:
+capture list, detail after a two-second stationary settling interval, and detail
+after a tab round trip. Keep the same ready voice fixture state and actual tab
+accessory. Review the glyph visually; passing navigation assertions only establishes
+that the observation completed. This distinguishes a transitional capture from a
+persistent rendering defect without repeating provider or input experiments.

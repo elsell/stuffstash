@@ -7,7 +7,8 @@ final class FixtureAuditTests: XCTestCase {
     continueAfterFailure = false
     app.launch()
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
-      || name.contains("testHistoryJourneyClearsPersistentChrome"))
+      || name.contains("testHistoryJourneyClearsPersistentChrome")
+      || name.contains("testVoiceAccessorySettledNavigationAppearance"))
       ? "View all recently changed assets" : "Audit Browse filters"
     XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
@@ -2928,6 +2929,34 @@ final class FixtureAuditTests: XCTestCase {
     tab("Home").tap()
     XCTAssertTrue(version.waitForExistence(timeout: 10))
     capture("settings-overview-tab-return")
+  }
+
+  func testVoiceAccessorySettledNavigationAppearance() {
+    guard openFixtureURL("(tabs)/(home)/assets/history-item/history") else { return }
+    let change = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Name · Description · Location · Tags'")).firstMatch
+    XCTAssertTrue(change.waitForExistence(timeout: 10))
+    func captureSettledAccessory(_ label: String) {
+      let command = app.buttons["Start voice interaction"].firstMatch
+      XCTAssertTrue(command.waitForExistence(timeout: 10)); XCTAssertTrue(command.isHittable)
+      // This is a bounded visual observation, not a longer functional timeout.
+      // Its image must be reviewed; the accessible button name cannot prove a drawn glyph.
+      RunLoop.current.run(until: Date().addingTimeInterval(2))
+      capture(label)
+      let attachment = XCTAttachment(screenshot: command.screenshot())
+      attachment.name = label + "-command"
+      attachment.lifetime = .keepAlways
+      add(attachment)
+    }
+    captureSettledAccessory("voice-navigation-list")
+    change.tap()
+    XCTAssertTrue(app.navigationBars["History detail"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["What changed"].waitForExistence(timeout: 10))
+    captureSettledAccessory("voice-navigation-detail-settled")
+    tab("Browse").tap()
+    XCTAssertTrue(app.segmentedControls.firstMatch.buttons["List"].waitForExistence(timeout: 10))
+    tab("Home").tap()
+    XCTAssertTrue(app.navigationBars["History detail"].waitForExistence(timeout: 10))
+    captureSettledAccessory("voice-navigation-detail-tab-return")
   }
 
   func testHistoryJourneyClearsPersistentChrome() {
