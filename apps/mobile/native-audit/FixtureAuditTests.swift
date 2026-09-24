@@ -8,7 +8,8 @@ final class FixtureAuditTests: XCTestCase {
     app.launch()
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
       || name.contains("testHistoryJourneyClearsPersistentChrome")
-      || name.contains("testVoiceAccessorySettledNavigationAppearance"))
+      || name.contains("testVoiceAccessorySettledNavigationAppearance")
+      || name.contains("testInventoryCollectionClearsPersistentChrome"))
       ? "View all recently changed assets" : "Audit Browse filters"
     XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
@@ -2929,6 +2930,22 @@ final class FixtureAuditTests: XCTestCase {
     tab("Home").tap()
     XCTAssertTrue(version.waitForExistence(timeout: 10))
     capture("settings-overview-tab-return")
+  }
+
+  func testInventoryCollectionClearsPersistentChrome() {
+    guard openFixtureURL("(tabs)/(home)/assets") else { return }
+    XCTAssertTrue(app.buttons["Open asset Inventory item 1"].firstMatch.waitForExistence(timeout: 10))
+    let heading = app.staticTexts["Recently changed"].firstMatch
+    XCTAssertTrue(heading.exists)
+    let header = app.navigationBars["Assets"]
+    XCTAssertTrue(header.exists)
+    let headingClearsHeader = heading.frame.minY >= header.frame.maxY
+    capture("inventory-collection-entry")
+    let footer = app.buttons["Search for tag Final inventory tag"].firstMatch
+    verifyFooterClearsPersistentChrome(footer)
+    capture("inventory-collection-footer")
+    XCTAssertTrue(footer.isHittable)
+    XCTAssertTrue(headingClearsHeader, "Inventory heading must clear the navigation header at entry")
   }
 
   func testVoiceAccessorySettledNavigationAppearance() {
