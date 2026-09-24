@@ -1,0 +1,61 @@
+Attributes: Application, 0x118c49040, pid: 35128, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x118c49040, pid: 35128, label: 'Stuff Stash'
+    Window (Main), 0x118c49180, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x118c492c0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x118c49400, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x118c49540, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x118c49680, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x118c497c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x118c49900, {{0.0, 0.0}, {402.0, 874.0}}
+              NavigationBar, 0x118c49a40, {{0.0, 62.0}, {402.0, 114.0}}, identifier: 'Put in'
+                Button, 0x118c49b80, {{20.0, 66.0}, {44.0, 36.0}}, label: 'Cancel location selection'
+                StaticText, 0x118c49cc0, {{177.7, 73.7}, {46.7, 20.7}}, label: 'Put in'
+                Button, 0x118c49e00, {{338.0, 66.0}, {44.0, 36.0}}, label: 'New place'
+                SearchField, 0x118c49f40, {{16.0, 117.0}, {315.0, 44.0}}, label: 'Search parent', placeholderValue: 'Search parent', value: Audit shed
+                  Image, 0x118c4a080, {{28.0, 129.0}, {20.7, 19.3}}, identifier: 'magnifyingglass', label: 'Search'
+                  Button, 0x118c4a1c0, {{296.7, 128.7}, {20.0, 20.0}}, label: 'Clear text'
+                Button, 0x118c4a300, {{342.0, 117.0}, {44.0, 44.0}}, label: 'Close'
+              Other, 0x118c4a440, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x118c4a580, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x118c4a6c0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x118c4a800, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x118c4a940, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x118c4aa80, {{0.0, 0.0}, {402.0, 874.0}}
+                          ScrollView, 0x118c4abc0, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x118c4ad00, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x118c4ae40, {{0.0, 0.0}, {402.0, 225.8}}
+                            Other, 0x118c4af80, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x118c4b0c0, {{0.0, 176.0}, {402.0, 254.0}}
+                              Other, 0x118c4b200, {{0.0, 176.0}, {402.0, 254.0}}
+                                Other, 0x118c4b340, {{16.0, 200.0}, {370.0, 104.0}}
+                                  StaticText, 0x118c4b480, {{32.0, 219.0}, {338.0, 15.7}}, label: 'Current: Garage / Shelf 14'
+                                    StaticText, 0x118c4b5c0, {{32.0, 219.0}, {338.0, 15.7}}, label: 'Current: Garage / Shelf 14'
+                                  Other, 0x118c4b700, {{16.0, 252.0}, {370.0, 52.0}}, label: 'Choose inventory top level', value: radio button, unch...
+                                StaticText, 0x118c4b840, {{16.0, 310.0}, {370.0, 18.0}}, label: 'Choosing a destination changes this draft only.'
+                                  StaticText, 0x118c4b980, {{16.0, 310.0}, {370.0, 18.0}}, label: 'Choosing a destination changes this draft only.'
+                                StaticText, 0x118c4bac0, {{16.0, 358.0}, {370.0, 18.0}}, label: 'No matching destinations'
+                                  StaticText, 0x118c4bc00, {{16.0, 358.0}, {370.0, 18.0}}, label: 'No matching destinations'
+                            Other, 0x118c4bd40, {{369.0, 176.0}, {30.0, 636.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                              Other, 0x118c4be80, {{396.0, 545.0}, {3.0, 264.0}}
+                            Other, 0x1176a48c0, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                              Other, 0x1176a5f40, {{65.0, 868.0}, {272.0, 3.0}}
+                            Other, 0x1176a5e00, {{369.0, 176.0}, {30.0, 636.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                              Other, 0x1176a4780, {{396.0, 545.0}, {3.0, 264.0}}
+                            Other, 0x1176a4640, {{62.0, 841.0}, {278.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                              Other, 0x1176a6300, {{65.0, 868.0}, {272.0, 3.0}}
+                  Other, 0x1176a4500, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11785a080, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11785a1c0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x117859680, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1178597c0, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x117859900, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11785bc00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1178588c0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x118c49040, pid: 35128, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x117858a00, pid: 35128, label: 'Stuff Stash'
+  }

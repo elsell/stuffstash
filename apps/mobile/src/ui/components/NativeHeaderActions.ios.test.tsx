@@ -1,6 +1,20 @@
 import { expect, it } from 'vitest';
 import { nativeHeaderActionOptions } from './NativeHeaderActions.ios';
 
+it('distinguishes explicit completion from optional creation without enabling a disabled command', () => {
+  const calls: string[] = [];
+  const options = nativeHeaderActionOptions([
+    { kind: 'add', label: 'New destination', onPress: () => calls.push('new') },
+    { kind: 'save', label: 'Move', emphasis: 'primary', disabled: true, onPress: () => calls.push('move') }
+  ]);
+  const items = options.unstable_headerRightItems?.({ canGoBack: false });
+  expect(items?.[0]).toMatchObject({ sharesBackground: true });
+  expect(items?.[0]).not.toHaveProperty('variant', 'prominent');
+  expect(items?.[1]).toMatchObject({ variant: 'prominent', sharesBackground: false, disabled: true });
+  items?.forEach(item => { if (item.type === 'button') item.onPress?.(); });
+  expect(calls).toEqual(['new']);
+});
+
 it('dispatches a native leading Back command with the backward system symbol', () => {
   let returned = false;
   const item = nativeHeaderActionOptions([{ kind: 'back', label: 'Back to settings collection', onPress: () => { returned = true; } }], 'left').unstable_headerLeftItems?.({ canGoBack: false })[0];

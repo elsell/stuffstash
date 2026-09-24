@@ -572,7 +572,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(candidate.value as? String, "Selected")
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    dismissMoveSearchKeyboardIfNeeded()
+    dismissNativeSearchKeyboardIfNeeded()
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertEqual(candidate.value as? String, "Selected")
 
@@ -610,10 +610,10 @@ final class FixtureAuditTests: XCTestCase {
     verifyMoveHereSuggestionsRecovery(captureSuffix: "accessibility-size")
   }
 
-  private func dismissMoveSearchKeyboardIfNeeded() {
+  private func dismissNativeSearchKeyboardIfNeeded() {
     let keyboard = app.keyboards.firstMatch
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
-    // Clearing native search can dismiss the keyboard before this snapshot settles.
+    // Native search may already have ended keyboard editing when this snapshot settles.
     let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       !keyboard.exists || dismiss.isHittable
     }, object: nil)
@@ -649,7 +649,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("move-here-suggestions-recovered-\(captureSuffix)")
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    dismissMoveSearchKeyboardIfNeeded()
+    dismissNativeSearchKeyboardIfNeeded()
 
     let cancel = app.navigationBars["Move something here"].buttons["Cancel"].firstMatch
     XCTAssertTrue(cancel.waitForExistence(timeout: 5)); XCTAssertTrue(cancel.isHittable)
@@ -2231,7 +2231,8 @@ final class FixtureAuditTests: XCTestCase {
       field.tap(); field.typeText(query)
       let entered = NSPredicate(format: "value == %@", query)
       XCTAssertEqual(observePredicate("add-search-exact-query", predicate: entered, object: field, immediately: true), .completed)
-      app.buttons["Dismiss keyboard"].firstMatch.tap()
+      dismissNativeSearchKeyboardIfNeeded()
+      XCTAssertEqual(field.value as? String, query)
     }
     name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
     waitForExactEnteredText("Tent", in: name)
@@ -3221,6 +3222,52 @@ final class FixtureAuditTests: XCTestCase {
       previous = value
       capture("color-rgb-parent-draft-\(index)")
     }
+  }
+
+  func testSettingsSaveReadsBackFromTheSameCollection() {
+    guard openFixtureURL("audit-settings-readback") else { return }
+    let original = app.buttons["Tools, No color"].firstMatch
+    XCTAssertTrue(original.waitForExistence(timeout: 10)); XCTAssertTrue(original.isHittable)
+    XCTAssertGreaterThanOrEqual(original.frame.minY, app.navigationBars["Tags"].frame.maxY)
+    XCTAssertLessThanOrEqual(original.frame.minY, app.navigationBars["Tags"].frame.maxY + 48)
+    capture("settings-connected-collection-entry")
+    original.tap()
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools")
+    name.tap(); name.typeText(" emergency supplies")
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    app.buttons["Dismiss keyboard"].firstMatch.tap()
+    let save = app.buttons["Save"].firstMatch
+    XCTAssertTrue(save.isHittable); save.tap()
+    XCTAssertTrue(app.staticTexts["Could not save"].firstMatch.waitForExistence(timeout: 10))
+    XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    capture("settings-connected-save-rejected")
+    XCTAssertTrue(save.isEnabled); save.tap()
+    let updated = app.buttons["Tools emergency supplies, No color"].firstMatch
+    XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(original.exists)
+    XCTAssertTrue(updated.isHittable)
+    XCTAssertGreaterThanOrEqual(updated.frame.minY, app.navigationBars["Tags"].frame.maxY)
+    XCTAssertLessThanOrEqual(updated.frame.minY, app.navigationBars["Tags"].frame.maxY + 48)
+    capture("settings-connected-collection-readback")
+    updated.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency supplies")
+    capture("settings-connected-reopened-editor")
+    app.buttons["Back to settings collection"].firstMatch.tap()
+    XCTAssertTrue(updated.waitForExistence(timeout: 10))
+    app.buttons["Add Tag"].firstMatch.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText("Camping")
+    XCTAssertEqual(name.value as? String, "Camping")
+    app.buttons["Dismiss keyboard"].firstMatch.tap(); save.tap()
+    let created = app.buttons["Camping, No color"].firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 10)); created.tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Camping")
+    let archive = app.buttons["Archive"].firstMatch
+    for _ in 0..<6 where !archive.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(archive.isHittable); archive.tap()
+    let confirm = app.alerts["Archive Camping?"].buttons["Archive"].firstMatch
+    XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.tap()
+    XCTAssertTrue(updated.waitForExistence(timeout: 10)); XCTAssertFalse(created.exists)
+    capture("settings-connected-created-tag-archived")
   }
 
   func testSettingsCollectionUsesNativeSearchAndAdd() {

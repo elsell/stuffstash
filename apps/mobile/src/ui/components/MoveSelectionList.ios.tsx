@@ -1,5 +1,6 @@
 import { Button, Host, HStack, Image, List, Section, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import { accessibilityLabel, accessibilityValue, buttonStyle, contentShape, shapes, disabled, font, foregroundStyle, frame, listStyle } from '@expo/ui/swift-ui/modifiers';
+import { useAppearanceAwarePalette } from '../theme/appearance';
 import { spacing } from '../theme/tokens';
 import { useFocusedSheetActions } from './useFocusedSheetActions';
 import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus } from './MoveSelectionList.types';
@@ -7,23 +8,30 @@ import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus
 const symbols = { root: 'tray', location: 'house', container: 'shippingbox', item: 'cube' } as const;
 const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
 
+const readableSelectionWidth = 720;
+
 /** System List owns scrolling, section spacing, separators and row insets. */
 export function MoveSelectionList(props: MoveSelectionListProps) {
-  return <Host style={{ flex: 1 }}>
+  const palette = useAppearanceAwarePalette();
+  const subjectColor = foregroundStyle(palette.text);
+  const contextColor = foregroundStyle(palette.textMuted);
+  const subject = <VStack alignment="leading" spacing={spacing.md}>
+    <VStack alignment="leading" spacing={spacing.xs}>
+      <Text modifiers={[contextColor]}>{props.subjectLabel}</Text>
+      <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
+      <Text modifiers={[contextColor]}>{props.context}</Text>
+    </VStack>
+    <Text modifiers={[contextColor]}>{props.retainedSelection ? 'Selected' : props.title}</Text>
+  </VStack>;
+  return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>
-      <Section title={props.subjectLabel}>
-        <VStack alignment="leading" spacing={spacing.xs}>
-          <Text modifiers={[font({ weight: 'semibold' })]}>{props.subject}</Text>
-          <Text modifiers={[secondary]}>{props.context}</Text>
-        </VStack>
-      </Section>
-      {props.retainedSelection ? <Section title="Selected"><Choice row={props.retainedSelection} /></Section> : null}
-      <Section title={props.title}>
+      {props.retainedSelection ? <Section header={subject}><Choice row={props.retainedSelection} /></Section> : null}
+      <Section title={props.retainedSelection ? props.title : undefined} header={props.retainedSelection ? undefined : subject}>
         {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
         {props.rows.map(row => <Choice key={row.id} row={row} />)}
       </Section>
     </List>
-    </Host>;
+  </Host>;
 }
 function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
   const actions = useFocusedSheetActions({ primaryLabel: row.accessibilityLabel, secondaryLabel: '',

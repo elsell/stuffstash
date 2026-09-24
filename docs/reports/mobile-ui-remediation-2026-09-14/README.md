@@ -24,7 +24,8 @@ remain incomplete.
 
 ## Current follow-up diagnosis and decisions
 
-The release hold remains open for Move's visual acceptance. PR174 consolidates
+PR174 merged as98d29649 and release35954982498 is publishing; TestFlight processing
+and changelog readback remain pending. PR174 consolidates
 M274–M279 plus Settings current-save/readback and Move hierarchy/contrast into one
 release candidate. The combined source passes1,995 mobile checks, TypeScript,
 structural checks and ten fixture-preparation checks. Its product source matches da791006; the additional Add test
@@ -43,7 +44,9 @@ complete names. This closes those scoped defects, not all Settings design findin
 
 Move8e79997c passes all four workflows on both devices in35947975650. Visual review
 found the custom section header too faint. Contrast correctionda791006 is in
-35951755320 on `codex/mobile-move-contrast`; native acceptance remains open.
+35951755320 on `codex/mobile-move-contrast`; all four workflows pass both devices.
+Reviewed phone/tablet selection and creation captures show readable context,
+grouped destinations and reachable actions. The scoped normal-text Move hold is closed.
 
 Detail M280 at a7ea4ac5 passed five of six cases per device in35948366265, including
 resized gallery selection. Photo Retry failed to disappear on phone; contents Retry

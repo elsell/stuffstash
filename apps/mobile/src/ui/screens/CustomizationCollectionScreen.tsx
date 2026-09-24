@@ -1,4 +1,6 @@
 import { NativeCommandButton } from '../components/NativeCommandButton';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { Stack } from 'expo-router';
@@ -6,7 +8,7 @@ import { usePullRefresh } from '../serverState/usePullRefresh';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { useCustomizationReads } from '../serverState/useCustomizationReads';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import type { CustomizationContextQuery } from '../../application/customization/CustomizationContextQuery';
 import type { CustomizationCollectionQuery } from '../../application/customization/CustomizationQueries';
@@ -38,6 +40,9 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
   const feedback = useAppFeedback();
   const colors = useAppearancePalette();
   const settings = useSettingsListStyles();
+  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
+  const ownsViewport = Platform.OS === 'ios';
   const styles = createStyles(colors);
   const requestRef = useRef(0);
   const [context, setContext] = useState<Awaited<ReturnType<CustomizationContextQuery['execute']>>>();
@@ -124,14 +129,26 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
     {body}
   </>;
 
+  const withScrollContent = (body: ReactNode, refreshable = false) => {
+    const scroll = <ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior={ownsViewport ? 'never' : 'automatic'}
+      automaticallyAdjustContentInsets={!ownsViewport}
+      contentContainerStyle={status === 'error' ? [settings.styles.errorContainer, { flexGrow: 1 }] : settings.styles.content}
+      keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled"
+      refreshControl={refreshable ? <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} /> : undefined}
+      style={settings.styles.shell}>{body}</ScrollView>;
+    return withHeader(ownsViewport
+      ? <View style={[settings.styles.shell, { paddingTop: headerHeight, paddingBottom: insets.bottom }]}>{scroll}</View>
+      : scroll);
+  };
+
   if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
-  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withHeader(<SettingsLoadingRow label="Loading settings…" />);
-  if (status === 'loading') return withHeader(<View style={settings.styles.shell}><View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View></View>);
-  if (status === 'error') return withHeader(<ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></ScrollView>);
+  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label="Loading settings…" />);
+  if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View>);
+  if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></>);
   if (status === 'denied') return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
   if (!context) return withHeader(null);
 
-  return withHeader(<ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />} style={settings.styles.shell}>
+  return withScrollContent(<>
     {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value={lifecycle} /></View> : null}
     {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${pendingLifecycle} settings…`} /></View> : null}
     {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>Some settings may be missing</Text><Text style={styles.incompleteText}>Pull to refresh and try loading the complete list.</Text></View> : null}
@@ -141,7 +158,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
         {inherited.length ? <ResourceSection name={`From ${context.tenantName}`} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
         {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? `Only in ${context.inventoryName}` : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
       </>}
-  </ScrollView>);
+  </>, true);
 }
 
 function ResourceSection({ inherited = false, name, onOpen, rows }: { readonly inherited?: boolean; readonly name?: string; readonly onOpen: (row: Row) => void; readonly rows: readonly Row[] }) {

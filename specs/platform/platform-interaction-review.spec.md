@@ -1079,3 +1079,30 @@ change unrelated asset sheets or Android stack presentation. Verify ordinary
 filter choices and the fixed actions in the initial normal-text phone/iPad view;
 retain explicit medium-to-large recovery coverage as a separately configured
 fixture. A larger sheet does not by itself certify hierarchy or accessibility.
+
+
+### Integrated Add destination search observation
+
+Run35941028517 passes15/15 iPad workflows and14/15 iPhone workflows. The remaining
+phone failure occurs after the complete `Audit shed` query is entered: the captured
+state has no keyboard and a reachable New place command, but the fixture requires
+an unconditional Dismiss keyboard tap. Reuse the native-search dismissal helper:
+wait for either keyboard absence or a reachable dismissal action; dismiss only
+when needed; assert the keyboard is absent before continuing. Keep exact query,
+draft retention, creation cancellation, rejection/retry and returned-parent checks.
+This is an observation correction, not evidence of a new application fix. Rerun
+the affected Add/Move selection subset; preserve the other fourteen passing phone
+and all fifteen iPad results without claiming whole-app acceptance.
+
+## Settings save reads the committed draft
+
+Native35945430640 passes the edited-row return geometry on iPhone, but creation
+persists Campin after the native field reported Camping. The retained final
+collection confirms truncated persisted content, not a missing row or refresh.
+Treat this as a data-loss defect. Test the concrete stale Save-handler hypothesis
+before changing text providers: a Save event retained before the final edit must
+submit the latest committed valid draft, and must reject invalid, pending,
+unfocused or unmounted state. Reuse the focused committed-action guard for the
+Settings save command. Do not weaken exact native text/persistence assertions or
+insert typing delays to make this journey pass. This source correction does not
+prove the native cause; the existing readback journey must still pass unchanged.

@@ -44,6 +44,8 @@ on:
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
+          - settings-readback
+          - settings-move-release
           - enum-and-settings
   pull_request:
     paths:
@@ -167,6 +169,19 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsFullNameSurvivesRejectedSaveAndRetry'
               )
               ;;
+            settings-move-release)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCollectionUsesNativeSearchAndAdd'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereRejectedCommandRetainsSelectionAndRetryReturns'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              ) ;;
+            settings-readback)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=("-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection") ;;
             settings-editing)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(

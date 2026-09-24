@@ -1,0 +1,51 @@
+Attributes: Application, 0x1157f9040, pid: 64177, label: 'Stuff Stash'
+Element subtree:
+ →Application, 0x1157f9040, pid: 64177, label: 'Stuff Stash'
+    Window (Main), 0x1157f8f00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1157f8dc0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1157f92c0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1157f9180, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1157f9540, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1157f9cc0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1157fbd40, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1157fa440, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1157f9b80, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1157fa1c0, {{0.0, 0.0}, {402.0, 874.0}}
+                        NavigationBar, 0x1157fa300, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Tags'
+                          StaticText, 0x1157fbc00, {{181.7, 73.7}, {38.7, 20.7}}, label: 'Tags'
+                          Button, 0x1157fa080, {{282.0, 66.0}, {44.0, 36.0}}, label: 'Add Tag'
+                          Button, 0x1157fa580, {{346.0, 66.0}, {36.0, 36.0}}, label: 'Search'
+                        Other, 0x1157fa6c0, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1157fae40, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x1157faa80, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1157fabc0, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1157fa800, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1157fa940, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1157f9680, {{0.0, 116.0}, {402.0, 724.0}}
+                                    ScrollView, 0x1157f97c0, {{0.0, 116.0}, {402.0, 724.0}}
+                                      Other, 0x1157f9a40, {{0.0, 116.0}, {402.0, 160.3}}
+                                        Other, 0x1157f9900, {{0.0, 116.0}, {402.0, 160.3}}
+                                          Other, 0x1157f9400, {{16.0, 140.0}, {370.0, 104.3}}
+                                            Button, 0x1157f8c80, {{16.0, 140.0}, {370.0, 52.0}}, label: 'Campin, No color'
+                                              Other, 0x1157f8a00, {{32.0, 154.0}, {24.0, 24.0}}
+                                            Button, 0x1157f8b40, {{16.0, 192.3}, {370.0, 52.0}}, label: 'Tools emergency supplies, No color'
+                                      Other, 0x1157f8780, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x1157f88c0, {{396.0, 735.0}, {3.0, 74.0}}
+                                      Other, 0x1157f8500, {{28.0, 807.0}, {346.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x1157f8640, {{31.0, 834.0}, {340.0, 3.0}}
+                                      Other, 0x1157f9f40, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                        Other, 0x1157f83c0, {{396.0, 735.0}, {3.0, 74.0}}
+                                      Other, 0x1157f8000, {{28.0, 807.0}, {346.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                        Other, 0x1157f8140, {{31.0, 834.0}, {340.0, 3.0}}
+                        Other, 0x1157fb840, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1157fb980, {{0.0, 0.0}, {402.0, 874.0}}
+    Window, 0x1157fbe80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1157fb480, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1157fb5c0, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x1157f9040, pid: 64177, label: 'Stuff Stash'
+Query chain:
+ →Find: Target Application 'org.stuffstash.mobile'
+  Output: {
+    Application, 0x1157f9e00, pid: 64177, label: 'Stuff Stash'
+  }

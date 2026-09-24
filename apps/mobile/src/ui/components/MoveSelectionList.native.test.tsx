@@ -12,7 +12,7 @@ it('keeps subject, selection and destination context distinct and rejects stale 
   try {
     await render();
     expect(h.allText()).toContain('Tent'); expect(h.allText()).toContain('Current location: Hall');
-    expect(h.allByType('SwiftUISection').map(node => node.props.title)).toEqual(['Moving', 'Destinations']);
+    expect(h.allText()).toContain('Moving'); expect(h.allText()).toContain('Destinations');
     const row = h.byType('SwiftUIButton')!;
     expect(row.props.modifiers).toContainEqual({ type: 'accessibilityValue', value: 'Selected' });
     const press = row.props.onPress;
@@ -37,5 +37,22 @@ it('keeps recovery inside the native list and retires removed retry actions', as
     const press = retry!.props.onPress;
     await render('current'); await h.run(press); expect(calls).toEqual(['current']);
     await render(); await h.run(press); expect(calls).toEqual(['current']);
+  } finally { await h.unmount(); }
+});
+
+
+it('keeps filtered-out selection available beside destination context without committing it', async () => {
+  const h = new MobileRenderHarness(); const calls: string[] = [];
+  try {
+    await h.render(<MoveSelectionList subjectLabel="Moving" subject="Tent"
+      context="Current location: Hall" title="Destinations" rows={[]}
+      retainedSelection={{ id: 'shed', label: 'Shed', context: 'Garden', kind: 'location',
+        selected: true, accessibilityLabel: 'Choose destination Shed', onPress: () => calls.push('shed') }} />);
+    expect(h.allText()).toContain('Tent');
+    expect(h.allText()).toContain('Current location: Hall');
+    expect(h.allText()).toContain('Shed');
+    expect(calls).toEqual([]);
+    await h.run(h.byType('SwiftUIButton')!.props.onPress);
+    expect(calls).toEqual(['shed']);
   } finally { await h.unmount(); }
 });
