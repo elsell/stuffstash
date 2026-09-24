@@ -108,7 +108,8 @@ Retained inventory collection: baseline36045543667 confirmed the iPhone final ta
 behind persistent controls. Automatic insets fix it: candidatebe7d0f9a passes
 unchanged native36048916536 on phone/iPad. Reviewed full-screen entry/final captures
 confirm heading and final-tag clearance; source checks and critic review pass.
-PR191 holds the correction for release. Root invitation acceptance is outside tabs
+PR191 merged2a447c2b after final CI36051578009 passedfb3a4901. Release36052329679
+is running; `/tmp/inventory-clearance-release-result.json` records its terminal result. Root invitation acceptance is outside tabs
 and is not implicated by this finding.
 [Bounded diagnosis](evidence/inventory-collection-clearance.txt).
 
