@@ -112,3 +112,13 @@ for route, component in {
     (routes / route).write_text(
         f"export {{ {component} as default }} from '../../../../native-audit/FixtureApplication';\n"
     )
+
+# Representative real destination screens under both production tab stacks.
+for route, component in {
+    "assets/[assetId]/index": "AssetEditJourneyDetailFixture",
+    "settings/inventory/tags/[resourceId]": "CustomizationEditorFixture",
+}.items():
+    target = routes / "audit-tabs/(home,search)" / f"{route}.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
+    target.write_text(f"export {{ {component} as default }} from '{source}';\n")

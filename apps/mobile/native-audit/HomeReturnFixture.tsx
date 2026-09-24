@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Button, Text } from 'react-native';
+import { router, type Href } from 'expo-router';
 import { AssetCheckoutCommand } from '../src/application/assets/AssetCheckoutCommand';
 import { HomeDashboardQuery } from '../src/application/home/HomeDashboardQuery';
 import type { HomeDashboardSnapshot } from '../src/application/home/InventorySummaryRepository';
@@ -27,7 +28,8 @@ export function HomeHeaderFixture() { return <HomeReturnFixture headerAudit />; 
 export function HomeTabShellFixture() { return <HomeReturnFixture headerAudit diagnostics={false} />; }
 export function TabShellBrowsePlaceholder() {
   const palette = useAppearancePalette();
-  return <Text style={{ margin: 24, color: palette.text }}>Tab shell Browse placeholder</Text>;
+  return <><Text style={{ margin: 24, color: palette.text }}>Tab shell Browse placeholder</Text>
+    <Button title="Open Browse asset" onPress={() => router.push('/audit-tabs/(search)/assets/audit-edit-item' as Href)} /></>;
 }
 
 // Observe the production header's actual router destinations without replacing

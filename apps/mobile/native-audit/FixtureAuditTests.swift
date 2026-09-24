@@ -2771,6 +2771,49 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-return")
   }
 
+  func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
+    guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
+    let move = app.buttons["Move"].firstMatch
+    XCTAssertTrue(move.waitForExistence(timeout: 10))
+    func tab(_ name: String) -> XCUIElement {
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        let strips = app.otherElements.containing(.button, identifier: "Home")
+          .containing(.button, identifier: "Browse").allElementsBoundByIndex
+        let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
+        XCTAssertNotNil(strip)
+        return strip?.buttons[name].firstMatch ?? app.buttons[name].firstMatch
+      }
+      return app.tabBars.firstMatch.buttons[name].firstMatch
+    }
+    XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    capture("persistent-tabs-home-detail")
+    move.tap()
+    let cancel = app.buttons["Cancel"].firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.tap()
+    XCTAssertTrue(cancel.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(move.isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    tab("Browse").tap()
+    let browse = app.staticTexts["Tab shell Browse placeholder"].firstMatch
+    XCTAssertTrue(browse.waitForExistence(timeout: 10))
+    app.buttons["Open Browse asset"].firstMatch.tap()
+    XCTAssertTrue(move.waitForExistence(timeout: 10))
+    tab("Home").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
+    tab("Browse").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
+    capture("persistent-tabs-browse-detail-return")
+    app.navigationBars.buttons["Back"].firstMatch.tap()
+    XCTAssertTrue(browse.waitForExistence(timeout: 10), "Browse must retain its own destination stack")
+    guard openFixtureURL("audit-tabs/(home)/settings/inventory/tags/tools") else { return }
+    let name = app.textFields["Name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText(" emergency")
+    XCTAssertEqual(name.value as? String, "Tools emergency")
+    let dismiss = app.buttons["Dismiss keyboard"].firstMatch
+    XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+    XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
+    XCTAssertTrue(browse.waitForExistence(timeout: 10)); tab("Home").tap()
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency")
+    capture("persistent-tabs-settings-draft-return")
+  }
+
   func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {
     let entry = app.buttons["Audit Home in tabs"].firstMatch
     for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }

@@ -16,6 +16,7 @@ on:
           - text-entry
           - text-entry-no-provider
           - add-draft
+          - persistent-tabs
           - home-header
           - browse-journey
           - browse-filter-journey
@@ -129,6 +130,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsEditorNativeArchiveConfirmsBeforeReturning'
               )
               ;;
+            persistent-tabs)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+              ) ;;
             move-selection-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
