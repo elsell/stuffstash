@@ -108,7 +108,7 @@ describe('Home interactions through mounted components', () => {
     expect(h.allByType('Text').some(node => node.children.includes('Checked out') && node.props.accessibilityRole === 'header')).toBe(true);
     await h.press(h.byLabel('View all recently changed assets'));
     await h.press(h.byLabel('View all checked-out assets'));
-    expect(dispatchedActions()).toEqual([{ type: 'navigate', href: { pathname: '/search', params: { surface: 'list', scope: 'all', query: '', tagId: '', lifecycleState: 'active', checkoutState: 'any', sort: 'updated_desc' } } }, { type: 'navigate', href: { pathname: '/search', params: { checkoutState: 'checked_out' } } }]);
+    expect(dispatchedActions()).toEqual([{ type: 'navigate', href: { pathname: '/search', params: { surface: 'list', scope: 'all', query: '', tagId: '', lifecycleState: 'active', checkoutState: 'any', sort: 'updated_desc' } } }, { type: 'navigate', href: { pathname: '/search', params: { surface: 'list', scope: 'all', query: '', tagId: '', lifecycleState: 'active', checkoutState: 'checked_out', sort: 'updated_desc' } } }]);
   });
   it('omits the checked-out section when empty', async () => {
     repository.load = async () => snapshot([]); await render();

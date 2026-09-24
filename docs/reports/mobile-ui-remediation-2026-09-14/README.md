@@ -51,7 +51,12 @@ Home28, route6 and mounted Browse13 tests pass. TypeScript/structural checks pas
 critic found no source blocker. Native connected acceptance remains required:
 start with refined Browse, return Home, use See all, open an asset and return;
 verify selected tab, criteria, scroll clearance and ordinary tab context retention.
-Include this in the next meaningful batch, not an isolated release.
+Checked out now uses the same explicit reset contract, differing only in availability.
+Home28 and shared fixture3 tests pass; fixture preparation11 tests pass. Focused
+`home-collections` acceptance uses production tab paths and shared real screens,
+with no competing root Search route or placeholder. Critic's root-header and
+stale-state observation findings were corrected. Native execution remains pending.
+Include these in the next meaningful batch, not isolated releases.
 
 ## Separate unresolved decisions
 

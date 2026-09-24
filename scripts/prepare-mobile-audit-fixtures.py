@@ -127,3 +127,23 @@ for route, component in {
     target.parent.mkdir(parents=True, exist_ok=True)
     source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
     target.write_text(f"export {{ {component} as default }} from '{source}';\n")
+
+# Exercise unmodified Home hrefs against their real tab ownership, without root
+# fixture routes that would intercept /search or /assets/:id.
+if os.environ.get("AUDIT_TEST_CASE") == "home-collections":
+    shutil.rmtree(routes / "audit-tabs")
+    (routes / "search.tsx").unlink()
+    (routes / "assets/[assetId]/index.tsx").unlink()
+    for layout in ("(tabs)/_layout.tsx", "(tabs)/(home)/_layout.tsx", "(tabs)/(search)/_layout.tsx"):
+        target = routes / layout
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(backup / layout, target)
+    for route, component in {
+        "(tabs)/(home)/index.tsx": "BrowseFilterJourneyHome",
+        "(tabs)/(search)/search.tsx": "BrowseFilterJourneySearch",
+        "(tabs)/(home,search)/assets/[assetId]/index.tsx": "BrowseFilterJourneyDetail",
+    }.items():
+        target = routes / route
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = os.path.relpath(root / "apps/mobile/native-audit/FixtureApplication", target.parent)
+        target.write_text(f"export {{ {component} as default }} from '{source}';\n")

@@ -1,7 +1,7 @@
 import { SettingsReadbackProvider } from './SettingsReadbackFixture';
 export { SettingsReadbackFixture } from './SettingsReadbackFixture';
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
-export { TabExpirationFiltersFixture, BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
+export { BrowseFilterJourneyHome, TabExpirationFiltersFixture, BrowseFilterJourneySearch, BrowseFilterJourneyFilters, BrowseFilterJourneyExpiration, BrowseFilterJourneyDetail } from './BrowseFilterJourneyFixture';
 
 export { default as AddDestinationRoute } from '../src/ui/screens/AddDestinationRouteScreen';
 import { AddDestinationTaskProvider } from '../src/ui/navigation/AddDestinationTask';
@@ -133,6 +133,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="home-return-details" options={{ ...sheets.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
       <Stack.Screen name="index" options={{ title: 'Native UI audit' }} />
       <Stack.Screen name="audit-tabs" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="audit-sheet-diagnostic" options={{ presentation: 'formSheet', sheetAllowedDetents: [1], sheetGrabberVisible: true }} />
       <Stack.Screen name="audit-inventory-switcher" options={inventorySwitcherNativeOptions(palette)} />
       <Stack.Screen name="audit-inventory-query" options={{ title: 'Inventory query', presentation: 'formSheet', sheetAllowedDetents: [1] }} />

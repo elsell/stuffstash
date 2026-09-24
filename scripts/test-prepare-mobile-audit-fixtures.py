@@ -31,6 +31,16 @@ class FixtureRouteIsolationTests(unittest.TestCase):
                "AUDIT_SUITE": "fixtures", "AUDIT_TEST_CASE": "all", **settings}
         return subprocess.run(["python3", str(self.script)], env=env, capture_output=True, text=True)
 
+    def test_home_collections_use_production_tab_paths_without_competing_search(self):
+        self.assertEqual(self.run_script(AUDIT_TEST_CASE="home-collections").returncode, 0)
+        for layout in self.tab_layouts:
+            self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")
+        self.assertFalse((self.routes / "search.tsx").exists())
+        self.assertFalse((self.routes / "audit-tabs").exists())
+        self.assertFalse((self.routes / "assets/[assetId]/index.tsx").exists())
+        self.assertIn("BrowseFilterJourneyHome", (self.routes / "(tabs)/(home)/index.tsx").read_text())
+        self.assertIn("BrowseFilterJourneySearch", (self.routes / "(tabs)/(search)/search.tsx").read_text())
+
     def test_refuses_nonrunner_or_nonfixture_calls_without_modifying_production(self):
         for settings in [{"GITHUB_ACTIONS": "false"}, {"AUDIT_SUITE": "onboarding"}]:
             self.assertNotEqual(self.run_script(**settings).returncode, 0)

@@ -194,13 +194,7 @@ function DashboardHeader({
         <Pressable
           accessibilityLabel="View all recently changed assets"
           accessibilityRole="button"
-          onPress={() => router.navigate({
-            pathname: '/search',
-            params: {
-              surface: 'list', scope: 'all', query: '', tagId: '',
-              lifecycleState: 'active', checkoutState: 'any', sort: 'updated_desc'
-            }
-          })}
+          onPress={() => router.navigate(homeCollectionHref('recent'))}
           style={styles.sectionActionButton}
         >
           <Text style={styles.sectionAction}>See all</Text>
@@ -230,7 +224,7 @@ function DashboardHeader({
             <Pressable
               accessibilityLabel="View all checked-out assets"
               accessibilityRole="button"
-              onPress={() => router.navigate({ pathname: '/search', params: { checkoutState: 'checked_out' } })}
+              onPress={() => router.navigate(homeCollectionHref('checked_out'))}
               style={styles.sectionActionButton}
             >
               <Text style={styles.sectionAction}>View all</Text>
@@ -260,4 +254,15 @@ function DashboardHeader({
 
     </View>
   );
+}
+
+function homeCollectionHref(collection: 'recent' | 'checked_out') {
+  return {
+    pathname: '/search',
+    params: {
+      surface: 'list', scope: 'all', query: '', tagId: '',
+      lifecycleState: 'active', checkoutState: collection === 'checked_out' ? 'checked_out' : 'any',
+      sort: 'updated_desc'
+    }
+  } as const;
 }

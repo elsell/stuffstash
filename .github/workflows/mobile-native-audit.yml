@@ -18,6 +18,7 @@ on:
           - add-draft
           - persistent-tabs
           - persistent-tab-return
+          - home-collections
           - tab-content-clearance
           - home-header
           - browse-journey
@@ -235,6 +236,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveHereSuggestionsRecoverAtNormalTextSize'
+              )
+              ;;
+            home-collections)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs'
               )
               ;;
             tab-content-clearance)

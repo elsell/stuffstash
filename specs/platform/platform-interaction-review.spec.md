@@ -1392,3 +1392,13 @@ for visual/lifecycle changes and must link the dispatched run and inspected
 artifacts. The full sweep remains available through the explicit all selection.
 Resolve a dispatched run by event=workflow_dispatch and exact head SHA, never the
 most recent workflow result alone; PR and dispatched runs can share a branch.
+
+## Home collection shortcut acceptance
+
+Use a focused Home/Browse fixture with one shared inventory dataset and the actual
+production `(tabs)` route paths. A root `/search` test route or a Browse placeholder
+cannot prove cross-tab shortcut behavior. Verify a previously refined Map becomes
+unfiltered recent List through Home See all; open and return from a real detail;
+verify Home Checked out replaces unrelated refinements; verify ordinary tab return
+preserves the resulting Browse context. Keep historical tab fixtures unchanged for
+their existing scenarios. Run phone/iPad acceptance with the next frozen batch.
