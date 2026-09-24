@@ -2771,20 +2771,21 @@ final class FixtureAuditTests: XCTestCase {
     capture("browse-journey-list-return")
   }
 
+  private func tab(_ name: String) -> XCUIElement {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      let strips = app.otherElements.containing(.button, identifier: "Home")
+        .containing(.button, identifier: "Browse").allElementsBoundByIndex
+      let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
+      return strip?.buttons[name].firstMatch ?? app.buttons[name].firstMatch
+    }
+    return app.tabBars.firstMatch.buttons[name].firstMatch
+  }
+
+
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
     guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
     let move = app.buttons["Move"].firstMatch
     XCTAssertTrue(move.waitForExistence(timeout: 10))
-    func tab(_ name: String) -> XCUIElement {
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        let strips = app.otherElements.containing(.button, identifier: "Home")
-          .containing(.button, identifier: "Browse").allElementsBoundByIndex
-        let strip = strips.filter { $0.frame.height > 0 }.min { $0.frame.height < $1.frame.height }
-        XCTAssertNotNil(strip)
-        return strip?.buttons[name].firstMatch ?? app.buttons[name].firstMatch
-      }
-      return app.tabBars.firstMatch.buttons[name].firstMatch
-    }
     XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
     capture("persistent-tabs-home-detail")
     move.tap()
@@ -2814,7 +2815,33 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(tab("Browse").isHittable); tab("Browse").tap()
     XCTAssertTrue(browse.waitForExistence(timeout: 10)); tab("Home").tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); XCTAssertEqual(name.value as? String, "Tools emergency")
+    let tabsReturned = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      self.tab("Home").isHittable && self.tab("Browse").isHittable
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [tabsReturned], timeout: 10), .completed,
+      "Both tabs must remain reachable after returning to the draft editor")
     capture("persistent-tabs-settings-draft-return")
+  }
+
+  func testExpirationFiltersReturnToTheirOwningTab() {
+    let scope = "tenantId=filter-tenant&inventoryId=filter-inventory&mode=expired"
+    guard openFixtureURL("audit-tabs/(home)/expiration?\(scope)&query=Kitchen") else { return }
+    let kitchen = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Kitchen item")).firstMatch
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10))
+    guard openFixtureURL("audit-tabs/(search)/expiration?\(scope)&query=Camping") else { return }
+    let camping = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item 01")).firstMatch
+    XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    let filters = app.buttons["Filter expiration items"].firstMatch
+    XCTAssertTrue(filters.isHittable); filters.tap()
+    let apply = app.buttons["Apply expiration filters"].firstMatch
+    XCTAssertTrue(apply.waitForExistence(timeout: 10)); XCTAssertTrue(apply.isHittable); apply.tap()
+    XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+    XCTAssertTrue(camping.waitForExistence(timeout: 10))
+    XCTAssertTrue(tab("Home").isHittable); tab("Home").tap()
+    XCTAssertTrue(kitchen.waitForExistence(timeout: 10)); XCTAssertFalse(camping.exists)
+    tab("Browse").tap()
+    XCTAssertTrue(camping.waitForExistence(timeout: 10)); XCTAssertFalse(kitchen.exists)
+    capture("expiration-filters-browse-origin-retained")
   }
 
   func testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn() {

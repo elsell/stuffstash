@@ -61,3 +61,20 @@ bounds y65–103 overlapped the transparent navigation bar y62–116. The fixtur
 must use automatic scroll insets like production Browse; assert full header
 clearance before activation. Home/detail tab visibility and modal cancel passed
 before this failure. Do not claim Browse history/draft acceptance until rerun.
+
+
+Native35952669886 passes the Home header and tab-retention workflows on iPhone and
+iPad at5760f037. This establishes the tested detail/Move cancel, independent Browse
+Back history and Settings draft retention. Expiration Filters still needs a native
+shared-route roundtrip: retain a different query in each tab, apply filters from
+Browse, then switch to Home and back. The applied route must remain in Browse and
+must not overwrite Home's query. The fixture may supply inventory/filter choices;
+use production expiration screen, filter screen and return-path policy with only
+the fixture route namespace substituted. This does not verify production service
+loading or replace its existing boundary tests.
+
+The final phone Settings-return capture in35952669886 lacks a visible tab bar,
+despite earlier tab activation passing. The final draft assertion can settle
+before navigation presentation does. Explicitly wait for both native tab controls
+to be hittable after returning to the editor, then capture. A failure is a
+navigation defect; an earlier successful tap does not establish final visibility.

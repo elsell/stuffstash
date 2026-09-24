@@ -70,6 +70,7 @@ exports = {
     "audit-browse-journey": "BrowseJourneyFixture",
     "search": "BrowseFilterJourneySearch",
     "browse-filters": "BrowseFilterJourneyFilters",
+    "expiration-filters": "TabExpirationFiltersFixture",
     "expiration": "BrowseFilterJourneyExpiration",
     "assets/[assetId]/index": "BrowseFilterJourneyDetail",
     "audit-android-header-composition": "AndroidHeaderCompositionFixture",
@@ -117,6 +118,7 @@ for route, component in {
 for route, component in {
     "assets/[assetId]/index": "AssetEditJourneyDetailFixture",
     "settings/inventory/tags/[resourceId]": "CustomizationEditorFixture",
+    "expiration": "BrowseFilterJourneyExpiration",
 }.items():
     target = routes / "audit-tabs/(home,search)" / f"{route}.tsx"
     target.parent.mkdir(parents=True, exist_ok=True)

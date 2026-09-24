@@ -135,6 +135,7 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeTabShellPreservesActionsAndAccessoryAfterTabReturn'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPersistentTabsRetainDestinationsDraftsAndModalReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationFiltersReturnToTheirOwningTab'
               ) ;;
             move-selection-workflows)
               test "$AUDIT_SUITE" = fixtures || exit 1
