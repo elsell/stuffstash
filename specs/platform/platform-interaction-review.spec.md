@@ -1380,3 +1380,15 @@ Native bottom-clearance fixtures must contain the metadata used by their locator
 and enough real contents rows to require scrolling on iPad. An absent synthetic
 label is a fixture failure, not proof of product clipping. Detail uses a populated
 container with a final Updated label; verify fixture data before dispatch.
+
+### Explicit native audit dispatch
+
+Native simulator workflows are explicitly dispatched for the affected journeys
+and frozen revision. Pull-request updates must not automatically start the full
+onboarding/fixture matrix: this duplicated focused runs, replayed historical
+diagnostics and delayed release acceptance on limited macOS capacity. Ordinary
+CI continues source, fixture and type checks; native acceptance remains required
+for visual/lifecycle changes and must link the dispatched run and inspected
+artifacts. The full sweep remains available through the explicit all selection.
+Resolve a dispatched run by event=workflow_dispatch and exact head SHA, never the
+most recent workflow result alone; PR and dispatched runs can share a branch.

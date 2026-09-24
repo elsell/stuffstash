@@ -54,13 +54,6 @@ on:
           - settings-tab-return
           - settings-move-release
           - enum-and-settings
-  pull_request:
-    paths:
-      - '.github/workflows/mobile-native-audit.yml'
-      - 'apps/mobile/native-audit/**'
-      - 'scripts/prepare-ios-audit-target.rb'
-      - 'scripts/prepare-mobile-audit-fixtures.py'
-      - 'scripts/test-prepare-mobile-audit-fixtures.py'
 
 permissions:
   contents: read
