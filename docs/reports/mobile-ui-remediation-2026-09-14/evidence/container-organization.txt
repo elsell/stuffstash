@@ -47,3 +47,22 @@ connected-browse-filter-detail-return preserves the scrolled results and aligns
 neighboring titles. These isolated fixtures omit persistent tabs/accessory and
 therefore cannot accept the user's bottom-clearance report. PR182's real-tab
 footer test remains the relevant gate.
+
+Terminal run35994194799 atb891a13e:6/7 pass on phone and iPad; all existing
+hierarchy/command checks pass, including corrected Move-items target. New footer
+check is INVALID evidence: audit-edit-item had updatedAtLabel='', so its locator
+never existed. No overlap conclusion from that failure. Corrected fixture28bc9b3c
+uses a dedicated populated container with12 children and a real, unique final
+Updated label. Critic caught children inheriting that label; fixed with distinct
+child metadata and red/green coverage.6 fixture tests,10 preparation tests,
+TypeScript and structural checks pass. Narrow run35999237093 verifies only
+corrected detail and populated Sharing clearance; sleeping watcher owns outcome.
+Frozen phone35987800972 finished15/16; only old32pt Move-items target failed.
+Reviewed Place identity and Browse alignment captures pass; Add/Move recovery
+passes on phone. Frozen iPad Add readiness remains unverified (no product rewrite).
+
+Reviewed named iPhone captures from b891a13e: detail-command-move-items-here-normal-size
+shows identity/availability together, short Contents heading and both bounded
+contents commands without clipping. detail-empty-photo-hierarchy keeps the item
+identity primary and uses a compact No photos row. Final-state for the command
+journey is the audit launcher, so only named intermediate captures support review.

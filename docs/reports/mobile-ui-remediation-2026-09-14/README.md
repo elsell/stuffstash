@@ -48,14 +48,16 @@ iPad passed14/16: reviewed captures confirm Place identity below the header and
 aligned Browse titles. Its32pt Move-items command fails the44pt gate; PR182
 addresses that control. Add destination stopped at entry readiness although the
 final capture shows its correctly labeled field; the recovery workflow remains
-unverified. Phone result remains pending.
+unverified. Phone passed15/16, failing only the same32pt Move-items command; reviewed Place
+identity and Browse alignment captures pass.
 
 PR182 groups availability with identity and places bounded contents commands under
 a short heading.80 focused tests, TypeScript, structural checks and review pass;
 Android capture confirms both commands after rejecting a recycled-row candidate
-that hid them. iOS run35994194799 atb891a13e verifies hierarchy and real-tab footer
-clearance. Later test-only8499d7c2 adds populated Sharing inside production tabs;
-it has not run natively. Sharing/list missing-inset source risks are not confirmed
+that hid them. iOS run35994194799 passed6/7 on both: hierarchy and commands pass, but the new
+footer locator had no fixture metadata and could not test clearance. Corrected
+populated detail and Sharing run35999237093 at28bc9b3c is pending; no overlap
+acceptance is claimed. Sharing/list missing-inset source risks are not confirmed
 runtime defects. [Current diagnosis and evidence](evidence/container-organization.txt).
 
 Broad refresh35980094051 atc7c44b45: phone completed121 tests with14 failures.
