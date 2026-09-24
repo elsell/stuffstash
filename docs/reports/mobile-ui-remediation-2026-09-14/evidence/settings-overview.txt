@@ -27,3 +27,13 @@ production build. Session mutations and inventory leaf actions are not exercised
 iOS correction candidate b81f73ef is running as36023217961. Baseline merge5e539aa9
 has an identical tree to b81f73ef. Draft PR186 contains this and accepted Home
 header spacing; both remain unreleased pending native/CI review.
+
+Corrected native36023217961 at b81f73ef passes all three cases on iPhone and
+iPad: connected overview/footer/tab return, Account recovery and Connection
+recovery. Reviewed final captures show readable root labels, consistent Appearance
+insets, reduced scope repetition and Diagnostics content clear of persistent
+navigation and voice controls after tab return. Artifacts10819103385 (phone) and
+10819413693 (iPad). Product/native source remains identical after baseline merge
+and evidence-only commits. Earlier Account transition captures omit the microphone
+glyph in both baseline and candidate; final tab-return captures show it again.
+Do not infer a persistent regression without a settled-navigation observation.

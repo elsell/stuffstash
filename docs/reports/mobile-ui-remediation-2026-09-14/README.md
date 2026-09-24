@@ -75,8 +75,9 @@ Appearance flush with the group edge, and repetitive scope subtitles. Candidate
 uses descriptive subtitles, shared inset rows and scope context once.83 focused
 tests, TypeScript,12 preparation tests, structural checks and critic review pass.
 Native36019282915 reached Diagnostics but stopped on duplicate selectable-text
-AX nodes; the locator is corrected without relaxing geometry checks. Recheck the
-whole layout and tab return, plus changed Account/Connection command wrappers.
+AX nodes; the locator is corrected without relaxing geometry checks. Corrected36023217961 passes all three cases on each device. Reviewed final
+captures confirm hierarchy, footer clearance and tab return; Account/Connection
+recovery checks also pass. PR186 is accepted for release, not yet delivered.
 [Diagnosis and evidence](evidence/settings-overview.txt).
 
 ## Separate unresolved decisions
