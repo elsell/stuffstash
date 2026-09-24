@@ -55,8 +55,11 @@ Checked out now uses the same explicit reset contract, differing only in availab
 Home28 and shared fixture3 tests pass; fixture preparation11 tests pass. Focused
 `home-collections` acceptance uses production tab paths and shared real screens,
 with no competing root Search route or placeholder. Critic's root-header and
-stale-state observation findings were corrected. Native36013639520 stopped in setup on both devices before the workflow: the focused fixture correctly opened Home, but shared setup expected the legacy audit menu. Retained phone capture confirms Home/tabs; setup now matches this entry. All workflow assertions remain unchanged; corrected native execution remains pending. CI36015199509 at9ad2ec8f passed all six jobs.
-Include these in the next meaningful batch, not isolated releases.
+stale-state observation findings were corrected. Native36013639520 stopped in fixture setup; corrected36017420318 passes on both
+devices at3f7485e3. Reviewed captures show the correct List/tab,25 recent items and6
+checked-out items with only the intended filter. CI36017423895 passes the same
+revision. PR184 merged8bdcc289; release36020469905 is running. TestFlight delivery
+is not yet verified. [Evidence](evidence/home-collections.txt).
 
 Separate follow-up: Home's inventory switcher now uses available header space up
 to320pt instead of always capping at180pt, avoiding unnecessary truncation when
