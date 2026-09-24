@@ -58,6 +58,12 @@ with no competing root Search route or placeholder. Critic's root-header and
 stale-state observation findings were corrected. Native36013639520 stopped in setup on both devices before the workflow: the focused fixture correctly opened Home, but shared setup expected the legacy audit menu. Retained phone capture confirms Home/tabs; setup now matches this entry. All workflow assertions remain unchanged; corrected native execution remains pending. CI36015199509 at9ad2ec8f passed all six jobs.
 Include these in the next meaningful batch, not isolated releases.
 
+Separate follow-up: Home's inventory switcher now uses available header space up
+to320pt instead of always capping at180pt, avoiding unnecessary truncation when
+only Profile is visible. Viewer regression failed before the change; six width
+checks, structural checks and critic review pass. Native one-action/three-action
+geometry remains unverified. This is outside frozen PR184 and is not released.
+
 ## Separate unresolved decisions
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
