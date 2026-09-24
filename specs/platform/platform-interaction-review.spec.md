@@ -1079,3 +1079,17 @@ change unrelated asset sheets or Android stack presentation. Verify ordinary
 filter choices and the fixed actions in the initial normal-text phone/iPad view;
 retain explicit medium-to-large recovery coverage as a separately configured
 fixture. A larger sheet does not by itself certify hierarchy or accessibility.
+
+
+### Integrated Add destination search observation
+
+Run35941028517 passes15/15 iPad workflows and14/15 iPhone workflows. The remaining
+phone failure occurs after the complete `Audit shed` query is entered: the captured
+state has no keyboard and a reachable New place command, but the fixture requires
+an unconditional Dismiss keyboard tap. Reuse the native-search dismissal helper:
+wait for either keyboard absence or a reachable dismissal action; dismiss only
+when needed; assert the keyboard is absent before continuing. Keep exact query,
+draft retention, creation cancellation, rejection/retry and returned-parent checks.
+This is an observation correction, not evidence of a new application fix. Rerun
+the affected Add/Move selection subset; preserve the other fourteen passing phone
+and all fifteen iPad results without claiming whole-app acceptance.

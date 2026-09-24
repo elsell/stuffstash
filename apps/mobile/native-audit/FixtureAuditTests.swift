@@ -572,7 +572,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(candidate.value as? String, "Selected")
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    dismissMoveSearchKeyboardIfNeeded()
+    dismissNativeSearchKeyboardIfNeeded()
     XCTAssertTrue(candidate.waitForExistence(timeout: 5))
     XCTAssertEqual(candidate.value as? String, "Selected")
 
@@ -610,10 +610,10 @@ final class FixtureAuditTests: XCTestCase {
     verifyMoveHereSuggestionsRecovery(captureSuffix: "accessibility-size")
   }
 
-  private func dismissMoveSearchKeyboardIfNeeded() {
+  private func dismissNativeSearchKeyboardIfNeeded() {
     let keyboard = app.keyboards.firstMatch
     let dismiss = app.buttons["Dismiss keyboard"].firstMatch
-    // Clearing native search can dismiss the keyboard before this snapshot settles.
+    // Native search may already have ended keyboard editing when this snapshot settles.
     let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       !keyboard.exists || dismiss.isHittable
     }, object: nil)
@@ -649,7 +649,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("move-here-suggestions-recovered-\(captureSuffix)")
     let clear = query.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable); clear.tap()
-    dismissMoveSearchKeyboardIfNeeded()
+    dismissNativeSearchKeyboardIfNeeded()
 
     let cancel = app.navigationBars["Move something here"].buttons["Cancel"].firstMatch
     XCTAssertTrue(cancel.waitForExistence(timeout: 5)); XCTAssertTrue(cancel.isHittable)
@@ -2189,7 +2189,8 @@ final class FixtureAuditTests: XCTestCase {
       field.tap(); field.typeText(query)
       let entered = NSPredicate(format: "value == %@", query)
       XCTAssertEqual(observePredicate("add-search-exact-query", predicate: entered, object: field, immediately: true), .completed)
-      app.buttons["Dismiss keyboard"].firstMatch.tap()
+      dismissNativeSearchKeyboardIfNeeded()
+      XCTAssertEqual(field.value as? String, query)
     }
     name.tap(); waitForKeyboard(keyLabel: "T"); name.typeText("Tent")
     waitForExactEnteredText("Tent", in: name)

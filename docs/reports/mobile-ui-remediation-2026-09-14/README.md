@@ -47,18 +47,22 @@ is complete. These source checks do not establish integrated native acceptance.
 The integrated release subset adds three representative Add destination, Add tag
 and Move creation workflows to the twelve follow-up workflows for shared search
 and return behavior; it retains all existing assertions. Native35941028517 at
-b605b6e9 is running this integrated subset. PR174 stays draft until it passes and
-its visual review is complete.
+b605b6e9 passes15/15 iPad and14/15 phone workflows. The only phone failure is an
+unconditional Dismiss keyboard tap after search has already closed the keyboard;
+[the captured state](evidence/phone-integrated-add-keyboard-359410.png) retains the
+complete query and New place command. Reuse the existing state-aware dismissal
+helper, preserve all task assertions, and rerun the affected Add/Move subset.
+PR174 stays draft until that verification and visual review pass.
 
-Connected Settings readback is a subsequent batch. Its fixture now uses production
-cache invalidation;35937082802 confirms the updated row exists but is behind the
-native header on both devices. Candidate35bba93c preserves one ScrollView across
-loading/ready/retry instead of replacing its root. Source checks pass; native
-35939654846 is verifying it. This is a candidate correction, not a proven fix.
-This does not block the selection release or expand the frozen follow-up.
-PR176 stacks Settings readback and clearer action grouping with native primary
-emphasis for Move completion. Its1,993 integrated tests and source checks pass;
-native verification is conditional on the existing Settings and follow-up runs.
+Connected Settings readback is a subsequent batch. Its fixture uses production
+cache invalidation. Run35939654846 disproves the stable-scroll-root candidate:
+the phone's updated row still starts behind the header. PR176 atcd775397 reserves
+the measured iOS header and bottom safe area around the collection viewport;
+Android keeps its hierarchy. The122 affected checks, TypeScript, structural checks
+and critic review pass. Native entry/return/search verification remains open.
+PR176 also gives Move completion native primary emphasis. Its six-workflow native
+run can proceed independently of the Add observation correction: the integrated
+run found no product-source failure. Keep both release batches scoped separately.
 
 ## Separate unresolved decisions
 
