@@ -23,6 +23,7 @@ on:
           - filter-sharing-workflows
           - followup-release
           - filters
+          - settings-commands
           - release-corrections
           - menu-ownership
           - archive-notice
@@ -400,6 +401,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            settings-commands)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCommandsRecoverReminderDraft'
               )
               ;;
             filters)

@@ -33,6 +33,7 @@ export { InventorySharingFixture } from './InventorySharingFixture';
 export { FooterAppearanceFixture } from './FooterAppearanceFixture';
 export { MoveDestinationFixture } from './MoveDestinationFixture';
 export { MoveHereRecoveryFixture } from './MoveHereRecoveryFixture';
+export { SettingsCommandFixture } from './SettingsCommandFixture';
 export { CommandHeightFixture } from './CommandHeightFixture';
 export { AssetRegionRecoveryFixture, AssetContentsSearchFixture, AssetDetailCommandsFixture } from './AssetRegionRecoveryFixture';
 export { AssetEditRecoveryFixture, AssetEditTagsFixture } from './AssetEditRecoveryFixture';
@@ -162,6 +163,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
+      <Stack.Screen name="audit-settings-commands" options={{ title: 'Reminder recovery' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-destination" options={sheets.move} />
       <Stack.Screen name="audit-move-here-recovery" options={sheets.moveHere} />

@@ -34,3 +34,15 @@ the longest visible device-settings label, in addition to the running iOS filter
 check. Source review alone does not establish wrapping, touch or assistive behavior.
 The installed Android fixture has no notification-settings route; no notification
 runtime acceptance was inferred from an unavailable route or a different screen.
+
+Android recovery acceptance: production ExpirationReminderEditor in the isolated
+SettingsCommandFixture passed failed-save → Retry (saved Off), then failed Custom
+save → Discard (restored Off). The longer Open device settings button activated
+once. Reviewed /tmp/settings-command-failed-save.png and
+/tmp/settings-command-recovered.png: both recovery commands and the longer label
+are fully visible, bounded and separated at normal text on API 36 Pixel 6.
+Build /tmp/settings-command-composition-build.log succeeded; replay
+/tmp/settings-command-composition-replay.log passed. This closes the Android
+composition gap above. It does not verify real device Settings launch, assistive
+traversal or iOS composition. The new focused settings-commands native case retains
+those same state assertions and capture points for the next iOS verification.

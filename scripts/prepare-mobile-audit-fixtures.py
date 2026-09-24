@@ -55,6 +55,7 @@ exports = {
     "audit-region-recovery": "AssetRegionRecoveryFixture",
     "audit-menu-ownership": "NativeMenuOwnershipFixture",
     "audit-command-height": "CommandHeightFixture",
+    "audit-settings-commands": "SettingsCommandFixture",
     "audit-notice": "NoticePlacementFixture",
     "audit-notice-sheet": "NoticePlacementFixture",
     "audit-provider-editor": "ProviderEditorFixture",

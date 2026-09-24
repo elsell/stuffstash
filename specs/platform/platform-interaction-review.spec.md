@@ -1171,3 +1171,9 @@ retry/discard, device-settings commands and voice profile actions. Verify shared
 source consumers and representative native filter/reminder screens before release.
 NativeCommandButton accepts a separate accessibility label, defaulting to its visible
 label, consistently on iOS, Android and the preview renderer.
+
+Native acceptance for bounded Settings commands includes a runner-only reminder
+recovery fixture using the production editor: the first save fails, Retry commits
+the retained choice, and Discard restores the saved choice. Include the longer
+Open device settings label for layout/activation observation only; a fixture
+activation is not evidence that OS settings opened or push permission changed.

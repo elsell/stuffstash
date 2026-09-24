@@ -3172,6 +3172,31 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testSettingsCommandsRecoverReminderDraft() {
+    guard openFixtureURL("audit-settings-commands") else { return }
+    let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
+    XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+    app.buttons["Off"].tap()
+    let retry = app.buttons["Retry saving reminders"].firstMatch
+    let discard = app.buttons["Discard reminder changes"].firstMatch
+    XCTAssertTrue(retry.waitForExistence(timeout: 5))
+    XCTAssertTrue(retry.isHittable); XCTAssertTrue(discard.isHittable)
+    XCTAssertFalse(retry.frame.intersects(discard.frame))
+    XCTAssertTrue(app.staticTexts["Saved reminders: defaults"].exists)
+    capture("settings-reminder-recovery-pair")
+    retry.tap()
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].waitForExistence(timeout: 5))
+    app.buttons["Fail next save"].tap(); choice.tap(); app.buttons["Custom"].tap()
+    XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.tap()
+    XCTAssertTrue(discard.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Saved reminders: off"].exists)
+    XCTAssertFalse(app.buttons["Before expiration"].exists)
+    let device = app.buttons["Open device settings"].firstMatch
+    XCTAssertTrue(device.isHittable); device.tap()
+    XCTAssertTrue(app.staticTexts["Device settings activations: 1"].waitForExistence(timeout: 5))
+    capture("settings-command-long-label")
+  }
+
   func testReminderModeUsesMenuWithoutNavigation() {
     openSettingsControls()
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch
