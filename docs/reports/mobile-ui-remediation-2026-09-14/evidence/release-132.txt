@@ -1,0 +1,9 @@
+TestFlight0.24.40 (132.1) — verified2026-09-24
+PR191 merged2a447c2b0ff86a7a9e0eb106a2c11cf3f9fcab40.
+Release36052329679 succeeded: validate107810688605, images107813717361,
+iOS build/upload107814803060, Apple notes publication107821799262.
+2026-09-24T20:35:41.8884781Z Verified TestFlight changelog for v0.24.40 (132.1).
+Notes: Keep the last inventory card and its tags reachable above the bottom navigation.
+Native36048916536 atbe7d0f9a passes unchanged iPhone/iPad clearance acceptance;
+full-screen entry/final captures reviewed. Final-head CI36051578009 passesfb3a4901.
+This release closes the retained collection footer defect, not the whole audit.
