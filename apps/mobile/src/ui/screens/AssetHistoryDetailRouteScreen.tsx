@@ -142,7 +142,7 @@ export function AssetHistoryDetailRouteScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} style={styles.screen}>
       <Stack.Screen options={{ title: 'History detail' }} />
       {detail.isRefetchError ? <View style={styles.section}>
         <Text accessibilityRole="alert" style={styles.muted}>Activity could not be refreshed. Previously loaded details are shown.</Text>

@@ -20,10 +20,10 @@ import {
   AssetActivityRecordViewModel,
   AssetActivityView
 } from '../../application/assets/AssetActivityQuery';
-import { groupHistoryRecords, historyFilterMenuGroups, historyLoadError } from './AssetHistoryPresentation';
+import { groupHistoryRecords, historyLoadError } from './AssetHistoryPresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
-import { NativeActionMenu } from '../components/NativeActionMenu';
+import { NativeChoicePicker } from '../components/NativeChoicePicker';
 
 type HistoryState =
   | { readonly status: 'loading' }
@@ -105,6 +105,7 @@ export function AssetHistoryRouteScreen({
       </View> : null}
       {state.status === 'ready' ? (
         <SectionList
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={state.records.length === 0 ? styles.emptyList : styles.list}
           sections={groupHistoryRecords(state.records)}
           keyExtractor={(record) => record.id}
@@ -135,12 +136,11 @@ export function AssetHistoryRouteScreen({
 function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActivityView; readonly onChange: (view: AssetActivityView) => void; readonly styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.filterButton}>
-      <Text style={styles.filterLabel}>Show</Text>
-      <NativeActionMenu
+      <NativeChoicePicker label="Show"
         accessibilityLabel={`Show History, ${value === 'changes' ? 'Changes' : 'All events'}`}
-        groups={historyFilterMenuGroups(value, onChange)}
-        trigger={{ kind: 'label', label: value === 'changes' ? 'Changes' : 'All events' }}
-      />
+        value={value} includeEmptyOption={false}
+        options={[{ value: 'changes', label: 'Changes' }, { value: 'all', label: 'All events' }]}
+        onChange={next => { if (next === 'changes' || next === 'all') onChange(next); }} />
     </View>
   );
 }
@@ -167,7 +167,6 @@ function createStyles(colors: MobileColorPalette) {
     heading: { backgroundColor: colors.surface, borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth, gap: spacing.md, padding: spacing.md },
     assetTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
     filterButton: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 44 },
-    filterLabel: { color: colors.text, fontSize: 16, fontWeight: '600' },
     dateHeader: { backgroundColor: colors.background, color: colors.textMuted, fontSize: 13, fontWeight: '700', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     list: { paddingBottom: spacing.xl },
     emptyList: { flexGrow: 1 },

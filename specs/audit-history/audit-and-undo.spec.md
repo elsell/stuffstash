@@ -391,3 +391,10 @@ Opening an entry shows each field with separately labeled Before and After value
 Absent/blank values read None; an entry with neither value reads Changed without
 inventing a before/after state. Technical details remain a secondary disclosure.
 This is a product hierarchy decision, not an Apple prohibition on inline diffs.
+
+History list and detail scroll containers must use native automatic content inset
+adjustment so final rows/metadata can scroll above persistent tabs and voice
+controls. The list heading remains outside scrolling content and already clears
+the navigation header. The Show value is a short, in-place choice: use the shared
+native choice picker with Changes and All events, not an action-menu trigger that
+can collapse its selected label into an ellipsis. Keep the current value visible.

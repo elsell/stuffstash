@@ -2936,6 +2936,15 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(title.waitForExistence(timeout: 10))
     let mode = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Show History'")).firstMatch
     XCTAssertTrue(mode.waitForExistence(timeout: 10))
+    XCTAssertTrue(mode.isHittable); mode.tap()
+    let allEvents = app.buttons["All events"].firstMatch
+    XCTAssertTrue(allEvents.waitForExistence(timeout: 5)); allEvents.tap()
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS 'Show History, All events'")).firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.navigationBars["History"].exists)
+    capture("history-all-events-choice")
+    mode.tap()
+    let changes = app.buttons["Changes"].firstMatch
+    XCTAssertTrue(changes.waitForExistence(timeout: 5)); changes.tap()
     capture("history-list-entry")
     let headingBelowHeader = title.frame.minY >= app.navigationBars.firstMatch.frame.maxY
     let modeBelowHeader = mode.frame.minY >= app.navigationBars.firstMatch.frame.maxY
@@ -2955,6 +2964,8 @@ final class FixtureAuditTests: XCTestCase {
     capture("history-detail-footer")
     app.navigationBars.firstMatch.buttons.firstMatch.tap()
     XCTAssertTrue(title.waitForExistence(timeout: 10))
+    verifyFooterClearsPersistentChrome(app.buttons["Load older activity"].firstMatch)
+    capture("history-pagination-footer")
     tab("Browse").tap()
     XCTAssertTrue(app.segmentedControls.firstMatch.buttons["List"].waitForExistence(timeout: 10))
     tab("Home").tap()
