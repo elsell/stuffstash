@@ -32,3 +32,15 @@ scrolling root through loading, ready and retry states so native inset ownership
 is stable; do not add a guessed header-height offset or force a navigation-return
 scroll. Keep the native row hittability/header-clearance and full reopen/create/
 archive journey unchanged. This candidate requires native verification.
+
+## Subsequent release batch
+
+Combine this collection correction and clearer settings action grouping with Move
+completion emphasis, based on the integrated filter/detail branch. Preserve its
+current dependency patch and locks; the earlier Settings branch's obsolete sheet
+patch is not part of this batch. The native `settings-move-release` subset exercises
+connected collection Save/reopen/create/archive and the four existing Move/Move
+Here journeys, retaining their search, creation, selection, rejection and retry
+assertions. Review phone/iPad screenshots as well as terminal results. Dispatch
+only after the existing Settings candidate and integrated follow-up have passed;
+do not use this batch to repeat an unchanged failing hypothesis.
