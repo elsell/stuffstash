@@ -36,6 +36,7 @@ on:
           - hierarchy-followup
           - command-emphasis
           - native-patterns-release
+          - native-completion
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
@@ -149,6 +150,12 @@ jobs:
             persistent-tabs)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=("${persistent_tab_test_args[@]}") ;;
+            native-completion)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetRegionsRecoverAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsSaveReadsBackFromTheSameCollection'
+              ) ;;
             native-patterns-release)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=("${command_emphasis_test_args[@]}" "${persistent_tab_test_args[@]}"

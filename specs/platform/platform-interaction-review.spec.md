@@ -1136,3 +1136,18 @@ button when available, retaining the first match only to report failure if none
 is hittable. Keep the final reachability assertion and add actual Browse/Home
 activation with exact Settings draft readback. This observation correction does
 not by itself establish iPad task acceptance or justify a production layout change.
+
+### Integrated native batch completion observations
+
+Run35958732480 passes12/13 phone and11/13 iPad workflows. Both pass Add and
+independent expiration search return. The phone Retry contents assertion expires
+at five seconds, but its final native capture shows Nothing inside yet and no
+Retry command. Observe the combined completed state for a bounded fifteen seconds;
+require both the command's disappearance and the recovered content without a
+second tap. This changes observation tolerance, not the production completion rule.
+The iPad first-match tab failure is covered by the existing duplicate-element
+correction. Its Settings creation reads Camngpi immediately after typing Camping;
+this remains an exact-text failure. Observe exact committed text for fifteen seconds
+without retyping or replacing it, then retain the exact save/reopen checks. A lasting
+wrong value still fails. Do not reopen provider/key-delivery experiments or claim
+these observation changes establish native acceptance before the focused run passes.

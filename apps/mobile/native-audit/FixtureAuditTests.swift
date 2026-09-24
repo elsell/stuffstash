@@ -1493,9 +1493,12 @@ final class FixtureAuditTests: XCTestCase {
     capture("asset-region-contents-error-\(captureSuffix)")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
-    XCTAssertTrue(contents.waitForNonExistence(timeout: 5))
     let empty = app.staticTexts["Nothing inside yet"].firstMatch
-    XCTAssertTrue(empty.waitForExistence(timeout: 5))
+    let recovered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      !contents.exists && empty.exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [recovered], timeout: 15), .completed,
+      "Contents retry must disappear and show recovered content after one tap")
     reveal(empty)
     capture("asset-region-recovered-\(captureSuffix)")
     let back = app.navigationBars.buttons.firstMatch
@@ -3340,7 +3343,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(updated.waitForExistence(timeout: 10))
     app.buttons["Add Tag"].firstMatch.tap()
     XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); name.typeText("Camping")
-    XCTAssertEqual(name.value as? String, "Camping")
+    let committedName = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      name.value as? String == "Camping"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [committedName], timeout: 15), .completed,
+      "The complete typed name must settle without retyping before Save")
     app.buttons["Dismiss keyboard"].firstMatch.tap(); save.tap()
     let created = app.buttons["Camping, No color"].firstMatch
     XCTAssertTrue(created.waitForExistence(timeout: 10)); created.tap()

@@ -42,8 +42,12 @@ width35954709640 passed9/9 iPad and8/9 phone. Phone Add stopped at keyboard read
 (line744); its capture shows the keyboard and focused Name field. Keep the workflow
 unresolved pending the combined run. Corrected phone/iPad command-width captures were reviewed: retry labels and
 contextual commands are readable and bounded (see evidence/native-command-width-review.txt).
-Combined13-workflow run35958732480 at35a79fe5 is pending; persistent-tab final-state
-coverage and the phone Add workflow remain release gates.
+Combined13-workflow run35958732480 at35a79fe5 passed12/13 phone and11/13 iPad.
+Add and expiration retention passed both. Phone contents Retry failed its five-second
+observation, but the final capture shows recovery. iPad retains the known duplicate-tab
+observation failure plus immediate Camping input read as Camngpi. Reviewed bounded
+completion observations preserve exact outcomes; focused native verification remains
+required. Do not interpret the text mismatch as proven transient.
 
 ## Accepted corrections and remaining release gates
 
