@@ -1191,6 +1191,36 @@ final class FixtureAuditTests: XCTestCase {
     }
   }
 
+  func testDetailGalleryKeepsLaterPhotoInReadableColumn() {
+    guard openFixtureURL("audit-detail-commands?variant=gallery") else { return }
+    let first = app.buttons["Open photo 1 of 3"].firstMatch
+    let second = app.buttons["Open photo 2 of 3"].firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    XCTAssertTrue(first.isHittable)
+    first.swipeLeft(velocity: .slow)
+    let secondCentered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      second.isHittable && abs(second.frame.midX - self.app.frame.midX) < 3
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [secondCentered], timeout: 5), .completed)
+    XCTAssertLessThanOrEqual(second.frame.width, 689)
+    capture("detail-gallery-second-portrait")
+    defer { XCUIDevice.shared.orientation = .portrait }
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      XCUIDevice.shared.orientation = .landscapeLeft
+      let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        self.app.frame.width > self.app.frame.height && second.isHittable
+          && abs(second.frame.midX - self.app.frame.midX) < 3
+      }, object: nil)
+      XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 10), .completed)
+      XCTAssertLessThanOrEqual(second.frame.width, 689)
+      capture("detail-gallery-second-landscape")
+    }
+    second.tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Fixture image 2.png"].waitForExistence(timeout: 5))
+    app.buttons["Close photo viewer"].tap()
+  }
+
   func testDetailCommandsRemainReachableAtNormalTextSize() {
     verifyDetailCommandReachability(captureSuffix: "normal-size")
   }

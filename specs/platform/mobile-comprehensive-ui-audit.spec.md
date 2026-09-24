@@ -2343,3 +2343,11 @@ window resizing, rather than assuming device width. Preserve opening the chosen
 photo and its authenticated source. Verify actual phone/tablet empty and populated
 detail, twenty-item contents, search and scroll return before visual acceptance.
 The existing release batch remains frozen; this is a subsequent candidate.
+
+
+M280 native acceptance extends the existing hierarchy subset with a three-photo
+fixture. Select the second photo, verify its centered bounded frame, rotate iPad
+using XCTest device orientation, then open that same named photo. Restore portrait
+on exit; iPhone retains its production portrait orientation. The other five
+hierarchy workflows retain their existing assertions. Fixture dimensions and
+source tests do not substitute for reviewing the resulting captures.
