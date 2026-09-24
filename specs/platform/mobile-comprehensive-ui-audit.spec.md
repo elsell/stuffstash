@@ -2380,3 +2380,13 @@ Settings archive, invitation recovery and Add draft recovery to inspect shared
 button consumers. Retain the region Retry completion assertions. This subset does
 not certify every button consumer; long labels, Android geometry and dark appearance
 remain explicit acceptance gaps until captured on their respective runtimes.
+
+
+The phone capture from35951671413 exposes a secondary-button sizing defect despite
+successful command completion: Retry contents wraps into a narrow oval. A Host
+that measures both dimensions cannot establish the available inline width here.
+Give the native host the parent width and measure only height; lay out the bounded
+button at the leading edge with remaining space outside the button. Preserve
+wrapping for genuinely long labels without compressing short normal-text labels.
+The existing native recovery workflow must check short Retry button geometry as
+well as successful recovery; review actual phone and tablet captures before acceptance.

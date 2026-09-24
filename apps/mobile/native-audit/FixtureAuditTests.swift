@@ -1477,6 +1477,9 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(visible())
     }
     reveal(photos)
+    if captureSuffix == "normal-size" {
+      XCTAssertGreaterThan(photos.frame.width, photos.frame.height * 1.5, "Short Retry label must not collapse into a narrow oval")
+    }
     capture("asset-region-photo-error-\(captureSuffix)")
     photos.tap()
     XCTAssertTrue(photos.waitForNonExistence(timeout: 5))
@@ -1484,6 +1487,9 @@ final class FixtureAuditTests: XCTestCase {
     reveal(app.staticTexts["No photos"].firstMatch)
     capture("asset-region-photo-recovered-\(captureSuffix)")
     reveal(contents)
+    if captureSuffix == "normal-size" {
+      XCTAssertGreaterThan(contents.frame.width, contents.frame.height * 1.5, "Short Retry label must not collapse into a narrow oval")
+    }
     capture("asset-region-contents-error-\(captureSuffix)")
     XCTAssertTrue(app.staticTexts["Could not load contents."].firstMatch.exists)
     contents.tap()
