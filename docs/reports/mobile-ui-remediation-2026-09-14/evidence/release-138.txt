@@ -1,0 +1,21 @@
+TestFlight 0.24.43 (138.1) — verified 2026-09-25.
+PR199 merged283c12af944347ff7c836ebf04538da98c267940.
+Release36144264031 succeeded; iOS upload108104810001 succeeded.
+Apple changelog108112063611 readback:
+2026-09-25T14:28:00.8127890Z Verified TestFlight changelog for v0.24.43 (138.1).
+
+Notes: Keep the photo viewer open when swiping between photos. Use native iPhone
+and iPad photo action buttons.
+
+Native36139759309 at6cb419a2 passes3/3 on both iPhone17 and iPad mini:
+Add swipe/previous/next/removal/close/reopen/final removal; saved removal failure
+and retry; unavailable-photo recovery. Full-screen first/after-swipe/return and
+recovery captures reviewed for bounds, disabled states, metadata and safe areas.
+Artifacts10867850955(phone),10866960557(iPad). Exact-head CI36139764757 passes.
+Targeted lifecycle and consumer tests, TypeScript, fixture and structural checks,
+and code critic review pass. Required CI includes dependency and docs gates.
+
+One modal per viewing session; active photo owns paging permission; dismissed
+selection callbacks cannot reopen a presentation; toolbar identity stays stable.
+iOS uses bounded SwiftUI symbol controls. Android button appearance unchanged;
+no new Android runtime acceptance claimed. User confirms double-tap zoom works.
