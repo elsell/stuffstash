@@ -1,33 +1,22 @@
-User correction,2026-09-25: double-tap zoom works on their device. The reported
-problems are non-native photo action buttons and a brief viewer close/reopen flash
-when paging left/right. These are the next authorized photo fixes.
+Photo viewer batch — current diagnosis, 2026-09-25.
 
-Withdraw the inferred zoom problem, the new zoom test gate and the uncommitted
-tap-trace diagnostic. No tracing run was dispatched and no zoom product change
-was made. The simulator evidence below remains historical, not a product diagnosis.
-Ask the user before pursuing future newly suspected problems.
+Confirmed by user: non-native photo buttons and brief dismissal/reopening during
+horizontal paging. Double-tap zoom works on their device; no zoom defect is open.
 
-iOS photo inspection — current diagnosis,2026-09-25.
-Baseline36110848610 at2ac37ae0 (verification-only PR199) runs four cases/device.
-Phone1/4 pass; iPad2/4. Both new double-tap cases stop because Close becomes
-unhittable after XCTest doubleTap. Full-screen fit/zoom/final captures show the
-same fitted image; final has hidden commands. The early zoom capture still shows
-commands mid-transition, while its AX tree records the footer below the viewport.
-Do not call that early capture evidence that AX is wrong: final confirms hiding.
+Source cause: react-native-image-viewing keyed its modal owner by imageIndex.
+Candidate keeps one presentation per visibility session, synchronizes external
+selection without replaying swipe echoes, and assigns paging permission to the
+active photo. An installed-viewer lifecycle test failed on retained disabled
+paging before the ownership fix and passes after it. iOS commands now use SwiftUI
+bounded symbol buttons; Android appearance remains the existing fallback.
 
-Phone failed-removal test sees the expected alert then fails the immediate OK hittability assertion;
-final frame shows a readable alert/OK above the viewer. iPad removal passes.
-Unavailable-photo recovery passes both. No real media or service mutations occur.
+Targeted action/removal/recovery/status checks: 13 pass; TypeScript and structural
+checks pass. Installed paging and modal lifecycle checks: 2 pass. Critic reviewed
+both passes; no outstanding source blocker. Native phone/iPad verification is
+pending; this is not release acceptance. Verify Add swipe/previous/next/removal,
+saved-photo failed removal, unavailable recovery and full-screen action bounds.
 
-Withdrawn plan: one runner-only tap-event trace to distinguish one delivered press from
-two delivered presses outside recognition timing or incorrect recognizer handling.
-Capture raw event timestamps, receipt time and single/double classification without
-adding renders to the gesture path. If delivery is single, choose a native gesture
-recognizer instead of tuning delays. If two events expose handler error, fix that
-specific ownership/timing defect. No repeated gesture timing/provider experiments.
-Bound: baseline plus this one diagnostic; do not reset budget on continuation.
-
-Artifacts10853741976 phone and10854026419 iPad. Only selected screenshots/trees
-extracted to /tmp/move-layout-review/photo-inspection-*. Native job logs:
-/tmp/photo-inspection-phone.log and /tmp/photo-inspection-ipad.log.
-Production source is unchanged in PR199; no product correction accepted yet.
+Historical run 36110848610 at 2ac37ae0 tested a subsequently withdrawn simulator
+zoom hypothesis. User correction supersedes that diagnosis. Artifacts 10853741976
+and 10854026419 retain its evidence; no tracing run was dispatched. Ask the user
+before pursuing newly suspected product problems.

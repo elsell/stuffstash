@@ -55,6 +55,7 @@ on:
           - add-destination
           - tag-selection
           - selection-lifecycle
+          - photo-paging-actions
           - sheet-footer-appearance
           - normal-detail-recovery
           - edit-and-move-drafts
@@ -500,6 +501,14 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeProfileHitRegionBeyondAccessibilityFrame'
+              )
+              ;;
+            photo-paging-actions)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPhotoRemovalFailureAppearsAboveViewer'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable'
               )
               ;;
             add-draft)

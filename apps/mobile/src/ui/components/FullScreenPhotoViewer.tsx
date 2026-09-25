@@ -1,9 +1,9 @@
 import { PhotoViewerSystemBars } from './PhotoViewerSystemBars';
 import React, { useEffect, useMemo } from 'react';
-import { AccessibilityInfo, Platform, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NativeCommandButton } from './NativeCommandButton';
 import ImageViewing from 'react-native-image-viewing';
-import { ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react-native';
+import { PhotoViewerActionButton } from './PhotoViewerActionButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing } from '../theme/tokens';
 import {
@@ -17,8 +17,7 @@ export type { FullScreenPhotoViewerPhoto } from './FullScreenPhotoViewerPresenta
 // colors and exposure do not shift with the surrounding app appearance.
 const viewerColors = {
   background: '#05080A',
-  foreground: '#FFFFFF',
-  warning: '#F5B95E'
+  foreground: '#FFFFFF'
 } as const;
 
 export function FullScreenPhotoViewer({
@@ -123,76 +122,35 @@ function PhotoViewerToolbar({
           <Text numberOfLines={1} style={styles.metadataText}>{state.metadataLabel}</Text>
         ) : null}
       </View>
-      <View style={styles.toolbar}>
-        <ViewerIconButton accessibilityLabel="Close photo viewer" onPress={onClose}>
-          <X color={viewerColors.foreground} size={25} strokeWidth={2.5} />
-        </ViewerIconButton>
+      <View style={[styles.toolbar, Platform.OS !== 'ios' && styles.legacyToolbar]}>
+        <PhotoViewerActionButton action="close" onPress={onClose} />
         {photos.length > 1 ? (
           <>
-            <ViewerIconButton
-              accessibilityLabel="Previous photo"
+            <PhotoViewerActionButton
+              action="previous"
               disabled={!state.canGoPrevious}
               onPress={() => onSelectIndex(Math.max(0, imageIndex - 1))}
-            >
-              <ChevronLeft color={viewerColors.foreground} size={27} strokeWidth={2.5} />
-            </ViewerIconButton>
-            <ViewerIconButton
-              accessibilityLabel="Next photo"
+           />
+            <PhotoViewerActionButton
+              action="next"
               disabled={!state.canGoNext}
               onPress={() => onSelectIndex(Math.min(photos.length - 1, imageIndex + 1))}
-            >
-              <ChevronRight color={viewerColors.foreground} size={27} strokeWidth={2.5} />
-            </ViewerIconButton>
+           />
           </>
         ) : null}
         {canShowRemoveAction ? (
-          <ViewerIconButton
-            accessibilityLabel="Remove photo"
-            destructive
+          <PhotoViewerActionButton
+            action="remove"
             disabled={isRemoving || !state.canRemove || !currentPhoto}
             onPress={() => {
               if (currentPhoto && !isRemoving) {
                 onRemove?.(currentPhoto, imageIndex);
               }
             }}
-          >
-            <Trash2 color={viewerColors.warning} size={24} strokeWidth={2.4} />
-          </ViewerIconButton>
+          />
         ) : null}
       </View>
     </View>
-  );
-}
-
-function ViewerIconButton({
-  accessibilityLabel,
-  children,
-  destructive,
-  disabled,
-  onPress
-}: {
-  readonly accessibilityLabel: string;
-  readonly children: React.ReactNode;
-  readonly destructive?: boolean;
-  readonly disabled?: boolean;
-  readonly onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      hitSlop={10}
-      onPress={onPress}
-      style={[
-        styles.iconButton,
-        destructive ? styles.destructiveButton : null,
-        disabled ? styles.disabledButton : null
-      ]}
-    >
-      {children}
-    </Pressable>
   );
 }
 
@@ -232,30 +190,19 @@ const styles = StyleSheet.create({
     maxWidth: '92%',
     opacity: 0.62
   },
-  toolbar: {
-    alignItems: 'center',
-    alignSelf: 'center',
+  legacyToolbar: {
     backgroundColor: 'rgba(13, 18, 22, 0.82)',
     borderColor: 'rgba(255, 255, 255, 0.14)',
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: 1
+  },
+  toolbar: {
+    alignItems: 'center',
+    alignSelf: 'center',
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   },
-  iconButton: {
-    alignItems: 'center',
-    borderRadius: radius.md,
-    height: 46,
-    justifyContent: 'center',
-    width: 54
-  },
-  destructiveButton: {
-    backgroundColor: 'rgba(249, 189, 73, 0.12)'
-  },
-  disabledButton: {
-    opacity: 0.35
-  }
 });

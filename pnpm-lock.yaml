@@ -40,7 +40,7 @@ overrides:
 
 patchedDependencies:
   '@expo/ui@55.0.17': 72ed4c392322df3dd5a755e323dfcccc3b8bced9b5e5116ea8bc8bbad3dacaea
-  react-native-image-viewing@0.2.2: 3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428
+  react-native-image-viewing@0.2.2: 0c62ca1b099a9167fc1ff83c0d5fd9560cf7cac8daee183ddf021a81524af927
   react-native-screens@4.23.0: 47b0c28ad5b5eb1c795ee939951510e705dcccd60e80bb3ca84e580d3a3e6d8d
 
 importers:
@@ -132,7 +132,7 @@ importers:
         version: 0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)
       react-native-image-viewing:
         specifier: 0.2.2
-        version: 0.2.2(patch_hash=3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
+        version: 0.2.2(patch_hash=0c62ca1b099a9167fc1ff83c0d5fd9560cf7cac8daee183ddf021a81524af927)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
       react-native-keyboard-controller:
         specifier: 1.20.7
         version: 1.20.7(react-native-reanimated@4.2.1(react-native-worklets@0.7.4(@babel/core@7.29.7)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0))(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0)
@@ -8130,7 +8130,7 @@ snapshots:
 
   react-is@19.2.7: {}
 
-  react-native-image-viewing@0.2.2(patch_hash=3c5ee1c3e3d2f0301676f02fbb0068ca33755511fffa17b2ce5a0c6bd631a428)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0):
+  react-native-image-viewing@0.2.2(patch_hash=0c62ca1b099a9167fc1ff83c0d5fd9560cf7cac8daee183ddf021a81524af927)(react-native@0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0))(react@19.2.0):
     dependencies:
       react: 19.2.0
       react-native: 0.83.6(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.0)
