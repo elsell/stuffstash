@@ -29,3 +29,16 @@ and reminders pass, plus TypeScript/structural checks. Critic found no source
 blocker; ordinary size and enlarged measurement remain native acceptance gates.
 Representative consumers use flexible wrappers (AssetTagSelectionField,
 SettingsCommandRow and Sharing command groups); no per-consumer padding added.
+
+Visual acceptance decision (2026-09-25): REJECT b25867d9. Completed native run
+36090229503 passed5/5 phone and5/5 iPad. Artifacts10845314882/10846147745.
+Phone full-screen review contradicts acceptance: Cancel new tag draws beyond its
+pill and into explanatory copy; Retry asset types also exceeds its background.
+Normal Detail unnecessarily wraps Check out, Add photos and Add item here.
+Retained complete captures: command-candidate-rejected-large.png and
+command-candidate-rejected-normal.png. No release is authorized by these tests.
+Next implementation must size the whole native button around its label; native
+label/background containment and ordinary density are explicit screenshot gates.
+The modifier approach has used its investigation budget; no more speculative
+control-size/fixed-size variations. Evaluate a native control adapter with an
+explicit complete-label measurement contract before another implementation.
