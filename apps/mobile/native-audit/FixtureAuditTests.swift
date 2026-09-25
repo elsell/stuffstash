@@ -2517,6 +2517,8 @@ final class FixtureAuditTests: XCTestCase {
     openFirstPhoto(count: 2)
     let photoOptions = app.buttons["Photo options"]
     XCTAssertGreaterThanOrEqual(photoOptions.frame.height, 44, "Photo options needs a full native toolbar target")
+    XCTAssertLessThanOrEqual(abs(photoOptions.frame.height - app.buttons["Close photo viewer"].frame.height), 1)
+    XCTAssertLessThanOrEqual(abs(photoOptions.frame.width - app.buttons["Close photo viewer"].frame.width), 1)
     XCTAssertLessThanOrEqual(abs(photoOptions.frame.midY - app.buttons["Close photo viewer"].frame.midY), 4)
     capture("photo-native-actions-first")
     let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.4))

@@ -1676,4 +1676,4 @@ controls. These layout choices are product decisions informed by platform patter
 not claims that Apple mandates one universal layout. Verify connected normal-text
 workflows first on iPhone/iPad with full-screen captures, then relevant adaptation.
 
-Photo inspection reuses the native action-menu adapter with an explicit on-dark canvas tone; other menu consumers keep their existing appearance. Metadata is read-only menu content. The on-dark menu uses the native symbol-label menu with the same large control size and host bounds as Close; a compressed image-only pill is not the intended toolbar presentation.
+Photo inspection reuses the native action-menu adapter with an explicit on-dark canvas tone; other menu consumers keep their existing appearance. Metadata is read-only menu content. The on-dark menu and photo Close button share one native symbol label, fixed symbol layout box, large control style, and host bounds; a compressed image-only pill is not the intended toolbar presentation.
