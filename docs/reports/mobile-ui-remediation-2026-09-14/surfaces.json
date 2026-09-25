@@ -74,7 +74,7 @@
     "surface": "(tabs)/(home,search)/assets/index.tsx",
     "source": "apps/mobile/src/app/(tabs)/(home,search)/assets/index.tsx",
     "sources": [
-      "apps/mobile/src/app/assets/index.tsx",
+      "apps/mobile/src/app/(tabs)/(home,search)/assets/index.tsx",
       "apps/mobile/src/ui/screens/InventoryAssetsRouteScreen.tsx"
     ]
   },
@@ -108,7 +108,7 @@
     "surface": "(tabs)/(home,search)/locations/[locationId]/index.tsx",
     "source": "apps/mobile/src/app/(tabs)/(home,search)/locations/[locationId]/index.tsx",
     "sources": [
-      "apps/mobile/src/app/locations/[locationId]/index.tsx",
+      "apps/mobile/src/app/(tabs)/(home,search)/locations/[locationId]/index.tsx",
       "apps/mobile/src/ui/screens/LocationAssetsRouteScreen.tsx"
     ]
   },
@@ -1077,6 +1077,38 @@
       "apps/mobile/src/ui/screens/AssetTagSelectionRouteScreen.tsx",
       "apps/mobile/src/ui/screens/AssetTagSelectionScreen.tsx",
       "apps/mobile/src/ui/navigation/AssetTagSelectionTask.tsx"
+    ]
+  },
+  {
+    "id": "S145",
+    "surface": "Edit asset / Tags / New tag",
+    "source": "apps/mobile/src/ui/screens/NewAssetTagScreen.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/NewAssetTagScreen.tsx",
+      "apps/mobile/src/ui/screens/AssetTagSelectionScreen.tsx",
+      "apps/mobile/src/ui/navigation/AssetTagSelectionTask.tsx"
+    ]
+  },
+  {
+    "id": "S146",
+    "surface": "Inventory switcher / New household",
+    "source": "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+      "apps/mobile/src/application/inventories/CreateWorkspace.ts",
+      "apps/mobile/src/adapters/inventories/ApiWorkspaceCreation.ts"
+    ]
+  },
+  {
+    "id": "S147",
+    "surface": "Inventory switcher / New inventory",
+    "source": "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
+    "sources": [
+      "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
+      "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+      "apps/mobile/src/application/inventories/CreateWorkspace.ts",
+      "apps/mobile/src/adapters/inventories/ApiWorkspaceCreation.ts"
     ]
   }
 ]

@@ -233,10 +233,13 @@ color editing/save, or assistive activation. iPad Add creation/retry now passes 
 
 ## Coverage and evidence limits
 
-[Surfaces](surfaces.json), [axes](axes.json) and [matrix](matrix.csv) enumerate144
-surfaces ×24 axes. Matrix classifications describe evidence, not3,456 separate test
+[Surfaces](surfaces.json), [axes](axes.json) and [matrix](matrix.csv) enumerate147
+surfaces ×24 axes. Matrix classifications describe evidence, not3,528 separate test
 requirements. The two recent selection routes now have source reviews for every axis;
 [source follow-through](selection-surface-followthrough.md) preserves runtime gaps.
+The three creation forms added in140.1 are now explicit nested surfaces;
+[creation follow-through](creation-surface-followthrough.md) records their task,
+ownership, scoped native evidence and remaining adaptation/assistive gaps.
 Source review does not establish native acceptance. [Findings](findings.md) retain stable IDs and historical evidence.
 The older [whole-workflow review](everyday-workflow-review.md) records design
 rationale; this file supplies current acceptance status.
