@@ -16,7 +16,7 @@ import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { actionableMenuGroups, nativeMenuItemPresentation } from './NativeActionMenuPresentation';
 import { useNativeMenuAction } from './useNativeMenuAction';
-import { NativePhotoSymbol, nativePhotoControlHost, nativePhotoControlModifiers } from './NativePhotoSymbol.ios';
+import { NativePhotoSymbol, nativePhotoControlModifiers } from './NativePhotoSymbol.ios';
 import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
 export type { NativeActionMenuGroup, NativeActionMenuItem, NativeActionMenuProps, NativeActionMenuTrigger } from './NativeActionMenu.types';
@@ -45,7 +45,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
     pointerEvents={menuDisabled ? 'none' : 'auto'}
     style={menuDisabled && styles.disabled}
   >
-    <Host matchContents={!compactTrigger} style={onDarkSymbol ? nativePhotoControlHost : compactTrigger ? styles.compactHost : styles.labelHost}>
+    <Host matchContents={onDarkSymbol || !compactTrigger} style={onDarkSymbol ? undefined : compactTrigger ? styles.compactHost : styles.labelHost}>
       <Menu
         label={menuLabel}
         modifiers={[

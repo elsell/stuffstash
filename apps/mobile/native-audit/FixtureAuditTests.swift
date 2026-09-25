@@ -2124,7 +2124,8 @@ final class FixtureAuditTests: XCTestCase {
       confirmation.buttons["Remove"].tap()
       let failure = app.alerts["Could not remove photo"]
       XCTAssertTrue(failure.waitForExistence(timeout: 5))
-      XCTAssertTrue(failure.buttons["OK"].isHittable)
+      let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: failure.buttons["OK"])
+      XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
       capture("photo-removal-failure-\(attempt)")
       failure.buttons["OK"].tap()
       XCTAssertTrue(failure.waitForNonExistence(timeout: 5))
@@ -2544,6 +2545,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertFalse(app.buttons["Next photo"].exists)
     capture("add-photo-preview-surviving-draft")
     app.buttons["Close photo viewer"].tap()
+    XCTAssertTrue(app.buttons["Close photo viewer"].waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Remove photo 1"].waitForExistence(timeout: 5))
     XCTAssertFalse(secondThumbnail.exists)
     openFirstPhoto(count: 1)
