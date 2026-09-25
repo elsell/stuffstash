@@ -52,7 +52,10 @@ captures retain clear native headers, grouped choices and unobscured footer acti
 [Scoped decision](evidence/selection-current-361006.txt).
 Inventory-list inset correction is shipped in132.1. Invitation acceptance is a
 root-stack route outside tabs; the same tab-overlap diagnosis does not apply.
-Its phone/iPad review and opening-recovery captures still need visual assessment.
+Reviewed existing phone/iPad invitation entry/recovery captures show clear
+hierarchy and safe-area clearance. These predate the shared button replacement;
+they establish baseline composition, not current rendering acceptance.
+[Scoped baseline](evidence/invitation-visual-baseline.txt).
 Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6),
 including old diagnostics and enlarged-text cases; it is not a release gate for
 this verified batch. [Terminal decisions](evidence/native-full-359800.txt).

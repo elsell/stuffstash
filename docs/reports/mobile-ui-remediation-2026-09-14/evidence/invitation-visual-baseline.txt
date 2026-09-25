@@ -1,0 +1,22 @@
+Invitation review and opening recovery — reviewed 2026-09-25
+Existing native run35980094051, revisionc7c44b45.
+iPhone artifact10805146387; iPad artifact10806201894.
+Case: testInvitationAcceptanceRetainsAccessAfterOpeningFailure.
+
+Reviewed full-screen invitation-review-normal and invitation-open-recovery PNGs
+from both artifacts. Long inventory name wraps, Access/Expires form a readable
+group, Join inventory is prominent, subordinate commands remain bounded, and all
+content clears navigation/safe areas. Recovery clearly states that access was
+added even though opening failed and retains a single Open inventory retry.
+No tab overlay is present on this root-stack task. No layout correction is
+justified by these captures. Existing fixture tests Not now, explicit Join,
+opening failure/retry and exactly-once acceptance; no real invitation is sent.
+
+Screen source has no diff from c7c44b45 to4b30f04a. Shared NativeCommandButton
+changed in136.1, so these historical captures establish baseline composition,
+not current adapter rendering acceptance. Current command adapter has its own
+representative native checks; do not mislabel these invitation captures as136.1.
+Physical external-link handoff, sign-in transitions, denied/expired invitations,
+assistive use and all appearance/adaptive states are not established here.
+Decision: preserve screen structure. Remaining coverage is specific integration
+and adaptation evidence, not an inferred bottom-tab clipping defect.
