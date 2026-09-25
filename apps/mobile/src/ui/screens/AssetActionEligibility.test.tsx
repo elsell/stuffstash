@@ -1,3 +1,4 @@
+import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
 import React from 'react';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { NativeSearchDriver } from '../../test-support/NativeSearchDriver';
@@ -24,14 +25,16 @@ it('does not submit Edit after permission changes during tag reconciliation', as
     asset: { id: assetId('asset'), title: 'Box', description: '', kind: 'container', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
   }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
         inventoryAssetTagsQuery={{ execute: async () => { if (++reads > 1) await new Promise<void>(resolve => { release = resolve; }); return []; } }}
         updateAssetCommand={{ execute: async () => { mutations++; return { id: 'asset', title: 'Box', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Retained tag'); await h.press(h.byLabel('Add tag'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetTags('scope', 'tenant', 'inventory'), refetchType: 'none' }));
     await h.press(h.byLabel('Save')); await settle(h);
     expect(release).toBeTypeOf('function');
@@ -39,7 +42,7 @@ it('does not submit Edit after permission changes during tag reconciliation', as
     await h.run(() => client.invalidateQueries({ queryKey: mobileQueryKeys.assetCore('scope', 'tenant', 'inventory', 'asset') })); await settle(h);
     await h.run(() => release()); await settle(h);
     expect(mutations).toBe(0);
-    expect(h.byLabel('Remove new tag Retained tag')).toBeDefined();
+    expect(h.byText('Retained tag')).toBeDefined();
     expect(h.byLabel('Save')?.props.disabled).toBe(true);
     expect(h.byLabel('Cancel')?.props.disabled).toBe(false);
   } finally { await h.unmount(); client.clear(); resetNavigation(); }
@@ -107,3 +110,5 @@ for (const route of routes) {
     } finally { await h.unmount(); client.clear(); resetNavigation(); }
   });
 }
+
+function SelectionContent() { const task = useAssetTagSelectionTask(); return <>{task?.content}</>; }

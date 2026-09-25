@@ -430,7 +430,7 @@ describe('AssetDetailView', () => {
     for (const label of ['Garage', 'Add item here', 'Spaces in Garage', 'Cordless drill', 'Move place']) {
       expect(styleValue(findFirstTextNode(tree, label)?.props?.style, 'lineHeight')).toBeUndefined();
     }
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset maintenance')?.props?.style, 'flexWrap'))
+    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset actions')?.props?.style, 'flexWrap'))
       .toBe('wrap');
     expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'minHeight'))
       .toBeGreaterThanOrEqual(44);
@@ -494,7 +494,7 @@ describe('AssetDetailView', () => {
     expect(collectText(tree)).toContain('Family tent');
     expect(findFirstByProp(tree, 'accessibilityLabel', 'Loading photos')?.props)
       .toMatchObject({ accessibilityLiveRegion: 'polite', accessibilityRole: 'progressbar' });
-    expect(findFirstByProp(tree, 'accessibilityLabel', 'Add photos')).toBeUndefined();
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Add photos')?.props?.accessibilityState).toMatchObject({ disabled: true });
   });
   it('allows photo additions while location and contents load', () => {
     const tree = AssetDetailView({

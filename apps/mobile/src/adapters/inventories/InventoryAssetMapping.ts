@@ -107,7 +107,8 @@ export function mapAccessRole(relationship: string): AccessRole {
 export function mapTenant(tenant: Tenant) {
   return {
     id: tenantId(tenant.id),
-    name: tenant.name
+    name: tenant.name,
+    canCreateInventory: tenant.access.permissions.includes('create_inventory')
   };
 }
 

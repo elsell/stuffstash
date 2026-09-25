@@ -12,7 +12,7 @@ it.each(['pending', 'selection', 'collection', 'close', 'visit', 'unmount', 'cur
   let changed = false;
   const render = () => h.render(<DraftPhotoPreviewModal disabled={changed && change === 'pending'} currentIndex={changed && change === 'close' ? undefined : changed && change === 'selection' ? 1 : 0} photos={changed && change === 'collection' ? [...photos, photo('three')] : photos} onClose={() => { closed++; }} onSetIndex={index => indices.push(index)} onRemovePhoto={id => removed.push(id)} />);
   try {
-    await render(); await h.press(h.byLabel('Remove photo'));
+    await render(); await h.press(h.byLabel('Photo options')); await h.press(h.byText('Remove photo')?.parent ?? undefined);
     const confirm = latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress;
     expect(confirm).toBeTypeOf('function');
     changed = true;

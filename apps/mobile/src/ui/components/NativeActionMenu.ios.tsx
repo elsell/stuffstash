@@ -23,7 +23,7 @@ export type { NativeActionMenuGroup, NativeActionMenuItem, NativeActionMenuProps
 type SwiftButtonImage = ComponentProps<typeof Button>['systemImage'];
 type SwiftImageName = ComponentProps<typeof Image>['systemName'];
 
-export function NativeActionMenu({ accessibilityLabel, disabled = false, groups, trigger = { kind: 'ellipsis' } }: NativeActionMenuProps) {
+export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 'standard', groups, trigger = { kind: 'ellipsis' } }: NativeActionMenuProps) {
   const palette = useAppearanceAwarePalette();
   const actionableGroups = actionableMenuGroups(groups);
   const menuDisabled = disabled || actionableGroups.length === 0;
@@ -31,9 +31,10 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
   const menuLabel = trigger.kind === 'label'
     ? trigger.label
     : <Image
+      color={tone === 'onDark' ? '#FFFFFF' : undefined}
       size={trigger.kind === 'icon' ? 16 : 20}
       systemName={(trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') as SwiftImageName}
-      modifiers={trigger.kind === 'ellipsis' ? [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())] : undefined}
+      modifiers={trigger.kind === 'ellipsis' && tone !== 'onDark' ? [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())] : undefined}
     />;
   const compactTrigger = trigger.kind !== 'label';
 
@@ -46,8 +47,8 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
         label={menuLabel}
         modifiers={[
           nativeAccessibilityLabel(accessibilityLabel),
-          ...(trigger.kind === 'label' || trigger.kind === 'icon'
-            ? [buttonStyle('bordered'), controlSize(trigger.kind === 'icon' ? 'small' : 'regular'), tint(palette.action)]
+          ...(trigger.kind === 'label' || trigger.kind === 'icon' || tone === 'onDark'
+            ? [buttonStyle('bordered'), controlSize(trigger.kind === 'icon' ? 'small' : 'regular'), tint(tone === 'onDark' ? '#FFFFFF' : palette.action)]
             : []),
           ...(trigger.kind === 'icon' ? [labelStyle('iconOnly')] : []),
           nativeDisabled(menuDisabled)

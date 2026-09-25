@@ -11,7 +11,7 @@ export const TextField='SwiftUITextField';
 export const ColorPicker='SwiftUIColorPicker';
 export const Menu='SwiftUIMenu';
 export function Section({ header, footer, children, ...props }: { header?: ReactNode; footer?: ReactNode; children?: ReactNode; title?: string }) {
-  return createElement('SwiftUISection', props, header, children, footer);
+  return createElement('SwiftUISection', props, header ?? (props.title ? createElement('Text', null, props.title) : null), children, footer);
 }
 export const Image='SwiftUIImage';
 

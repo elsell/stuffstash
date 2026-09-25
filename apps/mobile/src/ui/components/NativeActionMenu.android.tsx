@@ -11,14 +11,14 @@ import type { NativeActionMenuProps } from './NativeActionMenu.types';
 
 export type { NativeActionMenuGroup, NativeActionMenuItem, NativeActionMenuProps, NativeActionMenuTrigger } from './NativeActionMenu.types';
 
-export function NativeActionMenu({ accessibilityLabel, disabled = false, groups, trigger = { kind: 'ellipsis' } }: NativeActionMenuProps) {
+export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 'standard', groups, trigger = { kind: 'ellipsis' } }: NativeActionMenuProps) {
   const palette = useAppearanceAwarePalette();
   const actionableGroups = actionableMenuGroups(groups);
   const menuDisabled = disabled || actionableGroups.length === 0;
   const { pressItem, trigger: openMenu } = useNativeMenuAction(groups, menuDisabled);
   const [expanded, setExpanded] = useState(false);
   useEffect(() => { if (menuDisabled) setExpanded(false); }, [menuDisabled]);
-  const TriggerButton = trigger.kind === 'ellipsis' ? TextButton : OutlinedButton;
+  const TriggerButton = trigger.kind === 'ellipsis' && tone !== 'onDark' ? TextButton : OutlinedButton;
   const compactTrigger = trigger.kind !== 'label';
 
   return <View
@@ -34,7 +34,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
       <DropdownMenu expanded={expanded && !menuDisabled} onDismissRequest={() => setExpanded(false)}>
         <DropdownMenu.Trigger>
           <TriggerButton
-            colors={{ contentColor: palette.action, disabledContentColor: palette.textMuted }}
+            colors={{ contentColor: tone === 'onDark' ? '#FFFFFF' : palette.action, disabledContentColor: palette.textMuted }}
             contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
             enabled={!menuDisabled}
             modifiers={trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}

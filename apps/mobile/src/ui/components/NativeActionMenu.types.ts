@@ -23,6 +23,7 @@ export type NativeActionMenuGroup = {
 };
 
 export type NativeActionMenuProps = {
+  readonly tone?: 'standard' | 'onDark';
   readonly accessibilityLabel: string;
   readonly disabled?: boolean;
   readonly groups: readonly NativeActionMenuGroup[];

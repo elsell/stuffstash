@@ -580,6 +580,8 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
 
   private getSelectedInventoryIdentity(signal?: AbortSignal) { return this.directory.selected(signal); }
 
+  invalidateDirectory(): void { this.directory.invalidate(); }
+
   private loadInventoryDirectory(signal?: AbortSignal) { return this.directory.load(signal); }
 
   private async searchSelectedInventoryAssets(

@@ -508,12 +508,12 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(name.waitForExistence(timeout: 5)); XCTAssertEqual(name.value as? String, "Audit")
     XCTAssertTrue(name.isHittable)
     XCTAssertGreaterThanOrEqual(name.frame.minY, app.navigationBars["New destination"].frame.maxY)
-    let kind = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose destination kind")).firstMatch
+    let kind = app.segmentedControls.containing(.button, identifier: "Container").firstMatch
     XCTAssertTrue(kind.isHittable)
     XCTAssertGreaterThanOrEqual(kind.frame.minY, name.frame.maxY)
     capture("move-destination-creation-entry")
 
-    reveal(kind); kind.tap()
+    reveal(kind)
     let container = app.buttons["Container"].firstMatch
     XCTAssertTrue(container.waitForExistence(timeout: 5)); container.tap()
     func finishName() {
@@ -706,6 +706,31 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["First query ready"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Dependent query ready"].waitForExistence(timeout: 10))
     capture("cold-inventory-dependent-queries")
+  }
+
+  func testInventorySwitcherCreatesHouseholdAndInventory() {
+    guard openFixtureURL("audit-inventory-switcher") else { return }
+    let switchHousehold = app.buttons["Switch household"].firstMatch
+    XCTAssertTrue(switchHousehold.waitForExistence(timeout: 10)); XCTAssertTrue(switchHousehold.isHittable)
+    capture("switcher-household-trailing-action")
+    switchHousehold.tap()
+    app.buttons["New household"].firstMatch.tap()
+    let household = app.textFields["Household name"].firstMatch
+    XCTAssertTrue(household.waitForExistence(timeout: 5)); household.tap(); household.typeText("Lake house")
+    capture("new-household-keyboard")
+    let createHousehold = app.buttons["Create household"].firstMatch
+    XCTAssertTrue(createHousehold.isHittable); createHousehold.tap()
+    let newInventory = app.buttons["New inventory"].firstMatch
+    XCTAssertTrue(newInventory.waitForExistence(timeout: 5)); newInventory.tap()
+    let inventory = app.textFields["Inventory name"].firstMatch
+    XCTAssertTrue(inventory.waitForExistence(timeout: 5)); inventory.tap(); inventory.typeText("Garage")
+    let createInventory = app.buttons["Create inventory"].firstMatch
+    XCTAssertTrue(createInventory.isHittable); createInventory.tap()
+    let created = app.buttons["Switch to inventory Garage"].firstMatch
+    XCTAssertTrue(created.waitForExistence(timeout: 5)); XCTAssertTrue(created.isHittable)
+    capture("created-inventory-ready-to-switch")
+    app.buttons["Close inventory switcher"].tap()
+    XCTAssertTrue(created.waitForNonExistence(timeout: 5))
   }
 
   func testInventorySwitcherHouseholdRetryAndClose() {
@@ -1574,43 +1599,22 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertGreaterThan(app.staticTexts["Tags"].firstMatch.frame.height, 30, "The direct-entry scenario must retain enlarged text")
     }
     XCTAssertFalse(app.textFields["New tag name"].exists)
-    let newTag = app.buttons["New tag"].firstMatch
-    reveal(newTag); newTag.tap()
-    let entry = app.textFields["New tag name"].firstMatch
-    XCTAssertTrue(entry.waitForExistence(timeout: 5))
-    reveal(entry)
-    entry.tap()
-    waitForKeyboard(keyLabel: "C")
-    entry.typeText("Camping")
-    XCTAssertEqual(entry.value as? String, "Camping")
-    let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
-    XCTAssertTrue(dismissKeyboard.isHittable)
-    dismissKeyboard.tap()
-    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
-    XCTAssertFalse(app.buttons["Save"].firstMatch.isEnabled)
-    cancel.tap()
-    let keep = app.alerts.buttons["Keep editing"]
-    XCTAssertTrue(keep.waitForExistence(timeout: 5))
-    keep.tap()
-    XCTAssertEqual(entry.value as? String, "Camping")
-    let explanation = app.staticTexts["Add this tag or clear its name and color before saving."].firstMatch
-    XCTAssertTrue(explanation.exists)
-    reveal(explanation, requiresHit: false)
-    capture("edit-unstaged-tag-retained-\(captureSuffix)")
-    let add = app.buttons["Add tag"].firstMatch
-    reveal(add)
-    add.tap()
-    // A cleared SwiftUI field can expose no value while retaining its placeholder.
-    let clearedEntry = app.textFields["New tag name"].firstMatch
-    XCTAssertTrue(clearedEntry.exists)
-    XCTAssertTrue(clearedEntry.value == nil || ["", "New tag"].contains(clearedEntry.value as? String ?? "unexpected"))
-    XCTAssertTrue(app.buttons["Remove new tag Camping"].firstMatch.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["Save"].firstMatch.isEnabled)
-    reveal(chooseTags)
     chooseTags.tap()
+    let newTag = app.buttons["New tag"].firstMatch
+    XCTAssertTrue(newTag.waitForExistence(timeout: 5)); newTag.tap()
+    let entry = app.textFields["New tag name"].firstMatch
+    XCTAssertTrue(entry.waitForExistence(timeout: 5)); XCTAssertTrue(entry.isHittable)
+    capture("edit-new-tag-form-\(captureSuffix)")
+    entry.tap(); waitForKeyboard(keyLabel: "C"); entry.typeText("Camping")
+    waitForExactEnteredText("Camping", in: entry)
+    let add = app.buttons["Add tag"].firstMatch
+    XCTAssertTrue(add.isHittable); add.tap()
+    XCTAssertTrue(entry.waitForNonExistence(timeout: 5))
+    let staged = app.descendants(matching: .any).matching(identifier: "Remove new tag Camping").firstMatch
+    XCTAssertTrue(staged.waitForExistence(timeout: 5))
+    capture("edit-new-tag-staged-\(captureSuffix)")
     let visibleDone = app.buttons["Done selecting tags"].firstMatch
-    XCTAssertTrue(visibleDone.waitForExistence(timeout: 5))
-    XCTAssertTrue(visibleDone.isHittable, "Tag selection must appear above its editor")
+    XCTAssertTrue(visibleDone.isHittable)
     let extra = app.descendants(matching: .any)["Select tag Tag 13"].firstMatch
     XCTAssertTrue(extra.waitForExistence(timeout: 5))
     let tagScroll = app.scrollViews.containing(.any, identifier: "Select tag Tag 13").firstMatch
@@ -1622,7 +1626,7 @@ final class FixtureAuditTests: XCTestCase {
     doneTags.tap()
     XCTAssertTrue(doneTags.waitForNonExistence(timeout: 5))
     XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["Remove new tag Camping"].exists)
+    XCTAssertFalse(app.buttons["New tag"].exists)
     reveal(chooseTags)
     chooseTags.tap()
     XCTAssertTrue(extra.waitForExistence(timeout: 5))
@@ -2109,8 +2113,10 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.isHittable)
     open.tap()
     let remove = app.buttons["Remove photo"]
-    XCTAssertTrue(remove.waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Photo options"].waitForExistence(timeout: 5))
     for attempt in 1...2 {
+      app.buttons["Photo options"].tap()
+      XCTAssertTrue(remove.waitForExistence(timeout: 5))
       XCTAssertTrue(remove.isHittable)
       remove.tap()
       let confirmation = app.alerts["Remove photo?"]
@@ -2122,7 +2128,7 @@ final class FixtureAuditTests: XCTestCase {
       capture("photo-removal-failure-\(attempt)")
       failure.buttons["OK"].tap()
       XCTAssertTrue(failure.waitForNonExistence(timeout: 5))
-      XCTAssertTrue(remove.isEnabled)
+      XCTAssertTrue(app.buttons["Photo options"].isEnabled)
       XCTAssertTrue(app.buttons["Close photo viewer"].isHittable)
     }
     capture("photo-retained-after-retry")
@@ -2499,9 +2505,10 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(preview.isHittable)
       preview.tap()
       XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
-      XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].exists)
+      XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 1 of \(count)").firstMatch.exists)
     }
     func confirmRemoval() {
+      app.buttons["Photo options"].tap()
       let remove = app.buttons["Remove photo"]
       XCTAssertTrue(remove.isHittable)
       remove.tap()
@@ -2512,23 +2519,25 @@ final class FixtureAuditTests: XCTestCase {
     let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.4))
     let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.4))
     start.press(forDuration: 0.05, thenDragTo: end)
-    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 2 of 2").firstMatch.waitForExistence(timeout: 5))
     capture("photo-native-actions-after-swipe")
-    app.buttons["Previous photo"].tap()
-    XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].waitForExistence(timeout: 5))
-    let next = app.buttons["Next photo"]
-    XCTAssertTrue(next.isHittable)
-    next.tap()
-    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Previous photo"].exists)
+    XCTAssertFalse(app.buttons["Next photo"].exists)
+    end.press(forDuration: 0.05, thenDragTo: start)
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 1 of 2").firstMatch.waitForExistence(timeout: 5))
+    start.press(forDuration: 0.05, thenDragTo: end)
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 2 of 2").firstMatch.waitForExistence(timeout: 5))
+    app.buttons["Photo options"].tap()
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "audit-draft-photo-2.png").firstMatch.waitForExistence(timeout: 5))
+    capture("photo-more-information")
+    app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.7)).tap()
     confirmRemoval()
     app.alerts["Remove photo?"].buttons["Cancel"].tap()
-    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].exists)
-    XCTAssertTrue(app.staticTexts["2 of 2"].exists)
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 2 of 2").firstMatch.exists)
     confirmRemoval()
     app.alerts["Remove photo?"].buttons["Remove"].tap()
-    XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["1 of 1"].exists)
-    XCTAssertFalse(next.exists)
+    XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 1 of 1").firstMatch.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.buttons["Next photo"].exists)
     capture("add-photo-preview-surviving-draft")
     app.buttons["Close photo viewer"].tap()
     XCTAssertTrue(app.buttons["Remove photo 1"].waitForExistence(timeout: 5))

@@ -3,9 +3,10 @@ import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo }
 import { AccessibilityInfo, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NativeCommandButton } from './NativeCommandButton';
 import ImageViewing from 'react-native-image-viewing';
+import { NativeActionMenu, type NativeActionMenuGroup } from './NativeActionMenu';
 import { PhotoViewerActionButton } from './PhotoViewerActionButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radius, spacing } from '../theme/tokens';
+import { spacing } from '../theme/tokens';
 import {
   fullScreenPhotoViewerActionState,
   type FullScreenPhotoViewerPhoto
@@ -56,7 +57,7 @@ export function FullScreenPhotoViewer({
 
   return (
     <PhotoViewerToolbarContext.Provider value={{ canRemove, isRemoving, onClose: close,
-      onRemove, onSelectIndex: select, photos, safeBottomInset: insets.bottom }}>
+      onRemove, onSelectIndex: select, photos, safeTopInset: insets.top }}>
     {visible && Platform.OS === 'ios' ? <StatusBar barStyle="light-content" /> : null}
     <ImageViewing
       HeaderComponent={PhotoViewerHeader}
@@ -64,7 +65,6 @@ export function FullScreenPhotoViewer({
       animationType="fade"
       backgroundColor={viewerColors.background}
       doubleTapToZoomEnabled
-      FooterComponent={PhotoViewerFooter}
       imageIndex={selectedIndex}
       images={images}
       keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
@@ -79,13 +79,11 @@ export function FullScreenPhotoViewer({
 }
 
 const PhotoViewerToolbarContext = createContext<Omit<React.ComponentProps<typeof PhotoViewerToolbar>, 'imageIndex'> | null>(null);
-function PhotoViewerFooter({ imageIndex }: { imageIndex: number }) {
+function PhotoViewerHeader({ imageIndex }: { imageIndex: number }) {
   const props = useContext(PhotoViewerToolbarContext);
-  return props ? <PhotoViewerToolbar {...props} imageIndex={imageIndex} /> : null;
+  return <><PhotoViewerSystemBars />{props ? <PhotoViewerToolbar {...props} imageIndex={imageIndex} /> : null}</>;
 }
 
-// The safe-area-aware footer owns Close; omit the library's duplicate header.
-function PhotoViewerHeader() { return <PhotoViewerSystemBars />; }
 
 export function PhotoViewerLoadError({ onRetry }: { readonly onRetry: () => void }) {
   return <View style={styles.loadError}>
@@ -102,7 +100,7 @@ function PhotoViewerToolbar({
   onRemove,
   onSelectIndex,
   photos,
-  safeBottomInset
+  safeTopInset
 }: {
   readonly canRemove: boolean;
   readonly isRemoving: boolean;
@@ -111,7 +109,7 @@ function PhotoViewerToolbar({
   readonly onRemove?: (photo: FullScreenPhotoViewerPhoto, index: number) => void;
   readonly onSelectIndex: (index: number) => void;
   readonly photos: readonly FullScreenPhotoViewerPhoto[];
-  readonly safeBottomInset: number;
+  readonly safeTopInset: number;
 }) {
   const canShowRemoveAction = canRemove && onRemove !== undefined;
   const state = fullScreenPhotoViewerActionState(photos, imageIndex, canShowRemoveAction);
@@ -120,97 +118,39 @@ function PhotoViewerToolbar({
     if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Removing photo…');
   }, [isRemoving]);
 
-  return (
-    <View style={[styles.toolbarOuter, { paddingBottom: Math.max(spacing.md, safeBottomInset) }]}>
-      <View style={styles.infoBlock}>
-        <Text style={styles.positionText}>{state.positionLabel}</Text>
-        {isRemoving ? <Text accessibilityLiveRegion="polite" style={styles.positionText}>Removing photo…</Text> : null}
-        <Text numberOfLines={1} style={styles.fileText}>{state.fileLabel}</Text>
-        {state.metadataLabel ? (
-          <Text numberOfLines={1} style={styles.metadataText}>{state.metadataLabel}</Text>
-        ) : null}
-      </View>
-      <View style={[styles.toolbar, Platform.OS !== 'ios' && styles.legacyToolbar]}>
-        <PhotoViewerActionButton action="close" onPress={onClose} />
-        {photos.length > 1 ? (
-          <>
-            <PhotoViewerActionButton
-              action="previous"
-              disabled={!state.canGoPrevious}
-              onPress={() => onSelectIndex(Math.max(0, imageIndex - 1))}
-           />
-            <PhotoViewerActionButton
-              action="next"
-              disabled={!state.canGoNext}
-              onPress={() => onSelectIndex(Math.min(photos.length - 1, imageIndex + 1))}
-           />
-          </>
-        ) : null}
-        {canShowRemoveAction ? (
-          <PhotoViewerActionButton
-            action="remove"
-            disabled={isRemoving || !state.canRemove || !currentPhoto}
-            onPress={() => {
-              if (currentPhoto && !isRemoving) {
-                onRemove?.(currentPhoto, imageIndex);
-              }
-            }}
-          />
-        ) : null}
-      </View>
-    </View>
-  );
+  const groups: readonly NativeActionMenuGroup[] = [
+    { id: 'information', items: [
+      { id: 'position', label: state.positionLabel, disabled: true, onPress: () => {} },
+      { id: 'name', label: state.fileLabel, disabled: true, onPress: () => {} },
+      ...(state.metadataLabel ? [{ id: 'metadata', label: state.metadataLabel, disabled: true, onPress: () => {} }] : [])
+    ] },
+    { id: 'actions', items: canShowRemoveAction ? [{ id: 'remove', label: 'Remove photo',
+      systemImage: 'trash', isDestructive: true,
+      disabled: isRemoving || !state.canRemove || !currentPhoto,
+      onPress: () => { if (currentPhoto && !isRemoving) onRemove?.(currentPhoto, imageIndex); }
+    }] : [] }
+  ];
+  return <View style={[styles.toolbarOuter, { paddingTop: Math.max(spacing.sm, safeTopInset) }]}>
+    <View accessible accessibilityRole="adjustable" accessibilityLabel={`Photo, ${state.positionLabel}`}
+      accessibilityHint="Swipe up or down to change photos"
+      accessibilityActions={[{ name: 'increment', label: 'Next photo' }, { name: 'decrement', label: 'Previous photo' }]}
+      onAccessibilityAction={({ nativeEvent }) => {
+        if (nativeEvent.actionName === 'increment' && state.canGoNext) onSelectIndex(imageIndex + 1);
+        if (nativeEvent.actionName === 'decrement' && state.canGoPrevious) onSelectIndex(imageIndex - 1);
+      }} style={styles.photoAccessibilityTarget} />
+    {isRemoving ? <Text accessibilityLiveRegion="polite" style={styles.progress}>Removing photo…</Text> : null}
+    <NativeActionMenu accessibilityLabel="Photo options" tone="onDark" groups={groups} />
+    <PhotoViewerActionButton action="close" onPress={onClose} />
+  </View>;
 }
 
 const styles = StyleSheet.create({
   loadError: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
   loadErrorText: { color: viewerColors.foreground, fontSize: 20, textAlign: 'center', flexShrink: 1 },
   toolbarOuter: {
-    backgroundColor: viewerColors.background,
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm
   },
-  infoBlock: {
-    alignItems: 'center',
-    gap: 2,
-    paddingHorizontal: spacing.lg
-  },
-  positionText: {
-    color: viewerColors.foreground,
-    fontSize: 15,
-    fontWeight: '900',
-    letterSpacing: 0
-  },
-  fileText: {
-    color: viewerColors.foreground,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0,
-    maxWidth: '92%',
-    opacity: 0.84
-  },
-  metadataText: {
-    color: viewerColors.foreground,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0,
-    maxWidth: '92%',
-    opacity: 0.62
-  },
-  legacyToolbar: {
-    backgroundColor: 'rgba(13, 18, 22, 0.82)',
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    borderRadius: radius.lg,
-    borderWidth: 1
-  },
-  toolbar: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
-  },
+  photoAccessibilityTarget: { flex: 1, minHeight: 44 },
+  progress: { color: viewerColors.foreground, flexShrink: 1 }
 });

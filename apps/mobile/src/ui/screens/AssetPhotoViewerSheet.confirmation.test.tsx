@@ -12,7 +12,7 @@ it.each(['access', 'pending', 'selection', 'collection', 'collection-append', 'c
   let changed = false;
   const render = () => h.render(<AssetPhotoViewerSheet canRemove={!(changed && change === 'access')} isRemoving={changed && change === 'pending'} photos={changed && change === 'collection' ? photos.slice(1) : changed && change === 'collection-append' ? [...photos, { id: 'three', label: 'Three', uri: 'https://photo.invalid/three' }] : photos} model={assetPhotoViewerModel(photos, changed && change === 'close' ? undefined : changed && change === 'selection' ? 'two' : 'one')} onClose={() => {}} onSelectPhoto={() => {}} onRemove={id => removed.push(id)} />);
   try {
-    await render(); await h.press(h.byLabel('Remove photo'));
+    await render(); await h.press(h.byLabel('Photo options')); await h.press(h.byText('Remove photo')?.parent ?? undefined);
     const confirm = latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress;
     expect(confirm).toBeTypeOf('function');
     changed = true;

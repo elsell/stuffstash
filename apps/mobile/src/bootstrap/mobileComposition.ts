@@ -1,3 +1,5 @@
+import { CreateWorkspace } from '../application/inventories/CreateWorkspace';
+import { ApiWorkspaceCreation } from '../adapters/inventories/ApiWorkspaceCreation';
 import { ExpirationWorkspaceQuery } from '../application/expiration/ExpirationWorkspaceQuery';
 import type { ExpirationEvent } from '../application/expiration/ExpirationRepository';
 import { ApiExpirationRepository } from '../adapters/expiration/ApiExpirationRepository';
@@ -124,6 +126,7 @@ import { QueryClientInventorySelectionObserver } from '../adapters/serverState/Q
 import { createTimeoutFetch, mobileApiRequestTimeoutMs } from '../adapters/network/TimeoutFetch';
 
 export type MobileComposition = {
+  readonly createWorkspace: CreateWorkspace;
  readonly expirationWorkspaceQuery: ExpirationWorkspaceQuery;
   readonly pushReconciliation: PushReconciliationController;
   readonly pushNotificationResponses: PushNotificationResponses;
@@ -305,6 +308,10 @@ export function createMobileComposition(
   const customizationAccessPolicy = new CustomizationAccessPolicy(customizationObservability);
 
   return {
+    createWorkspace: new CreateWorkspace(new ApiWorkspaceCreation(client), { created() {
+      inventorySummaries.invalidateDirectory();
+      void queryClient.invalidateQueries({ predicate: query => query.queryKey[1] === serviceScopeId && query.queryKey.includes('home') });
+    } }),
     createNotificationPreferencesSession: (tenantId, inventoryId) => new NotificationPreferencesSession(notificationRepository, notificationObserver, tenantId, inventoryId),
     notificationInboxQueries,
     pushSession,

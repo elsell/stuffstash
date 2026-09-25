@@ -1,3 +1,4 @@
+import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { AssetTagSelectionScreen, type AssetTagSelectionOption } from '../screens/AssetTagSelectionScreen';
@@ -23,7 +24,8 @@ type SelectionOwner = {
   readonly disabled: boolean;
   readonly tags: readonly AssetTagSelectionOption[];
   readonly selectedIds: readonly string[];
-  readonly onChange: (ids: readonly string[]) => void;
+  readonly newTags?: readonly CreateAssetTagDraft[];
+  readonly onChange: (ids: readonly string[], newTags?: readonly CreateAssetTagDraft[]) => void;
 };
 /** Navigation carries the presentation only; committed form callbacks own the draft. */
 export function useAssetTagSelectionVisit(options: SelectionOwner) {
@@ -41,13 +43,13 @@ export function useAssetTagSelectionVisit(options: SelectionOwner) {
     current.current = options;
     return () => { current.current = undefined; };
   }, [options]);
-  const finish = useCallback((expected: NonNullable<typeof visit>, ids?: readonly string[]) => {
+  const finish = useCallback((expected: NonNullable<typeof visit>, ids?: readonly string[], newTags?: readonly CreateAssetTagDraft[]) => {
     const latest = current.current;
     const pending = active.current;
     if (!pending || pending !== expected) return;
     active.current = undefined;
     setVisit(undefined);
-    if (ids && latest && !latest.disabled && latest.scope === pending.scope) latest.onChange(ids);
+    if (ids && latest && !latest.disabled && latest.scope === pending.scope) latest.onChange(ids, newTags);
   }, []);
   useLayoutEffect(() => {
     if (!visit || visit.scope !== options.scope || options.disabled) {
@@ -58,8 +60,8 @@ export function useAssetTagSelectionVisit(options: SelectionOwner) {
     }
     active.current = visit;
     commands?.show(owner, { cancel: () => finish(visit), content: <AssetTagSelectionScreen
-      tags={options.tags} initialSelectedIds={visit.ids} onDone={ids => finish(visit, ids)} onCancel={() => finish(visit)} /> });
-  }, [commands, owner, visit, options.scope, options.disabled, options.tags, finish]);
+      tags={options.tags} initialSelectedIds={visit.ids} initialNewTags={options.newTags} onDone={(ids, newTags) => finish(visit, ids, newTags)} onCancel={() => finish(visit)} /> });
+  }, [commands, owner, visit, options.scope, options.disabled, options.tags, options.newTags, finish]);
   useLayoutEffect(() => () => { active.current = undefined; commands?.clear(owner); }, [commands, owner]);
   return useCallback(() => {
     const latest = current.current;

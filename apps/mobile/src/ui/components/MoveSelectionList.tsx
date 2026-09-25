@@ -13,9 +13,10 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
         <Text style={styles.rowContext}>{props.context}</Text>
       </View>
     </SettingsSection>
-    {props.retainedSelection ? <SettingsSection title="Selected"><Choice row={props.retainedSelection} /></SettingsSection> : null}
+    {props.destinationLabel ? <SettingsSection title="Move to"><View style={styles.navigationRow}><Text style={styles.rowLabel}>{props.destinationLabel}</Text></View></SettingsSection> : null}
     <SettingsSection title={props.title}>
       {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
+      {props.retainedSelection ? <Choice row={props.retainedSelection} /> : null}
       {props.rows.map(row => <Choice key={row.id} row={row} />)}
     </SettingsSection>
   </ScrollView>;

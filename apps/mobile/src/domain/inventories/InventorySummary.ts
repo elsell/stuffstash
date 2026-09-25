@@ -15,6 +15,7 @@ export type InventoryId = string & { readonly __brand: 'InventoryId' };
 export type TenantId = string & { readonly __brand: 'TenantId' };
 
 export type TenantContext = {
+  readonly canCreateInventory?: boolean;
   readonly id: TenantId;
   readonly name: string;
 };

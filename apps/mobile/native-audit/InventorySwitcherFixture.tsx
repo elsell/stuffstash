@@ -1,3 +1,4 @@
+import { CreateWorkspace } from '../src/application/inventories/CreateWorkspace';
 import { useEffect, useState } from 'react';
 import { createMobileQueryClient, mobileQueryKeys } from '../src/adapters/serverState/MobileQueryClient';
 import { HomeDashboardQuery, type HomeDashboardViewModel } from '../src/application/home/HomeDashboardQuery';
@@ -9,7 +10,7 @@ const scope = { tenantId: 'audit-home', inventoryId: 'audit-main' };
 const dashboard: HomeDashboardViewModel = {
   ...scope, tenantName: 'Maple Street household with a long shared name', inventoryName: 'Main',
   canAdd: true, canReturn: true, recentAssets: [], checkedOutAssets: [],
-  tenants: [{ id: scope.tenantId, name: 'Maple Street household with a long shared name' }, { id: 'audit-workshop', name: 'Workshop household' }],
+  tenants: [{ id: scope.tenantId, name: 'Maple Street household with a long shared name', canCreateInventory: true }, { id: 'audit-workshop', name: 'Workshop household' }],
   inventories: [
     { id: scope.inventoryId, tenantId: scope.tenantId, tenantName: 'Maple Street', name: 'Main', roleLabel: 'Owner', updatedAtLabel: 'Today' },
     { id: 'audit-tools', tenantId: 'audit-workshop', tenantName: 'Workshop household', name: 'Workshop tools', roleLabel: 'Contributor', updatedAtLabel: 'Today' }
@@ -27,12 +28,17 @@ export function InventorySwitcherFixture() {
     let attempts = 0;
     return {
       client,
+      creation: new CreateWorkspace({
+        async canCreateInventory(id) { return id === 'audit-created-household' || id === scope.tenantId; },
+        async createHousehold(name) { return { id: 'audit-created-household', name, canCreateInventory: true }; },
+        async createInventory(tenantId, name) { return { id: 'audit-created-inventory', tenantId, name }; }
+      }, { created() {} }),
       query: new HomeDashboardQuery({ async getHomeDashboardSnapshot() { throw new Error('The presentation fixture must use its seeded dashboard'); } }),
       command: new SelectInventoryCommand({ async selectInventory() { if (++attempts === 1) throw new Error('Synthetic selection failure'); } })
     };
   });
   useEffect(() => () => state.client.clear(), [state]);
   return <MobileServerStateProvider client={state.client} scopeId="audit-switcher" loadInventoryScope={async () => scope}>
-    <TenantSwitcherSheetScreen dashboardQuery={state.query} selectInventoryCommand={state.command} />
+    <TenantSwitcherSheetScreen createWorkspace={state.creation} dashboardQuery={state.query} selectInventoryCommand={state.command} />
   </MobileServerStateProvider>;
 }

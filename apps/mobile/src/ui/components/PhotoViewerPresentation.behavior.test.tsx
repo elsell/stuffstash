@@ -30,3 +30,25 @@ it('rejects queued selection events after dismissal, including before parent rea
     expect(selected).toEqual([0]);
   } finally { await h.unmount(); }
 });
+
+
+it('keeps photo inspection clear and puts metadata and removal in More', async () => {
+  const h = new MobileRenderHarness();
+  const removed: string[] = []; const selected: number[] = [];
+  const photos = [{ id: 'one', label: 'Kitchen.jpg', metadataLabel: '2 MB', uri: 'one' }, { id: 'two', label: 'Shelf.jpg', uri: 'two' }];
+  try {
+    await h.render(<FullScreenPhotoViewer canRemove currentIndex={0} photos={photos}
+      onClose={() => {}} onRemove={photo => removed.push(photo.id!)} onSelectIndex={index => selected.push(index)} />);
+    expect(h.byType('ImageViewing')!.props.FooterComponent).toBeUndefined();
+    expect(h.byLabel('Next photo')).toBeUndefined();
+    expect(h.byLabel('Previous photo')).toBeUndefined();
+    expect(h.allText().join(' ')).not.toContain('Kitchen.jpg');
+    await h.press(h.byLabel('Photo options'));
+    expect(h.allText().join(' ')).toContain('Kitchen.jpg');
+    expect(h.allText().join(' ')).toContain('2 MB');
+    await h.press(h.byText('Remove photo')?.parent ?? undefined);
+    expect(removed).toEqual(['one']);
+    await h.run(() => h.byLabel('Photo, 1 of 2')!.props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } }));
+    expect(selected).toEqual([1]);
+  } finally { await h.unmount(); }
+});

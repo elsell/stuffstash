@@ -1,3 +1,5 @@
+import type { CreateWorkspace, CreatedHousehold, CreatedInventory } from '../../application/inventories/CreateWorkspace';
+import { WorkspaceCreationForm, type WorkspaceCreationTask } from './WorkspaceCreationForm';
 import { returnToPreviousOrHome } from '../navigation/returnToPreviousOrHome';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -25,15 +27,27 @@ import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActio
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 
 type TenantSwitcherSheetScreenProps = {
+  readonly createWorkspace?: CreateWorkspace;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
 };
 
-export function TenantSwitcherSheetScreen({
+export function TenantSwitcherSheetScreen(props: TenantSwitcherSheetScreenProps) {
+  const scopeId = useMobileServerStateScopeId();
+  return <TenantSwitcherVisit key={scopeId} {...props} />;
+}
+
+function TenantSwitcherVisit({
   dashboardQuery,
-  selectInventoryCommand
+  selectInventoryCommand,
+  createWorkspace
 }: TenantSwitcherSheetScreenProps) {
   const styles = useStyles();
+  const [creation, setCreation] = useState<WorkspaceCreationTask>();
+  const [creating, setCreating] = useState(false);
+  const [createdHouseholds, setCreatedHouseholds] = useState<readonly CreatedHousehold[]>([]);
+  const [createdInventories, setCreatedInventories] = useState<readonly CreatedInventory[]>([]);
+  const [preferredTenantId, setPreferredTenantId] = useState<string>();
   const [selecting, setSelecting] = useState(false);
   const [selectionError, setSelectionError] = useState('');
   const pending = useRef<AbortController | undefined>(undefined);
@@ -43,7 +57,7 @@ export function TenantSwitcherSheetScreen({
   useFocusEffect(useCallback(() => {
     const owner = { active: true };
     focused.current = true; setVisit(owner); setSelecting(Boolean(pending.current));
-    return () => { owner.active = false; focused.current = false; pending.current?.abort(); };
+    return () => { owner.active = false; focused.current = false; pending.current?.abort(); setCreation(undefined); setCreating(false); };
   }, [scopeId, selectInventoryCommand]));
   const dashboard = useMobileInventoryServerQuery({
     key: mobileQueryKeys.home,
@@ -65,30 +79,49 @@ export function TenantSwitcherSheetScreen({
     }
   }
 
-  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close inventory switcher', onPress: () => {
+  const data = dashboard.data;
+  const displayed = data ? { ...data,
+    tenants: [...data.tenants, ...createdHouseholds.filter(item => !data.tenants.some(tenant => tenant.id === item.id))],
+    inventories: [...data.inventories, ...createdInventories.filter(item => !data.inventories.some(inventory => inventory.id === item.id)).map(item => ({ ...item,
+      tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: 'Owner', updatedAtLabel: 'Just created' }))]
+  } : undefined;
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? 'Cancel creation' : 'Close inventory switcher', disabled: creating, onPress: () => {
+    if (creating) return;
+    if (creation) { setCreation(undefined); return; }
     if (!visit?.active) return;
     visit.active = false;
     pending.current?.abort(); returnToPreviousOrHome(router);
   } }]);
-  const headerOptions = useMemo(() => ({ title: 'Inventories', ...actionOptions }), [actionOptions]);
+  const headerOptions = useMemo(() => ({ title: creation ? creation.kind === 'household' ? 'New household' : 'New inventory' : 'Inventories', ...actionOptions }), [actionOptions, creation]);
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
       <Stack.Screen options={headerOptions} />
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      {creation && createWorkspace ? <WorkspaceCreationForm task={creation} command={createWorkspace}
+        onBusy={busy => { if (visit?.active) setCreating(busy); }} onCancel={() => setCreation(undefined)} onCreated={result => {
+          if (!visit?.active) return;
+          if (result.kind === 'household') {
+            setCreatedHouseholds(current => [...current, result.value]); setPreferredTenantId(result.value.id);
+          } else {
+            setCreatedInventories(current => [...current, result.value]); setPreferredTenantId(result.value.tenantId);
+          }
+          setCreating(false); setCreation(undefined);
+        }} /> : <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       {dashboard.isPending && !dashboard.data ? <LoadingState /> : null}
       {dashboard.isError && !dashboard.data ? (
         <ErrorState onRetry={() => { void dashboard.refetch(); }} />
       ) : null}
       {selectionError ? <Text accessibilityRole="alert" style={styles.errorMessage}>{selectionError}</Text> : null}
-      {dashboard.data ? (
+      {displayed ? (
         <TenantSwitcher
-          dashboard={dashboard.data}
+          dashboard={displayed}
+          preferredTenantId={preferredTenantId}
+          onCreate={createWorkspace ? task => { if (visit?.active && !pending.current) setCreation(task); } : undefined}
           selecting={selecting}
           onSelectInventory={selectInventory}
         />
       ) : null}
-      </ScrollView>
+      </ScrollView>}
     </SafeAreaView>
   );
 }
@@ -96,15 +129,19 @@ export function TenantSwitcherSheetScreen({
 function TenantSwitcher({
   dashboard,
   selecting,
-  onSelectInventory
+  onSelectInventory,
+  preferredTenantId,
+  onCreate
 }: {
+  readonly preferredTenantId?: string;
+  readonly onCreate?: (task: WorkspaceCreationTask) => void;
   readonly dashboard: HomeDashboardViewModel;
   readonly selecting: boolean;
   readonly onSelectInventory: (inventoryId: string) => Promise<void>;
 }) {
   const styles = useStyles();
   const currentTenant = dashboard.tenants.find((tenant) => tenant.id === dashboard.tenantId);
-  const [selectedTenantId, setSelectedTenantId] = useState(currentTenant?.id ?? dashboard.tenants[0]?.id);
+  const [selectedTenantId, setSelectedTenantId] = useState(preferredTenantId ?? currentTenant?.id ?? dashboard.tenants[0]?.id);
   const [mode, setMode] = useState<'inventories' | 'tenants'>('inventories');
   const selectedTenant =
     dashboard.tenants.find((tenant) => tenant.id === selectedTenantId) ??
@@ -125,13 +162,15 @@ function TenantSwitcher({
             textStyle={styles.sheetTitle}
           />
         </View>
-        <NativeCommandButton label={mode === 'tenants' ? 'Back' : 'Switch household'}
-          disabled={selecting} onPress={() => setMode(mode === 'tenants' ? 'inventories' : 'tenants')} />
+        <View style={styles.switchAction}><NativeCommandButton prominence="standard" label={mode === 'tenants' ? 'Back' : 'Switch household'}
+          disabled={selecting} onPress={() => setMode(mode === 'tenants' ? 'inventories' : 'tenants')} /></View>
       </View>
 
       {mode === 'inventories' ? (
         <>
           <Text style={styles.sectionLabel}>Inventories</Text>
+          {onCreate && selectedTenant?.canCreateInventory ? <NativeCommandButton label="New inventory" disabled={selecting}
+            onPress={() => onCreate({ kind: 'inventory', household: selectedTenant })} /> : null}
           {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>No inventories are available in this household.</Text> : null}
 
           {selectedTenantInventories.map((inventory, index) => {
@@ -164,6 +203,7 @@ function TenantSwitcher({
       ) : (
         <>
           <Text style={styles.sectionLabel}>Households</Text>
+          {onCreate ? <NativeCommandButton label="New household" disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
@@ -256,13 +296,16 @@ function createStyles(colors: MobileColorPalette) {
     letterSpacing: 0
   },
   sheetHeader: {
-    alignItems: 'stretch',
+    alignItems: 'center',
+    flexDirection: 'row',
     borderBottomColor: colors.border,
     borderBottomWidth: 1,
     gap: spacing.sm,
     paddingBottom: spacing.md
   },
+  switchAction: { width: '44%', alignItems: 'flex-end' },
   contextText: {
+    flex: 1,
     minWidth: 0
   },
   sheetTitle: {

@@ -150,8 +150,8 @@ describe('HomeDashboardQuery', () => {
     expect(dashboard.inventoryName).toBe('Home');
     expect(dashboard.canAdd).toBe(true);
     expect(dashboard.tenants).toEqual([
-      { id: 'tenant-home', name: 'Ksell Household' },
-      { id: 'tenant-cabin', name: 'Ksell Cabin' }
+      { id: 'tenant-home', name: 'Ksell Household', canCreateInventory: false },
+      { id: 'tenant-cabin', name: 'Ksell Cabin', canCreateInventory: false }
     ]);
     expect(dashboard.inventories).toEqual([
       {

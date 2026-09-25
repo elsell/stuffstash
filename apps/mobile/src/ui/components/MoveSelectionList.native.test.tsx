@@ -56,3 +56,22 @@ it('keeps filtered-out selection available beside destination context without co
     expect(calls).toEqual(['shed']);
   } finally { await h.unmount(); }
 });
+
+
+it('keeps the Move to summary stable when search hides the selected destination', async () => {
+  const h = new MobileRenderHarness();
+  const row = { id: 'shed', label: 'Shed', context: 'Garden', kind: 'location' as const,
+    selected: true, accessibilityLabel: 'Choose destination Shed', onPress: () => {} };
+  const render = (filtered: boolean) => h.render(<MoveSelectionList subjectLabel="Moving" subject="Tent"
+    context="Current location: Hall" destinationLabel="Garden / Shed" title="Destinations"
+    rows={filtered ? [] : [row]} retainedSelection={filtered ? row : undefined} />);
+  try {
+    await render(false);
+    expect(h.allText()).toContain('Move to');
+    expect(h.allText()).toContain('Garden / Shed');
+    await render(true);
+    expect(h.allText()).toContain('Move to');
+    expect(h.allText()).toContain('Garden / Shed');
+    expect(h.allText()).not.toContain('Selected');
+  } finally { await h.unmount(); }
+});
