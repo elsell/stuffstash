@@ -1,0 +1,24 @@
+iOS photo inspection — current diagnosis,2026-09-25.
+Baseline36110848610 at2ac37ae0 (verification-only PR199) runs four cases/device.
+Phone1/4 pass; iPad2/4. Both new double-tap cases stop because Close becomes
+unhittable after XCTest doubleTap. Full-screen fit/zoom/final captures show the
+same fitted image; final has hidden commands. The early zoom capture still shows
+commands mid-transition, while its AX tree records the footer below the viewport.
+Do not call that early capture evidence that AX is wrong: final confirms hiding.
+
+Phone failed-removal test sees the expected alert then fails the immediate OK hittability assertion;
+final frame shows a readable alert/OK above the viewer. iPad removal passes.
+Unavailable-photo recovery passes both. No real media or service mutations occur.
+
+Decision: one runner-only tap-event trace to distinguish one delivered press from
+two delivered presses outside recognition timing or incorrect recognizer handling.
+Capture raw event timestamps, receipt time and single/double classification without
+adding renders to the gesture path. If delivery is single, choose a native gesture
+recognizer instead of tuning delays. If two events expose handler error, fix that
+specific ownership/timing defect. No repeated gesture timing/provider experiments.
+Bound: baseline plus this one diagnostic; do not reset budget on continuation.
+
+Artifacts10853741976 phone and10854026419 iPad. Only selected screenshots/trees
+extracted to /tmp/move-layout-review/photo-inspection-*. Native job logs:
+/tmp/photo-inspection-phone.log and /tmp/photo-inspection-ipad.log.
+Production source is unchanged in PR199; no product correction accepted yet.

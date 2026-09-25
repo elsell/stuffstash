@@ -6,10 +6,11 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.41 (136.1)**. PR196 mergedc2248215;
-release36098436371, iOS upload107957316184 and Apple changelog readback passed.
-Native commands now contain multiline labels while retaining ordinary density.
-[Release evidence](evidence/release-136.txt).
+Latest verified TestFlight is **0.24.42 (137.1)**. PR198 merged91f33a5d;
+release36110476038, iOS upload107995277629 and Apple changelog readback107999790099
+passed. Sheet actions now keep padded backgrounds around growing labels and
+bounded secondary actions. [Release evidence](evidence/release-137.txt).
+Prior136 delivered measured native commands. [Evidence](evidence/release-136.txt).
 Prior132 corrected inventory collection footer clearance above tabs/voice.
 [Prior release](evidence/release-132.txt).
 Prior130 delivered History summaries, Before/After values, mode selection and
@@ -100,13 +101,23 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-M281 is confirmed: enlarged iPad sheet labels grow while their backgrounds stay
-54pt high. The candidate reuses the measured UIKit command adapter for full-width
-footer actions.15 focused tests, TypeScript, structural checks,17 fixture checks
-and critic review pass. Native acceptance across footer, Conversation and long
-Tags consumers is required before release. The earlier fixture-only run is
-superseded; it is not a reason for another unchanged investigation.
+M281 is fixed and visually accepted for this batch. Native36107210729 at
+d4a9c0d9 passes all five cases on both iPhone17 and iPad mini: normal/enlarged
+footer appearance and disabled actions, Conversation location/return and
+close/reopen, and final-tag clearance/application. Full-screen review confirms
+padded button backgrounds, bounded secondary actions and unobscured final tags.
+15 focused tests, TypeScript, structural checks,17 fixture checks, critic review
+and exact-head CI pass. PR198 merged91f33a5d; release36110476038 delivered137.1 with verified Apple TestFlight notes.
 [One current diagnosis](evidence/sheet-footer-current.txt).
+
+Current ordinary workflow: iOS photo inspection. Native36110848610 at2ac37ae0
+reproduces a double-tap behaving like a single tap in both asset and Add previews
+on phone/iPad: final full frames show unchanged fitted crop and hidden commands.
+This is not yet a diagnosis of event delivery versus recognizer handling. One
+focused event-trace follow-up is the remaining investigation budget before a
+concrete implementation decision. iPad recovery passes; phone alert appears but
+its immediate OK hittability assertion fails, a separate readiness gap.
+[Current diagnosis](evidence/photo-inspection-current.txt).
 
 The UIKit command batch shipped in136.1 using combined same-product native
 evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and

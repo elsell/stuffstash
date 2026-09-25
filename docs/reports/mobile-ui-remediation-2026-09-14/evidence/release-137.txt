@@ -1,0 +1,9 @@
+TestFlight0.24.42 (137.1), verified2026-09-25.
+PR198 merged91f33a5d6f7e84a9b396e87f01c12028ab9f9e6b.
+Release36110476038 success; iOS upload107995277629 success.
+Apple notes job107999790099 success. Log readback:
+2026-09-25T08:27:36.7173481Z Verified TestFlight changelog for v0.24.42 (137.1).
+Notes: Improve sizing and spacing of filter and conversation buttons, including at larger text sizes.
+Native36107210729 passes five cases per device atd4a9c0d9. Full-screen
+review, focused source tests, structural checks and critic pass. Scope is sheet
+footer sizing and representative Filter/Conversation consumers, not whole-app QA.
