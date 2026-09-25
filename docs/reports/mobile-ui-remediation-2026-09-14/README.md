@@ -87,6 +87,12 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
+Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
+Reviewed full-screen entry/search/footer captures confirm header clearance and
+final long-name row reachability above persistent controls. Existing viewport
+ownership is retained; no product correction or TestFlight build is needed.
+[Decision and checks](evidence/customization-collection-clearance.txt).
+
 Notification tab journey36057807116 at4b64bbd7 passes on phone/iPad. Reviewed
 full-screen detail, pagination and final-row captures confirm tab/Back continuity,
 read-state reconciliation and final content/action clearance. No product change
@@ -126,11 +132,13 @@ It contains no production renderer change and does not justify a TestFlight buil
 
 ## Separate unresolved decisions
 
-Normal-size decision boundary: no unchanged color/input diagnostic runs are
-queued. M51 remains unreleased; one physical first-tap observation on132.1 has
-been requested to distinguish device behavior from the inconsistent simulator
-evidence. iPad Add readiness remains unverified. These limits do not reopen the
-released inventory clearance fix or establish whole-app acceptance.
+Physical first-tap observation received2026-09-25: in response to the requested
+TestFlight0.24.40 (132.1) tag-editor check, the user reports “opens right away,
+all good.” Ordinary custom-color opening is accepted for that tested iPhone/build;
+no color-control rewrite is justified by the earlier inconsistent simulator result.
+This does not validate the unreleased PR161 candidate, coordinate probes, iPad,
+color editing/save, or assistive activation. iPad Add readiness remains unverified.
+[Device evidence](evidence/color-first-tap-device-132.txt).
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
   keyboard disappearance; final capture/tree shows it dismissed and address intact.
@@ -144,12 +152,13 @@ released inventory clearance fix or establish whole-app acceptance.
   evidence. Swipe replay failed both directions and remains unverified after the
   bounded investigation; older Android is not certified. No Activity-level style workaround was restored. [Evidence](evidence/android-photo-status.txt).
 
-- **M51 color selection:** [PR161](https://github.com/elsell/stuffstash/pull/161)
-  remains draft at aa9fbd9e. The explicit system color-picker candidate passes
-  ordinary opening on both devices, but phone coordinate activation and timely Add
-  observation remain unverified in35812501085. Investigation budget is exhausted:
-  retain the implementation and the exact failed gates; do not swap controls or
-  repeat unchanged diagnostics. [Results](native-color-358125-results.csv).
+- **M51 ordinary color opening:** user verified immediate first-tap opening on
+  iPhone/TestFlight132.1 on2026-09-25. The shipped SwiftUI picker matches release
+  commit2a447c2b. Alternative UIKit replacement [PR161](https://github.com/elsell/stuffstash/pull/161)
+  is closed without merging; its branch and failed candidate gates remain evidence.
+  Do not revive it from the old simulator discrepancy alone. This closes the
+  reported ordinary-opening concern, not iPad/assistive or arbitrary color-edit
+  coverage. [Device evidence](evidence/color-first-tap-device-132.txt).
 - **Text-input comparisons:** provider removal and paced entry did not establish
   a general correction. Fix reproduced consumers using the established native
   draft field, preserving reset and ownership semantics. Do not repeat the same

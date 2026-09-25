@@ -19,9 +19,9 @@ import { CustomizationCollectionScreen } from '../src/ui/screens/CustomizationCo
 const scope = { tenantId: 'readback-household', inventoryId: 'readback-inventory' };
 const unavailable = async (): Promise<never> => { throw new Error('Outside the tag readback journey'); };
 
-export function createSettingsReadback() {
+export function createSettingsReadback(initialTags: readonly AssetTagDefinition[] = [{kind: 'tag', id: 'tools', key: 'tools', displayName: 'Tools'}]) {
  let sequence=0;let rejectUpdate=true;
- const records=new Map<string,AssetTagDefinition>([['tools',{kind:'tag',id:'tools',key:'tools',displayName:'Tools'}]]);
+ const records=new Map<string,AssetTagDefinition>(initialTags.map(tag => [tag.id, tag]));
  function verify(context:CustomizationContext) {
   if(context.tenantId!==scope.tenantId||context.inventoryId!==scope.inventoryId)throw new Error('Outside the fixture inventory');
  }

@@ -1,0 +1,15 @@
+Physical device report —2026-09-25
+Requested scenario: TestFlight0.24.40 (132.1), existing tag editor, tap custom
+color control once and observe whether Apple's color picker opens immediately.
+User response: “opens right away, all good”.
+Decision: accept ordinary first-tap opening for the tested iPhone/build. Stop
+using the inconsistent simulator result as evidence that this released interaction
+needs a rewrite. This observation does not establish unreleased PR161 acceptance,
+coordinate-target geometry, iPad behavior, color changes/save, or assistive use.
+The broader audit remains incomplete; the specific requested device evidence is
+no longer missing. No product code change or repeat run is warranted here.
+
+Reconciliation: current NativeTagColorPicker.ios.tsx is unchanged from released
+commit2a447c2b. PR161 was still draft ataa9fbd9e; closed without merging on
+2026-09-25. Its branch remains available; the candidate was not verified by this
+user observation. No replacement implementation or new release is required.

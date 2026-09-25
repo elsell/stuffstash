@@ -130,7 +130,7 @@ for route, component in {
 
 # Exercise unmodified Home hrefs against their real tab ownership, without root
 # fixture routes that would intercept /search or /assets/:id.
-if os.environ.get("AUDIT_TEST_CASE") in ("home-collections", "history-journey", "voice-accessory-navigation", "inventory-clearance", "notification-journey"):
+if os.environ.get("AUDIT_TEST_CASE") in ("home-collections", "history-journey", "voice-accessory-navigation", "inventory-clearance", "notification-journey", "customization-clearance"):
     shutil.rmtree(routes / "audit-tabs")
     (routes / "search.tsx").unlink()
     (routes / "assets/[assetId]/index.tsx").unlink()
@@ -179,3 +179,9 @@ if os.environ.get("AUDIT_TEST_CASE") == "notification-journey":
     target.parent.mkdir(parents=True, exist_ok=True)
     source = os.path.relpath(root / "apps/mobile/native-audit/NotificationJourneyFixture", target.parent)
     target.write_text(f"export {{ NotificationJourneyFixture as default }} from '{source}';\n")
+
+if os.environ.get("AUDIT_TEST_CASE") == "customization-clearance":
+    target = routes / "(tabs)/(home,search)/settings/inventory/tags/index.tsx"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source = os.path.relpath(root / "apps/mobile/native-audit/CustomizationCollectionJourneyFixture", target.parent)
+    target.write_text(f"export {{ CustomizationCollectionJourneyFixture as default }} from '{source}';\n")
