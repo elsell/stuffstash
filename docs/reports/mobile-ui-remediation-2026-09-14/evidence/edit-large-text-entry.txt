@@ -51,3 +51,8 @@ updates. NativeSheetActions uses a separate implementation and is not claimed fi
 Five bridge checks failed before implementation, then60 focused tests passed;
 critic found stale retained callbacks, reproduced separately before adding committed
 handler ownership and teardown. Native rendering/compilation is still pending.
+Native36093280018 stopped before compilation: deployment installation correctly
+rejected the missing new local pod lock entry. Adopted CI36093282388's CocoaPods
+1.17.0 generated lockfile (artifact10846601928); reviewed diff adds only
+StuffStashCommandButton, its existing dependencies, local path and checksum.
+No external dependency versions or deployment enforcement changed.
