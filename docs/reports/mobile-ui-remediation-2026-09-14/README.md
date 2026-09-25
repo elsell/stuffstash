@@ -87,9 +87,10 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Customization collection clearance is the next bounded native baseline: real Tags
-collection, long list, production tab chrome, search and final-row reachability.
-No product defect or correction is asserted from its different inset ownership.
+Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
+Reviewed full-screen entry/search/footer captures confirm header clearance and
+final long-name row reachability above persistent controls. Existing viewport
+ownership is retained; no product correction or TestFlight build is needed.
 [Decision and checks](evidence/customization-collection-clearance.txt).
 
 Notification tab journey36057807116 at4b64bbd7 passes on phone/iPad. Reviewed

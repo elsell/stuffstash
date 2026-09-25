@@ -16,3 +16,14 @@ TypeScript, structural rules, three existing readback tests pass. Critic identif
 an empty-results false-pass gap; matching-row presence/hittability now required.
 Local /tmp contains a sandbox Git marker, correctly rejected by disposable archive
 guard; full fixture tests pass using an external temporary directory. Guard intact.
+
+Native baseline36085164693 atbe336c602b9061c433b8541b8e03e8196b45e49e:
+iPhone job107915314467 and iPad job107915314282 both passed.
+Artifacts10844300671(phone),10844680186(iPad). Full-screen entry, search and
+footer reviewed. Initial rows clear the header, matching row remains visible
+with native search/keyboard, and complete final long-name row is above voice/tab
+controls. Phone wraps the final name to two lines; iPad retains one line. Grouped
+rows keep consistent alignment and disclosure placement. No reproduced layout
+fault; retain existing viewport ownership. This closes the named normal-text
+collection clearance/search gap, not inherited-field semantics, assistive reading,
+or every device/text size. No product change and no TestFlight release required.
