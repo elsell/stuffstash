@@ -1506,3 +1506,46 @@ controls. This represents the shared collection scroll owner, not inherited-fiel
 semantics or physical color editing. One baseline decides whether manual viewport
 ownership already accounts for chrome or needs correction. If safe, keep it; if
 clipped, fix this owner and repeat the same acceptance on phone and iPad.
+
+## Enlarged-text editor acceptance entry
+
+Run35980094051's full-screen captures show three of four enlarged-text Edit
+metadata/tag cases still in the audit menu, not the editor. Enter these cases
+through the existing fixture URL rather than exhausting a fixed swipe count in
+an oversized diagnostic menu. Keep the production Edit screen, enlarged launch
+category, geometry, metadata recovery, tag-draft and dismissal assertions intact.
+The iPad tag capture reaches Edit and shows New tag crossing the scroll bottom;
+that is a scoped baseline concern, not evidence of a general native-input fault.
+One focused phone/iPad replay distinguishes inaccessible editor content from
+fixture-entry failure; a confirmed product defect then gets a separate correction
+and unchanged acceptance. Do not reset earlier text-entry diagnostic budgets.
+
+## Native command measurement at enlarged text
+
+Replay36087906732 at938f32b1 confirms the phone New tag button draws77.3pt high
+inside a48pt host, extending below the scroll viewport at100% scroll. The earlier
+outer48pt minimum fixed ordinary-size spacing but does not preserve Dynamic Type
+measurement. Candidate b25867d9's large SwiftUI control sizing is rejected:
+its complete screenshots show label/background separation and ordinary-size wrapping.
+Use an iOS UIKit UIButton adapter with native tinted/filled/plain configurations
+for secondary/primary/explicit quiet actions. The bridge must report the complete
+measured height to React Native, recompute on width, label and content-size-category
+changes, and use the same preferred body font and content insets for measurement
+and rendering. Secondary commands use their natural width up to available width;
+primary commands fill available width. Native title wrapping must grow the bounded
+background and touch target with at least48pt height. Use10pt vertical/16pt horizontal
+content insets as this adapter's explicit layout contract, not per-consumer offsets.
+Preserve accessible names, destructive tint, disabled semantics and current handlers.
+Do not cap font scaling. Ignore malformed bridge size events. Native acceptance
+must repeat both enlarged Edit cases unchanged and ordinary Detail, Sharing and
+paired reminder recovery, reviewing full screenshots for label containment and density.
+Apple reference: https://developer.apple.com/documentation/uikit/uibutton/configuration-swift.struct/titlelinebreakmode
+The iPad Retry tags failure is still a separate unverified activation outcome;
+do not claim its cause is proved solely by the phone sizing evidence.
+
+For enlarged Edit tag acceptance, run36093575172 observed one keyboard predicate
+sample taking4.28s and exhausting the5s budget before a second sample; the retained
+post-timeout C key has a finite frame and is hittable. Allow15s for this named
+scenario's existing interactive-key predicate. Keep exact entered text, draft
+retention, geometry and dismissal assertions; do not substitute keyboard existence,
+change providers or relax normal-text timing. Product code stays frozen.

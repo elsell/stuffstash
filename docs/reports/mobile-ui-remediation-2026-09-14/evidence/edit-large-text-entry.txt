@@ -1,0 +1,45 @@
+Current decision: accept the UIKit command batch using combined same-product
+native evidence; do not report the latest native run as wholly green.
+
+Defect and correction
+Replay36087906732 at938f32b1 measured phone New tag77.3pt in a48pt host,
+clipping the native background. Candidateb25867d9 passed reachability but failed
+full-screen review: multiline labels overflowed pills and ordinary Detail commands
+wrapped unnecessarily. Retained rejected captures: command-candidate-rejected-large.png
+and command-candidate-rejected-normal.png. That candidate was not released.
+
+Replacementa8daf63b uses UIKit configured buttons and reports complete label height
+to page layout. Natural secondary width stays within available width; primary fills
+it. The preferred body font/insets drive label and background measurement. No font
+cap or per-consumer padding. Committed handler ownership guards late native events,
+disablement and teardown. Android and separate NativeSheetActions are unchanged.
+60 focused source checks passed; the critic's retained-callback regression failed
+before correction and all6 command/accessibility tests then passed. TypeScript,
+structural checks and17 fixture preparation checks passed; critic has no blocker.
+
+Native evidence
+36093280018 stopped before compilation because the local pod lock entry was missing.
+9c38bbbe adopted CocoaPods1.17.0 CI36093282388 artifact10846601928; only the local
+module/path/checksum was added. Deployment enforcement and external versions stayed.
+36093575172 at9c38bbbe: phone4/5, iPad5/5. Phone tag stopped at5s keyboard predicate;
+post-timeout C was finite/hittable.88b9bbfd only gives that enlarged scenario15s,
+retaining the actual typing, draft, geometry and dismissal assertions.
+36095743496 at88b9bbfd: phone5/5, iPad4/5. iPad Sharing's immediate email assertion
+read audit@example.i; final capture shows complete audit@example.invalid. It stopped
+before Create interaction. The same product code already passed complete iPad
+Sharing in36093575172; no input or command rewrite is justified by this observation.
+Do not retroactively mark the failed run passed or repeat provider/key diagnostics.
+
+Reviewed captures show normal Detail labels on one line, multiline phone recovery
+and Cancel new tag fully bounded, and representative Sharing/reminder command
+containment on both devices. Retained command-uikit-normal.png,
+command-uikit-large.png, command-uikit-phone-tag-accepted.png,
+command-uikit-ipad-email-final.png and command-uikit-keyboard-readiness.txt.
+Artifacts: prior10847466827/10847531256(phone/iPad);
+replay10847523545/10847764243. CI36095747484 passed88b9bbfd.
+
+Release scope is command measurement/activation and representative consumers.
+All scoped workflows have a full pass on each device with identical product code.
+Critic reviewed combined acceptance and found no concrete release blocker. Latest
+Sharing assertion timing remains a fixture gap, not claimed functional acceptance
+from its final screenshot alone. Broader audit and physical/assistive gaps remain.

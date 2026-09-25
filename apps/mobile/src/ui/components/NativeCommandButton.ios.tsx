@@ -1,17 +1,26 @@
-import { Button, Host, HStack, Spacer, Text } from '@expo/ui/swift-ui';
-import { accessibilityLabel, buttonStyle, disabled as nativeDisabled, fixedSize, frame } from '@expo/ui/swift-ui/modifiers';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { requireNativeView } from 'expo';
+import type { ViewStyle } from 'react-native';
 import type { NativeCommandButtonProps } from './NativeCommandButton.types';
 
-export function NativeCommandButton({ label, accessibilityLabel: accessibleName = label, disabled = false, onPress, prominence = 'secondary', role = 'default' }: NativeCommandButtonProps) {
-  const command = <Button role={role} onPress={() => { if (!disabled) onPress(); }} modifiers={[
-      buttonStyle(prominence === 'primary' ? 'borderedProminent' : prominence === 'secondary' ? 'bordered' : 'borderless'), nativeDisabled(disabled), accessibilityLabel(accessibleName),
-      fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 48 })
-    ]}>
-      {prominence === 'primary' ? <HStack><Spacer />
-        <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 32 })]}>{label}</Text>
-        <Spacer /></HStack> : <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minWidth: 48, minHeight: 32 })]}>{label}</Text>}
-    </Button>;
-  return <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-    {prominence === 'secondary' ? <HStack>{command}<Spacer /></HStack> : command}
-  </Host>;
+type NativeProps = Omit<NativeCommandButtonProps, 'onPress'> & {
+  onPress: () => void;
+  onSizeChange: (event: { nativeEvent: { height: number } }) => void;
+  style: ViewStyle;
+};
+const Command = requireNativeView<NativeProps>('StuffStashCommandButton');
+const minimumTarget = 48;
+
+export function NativeCommandButton({ label, accessibilityLabel = label, disabled = false, onPress, prominence = 'secondary', role = 'default' }: NativeCommandButtonProps) {
+  const [height, setHeight] = useState(minimumTarget);
+  const current = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    current.current = disabled ? null : onPress;
+    return () => { current.current = null; };
+  }, [disabled, onPress]);
+  return <Command label={label} accessibilityLabel={accessibilityLabel} disabled={disabled}
+    prominence={prominence} role={role} onPress={() => current.current?.()}
+    onSizeChange={({ nativeEvent }) => {
+      if (Number.isFinite(nativeEvent.height) && nativeEvent.height >= minimumTarget) setHeight(nativeEvent.height);
+    }} style={{ width: '100%', height }} />;
 }

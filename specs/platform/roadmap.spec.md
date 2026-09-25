@@ -2,15 +2,19 @@
 
 ## Current structural priority: connected workflow stability
 
-TestFlight0.24.36(127.1) is delivered from main0bb1f24e (combined PR182).
-Browse search/appearance, card alignment, detail header clearance and container
-organization passed scoped review; populated Detail/Sharing final content clears
-persistent navigation on phone and iPad. Release36008181746 and Apple changelog
-readback passed. Continue the normal-text connected workflow audit; retain iPad
-Add readiness timing and unverified Recent-assets/invitation layouts as specific
-follow-ups. Native audit runs are deliberately dispatched for frozen scopes;
-PR updates must not spawn duplicate full diagnostic sweeps. The single current
-summary is docs/reports/mobile-ui-remediation-2026-09-14/README.md.
+The normal-text workflow fixes through TestFlight0.24.40(132.1) are delivered.
+Current phone/iPad evidence covers the main Browse/Edit/Move/filter workflows,
+Home navigation, populated Detail/Sharing, Settings overview, History,
+notifications and long inventory/customization collections. These are scoped
+results, not whole-app certification. See the single current summary at
+`docs/reports/mobile-ui-remediation-2026-09-14/README.md` for exact builds and gaps.
+
+Continue from unresolved workflow evidence, not historical pending labels.
+Prioritize any confirmed normal-text defect before enlarged-text work. Inspect
+existing failure captures before dispatching a new run; distinguish task failures
+from fixture-entry or observation timing. Keep physical integrations, assistive
+behavior and wider-device acceptance explicit. Native runs remain manually
+selected for frozen scopes; audit-only evidence does not require TestFlight.
 
 ## Purpose
 
@@ -46,23 +50,12 @@ The next mobile review follows everyday workflows: Home → Browse List/Map →
 asset → Edit/Move → Filters and back. Prioritize stable screen structure and
 controls, appropriate task patterns, visual coherence, then detailed states.
 The144-surface/24-axis ledger checks omissions; it must not drive work toward easy
-measurements or tests. Hold the isolated Edit sheet-spacing candidate until its
-interaction pattern is reviewed. Preserve bounded investigation and quiet sleeping
+measurements or tests. Preserve bounded investigation and quiet sleeping
 scripts that report terminal results, not repeated unchanged waiting messages.
 
-M260–M273 are delivered through TestFlight0.24.33(124.1). Release35938987211
-verified Apple processing and exact changelog readback after PR173 merged.
-Continue normal-text workflow review with frozen PR174, consolidating filters,
-detail/Sharing, Settings current-save/readback and Move hierarchy/contrast into
-one release batch. Integrated35941028517 passed14/15 phone and15/15 iPad; the
-conditional keyboard-dismiss correction passed focused35945429162 on both.
-Settings35948277688 and Move contrast35951755320 pass both devices. Scoped Move
-captures were reviewed; required checks passed and PR174 merged as98d29649.
-Release35954982498 delivered TestFlight0.24.34(125.1); changelog job107497620643 verified exact readback. PR176 is superseded by this consolidation;
-persistent tabs and broader command emphasis remain separate candidates. Keep
-visual gates explicit; unrelated findings do not block this release batch.
-The audit's single current summary records evidence and remaining gaps:
-`docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
+Earlier Edit/Move pattern candidates, persistent tabs and command-emphasis work
+have shipped. Their old candidate/PR status is historical; recover current decisions
+from the audit summary rather than restarting those investigations.
 
 The older expiration rollout notes below are historical baseline context. The user
 has since verified notifications work; do not treat the old APNs setup gap as a

@@ -1530,14 +1530,18 @@ final class FixtureAuditTests: XCTestCase {
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
-    verifyEditTagDisclosure(captureSuffix: "accessibility-size")
+    verifyEditTagDisclosure(captureSuffix: "accessibility-size", directEntry: true)
   }
 
-  private func verifyEditTagDisclosure(captureSuffix: String) {
+  private func verifyEditTagDisclosure(captureSuffix: String, directEntry: Bool = false) {
     let open = app.buttons["Audit Edit tags"]
-    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+    if directEntry {
+      guard openFixtureURL("audit-edit-tags") else { return }
+    } else {
+      for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(open.isHittable)
+      open.tap()
+    }
     let scroll = app.scrollViews.containing(.textField, identifier: "Asset name").firstMatch
     XCTAssertTrue(scroll.waitForExistence(timeout: 10))
     let cancel = app.buttons["Cancel"].firstMatch
@@ -1559,6 +1563,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(chooseTags.waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Select tag Tag 13"].exists)
     reveal(chooseTags)
+    if directEntry {
+      XCTAssertGreaterThan(app.staticTexts["Tags"].firstMatch.frame.height, 30, "The direct-entry scenario must retain enlarged text")
+    }
     XCTAssertFalse(app.textFields["New tag name"].exists)
     let newTag = app.buttons["New tag"].firstMatch
     reveal(newTag); newTag.tap()
@@ -1566,7 +1573,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard(keyLabel: "C")
+    waitForKeyboard(keyLabel: "C", timeout: directEntry ? 15 : 5)
     entry.typeText("Camping")
     XCTAssertEqual(entry.value as? String, "Camping")
     let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
@@ -1626,8 +1633,10 @@ final class FixtureAuditTests: XCTestCase {
     discard.tap()
     XCTAssertTrue(app.textFields["Asset name"].firstMatch.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
-    for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
+    if !directEntry {
+      for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(open.isHittable)
+    }
     XCTAssertEqual(app.state, .runningForeground)
   }
 
@@ -1770,10 +1779,7 @@ final class FixtureAuditTests: XCTestCase {
     app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     app.launch()
     XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
-    let open = app.buttons["Audit Edit recovery"]
-    for _ in 0..<10 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+    guard openFixtureURL("audit-edit-recovery") else { return }
     let types = app.buttons["Retry asset types"]
     let tags = app.buttons["Retry tags"]
     XCTAssertTrue(types.waitForExistence(timeout: 10))

@@ -50,6 +50,7 @@ on:
           - asset-workflows
           - asset-edit-journey
           - edit-recovery
+          - edit-large-text
           - edit-tags
           - add-destination
           - tag-selection
@@ -436,6 +437,16 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceAccessorySettledNavigationAppearance'
+              )
+              ;;
+            edit-large-text)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditMetadataRecoveryAtAccessibilityTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureAtAccessibilityTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSharingRecoveryKeepsHeaderAndCommandsReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsCommandsRecoverReminderDraft'
               )
               ;;
             customization-clearance)
