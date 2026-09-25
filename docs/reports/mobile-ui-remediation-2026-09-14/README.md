@@ -6,10 +6,12 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.40 (132.1)**. PR191 merged2a447c2b;
-release36052329679, iOS upload107814803060 and Apple changelog readback passed.
-The retained inventory collection now scrolls its final card above tabs/voice.
-[Release evidence](evidence/release-132.txt).
+Latest verified TestFlight is **0.24.41 (136.1)**. PR196 mergedc2248215;
+release36098436371, iOS upload107957316184 and Apple changelog readback passed.
+Native commands now contain multiline labels while retaining ordinary density.
+[Release evidence](evidence/release-136.txt).
+Prior132 corrected inventory collection footer clearance above tabs/voice.
+[Prior release](evidence/release-132.txt).
 Prior130 delivered History summaries, Before/After values, mode selection and
 footer clearance. [Prior release](evidence/release-130.txt).
 Prior129 delivered Settings labels/grouping/insets and Home inventory name spacing.
@@ -87,7 +89,7 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-The UIKit command batch is accepted for release using combined same-product native
+The UIKit command batch shipped in136.1 using combined same-product native
 evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and
 iPad4/5. Every scoped workflow has a full pass on each device with identical product
 code. Full-screen review confirms ordinary density and bounded multiline labels.
