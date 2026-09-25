@@ -56,6 +56,7 @@ on:
           - tag-selection
           - selection-lifecycle
           - sheet-footer-appearance
+          - photo-inspection
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
@@ -276,6 +277,15 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+              )
+              ;;
+            photo-inspection)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetPhotoZoomRevealsCommandsWithoutChangingMedia'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDraftPhotoZoomRevealsCommandsWithoutChangingDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPhotoRemovalFailureAppearsAboveViewer'
               )
               ;;
             sheet-footer-appearance)
