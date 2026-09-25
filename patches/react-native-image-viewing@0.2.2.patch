@@ -13,7 +13,16 @@ index b27950495a8a92f3f6dd41b07b7907703d80e8ae..aaae4872dec6f6dd74bbd43ed81930e4
 diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
 --- a/dist/ImageViewing.js
 +++ b/dist/ImageViewing.js
-@@ -18,11 +18,21 @@
+@@ -5,7 +5,7 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import React, { useCallback, useRef, useEffect } from "react";
++import React, { useCallback, useRef, useEffect, useLayoutEffect } from "react";
+ import { Animated, Dimensions, StyleSheet, View, VirtualizedList, Modal, } from "react-native";
+ import ImageItem from "./components/ImageItem/ImageItem";
+ import ImageDefaultHeader from "./components/ImageDefaultHeader";
+@@ -18,22 +18,44 @@
  const DEFAULT_DELAY_LONG_PRESS = 800;
  const SCREEN = Dimensions.get("screen");
  const SCREEN_WIDTH = SCREEN.width;
@@ -21,7 +30,11 @@ diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
 +function ImageViewing({ images, keyExtractor, imageIndex, visible, onRequestClose, onLongPress = () => { }, onImageIndexChange, animationType = DEFAULT_ANIMATION_TYPE, backgroundColor = DEFAULT_BG_COLOR, presentationStyle, swipeToCloseEnabled, doubleTapToZoomEnabled, delayLongPress = DEFAULT_DELAY_LONG_PRESS, HeaderComponent, FooterComponent, ErrorComponent, }) {
      const imageList = useRef(null);
      const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
-     const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
+-    const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
++    const selectPage = useCallback(index => {
++        imageList.current?.scrollToIndex({ index, animated: false });
++    }, []);
++    const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN, selectPage);
      const [headerTransform, footerTransform, toggleBarsVisible] = useAnimatedComponents();
 +    const controlsVisible = useRef(true);
 +    const showControls = useCallback(() => {
@@ -34,25 +47,52 @@ diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
 +    }, [toggleBarsVisible]);
 +    useEffect(showControls, [currentImageIndex, visible, showControls]);
      useEffect(() => {
-         if (onImageIndexChange) {
+-        if (onImageIndexChange) {
++        if (visible && onImageIndexChange) {
              onImageIndexChange(currentImageIndex);
-@@ -32,7 +42,6 @@
-         var _a, _b;
-         // @ts-ignore
-         (_b = (_a = imageList) === null || _a === void 0 ? void 0 : _a.current) === null || _b === void 0 ? void 0 : _b.setNativeProps({ scrollEnabled: !isScaled });
+         }
+-    }, [currentImageIndex]);
+-    const onZoom = useCallback((isScaled) => {
+-        var _a, _b;
+-        // @ts-ignore
+-        (_b = (_a = imageList) === null || _a === void 0 ? void 0 : _a.current) === null || _b === void 0 ? void 0 : _b.setNativeProps({ scrollEnabled: !isScaled });
 -        toggleBarsVisible(!isScaled);
-     }, [imageList]);
+-    }, [imageList]);
++    }, [currentImageIndex, visible]);
++    const zoomByImage = useRef(new Map());
++    const imageKey = (image, index) => keyExtractor ? keyExtractor(image, index)
++        : typeof image === "number" ? `${image}` : image?.uri;
++    const activeKey = imageKey(images[currentImageIndex], currentImageIndex);
++    const activeImage = useRef(activeKey);
++    useLayoutEffect(() => {
++        activeImage.current = activeKey;
++        imageList.current?.setNativeProps({ scrollEnabled: !zoomByImage.current.get(activeKey) });
++    }, [activeKey]);
++    const onZoom = useCallback((key, isScaled) => {
++        zoomByImage.current.set(key, isScaled);
++        if (key === activeImage.current) {
++            imageList.current?.setNativeProps({ scrollEnabled: !isScaled });
++        }
++    }, []);
      if (!visible) {
          return null;
-@@ -49,7 +58,7 @@
+     }
+@@ -49,7 +71,7 @@
          length: SCREEN_WIDTH,
          offset: SCREEN_WIDTH * index,
          index,
 -    })} renderItem={({ item: imageSrc }) => (<ImageItem onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll} 
-+    })} renderItem={({ item: imageSrc, index }) => (<ImageItem onSingleTap={onSingleTap} onShowControls={showControls} ErrorComponent={ErrorComponent} isActive={index === currentImageIndex} onZoom={onZoom} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll}
++    })} renderItem={({ item: imageSrc, index }) => (<ImageItem onSingleTap={onSingleTap} onShowControls={showControls} ErrorComponent={ErrorComponent} isActive={index === currentImageIndex} onZoom={isScaled => onZoom(imageKey(imageSrc, index), isScaled)} imageSrc={imageSrc} onRequestClose={onRequestCloseEnhanced} onLongPress={onLongPress} delayLongPress={delayLongPress} swipeToCloseEnabled={swipeToCloseEnabled} doubleTapToZoomEnabled={doubleTapToZoomEnabled}/>)} onMomentumScrollEnd={onScroll}
      //@ts-ignore
      keyExtractor={(imageSrc, index) => keyExtractor
          ? keyExtractor(imageSrc, index)
+@@ -82,5 +104,5 @@
+         bottom: 0,
+     },
+ });
+-const EnhancedImageViewing = (props) => (<ImageViewing key={props.imageIndex} {...props}/>);
++const EnhancedImageViewing = (props) => (<ImageViewing key={props.visible ? "visible" : "hidden"} {...props}/>);
+ export default EnhancedImageViewing;
 diff --git a/dist/components/ImageItem/ImageError.js b/dist/components/ImageItem/ImageError.js
 new file mode 100644
 index 0000000000000000000000000000000000000000..e187ee6edbb36da063c855db41489a7d814497fa
@@ -152,7 +192,7 @@ diff --git a/dist/components/ImageItem/ImageItem.ios.js b/dist/components/ImageI
  import { getImageStyles, getImageTransform } from "../../utils";
  import { ImageLoading } from "./ImageLoading";
  const SWIPE_CLOSE_OFFSET = 75;
-@@ -16,12 +17,13 @@
+@@ -16,12 +17,14 @@
  const SCREEN = Dimensions.get("screen");
  const SCREEN_WIDTH = SCREEN.width;
  const SCREEN_HEIGHT = SCREEN.height;
@@ -165,12 +205,13 @@ diff --git a/dist/components/ImageItem/ImageItem.ios.js b/dist/components/ImageI
 -    const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
 +    const loading = useImageLoad(imageSrc);
 +    const imageDimensions = loading.dimensions;
++    useEffect(() => { if (isActive) onZoom(loading.failed ? false : scaled); }, [isActive, scaled, loading.failed, onZoom]);
 +    useEffect(() => { if (loading.failed && isActive) { onZoom(false); onShowControls?.(); } }, [loading.failed, isActive, onZoom, onShowControls]);
 +    const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN, isActive ? onSingleTap : undefined, doubleTapToZoomEnabled, JSON.stringify([imageSrc, isActive, loading.failed]));
      const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
      const scrollValueY = new Animated.Value(0);
      const scaleValue = new Animated.Value(scale || 1);
-@@ -56,13 +58,14 @@
+@@ -56,13 +59,14 @@
      const onLongPressHandler = useCallback((event) => {
          onLongPress(imageSrc);
      }, [imageSrc, onLongPress]);
@@ -700,3 +741,37 @@ diff --git a/dist/hooks/usePanResponder.d.ts b/dist/hooks/usePanResponder.d.ts
      initialScale: number;
      initialTranslate: Position;
      onZoom: (isZoomed: boolean) => void;
+diff --git a/dist/hooks/useImageIndexChange.js b/dist/hooks/useImageIndexChange.js
+--- a/dist/hooks/useImageIndexChange.js
++++ b/dist/hooks/useImageIndexChange.js
+@@ -5,9 +5,18 @@
+  * LICENSE file in the root directory of this source tree.
+  *
+  */
+-import { useState } from "react";
+-const useImageIndexChange = (imageIndex, screen) => {
++import { useEffect, useRef, useState } from "react";
++const useImageIndexChange = (imageIndex, screen, onExternalIndexChange) => {
+     const [currentImageIndex, setImageIndex] = useState(imageIndex);
++    const previousExternalIndex = useRef(imageIndex);
++    useEffect(() => {
++        if (previousExternalIndex.current === imageIndex) return;
++        previousExternalIndex.current = imageIndex;
++        if (currentImageIndex !== imageIndex) {
++            setImageIndex(imageIndex);
++            onExternalIndexChange?.(imageIndex);
++        }
++    }, [imageIndex, currentImageIndex, onExternalIndexChange]);
+     const onScroll = (event) => {
+         const { nativeEvent: { contentOffset: { x: scrollX }, }, } = event;
+         if (screen.width) {
+diff --git a/dist/hooks/useImageIndexChange.d.ts b/dist/hooks/useImageIndexChange.d.ts
+--- a/dist/hooks/useImageIndexChange.d.ts
++++ b/dist/hooks/useImageIndexChange.d.ts
+@@ -7,5 +7,5 @@
+  */
+ import { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+ import { Dimensions } from "../@types";
+-declare const useImageIndexChange: (imageIndex: number, screen: Dimensions) => readonly [number, (event: NativeSyntheticEvent<NativeScrollEvent>) => void];
++declare const useImageIndexChange: (imageIndex: number, screen: Dimensions, onExternalIndexChange?: (index: number) => void) => readonly [number, (event: NativeSyntheticEvent<NativeScrollEvent>) => void];
+ export default useImageIndexChange;

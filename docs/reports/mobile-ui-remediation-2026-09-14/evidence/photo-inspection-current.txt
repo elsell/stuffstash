@@ -1,0 +1,38 @@
+Photo viewer batch — current diagnosis, 2026-09-25.
+
+Confirmed by user: non-native photo buttons and brief dismissal/reopening during
+horizontal paging. Double-tap zoom works on their device; no zoom defect is open.
+
+Source cause: react-native-image-viewing keyed its modal owner by imageIndex.
+Candidate keeps one presentation per visibility session, synchronizes external
+selection without replaying swipe echoes, and assigns paging permission to the
+active photo. An installed-viewer lifecycle test failed on retained disabled
+paging before the ownership fix and passes after it. iOS commands now use SwiftUI
+bounded symbol buttons; Android appearance remains the existing fallback.
+
+Targeted action/removal/recovery/status checks: 13 pass; TypeScript and structural
+checks pass. Installed paging and modal lifecycle checks: 2 pass. Critic reviewed
+both passes; no outstanding source blocker. Native36133901938 at967069b7 passes saved removal failure and unavailable recovery
+on both devices. Add passes swipe, previous/next and removal to the surviving
+photo, then fails reopening after Close. Full-screen captures confirm bounded
+native controls, readable metadata and safe-area clearance on phone/iPad.
+
+Cause of candidate close regression: the hidden presentation owner publishes its
+initial index back to the controlled parent and reopens. A controlled-parent
+installed-viewer test reproduces this; gate selection publication on visibility.
+12 targeted tests, TypeScript, structural checks and critic review pass afterward.
+Corrected native36136468631 at361fb4b2 passes all three iPad cases, while phone
+still stops at reopening after Close; both recovery cases and all paging steps
+pass. Phone final capture still shows the viewer, so do not call this acceptance.
+Add a presentation boundary that retires queued selections immediately on Close
+and across reopen, plus a stable footer component to retain native button identity.
+The queued-selection test fails before and passes after; 21 related tests,
+TypeScript, structural checks and critic review pass. Native confirmation pending.
+Corrected artifacts:10864559883(phone),10866200454(iPad). Artifacts10863302795(phone) and
+10864155078(iPad) retain the first run evidence; selected captures are extracted
+under /tmp/move-layout-review/photo-paging-* without whole-archive downloads.
+
+Historical run 36110848610 at 2ac37ae0 tested a subsequently withdrawn simulator
+zoom hypothesis. User correction supersedes that diagnosis. Artifacts 10853741976
+and 10854026419 retain its evidence; no tracing run was dispatched. Ask the user
+before pursuing newly suspected product problems.

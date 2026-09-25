@@ -24,7 +24,7 @@ assertion for enlarged footers. No weak timing or appearance assertion removed.
 Fixture return correction uses back if available, otherwise audit index after
 restoring appearance; direct-entry readiness uses the index navigation bar.
 Fixture-only run36106222520 is superseded by the confirmed defect and implementation
-candidate, and is being cancelled to avoid an unnecessary extra native build.
+candidate, and was cancelled to avoid an unnecessary extra native build.
 Baseline wait36103695986 is terminal; do not restart it. No product acceptance or
 release claimed until candidate native review. Keep physical/assistive gaps scoped.
 
@@ -33,3 +33,14 @@ retain proposal. Secondary Cancel appears borderless despite bordered source.
 Actual Conversation consumer remains in candidate acceptance; no blanket style
 claim is inferred from source. Physical audio and small-detent adaptation remain
 outside these cases.
+
+Candidate acceptance: native36107210729 atd4a9c0d9 passes5/5 both devices.
+iPad job107982507177/artifact10852363525; phone107982507359/artifact10852362736.
+Full-screen captures reviewed: normal light footers on both, enlarged light iPad
+and dark phone, disabled dark iPad, last-tag clearance on both, Conversation
+location-return on both and phone close/reopen proposal. Backgrounds now contain
+labels with padding; primary/secondary hierarchy and final-content clearance hold.
+These fixture screenshots do not validate physical audio or all adaptations.
+Exact-head CI and critic pass. PR198 merged91f33a5d6f7e84a9b396e87f01c12028ab9f9e6b.
+Release36110476038 completed successfully. TestFlight0.24.42 (137.1) upload and
+Apple changelog readback pass; see release-137.txt. M281 accepted for named scope.

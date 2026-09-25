@@ -2508,6 +2508,14 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(app.alerts["Remove photo?"].waitForExistence(timeout: 5))
     }
     openFirstPhoto(count: 2)
+    capture("photo-native-actions-first")
+    let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.4))
+    let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.4))
+    start.press(forDuration: 0.05, thenDragTo: end)
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-2.png"].waitForExistence(timeout: 5))
+    capture("photo-native-actions-after-swipe")
+    app.buttons["Previous photo"].tap()
+    XCTAssertTrue(app.staticTexts["audit-draft-photo-1.png"].waitForExistence(timeout: 5))
     let next = app.buttons["Next photo"]
     XCTAssertTrue(next.isHittable)
     next.tap()

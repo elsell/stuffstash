@@ -1604,3 +1604,29 @@ native normal/enlarged light/dark screenshots must show padded backgrounds and
 reachable body/footer. Include Conversation review/return and filter selection
 as distinct consumers before release. Never promote minimum hit-frame assertions
 to visual label-containment acceptance.
+
+## User confirmation of new audit findings
+
+For this comprehensive remediation audit, confirm newly suspected product or
+design problems with the user before treating them as remediation work or starting
+dedicated diagnostic runs. A simulator-only failure does not override the user's
+observed experience. Preserve it as scoped evidence and ask whether the behavior
+is a problem for them. Continue fixes for issues the user has already confirmed
+without repeating approval questions.
+
+## Photo paging continuity and native actions
+
+User-confirmed defects: horizontal photo paging briefly closes/reopens the viewer,
+and its hand-built action buttons do not feel native. Keep one modal presentation
+through swipe and explicit previous/next commands. Parent selection readback must
+not recreate the modal or replay its opening animation. An external selection
+change must move the existing pager; echoing its own swipe must not move it again.
+Close/reopen starts a fresh presentation at the requested photo. Dismissal retires
+selection callbacks immediately, before parent readback; callbacks from a retired
+presentation cannot reopen it or affect a later presentation. Preserve native
+zoom, media headers, failed-removal recovery and final-photo dismissal.
+
+Use platform-native bounded action controls for Close, previous/next and Remove,
+with native icons, descriptive accessibility labels, disabled boundaries and the
+existing removal confirmation. The dark photo canvas retains readable metadata
+and safe-area clearance. Review both Add drafts and saved-asset consumers.
