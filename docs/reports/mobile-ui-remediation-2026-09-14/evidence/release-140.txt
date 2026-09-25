@@ -1,0 +1,35 @@
+TestFlight 0.25.0 (140.1) — verified 2026-09-25.
+PR203 merged77d129c5b70116c6dc7ba107d60887baf17b1e48.
+Release36180827504 succeeded; iOS upload108225255412 succeeded.
+Apple changelog108231235984 readback:
+2026-09-25T20:06:27.6709914Z Verified TestFlight changelog for v0.25.0 (140.1).
+
+TestFlight notes:
+- Find asset actions together beneath the item details.
+- View photos with compact Close and More controls and uninterrupted swiping.
+- Create tags in a separate form without losing asset edits.
+- Choose Move destinations with clearer location summaries and creation controls.
+- Create households and inventories from the inventory switcher.
+
+Mobile hierarchy and workspace-creation batch (PR203)
+
+Product changes:
+- Group Details commands beneath asset identity and status.
+- Photo viewer uses top-right native More/Close, no visible paging arrows or bottom tray; More contains filename, size/count and destructive removal.
+- Separate New tag form inside selection; commit selection to the pending Edit draft, persist only on asset Save.
+- Move retains its sheet, native search, permanent Current location / Move to summaries, and inset destination creation with a native two-option kind selector.
+- Switch household is a trailing text action; households and inventories can be created without implicitly changing active inventory.
+- Inventory creation defaults denied and rechecks household authority. Departed creation views retire presentation callbacks.
+
+Source acceptance:
+2,037 mobile tests across330files; TypeScript; full API Go suite; mobile/Go structural and domain import checks;17 fixture-preparation tests pass. Final photo adjustment adds11 focused lifecycle/ownership checks, TypeScript and structural checks, all pass. Code critic reviewed implementation and final native controls; no confirmed source blocker.
+API boundary tests include unauthenticated/malformed auth, cross-household creation, forged scope/role headers, inventory-owner escalation, legitimate creation and absence of resources after denied requests.
+
+Native acceptance:
+Hierarchy run36167444034 atf885fcee:8/9 pass on iPhone17 and iPad mini(A17Pro). Details commands, empty-photo hierarchy, Edit tags, Move creation/retry, connected Move return, workspace creation and photo recovery/unavailable cases pass. Initial paging test failed after its own outside-menu tap hid the controls; corrected to act on the open menu.
+Final photo run36178128868 at0ae0563d:3/3 pass on BOTH devices. Includes matched native control dimensions>=44pt, continuous swipe paging, metadata menu, confirmation/cancellation/removal, surviving and last draft-photo removal, close/reopen, repeated error-alert dismissal and unavailable-photo escape.
+Reviewed final captures and initial unchanged non-photo captures: native hierarchy, readable grouped content, separate forms, keyboard-clear actions, stable Move summaries, and matched top-right photo controls. No whole-app acceptance claim.
+Intermediate36172560395 identified intrinsic symbol-size mismatch;36175677319 verified equal dimensions but stopped in modal readiness checks. Final code shares native symbol label/style and content-measured hosts, with explicit modal-readiness assertions. Do not treat earlier simulator observations as confirmed new user defects.
+Final required CI36178106840 passed at0ae0563d. Product merge77d129c5b70116c6dc7ba107d60887baf17b1e48.
+
+Native fixtures do not establish physical-device behavior or real production API connectivity. API authorization is separately covered at the real HTTP boundary. Broader audit and unconfirmed findings remain separate from this batch.
