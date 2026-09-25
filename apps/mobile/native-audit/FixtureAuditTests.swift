@@ -2507,14 +2507,17 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(app.buttons["Close photo viewer"].waitForExistence(timeout: 5))
       XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 1 of \(count)").firstMatch.exists)
     }
-    func confirmRemoval() {
-      app.buttons["Photo options"].tap()
+    func confirmRemoval(menuAlreadyOpen: Bool = false) {
+      if !menuAlreadyOpen { app.buttons["Photo options"].tap() }
       let remove = app.buttons["Remove photo"]
       XCTAssertTrue(remove.isHittable)
       remove.tap()
       XCTAssertTrue(app.alerts["Remove photo?"].waitForExistence(timeout: 5))
     }
     openFirstPhoto(count: 2)
+    let photoOptions = app.buttons["Photo options"]
+    XCTAssertGreaterThanOrEqual(photoOptions.frame.height, 44, "Photo options needs a full native toolbar target")
+    XCTAssertLessThanOrEqual(abs(photoOptions.frame.midY - app.buttons["Close photo viewer"].frame.midY), 4)
     capture("photo-native-actions-first")
     let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.4))
     let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.4))
@@ -2530,8 +2533,7 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Photo options"].tap()
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "audit-draft-photo-2.png").firstMatch.waitForExistence(timeout: 5))
     capture("photo-more-information")
-    app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.7)).tap()
-    confirmRemoval()
+    confirmRemoval(menuAlreadyOpen: true)
     app.alerts["Remove photo?"].buttons["Cancel"].tap()
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Photo, 2 of 2").firstMatch.exists)
     confirmRemoval()

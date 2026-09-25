@@ -37,20 +37,22 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
       modifiers={trigger.kind === 'ellipsis' && tone !== 'onDark' ? [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())] : undefined}
     />;
   const compactTrigger = trigger.kind !== 'label';
+  const onDarkSymbol = tone === 'onDark' && compactTrigger;
 
   return <View
     pointerEvents={menuDisabled ? 'none' : 'auto'}
     style={menuDisabled && styles.disabled}
   >
-    <Host matchContents={!compactTrigger} style={compactTrigger ? styles.compactHost : styles.labelHost}>
+    <Host matchContents={!compactTrigger} style={onDarkSymbol ? styles.photoHost : compactTrigger ? styles.compactHost : styles.labelHost}>
       <Menu
-        label={menuLabel}
+        label={onDarkSymbol ? accessibilityLabel : menuLabel}
+        systemImage={onDarkSymbol ? (trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') : undefined}
         modifiers={[
           nativeAccessibilityLabel(accessibilityLabel),
           ...(trigger.kind === 'label' || trigger.kind === 'icon' || tone === 'onDark'
-            ? [buttonStyle('bordered'), controlSize(trigger.kind === 'icon' ? 'small' : 'regular'), tint(tone === 'onDark' ? '#FFFFFF' : palette.action)]
+            ? [buttonStyle('bordered'), controlSize(onDarkSymbol ? 'large' : trigger.kind === 'icon' ? 'small' : 'regular'), tint(tone === 'onDark' ? '#FFFFFF' : palette.action)]
             : []),
-          ...(trigger.kind === 'icon' ? [labelStyle('iconOnly')] : []),
+          ...(trigger.kind === 'icon' || onDarkSymbol ? [labelStyle('iconOnly')] : []),
           nativeDisabled(menuDisabled)
         ]}
       >
@@ -80,5 +82,6 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
 const styles = StyleSheet.create({
   disabled: { opacity: 0.5 },
   compactHost: { height: 44, width: 44 },
+  photoHost: { height: 48, width: 54 },
   labelHost: { height: 44, minWidth: 44 }
 });
