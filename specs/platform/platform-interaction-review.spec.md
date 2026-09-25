@@ -1525,11 +1525,20 @@ and unchanged acceptance. Do not reset earlier text-entry diagnostic budgets.
 Replay36087906732 at938f32b1 confirms the phone New tag button draws77.3pt high
 inside a48pt host, extending below the scroll viewport at100% scroll. The earlier
 outer48pt minimum fixed ordinary-size spacing but does not preserve Dynamic Type
-measurement. Let the native bordered style determine command height with large
-control sizing and a vertically flexible label; remove the outer fixed-size/frame
-proposal. Keep minimum label width and quiet-command target size, current/disabled
-handlers and destructive semantics. Do not patch individual consumers with bottom
-padding or font-scale multipliers. Native acceptance must repeat both enlarged
-Edit cases unchanged and ordinary Detail, Sharing and paired reminder recovery.
+measurement. Candidate b25867d9's large SwiftUI control sizing is rejected:
+its complete screenshots show label/background separation and ordinary-size wrapping.
+Use an iOS UIKit UIButton adapter with native tinted/filled/plain configurations
+for secondary/primary/explicit quiet actions. The bridge must report the complete
+measured height to React Native, recompute on width, label and content-size-category
+changes, and use the same preferred body font and content insets for measurement
+and rendering. Secondary commands use their natural width up to available width;
+primary commands fill available width. Native title wrapping must grow the bounded
+background and touch target with at least48pt height. Use10pt vertical/16pt horizontal
+content insets as this adapter's explicit layout contract, not per-consumer offsets.
+Preserve accessible names, destructive tint, disabled semantics and current handlers.
+Do not cap font scaling. Ignore malformed bridge size events. Native acceptance
+must repeat both enlarged Edit cases unchanged and ordinary Detail, Sharing and
+paired reminder recovery, reviewing full screenshots for label containment and density.
+Apple reference: https://developer.apple.com/documentation/uikit/uibutton/configuration-swift.struct/titlelinebreakmode
 The iPad Retry tags failure is still a separate unverified activation outcome;
 do not claim its cause is proved solely by the phone sizing evidence.

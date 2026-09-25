@@ -8,9 +8,9 @@ it('keeps short native labels and descriptive accessible names with disabled gua
   const h = new MobileRenderHarness(); let calls = 0;
   try {
     await h.render(<IOSCommand label="Retry" accessibilityLabel="Retry saving reminders" disabled onPress={() => calls++} />);
-    const ios = h.byType('SwiftUIButton');
-    expect(ios?.props.modifiers).toContainEqual({type:'accessibilityLabel', value:'Retry saving reminders'});
-    expect(h.allText()).toContain('Retry');
+    const ios = h.byType('StuffStashCommandButton');
+    expect(ios?.props.accessibilityLabel).toBe('Retry saving reminders');
+    expect(ios?.props.label).toBe('Retry');
     await h.press(ios); expect(calls).toBe(0);
     await h.render(<AndroidCommand label="Retry" accessibilityLabel="Retry saving reminders" disabled onPress={() => calls++} />);
     const android = h.byType('ComposeOutlinedButton');

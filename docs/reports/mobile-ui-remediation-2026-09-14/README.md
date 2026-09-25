@@ -93,8 +93,9 @@ rendering77.3pt, clipping New tag at the scroll end. Candidate b25867d9 is
 but reviewed phone captures show multiline labels outside their button backgrounds
 and unnecessary wrapping of normal-size Detail commands. Passing reachability
 checks did not establish visual acceptance. PR196 must remain draft until corrected.
-The next correction must measure the complete label and bounded background together,
-preserving normal-size density; do not repeat control-size modifier experiments.
+The replacement candidate uses native UIKit buttons and reports complete measured
+label height to the page layout. Source tests and native screenshot acceptance
+remain distinct; PR196 stays draft pending phone/iPad verification.
 The baseline iPad Retry tags result remains separate; this candidate's passing tap
 is not sufficient to accept its layout. [Diagnosis](evidence/edit-large-text-entry.txt).
 

@@ -42,3 +42,12 @@ label/background containment and ordinary density are explicit screenshot gates.
 The modifier approach has used its investigation budget; no more speculative
 control-size/fixed-size variations. Evaluate a native control adapter with an
 explicit complete-label measurement contract before another implementation.
+
+Replacement decision: local UIKit command-button adapter using native configured
+UIButton; same preferred body font and insets determine text/background/host height.
+Natural secondary width is constrained to available width; primary fills it. The
+existing platform adapter API and Android implementation remain intact. No package
+updates. NativeSheetActions uses a separate implementation and is not claimed fixed.
+Five bridge checks failed before implementation, then60 focused tests passed;
+critic found stale retained callbacks, reproduced separately before adding committed
+handler ownership and teardown. Native rendering/compilation is still pending.
