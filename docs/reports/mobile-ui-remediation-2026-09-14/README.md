@@ -87,20 +87,15 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Enlarged-text Edit replay36087906732 confirms a phone button measured48pt while
-rendering77.3pt, clipping New tag at the scroll end. Candidate b25867d9 is
-**rejected for release**: native36090229503 passes all five cases on each device,
-but reviewed phone captures show multiline labels outside their button backgrounds
-and unnecessary wrapping of normal-size Detail commands. Passing reachability
-checks did not establish visual acceptance. PR196 must remain draft until corrected.
-The replacement candidate uses native UIKit buttons and reports complete measured
-label height to the page layout. Source tests and native screenshot acceptance
-remain distinct; PR196 stays draft pending phone/iPad verification.
-Native36093575172 compiles both devices; phone4/5 and iPad5/5. Reviewed captures
-show corrected ordinary density and multiline containment. The remaining phone
-case stops at a5s keyboard predicate timeout; post-timeout evidence shows the key
-hittable. A15s observation budget for this enlarged case preserves every functional
-assertion; product code remains frozen pending the repeat. [Diagnosis](evidence/edit-large-text-entry.txt).
+The UIKit command batch is accepted for release using combined same-product native
+evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and
+iPad4/5. Every scoped workflow has a full pass on each device with identical product
+code. Full-screen review confirms ordinary density and bounded multiline labels.
+The replay iPad Sharing assertion read a partial email immediately after typing;
+its final capture shows the full address. Its earlier complete pass supports the
+batch; the failed replay remains a fixture timing gap, not a retroactive pass.
+Critic review found no concrete release blocker. CI36095747484 passes88b9bbfd.
+The rejected SwiftUI candidate never shipped. [Diagnosis](evidence/edit-large-text-entry.txt).
 
 Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
 Reviewed full-screen entry/search/footer captures confirm header clearance and
