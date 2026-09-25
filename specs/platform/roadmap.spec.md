@@ -570,8 +570,11 @@ change. Retain M51 and other runtime findings independently. Current matrix has
 runtime-partial. Source coverage does not imply native acceptance or audit closure.
 TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
 
-The next connected asset-task follow-up is M270: Move currently conflates search
-with creation naming and hides the creation controls when the name changes.
-Use shared native search/choice presentation and a separate creation draft after
-M269's scoped Android acceptance; preserve the frozen release batch and the
-independent iPhone/iPad verification already running for Add destination selection.
+Current audit delivery is TestFlight0.24.41 (136.1), released2026-09-25 through
+PR196/release36098436371 with verified Apple changelog readback. Native command
+measurement now contains enlarged labels without forcing ordinary labels to wrap.
+The earlier M270 sequencing paragraph is superseded by the connected workflow
+acceptance in docs/reports/mobile-ui-remediation-2026-09-14/README.md. That report
+is the sole current audit status; historical checkpoints above are not new work.
+Continue normal-text connected workflow review before remaining adaptation gaps;
+keep verified batch releases independent of unrelated audit findings.

@@ -1,0 +1,26 @@
+Normal-text selection refresh — 2026-09-25
+Revision: 4f130a93f48d7c3a37915d1c8784914c5dee5f60
+Run: https://github.com/elsell/stuffstash/actions/runs/36100666455
+Artifacts: phone10849643236; iPad10849094186.
+
+Decision: close the iPad Add destination creation/retry verification gap.
+No production change or new release is justified by this refresh.
+
+iPad: 4/4 connected workflows pass. Add destination cancellation, selection,
+creation failure/retry and return preserve the draft. All three tag workflows pass.
+Phone: 3/4 pass (all tag workflows). Add destination misses the five-second
+Choose inventory top level observation after Choose destination. Final capture
+shows the correct Put in page, Current House/Garage, Top level and Shelf rows.
+This remains a failed replay, not a retroactive pass. Earlier phone acceptance is
+recorded separately in the current report. Do not rerun unchanged or infer an
+input/provider defect from this observation timeout.
+
+Full-screen visual review: iPad New place entry and failure retain name, header
+Cancel/Save and readable inline error; phone Add/Edit Tags have native search,
+All tags/Selected control, readable grouped rows and separate bounded Done/Cancel
+footer above the safe area. Reviewed actual full frames, not element-only crops.
+No new hierarchy or footer-clipping defect was observed in these named states.
+
+Standard PR198 checks pass at this revision. Test-only shared key readiness budget
+is15s; exact input and creation/draft assertions remain intact. This does not prove
+all device/assistive/adaptive states, phone presentation latency, or physical input.

@@ -1548,4 +1548,59 @@ sample taking4.28s and exhausting the5s budget before a second sample; the retai
 post-timeout C key has a finite frame and is hittable. Allow15s for this named
 scenario's existing interactive-key predicate. Keep exact entered text, draft
 retention, geometry and dismissal assertions; do not substitute keyboard existence,
-change providers or relax normal-text timing. Product code stays frozen.
+change providers. The initial scenario-only timing policy is superseded by the
+shared observation budget below. Product code stays frozen.
+
+## Native keyboard observation budget
+
+Use15s as the shared keyboard-key readiness observation budget on macOS runners.
+Run36093575172 retained a4.28s snapshot evaluation followed by a post-timeout
+hittable key;5s can end after just one evaluation. This budget governs automation
+observation, not a claim that the app takes15s to respond. Retain the separate5s
+keyboard-existence assertion, finite/nonempty target bounds, actual hittability,
+single typing attempt and exact full-value checks. Do not retype, inject text,
+remove providers, or accept a visible keyboard as proof of successful entry.
+Apply the shared mechanism rather than repeatedly adjusting individual workflow
+cases. Verify normal Add destination creation/retry and related selection draft
+ownership on phone/iPad; retain terminal failures and full-screen evidence.
+
+## Shared sheet-footer acceptance entry
+
+The enlarged-text footer case in35980094051 stopped in the audit launcher, as
+its full-screen capture confirms. Use the existing audit-footer-appearance URL
+for normal and enlarged entry, preserving the shipping NativeFilterSheet and
+NativeSheetActions, light/dark transitions, disabled/enabled actions and all
+geometry assertions. A focused phone/iPad run distinguishes a launcher limitation
+from actual footer clipping; no production adapter change is justified before
+that result. Old nested sheet diagnostics are not shipping filter compositions.
+
+Direct-link footer fixtures must return to the audit index when no back history
+exists; restore appearance before navigation. Readiness for direct-entry footer
+cases uses the audit navigation bar, not an offscreen menu button. Run36103695986
+phone normal-text geometry/behavior passed until dismissal; final capture restored
+the theme while retaining the direct-entry screen. Its following setup capture
+shows the audit index scrolled beyond Browse filters. Preserve all product footer
+assertions and add the existing Conversation review/return cases to compare the
+secondary action in its actual consumer. These are fixture-only corrections.
+
+## Sheet action backgrounds grow with their labels
+
+Run36103695986 iPad captures show the same shallow footer capsules at ordinary
+and Accessibility XXXL text despite enlarged labels filling nearly all their
+height. Button hit frames pass minimum-target checks; that does not establish
+internal label padding. Reuse the existing UIKit command adapter for iOS sheet
+actions, retaining its measured body-font height plus10pt top/bottom content
+insets and48pt minimum target. Both footer commands fill the available width;
+primary remains filled and Cancel/Back uses bounded secondary emphasis. Ordinary
+command consumers retain their existing natural secondary width.
+
+The iOS command adapter may accept an internal fullWidth option for this composed
+footer. Android behavior is unchanged. The RN footer stack owns only an8pt gap;
+NativeFilterSheet and Conversation retain their existing safe-area/keyboard owners,
+with no additional SwiftUI keyboard avoidance. Preserve explicit accessible names,
+independent disabled states, current committed callbacks and teardown protection.
+Verify size changes and disabled/retained events through mounted adapter tests;
+native normal/enlarged light/dark screenshots must show padded backgrounds and
+reachable body/footer. Include Conversation review/return and filter selection
+as distinct consumers before release. Never promote minimum hit-frame assertions
+to visual label-containment acceptance.

@@ -1,0 +1,35 @@
+Sheet-footer sizing — current diagnosis, 2026-09-25
+Confirmed defect: enlarged iPad labels grow while native SwiftUI footer capsules
+remain54pt tall. Normal/XXXL light screenshots retained beside this record.
+AX records Move and Cancel heights54 in the enlarged state. Minimum target checks
+passed but did not establish internal padding. Baseline36103695986 atc7d2a482;
+iPad artifact10851625331, phone10850634316. Both normal modes and iPad enlarged
+geometry/activation pass until direct-entry dismissal fails. Phone next-case
+setup stops at an offscreen launcher button. These are separate fixture errors.
+
+Decision: reuse existing UIKit native command adapter for iOS footer actions.
+Body-font measurement plus existing top/bottom10pt insets drives each background
+and RN layout. Footer actions opt into full width; ordinary secondary commands
+retain natural width. Primary filled, secondary tinted. Containers retain existing
+keyboard/safe-area ownership; obsolete keyboard hint removed. Android unchanged.
+
+Tests: two mounted regressions red before implementation;15 focused tests across
+6files, TypeScript, mobile structural and17 preparation checks pass afterward.
+Critic found no blocker. Native acceptance must verify full screenshots, not just
+hit regions: normal/enlarged light/dark, independent disabled states, dismissal,
+Conversation location/close/reopen, long Tags list footer/application.
+Candidate selector has five existing cases, plus a UIKit-font-relative padding
+assertion for enlarged footers. No weak timing or appearance assertion removed.
+
+Fixture return correction uses back if available, otherwise audit index after
+restoring appearance; direct-entry readiness uses the index navigation bar.
+Fixture-only run36106222520 is superseded by the confirmed defect and implementation
+candidate, and is being cancelled to avoid an unnecessary extra native build.
+Baseline wait36103695986 is terminal; do not restart it. No product acceptance or
+release claimed until candidate native review. Keep physical/assistive gaps scoped.
+
+Voice baseline35980094051 iPad: context clears header and location/close-return
+retain proposal. Secondary Cancel appears borderless despite bordered source.
+Actual Conversation consumer remains in candidate acceptance; no blanket style
+claim is inferred from source. Physical audio and small-detent adaptation remain
+outside these cases.

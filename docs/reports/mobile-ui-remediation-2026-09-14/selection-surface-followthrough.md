@@ -32,5 +32,5 @@ screens, `AssetTagSelectionTask`, `AddDestinationTask`, both NativeFilterSheet
 adapters, `AssetNativeSheetOptions`, `SettingsScreen.styles`,
 `SettingsScreenPresentation`, `NativeSegmentedControl` and native NativeSheetActions.
 All previously unreviewed axes now have source review; none is promoted to runtime
-acceptance by this report. Existing iPad Add readiness and physical/assistive gaps
-remain open in README. No new product correction is justified by this source pass.
+acceptance by this report. The later iPad Add creation/retry refresh36100666455 passes; see README
+for the scoped phone observation failure and remaining physical/assistive gaps. No new product correction is justified by this source pass.

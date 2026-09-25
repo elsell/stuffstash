@@ -6,10 +6,12 @@ first. The surface/axis inventory checks omissions; it is not a separate test qu
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.40 (132.1)**. PR191 merged2a447c2b;
-release36052329679, iOS upload107814803060 and Apple changelog readback passed.
-The retained inventory collection now scrolls its final card above tabs/voice.
-[Release evidence](evidence/release-132.txt).
+Latest verified TestFlight is **0.24.41 (136.1)**. PR196 mergedc2248215;
+release36098436371, iOS upload107957316184 and Apple changelog readback passed.
+Native commands now contain multiline labels while retaining ordinary density.
+[Release evidence](evidence/release-136.txt).
+Prior132 corrected inventory collection footer clearance above tabs/voice.
+[Prior release](evidence/release-132.txt).
 Prior130 delivered History summaries, Before/After values, mode selection and
 footer clearance. [Prior release](evidence/release-130.txt).
 Prior129 delivered Settings labels/grouping/insets and Home inventory name spacing.
@@ -40,9 +42,20 @@ Android appearance and connected Edit/Move checks pass on the named audit APK.
 [alignment](evidence/checkout-row-alignment.txt),
 [detail entry](evidence/detail-entry-insets.txt).
 
-Frozen iPad Add entry readiness remains unverified; phone Add/Move recovery passes.
-No product rewrite or broader acceptance is inferred from the timing failure.
-Recent-assets/invitation inset risks and unrelated findings remain in the audit.
+Normal-text selection refresh36100666455 at4f130a93 completes all four iPad
+workflows, including Add destination creation/retry and draft retention. Phone
+passes all three tag workflows; destination entry misses its five-second UI
+observation deadline, then the final full-screen capture shows the correct Put in
+screen. That phone replay remains failed; it is not a demonstrated product failure
+or a reason for another unchanged run. Reviewed creation/error and tag-selection
+captures retain clear native headers, grouped choices and unobscured footer actions.
+[Scoped decision](evidence/selection-current-361006.txt).
+Inventory-list inset correction is shipped in132.1. Invitation acceptance is a
+root-stack route outside tabs; the same tab-overlap diagnosis does not apply.
+Reviewed existing phone/iPad invitation entry/recovery captures show clear
+hierarchy and safe-area clearance. These predate the shared button replacement;
+they establish baseline composition, not current rendering acceptance.
+[Scoped baseline](evidence/invitation-visual-baseline.txt).
 Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6),
 including old diagnostics and enlarged-text cases; it is not a release gate for
 this verified batch. [Terminal decisions](evidence/native-full-359800.txt).
@@ -87,7 +100,15 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-The UIKit command batch is accepted for release using combined same-product native
+M281 is confirmed: enlarged iPad sheet labels grow while their backgrounds stay
+54pt high. The candidate reuses the measured UIKit command adapter for full-width
+footer actions.15 focused tests, TypeScript, structural checks,17 fixture checks
+and critic review pass. Native acceptance across footer, Conversation and long
+Tags consumers is required before release. The earlier fixture-only run is
+superseded; it is not a reason for another unchanged investigation.
+[One current diagnosis](evidence/sheet-footer-current.txt).
+
+The UIKit command batch shipped in136.1 using combined same-product native
 evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and
 iPad4/5. Every scoped workflow has a full pass on each device with identical product
 code. Full-screen review confirms ordinary density and bounded multiline labels.
@@ -147,7 +168,7 @@ TestFlight0.24.40 (132.1) tag-editor check, the user reports “opens right away
 all good.” Ordinary custom-color opening is accepted for that tested iPhone/build;
 no color-control rewrite is justified by the earlier inconsistent simulator result.
 This does not validate the unreleased PR161 candidate, coordinate probes, iPad,
-color editing/save, or assistive activation. iPad Add readiness remains unverified.
+color editing/save, or assistive activation. iPad Add creation/retry now passes the scoped refresh above.
 [Device evidence](evidence/color-first-tap-device-132.txt).
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
@@ -173,9 +194,11 @@ color editing/save, or assistive activation. iPad Add readiness remains unverifi
   a general correction. Fix reproduced consumers using the established native
   draft field, preserving reset and ownership semantics. Do not repeat the same
   provider/key experiments. [Consolidated evidence](native-text-entry-352471.md).
-- Remaining Settings design findings, physical integrations, assistive behavior
-  and wider device adaptations remain tracked in the full findings and surface
-  reports. Passed fixture workflows do not close them.
+- Settings findings reviewed in this reconciliation have source corrections;
+  their remaining native/assistive claims stay scoped to the named checks.
+  Physical integrations, assistive behavior and wider device adaptations remain
+  verification gaps. Historical “candidate” wording is not evidence of a current
+  unimplemented defect; passed fixture workflows do not certify those gaps.
 
 ## Coverage and evidence limits
 
@@ -187,9 +210,9 @@ Source review does not establish native acceptance. [Findings](findings.md) reta
 The older [whole-workflow review](everyday-workflow-review.md) records design
 rationale; this file supplies current acceptance status.
 
-The last full native sweep, [352471](native-full-352471.md), passed phone74/92 and
-iPad84/92 fixture cases. It predates subsequent fixes and is neither a current
-failure count nor whole-app certification. Verify shared controls once, representative
+The last full native sweep, [35980094051](evidence/native-full-359800.txt), ran121
+cases per device: phone107 passed and iPad115 passed. It predates subsequent
+fixes and is neither a current failure count nor whole-app certification. Verify shared controls once, representative
 compositions and critical connected workflows; add coverage when ownership differs.
 
 

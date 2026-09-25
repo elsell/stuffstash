@@ -55,6 +55,7 @@ on:
           - add-destination
           - tag-selection
           - selection-lifecycle
+          - sheet-footer-appearance
           - normal-detail-recovery
           - edit-and-move-drafts
           - settings-editing
@@ -275,6 +276,16 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDestinationSelectionPreservesDraftAndRecoversCreation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+              )
+              ;;
+            sheet-footer-appearance)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testFooterAppearanceAndDisabledActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testFooterAppearanceAtAccessibilityTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
               )
               ;;
             selection-lifecycle)

@@ -13,7 +13,11 @@ final class FixtureAuditTests: XCTestCase {
       || name.contains("testCustomizationCollectionClearsPersistentChrome")
       || name.contains("testNotificationJourneyRetainsTabsAndClearsFooter"))
       ? "View all recently changed assets" : "Audit Browse filters"
-    XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
+    if name.contains("testFooterAppearance") {
+      XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 30))
+    } else {
+      XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
+    }
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
     let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
     providerEvidence.name = "keyboard-provider-configuration"
@@ -406,12 +410,9 @@ final class FixtureAuditTests: XCTestCase {
       app.terminate()
       app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
       app.launch()
-      XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+      XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 30))
     }
-    let open = app.buttons["Audit footer appearance"]
-    for _ in 0..<16 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+    guard openFixtureURL("audit-footer-appearance") else { return }
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForExistence(timeout: 10))
     let form = app.scrollViews.containing(.staticText, identifier: "Footer appearance").firstMatch
     let root = app.otherElements["footer-appearance-actions"].firstMatch
@@ -445,6 +446,12 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(button.frame.minX, bounds.minX)
         XCTAssertLessThanOrEqual(button.frame.maxX, bounds.maxX)
         XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+        if largeText {
+          let traits = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+          let lineHeight = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits).lineHeight
+          XCTAssertGreaterThan(button.frame.height, lineHeight,
+            "The button background must reserve padding around an enlarged title")
+        }
       }
       XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     }
@@ -730,7 +737,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 5) {
+  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 15) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = NSPredicate { _, _ in
@@ -1573,7 +1580,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard(keyLabel: "C", timeout: directEntry ? 15 : 5)
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
     XCTAssertEqual(entry.value as? String, "Camping")
     let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch

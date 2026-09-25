@@ -29,7 +29,7 @@ export function NativeFilterSheet({ title, search, children, actions, footerTest
       onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}
       style={[styles.footer, { bottom: keyboard.bottomInset, backgroundColor: palette.background }]}>
       <View testID={footerTestID} style={styles.actions}>
-        <NativeSheetActions {...footerActions} keyboardAvoidance="container" />
+        <NativeSheetActions {...footerActions} />
       </View>
     </SafeAreaView>
   </>;

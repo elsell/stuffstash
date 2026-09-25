@@ -4045,3 +4045,17 @@ resize regression failed before implementation; affected tests and TypeScript
 pass. Critic caught the remaining containment cap, now removed. Native visual
 acceptance is pending, including empty/populated detail, contained lists and
 resizing while on a later photo. This follows the frozen PR174/176 batches.
+
+### M281 — Enlarged sheet labels outgrow their button padding
+
+P2, confirmed iPad36103695986 atc7d2a482: the footer backgrounds remain54pt
+high at normal and Accessibility XXXL text, leaving enlarged labels almost no
+internal padding. [Normal](evidence/sheet-footer-baseline-default.png),
+[enlarged](evidence/sheet-footer-baseline-accessibility.png). Existing minimum
+hit-frame assertions pass; they do not establish visible label containment.
+
+Candidate reuses the measured UIKit command adapter for iOS filter/selection and
+Conversation footers, with full-width actions and container-owned keyboard insets.
+Ordinary command widths and Android are preserved. Source tests/checks and critic
+review pass; five-case phone/iPad native acceptance remains required before release.
+[One current diagnosis](evidence/sheet-footer-current.txt).

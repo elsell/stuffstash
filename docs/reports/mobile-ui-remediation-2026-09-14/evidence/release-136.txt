@@ -1,0 +1,11 @@
+TestFlight0.24.41 (136.1) — verified2026-09-25
+PR196 mergedc2248215e9dd98ba112e27c9d8a9b1e8c09af317.
+Release36098436371 succeeded: validate107955571364, images107956735700,
+iOS upload107957316184, Apple changelog publication107960254221.
+2026-09-25T05:49:07.1557498Z Verified TestFlight changelog for v0.24.41 (136.1).
+Notes:
+- Keep button labels inside their backgrounds at larger text sizes.
+- Improve command button sizing in asset details, editing, sharing and settings.
+Final-head CI36097932738 passesa661e121. Native combined acceptance and retained
+failed-run limits are in edit-large-text-entry.txt; full-screen screenshots reviewed.
+This delivers the UIKit command correction, not comprehensive audit completion.
