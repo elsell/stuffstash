@@ -11,7 +11,12 @@ already confirmed issues without asking again.
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.42 (137.1)**. PR198 merged91f33a5d;
+Latest verified TestFlight is **0.24.43 (138.1)**. PR199 merged283c12af;
+release36144264031, iOS upload108104810001 and Apple changelog readback108112063611
+passed. Photo paging retains its presentation and iOS photo actions use native
+bounded symbols. [Release evidence](evidence/release-138.txt).
+
+Prior **0.24.42 (137.1)**: PR198 merged91f33a5d;
 release36110476038, iOS upload107995277629 and Apple changelog readback107999790099
 passed. Sheet actions now keep padded backgrounds around growing labels and
 bounded secondary actions. [Release evidence](evidence/release-137.txt).
@@ -115,9 +120,9 @@ padded button backgrounds, bounded secondary actions and unobscured final tags.
 and exact-head CI pass. PR198 merged91f33a5d; release36110476038 delivered137.1 with verified Apple TestFlight notes.
 [One current diagnosis](evidence/sheet-footer-current.txt).
 
-Current user-confirmed photo work: replace the non-native action controls with
-appropriate native controls, and fix the brief close/reopen flash during left/right
-paging. The user confirms double-tap zoom works. Withdraw the zoom diagnosis and
+The confirmed photo batch is delivered in138.1: native iOS action controls and
+continuous left/right paging. Native36139759309 passes all three workflows on both
+devices; final captures reviewed. The user confirms double-tap zoom works. Withdraw the zoom diagnosis and
 trace; no zoom implementation change or diagnostic run is authorized by that
 simulator failure. [Current evidence and correction](evidence/photo-inspection-current.txt).
 

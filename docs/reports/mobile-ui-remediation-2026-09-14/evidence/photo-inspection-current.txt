@@ -1,3 +1,9 @@
+ACCEPTED AND RELEASED: TestFlight0.24.43(138.1), PR199, release36144264031.
+Final native36139759309 at6cb419a2 passes3/3 phone and iPad; full-screen captures
+reviewed. See release-138.txt for final acceptance and Apple changelog readback.
+No open photo diagnosis remains from this batch; earlier candidate failures below
+are historical and must not restart investigation.
+
 Photo viewer batch — current diagnosis, 2026-09-25.
 
 Confirmed by user: non-native photo buttons and brief dismissal/reopening during
