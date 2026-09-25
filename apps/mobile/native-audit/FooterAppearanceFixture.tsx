@@ -14,7 +14,7 @@ export function FooterAppearanceFixture() {
   return <NativeFilterSheet title="Footer appearance" footerTestID="footer-appearance-actions" actions={{
     primaryLabel: 'Move', secondaryLabel: 'Cancel', disabled: !selected,
     onApply: () => setReceived(true),
-    onBack: () => { void setPreference(initialPreference.current).then(() => router.back()); }
+    onBack: () => { void setPreference(initialPreference.current).then(() => { if (router.canGoBack()) router.back(); else router.replace('/'); }); }
   }}>
     <View style={{ padding: 20, gap: 16 }}>
       <Text accessibilityRole="header" style={{ color: palette.text, fontSize: 20 }}>Footer appearance</Text>

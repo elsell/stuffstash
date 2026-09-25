@@ -13,7 +13,11 @@ final class FixtureAuditTests: XCTestCase {
       || name.contains("testCustomizationCollectionClearsPersistentChrome")
       || name.contains("testNotificationJourneyRetainsTabsAndClearsFooter"))
       ? "View all recently changed assets" : "Audit Browse filters"
-    XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
+    if name.contains("testFooterAppearance") {
+      XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 30))
+    } else {
+      XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
+    }
     let providerOmitted = app.otherElements["audit-keyboard-provider-omitted"].exists
     let providerEvidence = XCTAttachment(string: "Keyboard provider omitted: \(providerOmitted)")
     providerEvidence.name = "keyboard-provider-configuration"
@@ -406,7 +410,7 @@ final class FixtureAuditTests: XCTestCase {
       app.terminate()
       app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
       app.launch()
-      XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
+      XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 30))
     }
     guard openFixtureURL("audit-footer-appearance") else { return }
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForExistence(timeout: 10))

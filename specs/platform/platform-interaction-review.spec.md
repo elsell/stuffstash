@@ -1573,3 +1573,12 @@ NativeSheetActions, light/dark transitions, disabled/enabled actions and all
 geometry assertions. A focused phone/iPad run distinguishes a launcher limitation
 from actual footer clipping; no production adapter change is justified before
 that result. Old nested sheet diagnostics are not shipping filter compositions.
+
+Direct-link footer fixtures must return to the audit index when no back history
+exists; restore appearance before navigation. Readiness for direct-entry footer
+cases uses the audit navigation bar, not an offscreen menu button. Run36103695986
+phone normal-text geometry/behavior passed until dismissal; final capture restored
+the theme while retaining the direct-entry screen. Its following setup capture
+shows the audit index scrolled beyond Browse filters. Preserve all product footer
+assertions and add the existing Conversation review/return cases to compare the
+secondary action in its actual consumer. These are fixture-only corrections.

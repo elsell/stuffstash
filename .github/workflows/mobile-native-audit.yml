@@ -283,6 +283,8 @@ jobs:
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testFooterAppearanceAndDisabledActions'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testFooterAppearanceAtAccessibilityTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset'
               )
               ;;
             selection-lifecycle)

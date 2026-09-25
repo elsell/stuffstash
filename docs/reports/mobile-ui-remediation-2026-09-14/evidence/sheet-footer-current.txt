@@ -1,0 +1,37 @@
+Shared sheet footer — current bounded review, 2026-09-25
+Baseline c7d2a482 changes fixture entry only; production stays unchanged.
+Native run36103695986 tests existing normal/enlarged footer light/dark,
+disabled/enabled states on iPhone/iPad. Sleeping waiter session62145 writes
+/tmp/footer-native-terminal.json. Do not dispatch a duplicate run.
+
+Established baseline:35980094051 phone large-footer final screenshot is still
+in the audit launcher, so it does not establish footer clipping. Old nested/footer
+sheet diagnostics show empty artificial bodies, not shipping filter composition.
+Direct audit-footer-appearance URL now bypasses only launcher scrolling. All
+existing geometry and behavior assertions remain.17 preparation tests and critic
+review pass. One corrected native run decides clipping/appearance vs entry failure.
+
+Independent iPad voice review from artifact10806201894: context below header,
+location search/retry/selection/Back and close/reopen preserve the proposed plan.
+Full-screen entry, location-back and returned-proposal captures reviewed. The
+root screen/voice sheet options have no diff sincec7c44b45. These do not establish
+physical audio, small-detent adaptation or enlarged text.
+
+Visual concern: Cancel in the voice approval footer looks borderless on white.
+Production VoiceReviewActions uses shared NativeSheetActions, whose iOS secondary
+button explicitly requests bordered style; no intentional plain exception exists
+there. This is an appearance concern in that composition, not evidence the source
+selects the wrong style. Compare current shared-footer light/dark captures before
+choosing a correction. Any shared correction must include this voice consumer.
+Do not infer that command-button136.1 fixed the separate NativeSheetActions adapter.
+
+Phone terminal result36103695986: normal light/dark enabled/disabled geometry
+and activation passed, then Cancel dismissal failed. Full final capture shows
+restored light appearance on the direct-entry footer route. Next enlarged case
+fails setup; its capture shows the audit index scrolled beyond Browse filters.
+The normal footer captures show bounded secondary buttons; no clipping correction
+is justified. Candidate fixture restores appearance then uses back if available,
+otherwise replace('/'); readiness uses the audit navigation bar. Original behavior
+assertions remain.17 preparation checks pass; critic caught and then verified the
+missing fallback edit. Existing two voice cases join the next scoped run to judge
+that consumer's apparent borderless Cancel. iPad baseline is still running.

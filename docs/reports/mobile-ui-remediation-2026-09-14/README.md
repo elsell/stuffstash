@@ -100,6 +100,13 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
+Shared sheet-footer review is active. The corrected direct-entry normal/enlarged
+run36103695986 will distinguish actual footer defects from the oversized test
+launcher failure. iPad Conversation context/return captures are sound; its Cancel
+footer appears borderless despite the adapter requesting bordered styling, so
+that consumer remains part of appearance review.
+[One current diagnosis](evidence/sheet-footer-current.txt).
+
 The UIKit command batch shipped in136.1 using combined same-product native
 evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and
 iPad4/5. Every scoped workflow has a full pass on each device with identical product
