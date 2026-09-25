@@ -21,7 +21,14 @@ Cause of candidate close regression: the hidden presentation owner publishes its
 initial index back to the controlled parent and reopens. A controlled-parent
 installed-viewer test reproduces this; gate selection publication on visibility.
 12 targeted tests, TypeScript, structural checks and critic review pass afterward.
-Native rerun is required before acceptance. Artifacts10863302795(phone) and
+Corrected native36136468631 at361fb4b2 passes all three iPad cases, while phone
+still stops at reopening after Close; both recovery cases and all paging steps
+pass. Phone final capture still shows the viewer, so do not call this acceptance.
+Add a presentation boundary that retires queued selections immediately on Close
+and across reopen, plus a stable footer component to retain native button identity.
+The queued-selection test fails before and passes after; 21 related tests,
+TypeScript, structural checks and critic review pass. Native confirmation pending.
+Corrected artifacts:10864559883(phone),10866200454(iPad). Artifacts10863302795(phone) and
 10864155078(iPad) retain the first run evidence; selected captures are extracted
 under /tmp/move-layout-review/photo-paging-* without whole-archive downloads.
 

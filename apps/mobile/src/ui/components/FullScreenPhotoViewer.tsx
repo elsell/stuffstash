@@ -1,5 +1,5 @@
 import { PhotoViewerSystemBars } from './PhotoViewerSystemBars';
-import React, { useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 import { AccessibilityInfo, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NativeCommandButton } from './NativeCommandButton';
 import ImageViewing from 'react-native-image-viewing';
@@ -42,8 +42,21 @@ export function FullScreenPhotoViewer({
   const selectedIndex = Math.max(0, currentIndex ?? 0);
   const images = useMemo(() => photos.map(photo => ({ uri: photo.uri, headers: photo.headers })), [photos]);
 
+  const presentation = useMemo(() => ({ active: false }), [visible]);
+  useLayoutEffect(() => {
+    presentation.active = visible;
+    return () => { presentation.active = false; };
+  }, [presentation, visible]);
+  const close = () => {
+    if (!presentation.active) return;
+    presentation.active = false;
+    onClose();
+  };
+  const select = (index: number) => { if (presentation.active) onSelectIndex(index); };
+
   return (
-    <>
+    <PhotoViewerToolbarContext.Provider value={{ canRemove, isRemoving, onClose: close,
+      onRemove, onSelectIndex: select, photos, safeBottomInset: insets.bottom }}>
     {visible && Platform.OS === 'ios' ? <StatusBar barStyle="light-content" /> : null}
     <ImageViewing
       HeaderComponent={PhotoViewerHeader}
@@ -51,29 +64,24 @@ export function FullScreenPhotoViewer({
       animationType="fade"
       backgroundColor={viewerColors.background}
       doubleTapToZoomEnabled
-      FooterComponent={({ imageIndex }) => (
-        <PhotoViewerToolbar
-          canRemove={canRemove}
-          isRemoving={isRemoving}
-          imageIndex={imageIndex}
-          onClose={onClose}
-          onRemove={onRemove}
-          onSelectIndex={onSelectIndex}
-          photos={photos}
-          safeBottomInset={insets.bottom}
-        />
-      )}
+      FooterComponent={PhotoViewerFooter}
       imageIndex={selectedIndex}
       images={images}
       keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
-      onImageIndexChange={onSelectIndex}
-      onRequestClose={onClose}
+      onImageIndexChange={select}
+      onRequestClose={close}
       presentationStyle="overFullScreen"
       swipeToCloseEnabled
       visible={visible}
     />
-    </>
+    </PhotoViewerToolbarContext.Provider>
   );
+}
+
+const PhotoViewerToolbarContext = createContext<Omit<React.ComponentProps<typeof PhotoViewerToolbar>, 'imageIndex'> | null>(null);
+function PhotoViewerFooter({ imageIndex }: { imageIndex: number }) {
+  const props = useContext(PhotoViewerToolbarContext);
+  return props ? <PhotoViewerToolbar {...props} imageIndex={imageIndex} /> : null;
 }
 
 // The safe-area-aware footer owns Close; omit the library's duplicate header.

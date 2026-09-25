@@ -1621,7 +1621,9 @@ and its hand-built action buttons do not feel native. Keep one modal presentatio
 through swipe and explicit previous/next commands. Parent selection readback must
 not recreate the modal or replay its opening animation. An external selection
 change must move the existing pager; echoing its own swipe must not move it again.
-Close/reopen starts a fresh presentation at the requested photo. Preserve native
+Close/reopen starts a fresh presentation at the requested photo. Dismissal retires
+selection callbacks immediately, before parent readback; callbacks from a retired
+presentation cannot reopen it or affect a later presentation. Preserve native
 zoom, media headers, failed-removal recovery and final-photo dismissal.
 
 Use platform-native bounded action controls for Close, previous/next and Remove,
