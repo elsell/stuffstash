@@ -42,12 +42,17 @@ Android appearance and connected Edit/Move checks pass on the named audit APK.
 [alignment](evidence/checkout-row-alignment.txt),
 [detail entry](evidence/detail-entry-insets.txt).
 
-iPad Add destination completion remains unverified after earlier keyboard-observation
-failures; phone Add/Move recovery passes. The next bounded normal-text review uses
-the shared15s key-observation budget established by the command batch, preserving
-exact typed values and complete creation/retry/draft assertions.
-No product rewrite or broader acceptance is inferred from the timing failure.
-Recent-assets/invitation inset risks and unrelated findings remain in the audit.
+Normal-text selection refresh36100666455 at4f130a93 completes all four iPad
+workflows, including Add destination creation/retry and draft retention. Phone
+passes all three tag workflows; destination entry misses its five-second UI
+observation deadline, then the final full-screen capture shows the correct Put in
+screen. That phone replay remains failed; it is not a demonstrated product failure
+or a reason for another unchanged run. Reviewed creation/error and tag-selection
+captures retain clear native headers, grouped choices and unobscured footer actions.
+[Scoped decision](evidence/selection-current-361006.txt).
+Inventory-list inset correction is shipped in132.1. Invitation acceptance is a
+root-stack route outside tabs; the same tab-overlap diagnosis does not apply.
+Its phone/iPad review and opening-recovery captures still need visual assessment.
 Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6),
 including old diagnostics and enlarged-text cases; it is not a release gate for
 this verified batch. [Terminal decisions](evidence/native-full-359800.txt).
@@ -152,7 +157,7 @@ TestFlight0.24.40 (132.1) tag-editor check, the user reports “opens right away
 all good.” Ordinary custom-color opening is accepted for that tested iPhone/build;
 no color-control rewrite is justified by the earlier inconsistent simulator result.
 This does not validate the unreleased PR161 candidate, coordinate probes, iPad,
-color editing/save, or assistive activation. iPad Add readiness remains unverified.
+color editing/save, or assistive activation. iPad Add creation/retry now passes the scoped refresh above.
 [Device evidence](evidence/color-first-tap-device-132.txt).
 
 - **M20 dismissal timing:** current iPhone onboarding refresh timed out awaiting
