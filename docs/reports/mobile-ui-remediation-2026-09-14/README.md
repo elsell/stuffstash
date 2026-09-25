@@ -87,10 +87,12 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Enlarged-text Edit review: three historical failures stopped in the diagnostic
-menu. iPad tags reached Edit with a partly clipped bottom control. A focused
-replay uses direct fixture entry and preserves editor geometry/draft assertions.
-No product correction is yet inferred. [Diagnosis](evidence/edit-large-text-entry.txt).
+Enlarged-text Edit replay36087906732 confirms a phone button measured48pt while
+rendering77.3pt, clipping New tag at the scroll end. The shared iOS command
+candidate removes the outer sizing constraint and uses native large control sizing.
+59 focused tests, TypeScript, structural checks and critic review pass. Native
+large-Edit and ordinary Detail/Sharing/reminder acceptance is pending. The iPad
+Retry tags activation outcome remains separate. [Diagnosis](evidence/edit-large-text-entry.txt).
 
 Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
 Reviewed full-screen entry/search/footer captures confirm header clearance and

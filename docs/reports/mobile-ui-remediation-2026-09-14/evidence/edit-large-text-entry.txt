@@ -10,3 +10,22 @@ editor assertions. Normal-size menu-driven cases remain unchanged. One focused
 replay on phone/iPad distinguishes fixture entry from actual editor reachability.
 If editor fails, use its complete captures to choose correction; if it passes,
 close only these named scenarios. This is not a rerun of text-provider diagnostics.
+
+Replay36087906732 at938f32b1: phone metadata recovery passes; iPad tag draft,
+selection and cancellation passes. Phone tag workflow fails reveal(New tag):
+scroll bounds bottom840, button y767.3 h77.3 bottom844.6, measured host y782 h48.
+Final full screenshot confirms clipped native background. iPad metadata reaches
+Retry tags and dispatches a tap but button remains; no common-cause claim yet.
+Artifact10844938360(phone),10844019839(iPad). Exact failure lines1557 and1812.
+
+Implementation decision: remove outer fixed-size/frame proposal from shared iOS
+command, use large native control sizing and flexible label measurement. Preserve
+quiet-action minimum target, current/disabled callbacks and roles. Repeat both
+large Edit tests plus ordinary Detail/Sharing/reminder shared consumers. No font
+scaling cap, guessed bottom padding or provider experiment.
+
+Source checks:59 focused tests across native command semantics, Detail, Sharing
+and reminders pass, plus TypeScript/structural checks. Critic found no source
+blocker; ordinary size and enlarged measurement remain native acceptance gates.
+Representative consumers use flexible wrappers (AssetTagSelectionField,
+SettingsCommandRow and Sharing command groups); no per-consumer padding added.

@@ -1519,3 +1519,17 @@ that is a scoped baseline concern, not evidence of a general native-input fault.
 One focused phone/iPad replay distinguishes inaccessible editor content from
 fixture-entry failure; a confirmed product defect then gets a separate correction
 and unchanged acceptance. Do not reset earlier text-entry diagnostic budgets.
+
+## Native command measurement at enlarged text
+
+Replay36087906732 at938f32b1 confirms the phone New tag button draws77.3pt high
+inside a48pt host, extending below the scroll viewport at100% scroll. The earlier
+outer48pt minimum fixed ordinary-size spacing but does not preserve Dynamic Type
+measurement. Let the native bordered style determine command height with large
+control sizing and a vertically flexible label; remove the outer fixed-size/frame
+proposal. Keep minimum label width and quiet-command target size, current/disabled
+handlers and destructive semantics. Do not patch individual consumers with bottom
+padding or font-scale multipliers. Native acceptance must repeat both enlarged
+Edit cases unchanged and ordinary Detail, Sharing and paired reminder recovery.
+The iPad Retry tags failure is still a separate unverified activation outcome;
+do not claim its cause is proved solely by the phone sizing evidence.
