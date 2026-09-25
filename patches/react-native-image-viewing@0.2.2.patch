@@ -47,16 +47,18 @@ diff --git a/dist/ImageViewing.js b/dist/ImageViewing.js
 +    }, [toggleBarsVisible]);
 +    useEffect(showControls, [currentImageIndex, visible, showControls]);
      useEffect(() => {
-         if (onImageIndexChange) {
+-        if (onImageIndexChange) {
++        if (visible && onImageIndexChange) {
              onImageIndexChange(currentImageIndex);
          }
-     }, [currentImageIndex]);
+-    }, [currentImageIndex]);
 -    const onZoom = useCallback((isScaled) => {
 -        var _a, _b;
 -        // @ts-ignore
 -        (_b = (_a = imageList) === null || _a === void 0 ? void 0 : _a.current) === null || _b === void 0 ? void 0 : _b.setNativeProps({ scrollEnabled: !isScaled });
 -        toggleBarsVisible(!isScaled);
 -    }, [imageList]);
++    }, [currentImageIndex, visible]);
 +    const zoomByImage = useRef(new Map());
 +    const imageKey = (image, index) => keyExtractor ? keyExtractor(image, index)
 +        : typeof image === "number" ? `${image}` : image?.uri;

@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import ts from 'typescript';
@@ -73,5 +73,17 @@ it('keeps one presentation across pages and gives scrolling ownership to the sel
     expect(dismissals).toBe(1);
     await h.render(render(1));
     expect(presentations).toBe(2);
+    let close!: () => void;
+    function ControlledViewer() {
+      const [index, setIndex] = useState<number | undefined>(0);
+      close = () => setIndex(undefined);
+      return <Viewer images={images} imageIndex={index ?? 0} visible={index !== undefined}
+        onRequestClose={close} onImageIndexChange={setIndex} />;
+    }
+    await h.render(<ControlledViewer />);
+    const beforeClose = presentations;
+    await h.run(() => close());
+    expect(h.allByType('NativePager')).toHaveLength(0);
+    expect(presentations).toBe(beforeClose);
   } finally { await h.unmount(); }
 });

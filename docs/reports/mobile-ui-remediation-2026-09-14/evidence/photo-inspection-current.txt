@@ -12,9 +12,18 @@ bounded symbol buttons; Android appearance remains the existing fallback.
 
 Targeted action/removal/recovery/status checks: 13 pass; TypeScript and structural
 checks pass. Installed paging and modal lifecycle checks: 2 pass. Critic reviewed
-both passes; no outstanding source blocker. Native phone/iPad verification is
-pending; this is not release acceptance. Verify Add swipe/previous/next/removal,
-saved-photo failed removal, unavailable recovery and full-screen action bounds.
+both passes; no outstanding source blocker. Native36133901938 at967069b7 passes saved removal failure and unavailable recovery
+on both devices. Add passes swipe, previous/next and removal to the surviving
+photo, then fails reopening after Close. Full-screen captures confirm bounded
+native controls, readable metadata and safe-area clearance on phone/iPad.
+
+Cause of candidate close regression: the hidden presentation owner publishes its
+initial index back to the controlled parent and reopens. A controlled-parent
+installed-viewer test reproduces this; gate selection publication on visibility.
+12 targeted tests, TypeScript, structural checks and critic review pass afterward.
+Native rerun is required before acceptance. Artifacts10863302795(phone) and
+10864155078(iPad) retain the first run evidence; selected captures are extracted
+under /tmp/move-layout-review/photo-paging-* without whole-archive downloads.
 
 Historical run 36110848610 at 2ac37ae0 tested a subsequently withdrawn simulator
 zoom hypothesis. User correction supersedes that diagnosis. Artifacts 10853741976
