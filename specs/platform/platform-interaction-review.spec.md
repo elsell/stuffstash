@@ -1506,3 +1506,16 @@ controls. This represents the shared collection scroll owner, not inherited-fiel
 semantics or physical color editing. One baseline decides whether manual viewport
 ownership already accounts for chrome or needs correction. If safe, keep it; if
 clipped, fix this owner and repeat the same acceptance on phone and iPad.
+
+## Enlarged-text editor acceptance entry
+
+Run35980094051's full-screen captures show three of four enlarged-text Edit
+metadata/tag cases still in the audit menu, not the editor. Enter these cases
+through the existing fixture URL rather than exhausting a fixed swipe count in
+an oversized diagnostic menu. Keep the production Edit screen, enlarged launch
+category, geometry, metadata recovery, tag-draft and dismissal assertions intact.
+The iPad tag capture reaches Edit and shows New tag crossing the scroll bottom;
+that is a scoped baseline concern, not evidence of a general native-input fault.
+One focused phone/iPad replay distinguishes inaccessible editor content from
+fixture-entry failure; a confirmed product defect then gets a separate correction
+and unchanged acceptance. Do not reset earlier text-entry diagnostic budgets.

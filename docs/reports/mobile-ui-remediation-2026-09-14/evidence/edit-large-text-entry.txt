@@ -1,0 +1,12 @@
+Current diagnosis: broad35980094051 atc7c44b45 did not enter Edit for phone
+metadata, phone tags, or iPad metadata. Reviewed complete final captures show the
+oversized audit menu. These failures do not establish product layout defects.
+iPad tags did enter Edit; New tag extends slightly below the scroll viewport.
+Do not infer inability to scroll or an input problem from this one capture.
+Artifacts10805146387(phone),10806201894(iPad); extracted only named cases.
+
+Decision: use existing URL entry for these enlarged-text cases; retain all actual
+editor assertions. Normal-size menu-driven cases remain unchanged. One focused
+replay on phone/iPad distinguishes fixture entry from actual editor reachability.
+If editor fails, use its complete captures to choose correction; if it passes,
+close only these named scenarios. This is not a rerun of text-provider diagnostics.

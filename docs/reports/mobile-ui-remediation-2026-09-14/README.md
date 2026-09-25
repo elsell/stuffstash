@@ -87,6 +87,11 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
+Enlarged-text Edit review: three historical failures stopped in the diagnostic
+menu. iPad tags reached Edit with a partly clipped bottom control. A focused
+replay uses direct fixture entry and preserves editor geometry/draft assertions.
+No product correction is yet inferred. [Diagnosis](evidence/edit-large-text-entry.txt).
+
 Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
 Reviewed full-screen entry/search/footer captures confirm header clearance and
 final long-name row reachability above persistent controls. Existing viewport
