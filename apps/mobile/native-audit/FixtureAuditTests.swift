@@ -408,10 +408,7 @@ final class FixtureAuditTests: XCTestCase {
       app.launch()
       XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 30))
     }
-    let open = app.buttons["Audit footer appearance"]
-    for _ in 0..<16 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable)
-    open.tap()
+    guard openFixtureURL("audit-footer-appearance") else { return }
     XCTAssertTrue(app.staticTexts["Footer appearance"].waitForExistence(timeout: 10))
     let form = app.scrollViews.containing(.staticText, identifier: "Footer appearance").firstMatch
     let root = app.otherElements["footer-appearance-actions"].firstMatch

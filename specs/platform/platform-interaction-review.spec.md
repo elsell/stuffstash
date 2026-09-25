@@ -1563,3 +1563,13 @@ remove providers, or accept a visible keyboard as proof of successful entry.
 Apply the shared mechanism rather than repeatedly adjusting individual workflow
 cases. Verify normal Add destination creation/retry and related selection draft
 ownership on phone/iPad; retain terminal failures and full-screen evidence.
+
+## Shared sheet-footer acceptance entry
+
+The enlarged-text footer case in35980094051 stopped in the audit launcher, as
+its full-screen capture confirms. Use the existing audit-footer-appearance URL
+for normal and enlarged entry, preserving the shipping NativeFilterSheet and
+NativeSheetActions, light/dark transitions, disabled/enabled actions and all
+geometry assertions. A focused phone/iPad run distinguishes a launcher limitation
+from actual footer clipping; no production adapter change is justified before
+that result. Old nested sheet diagnostics are not shipping filter compositions.
