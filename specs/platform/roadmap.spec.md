@@ -2,15 +2,19 @@
 
 ## Current structural priority: connected workflow stability
 
-TestFlight 0.24.43 (138.1) delivered continuous photo paging and native photo
-commands. The user confirmed the paging fix and supplied the next concrete batch:
-Details action hierarchy, top-right photo Close/More, separate tag creation,
-stable Move context and roomier creation, trailing household switching, and
-mobile household/inventory creation. Complete these connected normal-text
-workflows and their security checks, then verify the changed iPhone/iPad surfaces.
-This batch does not require closing unrelated audit findings. The single current
-summary and durable evidence remain in
-`docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
+TestFlight **0.25.0 (140.1)** delivered the confirmed hierarchy/creation batch:
+grouped Details commands, matched native top-right photo Close/More, separate tag
+creation, stable Move context and inset creation, trailing household switching,
+and mobile household/inventory creation. PR203 merged77d129c5; release36180827504
+and Apple changelog readback passed. Combined native acceptance covers the
+unchanged hierarchy workflows in36167444034 and all final photo workflows on
+both iPhone/iPad in36178128868. Required CI and adversarial creation checks pass.
+
+Resume the comprehensive audit from user-confirmed everyday workflow issues;
+this release does not imply the audit is complete. New suspected issues require
+user confirmation before dedicated investigation or remediation. Keep unrelated
+findings separate from release gates. The single current summary and durable
+evidence remain in `docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
 
 Continue from unresolved workflow evidence, not historical pending labels.
 Prioritize any confirmed normal-text defect before enlarged-text work. Inspect

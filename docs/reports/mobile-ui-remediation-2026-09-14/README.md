@@ -11,7 +11,20 @@ already confirmed issues without asking again.
 
 ## Delivery
 
-Latest verified TestFlight is **0.24.43 (138.1)**. PR199 merged283c12af;
+Latest verified TestFlight is **0.25.0 (140.1)**. PR203 merged77d129c5;
+release36180827504, iOS upload108225255412 and Apple changelog readback108231235984
+passed. This batch groups Details commands, simplifies photo inspection, separates
+new-tag entry, clarifies Move context, aligns the household switch action, and adds
+household/inventory creation with authorization checks. [Release evidence](evidence/release-140.txt).
+
+Native acceptance combines the unchanged hierarchy cases from36167444034 with
+final photo36178128868, which passes3/3 on both iPhone17 and iPad mini. Final
+screenshots were reviewed; both photo controls share the native symbol layout and
+content-measured hosts. Paging, close/reopen, removal and error-alert dismissal pass.
+Earlier simulator alert/reopen observations are not confirmed user defects and do
+not justify a new investigation. [Final photo captures](evidence/release-140-photo-controls.png).
+
+Prior **0.24.43 (138.1)**: PR199 merged283c12af;
 release36144264031, iOS upload108104810001 and Apple changelog readback108112063611
 passed. Photo paging retains its presentation and iOS photo actions use native
 bounded symbols. [Release evidence](evidence/release-138.txt).
