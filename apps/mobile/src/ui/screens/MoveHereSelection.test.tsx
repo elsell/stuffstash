@@ -38,7 +38,7 @@ it.each(['ios', 'android'] as const)('keeps Move Here selection through search a
     expect(submitted).toEqual([]);
     await changeSearch('unmatched'); await settle(h, 350); await settle(h);
     expect(h.byLabel('Choose item Tent')?.props.accessibilityState.checked).toBe(true);
-    expect(h.byText('Selected')).toBeDefined();
+    expect(h.byText('Items')).toBeDefined();
     expect(h.byText('Selected: Tent')).toBeUndefined();
     expect(h.byLabel('Move here')?.props.disabled).toBe(false);
     await changeSearch(''); await settle(h, 350); await settle(h);

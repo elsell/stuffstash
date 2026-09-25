@@ -1,3 +1,4 @@
+import { AssetDetailActions } from './AssetDetailActions';
 import { NativeCommandButton } from './NativeCommandButton';
 import { type ReactElement } from 'react';
 import type { RefreshControlProps } from 'react-native';
@@ -123,7 +124,7 @@ export function AssetDetailView({
     onMoveThingsHere={onMoveThingsHere} />;
   const photoGallery = photosAvailable ? (
     <AssetDetailPhotoGallery
-      canAddPhotos={!isActionPending && !isPhotosLoading && asset.canAddPhotos}
+      canAddPhotos={false}
       contentHorizontalPadding={spacing.md}
       onAddPhotos={onAddPhotos}
       onPhotoPress={onPhotoPress}
@@ -162,17 +163,10 @@ export function AssetDetailView({
           ) : null}
 
           {asset.photos.length > 0 ? photoGallery : null}
-          <AssetDetailIdentitySection
-            asset={asset}
-            isActionPending={isActionPending}
-            onCheckout={onCheckout}
-            showEditAction={showEditAction}
-            onEdit={onEdit}
-            onMove={onMove}
-            onParentLocationPress={onParentLocationPress}
-            onReturn={onReturn}
-            onTagPress={onTagPress}
-          />
+          <AssetDetailIdentitySection asset={asset} onParentLocationPress={onParentLocationPress} onTagPress={onTagPress} />
+          <AssetDetailActions asset={asset} isActionPending={isActionPending} isPhotosLoading={isPhotosLoading}
+            showEditAction={showEditAction} onEdit={onEdit} onAddPhotos={onAddPhotos}
+            onMove={onMove} onCheckout={onCheckout} onReturn={onReturn} />
 
           {photosRecovery}
           {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}

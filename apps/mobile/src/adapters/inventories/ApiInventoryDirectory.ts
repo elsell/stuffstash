@@ -40,6 +40,12 @@ export class ApiInventoryDirectory {
     this.selectedIdentity = directory.availableInventories.find(item => item.inventory.id === id);
   }
 
+  invalidate(): void {
+    this.cached = undefined;
+    // Existing readers can finish, but cannot repopulate the invalidated cache.
+    this.pending = undefined;
+  }
+
   load(signal?: AbortSignal, refresh = false): Promise<InventoryDirectory> {
     assertReadActive(signal);
     if (refresh) this.cached = undefined;

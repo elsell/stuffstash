@@ -150,21 +150,22 @@ describe('pending photo removal', () => {
       test.contents.resolve({ asset: test.core().asset, allAssets: [] });
       await test.render(); await settle(test.harness); await settle(test.harness);
       await test.harness.press(test.harness.byLabel('Open photo 1 of 2'));
-      await test.harness.press(test.harness.byLabel('Remove photo'));
+      await test.harness.press((await removePhotoAction(test.harness)));
       const confirm = latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress;
       expect(confirm).toBeDefined();
       await test.harness.run(() => { confirm?.(); confirm?.(); });
       expect(calls).toEqual(['first']);
-      expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(true);
+      expect((await removePhotoAction(test.harness))?.props.disabled).toBe(true);
       expect(test.harness.allText()).toContain('Removing photo…');
-      await test.harness.press(test.harness.byLabel('Next photo'));
+      await test.harness.press(test.harness.byLabel('Photo options'));
+      await test.harness.run(() => test.harness.byType('ImageViewing')!.props.onImageIndexChange(1));
       remainingPhotos.shift();
       await test.harness.run(() => removal.resolve({ message: 'Removed' }));
       await settle(test.harness);
       expect(test.harness.byType('ImageViewing')?.props.visible).toBe(true);
       expect(test.harness.byType('ImageViewing')?.props.imageIndex).toBe(0);
       expect(test.harness.byType('ImageViewing')?.props.images).toHaveLength(1);
-      expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
+      expect((await removePhotoAction(test.harness))?.props.disabled).toBe(false);
     } finally { await test.harness.unmount(); }
   });
 });
@@ -180,7 +181,7 @@ it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal
     test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
     await test.harness.press(test.harness.byLabel('Open photo 1 of 1'));
-    await test.harness.press(test.harness.byLabel('Remove photo'));
+    await test.harness.press((await removePhotoAction(test.harness)));
     await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
     if (visit === 'unmounted') { test.hide(); await test.render(); }
     if (visit === 'departed' || visit === 'returned') await test.harness.run(() => setScreenFocused(false));
@@ -191,8 +192,8 @@ it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal
       expect(latestAlert()?.title).not.toBe('Could not remove photo');
       if (visit !== 'unmounted') {
         if (visit === 'departed') await test.harness.run(() => setScreenFocused(true));
-        expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
-        await test.harness.press(test.harness.byLabel('Remove photo'));
+        expect((await removePhotoAction(test.harness))?.props.disabled).toBe(false);
+        await test.harness.press((await removePhotoAction(test.harness)));
         await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
         await settle(test.harness);
         expect(calls).toBe(2);
@@ -204,8 +205,8 @@ it.each(['current', 'unmounted', 'departed', 'returned'])('handles photo-removal
       await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'OK')?.onPress?.(); });
       expect(calls).toBe(1);
       expect(test.harness.byType('ImageViewing')?.props.visible).toBe(true);
-      expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(false);
-      await test.harness.press(test.harness.byLabel('Remove photo'));
+      expect((await removePhotoAction(test.harness))?.props.disabled).toBe(false);
+      await test.harness.press((await removePhotoAction(test.harness)));
       await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
       await settle(test.harness);
       expect(calls).toBe(2);
@@ -226,20 +227,20 @@ it('does not let a previous asset removal settle the new asset operation', async
     test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
     await test.harness.press(test.harness.byLabel('Open photo 1 of 1'));
-    await test.harness.press(test.harness.byLabel('Remove photo'));
+    await test.harness.press((await removePhotoAction(test.harness)));
     const staleConfirmation = latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress;
     await test.harness.run(() => { staleConfirmation?.(); });
     test.changeAsset('other'); await test.render(); await settle(test.harness); await settle(test.harness);
     await test.harness.run(() => { staleConfirmation?.(); });
     expect(calls).toEqual(['tent']);
     await test.harness.press(test.harness.byLabel('Open photo 1 of 1'));
-    await test.harness.press(test.harness.byLabel('Remove photo'));
+    await test.harness.press((await removePhotoAction(test.harness)));
     await test.harness.run(() => { latestAlert()?.buttons.find(button => button.text === 'Remove')?.onPress?.(); });
     expect(calls).toEqual(['tent', 'other']);
     await test.harness.run(() => oldRemoval.resolve({ message: 'Old photo removed' }));
     await settle(test.harness);
     expect(test.harness.byType('ImageViewing')?.props.visible).toBe(true);
-    expect(test.harness.byLabel('Remove photo')?.props.disabled).toBe(true);
+    expect((await removePhotoAction(test.harness))?.props.disabled).toBe(true);
     expect(test.harness.allText()).not.toContain('Old photo removed');
     await test.harness.run(() => newRemoval.resolve({ message: 'New photo removed' }));
     await settle(test.harness);
@@ -733,3 +734,8 @@ it('retries only failed photos from the workspace without reopening selection', 
     expect(test.harness.allText()).toContain('Family tent');
   } finally { await test.harness.unmount(); }
 });
+
+async function removePhotoAction(h: MobileRenderHarness) {
+  if (!h.byText('Remove photo')) await h.press(h.byLabel('Photo options'));
+  return h.byText('Remove photo')?.parent ?? undefined;
+}

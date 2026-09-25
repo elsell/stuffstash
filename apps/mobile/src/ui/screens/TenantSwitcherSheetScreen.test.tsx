@@ -1,3 +1,4 @@
+import { CreateWorkspace } from '../../application/inventories/CreateWorkspace';
 import { expect, it } from 'vitest';
 import { HomeDashboardQuery, type HomeDashboardViewModel } from '../../application/home/HomeDashboardQuery';
 import { SelectInventoryCommand } from '../../application/home/SelectInventoryCommand';
@@ -69,13 +70,13 @@ it('retains the switcher with safe retry feedback when selecting an inventory fa
   } finally { await h.unmount(); }
 });
 
-function fixture(command: SelectInventoryCommand, snapshot = dashboard) {
+function fixture(command: SelectInventoryCommand, snapshot = dashboard, creation?: CreateWorkspace, scopeId = 'session') {
   const client = createMobileQueryClient();
   const scope = { tenantId: 'second', inventoryId: 'selected' };
-  client.setQueryData(mobileQueryKeys.inventoryScope('session'), scope);
-  client.setQueryData(mobileQueryKeys.home('session', 'second', 'selected'), snapshot);
-  return <MobileServerStateProvider client={client} scopeId="session" loadInventoryScope={async () => scope}>
-    <TenantSwitcherSheetScreen dashboardQuery={new HomeDashboardQuery({ async getHomeDashboardSnapshot() { throw new Error('Fresh cache must be used'); } })} selectInventoryCommand={command} />
+  client.setQueryData(mobileQueryKeys.inventoryScope(scopeId), scope);
+  client.setQueryData(mobileQueryKeys.home(scopeId, 'second', 'selected'), snapshot);
+  return <MobileServerStateProvider client={client} scopeId={scopeId} loadInventoryScope={async () => scope}>
+    <TenantSwitcherSheetScreen createWorkspace={creation} dashboardQuery={new HomeDashboardQuery({ async getHomeDashboardSnapshot() { throw new Error('Fresh cache must be used'); } })} selectInventoryCommand={command} />
   </MobileServerStateProvider>;
 }
 
@@ -141,4 +142,58 @@ it.each([0, 1, 2])('shows the household inventory count with correct wording: %s
     expect(h.allText().join('')).toContain(`${count} ${count === 1 ? 'inventory' : 'inventories'}`);
     expect(h.allText().join('')).not.toContain('1 inventories');
   } finally { await h.unmount(); }
+});
+
+
+it('creates a household and inventory without changing the current inventory', async () => {
+  const h = new MobileRenderHarness(); const created: string[] = []; let switched = 0;
+  const creation = new CreateWorkspace({
+    async canCreateInventory(id) { return id === 'new-household'; },
+    async createHousehold(name) { created.push(name); return { id: 'new-household', name, canCreateInventory: true }; },
+    async createInventory(tenantId, name) { created.push(name); return { id: 'new-inventory', tenantId, name }; }
+  }, { created() {} });
+  try {
+    await h.render(fixture(new SelectInventoryCommand({ async selectInventory() { switched++; } }), dashboard, creation));
+    expect(h.byLabel('New inventory')).toBeUndefined();
+    await h.press(h.byLabel('Switch household'));
+    await h.press(h.byLabel('New household'));
+    await h.changeText(h.byLabel('Household name'), 'Lake house');
+    await h.press(h.byLabel('Create household'));
+    expect(h.byLabel('New inventory')).toBeDefined();
+    await h.press(h.byLabel('New inventory'));
+    await h.changeText(h.byLabel('Inventory name'), 'Garage');
+    await h.press(h.byLabel('Create inventory'));
+    expect(created).toEqual(['Lake house', 'Garage']);
+    expect(h.byLabel('Switch to inventory Garage')).toBeDefined();
+    expect(switched).toBe(0);
+    await h.press(h.byLabel('Switch to inventory Garage'));
+    expect(switched).toBe(1);
+  } finally { await h.unmount(); }
+});
+
+
+it.each(['blur', 'scope'] as const)('retires creation callbacks and deferred results after %s', async departure => {
+  const h = new MobileRenderHarness(); resetNavigation(); setScreenFocused(true);
+  let resolve!: (value: { id: string; name: string; canCreateInventory: boolean }) => void;
+  const creation = new CreateWorkspace({
+    async canCreateInventory() { return true; },
+    createHousehold: () => new Promise(done => { resolve = done; }),
+    async createInventory() { throw new Error('Not requested'); }
+  }, { created() {} });
+  const selection = new SelectInventoryCommand({ async selectInventory() {} });
+  try {
+    await h.render(fixture(selection, dashboard, creation));
+    await h.press(h.byLabel('Switch household'));
+    const open = h.byLabel('New household')!.props.onPress;
+    await h.press(h.byLabel('New household'));
+    await h.changeText(h.byLabel('Household name'), 'Retired');
+    await h.press(h.byLabel('Create household'));
+    if (departure === 'blur') await h.run(() => setScreenFocused(false));
+    else await h.render(fixture(selection, dashboard, creation, 'new-session'));
+    await h.run(() => resolve({ id: 'retired', name: 'Retired', canCreateInventory: true }));
+    await h.run(open);
+    expect(h.byLabel('Household name')).toBeUndefined();
+    expect(h.allText()).not.toContain('Retired');
+    expect(dispatchedActions()).toEqual([]);
+  } finally { await h.unmount(); resetNavigation(); setScreenFocused(true); }
 });

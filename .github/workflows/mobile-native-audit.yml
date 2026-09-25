@@ -55,6 +55,7 @@ on:
           - add-destination
           - tag-selection
           - selection-lifecycle
+          - hierarchy-creation-batch
           - photo-paging-actions
           - sheet-footer-appearance
           - normal-detail-recovery
@@ -501,6 +502,20 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeNotificationHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeAddHitRegionBeyondAccessibilityFrame'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testHomeProfileHitRegionBeyondAccessibilityFrame'
+              )
+              ;;
+            hierarchy-creation-batch)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailCommandsRemainReachableAtNormalTextSize'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEmptyPhotoDetailPrioritizesIdentityAndActions'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testPhotoRemovalFailureAppearsAboveViewer'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testUnavailablePhotoExplainsFailureAndKeepsEscapeReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testEditTagDisclosureRetainsNormalTextDraft'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testMoveDestinationCreationRetainsDraftAndRetries'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAssetMoveReturnsToUpdatedDetailAndReopensSelection'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInventorySwitcherCreatesHouseholdAndInventory'
               )
               ;;
             photo-paging-actions)

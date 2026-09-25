@@ -1,3 +1,4 @@
+import { NativeSegmentedControl } from '../components/NativeSegmentedControl';
 import { Stack } from 'expo-router';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -10,14 +11,12 @@ import { DraftTextField } from '../components/DraftTextField';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { AssetActionKeyboardFrame } from './AssetActionKeyboardFrame';
 import { AssetTagSelectionField } from '../components/AssetTagSelectionField';
-import { NativeCommandButton } from '../components/NativeCommandButton';
 import { NativeChoicePicker } from '../components/NativeChoicePicker';
 import { AssetExpirationEditor } from '../components/AssetExpirationEditor';
 import type { CustomAssetTypeDefinition } from '../../domain/customization/Customization';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -27,18 +26,12 @@ import type { AssetDetailViewModel } from '../../application/assets/AssetViewMod
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 import {
-  applyInlineAssetTagResolution,
-  canApplyInlineAssetTagResolution,
-  type CreateAssetTagDraft,
-  resolveInlineAssetTag
+  type CreateAssetTagDraft
 } from '../../application/assets/AssetTagDraftResolution';
-import { assetTagChipStylePresentation } from '../components/AssetTagChipsPresentation';
-import { TagColorPicker } from '../components/TagColorPicker';
 import { AppTextInput, appKeyboardDismissMode } from '../components/AppTextInput';
 import {
   assetEditContext,
   canSaveEditAsset,
-  hasUnstagedEditTag,
   EditDraft
 } from './AssetDetailEditPresentation';
 import {
@@ -53,7 +46,7 @@ import {
   movePlacementPreview
 } from './AssetDetailMovePresentation';
 import { useAppearancePalette } from '../theme/AppearanceContext';
-import { minimumTouchTargetSize, radius, spacing, type MobileColorPalette } from '../theme/tokens';
+import { radius, spacing, type MobileColorPalette } from '../theme/tokens';
 
 export type MoveDraft = {
   readonly creationName?: string;
@@ -145,7 +138,6 @@ export function EditAssetSheet({
           tags={assetTags}
           selectedTagIds={draft?.tagIds ?? []}
           newTags={draft?.newTags ?? []}
-          entry={draft?.inlineTag ?? { name: '', color: '' }}
           onChange={(tagIds, newTags, inlineTag) => onChange({ ...draft, title: draft?.title ?? '', description: draft?.description ?? '', tagIds, newTags, inlineTag })}
         />
       </ScrollView>
@@ -160,120 +152,16 @@ function EditTagPicker({
   onChange,
   selectedTagIds,
   tags,
-  entry
 }: {
   readonly scope: string;
   readonly disabled: boolean;
   readonly newTags: readonly CreateAssetTagDraft[];
-  readonly entry: NonNullable<EditDraft['inlineTag']>;
   readonly onChange: (tagIds: readonly string[], newTags: readonly CreateAssetTagDraft[], entry: NonNullable<EditDraft['inlineTag']>) => void;
   readonly selectedTagIds: readonly string[];
   readonly tags: readonly AssetTagOptionViewModel[];
 }) {
-  const palette = useAppearancePalette();
-  const styles = createStyles(palette);
-  const { name: newTagName, color: newTagColor } = entry;
-  function setNewTagName(name: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, name }); }
-  function setNewTagColor(color: string): void { if (!disabled) onChange(selectedTagIds, newTags, { ...entry, color }); }
-  const [creatingTag, setCreatingTag] = useState(false);
-  const creationVisible = creatingTag || hasUnstagedEditTag(entry);
-  const [tagEntryRevision, setTagEntryRevision] = useState(0);
-  const creationActions = useFocusedSheetActions({
-    primaryLabel: 'New tag', secondaryLabel: 'Cancel new tag',
-    disabled: disabled || creationVisible, secondaryDisabled: disabled || !creationVisible,
-    onApply: () => setCreatingTag(true),
-    onBack: () => {
-      setCreatingTag(false);
-      setTagEntryRevision(current => current + 1);
-      onChange(selectedTagIds, newTags, { name: '', color: '' });
-    }
-  });
-
-  function addNewTag(): void {
-    const displayName = newTagName.trim();
-    if (disabled || displayName.length === 0) {
-      return;
-    }
-    const transition = applyInlineAssetTagResolution({
-      resolution: tagResolution,
-      selectedTagIds,
-      pendingTags: newTags
-    });
-    if (transition.shouldClearInputs) setTagEntryRevision(current => current + 1);
-    onChange(transition.selectedTagIds, transition.pendingTags, transition.shouldClearInputs ? { name: '', color: '' } : entry);
-  }
-
-  const tagResolution = resolveInlineAssetTag({
-    displayName: newTagName,
-    color: newTagColor,
-    activeTags: tags,
-    pendingTags: newTags
-  });
-  const canAddNewTag = canApplyInlineAssetTagResolution(tagResolution);
-
-  return (
-    <View style={styles.tagPicker}>
-      <Text style={styles.inputLabel}>Tags</Text>
-      <AssetTagSelectionField scope={scope} disabled={disabled} tags={tags} selectedIds={selectedTagIds}
-        onChange={ids => onChange(ids, newTags, entry)} />
-      <View style={styles.tagOptions}>
-        {newTags.map((tag, index) => {
-          const colorStyle = assetTagChipStylePresentation(tag);
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Remove new tag ${tag.displayName}`}
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              key={`${tag.displayName}-${index.toString()}`}
-              onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}
-              style={[
-                styles.tagOption,
-                colorStyle.colored ? { backgroundColor: colorStyle.backgroundColor, borderColor: colorStyle.borderColor } : null,
-                styles.tagOptionSelected,
-                disabled ? styles.disabledAction : null
-              ]}
-            >
-              <Text style={[styles.tagOptionText, styles.tagOptionTextSelected]} numberOfLines={1}>
-                {tag.displayName}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {creationVisible ? <>
-        <View style={styles.newTagRow}>
-          <View style={styles.newTagNameInput}>
-            <DraftTextField
-              key={Platform.OS === 'ios' ? tagEntryRevision : 'tag-name'}
-              accessibilityLabel="New tag name"
-              editable={!disabled}
-              onChangeText={setNewTagName}
-              placeholder="New tag"
-              placeholderTextColor={palette.textMuted}
-              style={styles.input}
-              value={newTagName}
-            />
-          </View>
-          <AppTextInput
-            accessibilityLabel="New tag color"
-            autoCapitalize="characters"
-            editable={!disabled}
-            onChangeText={setNewTagColor}
-            placeholder="#2F80ED"
-            placeholderTextColor={palette.textMuted}
-            style={[styles.input, styles.newTagColorInput]}
-            value={newTagColor}
-          />
-        </View>
-        {tagResolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.sheetSubtitle}>Use a shorter tag name.</Text> : null}
-        <TagColorPicker disabled={disabled} palette={palette} value={newTagColor} onChange={setNewTagColor} />
-        <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
-        {hasUnstagedEditTag(entry) ? <Text style={styles.sheetSubtitle}>Add this tag or clear its name and color before saving.</Text> : null}
-        <NativeCommandButton label="Cancel new tag" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
-      </> : <NativeCommandButton label="New tag" disabled={creationActions.disabled} onPress={creationActions.onApply} />}
-    </View>
-  );
+  return <AssetTagSelectionField scope={scope} disabled={disabled} tags={tags} selectedIds={selectedTagIds} newTags={newTags}
+    onChange={(ids, pending) => onChange(ids, pending ?? newTags, { name: '', color: '' })} />;
 }
 
 export function MoveAssetSheet({
@@ -369,13 +257,14 @@ export function MoveAssetSheet({
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
     <Frame style={[Platform.OS === 'ios' && !creationExpanded ? styles.nativeSelection : styles.editor,
-      creationExpanded ? { backgroundColor: palette.background } : undefined,
+      creationExpanded ? { backgroundColor: palette.background, paddingHorizontal: 0 } : undefined,
       Platform.OS === 'ios' && creationExpanded ? { paddingTop: headerHeight + spacing.sm } : undefined]}>
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
       {!creationExpanded ? <MoveSelectionList subjectLabel="Moving" subject={asset.title}
         context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title="Destinations"
+        destinationLabel={draft?.selectedParent === null ? 'Inventory root' : draft?.selectedParent?.pathLabel || draft?.selectedParent?.title || 'Choose a destination'}
         statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
         rows={[{ id: 'inventory-root', label: 'Inventory root', context: 'Top level', kind: 'root',
           selected: draft?.selectedParent === null, disabled, accessibilityLabel: 'Choose inventory root', onPress: onSelectRoot },
@@ -393,11 +282,11 @@ export function MoveAssetSheet({
                   onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
               </View>
             </SettingsSection>
-            <SettingsSection footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
+            <SettingsSection title="Kind" footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
               <View style={settingsStyles.navigationRow}>
-                <NativeChoicePicker label="Kind" accessibilityLabel="Choose destination kind"
-                  value={createKind} options={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
-                  includeEmptyOption={false} disabled={disabled}
+                <NativeSegmentedControl colors={palette} style={{ flex: 1, height: 48 }}
+                  value={createKind} segments={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+                  disabled={disabled}
                   onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
               </View>
             </SettingsSection>
@@ -521,62 +410,6 @@ function createStyles(colors: MobileColorPalette) {
   multilineInput: {
     minHeight: 104,
     textAlignVertical: 'top'
-  },
-  tagPicker: {
-    gap: spacing.xs
-  },
-  tagOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs
-  },
-  tagOption: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    maxWidth: '100%',
-    minHeight: minimumTouchTargetSize,
-    minWidth: minimumTouchTargetSize,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6
-  },
-  tagOptionSelected: {
-    borderColor: colors.action
-  },
-  tagOptionText: {
-    color: colors.textMuted,
-    flexShrink: 1,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0,
-    maxWidth: 180
-  },
-  tagOptionTextSelected: {
-    color: colors.text
-  },
-  newTagRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.xs
-  },
-  newTagNameInput: {
-    flex: 1,
-    minHeight: minimumTouchTargetSize,
-    minWidth: 0
-  },
-  newTagColorInput: {
-    minHeight: minimumTouchTargetSize,
-    width: 96
-  },
-
-  parentSubtitle: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18
   },
   disabledAction: {
     opacity: 0.55

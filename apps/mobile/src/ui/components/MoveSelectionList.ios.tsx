@@ -15,24 +15,24 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
   const palette = useAppearanceAwarePalette();
   const subjectColor = foregroundStyle(palette.text);
   const contextColor = foregroundStyle(palette.textMuted);
-  const subject = <VStack alignment="leading" spacing={spacing.md}>
-    <VStack alignment="leading" spacing={spacing.xs}>
-      <Text modifiers={[contextColor]}>{props.subjectLabel}</Text>
-      <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
-      <Text modifiers={[contextColor]}>{props.context}</Text>
-    </VStack>
-    <Text modifiers={[contextColor]}>{props.retainedSelection ? 'Selected' : props.title}</Text>
-  </VStack>;
   return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>
-      {props.retainedSelection ? <Section header={subject}><Choice row={props.retainedSelection} /></Section> : null}
-      <Section title={props.retainedSelection ? props.title : undefined} header={props.retainedSelection ? undefined : subject}>
+      <Section title={props.subjectLabel}>
+        <VStack alignment="leading" spacing={spacing.sm}>
+          <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
+          <Text modifiers={[contextColor]}>{props.context}</Text>
+        </VStack>
+      </Section>
+      {props.destinationLabel ? <Section title="Move to"><Text modifiers={[subjectColor]}>{props.destinationLabel}</Text></Section> : null}
+      <Section title={props.title}>
         {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
+        {props.retainedSelection ? <Choice row={props.retainedSelection} /> : null}
         {props.rows.map(row => <Choice key={row.id} row={row} />)}
       </Section>
     </List>
   </Host>;
 }
+
 function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
   const actions = useFocusedSheetActions({ primaryLabel: row.accessibilityLabel, secondaryLabel: '',
     disabled: !!row.disabled, onApply: row.onPress, onBack: () => {} });

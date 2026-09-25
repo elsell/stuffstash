@@ -42,3 +42,20 @@ it('does not change selected inventory when selection discovery is cancelled',as
  const directory=new ApiInventoryDirectory({async listMyTenants(){controller.abort();return page([tenant]);},async listInventories(){return page([inventory]);}},'tenant');
  await expect(directory.select('inventory',controller.signal)).rejects.toThrow();
 });
+
+
+it('invalidates discovery after creation without changing selection or caching an older read', async () => {
+  let reads = 0; let resolve!: (value: ReturnType<typeof page<typeof tenant>>) => void;
+  const directory = new ApiInventoryDirectory({
+    async listMyTenants() { reads++; return reads === 2 ? new Promise(done => { resolve = done; }) : page([tenant]); },
+    async listInventories() { return page([inventory, { ...inventory, id: 'new-inventory' }]); }
+  }, 'tenant');
+  await directory.selected();
+  directory.invalidate();
+  const older = directory.load();
+  directory.invalidate();
+  await directory.load();
+  resolve(page([tenant])); await older;
+  expect((await directory.selected()).inventory.id).toBe('inventory');
+  expect(reads).toBe(3);
+});

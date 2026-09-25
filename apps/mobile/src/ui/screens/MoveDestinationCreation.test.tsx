@@ -43,7 +43,7 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     await h.run(() => retainedCreate());
     expect(submitted).toEqual([]);
     expect(currentTitle()).toBe('New destination');
-    expect(h.byLabel('Choose destination kind')).toBeDefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeDefined();
     expect(search.text).toBe('Garden');
     expect(h.byLabel('Put in')).toBeUndefined();
     expect(h.byLabel('Create destination')?.props.disabled).toBe(true);
@@ -53,7 +53,7 @@ it('edits a creation name without collapsing Kind or changing search, validates 
     await h.run(() => retainedCreate());
     expect(latestAlert()?.title).toBe('Could not create destination');
     expect(h.byLabel('New destination name')?.props.value).toBe('Garden shed');
-    expect(h.byLabel('Choose destination kind')).toBeDefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeDefined();
     await h.press(h.byLabel('Create destination'));
     expect(submitted).toEqual([expect.objectContaining({ title: 'Garden shed' }), expect.objectContaining({ title: 'Garden shed' })]);
     expect(h.byLabel('New destination name')).toBeUndefined();
@@ -90,7 +90,7 @@ it.each(['ios', 'android'] as const)('selects one destination on %s and moves on
     expect(submitted).toEqual([]);
     await changeSearch('unmatched'); await settle(h, 350);
     expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
-    expect(h.byText('Selected')).toBeDefined();
+    expect(h.byText('Move to')).toBeDefined();
     await h.press(h.byLabel('Choose inventory root'));
     await h.run(choose);
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(true);

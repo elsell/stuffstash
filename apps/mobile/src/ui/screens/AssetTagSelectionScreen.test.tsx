@@ -77,3 +77,24 @@ it('keeps unavailable assignments until explicitly removed and lets people revie
     expect(applied[1]).toEqual([]);
   } finally { await h.unmount(); }
 });
+
+
+it('creates a tag in a separate form and stages it only when selection is confirmed', async () => {
+  const h = new MobileRenderHarness(); const applied: unknown[] = [];
+  try {
+    await h.render(<AssetTagSelectionScreen tags={tags} initialSelectedIds={['tag-1']} initialNewTags={[]}
+      onDone={(ids, newTags) => applied.push({ ids, newTags })} onCancel={() => {}} />);
+    await h.press(h.byLabel('New tag'));
+    expect(h.byLabel('Select tag Tag 1')).toBeUndefined();
+    await h.changeText(h.byLabel('New tag name'), 'Camping');
+    await h.press(h.byLabel('Add tag'));
+    expect(h.byLabel('New tag name')).toBeUndefined();
+    expect(applied).toEqual([]);
+    expect(h.byLabel('Remove new tag Camping')).toBeDefined();
+    await h.press(h.byLabel('New tag'));
+    await h.changeText(h.byLabel('New tag name'), 'Discarded');
+    await h.press(h.byLabel('Cancel new tag'));
+    await h.press(h.byLabel('Done selecting tags'));
+    expect(applied).toEqual([{ ids: ['tag-1'], newTags: [{ displayName: 'Camping' }] }]);
+  } finally { await h.unmount(); }
+});

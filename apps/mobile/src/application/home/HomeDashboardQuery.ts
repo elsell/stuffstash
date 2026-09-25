@@ -15,6 +15,7 @@ export type HomeDashboardInventoryViewModel = {
 };
 
 export type HomeDashboardTenantViewModel = {
+  readonly canCreateInventory?: boolean;
   readonly id: string;
   readonly name: string;
 };
@@ -62,7 +63,8 @@ export class HomeDashboardQuery {
       inventoryName: overview.inventoryName,
       tenants: workspace.tenants.map((item) => ({
         id: item.id,
-        name: item.name
+        name: item.name,
+        canCreateInventory: item.canCreateInventory === true
       })),
       inventories: overview.inventories.map((item) => ({
         id: item.id,

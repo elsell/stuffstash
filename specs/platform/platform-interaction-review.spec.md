@@ -1630,3 +1630,50 @@ Use platform-native bounded action controls for Close, previous/next and Remove,
 with native icons, descriptive accessibility labels, disabled boundaries and the
 existing removal confirmation. The dark photo canvas retains readable metadata
 and safe-area clearance. Review both Add drafts and saved-asset consumers.
+
+## User review after TestFlight 138: hierarchy and creation
+
+The user confirms continuous photo paging is fixed and the Move sheet is useful.
+Preserve those behaviors. The following are confirmed changes, not speculative
+new audit findings. Ship a coherent verified batch; do not require unrelated audit
+completion first.
+
+- Asset Details groups Add photos, Move, and Check out/Return in one action area.
+  Identity, current location, availability, photos, and contents have clear section
+  hierarchy. Do not repeat the same command in scattered metadata sections. Retain
+  role/availability restrictions, upload progress, recovery, and tab clearance.
+  Keep Add photos in place but disabled during photo loading so actions do not shift.
+- Full-screen photos use safe-area-aware top-trailing native Close and More
+  controls. More groups photo information (name, format/size) and destructive
+  Remove, with existing confirmation and retry semantics. Remove the bottom
+  metadata/action tray and visible previous/next buttons. Keep swipe paging, zoom,
+  single-tap chrome reveal, and non-gesture accessibility paging actions. Dismissal
+  and queued selection isolation from138 remain required.
+- Edit exposes one Tags summary navigation row. Existing-tag selection and New tag
+  creation are coherent task destinations; creating a tag must not expand a form
+  inline in the asset editor. A dedicated creation screen retains name/color on
+  validation errors and returns its result to the owning unsaved asset draft.
+  Cancel does not discard the asset draft or persist an unfinished tag.
+- Move retains its sheet and native destination search. Show Current location and
+  Move to consistently across destination selection; avoid an unexplained Selected
+  label that disappears when navigating. Destination creation uses a properly
+  padded native name field and an in-place, comfortably sized two-option native
+  selection for Location/Container. Preserve selected parent and draft on Back,
+  validation, and failed creation.
+- Inventory switcher places Switch household as a trailing text-only contextual
+  action alongside household identity, an explicit exception to the bounded
+  command default. It exposes New household and New inventory in context. Creation
+  is a focused native task with name, Cancel/Create, pending/error states, duplicate
+  submission protection, and return to the switcher. Use household in product copy;
+  tenant remains the API/domain term. Reuse authenticated creation ports/adapters,
+  preserve authorization and cross-tenant isolation, and verify adversarial boundary
+  cases. Creating an inventory requires the selected household's create permission;
+  do not infer permission from an inventory role. Creating a household must not
+  silently change the current inventory or reset connection configuration.
+
+Pattern references: Apple HIG Toolbars, Menus, Sheets, Text fields and Segmented
+controls. These layout choices are product decisions informed by platform patterns,
+not claims that Apple mandates one universal layout. Verify connected normal-text
+workflows first on iPhone/iPad with full-screen captures, then relevant adaptation.
+
+Photo inspection reuses the native action-menu adapter with an explicit on-dark canvas tone; other menu consumers keep their existing appearance. Metadata is read-only menu content. The on-dark menu and photo Close button share one native symbol label, fixed symbol layout box, large control style, and content-measured hosts so React Native does not clip the system-computed control bounds; a compressed image-only pill is not the intended toolbar presentation.

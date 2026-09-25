@@ -1,21 +1,18 @@
-import { Text, View } from 'react-native';
-import { NativeCommandButton } from './NativeCommandButton';
+import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 import { useAssetTagSelectionVisit } from '../navigation/AssetTagSelectionTask';
 import type { AssetTagSelectionOption } from '../screens/AssetTagSelectionScreen';
-import { useSettingsListStyles } from '../screens/SettingsList';
+import { SettingsNavigationRow } from '../screens/SettingsList';
 
-export function AssetTagSelectionField({ scope, tags, selectedIds, disabled, onChange }: {
+export function AssetTagSelectionField({ scope, tags, selectedIds, newTags, disabled, onChange }: {
   readonly scope: string;
   readonly tags: readonly AssetTagSelectionOption[];
   readonly selectedIds: readonly string[];
+  readonly newTags?: readonly CreateAssetTagDraft[];
   readonly disabled: boolean;
-  readonly onChange: (ids: readonly string[]) => void;
+  readonly onChange: (ids: readonly string[], newTags?: readonly CreateAssetTagDraft[]) => void;
 }) {
-  const open = useAssetTagSelectionVisit({ scope, tags, selectedIds, disabled, onChange });
-  const { styles } = useSettingsListStyles();
-  const labels = tags.filter(tag => selectedIds.includes(tag.id)).map(tag => tag.label);
-  return <View>
-    <NativeCommandButton label="Choose tags" disabled={disabled} onPress={open} />
-    <Text numberOfLines={2} style={styles.rowContext}>{selectedIds.length} selected{labels.length ? ` · ${labels.join(', ')}` : ''}</Text>
-  </View>;
+  const open = useAssetTagSelectionVisit({ scope, tags, selectedIds, newTags, disabled, onChange });
+  const labels = [...tags.filter(tag => selectedIds.includes(tag.id)).map(tag => tag.label), ...(newTags ?? []).map(tag => tag.displayName)];
+  return <SettingsNavigationRow label="Tags" accessibilityLabel="Choose tags" disabled={disabled} onPress={open}
+    value={`${selectedIds.length + (newTags?.length ?? 0)}`} context={labels.length ? labels.join(', ') : 'None selected'} />;
 }

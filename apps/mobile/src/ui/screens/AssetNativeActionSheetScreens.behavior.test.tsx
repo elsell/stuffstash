@@ -116,14 +116,14 @@ it('creates the move destination with the kind selected in the native menu', asy
     await h.run(() => moveSearch.change('camping box'));
     expect(moveSearch.options).toBe(originalSearch);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 400))); await settle(h);
-    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeUndefined();
     await h.press(h.byLabel('New destination'));
-    expect(h.byLabel('Choose destination kind')).toBeDefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeDefined();
     await h.press(h.byLabel('Cancel new destination'));
-    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeUndefined();
     expect(moveSearch.text).toBe('camping box');
     await h.press(h.byLabel('New destination'));
-    await h.press(h.byLabel('Choose destination kind')); await h.press(h.byLabel('Container'));
+    await h.run(() => h.all().find(node => node.props.values?.includes('Container'))!.props.onValueChange('Container'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     const create = h.byLabel('Create destination');
     await h.press(create ?? undefined);
@@ -141,7 +141,7 @@ it('creates the move destination with the kind selected in the native menu', asy
     await h.run(() => moveSearch.change('Kitchen'));
     await h.run(() => new Promise(resolve => setTimeout(resolve, 300))); await settle(h);
     expect(selectedRows()).toHaveLength(1);
-    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeUndefined();
     await h.press(h.byLabel('New destination'));
     expect(h.byLabel('Create destination')).toBeDefined();
     await h.press(h.byLabel('Cancel new destination'));
@@ -241,7 +241,7 @@ it.each([[false, 'failure'], [true, 'failure'], [true, 'success']] as const)('sh
     await h.run(() => { create!.props.onPress(); create!.props.onPress(); move!.props.onPress(); });
     expect(creates).toBe(1); expect(moves).toBe(0);
     expect(h.byLabel('Create destination')?.props.disabled).toBe(true);
-    expect(h.byLabel('Choose destination kind')?.props.disabled).toBe(true);
+    expect(h.all().find(node => node.props.values?.includes('Container'))?.props.enabled).toBe(false);
     expect(h.allText()).toContain('Creating destination…');
     await h.changeText(h.byLabel('New destination name'), 'Changed');
     const alertBefore = latestAlert();
@@ -310,15 +310,17 @@ it('keeps an existing tag selected when inline tag resolution updates the Edit d
   const asset = { id: assetId('asset'), title: 'Tent', description: 'Keep this description', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }}
         inventoryAssetTagsQuery={{ execute: async () => [{ id: 'camping', key: 'camping', label: 'Camping' }] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), '  CAMPING  ');
     await h.press(h.byLabel('Add tag'));
+    await h.press(h.byLabel('Done selecting tags'));
     const save = h.byLabel('Save');
     expect(save?.props.disabled).toBe(false);
     await h.press(save ?? undefined);
@@ -418,7 +420,7 @@ it('waits for known Move suggestions before offering destination creation', asyn
     expect(h.byLabel('Create destination')).toBeUndefined();
     expect(h.allByType('ScrollView').some(node => node.queryAll(child => child.props.accessibilityLabel === 'Retry suggestions').length > 0)).toBe(true);
     unavailable = false; await h.press(h.byLabel('Retry suggestions')); await settle(h);
-    expect(h.byLabel('Choose destination kind')).toBeUndefined();
+    expect(h.all().find(node => node.props.values?.includes('Container'))).toBeUndefined();
     await h.press(h.byLabel('New destination'));
     expect(h.byLabel('Create destination')).toBeDefined();
     expect(moveSearch.text).toBe('New room');
@@ -431,14 +433,15 @@ it('names staged Edit tag removal and preserves other tags and edited fields', a
     asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
   }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     await h.changeText(h.byLabel('Description'), 'Keep my edit');
-    await h.press(h.byLabel('New tag'));
+    await h.press(h.byLabel('Choose tags'));
     for (const name of ['Camping', 'Outdoors']) {
+      await h.press(h.byLabel('New tag'));
       await h.changeText(h.byLabel('New tag name'), name); await h.press(h.byLabel('Add tag'));
     }
     const remove = h.byLabel('Remove new tag Camping');
@@ -447,6 +450,7 @@ it('names staged Edit tag removal and preserves other tags and edited fields', a
     await h.press(remove);
     expect(h.byLabel('Remove new tag Camping')).toBeUndefined();
     expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep my edit', newTags: [{ displayName: 'Outdoors' }] })]);
   } finally { await h.unmount(); client.clear(); }
@@ -459,12 +463,13 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
     asset: { id: assetId('asset'), title: 'Tent', description: 'Keep me', kind: 'item', lifecycleState: 'active', locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false }
   }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('New tag'));
     const input = h.byLabel('New tag name');
     const longName = 'Camping equipment '.repeat(8);
@@ -477,11 +482,9 @@ it.each(['ios', 'android'])('preserves rejected Edit tag drafts and resets accep
     expect(h.byText('Use a shorter tag name.')).toBeUndefined();
     expect(h.byLabel('New tag name')).toBe(input);
     await h.press(h.byLabel('Add tag'));
-    const cleared = h.byLabel('New tag name');
-    if (platform === 'ios') expect(cleared).not.toBe(input);
-    else expect(cleared).toBe(input);
-    expect(cleared?.props.value).toBe('');
+    expect(h.byLabel('New tag name')).toBeUndefined();
     expect(h.byLabel('Remove new tag Camping')).toBeDefined();
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep me', newTags: [{ displayName: 'Camping' }] })]);
   } finally { await h.unmount(); Platform.OS = originalPlatform; }
@@ -513,28 +516,23 @@ it('selects existing Edit tags in a separate visit and saves the parent draft', 
 });
 
 
-it('protects an unstaged Edit tag from cancellation and silent omission on Save', async () => {
+it('stages a new Edit tag without persisting it before the asset is saved', async () => {
   const h = new MobileRenderHarness(); const client = createMobileQueryClient(); const saved: unknown[] = [];
   const asset = { id: assetId('asset'), title: 'Tent', description: '', kind: 'item' as const, lifecycleState: 'active' as const, locationLabel: '', locationTrail: [], parentLocationTrail: [], updatedAtLabel: '', hasPhoto: false };
   const core = new AssetCoreQuery({ getAssetCore: async () => ({ tenantId: tenantId('tenant'), inventoryId: inventoryId('inventory'), permissions: ['edit_asset'], revision: '1', asset }) });
   try {
-    await h.render(<MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
+    await h.render(<AssetTagSelectionTaskProvider><SelectionContent /><MobileServerStateProvider client={client} scopeId="scope" loadInventoryScope={async () => ({ tenantId: 'tenant', inventoryId: 'inventory' })}>
       <AssetEditSheetRouteScreen assetId="asset" assetCoreQuery={core} inventoryAssetTypesQuery={{ execute: async () => [] }} inventoryAssetTagsQuery={{ execute: async () => [] }}
         updateAssetCommand={{ execute: async input => { saved.push(input); return { id: 'asset', title: 'Tent', message: 'Saved' }; } }} />
-    </MobileServerStateProvider>);
+    </MobileServerStateProvider></AssetTagSelectionTaskProvider>);
     await settle(h); await settle(h);
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Camping');
-    await h.press(h.byLabel('Cancel'));
-    expect(latestAlert()?.title).toBe('Discard changes?');
-    await h.run(() => pressAlertButton('Keep editing'));
-    expect(h.byLabel('New tag name')?.props.value).toBe('Camping');
-    await h.changeText(h.byLabel('Description'), 'Keep this edit');
-    await h.press(h.byLabel('Save'));
     expect(saved).toEqual([]);
-    expect(h.byText('Add this tag or clear its name and color before saving.')).toBeDefined();
     await h.press(h.byLabel('Add tag'));
-    expect(h.byLabel('New tag name')?.props.value).toBe('');
+    await h.changeText(h.byLabel('Description'), 'Keep this edit');
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Keep this edit', newTags: [{ displayName: 'Camping' }] })]);
   } finally { await h.unmount(); }
@@ -691,19 +689,20 @@ it('keeps tag creation secondary and cancels only the unstaged tag', async () =>
     await h.press(h.byLabel('Select tag Camping'));
     await h.press(h.byLabel('Done selecting tags'));
     await h.changeText(h.byLabel('Description'), 'Ready');
+    await h.press(h.byLabel('Choose tags'));
     await h.press(h.byLabel('New tag'));
-    const cancelCreation = h.byLabel('Cancel new tag')!.props.onPress;
     await h.changeText(h.byLabel('Description'), 'Ready for the weekend');
     await h.changeText(h.byLabel('New tag name'), 'Outdoors');
     await h.press(h.byLabel('Add tag'));
+    await h.press(h.byLabel('New tag'));
     await h.changeText(h.byLabel('New tag name'), 'Discard this');
-    await h.changeText(h.byLabel('New tag color'), '#123456');
-    await h.run(() => cancelCreation());
+    await h.press(h.byLabel('Cancel new tag'));
     expect(h.byLabel('New tag name')).toBeUndefined();
     expect(h.byLabel('Remove new tag Outdoors')).toBeDefined();
     await h.press(h.byLabel('New tag'));
     expect(h.byLabel('New tag name')?.props.value).toBe('');
-    expect(h.byLabel('New tag color')?.props.value).toBe('');
+    await h.press(h.byLabel('Cancel new tag'));
+    await h.press(h.byLabel('Done selecting tags'));
     await h.press(h.byLabel('Save'));
     expect(saved).toEqual([expect.objectContaining({ description: 'Ready for the weekend', tagIds: ['camping'], newTags: [{ displayName: 'Outdoors' }] })]);
   } finally { await h.unmount(); client.clear(); }

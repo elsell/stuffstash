@@ -2,12 +2,15 @@
 
 ## Current structural priority: connected workflow stability
 
-The normal-text workflow fixes through TestFlight0.24.40(132.1) are delivered.
-Current phone/iPad evidence covers the main Browse/Edit/Move/filter workflows,
-Home navigation, populated Detail/Sharing, Settings overview, History,
-notifications and long inventory/customization collections. These are scoped
-results, not whole-app certification. See the single current summary at
-`docs/reports/mobile-ui-remediation-2026-09-14/README.md` for exact builds and gaps.
+TestFlight 0.24.43 (138.1) delivered continuous photo paging and native photo
+commands. The user confirmed the paging fix and supplied the next concrete batch:
+Details action hierarchy, top-right photo Close/More, separate tag creation,
+stable Move context and roomier creation, trailing household switching, and
+mobile household/inventory creation. Complete these connected normal-text
+workflows and their security checks, then verify the changed iPhone/iPad surfaces.
+This batch does not require closing unrelated audit findings. The single current
+summary and durable evidence remain in
+`docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
 
 Continue from unresolved workflow evidence, not historical pending labels.
 Prioritize any confirmed normal-text defect before enlarged-text work. Inspect
