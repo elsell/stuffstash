@@ -87,6 +87,11 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
+Customization collection clearance is the next bounded native baseline: real Tags
+collection, long list, production tab chrome, search and final-row reachability.
+No product defect or correction is asserted from its different inset ownership.
+[Decision and checks](evidence/customization-collection-clearance.txt).
+
 Notification tab journey36057807116 at4b64bbd7 passes on phone/iPad. Reviewed
 full-screen detail, pagination and final-row captures confirm tab/Back continuity,
 read-state reconciliation and final content/action clearance. No product change

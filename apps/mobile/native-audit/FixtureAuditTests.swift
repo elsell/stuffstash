@@ -10,6 +10,7 @@ final class FixtureAuditTests: XCTestCase {
       || name.contains("testHistoryJourneyClearsPersistentChrome")
       || name.contains("testVoiceAccessorySettledNavigationAppearance")
       || name.contains("testInventoryCollectionClearsPersistentChrome")
+      || name.contains("testCustomizationCollectionClearsPersistentChrome")
       || name.contains("testNotificationJourneyRetainsTabsAndClearsFooter"))
       ? "View all recently changed assets" : "Audit Browse filters"
     XCTAssertTrue(app.buttons[entry].waitForExistence(timeout: 30))
@@ -2956,6 +2957,34 @@ final class FixtureAuditTests: XCTestCase {
     verifyFooterClearsPersistentChrome(final)
     XCTAssertTrue(final.isHittable)
     capture("notifications-final-row")
+  }
+
+  func testCustomizationCollectionClearsPersistentChrome() {
+    guard openFixtureURL("(tabs)/(home)/settings/inventory/tags") else { return }
+    let first = app.buttons["Tag 01, No color"].firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 10))
+    let header = app.navigationBars["Tags"]
+    XCTAssertTrue(header.exists)
+    let clearsHeader = first.frame.minY >= header.frame.maxY
+    capture("customization-collection-entry")
+    XCTAssertTrue(app.buttons["Add Tag"].firstMatch.isHittable)
+    app.buttons["Search"].firstMatch.tap()
+    let field = app.searchFields.firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5))
+    waitForKeyboard()
+    field.typeText("Tag 01")
+    XCTAssertEqual(field.value as? String, "Tag 01")
+    XCTAssertTrue(app.buttons["Tag 02, No color"].waitForNonExistence(timeout: 5))
+    XCTAssertTrue(first.waitForExistence(timeout: 5))
+    XCTAssertTrue(first.isHittable, "Search retains its matching row")
+    capture("customization-collection-search")
+    resetNativeSearch(field)
+    XCTAssertTrue(app.buttons["Tag 02, No color"].waitForExistence(timeout: 5))
+    let final = app.buttons["Tag 40 with a long descriptive household storage name, No color"].firstMatch
+    verifyFooterClearsPersistentChrome(final)
+    capture("customization-collection-footer")
+    XCTAssertTrue(final.isHittable)
+    XCTAssertTrue(clearsHeader, "Initial collection row clears navigation chrome")
   }
 
   func testInventoryCollectionClearsPersistentChrome() {

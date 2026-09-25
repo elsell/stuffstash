@@ -28,6 +28,7 @@ on:
           - filters
           - voice-accessory-navigation
           - notification-journey
+          - customization-clearance
           - inventory-clearance
           - history-journey
           - settings-overview
@@ -150,6 +151,7 @@ jobs:
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testSettingsOverviewNavigationAndFooterClearance'
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testHistoryJourneyClearsPersistentChrome'
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testInventoryCollectionClearsPersistentChrome'
+                '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testCustomizationCollectionClearsPersistentChrome'
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testNotificationJourneyRetainsTabsAndClearsFooter'
                 '-skip-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceAccessorySettledNavigationAppearance'
               )
@@ -434,6 +436,12 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceAccessorySettledNavigationAppearance'
+              )
+              ;;
+            customization-clearance)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testCustomizationCollectionClearsPersistentChrome'
               )
               ;;
             notification-journey)

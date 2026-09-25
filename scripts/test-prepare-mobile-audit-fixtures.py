@@ -31,6 +31,14 @@ class FixtureRouteIsolationTests(unittest.TestCase):
                "AUDIT_SUITE": "fixtures", "AUDIT_TEST_CASE": "all", **settings}
         return subprocess.run(["python3", str(self.script)], env=env, capture_output=True, text=True)
 
+    def test_customization_collection_uses_production_tab_layouts(self):
+        self.assertEqual(self.run_script(AUDIT_TEST_CASE="customization-clearance").returncode, 0)
+        target = self.routes / "(tabs)/(home,search)/settings/inventory/tags/index.tsx"
+        self.assertIn("CustomizationCollectionJourneyFixture", target.read_text())
+        self.assertFalse((self.routes / "audit-tabs").exists())
+        for layout in self.tab_layouts:
+            self.assertEqual((self.routes / layout).read_text(), f"production layout {layout}\n")
+
     def test_notification_journey_uses_production_tabs_and_real_detail(self):
         self.assertEqual(self.run_script(AUDIT_TEST_CASE="notification-journey").returncode, 0)
         target = self.routes / "(tabs)/(home,search)/notifications.tsx"

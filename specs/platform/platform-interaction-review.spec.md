@@ -1493,3 +1493,16 @@ and return, confirm local read state, reach pagination above the voice/tab contr
 and reach the final loaded row. Preserve existing query/scope/operation guards.
 Use full-screen entry and final captures on phone/iPad. No product change follows
 from the coverage gap alone; fix only a reproduced interaction or layout defect.
+
+## Customization collection in persistent tabs
+
+Review the Tags collection with enough real rows to scroll on iPad inside the
+production tab/voice shell. Existing isolated search and save fixtures do not prove
+footer reachability. Reuse the controlled customization repository and real
+collection screen; do not modify production inset ownership before a full-screen
+baseline. Verify initial row clears the header, native search filters and restores
+rows, and the complete final long-name row is visible and hittable above persistent
+controls. This represents the shared collection scroll owner, not inherited-field
+semantics or physical color editing. One baseline decides whether manual viewport
+ownership already accounts for chrome or needs correction. If safe, keep it; if
+clipped, fix this owner and repeat the same acceptance on phone and iPad.

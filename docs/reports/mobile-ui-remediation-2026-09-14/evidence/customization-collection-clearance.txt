@@ -1,0 +1,18 @@
+Current diagnosis: customization collections manually reserve native header and
+safe-area space on iOS while disabling automatic scroll insets. Existing small
+isolated collection/search fixtures do not prove final-row reachability in tabs.
+This is an unverified risk, not a confirmed clipping defect.
+
+Decision budget: one baseline phone/iPad run with production tab layouts, real
+CustomizationCollectionScreen/application queries, forty local tags and a long
+final name. Verify full-screen initial/header, native search matching/restoration,
+and full final-row clearance above tabs/voice. If safe, retain current ownership;
+if clipped, correct this owner and repeat unchanged acceptance. No product change
+yet; no renewed color-picker investigation. Tag editor behavior remains separately
+covered by the readback fixture and user first-tap evidence.
+
+Validation: new route-isolation check failed absent route, then all17 passed.
+TypeScript, structural rules, three existing readback tests pass. Critic identified
+an empty-results false-pass gap; matching-row presence/hittability now required.
+Local /tmp contains a sandbox Git marker, correctly rejected by disposable archive
+guard; full fixture tests pass using an external temporary directory. Guard intact.
