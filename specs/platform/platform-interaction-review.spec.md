@@ -457,14 +457,6 @@ commands, close without changing draft/media, double-tap without an extra toggle
 and image-change/unmount without delayed effects. Native verification must cover
 iOS and Android separately.
 
-The focused iOS photo-inspection audit covers both saved-asset and unsaved Add
-previews at normal text on phone and iPad. Record fitted, double-tapped, controls
-hidden and controls revealed full-screen captures. Assert command visibility and
-Close returning with unchanged photo/draft counts; manually compare the image
-crop to establish actual zoom and its preservation. Button visibility alone is
-not zoom acceptance. Reuse the existing unavailable/removal recovery scenarios.
-This closes an iOS evidence gap; do not infer a product defect from missing checks.
-
 Zoom gestures change image scale only; a single tap controls toolbar visibility.
 Newly selected images and loading failures restore commands. Keep visibility in
 a stable controller so showing commands does not remount or reset the image.
@@ -1612,3 +1604,12 @@ native normal/enlarged light/dark screenshots must show padded backgrounds and
 reachable body/footer. Include Conversation review/return and filter selection
 as distinct consumers before release. Never promote minimum hit-frame assertions
 to visual label-containment acceptance.
+
+## User confirmation of new audit findings
+
+For this comprehensive remediation audit, confirm newly suspected product or
+design problems with the user before treating them as remediation work or starting
+dedicated diagnostic runs. A simulator-only failure does not override the user's
+observed experience. Preserve it as scoped evidence and ask whether the behavior
+is a problem for them. Continue fixes for issues the user has already confirmed
+without repeating approval questions.

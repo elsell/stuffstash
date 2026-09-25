@@ -2103,63 +2103,6 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.buttons["Back to audit menu"].isHittable)
   }
 
-  private func verifyPhotoZoomAndCommandVisibility(_ prefix: String) {
-    let close = app.buttons["Close photo viewer"]
-    XCTAssertTrue(close.waitForExistence(timeout: 10))
-    XCTAssertTrue(close.isHittable)
-    XCTAssertFalse(app.staticTexts["Photo unavailable"].exists)
-    // Full-screen viewer geometry, not a hard-coded device pixel. The bundled
-    // square image is centered here on both phone and iPad.
-    let center = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-    capture("\(prefix)-fit")
-    center.doubleTap()
-    capture("\(prefix)-zoom")
-    XCTAssertTrue(close.isHittable, "Double tap must not also hide commands")
-    center.tap()
-    let hidden = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      !close.isHittable
-    }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 5), .completed)
-    capture("\(prefix)-zoom-hidden")
-    center.tap()
-    let revealed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      close.exists && close.isHittable
-    }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [revealed], timeout: 5), .completed)
-    capture("\(prefix)-zoom-revealed")
-    // Crop comparison is a required visual review of these captures, not an
-    // inference from the command assertions above.
-    close.tap()
-    XCTAssertTrue(close.waitForNonExistence(timeout: 5))
-  }
-
-  func testAssetPhotoZoomRevealsCommandsWithoutChangingMedia() {
-    let open = app.buttons["Audit photo removal recovery"]
-    for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
-    XCTAssertTrue(open.isHittable); open.tap()
-    verifyPhotoZoomAndCommandVisibility("asset-photo")
-    XCTAssertTrue(app.staticTexts["Removal attempts: 0"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Photos remaining: 1"].exists)
-    capture("asset-photo-close-unchanged")
-  }
-
-  func testDraftPhotoZoomRevealsCommandsWithoutChangingDraft() {
-    guard openFixtureURL("audit-add-header") else { return }
-    let add = app.buttons["Add photos"].firstMatch
-    XCTAssertTrue(add.waitForExistence(timeout: 10)); add.tap()
-    let library = app.buttons["Choose from Library"].firstMatch
-    XCTAssertTrue(library.waitForExistence(timeout: 5)); library.tap()
-    XCTAssertTrue(app.buttons["Remove photo 2"].waitForExistence(timeout: 5))
-    let preview = app.descendants(matching: .any).matching(
-      NSPredicate(format: "value == %@", "1 of 2")).firstMatch
-    XCTAssertTrue(preview.isHittable); preview.tap()
-    verifyPhotoZoomAndCommandVisibility("draft-photo")
-    XCTAssertTrue(app.buttons["Remove photo 1"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["Remove photo 2"].exists)
-    XCTAssertTrue(app.textFields["Asset name"].exists)
-    capture("draft-photo-close-unchanged")
-  }
-
   func testPhotoRemovalFailureAppearsAboveViewer() {
     let open = app.buttons["Audit photo removal recovery"]
     for _ in 0..<8 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }

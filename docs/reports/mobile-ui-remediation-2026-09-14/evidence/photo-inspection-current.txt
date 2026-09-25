@@ -1,3 +1,12 @@
+User correction,2026-09-25: double-tap zoom works on their device. The reported
+problems are non-native photo action buttons and a brief viewer close/reopen flash
+when paging left/right. These are the next authorized photo fixes.
+
+Withdraw the inferred zoom problem, the new zoom test gate and the uncommitted
+tap-trace diagnostic. No tracing run was dispatched and no zoom product change
+was made. The simulator evidence below remains historical, not a product diagnosis.
+Ask the user before pursuing future newly suspected problems.
+
 iOS photo inspection — current diagnosis,2026-09-25.
 Baseline36110848610 at2ac37ae0 (verification-only PR199) runs four cases/device.
 Phone1/4 pass; iPad2/4. Both new double-tap cases stop because Close becomes
@@ -10,7 +19,7 @@ Phone failed-removal test sees the expected alert then fails the immediate OK hi
 final frame shows a readable alert/OK above the viewer. iPad removal passes.
 Unavailable-photo recovery passes both. No real media or service mutations occur.
 
-Decision: one runner-only tap-event trace to distinguish one delivered press from
+Withdrawn plan: one runner-only tap-event trace to distinguish one delivered press from
 two delivered presses outside recognition timing or incorrect recognizer handling.
 Capture raw event timestamps, receipt time and single/double classification without
 adding renders to the gesture path. If delivery is single, choose a native gesture

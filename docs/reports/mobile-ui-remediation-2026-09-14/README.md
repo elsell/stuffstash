@@ -4,6 +4,11 @@ The comprehensive audit is **incomplete**. Prioritize stable screen structure,
 connected everyday tasks, visual coherence, then detailed states. Normal text comes
 first. The surface/axis inventory checks omissions; it is not a separate test queue.
 
+New suspected product or design problems require user confirmation before
+remediation or dedicated diagnostic runs. Source review and simulator failures
+are evidence to discuss, not permission to declare a user-facing defect. Continue
+already confirmed issues without asking again.
+
 ## Delivery
 
 Latest verified TestFlight is **0.24.42 (137.1)**. PR198 merged91f33a5d;
@@ -110,14 +115,11 @@ padded button backgrounds, bounded secondary actions and unobscured final tags.
 and exact-head CI pass. PR198 merged91f33a5d; release36110476038 delivered137.1 with verified Apple TestFlight notes.
 [One current diagnosis](evidence/sheet-footer-current.txt).
 
-Current ordinary workflow: iOS photo inspection. Native36110848610 at2ac37ae0
-reproduces a double-tap behaving like a single tap in both asset and Add previews
-on phone/iPad: final full frames show unchanged fitted crop and hidden commands.
-This is not yet a diagnosis of event delivery versus recognizer handling. One
-focused event-trace follow-up is the remaining investigation budget before a
-concrete implementation decision. iPad recovery passes; phone alert appears but
-its immediate OK hittability assertion fails, a separate readiness gap.
-[Current diagnosis](evidence/photo-inspection-current.txt).
+Current user-confirmed photo work: replace the non-native action controls with
+appropriate native controls, and fix the brief close/reopen flash during left/right
+paging. The user confirms double-tap zoom works. Withdraw the zoom diagnosis and
+trace; no zoom implementation change or diagnostic run is authorized by that
+simulator failure. [Current evidence and correction](evidence/photo-inspection-current.txt).
 
 The UIKit command batch shipped in136.1 using combined same-product native
 evidence:36093575172 passes phone4/5 and iPad5/5;36095743496 passes phone5/5 and
