@@ -1573,7 +1573,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard(keyLabel: "C")
+    waitForKeyboard(keyLabel: "C", timeout: directEntry ? 15 : 5)
     entry.typeText("Camping")
     XCTAssertEqual(entry.value as? String, "Camping")
     let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch

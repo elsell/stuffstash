@@ -56,3 +56,16 @@ rejected the missing new local pod lock entry. Adopted CI36093282388's CocoaPods
 1.17.0 generated lockfile (artifact10846601928); reviewed diff adds only
 StuffStashCommandButton, its existing dependencies, local path and checksum.
 No external dependency versions or deployment enforcement changed.
+
+Native36093575172 at9c38bbbe compiles both devices; phone4/5, iPad5/5.
+Full phone Detail capture restores single-line ordinary commands; metadata capture
+contains two-line Retry asset types inside its bounded background. iPad tag draft
+capture contains all labels and passes draft/add/select/cancel. Retained representative
+captures: command-uikit-normal.png and command-uikit-large.png.
+Phone tag failure is keyboard predicate deadline, not New tag button reachability:
+one sample4.28s returned false before5s expiry; post-timeout C key frame is finite
+and hittable (command-uikit-keyboard-readiness.txt). Final screenshot shows focused
+New tag and keyboard. Increase only enlarged scenario observation budget to15s,
+retain every actual typing/draft/layout assertion, then repeat frozen acceptance.
+No provider/key-delivery investigation or product change is justified by this run.
+Artifacts10847466827(phone),10847531256(iPad).

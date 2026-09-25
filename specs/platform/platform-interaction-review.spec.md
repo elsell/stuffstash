@@ -1542,3 +1542,10 @@ paired reminder recovery, reviewing full screenshots for label containment and d
 Apple reference: https://developer.apple.com/documentation/uikit/uibutton/configuration-swift.struct/titlelinebreakmode
 The iPad Retry tags failure is still a separate unverified activation outcome;
 do not claim its cause is proved solely by the phone sizing evidence.
+
+For enlarged Edit tag acceptance, run36093575172 observed one keyboard predicate
+sample taking4.28s and exhausting the5s budget before a second sample; the retained
+post-timeout C key has a finite frame and is hittable. Allow15s for this named
+scenario's existing interactive-key predicate. Keep exact entered text, draft
+retention, geometry and dismissal assertions; do not substitute keyboard existence,
+change providers or relax normal-text timing. Product code stays frozen.

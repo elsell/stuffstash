@@ -96,8 +96,11 @@ checks did not establish visual acceptance. PR196 must remain draft until correc
 The replacement candidate uses native UIKit buttons and reports complete measured
 label height to the page layout. Source tests and native screenshot acceptance
 remain distinct; PR196 stays draft pending phone/iPad verification.
-The baseline iPad Retry tags result remains separate; this candidate's passing tap
-is not sufficient to accept its layout. [Diagnosis](evidence/edit-large-text-entry.txt).
+Native36093575172 compiles both devices; phone4/5 and iPad5/5. Reviewed captures
+show corrected ordinary density and multiline containment. The remaining phone
+case stops at a5s keyboard predicate timeout; post-timeout evidence shows the key
+hittable. A15s observation budget for this enlarged case preserves every functional
+assertion; product code remains frozen pending the repeat. [Diagnosis](evidence/edit-large-text-entry.txt).
 
 Customization collection baseline36085164693 atbe336c60 passes phone/iPad.
 Reviewed full-screen entry/search/footer captures confirm header clearance and
