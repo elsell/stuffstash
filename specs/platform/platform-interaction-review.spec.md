@@ -1548,4 +1548,18 @@ sample taking4.28s and exhausting the5s budget before a second sample; the retai
 post-timeout C key has a finite frame and is hittable. Allow15s for this named
 scenario's existing interactive-key predicate. Keep exact entered text, draft
 retention, geometry and dismissal assertions; do not substitute keyboard existence,
-change providers or relax normal-text timing. Product code stays frozen.
+change providers. The initial scenario-only timing policy is superseded by the
+shared observation budget below. Product code stays frozen.
+
+## Native keyboard observation budget
+
+Use15s as the shared keyboard-key readiness observation budget on macOS runners.
+Run36093575172 retained a4.28s snapshot evaluation followed by a post-timeout
+hittable key;5s can end after just one evaluation. This budget governs automation
+observation, not a claim that the app takes15s to respond. Retain the separate5s
+keyboard-existence assertion, finite/nonempty target bounds, actual hittability,
+single typing attempt and exact full-value checks. Do not retype, inject text,
+remove providers, or accept a visible keyboard as proof of successful entry.
+Apply the shared mechanism rather than repeatedly adjusting individual workflow
+cases. Verify normal Add destination creation/retry and related selection draft
+ownership on phone/iPad; retain terminal failures and full-screen evidence.

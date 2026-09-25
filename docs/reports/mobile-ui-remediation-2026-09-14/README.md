@@ -42,7 +42,10 @@ Android appearance and connected Edit/Move checks pass on the named audit APK.
 [alignment](evidence/checkout-row-alignment.txt),
 [detail entry](evidence/detail-entry-insets.txt).
 
-Frozen iPad Add entry readiness remains unverified; phone Add/Move recovery passes.
+iPad Add destination completion remains unverified after earlier keyboard-observation
+failures; phone Add/Move recovery passes. The next bounded normal-text review uses
+the shared15s key-observation budget established by the command batch, preserving
+exact typed values and complete creation/retry/draft assertions.
 No product rewrite or broader acceptance is inferred from the timing failure.
 Recent-assets/invitation inset risks and unrelated findings remain in the audit.
 Broad refresh35980094051 completed121 cases per device (phone14 failures, iPad6),

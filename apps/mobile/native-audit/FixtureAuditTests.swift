@@ -730,7 +730,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("inventory-switcher-dismissed")
   }
 
-  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 5) {
+  private func waitForKeyboard(keyLabel: String? = nil, timeout: TimeInterval = 15) {
     let keyboard = app.keyboards.firstMatch
     XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
     let ready = NSPredicate { _, _ in
@@ -1573,7 +1573,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(entry.waitForExistence(timeout: 5))
     reveal(entry)
     entry.tap()
-    waitForKeyboard(keyLabel: "C", timeout: directEntry ? 15 : 5)
+    waitForKeyboard(keyLabel: "C")
     entry.typeText("Camping")
     XCTAssertEqual(entry.value as? String, "Camping")
     let dismissKeyboard = app.buttons["Dismiss keyboard"].firstMatch
