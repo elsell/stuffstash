@@ -1582,3 +1582,25 @@ the theme while retaining the direct-entry screen. Its following setup capture
 shows the audit index scrolled beyond Browse filters. Preserve all product footer
 assertions and add the existing Conversation review/return cases to compare the
 secondary action in its actual consumer. These are fixture-only corrections.
+
+## Sheet action backgrounds grow with their labels
+
+Run36103695986 iPad captures show the same shallow footer capsules at ordinary
+and Accessibility XXXL text despite enlarged labels filling nearly all their
+height. Button hit frames pass minimum-target checks; that does not establish
+internal label padding. Reuse the existing UIKit command adapter for iOS sheet
+actions, retaining its measured body-font height plus10pt top/bottom content
+insets and48pt minimum target. Both footer commands fill the available width;
+primary remains filled and Cancel/Back uses bounded secondary emphasis. Ordinary
+command consumers retain their existing natural secondary width.
+
+The iOS command adapter may accept an internal fullWidth option for this composed
+footer. Android behavior is unchanged. The RN footer stack owns only an8pt gap;
+NativeFilterSheet and Conversation retain their existing safe-area/keyboard owners,
+with no additional SwiftUI keyboard avoidance. Preserve explicit accessible names,
+independent disabled states, current committed callbacks and teardown protection.
+Verify size changes and disabled/retained events through mounted adapter tests;
+native normal/enlarged light/dark screenshots must show padded backgrounds and
+reachable body/footer. Include Conversation review/return and filter selection
+as distinct consumers before release. Never promote minimum hit-frame assertions
+to visual label-containment acceptance.

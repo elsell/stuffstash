@@ -285,6 +285,7 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testFooterAppearanceAtAccessibilityTextSize'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseLastTagClearsActionFooterAndApplies'
               )
               ;;
             selection-lifecycle)

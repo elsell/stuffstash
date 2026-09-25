@@ -1,27 +1,13 @@
-import React from 'react';
-import { Button, Host, HStack, Spacer, Text, VStack } from '@expo/ui/swift-ui';
-import { accessibilityLabel, buttonStyle, controlSize, disabled as nativeDisabled, fixedSize, frame } from '@expo/ui/swift-ui/modifiers';
+import { View } from 'react-native';
+import { NativeCommandButton } from './NativeCommandButton.ios';
 import type { NativeSheetActionsProps } from './NativeSheetActions.types';
 
-function ActionLabel({ children }: { readonly children: string }) {
-  return <HStack>
-    <Spacer />
-    <Text modifiers={[fixedSize({ horizontal: false, vertical: true }), frame({ minHeight: 24 })]}>{children}</Text>
-    <Spacer />
-  </HStack>;
-}
-
-export function NativeSheetActions({ keyboardAvoidance = 'native', primaryLabel, primaryAccessibilityLabel = primaryLabel, secondaryLabel, secondaryAccessibilityLabel = secondaryLabel, disabled, secondaryDisabled = false, onApply, onBack }: NativeSheetActionsProps) {
-  // React Native proposes the width; SwiftUI measures only the resulting height.
-  return <Host ignoreSafeArea={keyboardAvoidance === 'container' ? 'keyboard' : undefined} matchContents={{ vertical: true }} style={{ width: '100%' }}>
-    <VStack spacing={8}>
-      <Button onPress={() => { if (!disabled) onApply(); }} modifiers={[
-        buttonStyle('borderedProminent'), controlSize('large'), nativeDisabled(disabled),
-        accessibilityLabel(primaryAccessibilityLabel)
-      ]}><ActionLabel>{primaryLabel}</ActionLabel></Button>
-      <Button onPress={() => { if (!secondaryDisabled) onBack(); }} modifiers={[
-        buttonStyle('bordered'), controlSize('large'), nativeDisabled(secondaryDisabled), accessibilityLabel(secondaryAccessibilityLabel)
-      ]}><ActionLabel>{secondaryLabel}</ActionLabel></Button>
-    </VStack>
-  </Host>;
+/** Containers own safe areas and keyboard overlap; native commands measure their padded height. */
+export function NativeSheetActions({ primaryLabel, primaryAccessibilityLabel = primaryLabel, secondaryLabel, secondaryAccessibilityLabel = secondaryLabel, disabled, secondaryDisabled = false, onApply, onBack }: NativeSheetActionsProps) {
+  return <View style={{ width: '100%', gap: 8 }}>
+    <NativeCommandButton label={primaryLabel} accessibilityLabel={primaryAccessibilityLabel}
+      prominence="primary" fullWidth disabled={disabled} onPress={onApply} />
+    <NativeCommandButton label={secondaryLabel} accessibilityLabel={secondaryAccessibilityLabel}
+      prominence="secondary" fullWidth disabled={secondaryDisabled} onPress={onBack} />
+  </View>;
 }

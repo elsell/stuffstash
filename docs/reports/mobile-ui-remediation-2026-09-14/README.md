@@ -100,11 +100,12 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Shared sheet-footer review is active. Phone36103695986 shows bounded, clear
-normal-text actions; its failures concern direct-entry fixture return/readiness.
-Corrected fixture run36106222520 also includes the actual Conversation consumer. iPad Conversation context/return captures are sound; its Cancel
-footer appears borderless despite the adapter requesting bordered styling, so
-that consumer remains part of appearance review.
+M281 is confirmed: enlarged iPad sheet labels grow while their backgrounds stay
+54pt high. The candidate reuses the measured UIKit command adapter for full-width
+footer actions.15 focused tests, TypeScript, structural checks,17 fixture checks
+and critic review pass. Native acceptance across footer, Conversation and long
+Tags consumers is required before release. The earlier fixture-only run is
+superseded; it is not a reason for another unchanged investigation.
 [One current diagnosis](evidence/sheet-footer-current.txt).
 
 The UIKit command batch shipped in136.1 using combined same-product native

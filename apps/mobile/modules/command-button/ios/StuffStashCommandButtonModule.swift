@@ -11,6 +11,7 @@ public final class StuffStashCommandButtonModule: Module {
         view.button.accessibilityLabel = value
       }
       Prop("prominence") { (view: CommandButtonView, value: String) in view.prominence = value }
+      Prop("fullWidth") { (view: CommandButtonView, value: Bool) in view.fullWidth = value }
       Prop("role") { (view: CommandButtonView, value: String) in view.destructive = value == "destructive" }
       Prop("disabled") { (view: CommandButtonView, value: Bool) in view.button.isEnabled = !value }
     }
@@ -23,6 +24,7 @@ final class CommandButtonView: ExpoView {
   let onSizeChange = EventDispatcher()
   var label = "" { didSet { configure() } }
   var prominence = "secondary" { didSet { configure() } }
+  var fullWidth = false { didSet { setNeedsLayout() } }
   var destructive = false { didSet { configure() } }
   private let minimumTarget: CGFloat = 48
   private let insets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
@@ -81,7 +83,7 @@ final class CommandButtonView: ExpoView {
     let font = titleFont
     let horizontalInsets = insets.leading + insets.trailing
     let naturalWidth = ceil((label as NSString).size(withAttributes: [.font: font]).width) + horizontalInsets
-    let width = prominence == "primary" ? bounds.width : min(bounds.width, max(minimumTarget, naturalWidth))
+    let width = (fullWidth || prominence == "primary") ? bounds.width : min(bounds.width, max(minimumTarget, naturalWidth))
     let textWidth = max(1, width - horizontalInsets)
     let paragraph = NSMutableParagraphStyle()
     paragraph.lineBreakMode = .byWordWrapping

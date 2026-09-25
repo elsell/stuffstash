@@ -1,56 +1,39 @@
 import React from 'react';
-import { expect,it } from 'vitest';
+import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { NativeSheetActions } from './NativeSheetActions.ios';
-it('gives native sheet actions the full proposed width and content-driven height',async()=>{
- const h=new MobileRenderHarness();const actions:string[]=[];
- try{
-  await h.render(<NativeSheetActions primaryLabel="Apply filters" secondaryLabel="Cancel" disabled={false} onApply={()=>actions.push('apply')} onBack={()=>actions.push('cancel')} />);
-  expect(h.byType('SwiftUIHost')?.props.ignoreSafeArea).toBeUndefined();
-  expect(h.byType('SwiftUIHost')?.props.matchContents).toEqual({vertical:true});
-  expect(h.byType('SwiftUIHost')?.props.style).toMatchObject({width:'100%'});
-  const buttons=h.allByType('SwiftUIButton');expect(buttons).toHaveLength(2);
-  expect(buttons[0].props.modifiers).toContainEqual({type:'buttonStyle',value:'borderedProminent'});
-  await h.press(buttons[0]);await h.press(buttons[1]);expect(actions).toEqual(['apply','cancel']);
-  expect(h.allText()).toEqual(expect.arrayContaining(['Apply filters','Cancel']));
- }finally{await h.unmount()}
-});
 
-it('disables Apply for an invalid range while keeping Back available', async () => {
-  const h = new MobileRenderHarness();
-  const actions: string[] = [];
-  try {
-    await h.render(<NativeSheetActions primaryLabel="Apply filters" secondaryLabel="Back" disabled onApply={() => actions.push('apply')} onBack={() => actions.push('back')} />);
-    const buttons = h.allByType('SwiftUIButton');
-    expect(buttons[0].props.modifiers).toContainEqual({ type: 'disabled', value: true });
-    await h.press(buttons[0]);
-    await h.press(buttons[1]);
-    expect(actions).toEqual(['back']);
-    expect(h.allText()).toContain('Back');
-  } finally {
-    await h.unmount();
-  }
-});
-
-it('lets a measured container own keyboard avoidance without moving hosted controls again', async () => {
+it('lets each footer action adopt its measured padded native height', async () => {
   const h = new MobileRenderHarness();
   try {
-    await h.render(<NativeSheetActions primaryLabel="Apply" secondaryLabel="Back" disabled={false}
-      keyboardAvoidance="container" onApply={() => {}} onBack={() => {}} />);
-    expect(h.byType('SwiftUIHost')?.props.ignoreSafeArea).toBe('keyboard');
+    await h.render(<NativeSheetActions primaryLabel="Show results" secondaryLabel="Cancel" disabled={false} onApply={() => {}} onBack={() => {}} />);
+    const buttons = h.allByType('StuffStashCommandButton');
+    expect(buttons).toHaveLength(2);
+    await h.run(() => buttons[0].props.onSizeChange({ nativeEvent: { height: 112 } }));
+    await h.run(() => buttons[1].props.onSizeChange({ nativeEvent: { height: 84 } }));
+    expect(h.allByType('StuffStashCommandButton').map(button => button.props.style.height)).toEqual([112, 84]);
+    expect(h.allByType('StuffStashCommandButton').map(button => button.props.fullWidth)).toEqual([true, true]);
+    expect(buttons.map(button => button.props.prominence)).toEqual(['primary', 'secondary']);
   } finally { await h.unmount(); }
 });
 
-it('blocks both native actions during a mutation and restores Cancel afterwards', async () => {
-  const h = new MobileRenderHarness(); const actions: string[] = [];
+it('retains current separately enabled footer decisions and retires events on removal', async () => {
+  const h = new MobileRenderHarness(); const calls: string[] = [];
+  const render = (disabled: boolean, secondaryDisabled: boolean, value: string) => h.render(
+    <NativeSheetActions primaryLabel="Save" primaryAccessibilityLabel="Save draft" secondaryLabel="Cancel" secondaryAccessibilityLabel="Cancel draft"
+      disabled={disabled} secondaryDisabled={secondaryDisabled}
+      onApply={() => calls.push('save ' + value)} onBack={() => calls.push('cancel ' + value)} />);
   try {
-    await h.render(<NativeSheetActions primaryLabel="Saving" secondaryLabel="Cancel" disabled secondaryDisabled onApply={() => actions.push('save')} onBack={() => actions.push('cancel')} />);
-    const buttons = h.allByType('SwiftUIButton');
-    for (const button of buttons) await h.press(button);
-    expect(actions).toEqual([]);
-    expect(buttons[1].props.modifiers).toContainEqual({ type: 'disabled', value: true });
-    await h.render(<NativeSheetActions primaryLabel="Save" secondaryLabel="Cancel" disabled onApply={() => actions.push('save')} onBack={() => actions.push('cancel')} />);
-    await h.press(h.allByType('SwiftUIButton')[1]);
-    expect(actions).toEqual(['cancel']);
+    await render(false, false, 'old');
+    const [save, cancel] = h.allByType('StuffStashCommandButton').map(button => button.props.onPress);
+    expect(h.allByType('StuffStashCommandButton').map(button => button.props.accessibilityLabel)).toEqual(['Save draft', 'Cancel draft']);
+    await render(true, true, 'busy');
+    await h.run(save); await h.run(cancel); expect(calls).toEqual([]);
+    await render(true, false, 'invalid');
+    await h.run(save); await h.run(cancel); expect(calls).toEqual(['cancel invalid']);
+    await render(false, false, 'current');
+    await h.run(save); expect(calls).toEqual(['cancel invalid', 'save current']);
+    await h.unmount();
+    await h.run(save); await h.run(cancel); expect(calls).toEqual(['cancel invalid', 'save current']);
   } finally { await h.unmount(); }
 });

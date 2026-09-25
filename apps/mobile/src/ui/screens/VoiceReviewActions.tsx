@@ -21,5 +21,5 @@ function ReviewDecision({ planId }: { readonly planId: string }) {
     onApply: () => { void approveRealtimeActionPlan(planId, photoDrafts, voicePlanCommandEdits(drafts)); },
     onBack: () => { void cancelRealtimeActionPlan(planId); }
   });
-  return <NativeSheetActions keyboardAvoidance="container" {...actions} />;
+  return <NativeSheetActions {...actions} />;
 }

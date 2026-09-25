@@ -446,6 +446,12 @@ final class FixtureAuditTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(button.frame.minX, bounds.minX)
         XCTAssertLessThanOrEqual(button.frame.maxX, bounds.maxX)
         XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+        if largeText {
+          let traits = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+          let lineHeight = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits).lineHeight
+          XCTAssertGreaterThan(button.frame.height, lineHeight,
+            "The button background must reserve padding around an enlarged title")
+        }
       }
       XCTAssertTrue(app.buttons["Cancel"].firstMatch.isHittable)
     }

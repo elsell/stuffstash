@@ -20,7 +20,7 @@ export function NativeFilterSheet({ title, search, children, actions, footerTest
       {children}
     </ScrollView>
     <View testID={footerTestID} style={styles.actions}>
-      <NativeSheetActions {...footerActions} keyboardAvoidance="container" />
+      <NativeSheetActions {...footerActions} />
     </View>
   </SafeAreaView>
   </KeyboardAvoidingView>;
