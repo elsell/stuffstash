@@ -100,9 +100,9 @@ recovery checks also pass. PR186 delivered these changes in129.1.
 
 ## Current workflow investigation
 
-Shared sheet-footer review is active. The corrected direct-entry normal/enlarged
-run36103695986 will distinguish actual footer defects from the oversized test
-launcher failure. iPad Conversation context/return captures are sound; its Cancel
+Shared sheet-footer review is active. Phone36103695986 shows bounded, clear
+normal-text actions; its failures concern direct-entry fixture return/readiness.
+Corrected fixture run36106222520 also includes the actual Conversation consumer. iPad Conversation context/return captures are sound; its Cancel
 footer appears borderless despite the adapter requesting bordered styling, so
 that consumer remains part of appearance review.
 [One current diagnosis](evidence/sheet-footer-current.txt).
@@ -193,9 +193,11 @@ color editing/save, or assistive activation. iPad Add creation/retry now passes 
   a general correction. Fix reproduced consumers using the established native
   draft field, preserving reset and ownership semantics. Do not repeat the same
   provider/key experiments. [Consolidated evidence](native-text-entry-352471.md).
-- Remaining Settings design findings, physical integrations, assistive behavior
-  and wider device adaptations remain tracked in the full findings and surface
-  reports. Passed fixture workflows do not close them.
+- Settings findings reviewed in this reconciliation have source corrections;
+  their remaining native/assistive claims stay scoped to the named checks.
+  Physical integrations, assistive behavior and wider device adaptations remain
+  verification gaps. Historical “candidate” wording is not evidence of a current
+  unimplemented defect; passed fixture workflows do not certify those gaps.
 
 ## Coverage and evidence limits
 
@@ -207,9 +209,9 @@ Source review does not establish native acceptance. [Findings](findings.md) reta
 The older [whole-workflow review](everyday-workflow-review.md) records design
 rationale; this file supplies current acceptance status.
 
-The last full native sweep, [352471](native-full-352471.md), passed phone74/92 and
-iPad84/92 fixture cases. It predates subsequent fixes and is neither a current
-failure count nor whole-app certification. Verify shared controls once, representative
+The last full native sweep, [35980094051](evidence/native-full-359800.txt), ran121
+cases per device: phone107 passed and iPad115 passed. It predates subsequent
+fixes and is neither a current failure count nor whole-app certification. Verify shared controls once, representative
 compositions and critical connected workflows; add coverage when ownership differs.
 
 
