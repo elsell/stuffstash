@@ -85,9 +85,16 @@ imitations of controls that an existing native adapter already supports.
 Status: implementation candidate `32cc6465`. Source verification: 2,042 tests,
 TypeScript and mobile structural checks pass. Code review findings (native width,
 scalable iOS row text and circular styling import) were corrected. Android native
-Details/More, Move and inventory selection layouts were inspected. iPhone/iPad
+Details/More, Move and inventory selection layouts were inspected. Filter
+availability selection/apply and the contents Add menu were exercised successfully;
+menu row labels align with neighboring navigation rows. [Screenshots](evidence/reference-layouts/)
+record these checks. iPhone/iPad
 workflow and visual acceptance are pending; this is not a TestFlight release.
 Existing release 140 checks do not establish acceptance of this new composition.
 
 Design review clarified the retained Check out entry and scoped row/toolbar guidance
 to these action families; it does not disallow tabs, breadcrumbs or contextual links.
+
+Docs build reached site generation but failed because the pinned Pagefind Linux
+binary could not be downloaded. This is an environment/dependency-fetch failure;
+the source and mobile checks above passed.
