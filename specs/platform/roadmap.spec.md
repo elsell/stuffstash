@@ -1,6 +1,15 @@
 # Roadmap Spec
 
-## Current structural priority: connected workflow stability
+## Current structural priority: reference-led layout correction
+
+The September26 user review rejects the blanket bordered-command composition.
+Follow the reference-led reset in platform-interaction-review.spec.md and the
+linked reference-layout-reset.md. Redesign complete action/row layouts using
+established app task patterns, starting with Details/Move and Filters/Settings.
+Do not repeat another global button-style conversion. This is confirmed scope;
+normal-text screen composition needs new acceptance despite passing behavior tests.
+
+## Latest delivered batch
 
 TestFlight **0.25.0 (140.1)** delivered the confirmed hierarchy/creation batch:
 grouped Details commands, matched native top-right photo Close/More, separate tag

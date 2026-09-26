@@ -458,6 +458,10 @@ export function AssetDetailRouteScreen({
   const headerOverflow = screenState.status === 'ready' ? {
     asset: screenState.asset,
     disabled: pendingAction !== undefined,
+    onMove: screenState.asset.canMove ? () => router.push(`/assets/${screenState.asset.id}/move`) : undefined,
+    onAddPhotos: screenState.asset.canAddPhotos ? () => choosePhotos(screenState.asset.photos.length) : undefined,
+    photosDisabled: !assetPhotos.data && assetPhotos.isPending,
+    onCheckout: screenState.asset.canCheckout ? () => void runCheckoutAction('checkout', screenState.asset) : undefined,
     onEdit: screenState.asset.canEdit ? () => router.push(`/assets/${screenState.asset.id}/edit`) : undefined,
     onCheckoutHistory: () => router.push(`/assets/${screenState.asset.id}/checkouts`),
     onHistory: () => openHistory(screenState.asset),

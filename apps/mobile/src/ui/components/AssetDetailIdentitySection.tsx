@@ -1,3 +1,4 @@
+import { NativeCommandButton } from './NativeCommandButton';
 import { AssetExpirationStatus } from './AssetExpirationStatus';
 import { StyleSheet, Text, View } from 'react-native';
 import type {
@@ -18,11 +19,13 @@ import {
 
 type AssetDetailIdentitySectionProps = {
   readonly asset: AssetDetailViewModel;
+  readonly onReturn?: () => void;
+  readonly isActionPending?: boolean;
   readonly onParentLocationPress?: (parent: AssetParentLocationCrumbViewModel) => void;
   readonly onTagPress?: (tag: AssetTagViewModel) => void;
 };
 
-export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTagPress }: AssetDetailIdentitySectionProps) {
+export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTagPress, onReturn, isActionPending }: AssetDetailIdentitySectionProps) {
   const palette = useAppearanceAwarePalette();
   const styles = createStyles(palette);
   const identity = assetDetailIdentity(asset);
@@ -59,7 +62,9 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
         </View>
       </View> : null}
 
-      <AssetDetailAvailabilityStatus asset={asset} />
+      <View style={styles.contextRow}><AssetDetailAvailabilityStatus asset={asset} />
+        {asset.kind !== 'location' && asset.canReturn && onReturn ? <NativeCommandButton label="Return" disabled={isActionPending} onPress={onReturn} /> : null}
+      </View>
 
       {exceptionRows.length > 0 ? (
         <View style={styles.exceptionList}>

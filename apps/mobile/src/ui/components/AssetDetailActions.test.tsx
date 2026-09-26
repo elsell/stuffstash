@@ -6,8 +6,8 @@ import { AssetDetailActions } from './AssetDetailActions';
 it('groups permitted asset commands and switches checkout to return without exposing denied actions', async () => {
   const h = new MobileRenderHarness();
   const calls: string[] = [];
-  const asset = { kind: 'item' as const, canEdit: true, canMove: true, canAddPhotos: true, canCheckout: true, canReturn: false };
-  const render = (value = asset, pending = false) => <AssetDetailActions asset={value} isActionPending={pending}
+  const asset = { kind: 'item' as const, canEdit: false, canMove: true, canAddPhotos: true, canCheckout: true, canReturn: false };
+  const render = (value = asset, pending = false) => <AssetDetailActions showEditAction asset={value} isActionPending={pending}
     onAddPhotos={() => calls.push('photos')} onMove={() => calls.push('move')}
     onCheckout={() => calls.push('checkout')} onReturn={() => calls.push('return')} />;
   try {
@@ -24,5 +24,17 @@ it('groups permitted asset commands and switches checkout to return without expo
     expect(calls).toHaveLength(4);
     await h.render(render({ ...asset, canMove: false, canAddPhotos: false, canCheckout: false }));
     expect(h.byLabel('Asset actions')).toBeUndefined();
+  } finally { await h.unmount(); }
+});
+
+
+it('does not render a competing body command strip when the header owns commands', async () => {
+  const h = new MobileRenderHarness();
+  try {
+    await h.render(<AssetDetailActions asset={{ kind: 'item', canEdit: true, canMove: true, canAddPhotos: true, canCheckout: true, canReturn: false }}
+      showEditAction={false} isActionPending={false} onMove={() => {}} onAddPhotos={() => {}} onCheckout={() => {}} />);
+    expect(h.byLabel('Move')).toBeUndefined();
+    expect(h.byLabel('Add photos')).toBeUndefined();
+    expect(h.byLabel('Check out')).toBeUndefined();
   } finally { await h.unmount(); }
 });

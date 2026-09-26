@@ -20,9 +20,9 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, groups,
       accessibilityState={{ disabled: menuDisabled, expanded: expanded && !menuDisabled }}
       disabled={menuDisabled}
       onPress={() => openMenu(() => setExpanded((current) => !current))}
-      style={[styles.trigger, trigger.kind === 'label' ? null : styles.compactTrigger]}
+      style={[styles.trigger, trigger.kind === 'label' || trigger.kind === 'row' ? null : styles.compactTrigger]}
     >
-      <Text>{trigger.kind === 'label' ? trigger.label : trigger.kind === 'icon' ? '⇅' : '•••'}</Text>
+      <Text>{trigger.kind === 'row' ? `${trigger.label} ${trigger.value ?? ''}` : trigger.kind === 'label' ? trigger.label : trigger.kind === 'icon' ? '⇅' : '•••'}</Text>
     </Pressable>
     {expanded && !menuDisabled ? <View accessibilityRole="menu" style={styles.menu}>
       {actionableGroups.map((group) => <View key={group.id}>

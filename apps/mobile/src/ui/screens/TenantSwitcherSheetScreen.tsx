@@ -1,3 +1,4 @@
+import { NativeActionRow } from '../components/NativeActionRow';
 import type { CreateWorkspace, CreatedHousehold, CreatedInventory } from '../../application/inventories/CreateWorkspace';
 import { WorkspaceCreationForm, type WorkspaceCreationTask } from './WorkspaceCreationForm';
 import { returnToPreviousOrHome } from '../navigation/returnToPreviousOrHome';
@@ -169,7 +170,7 @@ function TenantSwitcher({
       {mode === 'inventories' ? (
         <>
           <Text style={styles.sectionLabel}>Inventories</Text>
-          {onCreate && selectedTenant?.canCreateInventory ? <NativeCommandButton label="New inventory" disabled={selecting}
+          {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label="New inventory" disabled={selecting}
             onPress={() => onCreate({ kind: 'inventory', household: selectedTenant })} /> : null}
           {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>No inventories are available in this household.</Text> : null}
 
@@ -203,7 +204,7 @@ function TenantSwitcher({
       ) : (
         <>
           <Text style={styles.sectionLabel}>Households</Text>
-          {onCreate ? <NativeCommandButton label="New household" disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
+          {onCreate ? <NativeActionRow label="New household" disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
@@ -303,17 +304,17 @@ function createStyles(colors: MobileColorPalette) {
     gap: spacing.sm,
     paddingBottom: spacing.md
   },
-  switchAction: { width: '44%', alignItems: 'flex-end' },
+  switchAction: { width: '44%', flexShrink: 0, alignItems: 'flex-end' },
   contextText: {
     flex: 1,
     minWidth: 0
   },
   sheetTitle: {
     color: colors.text,
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 17,
+    fontWeight: '600',
     letterSpacing: 0,
-    lineHeight: 31
+    lineHeight: 22
   },
   sectionLabel: {
     color: colors.textMuted,

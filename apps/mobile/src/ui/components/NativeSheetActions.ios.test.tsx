@@ -13,7 +13,7 @@ it('lets each footer action adopt its measured padded native height', async () =
     await h.run(() => buttons[1].props.onSizeChange({ nativeEvent: { height: 84 } }));
     expect(h.allByType('StuffStashCommandButton').map(button => button.props.style.height)).toEqual([112, 84]);
     expect(h.allByType('StuffStashCommandButton').map(button => button.props.fullWidth)).toEqual([true, true]);
-    expect(buttons.map(button => button.props.prominence)).toEqual(['primary', 'secondary']);
+    expect(buttons.map(button => button.props.prominence)).toEqual(['primary', 'standard']);
   } finally { await h.unmount(); }
 });
 

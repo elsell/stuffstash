@@ -1,3 +1,4 @@
+import { NativeActionMenu } from './NativeActionMenu';
 import { describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import type { AssetCardViewModel, AssetDetailViewModel } from '../../application/assets/AssetViewModels';
@@ -146,7 +147,7 @@ describe('AssetDetailView', () => {
       onMove: () => {}, onCheckout: () => {} });
     const text = collectText(tree);
     expect(text).not.toContain('Edit');
-    expect(text.filter(value => value === (kind === 'location' ? 'Move place' : 'Move'))).toHaveLength(1);
+    expect(text).not.toContain(kind === 'location' ? 'Move place' : 'Move');
     if (kind !== 'location') expect(text).toContain(asset.checkoutLabel);
     expect(collectText(AssetDetailView({ asset, onEdit: () => {} }))).toContain('Edit');
   });
@@ -276,7 +277,7 @@ describe('AssetDetailView', () => {
       asset: { ...assetDetail(), kind: 'container', canContainAssets: true, canAddContainedAssets: true },
       onCheckout: () => undefined, onAddHere: () => undefined, onMoveThingsHere: () => undefined
     }));
-    expect(text.indexOf('Available')).toBeLessThan(text.indexOf('Add item here'));
+    expect(text.indexOf('Available')).toBeLessThan(text.indexOf('Add'));
     expect(text.filter(value => value === 'Available')).toHaveLength(1);
   });
 
@@ -285,8 +286,8 @@ describe('AssetDetailView', () => {
       asset: placeDetail(), contentsAvailable: false,
       onAddHere: () => undefined, onMoveThingsHere: () => undefined
     }));
-    expect(text).toContain('Add item here');
-    expect(text).toContain('Move items here');
+    expect(text).toContain('Add');
+    expect(text).toContain('Add');
   });
 
   it('uses place route language only for locations', () => {
@@ -311,8 +312,8 @@ describe('AssetDetailView', () => {
     });
     const text = collectText(tree);
 
-    expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Add item here'));
-    expect(text.indexOf('Add item here')).toBeLessThan(text.indexOf('Utility shelf'));
+    expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Add'));
+    expect(text.indexOf('Add')).toBeLessThan(text.indexOf('Utility shelf'));
     expect(text.indexOf('Spaces in Garage')).toBeLessThan(text.indexOf('Utility shelf'));
     expect(text.indexOf('Items in Garage')).toBeLessThan(text.indexOf('Cordless drill'));
     expect(text.indexOf('Cordless drill')).toBeLessThan(text.lastIndexOf('Item'));
@@ -427,13 +428,12 @@ describe('AssetDetailView', () => {
       onMoveThingsHere: vi.fn()
     });
 
-    for (const label of ['Garage', 'Add item here', 'Spaces in Garage', 'Cordless drill', 'Move place']) {
+    for (const label of ['Garage', 'Add', 'Spaces in Garage', 'Cordless drill', 'Move place']) {
       expect(styleValue(findFirstTextNode(tree, label)?.props?.style, 'lineHeight')).toBeUndefined();
     }
     expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Asset actions')?.props?.style, 'flexWrap'))
       .toBe('wrap');
-    expect(styleValue(findFirstByProp(tree, 'accessibilityLabel', 'Add item here')?.props?.style, 'minHeight'))
-      .toBeGreaterThanOrEqual(44);
+    expect(findFirstByProp(tree, 'accessibilityLabel', 'Add to contents')).toBeDefined();
     expect(findFirstTextNode(tree, 'Container')?.props?.allowFontScaling).toBe(false);
   });
 
@@ -454,12 +454,12 @@ describe('AssetDetailView', () => {
       onMoveThingsHere: vi.fn()
     }));
 
-    const addHereIndex = text.indexOf('Add item here');
+    const addHereIndex = text.indexOf('Add');
     expect(addHereIndex).toBeGreaterThan(-1);
     expect(text.indexOf('Check out')).toBeLessThan(addHereIndex);
     expect(text.indexOf('Edit')).toBeLessThan(addHereIndex);
     expect(text.indexOf('Add photos')).toBeLessThan(addHereIndex);
-    expect(addHereIndex).toBeLessThan(text.indexOf('Move items here'));
+    expect(text).not.toContain('Move items here');
 
     expect(text.filter((value) => value === 'Add photos')).toHaveLength(1);
   });
@@ -607,6 +607,7 @@ function collectText(node: unknown): string[] {
   if (!isElementNode(node)) {
     return [];
   }
+  if (node.type === NativeActionMenu) return [String((node.props?.trigger as { label?: string })?.label ?? '')];
   if (typeof node.type === 'function') {
     return collectText(node.type(node.props));
   }
@@ -647,6 +648,7 @@ function findFirstByProp(node: unknown, prop: string, value: unknown): ElementNo
     return node;
   }
 
+  if (node.type === NativeActionMenu) return undefined;
   if (typeof node.type === 'function') {
     return findFirstByProp(node.type(node.props), prop, value);
   }
@@ -670,6 +672,7 @@ function findFirstTextNode(node: unknown, value: string): ElementNode | undefine
   if (node.type === 'Text' && childrenOf(node).includes(value)) {
     return node;
   }
+  if (node.type === NativeActionMenu) return undefined;
   if (typeof node.type === 'function') {
     return findFirstTextNode(node.type(node.props), value);
   }

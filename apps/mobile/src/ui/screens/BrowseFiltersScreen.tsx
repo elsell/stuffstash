@@ -55,7 +55,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
         <SettingsSection footer="Reviews active items only.">
           <View style={styles.navigationRow}>
             <NativeActionMenu accessibilityLabel="Choose expiration review" disabled={busy}
-              trigger={{ kind: 'label', label: 'Review expiration' }} groups={[{ id: 'expiration', items: [
+              trigger={{ kind: 'row', label: 'Review expiration' }} groups={[{ id: 'expiration', items: [
                 { id: 'soon', label: 'Expiring soon', onPress: () => onExpiration('soon', draft) },
                 { id: 'expired', label: 'Expired', onPress: () => onExpiration('expired', draft) },
                 { id: 'all', label: 'All dates', onPress: () => onExpiration('all', draft) }

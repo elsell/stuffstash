@@ -53,12 +53,20 @@ and record intentional departures as project choices rather than Apple rules.
 
 ## Stuff Stash command emphasis
 
-The product preference is bounded native buttons by default. Borderless commands
-require an explicit contextual choice, such as an action inside a clearly grouped
-row or toolbar. This is a project preference, not a claim that Apple forbids text
-buttons. Choose primary emphasis only for the main task. Review placement,
-alignment and grouping with the affected content; changing button style alone
-does not establish a coherent hierarchy.
+The user's rejection of borderless defaults is not a mandate to border every
+command. Classify the role and choose its familiar host first: toolbar item,
+menu item, labeled value row, navigation row, contextual action or task completion.
+Use that host's native treatment. Reserve standalone bounded buttons for a
+reference-supported action group or task-level emphasis. Never fix a cluttered
+screen by changing all button borders, colors or sizes.
+
+For structural redesigns, name and inspect a comparable established app flow.
+Copy its hierarchy, grouping, placement and transitions, preserving product
+semantics. Record what transfers and what intentionally differs. A ChatGPT header
+is a header reference, not a form or destination-picker reference. Clearly separate
+observed screenshots from behavior documented in a guide and from your proposal.
+Read the current [reference layout reset](../../../docs/reports/mobile-ui-remediation-2026-09-14/reference-layout-reset.md)
+for the selected product direction; do not treat its unimplemented proposals as shipped.
 
 ## Review and completion
 

@@ -1,5 +1,5 @@
 import React, { type ComponentProps } from 'react';
-import { Button, Host, Image, Menu, Section } from '@expo/ui/swift-ui';
+import { Button, Host, HStack, Spacer, Text, Image, Menu, Section } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel as nativeAccessibilityLabel,
   accessibilityValue as nativeAccessibilityValue,
@@ -7,6 +7,7 @@ import {
   controlSize,
   contentShape,
   frame,
+  foregroundStyle,
   shapes,
   disabled as nativeDisabled,
   labelStyle,
@@ -29,9 +30,10 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
   const actionableGroups = actionableMenuGroups(groups);
   const menuDisabled = disabled || actionableGroups.length === 0;
   const { pressItem } = useNativeMenuAction(groups, menuDisabled);
-  const onDarkSymbol = tone === 'onDark' && trigger.kind !== 'label';
+  const onDarkSymbol = tone === 'onDark' && trigger.kind !== 'label' && trigger.kind !== 'row';
   const menuLabel = onDarkSymbol
     ? <NativePhotoSymbol symbol={(trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') as SwiftImageName} />
+    : trigger.kind === 'row' ? <HStack spacing={8} modifiers={[frame({ minHeight: 48, maxWidth: Infinity }), contentShape(shapes.rectangle())]}><Text modifiers={[foregroundStyle(palette.text)]}>{trigger.label}</Text><Spacer />{trigger.value ? <Text modifiers={[foregroundStyle(palette.textMuted)]}>{trigger.value}</Text> : null}<Image systemName="chevron.up.chevron.down" size={12} /></HStack>
     : trigger.kind === 'label'
     ? trigger.label
     : <Image
@@ -39,18 +41,18 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
       systemName={(trigger.kind === 'icon' ? trigger.systemImage : 'ellipsis') as SwiftImageName}
       modifiers={trigger.kind === 'ellipsis' ? [frame({ width: 44, height: 44 }), contentShape(shapes.rectangle())] : undefined}
     />;
-  const compactTrigger = trigger.kind !== 'label';
+  const compactTrigger = trigger.kind !== 'label' && trigger.kind !== 'row';
 
   return <View
     pointerEvents={menuDisabled ? 'none' : 'auto'}
     style={menuDisabled && styles.disabled}
   >
-    <Host matchContents={onDarkSymbol || !compactTrigger} style={onDarkSymbol ? undefined : compactTrigger ? styles.compactHost : styles.labelHost}>
+    <Host matchContents={trigger.kind === 'row' ? { vertical: true } : onDarkSymbol || !compactTrigger} style={trigger.kind === 'row' ? { width: '100%', minHeight: 48 } : onDarkSymbol ? undefined : compactTrigger ? styles.compactHost : styles.labelHost}>
       <Menu
         label={menuLabel}
         modifiers={[
           nativeAccessibilityLabel(accessibilityLabel),
-          ...(onDarkSymbol ? nativePhotoControlModifiers
+          ...(trigger.kind === 'row' ? [buttonStyle('plain')] : onDarkSymbol ? nativePhotoControlModifiers
             : trigger.kind === 'label' || trigger.kind === 'icon'
               ? [buttonStyle('bordered'), controlSize(trigger.kind === 'icon' ? 'small' : 'regular'), tint(tone === 'onDark' ? '#FFFFFF' : palette.action)]
               : []),

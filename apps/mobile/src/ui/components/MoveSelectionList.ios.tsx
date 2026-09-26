@@ -17,13 +17,13 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
   const contextColor = foregroundStyle(palette.textMuted);
   return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>
-      <Section title={props.subjectLabel}>
+      <Section title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
         <VStack alignment="leading" spacing={spacing.sm}>
           <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
           <Text modifiers={[contextColor]}>{props.context}</Text>
+          {props.destinationLabel ? <Text modifiers={[contextColor]}>{`Move to: ${props.destinationLabel}`}</Text> : null}
         </VStack>
       </Section>
-      {props.destinationLabel ? <Section title="Move to"><Text modifiers={[subjectColor]}>{props.destinationLabel}</Text></Section> : null}
       <Section title={props.title}>
         {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
         {props.retainedSelection ? <Choice row={props.retainedSelection} /> : null}

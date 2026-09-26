@@ -1,3 +1,4 @@
+import { NativeActionMenu } from './NativeActionMenu';
 import type { ReactElement } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
@@ -17,7 +18,6 @@ import {
   containedItemsEmptyState,
   containedItemsSectionHeading,
   containedSpacesSectionHeading,
-  type ContainedAssetAction,
   type ContainedAssetsEmptyState,
   type ContainedAssetsSectionHeading,
   type ContainedAssetRowViewModel
@@ -123,39 +123,13 @@ export function ContainedSpatialActions({
   readonly onAddHere?: () => void;
   readonly onMoveThingsHere?: () => void;
 }) {
-  const styles = createStyles(useAppearanceAwarePalette());
   const actions = containedAssetActions(asset);
   if (actions.length === 0) return null;
-  return (
-    <View
-      accessibilityLabel={asset.kind === 'location' ? 'Place items in this place' : 'Place items in this container'}
-      style={styles.spatialActions}
-    >
-      {actions.map((action) => (
-        <View key={action.kind} style={styles.spatialCommand}>
-        <ContainedAssetActionButton
-          action={action}
-          isActionPending={isActionPending}
-          onPress={action.kind === 'add_here' ? onAddHere : onMoveThingsHere}
-        />
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function ContainedAssetActionButton({
-  action,
-  isActionPending,
-  onPress
-}: {
-  readonly action: ContainedAssetAction;
-  readonly isActionPending: boolean;
-  readonly onPress?: () => void;
-}) {
-  const enabled = canUseContainedAssetAction({ isActionPending, onPress });
-  return <NativeCommandButton label={action.label} disabled={!enabled}
-    prominence={action.isPrimary ? 'primary' : 'secondary'} onPress={() => onPress?.()} />;
+  return <NativeActionMenu accessibilityLabel="Add to contents" disabled={isActionPending}
+    trigger={{ kind: 'label', label: 'Add' }} groups={[{ id: 'contents', items: actions.map(action => {
+      const onPress = action.kind === 'add_here' ? onAddHere : onMoveThingsHere;
+      return { id: action.kind, label: action.label, disabled: !canUseContainedAssetAction({ isActionPending, onPress }), onPress: () => { if (!isActionPending) onPress?.(); } };
+    }) }]} />;
 }
 
 export function ContainedWorkspaceListItemView({
@@ -263,8 +237,6 @@ function ContainedAssetRowView({
 
 function createStyles(palette: MobileColorPalette) {
   return StyleSheet.create({
-    spatialActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    spatialCommand: { width: 160, maxWidth: '100%' },
     sectionHeading: { gap: spacing.xs, paddingBottom: spacing.sm, paddingTop: spacing.sm },
     sectionTitle: { color: palette.text, fontSize: 22, fontWeight: '700' },
     sectionSummary: { color: palette.textMuted, fontSize: 14, fontWeight: '500' },
