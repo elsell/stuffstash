@@ -3180,15 +3180,16 @@ final class FixtureAuditTests: XCTestCase {
 
   func testPersistentTabsRetainDestinationsDraftsAndModalReturn() {
     guard openFixtureURL("audit-tabs/assets/audit-edit-item") else { return }
-    let move = app.buttons["Move"].firstMatch
-    XCTAssertTrue(move.waitForExistence(timeout: 10))
+    let more = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "More actions for ")).firstMatch
+    XCTAssertTrue(more.waitForExistence(timeout: 10))
     XCTAssertTrue(tab("Home").isHittable); XCTAssertTrue(tab("Browse").isHittable)
     capture("persistent-tabs-home-detail")
-    move.tap()
+    more.tap()
+    app.buttons["Move"].firstMatch.tap()
     let cancel = app.buttons["Cancel"].firstMatch
     XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.tap()
     XCTAssertTrue(cancel.waitForNonExistence(timeout: 10))
-    XCTAssertTrue(move.isHittable); XCTAssertTrue(tab("Browse").isHittable)
+    XCTAssertTrue(more.isHittable); XCTAssertTrue(tab("Browse").isHittable)
     tab("Browse").tap()
     let browse = app.staticTexts["Tab shell Browse placeholder"].firstMatch
     XCTAssertTrue(browse.waitForExistence(timeout: 10))
@@ -3196,9 +3197,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(openBrowseAsset.isHittable)
     XCTAssertGreaterThanOrEqual(openBrowseAsset.frame.minY, app.navigationBars.firstMatch.frame.maxY)
     openBrowseAsset.tap()
-    XCTAssertTrue(move.waitForExistence(timeout: 10))
-    tab("Home").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
-    tab("Browse").tap(); XCTAssertTrue(move.waitForExistence(timeout: 10))
+    XCTAssertTrue(more.waitForExistence(timeout: 10))
+    tab("Home").tap(); XCTAssertTrue(more.waitForExistence(timeout: 10))
+    tab("Browse").tap(); XCTAssertTrue(more.waitForExistence(timeout: 10))
     capture("persistent-tabs-browse-detail-return")
     app.navigationBars.buttons["Back"].firstMatch.tap()
     XCTAssertTrue(browse.waitForExistence(timeout: 10), "Browse must retain its own destination stack")
