@@ -36,7 +36,7 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
         <DropdownMenu.Trigger>
           <TriggerButton
             colors={{ contentColor: tone === 'onDark' ? '#FFFFFF' : palette.action, disabledContentColor: palette.textMuted }}
-            contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
+            contentPadding={{ start: rowTrigger ? 0 : 12, top: 10, end: rowTrigger ? 0 : 12, bottom: 10 }}
             enabled={!menuDisabled}
             modifiers={rowTrigger ? [fillMaxWidth()] : trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
             onClick={() => openMenu(() => setExpanded(true))}
