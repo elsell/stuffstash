@@ -1,4 +1,5 @@
 export type NativeActionMenuTrigger =
+  | { readonly kind: 'row'; readonly label: string; readonly value?: string }
   | { readonly kind: 'ellipsis' }
   | { readonly kind: 'label'; readonly label: string }
   | {

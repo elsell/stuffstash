@@ -8,6 +8,6 @@ export function NativeSheetActions({ primaryLabel, primaryAccessibilityLabel = p
     <NativeCommandButton label={primaryLabel} accessibilityLabel={primaryAccessibilityLabel}
       prominence="primary" fullWidth disabled={disabled} onPress={onApply} />
     <NativeCommandButton label={secondaryLabel} accessibilityLabel={secondaryAccessibilityLabel}
-      prominence="secondary" fullWidth disabled={secondaryDisabled} onPress={onBack} />
+      prominence="standard" fullWidth disabled={secondaryDisabled} onPress={onBack} />
   </View>;
 }

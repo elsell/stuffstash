@@ -12,7 +12,7 @@ it('keeps subject, selection and destination context distinct and rejects stale 
   try {
     await render();
     expect(h.allText()).toContain('Tent'); expect(h.allText()).toContain('Current location: Hall');
-    expect(h.allText()).toContain('Moving'); expect(h.allText()).toContain('Destinations');
+    expect(h.allText()).not.toContain('Moving'); expect(h.allText()).toContain('Destinations');
     const row = h.byType('SwiftUIButton')!;
     expect(row.props.modifiers).toContainEqual({ type: 'accessibilityValue', value: 'Selected' });
     const press = row.props.onPress;
@@ -67,11 +67,11 @@ it('keeps the Move to summary stable when search hides the selected destination'
     rows={filtered ? [] : [row]} retainedSelection={filtered ? row : undefined} />);
   try {
     await render(false);
-    expect(h.allText()).toContain('Move to');
-    expect(h.allText()).toContain('Garden / Shed');
+    expect(h.allText()).toContain('Move to: Garden / Shed');
+    expect(h.allText()).toContain('Move to: Garden / Shed');
     await render(true);
-    expect(h.allText()).toContain('Move to');
-    expect(h.allText()).toContain('Garden / Shed');
+    expect(h.allText()).toContain('Move to: Garden / Shed');
+    expect(h.allText()).toContain('Move to: Garden / Shed');
     expect(h.allText()).not.toContain('Selected');
   } finally { await h.unmount(); }
 });

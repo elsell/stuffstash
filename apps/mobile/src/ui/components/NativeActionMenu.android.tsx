@@ -1,7 +1,7 @@
 import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React, { Fragment, useEffect, useState } from 'react';
-import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Icon, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
-import { selectable, size } from '@expo/ui/jetpack-compose/modifiers';
+import { DropdownMenu, DropdownMenuItem, HorizontalDivider, Icon, OutlinedButton, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { fillMaxWidth, weight, selectable, size } from '@expo/ui/jetpack-compose/modifiers';
 import { StyleSheet, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { minimumTouchTargetSize } from '../theme/tokens';
@@ -18,8 +18,9 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
   const { pressItem, trigger: openMenu } = useNativeMenuAction(groups, menuDisabled);
   const [expanded, setExpanded] = useState(false);
   useEffect(() => { if (menuDisabled) setExpanded(false); }, [menuDisabled]);
-  const TriggerButton = trigger.kind === 'ellipsis' && tone !== 'onDark' ? TextButton : OutlinedButton;
-  const compactTrigger = trigger.kind !== 'label';
+  const rowTrigger = trigger.kind === 'row';
+  const TriggerButton = rowTrigger ? TextButton : trigger.kind === 'ellipsis' && tone !== 'onDark' ? TextButton : OutlinedButton;
+  const compactTrigger = trigger.kind !== 'label' && !rowTrigger;
 
   return <View
     accessible
@@ -28,19 +29,23 @@ export function NativeActionMenu({ accessibilityLabel, disabled = false, tone = 
     accessibilityState={{ disabled: menuDisabled, expanded: expanded && !menuDisabled }}
     onAccessibilityTap={() => openMenu(() => setExpanded(true))}
     pointerEvents={menuDisabled ? 'none' : 'auto'}
-    style={[styles.wrapper, menuDisabled && styles.disabled]}
+    style={[styles.wrapper, rowTrigger && { width: '100%', alignSelf: 'stretch' }, menuDisabled && styles.disabled]}
   >
-    <Host matchContents={!compactTrigger} style={compactTrigger ? styles.compactHost : styles.labelHost}>
+    <Host matchContents={rowTrigger ? { vertical: true } : !compactTrigger} style={rowTrigger ? { width: '100%', minHeight: 48 } : compactTrigger ? styles.compactHost : styles.labelHost}>
       <DropdownMenu expanded={expanded && !menuDisabled} onDismissRequest={() => setExpanded(false)}>
         <DropdownMenu.Trigger>
           <TriggerButton
             colors={{ contentColor: tone === 'onDark' ? '#FFFFFF' : palette.action, disabledContentColor: palette.textMuted }}
             contentPadding={{ start: 12, top: 10, end: 12, bottom: 10 }}
             enabled={!menuDisabled}
-            modifiers={trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
+            modifiers={rowTrigger ? [fillMaxWidth()] : trigger.kind === 'icon' ? [size(minimumTouchTargetSize, minimumTouchTargetSize)] : undefined}
             onClick={() => openMenu(() => setExpanded(true))}
           >
-            {trigger.kind === 'icon'
+            {trigger.kind === 'row' ? <Row modifiers={[fillMaxWidth()]} verticalAlignment="center">
+              <Text color={palette.text} modifiers={[weight(1)]} style={{ fontSize: 17 }}>{trigger.label}</Text>
+              {trigger.value ? <Text color={palette.textMuted} style={{ fontSize: 17 }}>{trigger.value}</Text> : null}
+              <Text color={palette.textMuted}> ▾</Text>
+            </Row> : trigger.kind === 'icon'
               ? <Icon size={18} source={require('./android-icons/sort-arrows.xml')} tint={palette.action} />
               : <Text style={{ fontSize: trigger.kind === 'ellipsis' ? 24 : 14, fontWeight: '600' }}>
                 {trigger.kind === 'label' ? trigger.label : '⋮'}

@@ -1677,3 +1677,73 @@ not claims that Apple mandates one universal layout. Verify connected normal-tex
 workflows first on iPhone/iPad with full-screen captures, then relevant adaptation.
 
 Photo inspection reuses the native action-menu adapter with an explicit on-dark canvas tone; other menu consumers keep their existing appearance. Metadata is read-only menu content. The on-dark menu and photo Close button share one native symbol label, fixed symbol layout box, large control style, and content-measured hosts so React Native does not clip the system-computed control bounds; a compressed image-only pill is not the intended toolbar presentation.
+
+
+## Reference-led composition reset — September 26, 2026
+
+The user rejects the broad replacement of plain text actions with bordered native
+buttons: correct control implementation has preserved a cluttered and unfamiliar
+interaction layout. This is a confirmed composition problem across the affected
+command families. It supersedes the blanket bounded-command default and the
+three-button Details action-area composition above. Do not reverse it with a
+blanket borderless default. Choose the action's role and familiar placement first.
+
+Use whole task layouts from a named, inspected reference. Record the reference,
+what transfers, and intentional product differences. The user's ChatGPT header
+screenshot supports a compact persistent header with a small action group; it is
+not a reference for inventory forms, move selection or every current ChatGPT view.
+Apple Files supplies browse, selection and move patterns. Apple Settings supplies
+labeled value rows and grouped preferences. Contacts supplies readable object
+identity/details and Edit-to-form behavior. Copy hierarchy, alignment, placement
+and transitions; retain Stuff Stash semantics, permissions and identity.
+
+The concrete screen mapping and primary sources are in
+`docs/reports/mobile-ui-remediation-2026-09-14/reference-layout-reset.md`.
+
+Required composition rules:
+- Within the redesigned settings/action families, navigation is a whole row or
+  system toolbar item. Existing tabs, breadcrumbs and contextual links remain
+  valid for their own tasks. A value choice is a labeled
+  row with its current value and in-place native picker, not a pill in a row.
+- Commands inside a menu or a grouped action row use that host's native treatment.
+  They do not each acquire a standalone bordered button. Destructive commands
+  remain separated and retain confirmation/undo semantics.
+- Reserve standalone filled/bounded buttons for actual task-level emphasis or
+  a reference-supported action group. Do not equalize unrelated actions merely
+  by giving them matching capsules. Do not expose every capability simultaneously.
+- Details: keep identity/media and structured facts as the reading surface;
+  Edit remains in the header. Group secondary object commands in More, including
+  Move, Add photos and eligible Check out. Keep Return discoverable with an active checkout's status;
+  distinguish this frequent recovery action from optional object management.
+  Containers expose contents and their Add control together; Add/Move items are
+  one contextual add menu, not competing wide buttons. Preserve accessibility,
+  role gates and a non-long-press route to all commands.
+- Filters/Settings: consistent full-width rows with aligned labels and values.
+  Short choices open native menus in place. Tags/hierarchical locations can open
+  selection views. Preserve the user's accepted reachable bottom Show results
+  action; subordinate dismissal must not become another equally prominent slab.
+- Forms: one clear completion owner; short labeled input groups; creation returns
+  to the owning draft. Use normal task toolbar cancellation/completion when the
+  native adapter supports it reliably. Do not remove a working bottom completion
+  merely to imitate an unrelated screenshot; documented keyboard/access constraints
+  govern placement. Avoid duplicate Save/Create actions at two edges.
+- Move: retain the requested sheet; use a Files-style destination list, concise
+  source context, native search and one commit. Keep the source context stable,
+  but do not allocate competing large Moving/Move to/Selected summary blocks.
+  New destination is a secondary toolbar action with a focused creation form.
+- Switcher: current household is compact scope context above inventory rows.
+  Keep Switch household trailing and text-only as requested; creation belongs to
+  its household/inventory section or a labeled add menu, not loose pills.
+
+Reference adaptation is a product decision, not a claim that Apple mandates every
+placement. Preserve photo paging and the explicitly requested top-right Close/More
+layout. Preserve Home Add/Notifications/Profile ordering, Browse search behavior,
+List/Map placement, persistent tabs outside tasks and all safe-area fixes.
+
+Acceptance must compare complete normal-text screens to the named references:
+reading order, action prominence, grouping, duplicate actions, navigation cost,
+empty/populated content, and long names. Native geometry and tap tests supplement
+this review; they cannot approve the composition by themselves. Implement a
+connected family at a time, inspect its consumers, and ship only after source,
+critic and native workflow checks. No new package or universal button restyle is
+justified by this reset.

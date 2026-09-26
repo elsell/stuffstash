@@ -86,3 +86,21 @@ it('keeps Edit current and rejects retained presses after permission loss, pendi
   await h.run(retained);
   expect(calls).toEqual(['current']);
 });
+
+it('retires moved header commands and rejects photo actions after loading or permission changes', async () => {
+  const h = new MobileRenderHarness(); const calls: string[] = []; let options!: Options;
+  const observe = (value: Options) => { options = value; };
+  const props: AssetHeaderOverflowProps = { asset: { title: 'Tent', canArchive: false, canRestore: false, canDeletePermanently: false },
+    onHistory() {}, onCheckoutHistory() {}, onLifecycleAction() {},
+    onMove: () => calls.push('move'), onAddPhotos: () => calls.push('photos'), onCheckout: () => calls.push('checkout') };
+  try {
+    await h.render(<Probe value={props} observe={observe} />);
+    const old = (options.headerRight as () => React.ReactElement<AssetHeaderOverflowProps>)().props;
+    await h.render(<Probe value={{ ...props, onMove: undefined, onCheckout: undefined, photosDisabled: true }} observe={observe} />);
+    await h.run(() => { old.onMove?.(); old.onAddPhotos?.(); old.onCheckout?.(); });
+    expect(calls).toEqual([]);
+    await h.render(<Probe value={{ ...props, onMove: () => calls.push('current') }} observe={observe} />);
+    await h.run(() => old.onMove?.()); expect(calls).toEqual(['current']);
+    await h.unmount(); old.onMove?.(); expect(calls).toEqual(['current']);
+  } finally { await h.unmount(); }
+});

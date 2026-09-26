@@ -8,6 +8,7 @@ it('provides the Android menu with current selection, accessible value and nativ
     includeEmptyOption: false, disabled: true, options: [{ value: '', label: 'Any availability' }, { value: 'available', label: 'Available' }],
     onChange: value => selected.push(value) }).props as NativeActionMenuProps;
   expect(props.disabled).toBe(true);
+  expect(props.trigger).toEqual({ kind: 'row', label: 'Availability', value: 'Any availability' });
   expect(props.accessibilityLabel).toBe('Choose availability, Any availability');
   expect(props.groups[0].items.map(item => [item.id, item.isSelected])).toEqual([['', true], ['available', false]]);
   // An open menu may deliver a selection after the parent locks editing.

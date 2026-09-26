@@ -19,9 +19,9 @@ export function assetHeaderOverflowScreenOptions({
   onEdit,
   onCheckoutHistory,
   onHistory,
-  onLifecycleAction
+  onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled
 }: AssetHeaderOverflowProps): NativeStackScreenOptions {
-  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction });
+  const groups = assetOverflowMenuGroups({ asset, onCheckoutHistory, onHistory, onLifecycleAction, onMove, onAddPhotos, onCheckout, photosDisabled });
   return {
     headerShown: true as const,
     unstable_headerRightItems: (context): NativeHeaderItem[] => [

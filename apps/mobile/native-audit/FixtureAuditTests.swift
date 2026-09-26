@@ -1208,7 +1208,9 @@ final class FixtureAuditTests: XCTestCase {
       if variant == "place" {
         XCTAssertTrue(app.buttons["Search"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Search"].firstMatch.isHittable)
-        XCTAssertTrue(app.buttons["Move place"].firstMatch.isHittable)
+        app.buttons["More actions for Garage"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Move"].firstMatch.isHittable)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.8)).tap()
         XCTAssertFalse(app.staticTexts["Availability"].exists)
       }
       capture("detail-context-" + variant + "-entry")
@@ -1277,39 +1279,27 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<14 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable)
     open.tap()
-    let add = app.buttons["Add item here"].firstMatch
-    XCTAssertTrue(add.waitForExistence(timeout: 10))
-    for label in ["Add item here", "Move items here", "Check out", "Edit", "Move"] {
-      let command = label == "Edit" ? app.navigationBars.buttons["Edit"].firstMatch : app.buttons[label].firstMatch
-      XCTAssertTrue(command.exists)
-      let scroll = app.scrollViews.firstMatch
-      func fullyVisible() -> Bool {
-        if label == "Edit" {
-          return command.isHittable && app.navigationBars.firstMatch.frame.contains(command.frame)
-        }
-        let visible = scroll.frame.intersection(app.frame)
-        let top = max(visible.minY, app.navigationBars.firstMatch.frame.maxY)
-        return command.isHittable && command.frame.minY >= top && command.frame.maxY <= visible.maxY
-      }
-      for _ in 0..<12 where !fullyVisible() {
-        let above = command.frame.minY < app.navigationBars.firstMatch.frame.maxY
-        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.7))
-        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.7 : 0.4))
-        start.press(forDuration: 0.05, thenDragTo: end)
-      }
-      XCTAssertTrue(fullyVisible(), label)
-      if label != "Edit" { XCTAssertGreaterThanOrEqual(command.frame.height, 44, label) }
-      XCTAssertGreaterThanOrEqual(command.frame.minX, app.frame.minX, label)
-      XCTAssertLessThanOrEqual(command.frame.maxX, app.frame.maxX, label)
-      XCTAssertGreaterThanOrEqual(command.frame.width, 44, label)
-      capture("detail-command-" + label.lowercased().replacingOccurrences(of: " ", with: "-") + "-" + captureSuffix)
+    let edit = app.navigationBars.buttons["Edit"].firstMatch
+    let more = app.buttons["More actions for Garage shelves and seasonal storage"].firstMatch
+    XCTAssertTrue(edit.waitForExistence(timeout: 10)); XCTAssertTrue(edit.isHittable)
+    XCTAssertTrue(more.isHittable)
+    XCTAssertFalse(app.buttons["Check out"].exists)
+    XCTAssertFalse(app.buttons["Move"].exists)
+    capture("detail-composition-" + captureSuffix)
+    more.tap()
+    for label in ["Add photos", "Move", "Check out"] {
+      XCTAssertTrue(app.buttons[label].firstMatch.isHittable, label)
     }
-    let back = app.navigationBars.buttons.firstMatch
-    XCTAssertTrue(back.isHittable)
-    back.tap()
-    XCTAssertTrue(app.navigationBars["Native UI audit"].waitForExistence(timeout: 5))
-    XCTAssertTrue(add.waitForNonExistence(timeout: 5))
-    XCTAssertTrue(open.isHittable)
+    capture("detail-more-" + captureSuffix)
+    app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.8)).tap()
+    let add = app.buttons["Add to contents"].firstMatch
+    for _ in 0..<12 where !add.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(add.isHittable)
+    add.tap()
+    for label in ["Add item here", "Move items here"] {
+      XCTAssertTrue(app.buttons[label].firstMatch.isHittable, label)
+    }
+    capture("detail-contents-add-" + captureSuffix)
   }
 
   func testPlaceContentsUseNativeSearchAndKeepNavigation() {
@@ -1656,8 +1646,9 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
     XCTAssertTrue(app.staticTexts["Camping tent"].firstMatch.waitForExistence(timeout: 10))
+    let more = app.buttons["More actions for Camping tent"].firstMatch
+    XCTAssertTrue(more.isHittable); more.tap()
     let moveFromDetail = app.buttons["Move"].firstMatch
-    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
     let header = app.navigationBars["Move"]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
@@ -1678,7 +1669,7 @@ final class FixtureAuditTests: XCTestCase {
     for _ in 0..<4 where !location.isHittable { app.scrollViews.firstMatch.swipeDown() }
     XCTAssertTrue(location.waitForExistence(timeout: 10)); XCTAssertTrue(location.isHittable)
     capture("asset-move-journey-updated-detail")
-    for _ in 0..<4 where !moveFromDetail.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(more.isHittable); more.tap()
     XCTAssertTrue(moveFromDetail.isHittable); moveFromDetail.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     XCTAssertTrue(garage.waitForExistence(timeout: 10)); XCTAssertEqual(garage.value as? String, "Selected")
@@ -2794,17 +2785,18 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(status.waitForExistence(timeout: 5))
     let edit = app.navigationBars["Details"].buttons["Edit"].firstMatch
 
-    let move = app.buttons["Move"].firstMatch
-    let add = app.buttons["Add photos"].firstMatch
-    XCTAssertTrue(edit.isHittable); XCTAssertTrue(move.isHittable)
-    XCTAssertTrue(add.isHittable)
+    let more = app.buttons["More actions for Camping tent"].firstMatch
+    XCTAssertTrue(edit.isHittable); XCTAssertTrue(more.isHittable)
+    XCTAssertFalse(app.buttons["Move"].exists)
+    XCTAssertFalse(app.buttons["Add photos"].exists)
     XCTAssertGreaterThan(title.frame.height, 0)
-    XCTAssertGreaterThan(status.frame.height, 0)
     XCTAssertLessThanOrEqual(title.frame.maxY, status.frame.minY)
-    XCTAssertLessThanOrEqual(edit.frame.maxY, status.frame.minY)
-    XCTAssertLessThanOrEqual(move.frame.maxY, status.frame.minY)
-    XCTAssertLessThanOrEqual(add.frame.maxY, app.frame.maxY)
     capture("detail-empty-photo-hierarchy")
+    more.tap()
+    for label in ["Move", "Add photos", "Check out"] {
+      XCTAssertTrue(app.buttons[label].firstMatch.isHittable, label)
+    }
+    capture("detail-secondary-command-menu")
   }
 
   func testBrowsePhotoFreeRowsKeepMixedMediaAligned() {

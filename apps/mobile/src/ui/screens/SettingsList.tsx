@@ -1,3 +1,4 @@
+import { NativeActionRow } from '../components/NativeActionRow';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppearancePicker } from '../components/AppearancePicker';
 import type { ReactNode } from 'react';
@@ -130,13 +131,8 @@ export function SettingsActionRow({
   readonly label: string;
   readonly onPress: () => void;
 }) {
-  const { styles } = useSettingsListStyles();
-  return (
-    <View style={styles.actionRow}>
-      <NativeCommandButton label={label} accessibilityLabel={accessibilityLabel}
-        disabled={disabled} role={destructive ? 'destructive' : 'default'} onPress={onPress} />
-    </View>
-  );
+  return <NativeActionRow label={label} accessibilityLabel={accessibilityLabel}
+    disabled={disabled} role={destructive ? 'destructive' : 'default'} onPress={onPress} />;
 }
 
 

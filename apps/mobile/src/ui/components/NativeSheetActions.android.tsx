@@ -1,7 +1,7 @@
 import { NativeComposeHost as Host } from './NativeComposeHost.android';
 import React from 'react';
 import { nativeContentDescription } from './NativeComposeAccessibility.android';
-import { Button, OutlinedButton, Text } from '@expo/ui/jetpack-compose';
+import { Button, TextButton, Text } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { View } from 'react-native';
 import type { NativeSheetActionsProps } from './NativeSheetActions.types';
@@ -14,7 +14,7 @@ export function NativeSheetActions({ primaryLabel, primaryAccessibilityLabel = p
       </Button>
     </Host>
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <OutlinedButton enabled={!secondaryDisabled} modifiers={[fillMaxWidth(), nativeContentDescription(secondaryAccessibilityLabel)]} onClick={() => { if (!secondaryDisabled) onBack(); }}><Text>{secondaryLabel}</Text></OutlinedButton>
+      <TextButton enabled={!secondaryDisabled} modifiers={[fillMaxWidth(), nativeContentDescription(secondaryAccessibilityLabel)]} onClick={() => { if (!secondaryDisabled) onBack(); }}><Text>{secondaryLabel}</Text></TextButton>
     </Host>
   </View>;
 }

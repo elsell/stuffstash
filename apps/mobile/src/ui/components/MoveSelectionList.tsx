@@ -7,13 +7,13 @@ import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus
 export function MoveSelectionList(props: MoveSelectionListProps) {
   const { styles } = useSettingsListStyles();
   return <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-    <SettingsSection title={props.subjectLabel}>
+    <SettingsSection title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
       <View style={styles.navigationRow}>
         <Text style={styles.rowLabel}>{props.subject}</Text>
         <Text style={styles.rowContext}>{props.context}</Text>
+        {props.destinationLabel ? <Text style={styles.rowContext}>{`Move to: ${props.destinationLabel}`}</Text> : null}
       </View>
     </SettingsSection>
-    {props.destinationLabel ? <SettingsSection title="Move to"><View style={styles.navigationRow}><Text style={styles.rowLabel}>{props.destinationLabel}</Text></View></SettingsSection> : null}
     <SettingsSection title={props.title}>
       {props.statuses?.map((status, index) => <Status key={index} status={status} />)}
       {props.retainedSelection ? <Choice row={props.retainedSelection} /> : null}

@@ -163,7 +163,7 @@ export function AssetDetailView({
           ) : null}
 
           {asset.photos.length > 0 ? photoGallery : null}
-          <AssetDetailIdentitySection asset={asset} onParentLocationPress={onParentLocationPress} onTagPress={onTagPress} />
+          <AssetDetailIdentitySection asset={asset} onReturn={!showEditAction ? onReturn : undefined} isActionPending={isActionPending} onParentLocationPress={onParentLocationPress} onTagPress={onTagPress} />
           <AssetDetailActions asset={asset} isActionPending={isActionPending} isPhotosLoading={isPhotosLoading}
             showEditAction={showEditAction} onEdit={onEdit} onAddPhotos={onAddPhotos}
             onMove={onMove} onCheckout={onCheckout} onReturn={onReturn} />

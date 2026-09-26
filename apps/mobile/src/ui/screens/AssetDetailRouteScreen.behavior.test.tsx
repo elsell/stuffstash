@@ -104,7 +104,7 @@ describe('progressive asset detail route', () => {
       await test.harness.run(() => test.photos.resolve([]));
       await settle(test.harness);
       expect(test.harness.byLabel('Loading photos')).toBeUndefined();
-      expect(test.harness.byLabel('Add photos')).toBeDefined();
+      expect((await detailCommand(test.harness, 'Add photos'))).toBeDefined();
       expect(test.harness.byLabel('Loading location and contents')).toBeDefined();
       await test.harness.run(() => test.contents.resolve({ asset: test.core().asset, allAssets: [] }));
       await settle(test.harness);
@@ -267,7 +267,7 @@ it.each(['asset change', 'route teardown'])('discards pending selection after %s
   try {
     test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     await test.harness.run(() => latestActionSheetCallback()?.(1));
     if (destination === 'asset change') test.changeAsset('other'); else test.hide();
     await test.render();
@@ -286,7 +286,7 @@ it('rejects duplicate source callbacks and hides old upload failures after chang
   try {
     test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     const choose = latestActionSheetCallback();
     await test.harness.run(() => { choose?.(1); choose?.(1); });
     expect(calls).toBe(1);
@@ -294,7 +294,7 @@ it('rejects duplicate source callbacks and hides old upload failures after chang
     await test.harness.run(() => upload.reject(new Error('Old upload failed')));
     await settle(test.harness);
     expect(test.harness.allText()).not.toContain('Old upload failed');
-    expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+    expect((await detailCommand(test.harness, 'Add photos'))?.props.disabled).not.toBe(true);
   } finally { await test.harness.unmount(); }
 });
 
@@ -321,7 +321,7 @@ it.each(['picker', 'upload'] as const)('owns %s failure notices by the starting 
       setScreenFocused(true);
       test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
       await test.render(); await settle(test.harness); await settle(test.harness);
-      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.press((await detailCommand(test.harness, 'Add photos')));
       await test.harness.run(() => latestActionSheetCallback()?.(1));
       await settle(test.harness);
       if (visit !== 'current') await test.harness.run(() => setScreenFocused(false));
@@ -329,9 +329,9 @@ it.each(['picker', 'upload'] as const)('owns %s failure notices by the starting 
       await test.harness.run(() => failure.reject(new Error('Acquisition failed')));
       await settle(test.harness);
       expect(Boolean(test.harness.byText('Could not add photos'))).toBe(visit === 'current');
-      expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+      expect((await detailCommand(test.harness, 'Add photos'))?.props.disabled).not.toBe(true);
       await test.harness.run(() => setScreenFocused(true));
-      await test.harness.press(test.harness.byLabel('Add photos'));
+      await test.harness.press((await detailCommand(test.harness, 'Add photos')));
       await test.harness.run(() => latestActionSheetCallback()?.(1));
       await settle(test.harness);
       expect(selections).toBe(2);
@@ -357,10 +357,10 @@ it('keeps the new asset upload pending when the previous upload finishes', async
   try {
     test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     await test.harness.run(() => latestActionSheetCallback()?.(1));
     test.changeAsset('other'); await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     await test.harness.run(() => latestActionSheetCallback()?.(1));
     expect(calls).toEqual(['tent', 'other']);
     await test.harness.run(() => oldUpload.resolve({ attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'Old upload complete', canRetry: false }));
@@ -371,7 +371,7 @@ it('keeps the new asset upload pending when the previous upload finishes', async
     await test.harness.run(() => newUpload.resolve({ attachedCount: 1, failedCount: 0, failedPhotos: [], message: 'New upload complete', canRetry: false }));
     await settle(test.harness);
     expect(test.harness.allText()).toContain('New upload complete');
-    expect(test.harness.byLabel('Add photos')?.props.disabled).not.toBe(true);
+    expect((await detailCommand(test.harness, 'Add photos'))?.props.disabled).not.toBe(true);
   } finally { await test.harness.unmount(); }
 });
 
@@ -380,7 +380,7 @@ it('submits checkout once and suppresses its late failure after leaving the rout
   const test = setup({ assetCheckoutCommand: { execute: () => { calls++; return command.promise; } } });
   try {
     await test.render(); await settle(test.harness);
-    const checkout = test.harness.byLabel('Check out');
+    const checkout = (await detailCommand(test.harness, 'Check out'));
     expect(checkout).toBeDefined();
     await test.harness.run(() => { checkout!.props.onPress(); checkout!.props.onPress(); });
     expect(calls).toBe(1);
@@ -446,16 +446,18 @@ it('does not let old checkout completion unlock the replacement asset operation'
   const test = setup({ assetCheckoutCommand: { execute: input => input.assetId === 'tent' ? old.promise : current.promise } });
   try {
     await test.render(); await settle(test.harness);
-    const staleCheckout = test.harness.byLabel('Check out')!;
+    const staleCheckout = (await detailCommand(test.harness, 'Check out'))!;
     await test.harness.press(staleCheckout);
     test.changeAsset('other'); await test.render(); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Check out'));
-    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(true);
+    await test.harness.press((await detailCommand(test.harness, 'Check out')));
+    expect(test.harness.all().find(n => String(n.props.accessibilityLabel ?? '').startsWith('More actions for '))?.props.accessibilityState.disabled).toBe(true);
     await test.harness.run(() => old.reject(new Error('Old asset failed')));
-    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(true);
+    expect(test.harness.all().find(n => String(n.props.accessibilityLabel ?? '').startsWith('More actions for '))?.props.accessibilityState.disabled).toBe(true);
     expect(test.harness.allText()).not.toContain('Old asset failed');
     await test.harness.run(() => current.reject(new Error('Current asset failed')));
-    expect(test.harness.byLabel('Check out')?.props.disabled).toBe(false);
+    const recovered = await detailCommand(test.harness, 'Check out');
+    expect(recovered).toBeDefined();
+    expect(recovered?.props.disabled).not.toBe(true);
     expect(test.harness.allText()).toContain('Current asset failed');
   } finally { await test.harness.unmount(); }
 });
@@ -599,7 +601,7 @@ it.each(visitActions.flatMap(label => ['success', 'failure'].map(outcome => ({ l
       assetLifecycleCommand: { execute: () => { calls++; return command.promise; } }
     });
     async function invoke() {
-      if (label === 'Check out' || label === 'Return') await test.harness.press(test.harness.byLabel(label));
+      if (label === 'Check out' || label === 'Return') await test.harness.press(await detailCommand(test.harness, label));
       else {
         await test.harness.press(test.harness.byLabel('More actions for Family tent'));
         await test.harness.press(test.harness.byText(label)?.parent ?? undefined);
@@ -682,7 +684,7 @@ it.each(['ios', 'android'].flatMap(platform => [0, 1].map(source => ({ platform,
   try {
     test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     const chooserAlert = latestAlert();
     const choose = platform === 'ios' ? latestActionSheetCallback() : (index: number) => chooserAlert?.buttons[index].onPress?.();
     expect(choose).toBeTypeOf('function');
@@ -690,7 +692,7 @@ it.each(['ios', 'android'].flatMap(platform => [0, 1].map(source => ({ platform,
     await test.harness.run(() => setScreenFocused(true));
     await test.harness.run(() => choose!(source));
     expect(selections).toBe(0);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     await test.harness.run(() => platform === 'ios' ? latestActionSheetCallback()!(source) : latestAlert()?.buttons[source].onPress?.());
     expect(selections).toBe(1);
   } finally { await test.harness.unmount(); test.client.clear(); resetNavigation(); Platform.OS = originalPlatform; }
@@ -717,7 +719,7 @@ it('retries only failed photos from the workspace without reopening selection', 
   try {
     test.photos.resolve([]); test.contents.resolve({ asset: test.core().asset, allAssets: [] });
     await test.render(); await settle(test.harness); await settle(test.harness);
-    await test.harness.press(test.harness.byLabel('Add photos'));
+    await test.harness.press((await detailCommand(test.harness, 'Add photos')));
     await test.harness.run(() => latestActionSheetCallback()?.(1));
     await settle(test.harness);
     expect(test.harness.allText()).toContain('1 of 2 photos added.');
@@ -738,4 +740,14 @@ it('retries only failed photos from the workspace without reopening selection', 
 async function removePhotoAction(h: MobileRenderHarness) {
   if (!h.byText('Remove photo')) await h.press(h.byLabel('Photo options'));
   return h.byText('Remove photo')?.parent ?? undefined;
+}
+
+async function detailCommand(h: MobileRenderHarness, label: string) {
+  const direct = h.byLabel(label);
+  if (direct) return direct;
+  if (!h.byText(label)) {
+    const more = h.all().find(n => String(n.props.accessibilityLabel ?? '').startsWith('More actions for '));
+    await h.press(more);
+  }
+  return h.byText(label)?.parent ?? undefined;
 }

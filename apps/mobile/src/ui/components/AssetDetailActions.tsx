@@ -5,7 +5,7 @@ import { assetDetailAvailabilityAction } from './AssetDetailPresentation';
 import { spacing } from '../theme/tokens';
 
 type ActionAsset = Pick<AssetDetailViewModel, 'kind' | 'canEdit' | 'canMove' | 'canAddPhotos' | 'canCheckout' | 'canReturn'>;
-export function AssetDetailActions({ asset, isActionPending, isPhotosLoading = false, showEditAction = false,
+export function AssetDetailActions({ asset, isActionPending, isPhotosLoading = false, showEditAction = true,
   onAddPhotos, onMove, onCheckout, onReturn, onEdit }: {
   readonly asset: ActionAsset;
   readonly isActionPending: boolean;
@@ -20,9 +20,9 @@ export function AssetDetailActions({ asset, isActionPending, isPhotosLoading = f
   const availability = asset.kind === 'location' ? undefined : assetDetailAvailabilityAction(asset);
   const actions: readonly { label: string; handler?: () => void; pending?: boolean }[] = [
     ...(showEditAction && asset.canEdit ? [{ label: 'Edit', handler: onEdit }] : []),
-    ...(asset.canAddPhotos ? [{ label: 'Add photos', handler: onAddPhotos, pending: isPhotosLoading }] : []),
-    ...(asset.canMove ? [{ label: asset.kind === 'location' ? 'Move place' : 'Move', handler: onMove }] : []),
-    ...(availability ? [{ label: availability.label, handler: availability.id === 'return' ? onReturn : onCheckout }] : [])
+    ...(showEditAction && asset.canAddPhotos ? [{ label: 'Add photos', handler: onAddPhotos, pending: isPhotosLoading }] : []),
+    ...(showEditAction && asset.canMove ? [{ label: asset.kind === 'location' ? 'Move place' : 'Move', handler: onMove }] : []),
+    ...(availability && showEditAction ? [{ label: availability.label, handler: availability.id === 'return' ? onReturn : onCheckout }] : [])
   ];
   if (!actions.length) return null;
   return <View accessibilityLabel="Asset actions" style={styles.actions}>

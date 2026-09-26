@@ -90,7 +90,7 @@ it.each(['ios', 'android'] as const)('selects one destination on %s and moves on
     expect(submitted).toEqual([]);
     await changeSearch('unmatched'); await settle(h, 350);
     expect(h.byLabel('Choose destination Garage')?.props.accessibilityState.checked).toBe(true);
-    expect(h.byText('Move to')).toBeDefined();
+    expect(h.byText('Move to: House / Garage')).toBeDefined();
     await h.press(h.byLabel('Choose inventory root'));
     await h.run(choose);
     expect(h.byLabel('Choose inventory root')?.props.accessibilityState.checked).toBe(true);
