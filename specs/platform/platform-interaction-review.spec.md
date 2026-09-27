@@ -1747,3 +1747,15 @@ this review; they cannot approve the composition by themselves. Implement a
 connected family at a time, inspect its consumers, and ship only after source,
 critic and native workflow checks. No new package or universal button restyle is
 justified by this reset.
+
+### Browse filter header placement — September 27, 2026
+
+Browse List places its Filters action in the native trailing navigation actions,
+immediately after Add when creation is permitted. A viewer without creation access
+still has Filters. Use the native filter symbol, an accessible applied-filter count
+and a native badge when filters are active. Remove the duplicate content-row filter
+button; retain result summaries and applied-filter removal chips. The existing
+filter task, apply/cancel behavior, search and fixed List/Map selector are unchanged.
+Map retains its existing actions because List filters do not filter the map.
+Verify current callbacks and count updates after applying/clearing filters, loss of
+Add permission, navigation return and the native header at iPhone/iPad widths.

@@ -23,6 +23,7 @@ on:
           - home-header
           - browse-journey
           - browse-filter-journey
+          - browse-header-filter
           - filter-sharing-workflows
           - followup-release
           - filters
@@ -415,6 +416,13 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testColorWellDeliveredTouchRegion'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorRedEditsPreserveOtherChannelsInDraft'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeColorLockDisablesTheWellAndPreservesDraft'
+              )
+              ;;
+            browse-header-filter)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFilterLivesBesideAddInNativeHeader'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseFiltersDetailAndBackPreserveContext'
               )
               ;;
             browse-filter-journey|filter-sharing-workflows|followup-release)

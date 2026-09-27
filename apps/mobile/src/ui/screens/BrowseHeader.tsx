@@ -16,13 +16,11 @@ import type {
 } from '../../application/home/InventorySummaryRepository';
 import {
   buildBrowseFilterTokens,
-  browseFilterCount,
   searchResultSummaryLabel
 } from './SearchScreenPresentation';
 import type { BrowseFilterToken, BrowseScope } from './SearchScreenPresentation';
 import { radius, spacing } from '../theme/tokens';
 import type { MobileColorPalette } from '../theme/tokens';
-import { NativeRefinementButton } from '../components/NativeRefinementButton';
 
 
 export type SearchHeaderProps = {
@@ -40,7 +38,6 @@ export type SearchHeaderProps = {
   readonly onClearFilters: () => void;
   readonly onRemoveFilter: (token: BrowseFilterToken) => void;
   readonly onRetryResults?: () => void;
-  readonly onToggleFilters: () => void;
 };
 
 export function SearchHeader({
@@ -57,11 +54,9 @@ export function SearchHeader({
   tagFilters = [],
   onClearFilters,
   onRemoveFilter,
-  onRetryResults,
-  onToggleFilters
+  onRetryResults
 }: SearchHeaderProps) {
   const styles = stylesForPalette(palette);
-  const activeFilterCount = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds });
   const activeTokens = buildBrowseFilterTokens(
     { scope, lifecycleState, checkoutState, tagIds: selectedTagIds },
     tagFilters
@@ -83,14 +78,6 @@ export function SearchHeader({
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
         </Text>
-        <NativeRefinementButton
-          accessibilityLabel={activeFilterCount > 0 ? `Filters, ${activeFilterCount.toString()} applied` : 'Filters'}
-          badgeCount={activeFilterCount}
-          iconOnly
-          label="Filters"
-          onPress={onToggleFilters}
-          systemImage="line.3.horizontal.decrease"
-        />
 
       </View>
 

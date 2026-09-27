@@ -37,3 +37,19 @@ it('settles navigation feedback and keeps a changed Add command live', async () 
     expect(h.byLabel('Add an asset')).toBeUndefined();
   } finally { await h.unmount(); resetNavigation(); }
 });
+
+it('places Filters after Add, updates its count and keeps it available without creation permission', async () => {
+  resetNavigation(); const h = new MobileRenderHarness(); const calls: string[] = [];
+  const render = (count: number, canAdd: boolean, value: string) => h.render(<BrowseAddHeader canAdd={canAdd}
+    onAdd={() => {}} filterCount={count} onFilters={() => calls.push(value)} />);
+  try {
+    await render(0, true, 'old');
+    expect(h.all().filter(n => n.props.accessibilityRole === 'button').map(n => n.props.accessibilityLabel)).toEqual(['Add an asset', 'Filters']);
+    const retained = h.byLabel('Filters')!.props.onPress;
+    await render(2, false, 'current');
+    expect(h.byLabel('Add an asset')).toBeUndefined();
+    expect(h.byLabel('Filters, 2 applied')).toBeDefined();
+    await h.run(retained); expect(calls).toEqual(['current']);
+    await render(0, false, 'clear'); expect(h.byLabel('Filters')).toBeDefined();
+  } finally { await h.unmount(); resetNavigation(); }
+});

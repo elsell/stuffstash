@@ -379,7 +379,8 @@ export function SearchScreen({
   const resultIdentity = JSON.stringify([scopeIdentity, resultScope, state.results.query,
     state.results.lifecycleState, state.results.checkoutState, state.results.sort, state.results.tagIds]);
   const gridCardWidth = browseGridCardWidth(collectionWidth, numColumns);
-  const hasActiveFilters = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds }) > 0;
+  const activeFilterCount = browseFilterCount({ scope, lifecycleState, checkoutState, tagIds: selectedTagIds });
+  const hasActiveFilters = activeFilterCount > 0;
   const isInitialError = state.status === 'error' && state.phase === 'initial';
   const isPaginationError = state.status === 'error' && state.phase === 'pagination';
 
@@ -397,7 +398,8 @@ export function SearchScreen({
       </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
-      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')} />
+      <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')}
+        onFilters={openFilters} filterCount={activeFilterCount} />
       <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}
@@ -434,7 +436,6 @@ export function SearchScreen({
             onClearFilters={clearFilters}
             onRemoveFilter={removeFilter}
             onRetryResults={retryResults}
-            onToggleFilters={openFilters}
           />
         }
         ListEmptyComponent={
