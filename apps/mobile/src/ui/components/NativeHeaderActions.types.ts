@@ -5,6 +5,7 @@ export type NativeHeaderAction = {
   readonly kind: 'filter' | 'notifications' | 'add' | 'account' | 'close' | 'back' | 'save' | 'settings' | 'mark-read' | 'compose';
   readonly label: string;
   readonly emphasis?: 'primary';
+  readonly tintColor?: string;
   readonly disabled?: boolean;
   readonly badgeCount?: number;
   readonly onPress: () => void;

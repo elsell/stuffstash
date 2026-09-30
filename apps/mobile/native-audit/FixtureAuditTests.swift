@@ -1094,6 +1094,7 @@ final class FixtureAuditTests: XCTestCase {
     let summary = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "18 shown", "Camping")).firstMatch
     XCTAssertTrue(summary.waitForExistence(timeout: 10))
     XCTAssertTrue(app.navigationBars.buttons["Filters, 1 applied"].firstMatch.isHittable)
+    capture("browse-native-filter-active-tint")
     let list = app.scrollViews.firstMatch
     let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item"))
     let initial = app.buttons[cards.firstMatch.label].firstMatch
@@ -1117,6 +1118,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(restored.frame.minY, position, accuracy: 3)
     XCTAssertTrue(summary.exists)
     capture("connected-browse-filter-detail-return")
+    app.navigationBars.buttons["Filters, 1 applied"].firstMatch.tap()
+    app.buttons["Reset all filters"].tap()
+    app.buttons["Show results"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars.buttons["Filters"].firstMatch.waitForExistence(timeout: 5))
+    capture("browse-native-filter-cleared-tint")
   }
 
   func testBrowseExpirationDetailAndBackPreserveContext() {

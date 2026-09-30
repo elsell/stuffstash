@@ -8,7 +8,7 @@ export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[]
   const render = () => <View style={{ flexDirection: 'row' }}>{actions.map(action => {
     const Icon = icons[action.kind];
     return <Pressable key={action.kind} accessibilityRole="button" accessibilityLabel={action.label} disabled={action.disabled} accessibilityState={{ disabled: action.disabled ?? false }} onPress={() => { if (!action.disabled) action.onPress(); }}
-      style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}><Icon size={24} /></Pressable>;
+      style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}><Icon size={24} color={action.tintColor} /></Pressable>;
   })}</View>;
   return position === 'left' ? { headerLeft: render } : { headerRight: render };
 }

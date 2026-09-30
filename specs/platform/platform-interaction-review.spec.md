@@ -1753,7 +1753,10 @@ justified by this reset.
 Browse List places its Filters action in the native trailing navigation actions,
 immediately after Add when creation is permitted. A viewer without creation access
 still has Filters. Use the native filter symbol, an accessible applied-filter count
-and a native badge when filters are active. Remove the duplicate content-row filter
+and a native badge when filters are active. The filter icon uses the appearance-aware
+blue action tint while applied filters exist and the normal text tint when cleared.
+Draft changes do not change the header until applied; search text alone does not
+activate the filter tint. Keep other header actions unchanged. Remove the duplicate content-row filter
 button; retain result summaries and applied-filter removal chips. The existing
 filter task, apply/cancel behavior, search and fixed List/Map selector are unchanged.
 Map retains its existing actions because List filters do not filter the map.

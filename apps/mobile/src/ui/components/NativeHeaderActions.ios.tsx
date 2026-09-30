@@ -4,6 +4,7 @@ export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[]
   const items: NonNullable<HeaderOptions['unstable_headerRightItems']> = () => actions.map(action => ({
     type: 'button', width: 44, label: action.label, accessibilityLabel: action.label,
     icon: { type: 'sfSymbol', name: symbols[action.kind] },
+    ...(action.tintColor ? { tintColor: action.tintColor } : {}),
     sharesBackground: action.emphasis !== 'primary', disabled: action.disabled ?? false,
     ...(action.emphasis === 'primary' ? { variant: 'prominent' as const } : {}),
     ...(action.badgeCount && action.badgeCount > 0 ? { badge: { value: action.badgeCount > 99 ? '99+' : action.badgeCount } } : {}),

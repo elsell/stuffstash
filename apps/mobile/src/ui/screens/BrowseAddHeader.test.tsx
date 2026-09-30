@@ -1,4 +1,5 @@
 import React from 'react';
+import { lightPalette } from '../theme/tokens';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
@@ -45,11 +46,14 @@ it('places Filters after Add, updates its count and keeps it available without c
   try {
     await render(0, true, 'old');
     expect(h.all().filter(n => n.props.accessibilityRole === 'button').map(n => n.props.accessibilityLabel)).toEqual(['Add an asset', 'Filters']);
+    expect(h.all().find(n => n.type === 'ListFilterIcon')!.props.color).toBe(lightPalette.text);
     const retained = h.byLabel('Filters')!.props.onPress;
     await render(2, false, 'current');
     expect(h.byLabel('Add an asset')).toBeUndefined();
     expect(h.byLabel('Filters, 2 applied')).toBeDefined();
+    expect(h.all().find(n => n.type === 'ListFilterIcon')!.props.color).toBe(lightPalette.action);
     await h.run(retained); expect(calls).toEqual(['current']);
-    await render(0, false, 'clear'); expect(h.byLabel('Filters')).toBeDefined();
+    await render(0, false, 'clear');
+    expect(h.all().find(n => n.type === 'ListFilterIcon')!.props.color).toBe(lightPalette.text);
   } finally { await h.unmount(); resetNavigation(); }
 });
