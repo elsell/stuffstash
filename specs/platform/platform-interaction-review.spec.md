@@ -1762,8 +1762,9 @@ Retain notice lifetime, action ownership, announcement and Android placement.
 Verify actual touch dismissal with a retained notice and a foreground sheet,
 sheet-local notices, actions, dismissal/return and iPad sheet positioning.
 
-Remove the redundant keyboard Done toolbar reported by the user once its owner is
-identified. Keep the down-chevron dismissal control the user wants, keyboard
-avoidance/measurement, Return behavior and interactive scroll dismissal. The
-current application accessory contains a chevron, not Done; do not remove it based
-on an assumed match. Keyboard removal awaits identification of the affected screen.
+The screenshot confirms Add item's local `KeyboardDismissBar` is the redundant
+Done toolbar. Remove that component, its keyboard-event subscriptions/state and
+styles. Preserve the shared down-chevron accessory, keyboard avoidance, Return
+behavior and interactive scroll dismissal. No draft values or submission semantics
+change. Details titles must support native long-press text selection and Copy,
+including long names, without entering Edit or changing the item.

@@ -217,6 +217,35 @@ final class FixtureAuditTests: XCTestCase {
   func testNoticeKeepsPushedNavigationReachable() { verifyNoticePlacement("push") }
   func testNoticeKeepsSheetNavigationReachable() { verifyNoticePlacement("sheet") }
 
+  func testAddHasOneKeyboardDismissalControl() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); waitForKeyboard()
+    name.typeText("Keep this draft")
+    XCTAssertFalse(app.buttons["Done"].exists)
+    XCTAssertEqual(app.buttons.matching(identifier: "Dismiss keyboard").count, 1)
+    capture("add-single-keyboard-chevron")
+    app.buttons["Dismiss keyboard"].tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Keep this draft")
+  }
+
+  func testDetailNameOffersNativeCopy() {
+    guard openFixtureURL("audit-edit-journey") else { return }
+    let title = app.staticTexts["Camping tent"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10)); title.press(forDuration: 1.2)
+    let copy = app.menuItems["Copy"].firstMatch
+    let copyButton = app.buttons["Copy"].firstMatch
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      copy.exists || copyButton.exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+    capture("detail-name-native-copy")
+    if copy.exists { copy.tap() } else { copyButton.tap() }
+    XCTAssertTrue(app.navigationBars["Details"].exists)
+    XCTAssertTrue(title.exists)
+  }
+
   func testRetainedNoticeDismissesAboveForegroundSheet() {
     guard openFixtureURL("audit-notice") else { return }
     let open = app.buttons["Show notice then open sheet"].firstMatch
@@ -232,7 +261,9 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(open.waitForExistence(timeout: 5)); XCTAssertTrue(open.isHittable)
     XCTAssertFalse(dismiss.exists)
     open.tap(); XCTAssertTrue(close.waitForExistence(timeout: 5))
-    XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.swipeUp()
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    let start = dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+    start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -60)))
     XCTAssertTrue(dismiss.waitForNonExistence(timeout: 5))
     capture("foreground-sheet-after-notice-dismissal")
   }

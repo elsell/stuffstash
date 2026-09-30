@@ -168,6 +168,8 @@ jobs:
             notice-sheet-dismissal)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddHasOneKeyboardDismissalControl'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testDetailNameOffersNativeCopy'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testRetainedNoticeDismissesAboveForegroundSheet'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNoticeKeepsSheetNavigationReachable'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNoticeKeepsPushedNavigationReachable'

@@ -1,7 +1,7 @@
 import { typeInNativeSearch } from '../../test-support/NativeSearchDriver';
 import { AddDestinationTaskProvider, useAddDestinationTask } from '../navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider, useAssetTagSelectionTask } from '../navigation/AssetTagSelectionTask';
-import { scrollCommandsForTest } from '../../test-support/react-native';
+import { emitKeyboardEventForTest, scrollCommandsForTest } from '../../test-support/react-native';
 import { setNativeHeaderHeight } from '../../test-support/react-navigation-elements';
 import React from 'react';
 import { NavigationOptionFeedback } from '../../test-support/NavigationOptionFeedback';
@@ -42,6 +42,8 @@ it('removes the numbered draft photo while preserving the remaining selection an
       photoSelectionQuery={new PhotoSelectionQuery({ selectFromLibrary: async () => [], captureFromCamera: async () => [] })} /></AppFeedbackProvider></MobileServerStateProvider>);
     await h.run(() => new Promise(resolve => setTimeout(resolve, 30)));
     expect(h.byLabel('Asset name')).toBeDefined();
+    await h.run(() => emitKeyboardEventForTest('keyboardWillShow', { endCoordinates: { height: 300 } }));
+    expect(h.byText('Done')).toBeUndefined();
     expect(h.byLabel('Remove photo 1')).toBeDefined();
     expect(h.byLabel('Remove photo 2')).toBeDefined();
     await h.press(h.byLabel('Remove photo 1'));
