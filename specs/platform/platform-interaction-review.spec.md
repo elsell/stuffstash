@@ -1759,3 +1759,24 @@ filter task, apply/cancel behavior, search and fixed List/Map selector are uncha
 Map retains its existing actions because List filters do not filter the map.
 Verify current callbacks and count updates after applying/clearing filters, loss of
 Add permission, navigation return and the native header at iPhone/iPad widths.
+
+### Notice dismissal above sheets and system keyboard dismissal — September 30, 2026
+
+All visible notices, including saved/Undo feedback, must accept tap and upward-swipe
+dismissal while a native sheet is foregrounded. On iOS use the existing
+react-native-screens window overlay with nonmodal accessibility and pass-through
+outside the banner. Place one focused presenter in window coordinates below the
+application safe top edge, centered and bounded to 720 points on wider windows.
+This transient banner may cover navigation chrome until dismissed; it must never
+be untappable behind a sheet. It deliberately does not follow a sheet's frame,
+which can move without a React layout event.
+Retain notice lifetime, action ownership, announcement and Android placement.
+Verify actual touch dismissal with a retained notice and a foreground sheet,
+sheet-local notices, actions, dismissal/return and iPad sheet positioning.
+
+The screenshot confirms Add item's local `KeyboardDismissBar` is the redundant
+Done toolbar. Remove that component, its keyboard-event subscriptions/state and
+styles. Preserve the shared down-chevron accessory, keyboard avoidance, Return
+behavior and interactive scroll dismissal. No draft values or submission semantics
+change. Details titles must support native long-press text selection and Copy,
+including long names, without entering Edit or changing the item.

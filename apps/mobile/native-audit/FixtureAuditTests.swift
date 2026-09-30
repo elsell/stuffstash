@@ -199,48 +199,12 @@ final class FixtureAuditTests: XCTestCase {
     let notice = app.descendants(matching: .any).matching(identifier: "app-notice-container").firstMatch
     let content = app.descendants(matching: .any).matching(identifier: "notice-placement-content").firstMatch
     XCTAssertTrue(notice.exists); XCTAssertTrue(content.exists)
-    var lastGeometry = "No geometry sample evaluated"
-    func descendants(_ snapshot: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
-      [snapshot] + snapshot.children.flatMap { descendants($0) }
-    }
-    func belowNavigation(_ control: any XCUIElementSnapshot, bounds: CGRect, headerBottom: CGFloat) -> Bool {
-      let rect = control.frame
-      let contained = rect.width > 0 && rect.height > 0 && rect.minY >= max(bounds.minY, headerBottom) &&
-        rect.maxY <= bounds.maxY && rect.minX >= bounds.minX && rect.maxX <= bounds.maxX
-      lastGeometry += "\n\(control.identifier.isEmpty ? control.label : control.identifier): \(rect), contained=\(contained)"
-      return contained
-    }
-    let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-      do {
-        let snapshot = try self.app.snapshot()
-        let elements = descendants(snapshot)
-        guard let contentSnapshot = elements.first(where: { $0.identifier == "notice-placement-content" }),
-              let headerSnapshot = elements.first(where: { $0.elementType == .navigationBar && $0.identifier == "Notice placement" }),
-              let noticeSnapshot = elements.first(where: { $0.identifier == "app-notice-container" }),
-              let dismissSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Audit notice. A retained action must leave navigation reachable. Dismiss message" }),
-              let actionSnapshot = elements.first(where: { $0.elementType == .button && $0.label == "Complete audit action" }) else {
-          lastGeometry = "Required notice geometry element missing from snapshot"
-          return false
-        }
-        let bounds = contentSnapshot.frame.intersection(snapshot.frame)
-        lastGeometry = "app=\(snapshot.frame), content=\(contentSnapshot.frame), header=\(headerSnapshot.frame)"
-        guard !bounds.isEmpty, !bounds.isNull, !headerSnapshot.frame.isEmpty else { return false }
-        let results = [noticeSnapshot, dismissSnapshot, actionSnapshot].map {
-          belowNavigation($0, bounds: bounds, headerBottom: headerSnapshot.frame.maxY)
-        }
-        return results.allSatisfy { $0 }
-      } catch {
-        lastGeometry = "Could not capture notice geometry: \(error)"
-        return false
-      }
-    }, object: nil)
-    let placement = XCTWaiter.wait(for: [settled], timeout: 5)
-    capture("notice-\(presentation)-placement")
-    XCTAssertEqual(placement, .completed, "Full notice must fit in the active screen below navigation. Last sample: \(lastGeometry)")
+    XCTAssertTrue(app.frame.contains(notice.frame))
+    XCTAssertLessThanOrEqual(notice.frame.width, 720)
+    capture("notice-\(presentation)-window-placement")
     XCTAssertTrue(dismiss.isHittable); XCTAssertTrue(action.isHittable)
     let back = presentation == "sheet" ? header.buttons["Close notice fixture"] : header.buttons["BackButton"].firstMatch
-    XCTAssertTrue(back.isHittable)
-    action.tap()
+    action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     XCTAssertTrue(app.staticTexts["Notice actions completed: 1"].waitForExistence(timeout: 5))
     app.buttons["Show placement notice"].tap()
     XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); dismiss.tap()
@@ -252,6 +216,57 @@ final class FixtureAuditTests: XCTestCase {
 
   func testNoticeKeepsPushedNavigationReachable() { verifyNoticePlacement("push") }
   func testNoticeKeepsSheetNavigationReachable() { verifyNoticePlacement("sheet") }
+
+  func testAddHasOneKeyboardDismissalControl() {
+    guard openFixtureURL("audit-add-header") else { return }
+    let name = app.textFields["Asset name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 10)); name.tap(); waitForKeyboard()
+    name.typeText("Keep this draft")
+    XCTAssertFalse(app.buttons["Done"].exists)
+    XCTAssertEqual(app.buttons.matching(identifier: "Dismiss keyboard").count, 1)
+    capture("add-single-keyboard-chevron")
+    app.buttons["Dismiss keyboard"].tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Keep this draft")
+  }
+
+  func testDetailNameOffersNativeCopy() {
+    guard openFixtureURL("audit-edit-journey") else { return }
+    let title = app.staticTexts["Camping tent"].firstMatch
+    XCTAssertTrue(title.waitForExistence(timeout: 10)); title.press(forDuration: 1.2)
+    let copy = app.menuItems["Copy"].firstMatch
+    let copyButton = app.buttons["Copy"].firstMatch
+    let available = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+      copy.exists || copyButton.exists
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+    capture("detail-name-native-copy")
+    if copy.exists { copy.tap() } else { copyButton.tap() }
+    XCTAssertTrue(app.navigationBars["Details"].exists)
+    XCTAssertTrue(title.exists)
+  }
+
+  func testRetainedNoticeDismissesAboveForegroundSheet() {
+    guard openFixtureURL("audit-notice") else { return }
+    let open = app.buttons["Show notice then open sheet"].firstMatch
+    XCTAssertTrue(open.waitForExistence(timeout: 5)); open.tap()
+    let close = app.buttons["Close notice fixture"].firstMatch
+    XCTAssertTrue(close.waitForExistence(timeout: 5))
+    let dismiss = app.buttons["Asset saved. Dismiss message"].firstMatch
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5)); XCTAssertTrue(dismiss.isHittable)
+    capture("retained-notice-over-sheet")
+    dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    XCTAssertTrue(dismiss.waitForNonExistence(timeout: 5))
+    XCTAssertTrue(close.isHittable); close.tap()
+    XCTAssertTrue(open.waitForExistence(timeout: 5)); XCTAssertTrue(open.isHittable)
+    XCTAssertFalse(dismiss.exists)
+    open.tap(); XCTAssertTrue(close.waitForExistence(timeout: 5))
+    XCTAssertTrue(dismiss.waitForExistence(timeout: 5))
+    let start = dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+    start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -60)))
+    XCTAssertTrue(dismiss.waitForNonExistence(timeout: 5))
+    capture("foreground-sheet-after-notice-dismissal")
+  }
 
   private func verifyProviderEditor(_ kind: String, discard: Bool = false) {
     let open = app.buttons["Audit Provider \(kind)"]

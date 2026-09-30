@@ -179,7 +179,6 @@ function ScopedAddAssetScreen({
     change();
   }
 
-  const [keyboardBar, setKeyboardBar] = useState({ isVisible: false, keyboardHeight: 0 });
 
   const candidates = useParentCandidates(isParentMenuOpen ? parentSearchQuery : parentQuery, parentLookupQuery, isParentMenuOpen);
   const parentMatches = createdParent && createdParent.title === parentSearchQuery
@@ -259,34 +258,6 @@ function ScopedAddAssetScreen({
     showDetails,
     title
   ]);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const changeEvent = Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSubscription = Keyboard.addListener(showEvent, (event) => {
-      setKeyboardBar({
-        isVisible: true,
-        keyboardHeight: event.endCoordinates.height
-      });
-    });
-    const changeSubscription = Keyboard.addListener(changeEvent, (event) => {
-      setKeyboardBar({
-        isVisible: true,
-        keyboardHeight: event.endCoordinates.height
-      });
-    });
-    const hideSubscription = Keyboard.addListener(hideEvent, () => {
-      setKeyboardBar({ isVisible: false, keyboardHeight: 0 });
-    });
-
-    return () => {
-      showSubscription.remove();
-      changeSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   async function saveAsset(): Promise<void> {
     if (hasUnstagedTag || !expirationValid || !beginDraftOperation('save')) return;
@@ -708,10 +679,6 @@ function ScopedAddAssetScreen({
           </View>
         ) : null}
       </ScrollView>
-      <KeyboardDismissBar
-        keyboardHeight={keyboardBar.keyboardHeight}
-        visible={keyboardBar.isVisible}
-      />
       <DraftPhotoPreviewModal
         disabled={draftBusy}
         currentIndex={previewPhotoIndex}
@@ -1033,33 +1000,6 @@ function uniqueStrings(values: readonly string[]): readonly string[] {
   return Array.from(new Set(values));
 }
 
-function KeyboardDismissBar({
-  keyboardHeight,
-  visible
-}: {
-  readonly keyboardHeight: number;
-  readonly visible: boolean;
-}) {
-  const styles = createStyles(useAppearanceAwarePalette());
-  if (Platform.OS !== 'ios' || !visible) {
-    return null;
-  }
-
-  return (
-    <View style={[styles.keyboardDismissBar, { bottom: keyboardHeight }]}>
-      <Pressable
-        accessibilityLabel="Dismiss keyboard"
-        accessibilityRole="button"
-        hitSlop={8}
-        onPress={Keyboard.dismiss}
-        style={styles.keyboardDoneButton}
-      >
-        <Text style={styles.keyboardDoneText}>Done</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 function normalizeParentName(value: string): string {
   return value.trim().toLocaleLowerCase();
 }
@@ -1158,30 +1098,6 @@ function createStyles(colors: MobileColorPalette) {
   textArea: {
     minHeight: 96,
     textAlignVertical: 'top'
-  },
-  keyboardDismissBar: {
-    alignItems: 'flex-end',
-    backgroundColor: colors.surface,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    justifyContent: 'center',
-    left: 0,
-    minHeight: 44,
-    paddingHorizontal: spacing.md,
-    position: 'absolute',
-    right: 0
-  },
-  keyboardDoneButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 36,
-    minWidth: 56
-  },
-  keyboardDoneText: {
-    color: colors.action,
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 0
   },
   sectionTitle: {
     color: colors.text,
