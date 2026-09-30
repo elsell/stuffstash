@@ -14,6 +14,10 @@ export function NoticePlacementFixture() {
   return <>
     {pathname.endsWith('audit-notice-sheet') ? <Stack.Screen options={closeOptions} /> : null}
     <ScrollView testID="notice-placement-content" contentInsetAdjustmentBehavior="automatic">
+    {!pathname.endsWith('audit-notice-sheet') ? <Button title="Show notice then open sheet" onPress={() => {
+      feedback.showNotice({ tone: 'success', title: 'Asset saved', action: { label: 'Undo audit save', onPress: () => setActions(current => current + 1) } });
+      router.push('/audit-notice-sheet');
+    }} /> : null}
     <Text>Notice actions completed: {actions}</Text>
     <Button title="Show placement notice" onPress={() => feedback.showNotice({
       tone: 'info', title: 'Audit notice', message: 'A retained action must leave navigation reachable',

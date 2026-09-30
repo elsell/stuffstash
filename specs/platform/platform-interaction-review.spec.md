@@ -1747,3 +1747,23 @@ this review; they cannot approve the composition by themselves. Implement a
 connected family at a time, inspect its consumers, and ship only after source,
 critic and native workflow checks. No new package or universal button restyle is
 justified by this reset.
+
+### Notice dismissal above sheets and system keyboard dismissal — September 30, 2026
+
+All visible notices, including saved/Undo feedback, must accept tap and upward-swipe
+dismissal while a native sheet is foregrounded. On iOS use the existing
+react-native-screens window overlay with nonmodal accessibility and pass-through
+outside the banner. Place one focused presenter in window coordinates below the
+application safe top edge, centered and bounded to 720 points on wider windows.
+This transient banner may cover navigation chrome until dismissed; it must never
+be untappable behind a sheet. It deliberately does not follow a sheet's frame,
+which can move without a React layout event.
+Retain notice lifetime, action ownership, announcement and Android placement.
+Verify actual touch dismissal with a retained notice and a foreground sheet,
+sheet-local notices, actions, dismissal/return and iPad sheet positioning.
+
+Remove the redundant keyboard Done toolbar reported by the user once its owner is
+identified. Keep the down-chevron dismissal control the user wants, keyboard
+avoidance/measurement, Return behavior and interactive scroll dismissal. The
+current application accessory contains a chevron, not Done; do not remove it based
+on an assumed match. Keyboard removal awaits identification of the affected screen.
