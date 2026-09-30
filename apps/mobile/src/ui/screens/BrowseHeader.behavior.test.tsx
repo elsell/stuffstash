@@ -11,7 +11,7 @@ async function mount(overrides: Partial<Parameters<typeof SearchHeader>[0]> = {}
   await h.render(<SearchHeader isLoading={false} lifecycleState="active" checkoutState="any"
     palette={lightPalette} resultCount={0} scope="all" selectedTagIds={[]}
     sort="updated_desc" submittedQuery="" onClearFilters={() => {}}
-    onRemoveFilter={() => {}} onToggleFilters={() => {}} {...overrides} />);
+    onRemoveFilter={() => {}} {...overrides} />);
 }
 
 it('keeps search and creation out of content headers and leaves the view switcher to navigation', async () => {
@@ -28,12 +28,9 @@ it('describes submitted results without claiming a total', async () => {
   expect(h.allText()).toContain('20 shown for “mug” · relevance');
 });
 
-it('opens filters from the compact control with an applied count', async () => {
-  let opened = 0;
-  await mount({ scope: 'containers', lifecycleState: 'archived', onToggleFilters: () => { opened++; } });
-  await h.press(h.byLabel('Filters, 2 applied'));
-  expect(opened).toBe(1);
-  expect(h.byLabel('Sort, Recently changed')).toBeUndefined();
+it('keeps the filter command out of scrolling content', async () => {
+  await mount({ scope: 'containers', lifecycleState: 'archived' });
+  expect(h.byLabel('Filters, 2 applied')).toBeUndefined();
 });
 
 it('removes a named filter and clears multiple applied refinements', async () => {

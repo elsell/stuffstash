@@ -70,3 +70,13 @@ it('keeps invalid save commands disabled and exposes a leading close command', (
   if (close?.type === 'button') close.onPress?.();
   expect(calls).toEqual(['close']);
 });
+
+it('exposes native filter symbol and applied count in the navigation action', () => {
+  const item = nativeHeaderActionOptions([{ kind: 'filter', label: 'Filters, 2 applied', badgeCount: 2, onPress: () => {} }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ accessibilityLabel: 'Filters, 2 applied', icon: { type: 'sfSymbol', name: 'line.3.horizontal.decrease' }, badge: { value: 2 } });
+});
+
+it('passes per-action tint through to the native bar item', () => {
+  const item = nativeHeaderActionOptions([{ kind: 'filter', label: 'Filters', tintColor: '#0066CC', onPress: () => {} }]).unstable_headerRightItems?.({ canGoBack: false })[0];
+  expect(item).toMatchObject({ tintColor: '#0066CC' });
+});

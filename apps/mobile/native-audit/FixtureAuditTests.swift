@@ -1064,6 +1064,23 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Browse availability: available"].waitForExistence(timeout: 5))
     capture("browse-applied")
   }
+  func testBrowseFilterLivesBesideAddInNativeHeader() {
+    guard openFixtureURL("search?canAdd=true") else { return }
+    let bar = app.navigationBars.firstMatch
+    let add = bar.buttons["Add an asset"].firstMatch
+    let filter = bar.buttons["Filters"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 10)); XCTAssertTrue(filter.waitForExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable); XCTAssertTrue(filter.isHittable)
+    XCTAssertTrue(bar.frame.contains(filter.frame))
+    XCTAssertLessThanOrEqual(add.frame.maxX, filter.frame.minX)
+    XCTAssertEqual(app.buttons.matching(identifier: "Filters").count, 1)
+    capture("browse-native-add-filter-header")
+    filter.tap()
+    XCTAssertTrue(app.buttons["Cancel filters"].waitForExistence(timeout: 5))
+    app.buttons["Cancel filters"].tap()
+    XCTAssertTrue(filter.waitForExistence(timeout: 5)); XCTAssertTrue(filter.isHittable)
+  }
+
   func testBrowseFiltersDetailAndBackPreserveContext() {
     guard openFixtureURL("search?query=Camping") else { return }
     let filters = app.buttons["Filters"].firstMatch
@@ -1076,6 +1093,8 @@ final class FixtureAuditTests: XCTestCase {
     app.buttons["Show results"].firstMatch.tap()
     let summary = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "18 shown", "Camping")).firstMatch
     XCTAssertTrue(summary.waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars.buttons["Filters, 1 applied"].firstMatch.isHittable)
+    capture("browse-native-filter-active-tint")
     let list = app.scrollViews.firstMatch
     let cards = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open asset Camping item"))
     let initial = app.buttons[cards.firstMatch.label].firstMatch
@@ -1099,6 +1118,11 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(restored.frame.minY, position, accuracy: 3)
     XCTAssertTrue(summary.exists)
     capture("connected-browse-filter-detail-return")
+    app.navigationBars.buttons["Filters, 1 applied"].firstMatch.tap()
+    app.buttons["Reset all filters"].tap()
+    app.buttons["Show results"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars.buttons["Filters"].firstMatch.waitForExistence(timeout: 5))
+    capture("browse-native-filter-cleared-tint")
   }
 
   func testBrowseExpirationDetailAndBackPreserveContext() {

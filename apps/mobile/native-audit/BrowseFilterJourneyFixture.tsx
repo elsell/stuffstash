@@ -102,7 +102,7 @@ export function BrowseFilterJourneyHome() {
 export function BrowseFilterJourneySearch() {
   const journey = useJourney(); const params = useLocalSearchParams();
   return <JourneyState><SearchScreen {...parseBrowseRouteParams(params)} searchAssetsQuery={journey.search} inventoryMapQuery={journey.map}
-    inventoryContextQuery={{ execute: async () => ({ inventoryName: 'Camping inventory', canAdd: false }) }} inventoryAssetTagsQuery={journey.tags}
+    inventoryContextQuery={{ execute: async () => ({ inventoryName: 'Camping inventory', canAdd: params.canAdd === 'true' }) }} inventoryAssetTagsQuery={journey.tags}
     locationsQuery={{ execute: async () => ({ inventoryName: 'Camping inventory', tenantName: 'Home', canAdd: false, locations: [] }) }} /></JourneyState>;
 }
 export function BrowseFilterJourneyFilters() {

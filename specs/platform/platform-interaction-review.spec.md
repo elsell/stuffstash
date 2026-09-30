@@ -1748,6 +1748,21 @@ connected family at a time, inspect its consumers, and ship only after source,
 critic and native workflow checks. No new package or universal button restyle is
 justified by this reset.
 
+### Browse filter header placement — September 27, 2026
+
+Browse List places its Filters action in the native trailing navigation actions,
+immediately after Add when creation is permitted. A viewer without creation access
+still has Filters. Use the native filter symbol, an accessible applied-filter count
+and a native badge when filters are active. The filter icon uses the appearance-aware
+blue action tint while applied filters exist and the normal text tint when cleared.
+Draft changes do not change the header until applied; search text alone does not
+activate the filter tint. Keep other header actions unchanged. Remove the duplicate content-row filter
+button; retain result summaries and applied-filter removal chips. The existing
+filter task, apply/cancel behavior, search and fixed List/Map selector are unchanged.
+Map retains its existing actions because List filters do not filter the map.
+Verify current callbacks and count updates after applying/clearing filters, loss of
+Add permission, navigation return and the native header at iPhone/iPad widths.
+
 ### Notice dismissal above sheets and system keyboard dismissal — September 30, 2026
 
 All visible notices, including saved/Undo feedback, must accept tap and upward-swipe

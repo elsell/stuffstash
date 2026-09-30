@@ -1,9 +1,10 @@
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
-const symbols = { notifications: 'bell', add: 'plus', account: 'person.crop.circle', close: 'xmark', back: 'chevron.backward', save: 'checkmark', settings: 'gearshape', 'mark-read': 'checkmark.message', compose: 'square.and.pencil' } as const;
+const symbols = { filter: 'line.3.horizontal.decrease', notifications: 'bell', add: 'plus', account: 'person.crop.circle', close: 'xmark', back: 'chevron.backward', save: 'checkmark', settings: 'gearshape', 'mark-read': 'checkmark.message', compose: 'square.and.pencil' } as const;
 export function nativeHeaderActionOptions(actions: readonly NativeHeaderAction[], position: 'left' | 'right' = 'right'): HeaderOptions {
   const items: NonNullable<HeaderOptions['unstable_headerRightItems']> = () => actions.map(action => ({
     type: 'button', width: 44, label: action.label, accessibilityLabel: action.label,
     icon: { type: 'sfSymbol', name: symbols[action.kind] },
+    ...(action.tintColor ? { tintColor: action.tintColor } : {}),
     sharesBackground: action.emphasis !== 'primary', disabled: action.disabled ?? false,
     ...(action.emphasis === 'primary' ? { variant: 'prominent' as const } : {}),
     ...(action.badgeCount && action.badgeCount > 0 ? { badge: { value: action.badgeCount > 99 ? '99+' : action.badgeCount } } : {}),

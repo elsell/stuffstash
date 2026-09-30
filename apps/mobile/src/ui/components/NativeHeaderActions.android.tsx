@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import type { HeaderOptions, NativeHeaderAction } from './NativeHeaderActions.types';
 const icons = {
+  filter: require('./android-icons/filter-list.xml'),
   notifications: require('./android-icons/header-notifications.xml'),
   add: require('./android-icons/header-add.xml'),
   account: require('./android-icons/header-account.xml'),
@@ -18,7 +19,7 @@ const icons = {
 function Actions({ actions }: { readonly actions: readonly NativeHeaderAction[] }) {
   const palette = useAppearanceAwarePalette();
   return <View style={{ flexDirection: 'row' }}>{actions.map(action => {
-    const icon = <Icon source={icons[action.kind]} size={24} tint={action.disabled ? palette.textMuted : palette.action} contentDescription={action.label} />;
+    const icon = <Icon source={icons[action.kind]} size={24} tint={action.disabled ? palette.textMuted : (action.tintColor ?? palette.action)} contentDescription={action.label} />;
     return (
     <Host key={action.kind} style={{ width: 48, height: 48 }}>
       <IconButton enabled={!action.disabled} onClick={() => { if (!action.disabled) action.onPress(); }}>

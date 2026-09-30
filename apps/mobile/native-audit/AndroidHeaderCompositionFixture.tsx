@@ -1,3 +1,4 @@
+import { BrowseAddHeader } from '../src/ui/screens/BrowseAddHeader';
 import { Stack } from 'expo-router';
 import { BrowseSurfaceHeader } from '../src/ui/screens/BrowseSurfaceHeader';
 import { useState } from 'react';
@@ -23,11 +24,11 @@ export function AndroidHeaderCompositionFixture() {
       refreshing={false} hasMore={false} onMode={setMode} onSearch={() => {}}
       onFilters={() => setFilters(value => value + 1)} onRefresh={() => {}}
       onMore={() => {}} onOpenAsset={() => {}} />
-      : <View style={{ paddingHorizontal: 20 }}><SearchHeader isLoading={false}
+      : <View style={{ paddingHorizontal: 20 }}><BrowseAddHeader canAdd={false} onAdd={() => {}} onFilters={() => setFilters(value => value + 1)} /><SearchHeader isLoading={false}
         lifecycleState="active" checkoutState="any" palette={palette} resultCount={20}
         scope="all" selectedTagIds={[]} sort="updated_desc"
         submittedQuery="" onClearFilters={() => {}}
-        onRemoveFilter={() => {}} onToggleFilters={() => setFilters(value => value + 1)} />
+        onRemoveFilter={() => {}} />
         <Text style={{ color: palette.text }}>Selected surface: {surface}</Text>
       </View>}
   </View>;
