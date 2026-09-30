@@ -80,3 +80,20 @@ it('reserves the iOS form-sheet header and follows its measured height', async (
     expect(layer()?.props.style).toContainEqual({ top: 10 });
   } finally { await h.unmount(); Platform.OS = previousPlatform; setNativeHeaderHeight(144); }
 });
+
+it('dismisses a retained saved notice after handing it to the foreground sheet', async () => {
+  const h = new MobileRenderHarness(); let feedback!: AppFeedbackContextValue; let undos = 0;
+  function Source() { feedback = useAppFeedback(); return null; }
+  const render = (sheet: boolean) => h.render(<AppFeedbackProvider noticePlacement="screen"><Source />
+    <AppNoticeScreenLayout route={{ name: sheet ? 'edit' : 'details' }} options={{ presentation: sheet ? 'formSheet' : undefined }}><Source /></AppNoticeScreenLayout>
+  </AppFeedbackProvider>);
+  try {
+    await render(false);
+    await h.run(() => feedback.showNotice({ tone: 'success', title: 'Asset saved', action: { label: 'Undo', onPress: () => { undos++; } } }));
+    await render(true);
+    const dismiss = h.all().find(node => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.endsWith('. Dismiss message'));
+    await h.press(dismiss);
+    expect(h.byText('Asset saved')).toBeUndefined();
+    expect(undos).toBe(0);
+  } finally { await h.unmount(); }
+});

@@ -1,3 +1,5 @@
+import { NoticeWindowContext } from './NoticeWindowContext';
+import { NoticeWindowOverlay } from './NoticeWindowOverlay';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, AlertButton, Animated, Platform, useWindowDimensions, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -109,6 +111,7 @@ export function AppFeedbackProvider({ children, scopeKey = 'app', noticePlacemen
   return (
     <AppFeedbackContext.Provider value={value}>
       <AppNoticeContext.Provider value={{ notice: activeNotice?.owner === noticeOwner ? activeNotice : null, placement: noticePlacement, dismiss: dismissNotice }}>
+      <NoticeWindowContext.Provider value={insets.top + spacing.sm}>
       {children}
       {activeNotice?.owner === noticeOwner ? <NoticeLifetime key={`lifetime-${activeNotice.id}`} notice={activeNotice} onDismiss={dismissNotice} /> : null}
       {noticePlacement === 'root' && activeNotice?.owner === noticeOwner ? (
@@ -119,6 +122,7 @@ export function AppFeedbackProvider({ children, scopeKey = 'app', noticePlacemen
           onDismiss={dismissNotice}
         />
       ) : null}
+      </NoticeWindowContext.Provider>
       </AppNoticeContext.Provider>
     </AppFeedbackContext.Provider>
   );
@@ -256,12 +260,12 @@ function AppNotice({
   }), [dismissWithAnimation, restorePosition, translateY]);
 
   return (
-    <View
+    <NoticeWindowOverlay>{windowTop => <View
       testID="app-notice-layer"
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
       pointerEvents="box-none"
-      style={[styles.noticeLayer, { top: topOffset }]}
+      style={[styles.noticeLayer, { top: windowTop ?? topOffset }]}
     >
       <Animated.View
         testID="app-notice-container"
@@ -310,7 +314,7 @@ function AppNotice({
           </Pressable>
         ) : null}
       </Animated.View>
-    </View>
+    </View>}</NoticeWindowOverlay>
   );
 }
 

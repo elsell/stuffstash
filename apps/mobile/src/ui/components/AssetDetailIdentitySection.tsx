@@ -37,7 +37,7 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
   return (
     <View style={styles.section}>
       <View style={styles.identity}>
-        <Text accessibilityRole="header" style={styles.title}>{identity.title}</Text>
+        <Text selectable accessibilityRole="header" style={styles.title}>{identity.title}</Text>
         <Text style={styles.classification}>{identity.classificationLabel}</Text>
       </View>
 

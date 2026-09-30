@@ -129,6 +129,7 @@ describe('AssetDetailView', () => {
     const placementIndex = text.findIndex((value) => value.includes('Garage'));
 
     expect(collectText(identityHeading)).toContain('Family tent');
+    expect((identityHeading as { props: { selectable?: boolean } }).props.selectable).toBe(true);
     expect(text.indexOf('Family tent')).toBeLessThan(placementIndex);
     expect(placementIndex).toBeLessThan(text.indexOf('Sleeps four.'));
   });
