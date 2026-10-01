@@ -26,94 +26,34 @@ func (a App) WithRealtimeVoiceProviders(stt ports.SpeechToTextProvider, model po
 	return a
 }
 
+func (a App) realtimeSessionService() agentmodelapp.RealtimeSessionService {
+	return agentmodelapp.NewRealtimeSessionService(agentmodelapp.RealtimeSessionDependencies{
+		Workflows: a.conversationWorkflowService, Providers: a.realtimeVoiceProviders,
+		Access: a.inventoryService(), Authorizer: a.authorizer, Sessions: a.realtimeSessions,
+		Clock: a.clock, IDs: a.ids, ContextBytes: a.conversationContextBytes,
+	})
+}
+
 func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceSessionInput) (RealtimeVoiceSession, error) {
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
-	if input.Source != RealtimeVoiceSourceMobile && input.Source != RealtimeVoiceSourceWebText {
-		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
-	}
-	if input.InputAudio.MimeType != "audio/mp4" || input.InputAudio.Channels != 1 {
-		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
-	}
-	if err := a.ensureRealtimeVoiceAccess(ctx, input.Principal, input.TenantID, input.InventoryID); err != nil {
-		return RealtimeVoiceSession{}, err
-	}
-	selectedWorkflow, err := a.conversationWorkflowService.Selected(ctx, input.Principal, input.TenantID)
-	if err != nil {
-		return RealtimeVoiceSession{}, err
-	}
-	providers, err := a.realtimeVoiceProviders.ResolveRealtimeVoiceProviders(ctx, ports.RealtimeVoiceProviderResolutionInput{
-		SkipDefaultLanguage: selectedWorkflow != nil && !selectedWorkflow.NeedsDefaultLanguage(),
-		TenantID:            input.TenantID,
-		InventoryID:         input.InventoryID,
-		Principal:           input.Principal,
+	prepared, err := a.realtimeSessionService().Start(ctx, agentmodelapp.RealtimeSessionStartInput{
+		Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, Source: input.Source, InputAudio: input.InputAudio,
 	})
 	if err != nil {
 		return RealtimeVoiceSession{}, err
 	}
-
-	var workflow *agentmodelapp.PreparedWorkflow
-	if selectedWorkflow != nil {
-		workflowResolver, _ := a.realtimeVoiceProviders.(ports.WorkflowLanguageProviderResolver)
-		workflow, err = selectedWorkflow.Prepare(ctx, providers, workflowResolver)
-		if err != nil {
-			return RealtimeVoiceSession{}, err
-		}
-		providers.ConversationModel = workflow.ConversationModel()
-		providers.LanguageInferenceProfileID = workflow.ConversationProfileID()
-		providers.LanguagePromptTemplate = ""
-	}
-	if providers.SpeechToText == nil || providers.TextToSpeech == nil || providers.ConversationModel == nil {
-		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
-	}
-
-	sessionID := a.newRealtimeVoiceID()
-	if strings.TrimSpace(sessionID) == "" {
-		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
-	}
-	session := RealtimeVoiceSession{
-		conversationModel:          providers.ConversationModel,
-		ConversationContinuity:     input.ConversationContinuity,
-		ID:                         sessionID,
-		TenantID:                   input.TenantID,
-		InventoryID:                input.InventoryID,
-		Principal:                  input.Principal,
-		Source:                     input.Source,
-		InputAudio:                 input.InputAudio,
-		OutputAudio:                input.OutputAudio,
-		SpeechToTextProfileID:      providers.SpeechToTextProfileID,
-		LanguageInferenceProfileID: providers.LanguageInferenceProfileID,
-		TextToSpeechProfileID:      providers.TextToSpeechProfileID,
-		LanguagePromptTemplate:     providers.LanguagePromptTemplate,
-		DeveloperDiagnostics:       input.DeveloperDiagnostics,
-		speechToText:               providers.SpeechToText,
-		textToSpeech:               providers.TextToSpeech,
-	}
-	if workflow != nil {
-		session.WorkflowRevisionID = string(workflow.Revision().Snapshot().ID)
-		session.workflow = workflow
-	}
-	if session.conversationModel != nil {
-		session.conversationMemory = agentmodelapp.NewConversationMemory(realtimeConversationScope(session), a.conversationContextBytes)
-	}
-	now := a.clock.Now()
-	if err := a.realtimeSessions.SaveRealtimeSession(ctx, ports.RealtimeSessionRecord{
-		ID:                         session.ID,
-		TenantID:                   session.TenantID,
-		InventoryID:                session.InventoryID,
-		PrincipalID:                session.Principal.ID,
-		Source:                     session.Source,
-		State:                      ports.RealtimeSessionStateStarted,
-		SpeechToTextProfileID:      session.SpeechToTextProfileID,
-		LanguageInferenceProfileID: session.LanguageInferenceProfileID,
-		TextToSpeechProfileID:      session.TextToSpeechProfileID,
-		StartedAt:                  now,
-		LastActivityAt:             now,
-	}); err != nil {
-		return RealtimeVoiceSession{}, err
-	}
-	return session, nil
+	providers := prepared.Providers
+	return RealtimeVoiceSession{
+		ID: prepared.ID, TenantID: input.TenantID, InventoryID: input.InventoryID, Principal: input.Principal,
+		Source: input.Source, InputAudio: input.InputAudio, OutputAudio: input.OutputAudio,
+		ConversationContinuity: input.ConversationContinuity, DeveloperDiagnostics: input.DeveloperDiagnostics,
+		SpeechToTextProfileID: providers.SpeechToTextProfileID, LanguageInferenceProfileID: providers.LanguageInferenceProfileID,
+		TextToSpeechProfileID: providers.TextToSpeechProfileID, LanguagePromptTemplate: providers.LanguagePromptTemplate,
+		WorkflowRevisionID: prepared.WorkflowRevisionID, workflow: prepared.Workflow, conversationMemory: prepared.Memory,
+		conversationModel: providers.ConversationModel, speechToText: providers.SpeechToText, textToSpeech: providers.TextToSpeech,
+	}, nil
 }
 
 func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
@@ -190,11 +130,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 }
 
 func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	if err := a.authorizer.CheckTenant(ctx, principal, ports.TenantPermissionView, tenantID); err != nil {
-		a.recordAuthorizationDenied(ctx, principal, tenantID)
-		return err
-	}
-	return a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionView)
+	return a.realtimeSessionService().EnsureAccess(ctx, principal, tenantID, inventoryID)
 }
 
 func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
@@ -270,14 +206,7 @@ func (a App) MarkRealtimeVoiceSessionCancelled(ctx context.Context, session Real
 }
 
 func (a App) markRealtimeVoiceSessionOutcome(ctx context.Context, session RealtimeVoiceSession, state ports.RealtimeSessionState, safeFailureCode string) error {
-	if a.realtimeSessions == nil || strings.TrimSpace(session.ID) == "" {
-		return apperrors.ErrInvalidInput
-	}
-	return a.realtimeSessions.UpdateRealtimeSessionOutcome(ctx, session.TenantID, session.InventoryID, session.ID, ports.RealtimeSessionOutcome{
-		State:           state,
-		At:              a.clock.Now(),
-		SafeFailureCode: strings.TrimSpace(safeFailureCode),
-	})
+	return a.realtimeSessionService().UpdateOutcome(ctx, session.TenantID, session.InventoryID, session.ID, state, safeFailureCode)
 }
 
 func (a App) newRealtimeVoiceID() string {

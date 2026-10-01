@@ -188,3 +188,12 @@ root application package may retain forwarding functions and type aliases while
 session orchestration moves separately. Preserve wire schemas, validation bounds,
 unknown-argument rejection and existing adversarial tool/approval tests unchanged;
 this extraction does not alter grants or bypass application commands.
+
+Realtime session startup and terminal outcome persistence belong to agent-model
+application services. Inject the workflow selector, provider resolver, scoped
+inventory-access port, authorizer, repository, clock and IDs. Root session types
+may retain private transport-compatible runtime fields during migration; map
+prepared domain state without reselecting providers or recreating scoped memory.
+Tenant denial observability and active-inventory authorization precede provider
+resolution. Persist the started record only after successful preparation. Keep
+existing start/access/outcome tests and all realtime boundary tests unchanged.

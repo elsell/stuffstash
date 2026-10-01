@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	RealtimeVoiceSourceMobile  = "mobile_voice"
-	RealtimeVoiceSourceWebText = "web_text"
+	RealtimeVoiceSourceMobile  = agentmodelapp.RealtimeVoiceSourceMobile
+	RealtimeVoiceSourceWebText = agentmodelapp.RealtimeVoiceSourceWebText
 
 	RealtimeVoiceEventTranscriptFinal             = "transcript.final"
 	RealtimeVoiceEventAgentProgress               = "agent.progress"
