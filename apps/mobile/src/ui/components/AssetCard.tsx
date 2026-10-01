@@ -1,8 +1,9 @@
+import {MeasuredImage as Image} from './MeasuredImage';
 import { t } from '../../presentation/localization';
 import { AssetExpirationStatus } from './AssetExpirationStatus';
 import { formatAssetExpiration, expirationStatusLabel } from '../presentation/ExpirationPresentation';
 import { createRef } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type {
   AssetCardViewModel,
@@ -30,6 +31,7 @@ function useAssetCardStyles(paletteOverride?: MobileColorPalette) {
 }
 
 type AssetCardProps = {
+  readonly surface?: 'home' | 'list' | 'detail';
   readonly asset: AssetCardViewModel;
   readonly density?: 'standard' | 'compact' | 'row';
   readonly reserveMediaSpace?: boolean;
@@ -50,6 +52,7 @@ type AssetCardProps = {
 };
 
 export function AssetCard({
+  surface = 'list',
   asset,
   density = 'standard',
   reserveMediaSpace = false,
@@ -87,7 +90,7 @@ export function AssetCard({
       >
         <View style={[styles.imageFrame, photoFree ? styles.photoFreeFrame : styles.squareMediaFrame, isRow ? styles.rowImageFrame : undefined]}>
           {asset.photo ? (
-            <Image
+            <Image surface={surface} variant={asset.photo.variant}
               accessibilityIgnoresInvertColors
               source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
               style={styles.assetImage}

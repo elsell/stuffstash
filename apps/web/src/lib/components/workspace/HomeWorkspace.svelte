@@ -250,7 +250,7 @@
           {#each recentAssets as asset}
             <article class="recent-card" data-recent-card={asset.id}>
               <Button.Root href={recentAssetHref(asset)} variant="ghost" class="recent-card-open" data-recent-card-link onclick={(event) => openRecentAsset(event, asset)}>
-                <div data-recent-card-media><AssetThumb {asset} size="lg" /></div>
+                <div data-recent-card-media><AssetThumb surface="home" {asset} size="lg" /></div>
                 <span class="recent-card-copy" data-recent-card-copy>
                   <strong data-recent-card-title>{asset.title}</strong>
                   <AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
@@ -278,7 +278,7 @@
           {#each checkedOutAssets as asset}
             <div class="asset-row">
               <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
-                <AssetThumb {asset} />
+                <AssetThumb surface="home" {asset} />
                 <span class="asset-row-main">
                   <strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                   <small>{asset.description || assetKindLabel(asset.kind)}</small>
@@ -319,7 +319,7 @@
         {#each archivedAssets as asset}
           <div class="asset-row">
             <Button.Root href={browseAssetHref(asset)} variant="ghost" class="asset-row-open" onclick={(event) => openAsset(event, asset)}>
-              <AssetThumb {asset} />
+              <AssetThumb surface="home" {asset} />
               <span class="asset-row-main">
                 <strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} />
                 <small>{asset.description || assetKindLabel(asset.kind)}</small>
@@ -373,7 +373,7 @@
           aria-label={t('web.HomeWorkspace.openLocation', { title: String(summary.location.title) })}
           onclick={(event) => openLocation(event, summary.location)}
         >
-          <AssetThumb asset={summary.location} size="lg" />
+          <AssetThumb surface="home" asset={summary.location} size="lg" />
           <span>
             <strong>{summary.location.title}</strong>
             <small>{visibleAssetCountLabel(summary.assetCount)}</small>

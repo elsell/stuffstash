@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/stuffstash/stuff-stash/internal/app/agentmodel/tools"
 	"strings"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
@@ -11,7 +12,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-const realtimeConversationProposeTool = "propose_inventory_change"
+const realtimeConversationProposeTool = tools.ConversationProposeTool
 
 type conversationProposalArguments struct {
 	Summary  string                   `json:"summary"`

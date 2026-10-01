@@ -1,8 +1,8 @@
+import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   Alert,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -65,7 +65,7 @@ export function VoicePlanPhotoDraftStrip({
         >
           {photos.map((photo, index) => (
             <View key={photo.id} style={styles.planPhotoPreviewFrame}>
-              <Image
+              <Image surface="upload" variant="original"
                 accessibilityIgnoresInvertColors
                 source={{ uri: photo.uri }}
                 style={styles.planPhotoPreview}

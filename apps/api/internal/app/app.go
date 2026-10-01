@@ -12,6 +12,7 @@ import (
 	assetapp "github.com/stuffstash/stuff-stash/internal/app/assets"
 	customfieldapp "github.com/stuffstash/stuff-stash/internal/app/customfields"
 	exportapp "github.com/stuffstash/stuff-stash/internal/app/dataportability"
+	mediaapp "github.com/stuffstash/stuff-stash/internal/app/media"
 	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
@@ -380,24 +381,15 @@ func normalizeImportJobTimeout(timeout time.Duration) time.Duration {
 }
 
 func normalizePrimaryThumbnailWarmLimit(limit int) int {
-	if limit <= 0 {
-		return defaultPrimarySmallThumbnailWarmLimit
-	}
-	return limit
+	return mediaapp.NormalizePrimaryThumbnailWarmLimit(limit)
 }
 
 func normalizePrimaryThumbnailWarmConcurrency(concurrency int) int {
-	if concurrency <= 0 {
-		return defaultPrimarySmallThumbnailWarmConcurrency
-	}
-	return concurrency
+	return mediaapp.NormalizePrimaryThumbnailWarmConcurrency(concurrency)
 }
 
 func normalizePrimaryThumbnailWarmTimeout(timeout time.Duration) time.Duration {
-	if timeout <= 0 {
-		return defaultPrimarySmallThumbnailWarmTimeout
-	}
-	return timeout
+	return mediaapp.NormalizePrimaryThumbnailWarmTimeout(timeout)
 }
 
 func normalizeRealtimeVoiceToolCallTimeout(timeout time.Duration) time.Duration {

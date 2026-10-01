@@ -39,7 +39,7 @@ func TestCreateImportJobPreviewReportsAssetAndAttachmentSourceLinkDuplicates(t *
 	}, nil); err != nil {
 		t.Fatalf("seed existing asset: %v", err)
 	}
-	sourceIdentity := importSourceIdentity{sourceType: importplan.SourceLegacyHomebox, sourceInstanceKey: "https://homebox.example.test"}
+	sourceIdentity := importSourceIdentity{SourceType: importplan.SourceLegacyHomebox, SourceInstanceKey: "https://homebox.example.test"}
 	for _, input := range []importImportedResourceInput{
 		{
 			TenantID:         tenant.ID("tenant-one"),
@@ -154,7 +154,7 @@ func TestCreateImportJobPreviewReportsCSVAttachmentSourceLinkDuplicates(t *testi
 		TenantID:         tenant.ID("tenant-one"),
 		InventoryID:      inventory.InventoryID("inventory-one"),
 		JobID:            importjob.ID("previous-job"),
-		SourceIdentity:   importSourceIdentity{sourceType: importplan.SourceLegacyHomeboxCSV, sourceInstanceKey: fingerprint},
+		SourceIdentity:   importSourceIdentity{SourceType: importplan.SourceLegacyHomeboxCSV, SourceInstanceKey: fingerprint},
 		SourceEntityType: ports.ImportSourceEntityAttachment,
 		SourceEntityID:   "attachment:source:drill",
 		ResourceType:     ports.ImportResourceAttachment,

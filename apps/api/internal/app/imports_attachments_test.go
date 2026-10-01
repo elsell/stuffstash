@@ -173,7 +173,7 @@ func TestExecuteImportJobSkipsAttachmentWithExistingSourceLinkAcrossJobs(t *test
 	if attachmentResource.ResourceID != attachments[0].ID.String() {
 		t.Fatalf("expected import resource to point at persisted attachment %q, got %+v", attachments[0].ID, attachmentResource)
 	}
-	sourceIdentity := importSourceIdentity{sourceType: importplan.SourceLegacyHomebox, sourceInstanceKey: "https://homebox.example.test"}
+	sourceIdentity := importSourceIdentity{SourceType: importplan.SourceLegacyHomebox, SourceInstanceKey: "https://homebox.example.test"}
 	link, found, err := store.ImportSourceLinkByKey(ctx, importAttachmentSourceLinkKey(tenant.ID("tenant-one"), inventory.InventoryID("inventory-one"), sourceIdentity, source.plan.Attachments[0]))
 	if err != nil {
 		t.Fatalf("read attachment source link: %v", err)
@@ -619,7 +619,7 @@ func TestImportProgressCheckpointsDoNotOverwriteCancellationRequest(t *testing.T
 		JobID:       job.ID,
 	}, importjob.PhaseAssets, 1, 2, "Creating assets")
 	var cancelled importCancelledError
-	if !errors.As(err, &cancelled) || cancelled.mode != importjob.CancellationModeDiscardPartial {
+	if !errors.As(err, &cancelled) || cancelled.Mode != importjob.CancellationModeDiscardPartial {
 		t.Fatalf("expected progress checkpoint to observe cancellation request, got %v", err)
 	}
 	got := repository.jobs[job.ID]
@@ -651,7 +651,7 @@ func TestImportProgressCASPreservesCancellationWrittenDuringCheckpoint(t *testin
 		JobID:       job.ID,
 	}, importjob.PhaseAssets, 1, 2, "Creating assets")
 	var cancelled importCancelledError
-	if !errors.As(err, &cancelled) || cancelled.mode != importjob.CancellationModeDiscardPartial {
+	if !errors.As(err, &cancelled) || cancelled.Mode != importjob.CancellationModeDiscardPartial {
 		t.Fatalf("expected cancellation from raced progress update, got %v", err)
 	}
 	got := repository.jobs[job.ID]

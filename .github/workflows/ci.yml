@@ -202,8 +202,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install pinned browser
         run: pnpm --dir apps/web exec playwright install --with-deps chromium
-      - name: Exercise conversation settings
-        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts inventory-export.spec.ts expiration-workspace.spec.ts
+      - name: Exercise connected browser workflows
+        run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts inventory-export.spec.ts expiration-workspace.spec.ts image-telemetry.spec.ts
       - name: Exercise typed conversation in English, expanded text and RTL
         run: |
           for locale in en-US en-XA ar-XB; do

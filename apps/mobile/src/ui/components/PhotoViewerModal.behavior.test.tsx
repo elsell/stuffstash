@@ -13,6 +13,7 @@ it('keeps one presentation across pages and gives scrolling ownership to the sel
   let dismissals = 0;
   let scrollEnabled = true;
   const selections: number[] = [];
+  const attempts: number[] = [];
   function Modal({ children }: { children: React.ReactNode }) {
     useEffect(() => { presentations++; return () => { dismissals++; }; }, []);
     return <>{children}</>;
@@ -48,10 +49,13 @@ it('keeps one presentation across pages and gives scrolling ownership to the sel
   const Viewer = module.exports.default!;
   const h = new MobileRenderHarness();
   const images = [{ uri: 'first' }, { uri: 'second' }];
-  const render = (index: number, visible = true) => <Viewer images={images} imageIndex={index} visible={visible} onRequestClose={() => {}} />;
+  const render = (index: number, visible = true) => <Viewer images={images} imageIndex={index} visible={visible} onRequestClose={() => {}} onImageLoadStart={(page: number) => { attempts.push(page); return () => {}; }} />;
   try {
     await h.render(render(0));
     const first = h.allByType('NativeImage')[0];
+    first.props.onLoadAttempt();
+    h.allByType('NativeImage')[1].props.onLoadAttempt();
+    expect(attempts).toEqual([0, 1]);
     await h.run(() => first.props.onZoom(true));
     expect(scrollEnabled).toBe(false);
     await h.render(render(1));

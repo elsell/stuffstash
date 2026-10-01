@@ -15,17 +15,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type CreateCustomAssetTypeInput struct {
-	ExpirationEnabled bool
-	Principal         identity.Principal
-	Source            audit.Source
-	RequestID         string
-	TenantID          tenant.ID
-	InventoryID       inventory.InventoryID
-	Key               string
-	DisplayName       string
-	Description       string
-}
+type CreateCustomAssetTypeInput = ports.CreateCustomAssetTypeInput
 
 type ListCustomAssetTypesInput struct {
 	Principal      identity.Principal

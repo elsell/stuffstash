@@ -79,3 +79,140 @@ Empty app or package directories may contain a `.gitkeep` file until implementat
 - Tests must pass after moving code into the monorepo layout.
 - Docker builds must use the new API path.
 - Lefthook must continue to run Go formatting and tests from the new API path.
+
+## Inventory application ownership
+
+The `internal/app/inventories` package owns tenant/inventory creation, querying,
+lifecycle transitions, scoped access guards, and durable authorization-outbox
+processing. Separate typed inputs, commands, queries/cursors, tenant lifecycle,
+inventory lifecycle, access helpers, and outbox execution. Inject repository,
+unit-of-work, authorizer, audit, observer, ID, clock and configured paging/lease
+ports; do not import the root App or adapters. Shared audit construction and
+opaque cursor encoding continue through appsupport.
+
+The root App retains type aliases and forwarding methods for existing callers,
+including temporary forwarding access/outbox helpers used by contexts still being
+migrated. Construct the small inventory service from the App's already-normalized
+dependencies; do not create providers or default clocks on each operation. Preserve
+transactional writes, read auditing, scoped cursor validation, authorization error
+propagation, outbox claim/lease/dead-letter behavior and event names exactly.
+
+Existing creation/outbox, authorization-filtered pagination, lifecycle and HTTP
+adversarial tests remain the critical behavioral contract across this relocation.
+The refactor changes ownership only; it does not add an endpoint or permission.
+CI must compile and run those suites before this slice is accepted. Other root
+import/conversation/access behavior remains explicitly pending under G8.
+
+Inventory membership, effective access summaries, current-user tenant discovery,
+and invitation orchestration also belong to this package. Keep discovery, grants,
+invitation creation/link validation, invitation acceptance, invitation queries and
+invitation lifecycle in separate files. OIDC/session authentication remains outside
+this inventory use-case package. Preserve exact role/permission enumeration,
+fail-closed revocation, token comparison, email binding, expiration and invitation
+URL restrictions. Root invitation error symbols alias package-owned errors so
+errors.Is identity survives migration. Existing application and HTTP adversarial
+access/invitation tests cover these unchanged boundaries; do not replace them with
+structural or happy-path-only tests.
+
+Import preview, job queries, durable execution/recovery, source validation,
+credential handling, source links, progress and cleanup belong to an ImportService
+in dataportability. Cross-context asset/tag/custom-field/media commands enter
+through an ImportTargets port expressed in domain values, composed by the root
+application from its existing services. Preparation still precedes the existing
+atomic import unit-of-work writes; do not substitute non-atomic create calls.
+Preserve import request fingerprints, idempotency/source-link deduplication,
+bounded streaming, cancellation/discard semantics, vault lifetime, audit and safe
+error projection. Import errors retain identity through root aliases. Existing
+adversarial import HTTP and durability/recovery application tests remain required.
+
+Attachment validation sentinels shared by media commands and import error projection live in `internal/app/apperrors`; root compatibility names alias the same values so `errors.Is` behavior remains unchanged.
+
+Search orchestration belongs in `internal/app/search`: tenant visibility,
+authorized inventory intersection, query/filter validation, scoped cursors,
+repository queries, ancestor/photo projection, safe read audit and domain events.
+The root facade only composes that authorized read model with existing expiration
+and media services. Preserve the empty-authorized-scope short circuit; expose
+that internal scope to composition without adding it to transport responses.
+Shared lifecycle filter parsing belongs in application support, with existing
+asset callers retaining compatibility. Existing scoped search and adversarial
+HTTP tests remain the behavior contract for this extraction.
+
+Action-plan creation, bounded command parsing, approval edits, permission
+revalidation, atomic execution and photo metadata validation belong to a focused
+`ActionPlanService` in `internal/app/agentmodel`. Preparation of asset and
+customization mutations crosses typed preparation ports, not sibling application
+imports. These ports expose scoped command inputs and prepared domain/audit/undo
+records; existing asset/customization services implement them, retaining input
+aliases for compatibility. The action-plan repository still commits prepared
+mutations and plan transitions atomically. No model output bypasses preparation,
+approval, authorization, ownership or replay protection. Root APIs and review
+helper forwarding remain compatible while realtime-session orchestration is
+migrated separately. Existing adversarial approval/execution/rollback tests remain
+required; this move changes ownership, not executable commands or disclosures.
+
+Audit/history reads belong to `internal/app/audithistory`: tenant and inventory
+history, asset activity projection, cursor scoping, principal resolution and read
+audit emission. A typed inventory-read access port reuses inventory-owned existence
+and permission checks without importing that sibling application package. Keep
+read-only callers able to view activity while withholding undo affordances, retain
+tenant/inventory/asset/view cursor binding and preserve safe metadata projection.
+Root audit-record construction remains a shared-support compatibility helper for
+other pending migrations. Existing history and adversarial boundary tests are the
+acceptance contract; this extraction adds no new history fields or permissions.
+
+Asset and checkout undo/redo commands belong to the asset application service,
+next to mutation preparation and undo-record creation. Reuse its scoped access,
+custom-field validation and audit helpers. Preserve current snapshot checks,
+active-type assignment policy, optimistic conflicts, atomic repository application,
+error identities and post-commit events. Root Undo/Redo APIs remain forwarding
+facades; existing unauthorized, cross-scope, conflict and checkout tests remain
+required rather than replacing them with extraction-specific tests.
+
+Attachment creation, direct upload, scoped reads, lifecycle changes, model-image
+preparation and deletion-outbox orchestration belong to `internal/app/media`.
+Reuse the inventory-owned active-access port and shared audit/pagination support.
+The root facade injects the same normalized configuration, repositories, reader,
+image processor and shared thumbnail singleflight/admission state; it must not
+allocate per-request coordination state. Separate upload, query, lifecycle,
+validation, deletion and thumbnail responsibilities. Preserve import preparation,
+attachment ownership checks, byte/content validation, durable thumbnail jobs,
+blob-cleanup leases/retries and safe read audit semantics. Existing attachment,
+direct-upload, thumbnail/concurrency and adversarial transport tests remain the
+acceptance contract for this behavior-preserving move.
+
+### Conversation tool contract ownership
+
+The agent-model `tools` package owns conversational proposal schemas, bounded
+read-tool argument validation and structured response-artifact validation. The
+root application package may retain forwarding functions and type aliases while
+session orchestration moves separately. Preserve wire schemas, validation bounds,
+unknown-argument rejection and existing adversarial tool/approval tests unchanged;
+this extraction does not alter grants or bypass application commands.
+
+Realtime session startup and terminal outcome persistence belong to agent-model
+application services. Inject the workflow selector, provider resolver, scoped
+inventory-access port, authorizer, repository, clock and IDs. Root session types
+may retain private transport-compatible runtime fields during migration; map
+prepared domain state without reselecting providers or recreating scoped memory.
+Tenant denial observability and active-inventory authorization precede provider
+resolution. Persist the started record only after successful preparation. Keep
+existing start/access/outcome tests and all realtime boundary tests unchanged.
+
+Realtime response completion, speech delivery, final-response validation and safe
+error/diagnostic policy belong to `internal/app/agentmodel`. That package owns the
+shared realtime event and action-plan presentation contracts; root aliases preserve
+callers. Pass an explicit response-session value containing only completion inputs,
+and inject ID generation and terminal-outcome persistence. Preserve event order,
+silent replies, clarification/continuity completion rules, playable-chunk filtering,
+provider-stage error attribution and diagnostic redaction. Do not recreate session
+memory or change provider selection. Existing response, billing, diagnostics,
+silent-text and transport security tests remain the acceptance contract.
+
+Action-plan review projection belongs beside approval and execution in the
+agent-model action-plan service. Inject the existing scoped asset and custom-field
+repositories. Preserve caller authorization, tenant/inventory-scoped reads,
+application-authored change disclosures, active-definition labels, deterministic
+field ordering, expiration precision/clear state and dependent-parent references.
+Root realtime wrappers supply the decision scope; they must not reconstruct or
+change review content. Existing review, expiration and approval security tests
+remain the contract for this ownership change.

@@ -72,3 +72,77 @@ it('isolates source changes and survives effect replay in Strict Mode', async ()
     expect(load.loaded).toBe(true);
   } finally { await h.unmount(); }
 });
+
+it('measures active-page readiness, failure, retry and cancellation without recording prefetch', async () => {
+  const h = new MobileRenderHarness();
+  const outcomes: string[][] = [];
+  const start = () => { const result: string[] = []; outcomes.push(result); return (outcome: string) => result.push(outcome); };
+  const source = { uri: 'https://photo.invalid/measurement' };
+  let load!: ReturnType<typeof useImageLoad>;
+  function Probe({ active = true }: { active?: boolean }) { load = useImageLoad(source, start, active); return null; }
+  try {
+    await h.render(<Probe active={false} />);
+    expect(outcomes).toEqual([]);
+    await h.render(<Probe />);
+    expect(outcomes).toEqual([[]]);
+    await h.run(() => imageSizeRequestsForTest()[0].succeed(640, 480));
+    expect(outcomes).toEqual([[]]);
+    await h.run(() => load.onLoad());
+    expect(outcomes).toEqual([['success']]);
+    await h.run(() => load.retry());
+    await h.run(() => imageSizeRequestsForTest()[1].fail());
+    expect(outcomes).toEqual([['success'], ['failure']]);
+    const old = load;
+    await h.run(() => load.retry());
+    await h.render(<Probe active={false} />);
+    await h.run(() => old.onLoad());
+    expect(outcomes).toEqual([['success'], ['failure'], ['cancelled']]);
+    await h.render(<Probe />);
+    await h.unmount();
+    expect(outcomes).toEqual([['success'], ['failure'], ['cancelled'], ['cancelled']]);
+  } finally { await h.unmount(); }
+});
+
+it('keeps photo loading usable when measurement start or completion throws', async () => {
+  const h = new MobileRenderHarness();
+  const source = { uri: 'https://photo.invalid/observer-failure' };
+  let load!: ReturnType<typeof useImageLoad>;
+  function Probe({ throwsOnStart }: { throwsOnStart: boolean }) {
+    load = useImageLoad(source, () => { if (throwsOnStart) throw Error('start'); return () => { throw Error('finish'); }; });
+    return null;
+  }
+  try {
+    await h.render(<Probe throwsOnStart />);
+    await h.run(() => imageSizeRequestsForTest()[0].succeed(100, 100));
+    await h.run(() => load.onLoad());
+    expect(load.loaded).toBe(true);
+    await h.render(<Probe throwsOnStart={false} />);
+    await h.run(() => load.retry());
+    await h.run(() => imageSizeRequestsForTest()[1].succeed(100, 100));
+    await h.run(() => load.onLoad());
+    expect(load.loaded).toBe(true);
+  } finally { await h.unmount(); }
+});
+
+
+it('settles a revisited cached page immediately and cancels replaced credential sources', async () => {
+  const h = new MobileRenderHarness();
+  const outcomes: string[][] = [];
+  const start = () => { const values: string[] = []; outcomes.push(values); return (value: string) => values.push(value); };
+  const first = {uri: 'https://photo.invalid/private', headers: {Authorization: 'old'}};
+  const next = {uri: first.uri, headers: {Authorization: 'new'}};
+  let load!: ReturnType<typeof useImageLoad>;
+  function Probe({source, active = true}: {source: typeof first; active?: boolean}) {load = useImageLoad(source, start, active); return null;}
+  try {
+    await h.render(<Probe source={first} />);
+    const stale = load;
+    await h.render(<Probe source={next} />);
+    await h.run(() => stale.onLoad());
+    expect(outcomes).toEqual([['cancelled'], []]);
+    await h.run(() => imageSizeRequestsForTest()[1].succeed(100, 100));
+    await h.run(() => load.onLoad());
+    await h.render(<Probe source={next} active={false} />);
+    await h.render(<Probe source={next} />);
+    expect(outcomes).toEqual([['cancelled'], ['success'], ['success']]);
+  } finally {await h.unmount();}
+});

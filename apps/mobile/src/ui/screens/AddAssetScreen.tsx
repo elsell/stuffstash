@@ -1,3 +1,4 @@
+import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { SelectionRow } from '../components/SelectionRow';
 import { useAddDestinationPresentation } from '../navigation/AddDestinationTask';
@@ -23,7 +24,6 @@ import {
   AccessibilityInfo,
   ActivityIndicator,
   Alert,
-  Image,
   Keyboard,
   PanResponder,
   Platform,
@@ -870,7 +870,7 @@ function PhotoPreviewItem({
         }}
         style={[styles.photoPreview, isDragging ? styles.photoPreviewDragging : null]}
       >
-        <Image
+        <Image surface="upload" variant="original"
           accessibilityIgnoresInvertColors
           source={{ uri: photo.uri }}
           style={styles.photoPreviewImage}

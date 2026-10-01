@@ -160,7 +160,7 @@ export class StuffStashInventoryRepository
       this.observer.record('workspace.asset_primary_photo_load_failed', { assetId: asset.id });
       return null;
     }
-    return { id: asset.primaryPhotoId, assetId: asset.id, url: resource.url, alt: asset.title };
+    return { id: asset.primaryPhotoId, assetId: asset.id, url: resource.url, alt: asset.title, variant: 'small' };
   }
 
   async loadAttachmentThumbnail(asset: Asset, attachment: AssetAttachment): Promise<AssetAttachment> {
@@ -172,7 +172,7 @@ export class StuffStashInventoryRepository
       attachment.id,
       'small'
     );
-    return resource ? { ...attachment, thumbnailUrl: resource.url, thumbnailHeaders: resource.headers } : attachment;
+    return resource ? { ...attachment, thumbnailVariant: 'small', thumbnailUrl: resource.url, thumbnailHeaders: resource.headers } : attachment;
   }
 
   dispose(): void {
@@ -1132,7 +1132,7 @@ export class StuffStashInventoryRepository
       variant
     );
     return resource
-      ? { ...mapped, photo: { id: asset.primaryPhoto.id, assetId: asset.id, url: resource.url, alt: asset.title } }
+      ? { ...mapped, photo: { id: asset.primaryPhoto.id, assetId: asset.id, url: resource.url, alt: asset.title, variant } }
       : { ...mapped, photoUnavailable: true };
   }
 

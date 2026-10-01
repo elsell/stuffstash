@@ -1,8 +1,10 @@
+import type { PerformanceContext } from '../../application/observability/PerformanceObserver';
 import { t } from '../../presentation/localization';
 export type FullScreenPhotoViewerPhoto = {
   readonly id?: string;
   readonly label: string;
   readonly uri: string;
+  readonly variant?: PerformanceContext['variant'];
   readonly headers?: Readonly<Record<string, string>>;
   readonly metadataLabel?: string;
 };

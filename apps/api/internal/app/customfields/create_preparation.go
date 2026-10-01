@@ -2,18 +2,16 @@ package customfields
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/app/appsupport"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	"strconv"
 )
 
-type PreparedCustomFieldDefinition struct {
-	Item        customfield.Definition
-	AuditRecord audit.Record
-}
+type PreparedCustomFieldDefinition = ports.PreparedCustomFieldDefinition
 
 func (s Service) PrepareInventoryCustomFieldDefinition(ctx context.Context, input CreateCustomFieldDefinitionInput) (PreparedCustomFieldDefinition, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
@@ -111,10 +109,7 @@ func (s Service) RecordCustomFieldDefinitionCreated(ctx context.Context, input C
 
 }
 
-type PreparedCustomAssetType struct {
-	Item        customfield.AssetType
-	AuditRecord audit.Record
-}
+type PreparedCustomAssetType = ports.PreparedCustomAssetType
 
 func (s Service) PrepareInventoryCustomAssetType(ctx context.Context, input CreateCustomAssetTypeInput) (PreparedCustomAssetType, error) {
 	if err := s.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {

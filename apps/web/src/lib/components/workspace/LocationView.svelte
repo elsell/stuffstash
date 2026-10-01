@@ -72,7 +72,7 @@
 <section class="workspace-main location-view" aria-labelledby="location-title">
   <Button.Root href={locationBackHref(location)} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> {t('web.LocationView.back')}</Button.Root>
   <header class="location-detail-hero">
-    <AssetThumb asset={location} size="lg" />
+    <AssetThumb surface="detail" asset={location} size="lg" />
     <div class="location-identity">
       <span class="location-kind-label">{t('web.LocationView.location')}</span>
       <h1 id="location-title" data-workspace-add-result-focus tabindex="-1">{location.title}</h1>

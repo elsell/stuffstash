@@ -12,6 +12,7 @@ export type LocationBrowserItemViewModel = {
   readonly photoLabel: string;
   readonly hasPhoto: boolean;
   readonly photo?: {
+    readonly variant?: 'small' | 'medium' | 'large' | 'original';
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };

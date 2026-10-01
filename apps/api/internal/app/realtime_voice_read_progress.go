@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 
+	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -45,32 +46,12 @@ func realtimeVoiceToolCompletionStatus(result ports.AgentToolResult) string {
 	return "completed"
 }
 
-func emitRealtimeVoiceProgress(session RealtimeVoiceSession, status string, message string, emit RealtimeVoiceEventSink) error {
-	safeMessage := safeRealtimeVoiceProgressMessage(message)
-	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentProgress, SessionID: session.ID, Status: safeRealtimeVoiceProgressStatus(status), Message: safeMessage})
+func emitRealtimeVoiceProgress(session RealtimeVoiceSession, status, message string, emit RealtimeVoiceEventSink) error {
+	return agentmodelapp.EmitRealtimeVoiceProgress(session.ID, status, message, emit)
 }
-
 func safeRealtimeVoiceProgressMessage(message string) string {
-	if realtimeVoiceDiagnosticUnsafePhrasePattern.MatchString(message) {
-		return "Working safely."
-	}
-	safeMessage := safeRealtimeVoiceDiagnosticText(message, 160)
-	if safeMessage == "" {
-		return "Working safely."
-	}
-	return safeMessage
+	return agentmodelapp.SafeRealtimeVoiceProgressMessage(message)
 }
-
 func safeRealtimeVoiceProgressStatus(status string) string {
-	switch status {
-	case realtimeVoiceProgressUnderstanding,
-		realtimeVoiceProgressExploring,
-		realtimeVoiceProgressPlanning,
-		realtimeVoiceProgressReviewing,
-		realtimeVoiceProgressAnswering,
-		realtimeVoiceProgressRecovering:
-		return status
-	default:
-		return realtimeVoiceProgressRecovering
-	}
+	return agentmodelapp.SafeRealtimeVoiceProgressStatus(status)
 }

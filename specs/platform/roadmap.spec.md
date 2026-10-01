@@ -18,10 +18,10 @@ implementation-mirroring tests or weaken security coverage to meet a batch size.
 
 | Batch | Three gaps | State |
 | --- | --- | --- |
-| Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | PR #213; required checks passed, merge pending |
-| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | PR #214 ready for review: CI and native export share/cancel/cleanup passed at d8dd2c45 (run 36862474560); recipient saving remains V1 |
-| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Draft PR #215. G4/G5 implemented. G6 shared catalogs, client presentation migration and copy gate implemented. CI [36880111295](https://github.com/elsell/stuffstash/actions/runs/36880111295) passed at 7da1b82b. Expanded native Add/recovery run 36876189076 passed on iPhone 17/iPad mini at 3ba9fa2f; RTL-configured run 36880433939 passed at 7da1b82b, with recovery screenshots inspected on both devices. RTL screenshots do not establish mirrored native layout. Follow-up localizes variable-derived notices/accessibility labels and complete expiration/upload messages; Map focus uses element identity instead of English labels. Focused tests, both client typechecks and critic review pass. Remaining: residual copy classification/migration, native RTL layout acceptance and current-head CI. |
-| Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | Planned |
+| Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | Merged PR #213. |
+| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | Merged PR #214. CI and native export share/cancel/cleanup passed; recipient saving remains V1. Native run 36862474560 at d8dd2c45. |
+| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Merged PR #215. G4/G5 implemented; G6 catalogs, client copy migration and copy gate delivered. Native RTL Add/recovery passed on iPhone/iPad in run 36894135591; [inspected evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-localization.md). Remaining: residual copy migration and broader directional-layout coverage. |
+| Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | PR #216 delivers scoped image outcomes and browser decode/delivery verification, domain application extractions including response safety and action-plan review projection. Full CI 36899689933 passed at 045570f3; merge reconciliation receives its own CI. Remaining: realtime orchestration, native image measurements, and connected/physical acceptance. Unfinished connected OIDC test work is preserved outside this batch. |
 
 V1 includes authenticated browser journeys, representative connected native
 workflows, relevant assistive/adaptation and physical integration checks, and
@@ -32,6 +32,9 @@ a batching rule, not permission to replace missing implementation with scaffoldi
 
 ## Delivery and acceptance rules
 
+- Delivery is authorized: complete checks and review, merge, and publish one release
+  per frozen batch. Do not hold passing batches for separate merge permission or
+  completion of the full audit. The current PR #213–#216 catch-up ships together.
 - Freeze each PR's three gaps and critical workflow/regression checks. Unrelated
   existing findings remain tracked and do not gate a verified frozen release.
 - Preserve the user's normal-text priority: structure and stable navigation,

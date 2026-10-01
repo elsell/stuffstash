@@ -1,3 +1,4 @@
+import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
@@ -5,7 +6,6 @@ import { router } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -134,7 +134,7 @@ function LocationRow({ location }: { readonly location: LocationBrowserItemViewM
     >
       <View style={styles.locationImageFrame}>
         {location.photo ? (
-          <Image
+          <Image variant={location.photo.variant}
             accessibilityIgnoresInvertColors
             source={{ uri: location.photo.uri, headers: location.photo.headers }}
             style={styles.locationImage}

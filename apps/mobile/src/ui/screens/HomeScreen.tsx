@@ -203,7 +203,7 @@ function DashboardHeader({
       </View>
       <View style={styles.recentTicker}>
         {dashboard.recentAssets.slice(0, 3).map((asset) => (
-          <AssetCard
+          <AssetCard surface="home"
             asset={asset}
             density="row"
             key={asset.id}
@@ -233,7 +233,7 @@ function DashboardHeader({
           </View>
           <View style={styles.recentTicker}>
             {dashboard.checkedOutAssets.slice(0, 3).map((asset) => (
-              <AssetCard
+              <AssetCard surface="home"
                 asset={asset}
                 density="row"
                 footerAction={dashboard.canReturn ? {

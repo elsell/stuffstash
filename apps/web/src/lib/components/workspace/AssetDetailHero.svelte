@@ -7,6 +7,10 @@
 </script>
 
 <script lang="ts">
+  import {visibleImage} from '$lib/presentation/observability/visibleImage';
+  import {imageObserverContext} from '$lib/presentation/observability/imageObserverContext';
+  const imageObserver = imageObserverContext();
+
   import Image from '@lucide/svelte/icons/image';
   import Trash2 from '@lucide/svelte/icons/trash-2';
   import type { Snippet } from 'svelte';
@@ -54,7 +58,7 @@
   <div class="asset-photo-panel" aria-label={t('web.AssetDetailHero.assetPhotos')}>
     <div class="asset-hero-photo">
       {#if heroPhoto}
-        <img src={heroPhoto.url} alt={heroPhoto.alt} />
+        <img use:visibleImage={{source: heroPhoto.url, observer: imageObserver, surface: 'detail', variant: heroPhoto.variant ?? 'none'}} src={heroPhoto.url} alt={heroPhoto.alt} />
       {:else}
         <div class="asset-hero-fallback">
           <KindIcon kind={kind} />
@@ -96,7 +100,7 @@
             aria-pressed={photo.id === heroPhoto?.id}
             onclick={() => onSelectPhoto(photo.id)}
           >
-            <img src={photo.url} alt="" />
+            <img use:visibleImage={{source: photo.url, observer: imageObserver, surface: 'gallery', variant: photo.variant ?? 'none'}} src={photo.url} alt="" />
             {#if photo.isPrimary}
               <span>{t('web.AssetDetailHero.primary')}</span>
             {/if}

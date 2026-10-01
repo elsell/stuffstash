@@ -1,9 +1,9 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
+	inventoryapp "github.com/stuffstash/stuff-stash/internal/app/inventories"
 )
 
 var (
@@ -17,40 +17,18 @@ var (
 	// ErrInvalidInput is retained for existing application call sites that have
 	// not yet moved to the more precise validation/conflict/precondition vocabulary.
 	ErrInvalidInput                     = apperrors.ErrInvalidInput
-	ErrAttachmentFileNameInvalid        = fmt.Errorf("%w: invalid attachment file name", ErrInvalidInput)
-	ErrAttachmentContentTypeUnsupported = fmt.Errorf("%w: unsupported attachment file type", ErrInvalidInput)
-	ErrAttachmentContentMismatch        = fmt.Errorf("%w: attachment content type mismatch", ErrInvalidInput)
-	ErrAttachmentContentEmpty           = fmt.Errorf("%w: empty attachment content", ErrInvalidInput)
-	ErrAttachmentTooLarge               = fmt.Errorf("%w: attachment too large", ErrInvalidInput)
-	ErrInvitationInvalid                = fmt.Errorf("%w: invalid invitation", ErrNotFound)
-	ErrInvitationEmailMismatch          = fmt.Errorf("%w: invitation email mismatch", ErrUnauthorized)
+	ErrAttachmentFileNameInvalid        = apperrors.ErrAttachmentFileNameInvalid
+	ErrAttachmentContentTypeUnsupported = apperrors.ErrAttachmentContentTypeUnsupported
+	ErrAttachmentContentMismatch        = apperrors.ErrAttachmentContentMismatch
+	ErrAttachmentContentEmpty           = apperrors.ErrAttachmentContentEmpty
+	ErrAttachmentTooLarge               = apperrors.ErrAttachmentTooLarge
+	ErrInvitationInvalid                = inventoryapp.ErrInvitationInvalid
+	ErrInvitationEmailMismatch          = inventoryapp.ErrInvitationEmailMismatch
 )
 
-type ImportSourceInvalidInputError struct {
-	Detail string
-}
-
-func (e ImportSourceInvalidInputError) Error() string {
-	return e.Detail
-}
-
-func (e ImportSourceInvalidInputError) Unwrap() error {
-	return ErrInvalidInput
-}
+type ImportSourceInvalidInputError = dataportability.ImportSourceInvalidInputError
+type ImportSourceChangedAfterPreviewError = dataportability.ImportSourceChangedAfterPreviewError
 
 func NewImportSourceInvalidInputError(detail string) error {
-	if detail == "" {
-		detail = "Invalid request."
-	}
-	return ImportSourceInvalidInputError{Detail: detail}
-}
-
-type ImportSourceChangedAfterPreviewError struct{}
-
-func (ImportSourceChangedAfterPreviewError) Error() string {
-	return "Import source changed after preview. Preview the source again before starting the import."
-}
-
-func (ImportSourceChangedAfterPreviewError) Unwrap() error {
-	return ErrPrecondition
+	return dataportability.NewImportSourceInvalidInputError(detail)
 }

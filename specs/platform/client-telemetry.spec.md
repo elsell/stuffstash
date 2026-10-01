@@ -122,3 +122,50 @@ Shared delivery must support React Native's pinned AbortController implementatio
 which provides `aborted` and abort events but does not require newer methods such
 as `throwIfAborted` or custom abort reasons. Native transport tests use that real
 pinned implementation.
+
+## Image rendering integration
+
+Web image elements acquire the current session observer through Svelte context.
+Start one measurement when a rendered source is installed; finish once on load,
+error, source replacement or teardown (the last two are cancelled). Cached complete
+images settle from naturalWidth after listeners are installed. Repeated events
+and stale callbacks cannot complete another source's measurement. Observer failures
+are isolated from image rendering. No source URL or resource identity crosses the
+observer port. Measure DOM image loading/decoding separately from earlier blob
+fetches, which already have request telemetry; do not label these as complete
+network-to-screen latency. Native image consumers follow the same lifecycle using
+load-start/load/error callbacks and cancellation on replacement or unmount.
+
+Carry the requested thumbnail variant from the media adapter through the view
+model instead of inferring it from a URL or rendered pixel size. Unknown fixture
+or external variants use none. Home thumbnails identify home; other list/chooser
+rows identify list; detail hero, gallery rail, fullscreen and local upload previews
+identify their own surfaces. Static brand artwork and system icons are excluded.
+
+Native image measurement uses a dedicated observer context with a no-op default,
+provided by the authenticated composition. Source identity includes URI and request
+headers locally, so credential replacement cancels the prior attempt without
+exporting secrets. Native event handlers belong to one committed source generation;
+late events after replacement/unmount are ignored. A repeated load-start cancels
+the prior attempt and starts a new one. Cached load/error without load-start may
+record a zero-duration completion. User-supplied image event handlers still run.
+
+Fullscreen native measurement follows the viewer's actual image loading state:
+start when the active page begins waiting for dimensions/decode, succeed only
+when valid dimensions and the image load event are both present, and fail on
+lookup/decode failure. Inactive prefetched pages do not report visible latency.
+Leaving an unfinished page, replacing its source, retrying or dismissing the
+viewer cancels that attempt. Returning to a cached loaded page may settle
+immediately. Each attempt finishes once, and observer exceptions cannot affect
+paging, retry or dismissal. Extend the pinned viewer patch through an optional
+load-attempt callback; do not estimate readiness from selection changes.
+
+## Browser runtime acceptance
+
+A representative browser journey must capture actual production image-observer
+batches while navigating Home and asset Details. Use controlled API fixtures and
+explicit telemetry configuration, verify authenticated delivery and the exact
+measurement field allowlist, and retain bounded timing samples as a test artifact.
+Exercise real image decode success and malformed-image failure. Fixture results
+prove browser lifecycle/reporting integration, not production HTTP latency, real
+OIDC authentication, physical-device rendering or a population percentile.

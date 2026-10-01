@@ -65,6 +65,7 @@ export class ApiInventoryAssetPhotos {
       fileName: asset.primaryPhoto.fileName,
       contentType: asset.primaryPhoto.contentType,
       sizeBytes: asset.primaryPhoto.sizeBytes,
+      variant: 'small',
       uri: smallReference.uri,
       headers: smallReference.headers
     };
@@ -100,6 +101,9 @@ export class ApiInventoryAssetPhotos {
       fileName: asset.primaryPhoto.fileName,
       contentType: asset.primaryPhoto.contentType,
       sizeBytes: asset.primaryPhoto.sizeBytes,
+      variant: 'small',
+      heroVariant: 'medium',
+      viewerVariant: 'large',
       uri: smallReference.uri,
       heroUri: mediumReference.uri,
       heroHeaders: mediumReference.headers,
@@ -172,6 +176,9 @@ export class ApiInventoryAssetPhotos {
           fileName: attachment.fileName,
           contentType: attachment.contentType,
           sizeBytes: attachment.sizeBytes,
+          variant: 'small',
+          heroVariant: 'medium',
+          viewerVariant: 'large',
           uri: smallReference.uri,
           heroUri: mediumReference.uri,
           heroHeaders: mediumReference.headers,

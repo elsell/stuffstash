@@ -1,3 +1,4 @@
+import {MeasuredImage} from '../components/MeasuredImage';
 import { describe, expect, it, vi } from 'vitest';
 import { BrowsePlaceRow } from './BrowsePlaceRow';
 import { lightPalette } from '../theme/tokens';
@@ -67,7 +68,7 @@ describe('BrowsePlaceRow', () => {
       onPress: vi.fn()
     });
 
-    expect(findFirstByType(row, 'Image')?.props?.source).toEqual({
+    expect(findFirstByType(row, MeasuredImage)?.props?.source).toEqual({
       uri: 'https://photos.example/kitchen.jpg',
       headers: { Authorization: 'Bearer test' }
     });
