@@ -79,3 +79,26 @@ Empty app or package directories may contain a `.gitkeep` file until implementat
 - Tests must pass after moving code into the monorepo layout.
 - Docker builds must use the new API path.
 - Lefthook must continue to run Go formatting and tests from the new API path.
+
+## Inventory application ownership
+
+The `internal/app/inventories` package owns tenant/inventory creation, querying,
+lifecycle transitions, scoped access guards, and durable authorization-outbox
+processing. Separate typed inputs, commands, queries/cursors, tenant lifecycle,
+inventory lifecycle, access helpers, and outbox execution. Inject repository,
+unit-of-work, authorizer, audit, observer, ID, clock and configured paging/lease
+ports; do not import the root App or adapters. Shared audit construction and
+opaque cursor encoding continue through appsupport.
+
+The root App retains type aliases and forwarding methods for existing callers,
+including temporary forwarding access/outbox helpers used by contexts still being
+migrated. Construct the small inventory service from the App's already-normalized
+dependencies; do not create providers or default clocks on each operation. Preserve
+transactional writes, read auditing, scoped cursor validation, authorization error
+propagation, outbox claim/lease/dead-letter behavior and event names exactly.
+
+Existing creation/outbox, authorization-filtered pagination, lifecycle and HTTP
+adversarial tests remain the critical behavioral contract across this relocation.
+The refactor changes ownership only; it does not add an endpoint or permission.
+CI must compile and run those suites before this slice is accepted. Other root
+import/conversation/access behavior remains explicitly pending under G8.
