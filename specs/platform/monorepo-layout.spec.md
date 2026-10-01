@@ -149,3 +149,13 @@ approval, authorization, ownership or replay protection. Root APIs and review
 helper forwarding remain compatible while realtime-session orchestration is
 migrated separately. Existing adversarial approval/execution/rollback tests remain
 required; this move changes ownership, not executable commands or disclosures.
+
+Audit/history reads belong to `internal/app/audithistory`: tenant and inventory
+history, asset activity projection, cursor scoping, principal resolution and read
+audit emission. A typed inventory-read access port reuses inventory-owned existence
+and permission checks without importing that sibling application package. Keep
+read-only callers able to view activity while withholding undo affordances, retain
+tenant/inventory/asset/view cursor binding and preserve safe metadata projection.
+Root audit-record construction remains a shared-support compatibility helper for
+other pending migrations. Existing history and adversarial boundary tests are the
+acceptance contract; this extraction adds no new history fields or permissions.
