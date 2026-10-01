@@ -16,6 +16,7 @@ export default defineConfig({
       { find: /^expo-notifications$/, replacement: support('expo-notifications.ts') },
       { find: /^expo-image-picker$/, replacement: support('expo-image-picker.ts') },
       { find: /^expo-crypto$/, replacement: support('expo-crypto.ts') },
+      { find: /^expo-sharing$/, replacement: support('expo-sharing.ts') },
       { find: /^@react-native-community\/datetimepicker$/, replacement: support('native-date-picker.ts') },
       { find: /^expo-network$/, replacement: support('expo-network.ts') },
       { find: /^react-native-image-viewing$/, replacement: support('react-native-image-viewing.ts') },
