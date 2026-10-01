@@ -159,3 +159,11 @@ tenant/inventory/asset/view cursor binding and preserve safe metadata projection
 Root audit-record construction remains a shared-support compatibility helper for
 other pending migrations. Existing history and adversarial boundary tests are the
 acceptance contract; this extraction adds no new history fields or permissions.
+
+Asset and checkout undo/redo commands belong to the asset application service,
+next to mutation preparation and undo-record creation. Reuse its scoped access,
+custom-field validation and audit helpers. Preserve current snapshot checks,
+active-type assignment policy, optimistic conflicts, atomic repository application,
+error identities and post-commit events. Root Undo/Redo APIs remain forwarding
+facades; existing unauthorized, cross-scope, conflict and checkout tests remain
+required rather than replacing them with extraction-specific tests.
