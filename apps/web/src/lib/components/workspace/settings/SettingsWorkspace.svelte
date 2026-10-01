@@ -1,5 +1,9 @@
 <script lang="ts">
   import './settings-management.css';
+  import { inventoryExportContext } from '$lib/ports/inventoryExport';
+  import type { ExportInventory } from '$lib/application/exportInventory';
+  import InventoryExportAction from './InventoryExportAction.svelte';
+  const exportCommand = getContext<ExportInventory | undefined>(inventoryExportContext);
   import { notificationWorkspaceContext, type NotificationWorkspace } from '$lib/ports/notificationWorkspace';
   import NotificationSettings from './NotificationSettings.svelte';
   import { getContext } from 'svelte';
@@ -65,6 +69,11 @@
     <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> Settings</Button.Root>
     <header class="settings-management-heading"><p class="settings-eyebrow">{levelLabel}</p><h1 id="settings-level-title">{levelTitle}</h1>{#if inventory}<p>{inventory.name} belongs to {tenant.name}.</p>{:else}<p>Settings shared with this tenant’s inventories.</p>{/if}</header>
     <SettingsDestinationList label={`${levelTitle} settings`} destinations={route.settingsLevel === 'tenant' ? tenantSettingsDestinations(tenant) : inventorySettingsDestinations(inventory!)} {onNavigate} />
+    {#if route.settingsLevel === 'inventory' && inventory && exportCommand}
+      {#key JSON.stringify([principal.id, tenant.id, inventory.id])}
+        <InventoryExportAction command={exportCommand} scope={{ tenantId: tenant.id, inventoryId: inventory.id }} />
+      {/key}
+    {/if}
   </section>
 {:else}
   <div class="workspace-main settings-management settings-management-resource">

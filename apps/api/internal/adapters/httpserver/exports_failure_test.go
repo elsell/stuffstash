@@ -216,7 +216,7 @@ func TestExportIncludesArchivedTagsAssignmentsAndAttachmentMetadata(t *testing.T
 	if err := store.UpdateAssetTagLifecycle(ctx, tag, audit.Record{ID: "tag-archive"}); err != nil {
 		t.Fatal(err)
 	}
-	attachment := media.Attachment{ID: "photo", TenantID: "home", InventoryID: "main", AssetID: "asset-0001", StorageKey: "never-export", FileName: "manual.pdf", ContentType: "application/pdf", SizeBytes: 10, SHA256: strings.Repeat("a", 64), CreatedAt: time.Now(), LifecycleState: media.LifecycleStateArchived}
+	attachment := media.Attachment{ID: "photo", TenantID: "home", InventoryID: "main", AssetID: "asset-0001", StorageKey: "never-export", FileName: "manual.pdf", ContentType: "application/pdf", SizeBytes: 10, SHA256: media.SHA256(strings.Repeat("a", 64)), CreatedAt: time.Now(), LifecycleState: media.LifecycleStateArchived}
 	if err := store.SaveAttachment(ctx, attachment, audit.Record{ID: "photo-create"}, nil); err != nil {
 		t.Fatal(err)
 	}

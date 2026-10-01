@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { inventoryExportContext } from '$lib/ports/inventoryExport';
+  import type { ExportInventory } from '$lib/application/exportInventory';
   import { expirationWorkspaceContext, type ExpirationWorkspace, type ExpirationFilter } from '$lib/ports/expirationRepository';
   import ExpirationRefresh from './ExpirationRefresh.svelte';
   import NotificationBell from './NotificationBell.svelte';
@@ -103,7 +105,7 @@
 
   let {
     repository,
-    conversations,
+    exportCommand, conversations,
     notifications,
     expiration,
     observer = { record: () => {} },
@@ -112,6 +114,7 @@
     onSessionExpired = onSignOut
   }: {
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
+    exportCommand?: ExportInventory;
     conversations?: ConversationWorkspaceRepositories;
     notifications?: NotificationWorkspace;
     expiration?: ExpirationWorkspace;
@@ -122,6 +125,8 @@
   } = $props();
 
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the mounted authenticated workspace.
+  setContext(inventoryExportContext, exportCommand);
+  // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
   setContext(conversationWorkspaceContext, conversations);
   // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
   setContext(expirationWorkspaceContext, expiration ? { ...expiration, observer, positions: new Map(), cache: new Map(), revision: () => data } : undefined);
