@@ -33,5 +33,11 @@ protected-proposal close/reset, but location search's immediate assertion read
 and hierarchy show the full `missing` query and correct empty result. Replace the
 immediate assertion with the same bounded live-field observer used above; retain
 exact value equality and the existing timeout. No input replay, forced value or
-production behavior change is allowed to make this assertion pass. iPhone and the
-remaining post-search steps still need their own result.
+production behavior change is allowed to make this assertion pass. The iPad post-search steps remain unverified by this run.
+
+The iPhone job in the same run passed all three workflows. Inspected screenshots
+show the [selected Garage / Garage bin destination](iphone-expanded-selected-location.png)
+and the [preserved proposal after closing and returning](iphone-expanded-returned-proposal.png).
+Expanded app labels fit the visible proposal and its completion actions at normal
+text size; user-provided names remain unchanged. This is simulator fixture evidence,
+not connected voice, physical-device or full-app localization acceptance.
