@@ -44,3 +44,18 @@ Voice vocabulary projection and resolution now live in the agent-model applicati
 package. Source comparison verified identical bodies after explicit symbol changes.
 Existing isolation and expiration-capability tests passed in the CI run above.
 This completes that extraction; broader realtime orchestration remains tracked.
+
+## Connected export recovery
+
+CI [36912314042](https://github.com/elsell/stuffstash/actions/runs/36912314042)
+passed at `b6b07b1c`: real Dex sign-in, UI item creation, actual JSON/CSV downloads
+with item-content and CSV-header assertions, persisted `inventory.exported`
+history for both formats, and absent/other-principal access rejection. The test
+runs against migrated PostgreSQL and SpiceDB, without route interception.
+[Inspected export screen](browser-export.png) shows the download confirmation;
+the file-content and audit assertions, not the screenshot, prove exported data.
+
+The earlier HTTP500 was caused by the missing PostgreSQL audit-action constraint
+migration. PR #222 merged `39700a21`; main now requires the connected browser
+check. Release run36913294557 is separate delivery evidence and is still pending.
+This does not verify saving exports into a physical iOS receiving application.

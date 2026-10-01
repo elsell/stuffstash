@@ -44,9 +44,11 @@ a batching rule, not permission to replace missing implementation with scaffoldi
 PR #221 merged at `31f81eff` before its failing connected export check was required
 by GitHub. Its release run36911487216 was cancelled before image/tag publication.
 The connected run36910592292 exposed HTTP500: PostgreSQL rejected the new
-`inventory.exported` audit action. The follow-up adds migration59 and a domain-action
-migration guard. The connected job is now a required main check. Finish this same
-batch's delivery after corrected downloads and persisted audit history pass.
+`inventory.exported` audit action. PR #222 adds migration59 and a domain-action migration guard; merged `39700a21`.
+CI36912314042 passed at `b6b07b1c`, including actual JSON/CSV downloads, persisted
+export audit history, and other-principal rejection. The connected job is now a
+required main check. Release36913294557 is running for this completed batch.
+[Retained acceptance](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
 
 Remaining acceptance includes physical iOS export recipient saving (requested from
 user), broader connected native/adaptation workflows, and bounded performance
