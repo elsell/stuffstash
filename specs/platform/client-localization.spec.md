@@ -97,3 +97,8 @@ return. Expected accessibility labels come from the same reviewed catalog rather
 than a second translation implementation. Screenshots and element hierarchy are
 retained for visual inspection. RTL pseudotext evidence alone does not certify
 native navigation mirroring or physical assistive behavior.
+
+Settings and conversation-case validation use complete catalog messages, including
+required/optional character and UTF-8 byte limits. Invitation action labels,
+confirmations and accessible names localize independently of action IDs, status,
+URLs and permission decisions; email addresses remain verbatim parameters.

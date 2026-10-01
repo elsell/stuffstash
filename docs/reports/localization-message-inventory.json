@@ -6,10 +6,6 @@
       "candidates": 61
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
-      "candidates": 35
-    },
-    {
       "file": "apps/web/src/lib/adapters/memory/seededInventoryRepository.ts",
       "candidates": 31
     },
@@ -22,23 +18,15 @@
       "candidates": 24
     },
     {
-      "file": "apps/web/src/lib/application/caseDraftValidation.ts",
-      "candidates": 23
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
-      "candidates": 21
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceInvitationActions.ts",
-      "candidates": 17
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
       "candidates": 16
     },
     {
       "file": "apps/web/src/lib/components/workspace/InventoryAccessManager.svelte",
+      "candidates": 16
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
       "candidates": 16
     },
     {
@@ -62,22 +50,6 @@
       "candidates": 14
     },
     {
-      "file": "apps/mobile/src/application/assets/AssetCheckoutHistoryQuery.ts",
-      "candidates": 13
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
-      "candidates": 13
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/ProviderProfilesVoiceSetupPresentation.ts",
-      "candidates": 13
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceShellNavigation.ts",
-      "candidates": 13
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
       "candidates": 13
     },
@@ -87,10 +59,6 @@
     },
     {
       "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/application/settingsManagementNavigation.ts",
       "candidates": 12
     },
     {
@@ -107,14 +75,6 @@
     },
     {
       "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
-      "candidates": 11
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
-      "candidates": 11
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceCustomizationActions.ts",
       "candidates": 11
     },
     {
@@ -334,6 +294,10 @@
       "candidates": 5
     },
     {
+      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
+      "candidates": 5
+    },
+    {
       "file": "apps/web/src/lib/application/workspaceContextSwitching.ts",
       "candidates": 5
     },
@@ -383,6 +347,10 @@
     },
     {
       "file": "apps/mobile/src/application/sharing/InventorySharing.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
       "candidates": 4
     },
     {
@@ -802,6 +770,10 @@
       "candidates": 1
     },
     {
+      "file": "apps/mobile/src/application/assets/AssetCheckoutHistoryQuery.ts",
+      "candidates": 1
+    },
+    {
       "file": "apps/mobile/src/application/assets/AssetLifecycleCommand.ts",
       "candidates": 1
     },
@@ -923,6 +895,10 @@
     },
     {
       "file": "apps/mobile/src/ui/screens/AssetCheckoutHistorySheet.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
       "candidates": 1
     },
     {

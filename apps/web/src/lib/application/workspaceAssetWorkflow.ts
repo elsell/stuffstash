@@ -114,12 +114,12 @@ export async function createAssetWorkflow(
   } catch (caught) {
     if (createdAsset) {
       const selectedAsset = savedAsset ?? createdAsset;
-      const failure = caught instanceof Error ? caught.message : 'Action failed.';
+      const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
       return {
         data: dataWithTags(data, createdTags),
         saveResult: { saved: true },
         message: createAssetMessage(createdAsset, uploadResult, createdParent),
-        error: `Saved ${createdAsset.title}, but could not refresh the active view. ${failure}`,
+        error: t('web.workspaceAssetWorkflow.savedButCouldNotRefreshTheActiveView', { title: String(createdAsset.title), failure: String(failure) }),
         closeAdd: true,
         mode: selectedAsset.kind === 'location' ? 'location' : 'asset',
         selectedAsset,
@@ -130,11 +130,11 @@ export async function createAssetWorkflow(
       createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)
         ? { ...dataWithTags(data, createdTags), assets: [createdParent, ...data.assets] }
         : dataWithTags(data, createdTags);
-    const failure = caught instanceof Error ? caught.message : 'Action failed.';
+    const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
     return {
       data: nextData,
       saveResult: createdParent ? { saved: false, createdParentId: createdParent.id } : { saved: false },
-      error: createdParent ? `Created ${createdParent.title}, but could not save ${draft.title}. ${failure}` : failure,
+      error: createdParent ? t('web.workspaceAssetWorkflow.createdButCouldNotSave', { title: String(createdParent.title), title2: String(draft.title), failure: String(failure) }) : failure,
       closeAdd: false
     };
   }

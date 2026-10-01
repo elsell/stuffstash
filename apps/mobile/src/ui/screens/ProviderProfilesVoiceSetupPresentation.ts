@@ -81,15 +81,15 @@ export function voiceProviderSetupIssueLabels(readiness: string, recommendedActi
     case 'none':
       return readiness === 'ready' ? [] : voiceProviderSetupIssueLabelsForReadiness(readiness);
     case 'add_profile':
-      return ['Choose a provider profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAProviderProfileForThisSlot')];
     case 'choose_profile':
-      return ['Choose which profile this voice slot should use.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseWhichProfileThisVoiceSlotShouldUse')];
     case 'replace_credential':
-      return ['Add a credential for the selected profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.addACredentialForTheSelectedProfile')];
     case 'enable_profile':
-      return ['Enable the selected provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.enableTheSelectedProviderProfile')];
     case 'test_profile':
-      return ['Test the selected profile before using voice.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.testTheSelectedProfileBeforeUsingVoice')];
     default:
       return voiceProviderSetupIssueLabelsForReadiness(readiness);
   }
@@ -100,20 +100,20 @@ function voiceProviderSetupIssueLabelsForReadiness(readiness: string): readonly 
     case 'ready':
       return [];
     case 'missing':
-      return ['Choose a provider profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAProviderProfileForThisSlot')];
     case 'disabled':
-      return ['Enable the selected provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.enableTheSelectedProviderProfile')];
     case 'archived':
-      return ['Choose an active provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAnActiveProviderProfile')];
     case 'credential_missing':
-      return ['Add a credential for the selected profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.addACredentialForTheSelectedProfile')];
     case 'untested':
-      return ['Test the selected profile before using voice.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.testTheSelectedProfileBeforeUsingVoice')];
     case 'duplicate_candidates':
-      return ['Choose which ready profile this voice slot should use.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseWhichReadyProfileThisVoiceSlotShouldUse')];
     case 'invalid_selection':
-      return ['Choose a valid profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAValidProfileForThisSlot')];
     default:
-      return ['Review this voice provider slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.reviewThisVoiceProviderSlot')];
   }
 }

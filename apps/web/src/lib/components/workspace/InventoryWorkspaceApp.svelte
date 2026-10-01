@@ -339,7 +339,7 @@
       if (handleSessionExpired(caught)) {
         return;
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       if (rethrow) {
         throw new Error(error);
       }
@@ -350,11 +350,11 @@
 
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
     if (!selectedInventory) {
-      error = 'Create an inventory before adding assets.';
+      error = t('web.InventoryWorkspaceApp.createAnInventoryBeforeAddingAssets');
       return { saved: false };
     }
     if (!createAssetAllowed) {
-      error = 'You do not have permission to add assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToAddAssetsIn');
       return { saved: false };
     }
     busy = true;
@@ -415,7 +415,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     busy = true;
@@ -459,7 +459,7 @@
           }
         };
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       throw new Error(error);
     } finally {
       busy = false;
@@ -601,7 +601,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -625,7 +625,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -642,7 +642,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -659,7 +659,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -679,7 +679,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -695,7 +695,7 @@
 
   async function returnAssetFromHome(asset: Asset): Promise<void> {
     if (!editAssetAllowed || !selectedInventory) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       return;
     }
     await run(async () => {
@@ -708,7 +708,7 @@
 
   async function archiveSelectedAttachment(attachment: AssetAttachment): Promise<void> {
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -720,7 +720,7 @@
 
   async function deleteSelectedAttachment(attachment: AssetAttachment): Promise<void> {
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -742,7 +742,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -768,7 +768,7 @@
         }
         return;
       }
-      const taskError = caught instanceof Error ? caught.message : 'Action failed.';
+      const taskError = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       if (options.rethrow) {
         throw caught instanceof Error ? caught : new Error(taskError);
       }
@@ -837,7 +837,7 @@
       const successNotification: WorkspaceNotification = {
         id: `asset-operation:${operationId}`,
         kind: 'success',
-        title: t('web.InventoryWorkspaceApp.changeTo', { value: String(direction === 'undo' ? 'Undid' : 'Redid'), title: String(asset.title) }),
+        title: direction === 'undo' ? t('web.InventoryWorkspaceApp.undidChange', { title: asset.title }) : t('web.InventoryWorkspaceApp.redidChange', { title: asset.title }),
         duration: 10_000,
         action: {
           label: inverse === 'undo' ? t('web.InventoryWorkspaceApp.undo') : t('web.InventoryWorkspaceApp.redo'),
@@ -1055,7 +1055,7 @@
         if (tenantId) {
           await selectTenant(tenantId);
         } else {
-          showUnavailableRoute('That tenant is not available to this account.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatTenantIsNotAvailableToThisAccount'));
           return;
         }
       }
@@ -1065,7 +1065,7 @@
         if (inventory) {
           await selectInventory(inventory.tenantId, inventory.id);
         } else {
-          showUnavailableRoute('That inventory is not available in the current workspace.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatInventoryIsNotAvailableInTheCurrentWorkspace'));
           return;
         }
       }
@@ -1152,14 +1152,14 @@
         }
         if (!loaded) {
           if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
-          showUnavailableRoute('That asset is not available in this inventory.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatAssetIsNotAvailableInThisInventory'));
           return;
         }
         attachmentId = route.attachmentId;
         attachmentAction = route.attachmentAction;
         if (route.locationId) {
           if (loadedAssetDetail?.kind !== 'location') {
-            showUnavailableRoute('That location is not available in this inventory.');
+            showUnavailableRoute(t('web.InventoryWorkspaceApp.thatLocationIsNotAvailableInThisInventory'));
             return;
           }
           selectedLocationId = route.locationId;

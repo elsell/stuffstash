@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AssetKind, Inventory, Principal, WorkspaceMode } from '$lib/domain/inventory';
 import { assetKinds, canViewImportJobs } from '$lib/domain/inventory';
 import { assetKindLabel } from '$lib/presentation/assetKindLabel';
@@ -37,23 +38,23 @@ export interface ShellAddOption {
 
 export function accountDisplayLabel(principal: Principal): string {
   const email = principal.email?.trim();
-  return email || 'Signed-in account';
+  return email || t('web.workspaceShellNavigation.signedInAccount');
 }
 
 type ShellNavigationDefinition = Omit<ShellNavigationDestination, 'href' | 'current'>;
 
 const desktopPrimaryDestinations: ShellNavigationDefinition[] = [
-  { mode: 'home', label: 'Home', description: 'Recent assets and places', icon: 'home' },
-  { mode: 'browse', label: 'Browse', description: 'Find and explore your inventory', icon: 'browse' }
+  { mode: 'home', label: t('web.workspaceShellNavigation.home'), description: t('web.workspaceShellNavigation.recentAssetsAndPlaces'), icon: 'home' },
+  { mode: 'browse', label: t('web.workspaceShellNavigation.browse'), description: t('web.workspaceShellNavigation.findAndExploreYourInventory'), icon: 'browse' }
 ];
 
 const desktopUtilityDestinations: ShellNavigationDefinition[] = [
-  { mode: 'import', label: 'Import', description: 'Bring in outside data', icon: 'import' }
+  { mode: 'import', label: t('web.workspaceShellNavigation.import'), description: t('web.workspaceShellNavigation.bringInOutsideData'), icon: 'import' }
 ];
 
 const mobileDestinations: ShellNavigationDefinition[] = [
-  { mode: 'home', label: 'Home', description: 'Inventory home', icon: 'home' },
-  { mode: 'browse', label: 'Browse', description: 'Find and explore', icon: 'browse' }
+  { mode: 'home', label: t('web.workspaceShellNavigation.home'), description: t('web.workspaceShellNavigation.inventoryHome'), icon: 'home' },
+  { mode: 'browse', label: t('web.workspaceShellNavigation.browse'), description: t('web.workspaceShellNavigation.findAndExplore'), icon: 'browse' }
 ];
 
 export function shellModeHref(
@@ -85,12 +86,12 @@ export function desktopShellNavigationGroups(input: ShellNavigationInput): Shell
   return [
     {
       id: 'primary',
-      label: 'Inventory',
+      label: t('web.workspaceShellNavigation.inventory'),
       destinations: shellDestinations(desktopPrimaryDestinations, input)
     },
     {
       id: 'utility',
-      label: 'Tools',
+      label: t('web.workspaceShellNavigation.tools'),
       destinations: shellDestinations(desktopUtilityDestinations, input)
     }
   ];

@@ -210,7 +210,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   }, [dirty, navigation, backOptions]);
 
   if (status === 'ready' && (!reads.context && !isAccessFailure(reads.contextError) || reads.context && (context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId))) return <SettingsLoadingRow label={t('mobile.CustomizationEditorScreen.loadingSetting')} />;
-  if (status === 'loading') return <View style={settings.styles.shell}><View style={styles.loadingGroup}><SettingsLoadingRow label={t('mobile.CustomizationEditorScreen.loading', { value: String(label(kind).toLocaleLowerCase()) })} /></View></View>;
+  if (status === 'loading') return <View style={settings.styles.shell}><View style={styles.loadingGroup}><SettingsLoadingRow label={t(`mobile.CustomizationEditorScreen.${kind}.loading`)} /></View></View>;
   if (status === 'error') return <ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>{t('mobile.CustomizationEditorScreen.settingUnavailable')}</Text><Text style={settings.styles.errorMessage}>{t('mobile.CustomizationEditorScreen.itMayHaveBeenArchivedDeletedOrYouMay')}</Text><NativeCommandButton label={t('mobile.CustomizationEditorScreen.retry')} onPress={() => void load()} /></ScrollView>;
   if (status === 'denied') return <DeniedSettingsState message={deniedMessage} />;
   if (!context) return null;
@@ -230,8 +230,8 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
       await saveCustomizationEditor({ context, draft: editorDraft, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, mode, record: record?.kind === 'field' ? record : undefined, resourceId, scope });
       if (resourceOwner.current !== resource) return;
       setInitialSnapshot(current); setCompletion('Saved');
-      if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: t('mobile.CustomizationEditorScreen.saved', { value: String(label(kind)) }) }); onDone(); }
-    } catch (cause) { if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not saved.`); }
+      if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: t(`mobile.CustomizationEditorScreen.${kind}.saved`) }); onDone(); }
+    } catch (cause) { if (resourceOwner.current === resource) await handleFailure(cause, t(`mobile.CustomizationEditorScreen.${kind}.saveFailed`)); }
     finally { workflow.finishSave(); if (resourceOwner.current === resource) setSaving(false); }
   }
 
@@ -240,9 +240,9 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     if (completed || !resource || !owner || !context || !resourceId || !workflow.beginLifecycleConfirmation()) return;
     setLifecycleBusy(true);
     const destructive = action !== 'restore';
-    const title = action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently', { name: String(name) }) : `${capitalize(action)} ${name}?`;
+    const title = action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently', { name: String(name) }) : t(`mobile.CustomizationEditorScreen.${action}Named`, { name });
     const message = lifecycleMessage(kind, action);
-    Alert.alert(title, message, [{ text: t('mobile.CustomizationEditorScreen.cancel'), style: 'cancel', onPress: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } }, { text: action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently2') : capitalize(action), style: destructive ? 'destructive' : 'default', onPress: async () => {
+    Alert.alert(title, message, [{ text: t('mobile.CustomizationEditorScreen.cancel'), style: 'cancel', onPress: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } }, { text: action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently2') : t(`mobile.CustomizationEditorScreen.${action}Action`), style: destructive ? 'destructive' : 'default', onPress: async () => {
       if (focusOwner.current !== owner || resourceOwner.current !== resource) {
         if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false);
         return;
@@ -253,9 +253,9 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
         workflow.finishLifecycle();
         if (resourceOwner.current !== resource) return;
         setLifecycleBusy(false); setCompletion(action === 'archive' ? 'Archived' : action === 'restore' ? 'Restored' : 'Deleted');
-        if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} ${action === 'archive' ? 'archived' : action === 'restore' ? 'restored' : 'deleted'}` }); onDone(); }
+        if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: t(`mobile.CustomizationEditorScreen.${kind}.${action}`) }); onDone(); }
       } catch (cause) {
-        if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not changed.`, `Could not ${action}`);
+        if (resourceOwner.current === resource) await handleFailure(cause, t(`mobile.CustomizationEditorScreen.${kind}.changeFailed`), t(`mobile.CustomizationEditorScreen.${action}Failed`));
         workflow.finishLifecycle(); if (resourceOwner.current === resource) setLifecycleBusy(false);
       }
     }}], { onDismiss: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } });
@@ -263,14 +263,14 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
 
   return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={settings.styles.shell}><ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
     {draftDenied ? <View accessibilityLiveRegion="assertive" style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.CustomizationEditorScreen.accessChanged')}</Text><Text style={styles.errorText}>{t('mobile.CustomizationEditorScreen.yourChangeWasNotSavedYourDraftIsShown')}</Text><Text style={styles.errorText}>{t('mobile.CustomizationEditorScreen.askAHouseholdManagerToRestoreYourAccessThen')}</Text><NativeCommandButton label={t('mobile.CustomizationEditorScreen.refreshAccess')} onPress={() => void refreshDraftAccess()} /></View> : error ? <View accessibilityLiveRegion="assertive" ref={errorSummaryRef} style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>{errorTitle}</Text><Text style={styles.errorText}>{error}</Text></View> : null}
-    <SettingsSection title={mode === 'create' ? t('mobile.CustomizationEditorScreen.new', { value: String(label(kind)) }) : label(kind)}>
-      {editorMutable ? <CustomizationNameInput error={nameTouched && !name.trim() ? 'Name is required.' : undefined} onChangeText={(value) => { setNameTouched(true); const next = withEditorName(editorDraft, value, mode); setName(next.name); setKey(next.key); }} value={name} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.name')} value={name} />}
+    <SettingsSection title={mode === 'create' ? t(`mobile.CustomizationEditorScreen.${kind}.new`) : t(`mobile.CustomizationEditorScreen.${kind}.name`)}>
+      {editorMutable ? <CustomizationNameInput error={nameTouched && !name.trim() ? t('mobile.CustomizationEditorScreen.nameRequired') : undefined} onChangeText={(value) => { setNameTouched(true); const next = withEditorName(editorDraft, value, mode); setName(next.name); setKey(next.key); }} value={name} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.name')} value={name} />}
       {kind === 'tag' ? editorMutable ? <View style={styles.formRow}><Text style={styles.label}>{t('mobile.CustomizationEditorScreen.color')}</Text><TagColorPicker disabled={!draftEditable} value={color} onChange={setColor} />{!colorValid ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{t('mobile.CustomizationEditorScreen.enterASixDigitHexColorSuchAs2F80ED')}</Text> : null}</View> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.color')} value={tagColorName(color)} /> : null}
       {kind === 'asset-type' ? editorMutable
         ? <AppSwitchField label={t('mobile.CustomizationEditorScreen.trackExpirationDates')} description={t('mobile.CustomizationEditorScreen.eachAssetCanHaveItsOwnOptionalDateTurning')} value={expirationEnabled} onValueChange={setExpirationEnabled} disabled={saving || lifecycleBusy} />
-        : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.trackExpirationDates')} value={expirationEnabled ? 'Enabled' : 'Disabled'} />
+        : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.trackExpirationDates')} value={expirationEnabled ? t('mobile.CustomizationEditorScreen.enabled') : t('mobile.CustomizationEditorScreen.disabled')} />
         : null}
-      {kind === 'asset-type' ? editorMutable ? <CustomizationLabeledInput label={t('mobile.CustomizationEditorScreen.description')} multiline onChangeText={setDescription} value={description} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.description')} value={description || 'No description'} /> : null}
+      {kind === 'asset-type' ? editorMutable ? <CustomizationLabeledInput label={t('mobile.CustomizationEditorScreen.description')} multiline onChangeText={setDescription} value={description} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.description')} value={description || t('mobile.CustomizationEditorScreen.noDescription')} /> : null}
       {kind === 'field' ? <CustomizationFieldControls persistedApplicability={record?.kind === 'field' ? record.applicability : undefined} applicability={applicability} canMutate={editorMutable} busy={saving || lifecycleBusy} eligibleTypes={eligibleTypes} enumOptions={enumOptions} fieldType={fieldType} mode={mode} newOption={newOption} onApplicability={setApplicability} onEnumOptions={setEnumOptions} onFieldType={setFieldType} onNewOption={setNewOption} onTargets={setTargetIds} persistedEnumOptions={record?.kind === 'field' ? record.enumOptions : []} persistedTargetIds={record?.kind === 'field' ? record.customAssetTypeIds : []} targetIds={targetIds} /> : null}
     </SettingsSection>
     {kind !== 'tag' ? <SettingsSection title={t('mobile.CustomizationEditorScreen.details')}><Pressable accessibilityRole="button" onPress={() => setAdvanced((value) => !value)} style={styles.disclosure}><Text style={styles.disclosureText}>{advanced ? t('mobile.CustomizationEditorScreen.hideTechnicalDetails') : t('mobile.CustomizationEditorScreen.showTechnicalDetails')}</Text><ChevronDown color={colors.textMuted} size={18} style={{ transform: [{ rotate: advanced ? '180deg' : '0deg' }] }} /></Pressable>{advanced ? <>{mode === 'create' ? <CustomizationLabeledInput editable={draftEditable} error={!validation.keyValid ? validation.keyMessage : undefined} inputRef={keyInputRef} label={t('mobile.CustomizationEditorScreen.stableKey')} onChangeText={(value) => { const next = withManualEditorKey(editorDraft, value); setKey(next.key); setKeyManuallyEdited(next.keyManuallyEdited); }} value={key} /> : <><SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.key')} value={key} /></>}<SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.scope')} value={scope === 'tenant' || effectiveInherited ? context.tenantName : context.inventoryName} /></> : null}</SettingsSection> : null}
@@ -282,7 +282,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     {dirty ? <Text style={styles.unsaved}>{t('mobile.CustomizationEditorScreen.unsavedChanges')}</Text> : null}
   </ScrollView></KeyboardAvoidingView>;
 
-  async function handleFailure(cause: unknown, fallback: string, title = 'Could not save'): Promise<void> {
+  async function handleFailure(cause: unknown, fallback: string, title = t('mobile.CustomizationEditorScreen.saveFailureTitle')): Promise<void> {
     const resource = resourceOwner.current;
     setErrorTitle(title);
     setError(safeCustomizationMessage(cause, fallback));
@@ -324,9 +324,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   }
 }
 
-function label(kind: CustomizationKind) { return kind === 'tag' ? 'Tag' : kind === 'field' ? 'Custom field' : 'Asset type'; }
-function capitalize(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).replaceAll('_', ' '); }
-function lifecycleMessage(kind: CustomizationKind, action: 'archive' | 'restore' | 'delete') { if (action === 'delete') return kind === 'field' ? 'This cannot be undone. Deletion is blocked while active assets store a value for this field.' : 'This cannot be undone. Deletion is blocked while active assets or custom fields reference this type.'; if (action === 'restore') return 'This will make it available for normal use again.'; return kind === 'tag' ? 'This tag will no longer be available for new assignment or normal filtering.' : kind === 'field' ? 'Existing values remain, but this field will be hidden from normal editing and validation.' : 'Existing references remain, but this type will no longer be available for new assignments.'; }
+function lifecycleMessage(kind: CustomizationKind, action: 'archive' | 'restore' | 'delete') { if (action === 'delete') return kind === 'field' ? t('mobile.CustomizationEditorScreen.thisCannotBeUndoneDeletionIsBlockedWhileActive') : t('mobile.CustomizationEditorScreen.thisCannotBeUndoneDeletionIsBlockedWhileActive2'); if (action === 'restore') return t('mobile.CustomizationEditorScreen.thisWillMakeItAvailableForNormalUseAgain'); return kind === 'tag' ? t('mobile.CustomizationEditorScreen.thisTagWillNoLongerBeAvailableForNew') : kind === 'field' ? t('mobile.CustomizationEditorScreen.existingValuesRemainButThisFieldWillBeHidden') : t('mobile.CustomizationEditorScreen.existingReferencesRemainButThisTypeWillNoLonger'); }
 function snapshotFor(record: EditorRecord): string { return customizationEditorSnapshot({ expirationEnabled: record.kind === 'asset-type' ? record.expirationEnabled ?? false : false, name: record.displayName, key: record.key, keyManuallyEdited: false, description: record.kind === 'asset-type' ? record.description : '', color: record.kind === 'tag' ? record.color ?? '' : '', fieldType: record.kind === 'field' ? record.type : 'text', applicability: record.kind === 'field' ? record.applicability : 'all_assets', enumOptions: record.kind === 'field' ? record.enumOptions : [], targetIds: record.kind === 'field' ? record.customAssetTypeIds : [] }); }
 
 function createStyles(colors: MobileColorPalette) { return StyleSheet.create({

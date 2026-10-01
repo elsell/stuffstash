@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { formatHistoryTimestamp } from './AssetHistoryTimestamp';
 export type AssetCheckoutRecord = {
   readonly id: string;
@@ -73,21 +74,21 @@ export class AssetCheckoutHistoryQuery {
       records: page.records.map(toRecordViewModel),
       hasMore: page.hasMore,
       nextCursor: page.nextCursor,
-      emptyTitle: 'No checkout history yet',
-      emptyMessage: 'Checkouts and returns for this asset will appear here.'
+      emptyTitle: t('mobile.AssetCheckoutHistoryQuery.emptyTitle'),
+      emptyMessage: t('mobile.AssetCheckoutHistoryQuery.emptyMessage')
     };
   }
 }
 
 function toRecordViewModel(record: AssetCheckoutRecord): AssetCheckoutRecordViewModel {
   const returned = record.returnedAt && record.returnedByPrincipalId
-    ? `${labelReturnedAt(record.returnedAt)} by ${labelPrincipal(record.returnedByPrincipalId)}`
+    ? t('mobile.AssetCheckoutHistoryQuery.returnedBy', { time: formatHistoryTimestamp(record.returnedAt, 'checkout'), principal: record.returnedByPrincipalId })
     : undefined;
 
   return {
     id: record.id,
-    title: record.state === 'returned' ? 'Returned' : 'Checked out',
-    subtitle: `${labelCheckedOutAt(record.checkedOutAt)} by ${labelPrincipal(record.checkedOutByPrincipalId)}`,
+    title: record.state === 'returned' ? t('mobile.AssetCheckoutHistoryQuery.returned') : t('mobile.AssetCheckoutHistoryQuery.checkedOut'),
+    subtitle: t('mobile.AssetCheckoutHistoryQuery.checkedOutBy', { time: formatHistoryTimestamp(record.checkedOutAt, 'checkout'), principal: record.checkedOutByPrincipalId }),
     statusLabel: labelState(record.state),
     checkedOutLabel: labelCheckedOutAt(record.checkedOutAt),
     returnedLabel: returned,
@@ -99,26 +100,18 @@ function toRecordViewModel(record: AssetCheckoutRecord): AssetCheckoutRecordView
 function labelState(state: string): string {
   switch (state) {
     case 'open':
-      return 'Checked out';
+      return t('mobile.AssetCheckoutHistoryQuery.checkedOut');
     case 'returned':
-      return 'Returned';
+      return t('mobile.AssetCheckoutHistoryQuery.returned');
     case 'undone':
-      return 'Undone';
+      return t('mobile.AssetCheckoutHistoryQuery.undone');
     default:
       return state.charAt(0).toUpperCase() + state.slice(1).replaceAll('_', ' ');
   }
 }
 
-function labelPrincipal(principalId: string): string {
-  return `Principal ${principalId}`;
-}
-
 function labelCheckedOutAt(value: string): string {
-  return `Checked out ${formatHistoryTimestamp(value, 'checkout')}`;
-}
-
-function labelReturnedAt(value: string): string {
-  return `Returned ${formatHistoryTimestamp(value, 'checkout')}`;
+  return t('mobile.AssetCheckoutHistoryQuery.checkedOutAt', { time: formatHistoryTimestamp(value, 'checkout') });
 }
 
 function safeDetails(value: string | undefined): string | undefined {

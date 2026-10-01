@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { CustomAssetType, CustomFieldDefinition } from '$lib/domain/inventory';
 import { workspaceRouteHref } from './workspaceRoute';
 
@@ -67,10 +68,10 @@ export function customizationArchiveConfirmation(input: {
   if (input.assetType) {
     return {
       kind: 'asset_type',
-      title: 'Archive asset type',
+      title: t('web.workspaceCustomizationActions.archiveAssetType'),
       targetLabel: input.assetType.displayName,
-      description: 'Existing assets keep their data. This type will stop appearing in new asset forms.',
-      buttonLabel: 'Archive',
+      description: t('web.workspaceCustomizationActions.existingAssetsKeepTheirDataThisTypeWillStop'),
+      buttonLabel: t('web.workspaceCustomizationActions.archive'),
       unavailable: false,
       disabled: input.busy || !input.canArchiveScope(input.assetType.scope)
     };
@@ -78,20 +79,20 @@ export function customizationArchiveConfirmation(input: {
   if (input.fieldDefinition) {
     return {
       kind: 'field_definition',
-      title: 'Archive field definition',
+      title: t('web.workspaceCustomizationActions.archiveFieldDefinition'),
       targetLabel: input.fieldDefinition.displayName,
-      description: 'Existing assets keep their field values. This field will stop appearing in edit forms.',
-      buttonLabel: 'Archive',
+      description: t('web.workspaceCustomizationActions.existingAssetsKeepTheirFieldValuesThisFieldWill'),
+      buttonLabel: t('web.workspaceCustomizationActions.archive'),
       unavailable: false,
       disabled: input.busy || !input.canArchiveScope(input.fieldDefinition.scope)
     };
   }
   return {
     kind: 'unavailable',
-    title: 'Archive target unavailable',
-    targetLabel: 'This schema item is not available in the current fields list.',
+    title: t('web.workspaceCustomizationActions.archiveTargetUnavailable'),
+    targetLabel: t('web.workspaceCustomizationActions.thisSchemaItemIsNotAvailableInTheCurrent'),
     description: '',
-    buttonLabel: 'Back to fields',
+    buttonLabel: t('web.workspaceCustomizationActions.backToFields'),
     unavailable: true,
     disabled: false
   };
@@ -105,14 +106,14 @@ export function customizationManagerAccessStatus(input: {
   if (!input.hasTenant || !input.hasInventory) {
     return {
       kind: 'missing-context',
-      message: 'Select an inventory before managing fields.',
+      message: t('web.workspaceCustomizationActions.selectAnInventoryBeforeManagingFields'),
       alert: false
     };
   }
   if (!input.canManage) {
     return {
       kind: 'denied',
-      message: 'Custom fields require tenant or inventory configuration access.',
+      message: t('web.workspaceCustomizationActions.customFieldsRequireTenantOrInventoryConfigurationAccess'),
       alert: true
     };
   }

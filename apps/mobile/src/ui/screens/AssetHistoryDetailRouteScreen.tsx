@@ -196,21 +196,21 @@ function TechnicalRow({ label, value, styles }: { readonly label: string; readon
 
 function detailTitle(action: string): string {
   switch (action) {
-    case 'asset.created': return 'Item added';
-    case 'asset.archived': return 'Item archived';
-    case 'asset.restored': return 'Item restored';
-    case 'asset.checked_out': return 'Item checked out';
-    case 'asset.returned': return 'Item returned';
-    case 'asset.viewed': return 'Item viewed';
-    default: return action.startsWith('asset.') ? 'Item updated' : 'Item activity';
+    case 'asset.created': return t('mobile.AssetHistoryDetailRouteScreen.itemAdded');
+    case 'asset.archived': return t('mobile.AssetHistoryDetailRouteScreen.itemArchived');
+    case 'asset.restored': return t('mobile.AssetHistoryDetailRouteScreen.itemRestored');
+    case 'asset.checked_out': return t('mobile.AssetHistoryDetailRouteScreen.itemCheckedOut');
+    case 'asset.returned': return t('mobile.AssetHistoryDetailRouteScreen.itemReturned');
+    case 'asset.viewed': return t('mobile.AssetHistoryDetailRouteScreen.itemViewed');
+    default: return action.startsWith('asset.') ? t('mobile.AssetHistoryDetailRouteScreen.itemUpdated') : t('mobile.AssetHistoryDetailRouteScreen.itemActivity');
   }
 }
 
 function sourceLabel(source: string): string {
-  if (source === 'api') return 'App';
-  if (source === 'conversation' || source === 'voice') return 'Voice';
-  if (source === 'import') return 'Import';
-  return 'Stuff Stash';
+  if (source === 'api') return t('mobile.AssetHistoryDetailRouteScreen.app');
+  if (source === 'conversation' || source === 'voice') return t('mobile.AssetHistoryDetailRouteScreen.voice');
+  if (source === 'import') return t('mobile.AssetHistoryDetailRouteScreen.import');
+  return t('mobile.AssetHistoryDetailRouteScreen.stuffStash');
 }
 
 function createStyles(colors: MobileColorPalette) {
