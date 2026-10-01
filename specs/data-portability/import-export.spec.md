@@ -680,3 +680,60 @@ The web application must provide a polished import workflow for the first Homebo
 - What exact CSV columns should be used first?
 - Should exports include audit history?
 - Should exports include attachment metadata before binary file export is supported?
+
+## Inventory export v1 — October 1, 2026
+
+This closes the previously required JSON/CSV export capability. Export is a
+read-only bounded task, not an import protocol or a database/media backup.
+
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/export?format=json|csv`
+  returns a downloadable UTF-8 file. Missing format defaults to JSON; unknown
+  formats fail validation. Content-Disposition uses a fixed safe filename plus
+  format, never untrusted inventory text. Responses are private/no-store.
+- Inventory view permission authorizes export, including viewer roles. Authorize
+  before reading export data and recheck immediately before publication. Tenant
+  and inventory IDs are mandatory on every repository read. Wrong-scope results
+  fail closed. No caller-supplied principal or permissions are accepted.
+- JSON uses schemaVersion1, exportedAt from the injected clock, tenant/inventory
+  identity and name, assets, tags, customAssetTypes and customFieldDefinitions.
+  Include active and archived assets and schema records, parent IDs, custom type
+  IDs, typed custom-field values, expiration date/precision, assigned tag IDs,
+  creation/update timestamps, current checkout metadata and attachment metadata.
+  Include inherited tenant definitions, identifying their scope. IDs remain opaque
+  source identities. Do not export provider configuration/credentials, access or
+  invitation tokens, auth claims, raw audit/undo snapshots, blob keys or signed URLs.
+  Attachment metadata is not attachment content; media bytes and audit-history
+  backup packaging remain separate future contracts.
+- CSV is an asset table with stable columns for IDs, title/description, kind,
+  parent/type, lifecycle, timestamps, expiration, tags, custom-field values,
+  current checkout and attachment metadata. Nested values use compact JSON cells.
+  JSON is the authoritative format for complete schema metadata. Empty inventory
+  CSV still has headers. Preserve Unicode, multiline text, quotes and commas.
+  Prefix spreadsheet-formula-like text cells with a single quote; inspect the
+  first non-whitespace character for =, +, -, @, tab or carriage return. JSON
+  preserves original strings unchanged. Document this CSV safety transformation.
+- Traverse repository pages in stable ID/key order, detect nonadvancing cursors,
+  check cancellation between pages, and never omit an unprocessed page silently.
+  Exports are read-consistent per repository operation, not a transactional
+  point-in-time backup; concurrent inventory edits can affect the result.
+- Environment-backed positive limits default to10,000 records per collection and
+ 64MiB encoded output. Exceeding either fails with a safe explicit limit message;
+  no partial download is returned as success. Keep encoding and file-format
+  details behind an export-encoder port; application orchestration lives in the
+  data-portability application package. No new third-party package is required.
+- Write one safe `inventory.exported` read audit record after successful assembly
+  and final authorization, before returning bytes. Record format and asset count,
+  not exported content. Emit the corresponding domain observer event. A failed
+  audit write prevents publication. Client cancellation publishes no file.
+- Web inventory settings expose Export with JSON/CSV choices, pending/error/retry,
+  using an authenticated repository adapter and a local file download. Mobile
+  inventory settings use the same formats and a native save/share handoff through
+  a file-delivery port. Clear temporary mobile files after the handoff lifetime;
+  do not put download contents into persistent server-state caches or telemetry.
+
+Critical acceptance: authenticated viewer/editor/owner success, absent/malformed/
+expired-token denial through existing auth boundaries, cross-tenant/inventory
+isolation, all pages and archived data, field/tag/containment fidelity, secret/blob
+key exclusion, CSV formula safety and round trips, cancellation/limit/audit failure
+without a successful file, and one real client download per platform. Source
+encoding/HTTP tests do not prove the browser/native handoff.
