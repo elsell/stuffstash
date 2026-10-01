@@ -177,6 +177,13 @@ When `STUFF_STASH_VOICE_GOOGLE_ENABLED=true`, Google configuration is validated
 at startup. Google voice providers take precedence over development fakes when
 both are enabled.
 
+## API: Compatible Language Providers
+
+`STUFF_STASH_COMPATIBLE_PROVIDER_ENDPOINTS` is a comma-separated allowlist of
+complete API base URLs. It is empty by default, so compatible provider calls are
+disabled until an operator allows an endpoint. See [Compatible Language Providers](../compatible-providers/)
+for setup and supported capabilities.
+
 ## API: Provider Credential Sealing
 
 | Variable | Default | Purpose |

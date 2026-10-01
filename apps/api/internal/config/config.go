@@ -213,6 +213,7 @@ type Config struct {
 	GoogleTTSVoiceName               string
 	GoogleCredentialMode             string
 	GoogleAccessToken                string
+	CompatibleProviderEndpoints      []string
 	ProviderCredentialKeyID          string
 	ProviderCredentialKey            string
 	ImportJobTimeout                 time.Duration
@@ -293,6 +294,7 @@ func Load() Config {
 		GoogleTTSVoiceName:               envOrDefault(envGoogleTTSVoiceName, defaultGoogleTTSVoiceName),
 		GoogleCredentialMode:             envOrDefault(envGoogleCredentialMode, defaultGoogleCredentialMode),
 		GoogleAccessToken:                os.Getenv(envGoogleAccessToken),
+		CompatibleProviderEndpoints:      stringListEnv("STUFF_STASH_COMPATIBLE_PROVIDER_ENDPOINTS"),
 		ProviderCredentialKeyID:          os.Getenv(envProviderCredentialKeyID),
 		ProviderCredentialKey:            os.Getenv(envProviderCredentialKey),
 		ImportJobTimeout:                 secondsEnvOrDefault(envImportJobTimeoutSeconds, defaultImportJobTimeout),

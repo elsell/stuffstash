@@ -294,6 +294,10 @@ func TestProviderProfileEndpointsRejectUnauthorizedUsers(t *testing.T) {
 }
 
 func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
+	return newProviderProfileTestAppWithTester(t, state, httpTestProviderProfileTester{})
+}
+
+func newProviderProfileTestAppWithTester(t *testing.T, state seededState, tester ports.ProviderProfileTester) app.App {
 	t.Helper()
 
 	ctx := context.Background()
@@ -331,7 +335,7 @@ func newProviderProfileTestApp(t *testing.T, state seededState) app.App {
 		ProviderProfileUnitOfWork: store,
 		VoiceProviderConfigs:      store,
 		ProviderCredentialVault:   httpTestCredentialVault{repository: store, sealer: httpTestCredentialSealer{}},
-		ProviderProfileTester:     httpTestProviderProfileTester{},
+		ProviderProfileTester:     tester,
 		RealtimeSessions:          store,
 		IDs:                       &fakeIDGenerator{ids: state.ids},
 	})

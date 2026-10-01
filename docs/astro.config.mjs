@@ -46,6 +46,7 @@ export default defineConfig({
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
             { label: 'Connect An Inventory Agent', slug: 'mcp' },
+            { label: 'Compatible Language Providers', slug: 'compatible-providers' },
             { label: 'Release To TestFlight', slug: 'testflight' },
             { label: 'Contributing', slug: 'specs-and-process' },
           ],

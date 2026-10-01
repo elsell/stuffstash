@@ -102,7 +102,7 @@ func buildRealtimeVoiceProviderResolver(cfg config.Config, repositories reposito
 	if repositories.providerProfiles == nil || vault == nil {
 		return nil
 	}
-	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, googleProviderProfileFactory(cfg))
+	return voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, providerProfileFactory(cfg))
 }
 
 func googleProviderProfileFactory(cfg config.Config) voice.GoogleProviderProfileFactory {
@@ -136,4 +136,8 @@ func validateGoogleVoiceConfig(cfg config.Config) error {
 		}
 	}
 	return nil
+}
+
+func providerProfileFactory(cfg config.Config) voice.ProviderProfileFactory {
+	return voice.ProviderProfileFactory{Google: googleProviderProfileFactory(cfg), CompatibleEndpoints: cfg.CompatibleProviderEndpoints}
 }
