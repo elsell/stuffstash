@@ -141,3 +141,11 @@ model instead of inferring it from a URL or rendered pixel size. Unknown fixture
 or external variants use none. Home thumbnails identify home; other list/chooser
 rows identify list; detail hero, gallery rail, fullscreen and local upload previews
 identify their own surfaces. Static brand artwork and system icons are excluded.
+
+Native image measurement uses a dedicated observer context with a no-op default,
+provided by the authenticated composition. Source identity includes URI and request
+headers locally, so credential replacement cancels the prior attempt without
+exporting secrets. Native event handlers belong to one committed source generation;
+late events after replacement/unmount are ignored. A repeated load-start cancels
+the prior attempt and starts a new one. Cached load/error without load-start may
+record a zero-duration completion. User-supplied image event handlers still run.

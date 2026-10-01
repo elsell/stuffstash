@@ -75,6 +75,9 @@ export type AssetPhoto = {
   readonly contentType?: string;
   readonly sizeBytes?: number;
   readonly uri: string;
+  readonly variant?: 'small' | 'medium' | 'large' | 'original';
+  readonly heroVariant?: 'small' | 'medium' | 'large' | 'original';
+  readonly viewerVariant?: 'small' | 'medium' | 'large' | 'original';
   readonly heroUri?: string;
   readonly heroHeaders?: Readonly<Record<string, string>>;
   readonly viewerUri?: string;

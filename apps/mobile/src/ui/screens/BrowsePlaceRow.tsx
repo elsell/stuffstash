@@ -1,5 +1,6 @@
+import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BrowsePlaceItemViewModel } from './SearchScreenPresentation';
 import {
   radius,
@@ -29,7 +30,7 @@ export function BrowsePlaceRow({ location, palette, onPress }: BrowsePlaceRowPro
     >
       <View style={styles.imageFrame}>
         {location.photo ? (
-          <Image
+          <Image variant={location.photo.variant}
             accessibilityIgnoresInvertColors
             source={{ uri: location.photo.uri, headers: location.photo.headers }}
             style={styles.image}

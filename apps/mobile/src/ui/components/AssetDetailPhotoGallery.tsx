@@ -1,8 +1,8 @@
+import {MeasuredImage as Image} from './MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from './NativeCommandButton';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -139,7 +139,7 @@ function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
     {failed ? <View style={styles.previewFailure}>
       <Text style={[styles.emptySupporting, { color: palette.text }]}>{t('mobile.AssetDetailPhotoGallery.previewUnavailable')}</Text>
       {canOpen ? <Text style={[styles.emptySupporting, { color: palette.text }]}>{t('mobile.AssetDetailPhotoGallery.openPhoto')}</Text> : null}
-    </View> : <Image accessibilityIgnoresInvertColors accessible={false} resizeMode="cover"
+    </View> : <Image surface="gallery" variant={photo.heroUri ? photo.heroVariant : photo.variant} accessibilityIgnoresInvertColors accessible={false} resizeMode="cover"
     source={source} style={styles.photo}
     onError={() => { if (currentSource.current === source) setFailedSource(source); }} />}
     <View accessible={false} style={[styles.positionBadge, { backgroundColor: palette.scrim }]}>

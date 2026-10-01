@@ -20,6 +20,7 @@ export type AssetCardViewModel = {
   readonly searchMatchLabels?: readonly string[];
   readonly imagePlaceholderLabel: string;
   readonly photo?: {
+    readonly variant?: 'small' | 'medium' | 'large' | 'original';
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };
@@ -54,6 +55,9 @@ export type AssetPhotoViewModel = {
   readonly sizeBytes?: number;
   readonly label: string;
   readonly uri: string;
+  readonly variant?: 'small' | 'medium' | 'large' | 'original';
+  readonly heroVariant?: 'small' | 'medium' | 'large' | 'original';
+  readonly viewerVariant?: 'small' | 'medium' | 'large' | 'original';
   readonly heroUri?: string;
   readonly heroHeaders?: Readonly<Record<string, string>>;
   readonly viewerUri?: string;
@@ -105,6 +109,7 @@ export type AssetDetailViewModel = {
   readonly imagePlaceholderLabel: string;
   readonly photos: readonly AssetPhotoViewModel[];
   readonly photo?: {
+    readonly variant?: 'small' | 'medium' | 'large' | 'original';
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };
@@ -210,6 +215,9 @@ export function toAssetPhotoViewModels(
     sizeBytes: photo.sizeBytes,
     label: photo.fileName ?? t('asset.photoPosition', { position: index + 1 }),
     uri: photo.uri,
+    variant: photo.variant,
+    heroVariant: photo.heroVariant,
+    viewerVariant: photo.viewerVariant,
     heroUri: photo.heroUri,
     heroHeaders: photo.heroHeaders,
     viewerUri: photo.viewerUri,

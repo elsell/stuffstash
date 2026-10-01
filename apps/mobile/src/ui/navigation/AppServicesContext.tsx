@@ -1,3 +1,4 @@
+import {ImagePerformanceProvider} from '../components/ImagePerformanceContext';
 import { t } from '../../presentation/localization';
 import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
 import { useRouter } from 'expo-router';
@@ -83,6 +84,7 @@ function AppServicesContent({ children, controller, onboardingCommand }: AppServ
       scopeId={mobileComposition.serviceScopeId}
     >
       <AppServicesContext.Provider value={mobileComposition}>
+      <ImagePerformanceProvider value={mobileComposition.performanceObserver}>
         <AppConnectionActionsContext.Provider
           value={{
             signOut,
@@ -98,6 +100,7 @@ function AppServicesContent({ children, controller, onboardingCommand }: AppServ
             {children}
           </VoiceInteractionStateProvider>
         </AppConnectionActionsContext.Provider>
+      </ImagePerformanceProvider>
       </AppServicesContext.Provider>
     </MobileServerStateProvider>
   );

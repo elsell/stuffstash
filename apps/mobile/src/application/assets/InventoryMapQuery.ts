@@ -23,6 +23,7 @@ export type InventoryMapAssetViewModel = {
   readonly photoLabel: string;
   readonly checkedOutLabel?: string;
   readonly photo?: {
+    readonly variant?: 'small' | 'medium' | 'large' | 'original';
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
   };

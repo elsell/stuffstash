@@ -1,7 +1,8 @@
+import {MeasuredImage as Image} from './MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeActionMenu } from './NativeActionMenu';
 import type { ReactElement } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import type {
   AssetCardViewModel,
@@ -212,7 +213,7 @@ function ContainedAssetRowView({
       >
         <View style={styles.childPhoto}>
           {asset.photo ? (
-            <Image
+            <Image variant={asset.photo.variant}
               accessibilityIgnoresInvertColors
               accessible={false}
               source={{ uri: asset.photo.uri, headers: asset.photo.headers }}

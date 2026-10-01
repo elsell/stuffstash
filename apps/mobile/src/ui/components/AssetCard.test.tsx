@@ -1,3 +1,4 @@
+import {MeasuredImage} from './MeasuredImage';
 import { describe, expect, it, vi } from 'vitest';
 import {
   AssetBreadcrumbTrail,
@@ -55,7 +56,7 @@ describe('AssetCard', () => {
     expect(collectText(empty)).toEqual(expect.arrayContaining(['Toolbox', 'Box', 'Checked out']));
     expect(findFirstByStyleValue(render(true), 'aspectRatio', 1)).toBeDefined();
     expect(findFirstByStyleValue(render(), 'aspectRatio', 1)).toBeDefined();
-    expect(findFirstByType(render(true, { uri: 'https://example.invalid/photo.jpg' }), 'Image')).toBeDefined();
+    expect(findFirstByType(render(true, { uri: 'https://example.invalid/photo.jpg' }), MeasuredImage)).toBeDefined();
     const row = AssetCard({ asset: { ...asset, hasPhoto: false }, density: 'row',
       onPress: vi.fn(), onParentLocationPress: vi.fn() });
     expect(findFirstByStyleValue(row, 'height', 64)).toBeDefined();

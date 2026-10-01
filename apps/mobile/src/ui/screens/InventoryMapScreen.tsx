@@ -1,3 +1,4 @@
+import {MeasuredImage as Image} from '../components/MeasuredImage';
 import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
@@ -15,7 +16,6 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
-  Image,
   PanResponder,
   Pressable,
   RefreshControl,
@@ -1062,7 +1062,7 @@ function InventoryMapRow({
             <View style={styles.rowImageWrap}>
               <View style={styles.rowImageFrame}>
                 {asset.photo ? (
-                  <Image
+                  <Image variant={asset.photo.variant}
                     accessibilityIgnoresInvertColors
                     source={{ uri: asset.photo.uri, headers: asset.photo.headers }}
                     style={styles.rowImage}
