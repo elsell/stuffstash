@@ -781,3 +781,16 @@ the system's outside-tap dismissal region. Tests must establish the exported fil
 is present before dismissal, then verify temporary-file retirement and a usable
 Settings screen. The absence of an iPhone-style Close button on iPad is not itself
 a product defect.
+
+### Production export audit persistence
+
+The PostgreSQL audit action constraint must accept `inventory.exported` before
+export is available. Extend it through a new forward migration, preserving all
+previously accepted actions. Rollback retains the expanded constraint so existing
+export history is not deleted or made invalid. Connected export acceptance must
+exercise migrated PostgreSQL, download both formats and confirm the corresponding
+audit records persist. In-memory HTTP tests alone do not verify this guarantee.
+
+A fast required/pre-commit check compares declared domain audit actions against
+the latest forward migration that replaces the action constraint. Missing actions
+fail before runtime tests; retained historical actions are allowed.

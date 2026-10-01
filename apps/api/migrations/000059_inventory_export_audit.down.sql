@@ -1,0 +1,2 @@
+-- Preserve historical inventory export audit records during rollback.
+-- The expanded action constraint is backward-compatible.
