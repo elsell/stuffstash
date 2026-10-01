@@ -105,6 +105,9 @@ physical export recipient saving, or assistive-technology acceptance.
 
 ## Delivery and acceptance rules
 
+Historical audits must link source evidence to the audited revision so later
+implementation and package moves do not invalidate the recorded baseline.
+
 - Delivery is authorized: complete checks and review, merge, and publish one release
   per frozen batch. Do not hold passing batches for separate merge permission or
   completion of the full audit. PR #213–#216 shipped together in v0.26.0; subsequent batches ship separately.
