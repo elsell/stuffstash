@@ -17,7 +17,11 @@ import (
 	"nhooyr.io/websocket"
 )
 
-type customizationProposalModel struct{ kind string }
+type customizationProposalModel struct {
+	kind        string
+	targets     []string
+	invalidType bool
+}
 
 func (m customizationProposalModel) Converse(_ context.Context, in ports.ConversationModelInput) (ports.ConversationModelTurn, error) {
 	if in.Messages[len(in.Messages)-1].Role != ports.ConversationRoleUser {
@@ -27,6 +31,13 @@ func (m customizationProposalModel) Converse(_ context.Context, in ports.Convers
 	if m.kind == "create_custom_field_definition" {
 		args["fieldType"] = "date"
 		args["applicability"] = "all_assets"
+		if len(m.targets) > 0 {
+			args["applicability"] = "custom_asset_types"
+			args["customAssetTypeIds"] = m.targets
+		}
+		if m.invalidType {
+			args["fieldType"] = "script"
+		}
 	} else {
 		args["description"] = "Items with a warranty"
 		args["expirationEnabled"] = true
@@ -129,5 +140,32 @@ func TestConversationCustomizationRequiresConfigureAndExplicitApproval(t *testin
 				}
 			})
 		}
+	}
+}
+
+func TestConversationCustomizationRejectsForeignTargetsAndMalformedTypes(t *testing.T) {
+	for _, malformed := range []bool{false, true} {
+		t.Run(map[bool]string{false: "foreign target", true: "unknown type"}[malformed], func(t *testing.T) {
+			model := &customizationProposalModel{kind: "create_custom_field_definition", invalidType: malformed}
+			application := newSeededTestAppWithVoice(t, seededState{tenants: []seedTenant{{id: "tenant-home", name: "Home", owner: "user-1"}}, inventories: []seedInventory{{id: "inventory-home", tenantID: "tenant-home", name: "Home", owner: "user-1"}, {id: "inventory-private", tenantID: "tenant-home", name: "Private", owner: "user-1"}}}, fakeSpeechToText{transcript: "Create a warranty field"}, model, fakeTextToSpeech{})
+			owner := identity.Principal{ID: "user-1"}
+			kind, err := application.CreateInventoryCustomAssetType(context.Background(), app.CreateCustomAssetTypeInput{Principal: owner, TenantID: "tenant-home", InventoryID: "inventory-private", Key: "private", DisplayName: "Private"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !malformed {
+				model.targets = []string{kind.ID.String()}
+			}
+			server := httptest.NewServer(NewServerWithOptions(":0", application, Options{RateLimitDisabled: true}).Handler)
+			defer server.Close()
+			events := runRealtimeVoiceQuestionUntil(t, server.URL, "tenant-home", "inventory-home", "user-1", "session.failed")
+			if hasRealtimeEvent(events, "action.plan.proposed") {
+				t.Fatal("unsafe schema offered for approval")
+			}
+			fields, err := application.ListInventoryCustomFieldDefinitions(context.Background(), app.ListCustomFieldDefinitionsInput{Principal: owner, TenantID: "tenant-home", InventoryID: "inventory-home"})
+			if err != nil || len(fields.Items) != 0 {
+				t.Fatal("invalid proposal created schema")
+			}
+		})
 	}
 }

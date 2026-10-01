@@ -119,74 +119,11 @@ func (s Service) UpdateInventoryCustomFieldDefinition(ctx context.Context, input
 }
 
 func (s Service) createCustomFieldDefinition(ctx context.Context, input CreateCustomFieldDefinitionInput, scope customfield.Scope) (customfield.Definition, error) {
-	id, ok := customfield.NewID(s.ids.NewID())
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	key, ok := customfield.NewKey(input.Key)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	displayName, ok := customfield.NewDisplayName(input.DisplayName)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	fieldType, ok := customfield.NewFieldType(input.Type)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	enumOptions, ok := customFieldEnumOptions(input.EnumOptions)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	applicability, ok := customfield.NewApplicability(input.Applicability)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-	customAssetTypeIDs, err := s.validatedCustomFieldTargetIDs(ctx, input, scope, applicability)
+	prepared, err := s.prepareCustomFieldDefinition(ctx, input, scope)
 	if err != nil {
 		return customfield.Definition{}, err
 	}
-
-	inventoryID := customfield.InventoryID("")
-	if scope == customfield.ScopeInventory {
-		inventoryID = customfield.InventoryID(input.InventoryID.String())
-	}
-	definition, ok := customfield.NewDefinition(
-		id,
-		customfield.TenantID(input.TenantID.String()),
-		inventoryID,
-		scope,
-		key,
-		displayName,
-		fieldType,
-		enumOptions,
-		applicability,
-		customAssetTypeIDs,
-	)
-	if !ok {
-		return customfield.Definition{}, apperrors.ErrInvalidInput
-	}
-
-	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		Principal:   input.Principal,
-		TenantID:    input.TenantID,
-		InventoryID: input.InventoryID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionCustomFieldDefinitionCreated,
-		TargetType:  audit.TargetCustomFieldDefinition,
-		TargetID:    definition.ID.String(),
-		Metadata: map[string]string{
-			"field_key":     definition.Key.String(),
-			"scope":         definition.Scope.String(),
-			"applicability": definition.Applicability.String(),
-			"target_count":  strconv.Itoa(len(definition.CustomAssetTypeIDs)),
-		},
-	})
-	if err != nil {
-		return customfield.Definition{}, err
-	}
+	definition, auditRecord := prepared.Item, prepared.AuditRecord
 
 	if err := s.customFieldUnitOfWork.SaveCustomFieldDefinition(ctx, definition, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
@@ -195,19 +132,7 @@ func (s Service) createCustomFieldDefinition(ctx context.Context, input CreateCu
 		return customfield.Definition{}, err
 	}
 
-	s.observer.Record(ctx, ports.Event{
-		Name:    ports.EventCustomFieldDefinitionCreated,
-		Message: "custom field definition created",
-		Fields: map[string]string{
-			"tenant_id":     input.TenantID.String(),
-			"inventory_id":  input.InventoryID.String(),
-			"principal_id":  input.Principal.ID.String(),
-			"definition_id": definition.ID.String(),
-			"field_key":     definition.Key.String(),
-			"scope":         definition.Scope.String(),
-		},
-	})
-
+	s.RecordCustomFieldDefinitionCreated(ctx, input, definition)
 	return definition, nil
 }
 

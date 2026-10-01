@@ -11,5 +11,5 @@ export interface VoiceInventoryContextRepository {
   getVoiceInventoryContext(request?: ReadRequest): Promise<VoiceInventoryContext>;
 }
 export interface VoiceInventoryMutationObserver {
-  onVoicePlanExecuted(impact: { readonly tenantId: string; readonly inventoryId: string; readonly assetIds: readonly string[] }): void;
+  onVoicePlanExecuted(impact: { readonly tenantId: string; readonly inventoryId: string; readonly assetIds: readonly string[]; readonly configurationChanged?: boolean }): void;
 }

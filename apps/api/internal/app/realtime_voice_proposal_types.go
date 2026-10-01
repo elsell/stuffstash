@@ -12,6 +12,15 @@ import (
 
 func (a App) validateRealtimeVoiceProposalTypes(ctx context.Context, session RealtimeVoiceSession, commands []ports.ActionPlanCommandRecord) error {
 	for _, command := range commands {
+		if isCustomizationCommand(command.Kind) {
+			if len(commands) != 1 {
+				return ports.ErrInvalidProviderInput
+			}
+			if err := a.ensureActiveInventoryAccess(ctx, session.Principal, session.TenantID, session.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+				return err
+			}
+			continue
+		}
 		if command.Kind == actionplan.CommandKindUpdateAsset {
 			if len(commands) != 1 {
 				return ports.ErrInvalidProviderInput

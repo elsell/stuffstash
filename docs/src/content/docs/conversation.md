@@ -17,6 +17,11 @@ including cleared values. Fields you did not mention stay unchanged. If a field
 name is ambiguous, clarify which one you mean; unknown fields are not created
 silently.
 
+If you can configure the inventory, you can explicitly request a new custom field
+or asset type. Review its name, key, type and applicability before approving.
+Creation is a separate change: approve it first, then ask to use it on an item.
+Viewers and editors cannot create inventory definitions through conversation.
+
 Use **Stop** to cancel a request. If the connection ends while an approved change
 is running, its outcome may be unknown. Refresh the inventory before trying the
 change again; the app does not automatically repeat an approval.

@@ -65,7 +65,7 @@ func (e *Executor) prepare(ctx context.Context, input ports.ConversationEvaluati
 	if err := authorizer.GrantInventoryOwner(ctx, input.Principal, tenantID, inventoryID); err != nil {
 		return isolatedRuntime{}, err
 	}
-	application := app.New(app.Dependencies{Authorizer: authorizer, Tenants: store, Inventories: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Undoables: store, Search: store, Checkouts: store, Audit: store, ActionPlans: store, RealtimeSessions: store, IDs: e.deps.IDs, Clock: e.deps.Clock, Observer: e.deps.Observer, ConversationWorkflows: pinnedWorkflow{revision: input.Revision}, ConversationWorkflowLimits: input.Limits, RealtimeVoiceProviderResolver: textProviders{providers: input.Providers, explicit: input.WorkflowProviders, transcript: input.Case.Settings().Utterance, calls: calls}})
+	application := app.New(app.Dependencies{Authorizer: authorizer, Tenants: store, Inventories: store, CustomFields: store, CustomFieldUnitOfWork: store, CustomAssetTypes: store, CustomAssetTypeUnitOfWork: store, Assets: store, AssetUnitOfWork: store, AssetTags: store, AssetTagUnitOfWork: store, Undoables: store, Search: store, Checkouts: store, Audit: store, ActionPlans: store, ActionPlanCustomizations: store, RealtimeSessions: store, IDs: e.deps.IDs, Clock: e.deps.Clock, Observer: e.deps.Observer, ConversationWorkflows: pinnedWorkflow{revision: input.Revision}, ConversationWorkflowLimits: input.Limits, RealtimeVoiceProviderResolver: textProviders{providers: input.Providers, explicit: input.WorkflowProviders, transcript: input.Case.Settings().Utterance, calls: calls}})
 	fixtureIDs := map[string]string{}
 	tags := map[string]string{}
 	pending := input.Case.Settings().Assets

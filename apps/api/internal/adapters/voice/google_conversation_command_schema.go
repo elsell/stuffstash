@@ -65,7 +65,7 @@ func googleMergeableObject(schema map[string]any) bool {
 	}
 	for key := range schema {
 		switch key {
-		case "type", "properties", "required", "additionalProperties", "description":
+		case "type", "properties", "required", "additionalProperties", "description", "minProperties", "maxProperties":
 		default:
 			return false
 		}

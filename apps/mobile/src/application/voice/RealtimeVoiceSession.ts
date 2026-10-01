@@ -726,6 +726,7 @@ export class RealtimeVoiceSessionController {
           this.options.mutationObserver?.onVoicePlanExecuted({
             tenantId: this.currentContext.tenantId,
             inventoryId: this.currentContext.inventoryId,
+            ...(state.actionPlan.commands.some(command => command.operation === 'configure') ? { configurationChanged: true } : {}),
             assetIds: [...new Set((event.commandResults ?? []).map(result => result.assetId).filter(id => id.trim().length > 0))]
           });
         }
@@ -1224,6 +1225,8 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
 }
 
 const voiceActionPlanOperations = {
+  create_custom_asset_type: 'configure',
+  create_custom_field_definition: 'configure',
   create_asset: 'create',
   create_location: 'create',
   move_asset: 'move',
@@ -1253,6 +1256,7 @@ export function isValidVoiceActionPlanProposal(proposal: VoiceActionPlanProposal
     if (command.expirationCleared !== undefined && (typeof command.expirationCleared !== 'boolean' || (command.expirationCleared && (command.kind !== 'update_asset' || command.expiration !== undefined)))) return false;
     if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true && !command.changes?.length) return false;
     if (command.changes !== undefined && !isValidVoiceActionPlanChanges(command.changes)) return false;
+    if (command.operation === 'configure' && !isValidVoiceActionPlanChanges(command.changes)) return false;
     const expectedOperation = voiceActionPlanOperations[command.kind as keyof typeof voiceActionPlanOperations];
     if (!expectedOperation || command.operation !== expectedOperation) {
       return false;

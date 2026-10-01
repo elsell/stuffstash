@@ -24,6 +24,9 @@ func validActionPlanCommandID(value string) bool {
 func validateExecutableActionPlanArguments(kind actionplan.CommandKind, arguments []byte) error {
 	command := ports.ActionPlanCommandRecord{Kind: kind, ArgumentsJSON: arguments}
 	switch kind {
+	case actionplan.CommandKindCreateCustomAssetType, actionplan.CommandKindCreateCustomFieldDefinition:
+		_, err := parseActionPlanCustomizationArguments(command)
+		return err
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		_, err := parseActionPlanCreateArguments(command)
 		return err

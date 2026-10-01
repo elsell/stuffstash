@@ -59,6 +59,7 @@ type App struct {
 	providerProfileTester        ports.ProviderProfileTester
 	realtimeSessions             ports.RealtimeSessionRepository
 	actionPlans                  ports.ActionPlanRepository
+	actionPlanCustomizations     ports.ActionPlanCustomizationRepository
 	importSources                ports.ImportSourceReader
 	importAttachmentSources      ports.ImportAttachmentSource
 	importJobs                   ports.ImportJobRepository
@@ -155,6 +156,7 @@ type Dependencies struct {
 	ProviderProfileTester            ports.ProviderProfileTester
 	RealtimeSessions                 ports.RealtimeSessionRepository
 	ActionPlans                      ports.ActionPlanRepository
+	ActionPlanCustomizations         ports.ActionPlanCustomizationRepository
 	ImportSources                    ports.ImportSourceReader
 	ImportAttachmentSources          ports.ImportAttachmentSource
 	ImportJobs                       ports.ImportJobRepository
@@ -255,6 +257,7 @@ func New(deps Dependencies) App {
 		providerProfileTester:        deps.ProviderProfileTester,
 		realtimeSessions:             deps.RealtimeSessions,
 		actionPlans:                  deps.ActionPlans,
+		actionPlanCustomizations:     deps.ActionPlanCustomizations,
 		importSources:                deps.ImportSources,
 		importAttachmentSources:      importAttachmentSources,
 		importJobs:                   deps.ImportJobs,

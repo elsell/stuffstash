@@ -32,6 +32,19 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		Summary:   command.Summary,
 		Operation: actionPlanCommandOperation(command.Kind),
 	}
+	if isCustomizationCommand(command.Kind) {
+		prepared, err := a.prepareActionPlanCustomization(ctx, ActionPlanDecisionInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID}, command)
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		proposal.Changes = prepared.changes
+		if prepared.assetType != nil {
+			proposal.Title = prepared.assetType.Item.DisplayName.String()
+		} else {
+			proposal.Title = prepared.definition.Item.DisplayName.String()
+		}
+		return proposal, nil
+	}
 	if command.Kind == actionplan.CommandKindCreateAsset || command.Kind == actionplan.CommandKindCreateLocation {
 		args, err := parseActionPlanCreateArguments(command)
 		if err == nil {
@@ -141,6 +154,8 @@ func (a App) realtimeVoiceReviewAsset(ctx context.Context, session RealtimeVoice
 
 func actionPlanCommandOperation(kind actionplan.CommandKind) string {
 	switch kind {
+	case actionplan.CommandKindCreateCustomAssetType, actionplan.CommandKindCreateCustomFieldDefinition:
+		return "configure"
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		return "create"
 	case actionplan.CommandKindMoveAsset:

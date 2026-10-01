@@ -13,6 +13,10 @@ import (
 func (s *Store) SaveCustomAssetType(_ context.Context, assetType customfield.AssetType, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.saveCustomAssetTypeLocked(assetType, auditRecord)
+}
+
+func (s *Store) saveCustomAssetTypeLocked(assetType customfield.AssetType, auditRecord audit.Record) error {
 
 	if err := s.customAssetTypeParentIsValid(assetType); err != nil {
 		return err
