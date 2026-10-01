@@ -7,6 +7,8 @@ func registerMCPHandler(mux *http.ServeMux, handler http.Handler) {
 	if handler == nil {
 		return
 	}
-	mux.Handle("/mcp", handler)
-	mux.Handle("/.well-known/oauth-protected-resource/mcp", handler)
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
+		mux.Handle(method+" /mcp", handler)
+	}
+	mux.Handle("GET /.well-known/oauth-protected-resource/mcp", handler)
 }

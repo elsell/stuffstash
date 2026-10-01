@@ -119,7 +119,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		r.Body = io.NopCloser(bytes.NewReader(body))
 	}
-	transport := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return h.server(principal) }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true, MaxRequestBodyBytes: h.options.MaxBodyBytes})
+	transport := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return h.server(r.Context(), principal) }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true, MaxRequestBodyBytes: h.options.MaxBodyBytes})
 	transport.ServeHTTP(w, r)
 }
 
@@ -143,11 +143,17 @@ func (h *handler) unauthorized(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", `Bearer resource_metadata="`+metadata+`"`)
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
 }
-func (h *handler) server(principal identity.Principal) *mcp.Server {
+func (h *handler) server(requestContext context.Context, principal identity.Principal) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "Stuff Stash", Version: "1"}, &mcp.ServerOptions{SupportedProtocolVersions: []string{"2026-07-28", "2025-11-25"}})
 	for _, definition := range tools.ReadCatalog() {
 		mcp.AddTool(server, &mcp.Tool{Name: string(definition.Name), Description: definition.Description, InputSchema: definition.InputSchema, OutputSchema: definition.OutputSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true}}, func(ctx context.Context, req *mcp.CallToolRequest, input arguments) (*mcp.CallToolResult, map[string]any, error) {
-			output, err := h.call(ctx, principal, definition, input)
+			// The SDK detaches HTTP cancellation for older protocol versions. This
+			// stateless server must retain both the carrier deadline and tool cancellation.
+			callContext, cancel := context.WithCancel(requestContext)
+			stop := context.AfterFunc(ctx, cancel)
+			defer stop()
+			defer cancel()
+			output, err := h.call(callContext, principal, definition, input)
 			return nil, output, err
 		})
 	}
