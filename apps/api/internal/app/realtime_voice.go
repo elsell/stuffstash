@@ -30,7 +30,7 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
 		return RealtimeVoiceSession{}, err
 	}
-	if input.Source != RealtimeVoiceSourceMobile {
+	if input.Source != RealtimeVoiceSourceMobile && input.Source != RealtimeVoiceSourceWebText {
 		return RealtimeVoiceSession{}, apperrors.ErrInvalidInput
 	}
 	if input.InputAudio.MimeType != "audio/mp4" || input.InputAudio.Channels != 1 {
