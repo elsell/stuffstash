@@ -195,3 +195,9 @@ Mobile repository presentation labels also use catalog messages: fallback locati
 and update labels, known search-match field names, and complete dated-update
 messages. Preserve server titles, descriptions, unknown field identifiers and
 existing date formatting; translating a display label must not change API values.
+
+## Diagnostics fallback copy
+
+Settings diagnostics must resolve missing server/version labels through the client
+catalog. Actual configured URLs and version identifiers remain verbatim; the
+authentication-mode enum remains a protocol value.

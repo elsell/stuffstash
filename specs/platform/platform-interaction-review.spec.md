@@ -1794,3 +1794,11 @@ other-principal reads cannot access the newly created inventory. Fixture credent
 are test-only. Disable browser traces/videos and do not persist tokens; retain
 only post-login product screenshots. This proves that connected fixture journey,
 not production identity-provider configuration or physical mobile behavior.
+
+### Connected inventory export acceptance
+
+The isolated real-OIDC browser journey creates an item through the production UI,
+exports JSON and CSV through inventory settings, and inspects actual browser
+downloads for the saved item. Verify export rejects absent and other-principal
+credentials. No route interception or injected sessions may stand in for the API.
+Browser downloads do not substitute for physical iOS recipient saving.

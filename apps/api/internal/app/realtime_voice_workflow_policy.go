@@ -1,13 +1,6 @@
 package app
 
-import (
-	"github.com/stuffstash/stuff-stash/internal/domain/search"
-	"math"
-)
-
-func realtimeVoiceSearchModes(RealtimeVoiceSession) []search.Mode {
-	return []search.Mode{search.ModeFuzzy}
-}
+import "math"
 
 // RealtimeVoiceSessionTurnLimit counts the initial request plus permitted follow-ups.
 func RealtimeVoiceSessionTurnLimit(session RealtimeVoiceSession) int {

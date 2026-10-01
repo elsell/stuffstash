@@ -1,5 +1,7 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "settings.serverNotConfigured": "Not configured",
+  "settings.versionUnknown": "Unknown",
   "voice.openEntityIn": "Open {title} in {context}",
   "voice.openEntity": "Open {title}",
   "voice.entityPosition": "{label} ({position} of {total})",
