@@ -53,9 +53,15 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
   await page.goto(`/settings/tenants/${scope[1]}/inventories/${scope[2]}`);
   for (const format of ['json', 'csv'] as const) {
     await page.getByRole('button', { name: 'Export inventory', exact: true }).click();
-    const downloaded = page.waitForEvent('download');
+    const downloaded = page.waitForEvent('download', { timeout: 20_000 }).catch(() => null);
+    const exported = page.waitForResponse(response => response.url() === `${inventoryURL}/export?format=${format}`, { timeout: 20_000 });
     await page.getByRole('menuitem', { name: format === 'json' ? /JSON —/ : /CSV —/ }).click();
+    const response = await exported;
+    await page.screenshot({ path: testInfo.outputPath(`connected-export-${format}-response.png`) });
+    expect(response.status(), `Authenticated ${format} export HTTP status`).toBe(200);
     const file = await downloaded;
+    expect(file, `Browser must accept the ${format} export download`).not.toBeNull();
+    if (!file) throw new Error('Browser did not accept the inventory download.');
     expect(file.suggestedFilename()).toBe(`stuff-stash-inventory.${format}`);
     expect(await file.failure()).toBeNull();
     const filePath = await file.path();
