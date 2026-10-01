@@ -292,3 +292,13 @@ Unknown field keys, fields that do not apply to the asset's custom asset type, w
 - Tests must cover unknown lifecycle filters and cursors reused across lifecycle, tenant, inventory, or effective-scope boundaries.
 - Security-sensitive custom field behavior must have adversarial end-to-end tests before public interaction points expose it.
 - The first API slice must include adversarial tests for unauthenticated requests, unrelated users, viewers attempting definition creation, duplicate keys, wrong tenant, wrong inventory, wrong-scope cursors, and asset values referencing hidden or unknown definitions.
+
+
+### Application custom-field patches
+
+The asset application update input supports a named custom-field patch in addition
+to the existing full replacement input. Supplying both is invalid. Patch keys,
+including null clears, are checked against effective definitions and applicability.
+Merge against the authorized current asset inside update preparation, preserving
+omitted values; the persisted expected-current snapshot protects concurrent writes.
+REST replacement semantics are unchanged. Conversation uses the patch input.
