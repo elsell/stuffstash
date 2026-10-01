@@ -26,3 +26,12 @@ before asserting its native title. If the body marker fails, investigate input
 activation; if it passes but the title fails, investigate header propagation.
 Do not change production search behavior based on these inconclusive failures.
 A fresh native result is still required; no retry result is claimed here.
+
+Expansion run36926429000, sourcec7a92147, iPad completed Add/recovery and
+protected-proposal close/reset, but location search's immediate assertion read
+`m` after typing `missing`. The retained [final screenshot](ipad-expanded-query-retained.png)
+and hierarchy show the full `missing` query and correct empty result. Replace the
+immediate assertion with the same bounded live-field observer used above; retain
+exact value equality and the existing timeout. No input replay, forced value or
+production behavior change is allowed to make this assertion pass. iPhone and the
+remaining post-search steps still need their own result.

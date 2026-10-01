@@ -72,7 +72,7 @@ Native expansion run36920101432 passed on iPhone/iPad at673fb0b5;
 [inspected Add/recovery evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-localization.md).
 
 PR #230 merged0538ddb6 after CI36922781635 passed. Its separate
-release36925924885 is pending. This batch closed three named gaps:
+release36925924885 succeeded as v0.27.2, including TestFlight build/upload. This batch closed three named gaps:
 - G6 option copy: migrate previously missed nested option labels and displayed
   fixture-selection fallback labels into the catalog, preserving wire values.
 - G6 enforcement: check display properties inside option objects and Svelte
@@ -80,14 +80,21 @@ release36925924885 is pending. This batch closed three named gaps:
 - D2 inventory fidelity: include expressions in component option attributes in
   residual-copy triage and correct the AssetDetail error-classification source path.
 
-Current frozen batch, PR #232 (not a release gate for #230):
+PR #232 merged001dfb28; release36929650300 is pending:
 - G6 adapter recovery: catalog surfaced timeout and onboarding failures while
   preserving cancellation and tenancy semantics.
 - V1 native expansion: retain inspected en-XA Add/recovery evidence on phone/tablet.
 - D2 acceptance status: distinguish this scoped success from still-missing
   physical export, assistive, connected native and broader directional evidence.
-  Native search-placement run36923519340 is pending at58bb40a8; it covers
-  representative search/keyboard and proposal location retry/return fixtures.
+  Native search-placement run36923519340 completed seven of eight tests on each
+  device; [scoped results and current diagnosis](../../docs/reports/spec-gap-evidence-2026-10-01/native-search/README.md).
+
+Current frozen acceptance batch, draft PR #233:
+- V1 native search/retry/selection/return under pseudolocales.
+- V1 pending-proposal preservation across close and cancelled reset.
+- G6 production-catalog expectations preserving user text and system controls.
+The suite is not accepted yet. Test-only observation corrections follow retained
+screenshots; they do not change production search or establish physical acceptance.
 
 G8 source review found no further concrete root-policy ownership violation after
 #228; construction, cross-domain composition and compatibility facades remain

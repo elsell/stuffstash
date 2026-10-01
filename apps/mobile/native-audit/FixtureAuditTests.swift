@@ -8,6 +8,13 @@ private let auditLocalizationRTL = false
 
 final class FixtureAuditTests: XCTestCase {
   private func localized(_ value: String) -> String { auditLocalizationLabels[value] ?? value }
+  private func assertNativeSearchValue(_ expected: String) {
+    XCTAssertEqual(observePredicate("search-query-timing", predicate: NSPredicate { _, _ in
+      let current = self.app.searchFields.firstMatch
+      return current.exists && current.value as? String == expected
+    }, object: app), .completed, "Native search must retain the complete query")
+  }
+
   func testNativeGalleryReportsImageLoadAndFailure() throws {
     let entry = app.buttons["Audit image telemetry"]
     XCTAssertTrue(entry.waitForExistence(timeout: 10))
@@ -1107,12 +1114,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
-    XCTAssertEqual(observePredicate("search-query-timing",
-      predicate: NSPredicate { _, _ in
-        let current = self.app.searchFields.firstMatch
-        return current.exists && current.value as? String == "Tools"
-      }, object: app),
-      .completed, "Native search must retain the complete query")
+    assertNativeSearchValue("Tools")
     let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
@@ -3986,7 +3988,7 @@ final class FixtureAuditTests: XCTestCase {
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     waitForKeyboard(); field.typeText("missing")
-    XCTAssertEqual(field.value as? String, "missing")
+    assertNativeSearchValue("missing")
     XCTAssertTrue(app.staticTexts[localized("No matching locations")].waitForExistence(timeout: 10))
     XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
     capture("voice-location-empty-search")
@@ -4012,7 +4014,7 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
     XCTAssertTrue(clearedField.isHittable); waitForKeyboard(); clearedField.typeText("Garage")
-    XCTAssertEqual(clearedField.value as? String, "Garage")
+    assertNativeSearchValue("Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()
     let changed = app.buttons[localized("Change containing location, currently Garage / Garage bin")]
