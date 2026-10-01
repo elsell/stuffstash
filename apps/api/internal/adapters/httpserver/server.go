@@ -54,7 +54,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 		session:  normalizeDuration(options.RealtimeVoiceSessionTimeout, 15*time.Minute),
 		idle:     normalizeDuration(options.RealtimeVoiceIdleTimeout, 15*time.Second),
 		followUp: normalizeDuration(options.RealtimeVoiceFollowUpTimeout, 5*time.Minute),
-	}))
+	}, options.CORSAllowedOrigins))
 
 	config := huma.DefaultConfig("Stuff Stash API", "0.1.0")
 	config.DocsPath = "/docs"

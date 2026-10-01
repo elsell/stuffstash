@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import ChevronLeft from '@lucide/svelte/icons/chevron-left';
   import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -62,13 +63,13 @@
     return [
       {
         id: 'fields',
-        title: 'Fields',
-        emptyText: 'No custom fields planned.',
+        title: t('web.ImportPreviewSamples.fields'),
+        emptyText: t('web.ImportPreviewSamples.noCustomFieldsPlanned'),
         truncated: preview.fieldsTruncated,
         columns: [
-          { key: 'name', label: 'Field' },
-          { key: 'key', label: 'Key' },
-          { key: 'type', label: 'Type' }
+          { key: 'name', label: t('web.ImportPreviewSamples.field') },
+          { key: 'key', label: t('web.ImportPreviewSamples.key') },
+          { key: 'type', label: t('web.ImportPreviewSamples.type') }
         ],
         rows: preview.fields.map((field) => ({
           id: field.key,
@@ -81,13 +82,13 @@
       },
       {
         id: 'tags',
-        title: 'Tags',
-        emptyText: 'No tags planned.',
+        title: t('web.ImportPreviewSamples.tags'),
+        emptyText: t('web.ImportPreviewSamples.noTagsPlanned'),
         truncated: Boolean(preview.tagsTruncated),
         columns: [
-          { key: 'name', label: 'Tag' },
-          { key: 'key', label: 'Key' },
-          { key: 'color', label: 'Color' }
+          { key: 'name', label: t('web.ImportPreviewSamples.tag') },
+          { key: 'key', label: t('web.ImportPreviewSamples.key') },
+          { key: 'color', label: t('web.ImportPreviewSamples.color') }
         ],
         rows: (preview.tags ?? []).map((tag) => ({
           id: tag.key,
@@ -95,19 +96,19 @@
           cells: {
             name: tag.displayName || tag.key,
             key: tag.key,
-            color: tag.color || 'No color'
+            color: tag.color || t('web.ImportPreviewSamples.noColor')
           }
         }))
       },
       {
         id: 'locations',
-        title: 'Locations',
-        emptyText: 'No locations planned.',
+        title: t('web.ImportPreviewSamples.locations'),
+        emptyText: t('web.ImportPreviewSamples.noLocationsPlanned'),
         truncated: preview.locationsTruncated,
         columns: [
-          { key: 'name', label: 'Location' },
-          { key: 'kind', label: 'Kind' },
-          { key: 'context', label: 'Context' }
+          { key: 'name', label: t('web.ImportPreviewSamples.location') },
+          { key: 'kind', label: t('web.ImportPreviewSamples.kind') },
+          { key: 'context', label: t('web.ImportPreviewSamples.context') }
         ],
         rows: preview.locations.map((item, index) => ({
           id: `location-${index}-${item.title}`,
@@ -120,13 +121,13 @@
       },
       {
         id: 'assets',
-        title: 'Assets',
-        emptyText: 'No asset records planned.',
+        title: t('web.ImportPreviewSamples.assets'),
+        emptyText: t('web.ImportPreviewSamples.noAssetRecordsPlanned'),
         truncated: preview.assetsTruncated,
         columns: [
-          { key: 'name', label: 'Asset' },
-          { key: 'kind', label: 'Kind' },
-          { key: 'context', label: 'Context' }
+          { key: 'name', label: t('web.ImportPreviewSamples.asset') },
+          { key: 'kind', label: t('web.ImportPreviewSamples.kind') },
+          { key: 'context', label: t('web.ImportPreviewSamples.context') }
         ],
         rows: preview.assets.map((item, index) => ({
           id: `asset-${index}-${item.title}`,
@@ -139,19 +140,19 @@
       },
       {
         id: 'attachments',
-        title: 'Photos/files',
-        emptyText: 'No photos or files planned.',
+        title: t('web.ImportPreviewSamples.photosFiles'),
+        emptyText: t('web.ImportPreviewSamples.noPhotosOrFilesPlanned'),
         truncated: preview.attachmentsTruncated,
         columns: [
-          { key: 'name', label: 'File' },
-          { key: 'type', label: 'Type' },
-          { key: 'size', label: 'Size' }
+          { key: 'name', label: t('web.ImportPreviewSamples.file') },
+          { key: 'type', label: t('web.ImportPreviewSamples.type') },
+          { key: 'size', label: t('web.ImportPreviewSamples.size') }
         ],
         rows: preview.attachments.map((attachment, index) => ({
           id: `attachment-${index}-${attachment.fileName || 'unnamed'}`,
           cells: {
-            name: `${attachment.fileName || 'Unnamed attachment'}${attachment.primary ? ' (primary)' : ''}`,
-            type: attachment.contentType || 'unknown type',
+            name: attachment.primary ? t('import.primaryAttachment', { name: attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment') }) : attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment'),
+            type: attachment.contentType || t('import.unknownContentType'),
             size: fileSizeLabel(attachment.sizeBytes)
           }
         }))
@@ -177,11 +178,11 @@
   }
 
   function sectionCountLabel(section: PlanSection): string {
-    if (section.rows.length === 0) return 'None planned';
+    if (section.rows.length === 0) return t('web.ImportPreviewSamples.nonePlanned');
     if (section.rows.length > PLAN_PAGE_SIZE || section.truncated) {
-      return `${visibleStart(section) + 1}-${visibleEnd(section)} of ${section.rows.length}${section.truncated ? '+' : ''}`;
+      return t(section.truncated ? 'import.visibleRangeTruncated' : 'import.visibleRange', { start: visibleStart(section) + 1, end: visibleEnd(section), total: section.rows.length });
     }
-    return `${section.rows.length} ${section.rows.length === 1 ? 'record' : 'records'}`;
+    return t('import.records', { count: section.rows.length });
   }
 
   function setPage(section: PlanSection, nextPage: number): void {
@@ -201,14 +202,14 @@
           <small>{sectionCountLabel(section)}</small>
         </div>
         {#if section.truncated}
-          <span class="partial-list-badge">Partial list</span>
+          <span class="partial-list-badge">{t('web.ImportPreviewSamples.partialList')}</span>
         {/if}
       </div>
 
       {#if section.rows.length === 0}
         <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
       {:else}
-        <Table.Root aria-label={`${section.title} plan preview`}>
+        <Table.Root aria-label={t('web.ImportPreviewSamples.planPreview', { title: String(section.title) })}>
           <Table.Header>
             <Table.Row>
               {#each section.columns as column}
@@ -242,12 +243,12 @@
         </Table.Root>
         {#if section.rows.length > PLAN_PAGE_SIZE}
           <div class="plan-pagination">
-            <span>Page {pageBySection[section.id] + 1} of {planPageCount(section)}</span>
+            <span>{t('web.ImportPreviewSamples.pageOfFull', { value: pageBySection[section.id] + 1, value2: planPageCount(section) })}</span>
             <Button.Root
               variant="outline"
               size="icon"
               disabled={pageBySection[section.id] === 0}
-              aria-label={`Previous ${section.title.toLowerCase()} plan page`}
+              aria-label={t('web.ImportPreviewSamples.previousPlanPage', { value: String(section.title.toLowerCase()) })}
               onclick={() => setPage(section, pageBySection[section.id] - 1)}
             >
               <ChevronLeft size={16} aria-hidden="true" />
@@ -256,7 +257,7 @@
               variant="outline"
               size="icon"
               disabled={pageBySection[section.id] >= planPageCount(section) - 1}
-              aria-label={`Next ${section.title.toLowerCase()} plan page`}
+              aria-label={t('web.ImportPreviewSamples.nextPlanPage', { value: String(section.title.toLowerCase()) })}
               onclick={() => setPage(section, pageBySection[section.id] + 1)}
             >
               <ChevronRight size={16} aria-hidden="true" />

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { HomeCheckedOutAssetViewModel } from '../../application/home/HomeDashboardQuery';
@@ -58,11 +59,11 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       completedReturns.current.set(asset.id, result.id);
       if (mounted.current && session.active) {
         updateEditor({ sessionId: ++editorSequence.current, asset, checkoutId: result.id, undoableOperationId: result.undoableOperationId, details: '', isSaving: false });
-        if (!result.undoableOperationId) feedback.showNotice({ tone: 'warning', title: 'Return completed without undo', message: 'The asset was returned, but this return cannot be canceled.' });
+        if (!result.undoableOperationId) feedback.showNotice({ tone: 'warning', title: t('mobile.useHomeReturnActions.returnCompletedWithoutUndo'), message: t('mobile.useHomeReturnActions.theAssetWasReturnedButThisReturnCannotBe') });
       }
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      notice(session, 'Could not return asset', error, 'The asset was not returned.');
+      notice(session, t('mobile.useHomeReturnActions.couldNotReturnAsset'), error, t('mobile.useHomeReturnActions.theAssetWasNotReturned'));
     } finally {
       operationPending.current = false;
       if (mounted.current) setReturningAssetId(undefined);
@@ -84,7 +85,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       updateEditor(undefined);
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      updateEditor({ ...draft, isSaving: false, error: { title: undo ? 'Could not cancel return' : 'Could not save return details', message: error instanceof Error ? error.message : undo ? 'The asset is still returned.' : 'Return details were not saved.' } });
+      updateEditor({ ...draft, isSaving: false, error: { title: undo ? t('mobile.useHomeReturnActions.couldNotCancelReturn') : t('mobile.useHomeReturnActions.couldNotSaveReturnDetails'), message: error instanceof Error ? error.message : undo ? t('mobile.useHomeReturnActions.theAssetIsStillReturned') : t('mobile.useHomeReturnActions.returnDetailsWereNotSaved') } });
     } finally { operationPending.current = false; }
   }
   return {

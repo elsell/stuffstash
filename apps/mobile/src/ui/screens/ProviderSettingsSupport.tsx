@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { isAccessFailure } from '../serverState/isAccessFailure';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
@@ -20,19 +21,19 @@ export function useProviderProfiles(query: ProviderProfileSettingsQuery) {
 
 export function useProviderProfileModel(query: ProviderProfileSettingsQuery) {
   const profiles = useProviderProfiles(query);
-  const state: Exclude<ProviderState, { status: 'ready' }> | { status: 'ready'; viewModel: Pick<ProviderProfileSettingsViewModel, 'profiles'> } = isAccessFailure(profiles.error) ? { status: 'error', message: 'Provider profiles are no longer available.' } : profiles.data
+  const state: Exclude<ProviderState, { status: 'ready' }> | { status: 'ready'; viewModel: Pick<ProviderProfileSettingsViewModel, 'profiles'> } = isAccessFailure(profiles.error) ? { status: 'error', message: t('mobile.ProviderSettingsSupport.providerProfilesAreNoLongerAvailable') } : profiles.data
     ? { status: 'ready', viewModel: { profiles: profiles.data } }
-    : profiles.isError ? { status: 'error', message: 'Provider profiles could not be loaded.' } : { status: 'loading' };
+    : profiles.isError ? { status: 'error', message: t('mobile.ProviderSettingsSupport.providerProfilesCouldNotBeLoaded') } : { status: 'loading' };
   return { state, ownerKey: JSON.stringify(profiles.resourceKey), load: async () => { await profiles.reconcile(); }, retry: async () => { await profiles.refetch(); }, hasRefreshError: profiles.isRefetchError };
 }
 
 export function useProviderSettings(query: ProviderProfileSettingsQuery) {
   const profiles = useProviderProfiles(query);
   const configuration = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceConfiguration, query: (signal) => query.getConfiguration({ signal }) });
-  const state: ProviderState = isAccessFailure(profiles.error) || isAccessFailure(configuration.error) ? { status: 'error', message: 'Voice settings are no longer available.' } : profiles.data && configuration.data ? { status: 'ready', viewModel: {
+  const state: ProviderState = isAccessFailure(profiles.error) || isAccessFailure(configuration.error) ? { status: 'error', message: t('mobile.ProviderSettingsSupport.voiceSettingsAreNoLongerAvailable') } : profiles.data && configuration.data ? { status: 'ready', viewModel: {
     profiles: profiles.data, configuration: configuration.data,
     missingCapabilities: configuration.data.slots.filter((slot) => slot.readiness !== 'ready').map((slot) => slot.capability)
-  } } : profiles.isError || configuration.isError ? { status: 'error', message: 'Voice settings could not be loaded.' } : { status: 'loading' };
+  } } : profiles.isError || configuration.isError ? { status: 'error', message: t('mobile.ProviderSettingsSupport.voiceSettingsCouldNotBeLoaded') } : { status: 'loading' };
   const load = async () => { await Promise.all([profiles.reconcile(), configuration.reconcile()]); };
   const retry = async () => { await Promise.all([profiles.refetch(), configuration.refetch()]); };
   return { state, ownerKey: JSON.stringify(profiles.resourceKey), load, retry, hasRefreshError: profiles.isRefetchError || configuration.isRefetchError };
@@ -49,17 +50,17 @@ export function ProviderStateView({
 }) {
   const { styles } = useSettingsListStyles();
   if (state.status === 'loading') {
-    return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={`Loading ${taskLabel}`} /></View>;
+    return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={t('mobile.ProviderSettingsSupport.loading', { taskLabel: String(taskLabel) })} /></View>;
   }
   return (
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
-      <Text accessibilityRole="header" style={styles.errorTitle}>{`Could not load ${taskLabel}`}</Text>
+      <Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.ProviderSettingsSupport.couldNotLoad', { taskLabel: String(taskLabel) })}</Text>
       <Text style={styles.errorMessage}>{state.message}</Text>
-      <NativeCommandButton label="Retry" onPress={() => void onRetry()} />
+      <NativeCommandButton label={t('mobile.ProviderSettingsSupport.retry')} onPress={() => void onRetry()} />
     </ScrollView>
   );
 }
 
 export function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'The action failed safely.';
+  return error instanceof Error ? error.message : t('mobile.ProviderSettingsSupport.theActionFailedSafely');
 }

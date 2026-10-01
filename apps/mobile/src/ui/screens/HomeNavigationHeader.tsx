@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import React, { useMemo } from 'react';
 import { Stack, router } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
@@ -17,16 +18,16 @@ export function HomeNavigationHeader({ dashboard, notificationAction }: {
   const styles = useMemo(() => createHomeScreenStyles(colors), [colors]);
   const { width, fontScale } = useWindowDimensions();
   const actions: NativeHeaderAction[] = [
-    ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: 'Add an asset', onPress: () => router.push('/add') }] : []),
+    ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: t('mobile.HomeNavigationHeader.addAnAsset'), onPress: () => router.push('/add') }] : []),
     ...(notificationAction ? [notificationAction] : []),
-    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') }
+    { kind: 'account', label: t('mobile.HomeNavigationHeader.openAccountAndSettings'), onPress: () => router.push('/settings') }
   ];
   const actionOptions = useNativeHeaderActionOptions(actions);
   const inventoryName = dashboard?.inventoryName;
   const tenantName = dashboard?.tenantName;
   const hasDashboard = dashboard !== undefined;
   const headerLeft = useMemo(() => hasDashboard ? () => <Pressable
-      accessibilityLabel={`Current inventory ${inventoryName}, tenant ${tenantName}. Switch inventory`}
+      accessibilityLabel={t('mobile.HomeNavigationHeader.currentInventoryTenantSwitchInventory', { inventoryName: String(inventoryName), tenantName: String(tenantName) })}
       accessibilityRole="button" onPress={() => router.push('/tenant-switcher')}
       style={[styles.contextControl, { flex: 0, width: homeInventoryControlWidth(width, actions.length) }]}
     >
@@ -36,6 +37,6 @@ export function HomeNavigationHeader({ dashboard, notificationAction }: {
       </View>
       <ChevronDown color={colors.textMuted} size={18} strokeWidth={2} />
     </Pressable> : undefined, [hasDashboard, inventoryName, tenantName, styles, colors.textMuted, width, fontScale, actions.length]);
-  const options = useMemo(() => ({ title: hasDashboard ? '' : 'Home', headerLeft, ...actionOptions }), [hasDashboard, headerLeft, actionOptions]);
+  const options = useMemo(() => ({ title: hasDashboard ? '' : t('mobile.HomeNavigationHeader.home'), headerLeft, ...actionOptions }), [hasDashboard, headerLeft, actionOptions]);
   return <Stack.Screen options={options} />;
 }

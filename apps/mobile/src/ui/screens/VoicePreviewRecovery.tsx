@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
@@ -27,8 +28,8 @@ export function VoicePreviewRecovery({ message, identity, onRetry }: {
     }
   };
   return <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.md }}>
-    <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>Voice unavailable</Text>
+    <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>{t('mobile.VoicePreviewRecovery.voiceUnavailable')}</Text>
     <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{message}</Text>
-    <NativeCommandButton label="Retry conversation" disabled={retrying} onPress={() => { void retry(); }} />
+    <NativeCommandButton label={t('mobile.VoicePreviewRecovery.retryConversation')} disabled={retrying} onPress={() => { void retry(); }} />
   </ScrollView>;
 }

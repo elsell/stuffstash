@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import type { ExpirationFilter, ExpirationPage, ExpirationRepository } from '$lib/ports/expirationRepository';
 export interface ExpirationListState { page?: ExpirationPage; loading: boolean; appending: boolean; error: string; }
@@ -38,7 +39,7 @@ export class ExpirationList {
     const scopePrefix = JSON.stringify([tenantId,inventoryId]).slice(0,-1) + ',';
     for (const cachedKey of this.cache.keys()) if (cachedKey.startsWith(scopePrefix)) this.cache.delete(cachedKey);
    }
-   this.update({ page: denied ? undefined : this.state.page, loading: false, appending: false, error: denied ? 'This inventory is no longer available.' : append ? 'More expiration dates could not be loaded. Try again.' : 'Expiration could not be refreshed. Try again.' });
+   this.update({ page: denied ? undefined : this.state.page, loading: false, appending: false, error: denied ? t('web.expirationList.thisInventoryIsNoLongerAvailable') : append ? t('web.expirationList.moreExpirationDatesCouldNotBeLoadedTryAgain') : t('web.expirationList.expirationCouldNotBeRefreshedTryAgain') });
   }
  }
  private update(state: ExpirationListState) { this.state = state; this.changed(state); }

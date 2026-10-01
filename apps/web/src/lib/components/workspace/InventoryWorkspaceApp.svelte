@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
+  import InventoryConversationPanel from './InventoryConversationPanel.svelte';
+  import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
   import { inventoryExportContext } from '$lib/ports/inventoryExport';
   import type { ExportInventory } from '$lib/application/exportInventory';
   import { expirationWorkspaceContext, type ExpirationWorkspace, type ExpirationFilter } from '$lib/ports/expirationRepository';
@@ -105,7 +108,7 @@
 
   let {
     repository,
-    exportCommand, conversations,
+    exportCommand, conversations, inventoryConversation,
     notifications,
     expiration,
     observer = { record: () => {} },
@@ -115,6 +118,7 @@
   }: {
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
     exportCommand?: ExportInventory;
+    inventoryConversation?: InventoryConversationTransport;
     conversations?: ConversationWorkspaceRepositories;
     notifications?: NotificationWorkspace;
     expiration?: ExpirationWorkspace;
@@ -323,8 +327,8 @@
       selectedAssetAttachments = [];
       selectedAssetCheckoutHistory = [];
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
-      setSuccessNotification(`Created ${inventoryName}.`, {
-        label: 'Open inventory',
+      setSuccessNotification(t("workspace.inventoryCreated", { title: inventoryName }), {
+        label: t('web.InventoryWorkspaceApp.openInventory'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
           data.context.selectedTenantId,
@@ -335,7 +339,7 @@
       if (handleSessionExpired(caught)) {
         return;
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       if (rethrow) {
         throw new Error(error);
       }
@@ -346,11 +350,11 @@
 
   async function createAsset(draft: AddAssetSubmission): Promise<AddAssetSaveResult> {
     if (!selectedInventory) {
-      error = 'Create an inventory before adding assets.';
+      error = t('web.InventoryWorkspaceApp.createAnInventoryBeforeAddingAssets');
       return { saved: false };
     }
     if (!createAssetAllowed) {
-      error = 'You do not have permission to add assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToAddAssetsIn');
       return { saved: false };
     }
     busy = true;
@@ -411,7 +415,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     busy = true;
@@ -441,7 +445,7 @@
         }
       };
       loadedAssetDetail = asset;
-      setMutationSuccessNotification(`Saved ${asset.title}.`, asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
+      setMutationSuccessNotification(t("assets.savedNamed", { title: asset.title }), asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -455,7 +459,7 @@
           }
         };
       }
-      error = caught instanceof Error ? caught.message : 'Action failed.';
+      error = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       throw new Error(error);
     } finally {
       busy = false;
@@ -466,19 +470,19 @@
     const target = selectedAsset ?? selectedLocation;
     if (!target || (target.kind !== 'container' && target.kind !== 'location')) return;
     if (!editAssetAllowed) {
-      throw new Error('Move not saved. You do not have permission to move assets in this inventory.');
+      throw new Error(t("move.permissionDenied"));
     }
     busy = true;
     notification = null;
     try {
       const moved = await repository.moveAsset(candidate.tenantId, candidate.inventoryId, candidate.id, target.id);
       data = replaceWorkspaceAsset(data, moved);
-      setMutationSuccessNotification(`Moved ${moved.title} into ${target.title}.`, moved, viewAssetAction(moved));
+      setMutationSuccessNotification(t("move.savedInto", { title: moved.title, parent: target.title }), moved, viewAssetAction(moved));
       closeAssetActionRoute();
     } catch (caught) {
       if (handleSessionExpired(caught)) return;
       const reason = safeOperationFailureDescription(caught);
-      throw new Error(`Move not saved. ${candidate.title} stayed where it was. ${reason}`);
+      throw new Error(t("move.failedWithReason", { title: candidate.title, reason }));
     } finally {
       busy = false;
     }
@@ -597,15 +601,15 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       const result = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
-        label: 'View archived',
+      setMutationSuccessNotification(t("assets.archivedNamed", { title: asset.title }), result, {
+        label: t('web.InventoryWorkspaceApp.viewArchived'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
           asset.tenantId,
@@ -621,14 +625,14 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       const result = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Restored ${asset.title}.`, result, viewAssetAction(asset));
+      setMutationSuccessNotification(t("assets.restoredNamed", { title: asset.title }), result, viewAssetAction(asset));
     });
   }
 
@@ -638,14 +642,14 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       await repository.deleteAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Deleted ${asset.title}.`);
+      setSuccessNotification(t("assets.deletedNamed", { title: asset.title }));
     });
   }
 
@@ -655,7 +659,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -665,7 +669,7 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
+      setMutationSuccessNotification(t("assets.checkedOutNamed", { title: refreshed.title }), { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -675,7 +679,7 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
@@ -685,44 +689,44 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Returned ${refreshed.title}.`, { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
+      setMutationSuccessNotification(t("assets.returnedNamed", { title: refreshed.title }), { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
   async function returnAssetFromHome(asset: Asset): Promise<void> {
     if (!editAssetAllowed || !selectedInventory) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       return;
     }
     await run(async () => {
       const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
       const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
       data = replaceWorkspaceAsset(data, returnedAsset);
-      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
+      setMutationSuccessNotification(t("assets.returnedNamed", { title: returnedAsset.title }), { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
     });
   }
 
   async function archiveSelectedAttachment(attachment: AssetAttachment): Promise<void> {
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
-      setSuccessNotification(`Archived ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
+      setSuccessNotification(t("photos.archivedNamed", { title: attachment.fileName }), viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
     }, { rethrow: true });
   }
 
   async function deleteSelectedAttachment(attachment: AssetAttachment): Promise<void> {
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       removeSelectedAttachment(attachment);
-      setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
+      setSuccessNotification(t("photos.deletedNamed", { title: attachment.fileName }), viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
       void refreshSelectedAttachments(
         attachment.tenantId,
         attachment.inventoryId,
@@ -738,13 +742,13 @@
       return;
     }
     if (!editAssetAllowed) {
-      error = 'You do not have permission to edit assets in this inventory.';
+      error = t('web.InventoryWorkspaceApp.youDoNotHavePermissionToEditAssetsIn');
       throw new Error(error);
     }
     await run(async () => {
       await repository.uploadAssetAttachment(asset.tenantId, asset.inventoryId, asset.id, attachment);
       await refreshSelectedAttachments(asset.tenantId, asset.inventoryId, asset.id);
-      setSuccessNotification(`Uploaded ${attachment.name}.`, viewAssetAction(asset));
+      setSuccessNotification(t("photos.uploadedNamed", { title: attachment.name }), viewAssetAction(asset));
     });
   }
 
@@ -764,7 +768,7 @@
         }
         return;
       }
-      const taskError = caught instanceof Error ? caught.message : 'Action failed.';
+      const taskError = caught instanceof Error ? caught.message : t('web.InventoryWorkspaceApp.actionFailed');
       if (options.rethrow) {
         throw caught instanceof Error ? caught : new Error(taskError);
       }
@@ -794,7 +798,7 @@
       title,
       duration: 10_000,
       action: {
-        label: 'Undo',
+        label: t('web.InventoryWorkspaceApp.undo'),
         onClick: () => applyUndoableAssetOperation(result.tenantId, result.inventoryId, operationId, 'undo')
       }
     };
@@ -812,7 +816,7 @@
     notification = {
       id: `asset-operation:${operationId}`,
       kind: 'info',
-      title: direction === 'undo' ? 'Undoing change…' : 'Redoing change…',
+      title: direction === 'undo' ? t('web.InventoryWorkspaceApp.undoingChange') : t('web.InventoryWorkspaceApp.redoingChange'),
       important: true,
       duration: Infinity
     };
@@ -833,10 +837,10 @@
       const successNotification: WorkspaceNotification = {
         id: `asset-operation:${operationId}`,
         kind: 'success',
-        title: `${direction === 'undo' ? 'Undid' : 'Redid'} change to ${asset.title}.`,
+        title: direction === 'undo' ? t('web.InventoryWorkspaceApp.undidChange', { title: asset.title }) : t('web.InventoryWorkspaceApp.redidChange', { title: asset.title }),
         duration: 10_000,
         action: {
-          label: inverse === 'undo' ? 'Undo' : 'Redo',
+          label: inverse === 'undo' ? t('web.InventoryWorkspaceApp.undo') : t('web.InventoryWorkspaceApp.redo'),
           onClick: () => applyUndoableAssetOperation(tenantId, inventoryId, operationId, inverse)
         }
       };
@@ -865,7 +869,7 @@
       notification = {
         id: `asset-operation:${operationId}`,
         kind: 'error',
-        title: direction === 'undo' ? 'Couldn’t undo change.' : 'Couldn’t redo change.',
+        title: direction === 'undo' ? t('web.InventoryWorkspaceApp.couldnTUndoChange') : t('web.InventoryWorkspaceApp.couldnTRedoChange'),
         description: safeOperationFailureDescription(caught),
         important: true,
         duration: Infinity
@@ -878,7 +882,7 @@
   function viewAssetAction(asset: Asset): WorkspaceNotificationAction {
     return asset.kind === 'location'
       ? {
-          label: 'View location',
+          label: t('web.InventoryWorkspaceApp.viewLocation'),
           href: workspaceRouteHref(
             { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
             asset.tenantId,
@@ -890,22 +894,22 @@
 
   function viewAssetByIdAction(tenantId: string, inventoryId: string, assetId: string): WorkspaceNotificationAction {
     return {
-      label: 'View asset',
+      label: t('web.InventoryWorkspaceApp.viewAsset'),
       href: workspaceRouteHref({ mode: 'asset', tenantId, inventoryId, assetId }, tenantId, inventoryId)
     };
   }
 
   function parentDestinationAction(parentAssetId: string | null): WorkspaceNotificationAction {
     if (!parentAssetId) {
-      return { label: 'View home', href: homeHref() };
+      return { label: t('web.InventoryWorkspaceApp.viewHome'), href: homeHref() };
     }
     const target = parentTargets(assets).find((candidate) => candidate.id === parentAssetId);
     if (!target) {
-      return { label: 'View asset', href: workspaceRouteHref({ mode: 'asset', assetId: parentAssetId }, data.context.selectedTenantId, data.context.selectedInventoryId) };
+      return { label: t('web.InventoryWorkspaceApp.viewAsset'), href: workspaceRouteHref({ mode: 'asset', assetId: parentAssetId }, data.context.selectedTenantId, data.context.selectedInventoryId) };
     }
     if (target.kind === 'location') {
       return {
-        label: 'View location',
+        label: t('web.InventoryWorkspaceApp.viewLocation'),
         href: workspaceRouteHref(
           { mode: 'location', tenantId: target.tenantId, inventoryId: target.inventoryId, locationId: target.id },
           target.tenantId,
@@ -914,7 +918,7 @@
       };
     }
     return {
-      label: 'View parent',
+      label: t('web.InventoryWorkspaceApp.viewParent'),
       href: workspaceRouteHref(
         { mode: 'asset', tenantId: target.tenantId, inventoryId: target.inventoryId, assetId: target.id },
         target.tenantId,
@@ -1051,7 +1055,7 @@
         if (tenantId) {
           await selectTenant(tenantId);
         } else {
-          showUnavailableRoute('That tenant is not available to this account.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatTenantIsNotAvailableToThisAccount'));
           return;
         }
       }
@@ -1061,7 +1065,7 @@
         if (inventory) {
           await selectInventory(inventory.tenantId, inventory.id);
         } else {
-          showUnavailableRoute('That inventory is not available in the current workspace.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatInventoryIsNotAvailableInTheCurrentWorkspace'));
           return;
         }
       }
@@ -1148,14 +1152,14 @@
         }
         if (!loaded) {
           if (activeRouteApplicationKey !== routeKey || queuedRoute) return;
-          showUnavailableRoute('That asset is not available in this inventory.');
+          showUnavailableRoute(t('web.InventoryWorkspaceApp.thatAssetIsNotAvailableInThisInventory'));
           return;
         }
         attachmentId = route.attachmentId;
         attachmentAction = route.attachmentAction;
         if (route.locationId) {
           if (loadedAssetDetail?.kind !== 'location') {
-            showUnavailableRoute('That location is not available in this inventory.');
+            showUnavailableRoute(t('web.InventoryWorkspaceApp.thatLocationIsNotAvailableInThisInventory'));
             return;
           }
           selectedLocationId = route.locationId;
@@ -1873,7 +1877,7 @@
     <div class="brand-lockup setup-lockup">
       <div class="brand-mark" aria-hidden="true"><span></span></div>
       <div>
-        <strong>Stuff Stash</strong>
+        <strong>{t('web.InventoryWorkspaceApp.stuffStash')}</strong>
         <p>{userLabel}</p>
       </div>
     </div>
@@ -1882,12 +1886,19 @@
       tenantName={selectedTenant?.name}
       {busy}
       {error}
-      submitLabel={data.context.selectedTenantId ? 'Create inventory' : 'Create workspace'}
+      submitLabel={data.context.selectedTenantId ? t('web.InventoryWorkspaceApp.createInventory') : t('web.InventoryWorkspaceApp.createWorkspace')}
       onSubmit={createStarterInventory}
     />
   </main>
 {:else}
   {#snippet notificationHeader()}
+    {#if inventoryConversation && selectedInventory && selectedTenant}
+      {#key JSON.stringify([data.context.principal.id, selectedTenant.id, selectedInventory.id])}
+        <InventoryConversationPanel transport={inventoryConversation} tenantId={selectedTenant.id} inventoryId={selectedInventory.id} inventoryName={selectedInventory.name}
+          onOpenAsset={(assetId) => navigateTo({ mode: 'asset', tenantId: selectedTenant!.id, inventoryId: selectedInventory!.id, assetId })}
+          onRefresh={refreshExpirationAssets} onAuthenticationLost={onSessionExpired} />
+      {/key}
+    {/if}
     {#if notifications && selectedInventory && selectedTenant}
       {#key JSON.stringify([notifications.apiIdentity, data.context.principal.id, selectedTenant.id, selectedInventory.id])}
         <NotificationBell tenantId={selectedTenant.id} inventoryId={selectedInventory.id} repository={notifications.repository} {observer}

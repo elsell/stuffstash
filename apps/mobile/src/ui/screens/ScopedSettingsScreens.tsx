@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ExportInventoryCommand } from '../../application/exports/InventoryExport';
 import { InventoryExportAction } from './InventoryExportAction';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -23,29 +24,29 @@ export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonl
 
 function ScopeScreen({ model, onNavigate, scope, exportCommand }: { readonly exportCommand?: ExportInventoryCommand; readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
   const { palette, styles } = useSettingsListStyles();
-  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? 'Loading household settings' : 'Loading inventory settings'} /></View>;
-  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>Could not load settings</Text><Text style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label="Retry" onPress={() => void model.load()} /></ScrollView>;
+  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? t('mobile.ScopedSettingsScreens.loadingHouseholdSettings') : t('mobile.ScopedSettingsScreens.loadingInventorySettings')} /></View>;
+  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.ScopedSettingsScreens.couldNotLoadSettings')}</Text><Text style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label={t('mobile.ScopedSettingsScreens.retry')} onPress={() => void model.load()} /></ScrollView>;
   const settings = model.state.settings;
   const name = scope === 'tenant' ? settings.selectedTenant.name : settings.selectedInventory.name;
   const tenantCanConfigure = settings.selectedTenant.permissions.includes('configure');
   const rows: Array<{ id: ScopedDestination; label: string; context?: string }> = scope === 'tenant'
     ? tenantCanConfigure ? [
-        { id: 'fields', label: 'Custom fields' },
-        { id: 'asset-types', label: 'Asset types' },
-        { id: 'voice', label: 'Voice setup' }
+        { id: 'fields', label: t('mobile.ScopedSettingsScreens.customFields') },
+        { id: 'asset-types', label: t('mobile.ScopedSettingsScreens.assetTypes') },
+        { id: 'voice', label: t('mobile.ScopedSettingsScreens.voiceSetup') }
       ] : []
     : [
-        ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: 'Sharing' }] : []),
-        { id: 'notifications', label: 'Notifications', context: 'Your reminders' },
-        { id: 'tags', label: 'Tags' },
-        { id: 'fields', label: 'Custom fields' },
-        { id: 'asset-types', label: 'Asset types' }
+        ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: t('mobile.ScopedSettingsScreens.sharing') }] : []),
+        { id: 'notifications', label: t('mobile.ScopedSettingsScreens.notifications'), context: t('mobile.ScopedSettingsScreens.yourReminders') },
+        { id: 'tags', label: t('mobile.ScopedSettingsScreens.tags') },
+        { id: 'fields', label: t('mobile.ScopedSettingsScreens.customFields') },
+        { id: 'asset-types', label: t('mobile.ScopedSettingsScreens.assetTypes') }
       ];
-  if (scope === 'tenant' && !tenantCanConfigure) return <DeniedSettingsState message="You don’t have permission to manage settings shared by this household." />;
+  if (scope === 'tenant' && !tenantCanConfigure) return <DeniedSettingsState message={t('mobile.ScopedSettingsScreens.youDonTHavePermissionToManageSettingsShared')} />;
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
     <SettingsRefreshNotice visible={model.hasRefreshError} onRetry={model.load} />
-    <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? 'Household settings' : `Inventory in ${settings.selectedTenant.name}`}</Text></View>
-    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
+    <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? t('mobile.ScopedSettingsScreens.householdSettings') : t('mobile.ScopedSettingsScreens.inventoryIn', { name: String(settings.selectedTenant.name) })}</Text></View>
+    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={t('mobile.ScopedSettingsScreens.openFor', { label: String(row.label), name: String(name) })} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
     {scope === 'inventory' && exportCommand ? <InventoryExportAction key={`${settings.selectedTenant.id}:${settings.selectedInventory.id}`} command={exportCommand} scope={{ tenantId: settings.selectedTenant.id, inventoryId: settings.selectedInventory.id }} /> : null}
   </ScrollView>;
 }
@@ -56,9 +57,9 @@ export function DeniedSettingsState({ message }: { readonly message: string }) {
   useEffect(() => {
     const target = findNodeHandle(headingRef.current);
     if (target) AccessibilityInfo.setAccessibilityFocus(target);
-    else AccessibilityInfo.announceForAccessibility(`Settings unavailable. ${message}`);
+    else AccessibilityInfo.announceForAccessibility(t("settings.unavailableReason", { reason: message }));
   }, [message]);
-  return <ScrollView accessibilityLiveRegion="assertive" style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" ref={headingRef} style={styles.errorTitle}>Settings unavailable</Text><Text style={styles.errorMessage}>{message}</Text></ScrollView>;
+  return <ScrollView accessibilityLiveRegion="assertive" style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" ref={headingRef} style={styles.errorTitle}>{t('mobile.ScopedSettingsScreens.settingsUnavailable')}</Text><Text style={styles.errorMessage}>{message}</Text></ScrollView>;
 }
 
 function scopeIcon(id: ScopedDestination, color: string) {

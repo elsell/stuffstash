@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {
   InventoryMapAssetViewModel,
   InventoryMapViewModel
@@ -32,7 +33,7 @@ export type InventoryMapRowInteractionState = {
 };
 
 export type InventoryMapEmptyColumnActionViewModel = {
-  readonly label: 'Add item here';
+  readonly label: string;
 };
 
 export type InventoryMapEmbeddedDetailRequest = {
@@ -55,8 +56,8 @@ export function buildBrowseSurfaceOptions(): readonly {
   readonly value: InventoryMapSurface;
 }[] {
   return [
-    { label: 'List', value: 'list' },
-    { label: 'Map', value: 'map' }
+    { label: t('mobile.InventoryMapPresentation.list'), value: 'list' },
+    { label: t('mobile.InventoryMapPresentation.map'), value: 'map' }
   ];
 }
 
@@ -76,7 +77,7 @@ export function buildInventoryMapColumns(
     level: 0,
     title: map.inventoryName,
     assets: childrenByParent.get(rootKey) ?? [],
-    emptyLabel: 'No active assets yet'
+    emptyLabel: t('mobile.InventoryMapPresentation.noActiveAssetsYet')
   }];
 
   safePath.forEach((assetIdValue, index) => {
@@ -91,7 +92,7 @@ export function buildInventoryMapColumns(
       title: asset.title,
       parentId: asset.id,
       assets: childrenByParent.get(asset.id) ?? [],
-      emptyLabel: `${asset.title} is empty`
+      emptyLabel: t('mobile.InventoryMapPresentation.isEmpty', { title: String(asset.title) })
     });
   });
 
@@ -110,7 +111,7 @@ export function buildInventoryMapBreadcrumbs(
     ...safePath.map((assetIdValue, index) => ({
       key: assetIdValue,
       level: index + 1,
-      title: assetsById.get(assetIdValue)?.title ?? 'Unknown',
+      title: assetsById.get(assetIdValue)?.title ?? t('mobile.InventoryMapPresentation.unknown'),
       assetId: assetIdValue
     }))
   ];
@@ -183,10 +184,10 @@ export function findInventoryMapSearchMatch(
 
 export function mapOverviewLabel(map: InventoryMapViewModel): string {
   const rootCount = map.assets.filter((asset) => asset.parentAssetId === undefined).length;
-  const assetLabel = map.assets.length === 1 ? '1 active asset' : `${map.assets.length.toString()} active assets`;
-  const rootLabel = rootCount === 1 ? '1 root item' : `${rootCount.toString()} root items`;
+  const assetLabel = t('assets.activeCount', { count: map.assets.length });
+  const rootLabel = t('assets.rootCount', { count: rootCount });
 
-  return `${assetLabel} · ${rootLabel}`;
+  return t('map.overview', { assets: assetLabel, roots: rootLabel });
 }
 
 export function buildInventoryMapRowInteractionState(
@@ -208,7 +209,7 @@ export function buildInventoryMapEmptyColumnAction(
     return undefined;
   }
 
-  return { label: 'Add item here' };
+  return { label: t('mobile.InventoryMapPresentation.addItemHere') };
 }
 
 export function shouldActivateInventoryMapBranchSwipe(input: {

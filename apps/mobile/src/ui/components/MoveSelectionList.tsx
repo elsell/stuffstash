@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ScrollView, Text, View } from 'react-native';
 import { SettingsChoiceRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
 import { NativeCommandButton } from './NativeCommandButton';
@@ -7,11 +8,11 @@ import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus
 export function MoveSelectionList(props: MoveSelectionListProps) {
   const { styles } = useSettingsListStyles();
   return <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-    <SettingsSection title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
+    <SettingsSection title={props.subjectLabel}>
       <View style={styles.navigationRow}>
         <Text style={styles.rowLabel}>{props.subject}</Text>
         <Text style={styles.rowContext}>{props.context}</Text>
-        {props.destinationLabel ? <Text style={styles.rowContext}>{`Move to: ${props.destinationLabel}`}</Text> : null}
+        {props.destinationLabel ? <Text style={styles.rowContext}>{t('mobile.MoveSelectionList.moveTo', { destinationLabel: String(props.destinationLabel) })}</Text> : null}
       </View>
     </SettingsSection>
     <SettingsSection title={props.title}>

@@ -30,7 +30,8 @@
     "svelte-sonner": "1.1.1",
     "tailwind-merge": "3.6.0",
     "tailwind-variants": "3.2.2",
-    "vite": "8.0.16"
+    "vite": "8.0.16",
+    "@stuff-stash/localization": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",

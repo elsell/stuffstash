@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { normalizeTagColor } from '../../domain/customization/Customization';
 import type { CustomizationContext, CustomizationRepository } from './CustomizationRepository';
 import { CustomizationValidationError } from './CustomizationErrors';
@@ -10,7 +11,7 @@ export class ManageTags {
   async create(context: CustomizationContext, input: { readonly displayName: string; readonly color?: string }) {
     const color = validatedColor(input.color);
     return this.singleFlight('create', () => this.repository.createTag(context, {
-      displayName: requiredName(input.displayName, 'Tag name'),
+      displayName: requiredName(input.displayName),
       color
     }));
   }
@@ -18,7 +19,7 @@ export class ManageTags {
   async update(context: CustomizationContext, id: string, input: { readonly displayName: string; readonly color?: string }) {
     const color = validatedColor(input.color);
     return this.singleFlight('update', () => this.repository.updateTag(context, id, {
-      displayName: requiredName(input.displayName, 'Tag name'),
+      displayName: requiredName(input.displayName),
       color: color ?? ''
     }));
   }
@@ -28,7 +29,7 @@ export class ManageTags {
   }
 
   private async singleFlight<T>(action: 'create' | 'update' | 'archive', operation: () => Promise<T>): Promise<T> {
-    if (this.saving) throw new CustomizationValidationError('This tag change is already being saved.');
+    if (this.saving) throw new CustomizationValidationError(t('mobile.ManageTags.thisTagChangeIsAlreadyBeingSaved'));
     this.saving = true;
     this.observability.record({ name: 'customization.mutation_requested', resource: 'tag', scope: 'inventory', action });
     try {
@@ -42,15 +43,15 @@ export class ManageTags {
   }
 }
 
-function requiredName(value: string, label: string): string {
+function requiredName(value: string): string {
   const trimmed = value.trim();
-  if (!trimmed) throw new CustomizationValidationError(`${label} is required.`);
-  if (trimmed.length > 120) throw new CustomizationValidationError(`${label} must be 120 characters or fewer.`);
+  if (!trimmed) throw new CustomizationValidationError(t('customization.tagRequired'));
+  if (trimmed.length > 120) throw new CustomizationValidationError(t('customization.tagTooLong'));
   return trimmed;
 }
 
 function validatedColor(value: string | undefined): string | undefined {
   const normalized = normalizeTagColor(value);
-  if (value?.trim() && !normalized) throw new CustomizationValidationError('Enter a six-digit hex color such as #2F80ED.');
+  if (value?.trim() && !normalized) throw new CustomizationValidationError(t('mobile.ManageTags.enterASixDigitHexColorSuchAs2F80ED'));
   return normalized;
 }

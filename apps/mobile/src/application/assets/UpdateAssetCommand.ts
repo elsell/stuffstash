@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import { assetId, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type {
   InventoryAssetUpdateRepository
@@ -29,7 +30,7 @@ export class UpdateAssetCommand {
   async execute(input: UpdateAssetCommandInput): Promise<UpdateAssetCommandResult> {
     const title = input.title.trim();
     if (title.length === 0) {
-      throw new Error('Name is required.');
+      throw new Error(t('recovery.nameRequired'));
     }
 
     const reconciledTags = reconcilePendingAssetTagDrafts({
@@ -57,7 +58,7 @@ export class UpdateAssetCommand {
     return {
       id: updated.id,
       title: updated.title,
-      message: `Updated ${updated.title}.`,
+      message: t("assets.updatedNamed", { title: updated.title }),
       undoableOperationId: updated.undoableOperationId
     };
   }

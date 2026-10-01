@@ -1,3 +1,4 @@
+import { t } from '../../../../../presentation/localization';
 import { NativeCommandButton } from '../../../../../ui/components/NativeCommandButton';
 import { useQueryClient } from '@tanstack/react-query';
 import { mobileQueryKeys } from '../../../../../adapters/serverState/MobileQueryClient';
@@ -17,13 +18,13 @@ export default function NotificationSettingsRoute({ page, expectedScope }: { rea
   const scopeId = useMobileServerStateScopeId();
   const model = useSettingsModel(services.settingsQuery);
   const { styles, palette } = useSettingsListStyles();
-  if (model.state.status === 'loading') return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading inventory" color={palette.action} /></View>;
+  if (model.state.status === 'loading') return <View style={styles.shell}><ActivityIndicator accessibilityLabel={t('mobile.notifications.loadingInventory')} color={palette.action} /></View>;
   if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={[styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic">
     <Text accessibilityRole="alert" style={styles.errorMessage}>{model.state.message}</Text>
-    <NativeCommandButton label="Retry" onPress={() => void model.load()} />
+    <NativeCommandButton label={t('mobile.notifications.retry')} onPress={() => void model.load()} />
   </ScrollView>;
   const { selectedTenant, selectedInventory } = model.state.settings;
-  if (expectedScope && (expectedScope.tenantId !== selectedTenant.id || expectedScope.inventoryId !== selectedInventory.id)) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text style={styles.errorMessage}>This inventory is no longer selected. Go back to open its settings again.</Text></ScrollView>;
+  if (expectedScope && (expectedScope.tenantId !== selectedTenant.id || expectedScope.inventoryId !== selectedInventory.id)) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text style={styles.errorMessage}>{t('mobile.notifications.thisInventoryIsNoLongerSelectedGoBackTo')}</Text></ScrollView>;
   return <ScopedNotifications page={page} key={JSON.stringify([scopeId, selectedTenant.id, selectedInventory.id])} services={services} tenantId={selectedTenant.id} inventoryId={selectedInventory.id} />;
 }
 

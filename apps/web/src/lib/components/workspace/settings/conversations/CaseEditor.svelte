@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
   import type { CaseDefinition } from '$lib/domain/conversationCase';
@@ -18,14 +19,14 @@
   const errors = $derived(validationMessages(issues)); let message = $state(''); let saving = $state(false); let conflict = $state(false);
   let form: HTMLFormElement; let summary = $state<HTMLDivElement>(); let alive = true;
   onDestroy(() => { alive = false; });
-  const labels: Record<string, string> = { 'case-title': 'Case title', 'case-utterance': 'Request', 'case-fixtures-title': 'Test inventory', 'case-expectations-title': 'Expected results', 'expected-outcome': 'Expected outcome' };
+  const labels: Record<string, string> = { 'case-title': t('web.CaseEditor.caseTitle'), 'case-utterance': t('web.CaseEditor.request'), 'case-fixtures-title': t('web.CaseEditor.testInventory'), 'case-expectations-title': t('web.CaseEditor.expectedResults'), 'expected-outcome': t('web.CaseEditor.expectedOutcome') };
   function fieldLabel(field: string) {
     if (labels[field]) return labels[field];
     if (field.startsWith('fixture-')) {
       const asset = draft.assets.find(asset => field.endsWith(`-${asset.id}`));
-      return `Fixture ${asset?.title || 'settings'}`;
+      return asset?.title ? t('conversation.fixtureNamed', { title: asset.title }) : t('conversation.fixtureSettings');
     }
-    return field.startsWith('location-') ? 'Expected location' : 'Proposed change';
+    return field.startsWith('location-') ? t('web.CaseEditor.expectedLocation') : t('web.CaseEditor.proposedChange');
   }
   function focusField(event: MouseEvent, field: string) {
     event.preventDefault();
@@ -39,34 +40,34 @@
     issues = prepared.issues; message = ''; conflict = false;
     if (issues.length) { await showIssues(); return; }
     saving = true;
-    try { await onSave(prepared.definition); if (alive) message = 'Test case revision saved.'; }
+    try { await onSave(prepared.definition); if (alive) message = t('web.CaseEditor.testCaseRevisionSaved'); }
     catch (error) {
       if (!alive) return;
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'A newer revision exists. Your edits are still here; load the latest revision to compare.'
+      message = conflict ? t('web.CaseEditor.aNewerRevisionExistsYourEditsAreStillHere')
         : error instanceof ConversationFailure && ['forbidden', 'unauthenticated'].includes(error.kind)
-          ? 'You no longer have access to save this case.'
-          : 'Could not save the case. Your edits are still here.';
+          ? t('web.CaseEditor.youNoLongerHaveAccessToSaveThisCase')
+          : t('web.CaseEditor.couldNotSaveTheCaseYourEditsAreStill');
       if (error instanceof ConversationFailure && error.kind === 'invalid') {
-        issues = [{ field: 'case-title', message: 'The server rejected this case. Check its fixture and expectation limits.' }];
+        issues = [{ field: 'case-title', message: t('web.CaseEditor.theServerRejectedThisCaseCheckItsFixtureAnd') }];
         await showIssues();
       }
     } finally { if (alive) saving = false; }
   }
 </script>
 <form bind:this={form} class="case-editor" onsubmit={save} novalidate>
-  <header><h2>Test case</h2><p>Describe a realistic request, a test inventory and what a good response should do. This case evaluates text interactions.</p></header>
-  {#if issues.length}<div bind:this={summary} role="alert" tabindex="-1" class="validation-summary"><h3>Check these details</h3><ul>
+  <header><h2>{t('web.CaseEditor.testCase')}</h2><p>{t('web.CaseEditor.describeARealisticRequestATestInventoryAndWhat')}</p></header>
+  {#if issues.length}<div bind:this={summary} role="alert" tabindex="-1" class="validation-summary"><h3>{t('web.CaseEditor.checkTheseDetails')}</h3><ul>
     {#each issues as issue}<li><a href={`#${encodeURIComponent(issue.field)}`} onclick={event => focusField(event, issue.field)}>{fieldLabel(issue.field)}: {issue.message}</a></li>{/each}
   </ul></div>{/if}
-  <Label.Root class="grid gap-2">Case title<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving || disabled} required {...validationAttributes(errors['case-title'], 'case-title')} /></Label.Root>
+  <Label.Root class="grid gap-2">{t('web.CaseEditor.caseTitle')}<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving || disabled} required {...validationAttributes(errors['case-title'], 'case-title')} /></Label.Root>
   <ValidationMessage field="case-title" message={errors['case-title']} />
-  <Label.Root class="grid gap-2">What the user says<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving || disabled} required rows={3} {...validationAttributes(errors['case-utterance'], 'case-utterance')} /></Label.Root>
+  <Label.Root class="grid gap-2">{t('web.CaseEditor.whatTheUserSays')}<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving || disabled} required rows={3} {...validationAttributes(errors['case-utterance'], 'case-utterance')} /></Label.Root>
   <ValidationMessage field="case-utterance" message={errors['case-utterance']} />
   <CaseFixtures value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
   <CaseExpectations value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
-  <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save test case'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
+  <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? t('web.CaseEditor.saving') : t('web.CaseEditor.saveTestCase')}</Button.Root>
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.CaseEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p role="status" aria-live="polite">{message}</p>
 </form>

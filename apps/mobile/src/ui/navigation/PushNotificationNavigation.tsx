@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {useEffect} from 'react';
 import {useRootNavigationState,useRouter} from 'expo-router';
 import {useAppServices} from './AppServicesContext';
@@ -15,7 +16,7 @@ export function PushNotificationNavigation(){
    return services.openPushNotification.execute(payload,{signal:controller.signal}).then(assetId=>{
     if(!controller.signal.aborted)router.push(assetDetailHref(assetId));
    }).catch(error=>{
-    if(!controller.signal.aborted)feedback.showDialog({title:'Notification unavailable',message:error instanceof NotificationFailure?error.message:'This notification could not be opened. Check your notifications inbox and try again.',primaryAction:{label:'OK'}});
+    if(!controller.signal.aborted)feedback.showDialog({title:t('mobile.PushNotificationNavigation.notificationUnavailable'),message:error instanceof NotificationFailure?error.message:t('mobile.PushNotificationNavigation.thisNotificationCouldNotBeOpenedCheckYourNotifications'),primaryAction:{label:t('mobile.PushNotificationNavigation.oK')}});
    });
   },()=>{services.notificationObserver.record({operation:'push-open',outcome:'failed'});});
   return ()=>{current?.abort();unsubscribe();};

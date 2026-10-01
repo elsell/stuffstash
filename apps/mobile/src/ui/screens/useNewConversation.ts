@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { Alert } from 'react-native';
 import type { VoiceRealtimeState } from '../../application/voice/RealtimeVoiceSession';
@@ -22,9 +23,9 @@ export function useNewConversation(realtime: VoiceRealtimeState | null, photoDra
       onReset();
     };
     if (shouldConfirmNewConversation(realtime)) {
-      Alert.alert('Start a new conversation?', 'This clears the conversation and staged photos. It does not undo changes already submitted.', [
-        { text: 'Keep conversation', style: 'cancel' },
-        { text: 'New conversation', style: 'destructive', onPress: accept }
+      Alert.alert(t('mobile.useNewConversation.startANewConversation'), t('mobile.useNewConversation.thisClearsTheConversationAndStagedPhotosItDoes'), [
+        { text: t('mobile.useNewConversation.keepConversation'), style: 'cancel' },
+        { text: t('mobile.useNewConversation.newConversation'), style: 'destructive', onPress: accept }
       ]);
     } else { accept(); }
   };

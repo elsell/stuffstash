@@ -1,10 +1,16 @@
 import XCTest
 import UIKit
 
+// AUDIT_LOCALIZATION_LABELS_BEGIN
+private let auditLocalizationLabels: [String: String] = [:]
+private let auditLocalizationRTL = false
+// AUDIT_LOCALIZATION_LABELS_END
+
 final class FixtureAuditTests: XCTestCase {
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
   override func setUpWithError() throws {
     continueAfterFailure = false
+    app.launchArguments = ["-RCTI18nUtil_forceRTL", auditLocalizationRTL ? "YES" : "NO"]
     app.launch()
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
       || name.contains("testHistoryJourneyClearsPersistentChrome")
@@ -28,6 +34,43 @@ final class FixtureAuditTests: XCTestCase {
     capture("final-state")
     app.terminate()
   }
+  func testLocalizedAddDraftKeepsNativeActionsAndRecovery() {
+    func label(_ english: String) -> String { auditLocalizationLabels[english] ?? english }
+    let direction = auditLocalizationRTL ? "rtl" : "ltr"
+    XCTAssertTrue(app.staticTexts["audit-native-direction-\(direction)"].exists)
+    guard openFixtureURL("audit-add") else { return }
+    let name = app.textFields[label("Asset name")]
+    XCTAssertTrue(name.waitForExistence(timeout: 10))
+    let navigation = app.navigationBars[label("Add item")]
+    XCTAssertTrue(navigation.exists)
+    let save = app.buttons[label("Save item")]
+    let close = app.buttons[label("Close Add")]
+    XCTAssertTrue(save.exists); XCTAssertTrue(close.isHittable)
+    XCTAssertTrue(app.frame.contains(save.frame)); XCTAssertTrue(app.frame.contains(close.frame))
+    if auditLocalizationRTL {
+      XCTAssertGreaterThan(close.frame.midX, save.frame.midX)
+    } else {
+      XCTAssertLessThan(close.frame.midX, save.frame.midX)
+    }
+    capture("localized-add-before-input")
+    name.tap(); waitForKeyboard(); name.typeText("Native draft name")
+    XCTAssertEqual(name.value as? String, "Native draft name")
+    XCTAssertTrue(save.isEnabled); XCTAssertTrue(save.isHittable)
+    save.tap()
+    XCTAssertFalse(save.isEnabled); XCTAssertFalse(close.isEnabled)
+    let rejected = app.staticTexts["Rejected draft: Native draft name"].firstMatch
+    XCTAssertTrue(rejected.waitForExistence(timeout: 12))
+    XCTAssertEqual(name.value as? String, "Native draft name")
+    XCTAssertTrue(save.isEnabled); XCTAssertTrue(close.isEnabled)
+    let heading = app.staticTexts[label("Could not save asset")].firstMatch
+    XCTAssertTrue(heading.waitForExistence(timeout: 5))
+    XCTAssertGreaterThanOrEqual(heading.frame.minY, navigation.frame.maxY)
+    XCTAssertLessThanOrEqual(heading.frame.maxY, rejected.frame.minY)
+    capture("localized-add-recovery")
+    close.tap()
+    XCTAssertTrue(app.buttons["Audit Browse filters"].waitForExistence(timeout: 5))
+  }
+
   func testNativeMenuLocksOpenActionsAndRecovers() {
     let entry = app.buttons["Audit menu ownership"].firstMatch
     for _ in 0..<12 where !entry.isHittable { app.scrollViews.firstMatch.swipeUp() }

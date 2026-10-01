@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { voiceResponseMarkdown, type VoiceMarkdownSpan } from './VoiceResponseMarkdown';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
@@ -31,8 +32,8 @@ export function VoiceResponseEntityText({
         {block.prefix}
         {block.links.segments.map((segment, index) => (
           <Text
-            accessibilityHint={enabled && segment.reference ? 'Opens this asset' : undefined}
-            accessibilityLabel={enabled && segment.reference ? `Open ${segment.reference.title}` : undefined}
+            accessibilityHint={enabled && segment.reference ? t('mobile.VoiceResponseEntityText.opensThisAsset') : undefined}
+            accessibilityLabel={enabled && segment.reference ? t('mobile.VoiceResponseEntityText.open', { title: String(segment.reference.title) }) : undefined}
             accessibilityRole={enabled && segment.reference ? 'link' : undefined}
             key={index}
             onPress={enabled && segment.reference ? () => onOpen(segment.reference!) : undefined}
@@ -44,7 +45,7 @@ export function VoiceResponseEntityText({
         <View style={styles.responseEntityActions}>
           {fallbackReferences.map((reference) => {
             const label = voiceResponseEntityOpenLabel(reference, fallbackReferences);
-            const unavailableLabel = `${reference.title}${reference.context ? ` in ${reference.context}` : ''}, available after the response finishes`;
+            const unavailableLabel = t('mobile.VoiceResponseEntityText.availableAfterTheResponseFinishes', { title: String(reference.title), value: String(reference.context ? ` in ${reference.context}` : '') });
             return (
               <Pressable
                 accessibilityLabel={enabled ? label : unavailableLabel}

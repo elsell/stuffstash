@@ -1,6 +1,9 @@
+import type { ImportCountMetric } from './importCountMetrics';
+import { localization, t } from '$lib/presentation/localization';
 import type { ImportJob, ImportMessage, Principal } from '$lib/domain/inventory';
 
 export type CountCell = {
+  metric: ImportCountMetric;
   value: number;
   label: string;
   muted?: boolean;
@@ -12,21 +15,21 @@ export type ImportIssueTone = 'none' | 'warning' | 'action';
 export function statusLabel(job: ImportJob): string {
   switch (job.status) {
     case 'previewed':
-      return 'Ready';
+      return t('web.importWorkspacePresentation.ready');
     case 'running':
-      return 'In progress';
+      return t('web.importWorkspacePresentation.inProgress');
     case 'succeeded':
-      return 'Completed';
+      return t('web.importWorkspacePresentation.completed');
     case 'failed':
-      return 'Failed';
+      return t('web.importWorkspacePresentation.failed');
     case 'cancel_requested':
-      return 'Cancelling';
+      return t('web.importWorkspacePresentation.cancelling');
     case 'cancelled_kept':
-      return 'Kept';
+      return t('web.importWorkspacePresentation.kept');
     case 'cancelled_discarded':
-      return 'Discarded';
+      return t('web.importWorkspacePresentation.discarded');
     case 'discard_failed':
-      return 'Discard failed';
+      return t('web.importWorkspacePresentation.discardFailed');
     default:
       return String(job.status).replaceAll('_', ' ');
   }
@@ -52,40 +55,40 @@ export function importIssueTone(job: ImportJob): ImportIssueTone {
 }
 
 export function attentionSummary(job: ImportJob): string {
-  if (job.status === 'discard_failed') return 'Cancellation cleanup needs review';
-  if (job.status === 'failed') return 'Import failed before it finished';
-  if (job.counts.errors === 0 && job.counts.warnings === 0) return 'No issues';
+  if (job.status === 'discard_failed') return t('web.importWorkspacePresentation.cancellationCleanupNeedsReview');
+  if (job.status === 'failed') return t('web.importWorkspacePresentation.importFailedBeforeItFinished');
+  if (job.counts.errors === 0 && job.counts.warnings === 0) return t('web.importWorkspacePresentation.noIssues');
   return countParts([
-    [job.counts.errors, 'blocking issue', 'blocking issues'],
-    [job.counts.warnings, 'warning', 'warnings']
+    [job.counts.errors, 'blockingIssue'],
+    [job.counts.warnings, 'warning']
   ]);
 }
 
 export function statusSentence(job: ImportJob): string {
   switch (job.status) {
     case 'previewed':
-      return 'Ready for your review.';
+      return t('web.importWorkspacePresentation.readyForYourReview');
     case 'running':
-      return 'Import is running in the background.';
+      return t('web.importWorkspacePresentation.importIsRunningInTheBackground');
     case 'cancel_requested':
-      return 'Cancellation is waiting for a safe stopping point.';
+      return t('web.importWorkspacePresentation.cancellationIsWaitingForASafeStoppingPoint');
     case 'succeeded':
-      return job.counts.warnings > 0 ? 'Completed with warnings.' : 'Completed successfully.';
+      return job.counts.warnings > 0 ? t('web.importWorkspacePresentation.completedWithWarnings') : t('web.importWorkspacePresentation.completedSuccessfully');
     case 'failed': {
       const created = job.counts.fieldsCreated + (job.counts.tagsCreated ?? 0) + job.counts.locationsCreated + job.counts.assetsCreated + job.counts.attachmentsCreated;
       if (allJobMessages(job).some((message) => message.code === 'attachment-session-unavailable' || message.code === 'attachment-storage-unavailable')) {
         return created > 0
-          ? `Image import did not start. ${created} earlier records were kept.`
-          : 'Image import did not start.';
+          ? t('web.importWorkspacePresentation.imageImportDidNotStartEarlierRecordsWereKept', { created: String(created) })
+          : t('web.importWorkspacePresentation.imageImportDidNotStart');
       }
-      return created > 0 ? `Import stopped. ${created} records were kept.` : 'Import failed before it could finish.';
+      return created > 0 ? t('web.importWorkspacePresentation.importStoppedRecordsWereKept', { created: String(created) }) : t('web.importWorkspacePresentation.importFailedBeforeItCouldFinish');
     }
     case 'cancelled_kept':
-      return 'Cancelled. Partial progress was kept.';
+      return t('web.importWorkspacePresentation.cancelledPartialProgressWasKept');
     case 'cancelled_discarded':
-      return 'Cancelled. Partial progress was discarded.';
+      return t('web.importWorkspacePresentation.cancelledPartialProgressWasDiscarded');
     case 'discard_failed':
-      return 'Cancellation cleanup needs attention.';
+      return t('web.importWorkspacePresentation.cancellationCleanupNeedsAttention');
     default:
       return statusLabel(job);
   }
@@ -95,21 +98,21 @@ export function phaseLabel(job: ImportJob): string {
   const phase = job.progress.phase || job.status;
   switch (phase) {
     case 'ready':
-      return 'Ready';
+      return t('web.importWorkspacePresentation.ready');
     case 'reading_source':
-      return 'Reading source';
+      return t('web.importWorkspacePresentation.readingSource');
     case 'creating_fields':
     case 'fields':
-      return 'Creating fields';
+      return t('web.importWorkspacePresentation.creatingFields');
     case 'creating_locations':
     case 'locations':
-      return 'Creating locations';
+      return t('web.importWorkspacePresentation.creatingLocations');
     case 'creating_assets':
     case 'assets':
-      return 'Creating assets';
+      return t('web.importWorkspacePresentation.creatingAssets');
     case 'importing_attachments':
     case 'attachments':
-      return 'Importing photos and files';
+      return t('web.importWorkspacePresentation.importingPhotosAndFiles');
     case 'terminal':
       return statusLabel(job);
     default:
@@ -160,18 +163,18 @@ export function progressSummary(job: ImportJob): string {
   if (isTerminal(job)) {
     return statusLabel(job);
   }
-  return 'Total not known yet';
+  return t('web.importWorkspacePresentation.totalNotKnownYet');
 }
 
 export function progressBarLabel(job: ImportJob): string {
   if (progressKnown(job)) {
-    return `Import progress ${progressPercent(job)} percent`;
+    return t('web.importWorkspacePresentation.importProgressPercent', { value: String(progressPercent(job)) });
   }
-  return `Import progress for ${phaseLabel(job)}; total not known yet`;
+  return t('web.importWorkspacePresentation.importProgressForTotalNotKnownYet', { value: String(phaseLabel(job)) });
 }
 
 export function progressBarStyle(job: ImportJob): string | undefined {
-  return progressKnown(job) ? `width: ${progressPercent(job)}%` : undefined;
+  return progressKnown(job) ? t('web.importWorkspacePresentation.width', { value: String(progressPercent(job)) }) : undefined;
 }
 
 export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
@@ -179,34 +182,34 @@ export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
 }
 
 export function sourceDescription(job: ImportJob): string {
-  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : compactSourceURL(job.source.baseUrl) || 'Homebox'];
+  const parts = [job.source.type === 'legacy_homebox_csv' ? t('web.importWorkspacePresentation.cSVUpload') : compactSourceURL(job.source.baseUrl) || t('web.importWorkspacePresentation.homebox')];
   if (job.source.version) parts.push(job.source.version);
   return parts.join(' · ');
 }
 
 export function sourceOptionsSummary(job: ImportJob): string[] {
   if (job.source.type === 'legacy_homebox_csv') {
-    return ['CSV file', 'Photos are not included in Homebox CSV exports'];
+    return [t('web.importWorkspacePresentation.cSVFile'), t('web.importWorkspacePresentation.photosAreNotIncludedInHomeboxCSVExports')];
   }
-  const options = ['Connected directly to Homebox'];
+  const options = [t('web.importWorkspacePresentation.connectedDirectlyToHomebox')];
   if (job.source.imageImport === 'disabled') {
-    options.push('Photo import disabled');
+    options.push(t('web.importWorkspacePresentation.photoImportDisabled'));
   }
   if (job.source.allowPrivateNetwork) {
-    options.push('Allowed local/private network address');
+    options.push(t('web.importWorkspacePresentation.allowedLocalPrivateNetworkAddress'));
   }
   if (job.source.allowInsecureTLS) {
-    options.push('Allowed self-signed certificate');
+    options.push(t('web.importWorkspacePresentation.allowedSelfSignedCertificate'));
   }
   return options;
 }
 
 export function actorSummary(job: ImportJob, currentPrincipal?: Principal): string {
   if (!job.actorId) return '';
-  if (job.actor?.email) return `Prepared by ${job.actor.email}`;
-  if (currentPrincipal?.id === job.actorId && currentPrincipal.email) return `Prepared by ${currentPrincipal.email}`;
-  if (!job.actorId.includes('@') && job.actorId.length > 24) return `Prepared by ${compactIdentifier(job.actorId)}`;
-  return `Prepared by ${job.actorId}`;
+  if (job.actor?.email) return t('web.importWorkspacePresentation.preparedBy', { email: String(job.actor.email) });
+  if (currentPrincipal?.id === job.actorId && currentPrincipal.email) return t('web.importWorkspacePresentation.preparedBy', { email: String(currentPrincipal.email) });
+  if (!job.actorId.includes('@') && job.actorId.length > 24) return t('web.importWorkspacePresentation.preparedBy2', { value: String(compactIdentifier(job.actorId)) });
+  return t('web.importWorkspacePresentation.preparedBy3', { actorId: String(job.actorId) });
 }
 
 export function compactSourceURL(value?: string): string {
@@ -227,9 +230,9 @@ export function compactIdentifier(value: string): string {
 export function historyCountSummary(job: ImportJob): string {
   if (job.status === 'previewed') {
     return countParts([
-      [job.counts.locations, 'location', 'locations'],
-      [job.counts.assets, 'asset', 'assets'],
-      [job.counts.attachments, 'photo/file', 'photos/files']
+      [job.counts.locations, 'location'],
+      [job.counts.assets, 'asset'],
+      [job.counts.attachments, 'photoFile']
     ]);
   }
   if (job.status === 'running' || job.status === 'cancel_requested') {
@@ -237,26 +240,26 @@ export function historyCountSummary(job: ImportJob): string {
   }
   if (job.status === 'cancelled_discarded') {
     return countParts([
-      [job.counts.recordsDiscarded, 'record discarded', 'records discarded'],
-      [job.counts.sourceLinksDiscarded, 'source link removed', 'source links removed']
+      [job.counts.recordsDiscarded, 'recordDiscarded'],
+      [job.counts.sourceLinksDiscarded, 'sourceLinkRemoved']
     ]);
   }
   return countParts([
-    [job.counts.fieldsCreated, 'field created', 'fields created'],
-    [job.counts.locationsCreated, 'location created', 'locations created'],
-    [job.counts.assetsCreated, 'asset created', 'assets created'],
-    [job.counts.attachmentsCreated, 'photo/file imported', 'photos/files imported'],
-    [job.counts.assetsSkipped + job.counts.attachmentsSkipped, 'skipped', 'skipped']
+    [job.counts.fieldsCreated, 'fieldCreated'],
+    [job.counts.locationsCreated, 'locationCreated'],
+    [job.counts.assetsCreated, 'assetCreated'],
+    [job.counts.attachmentsCreated, 'photoFileImported'],
+    [job.counts.assetsSkipped + job.counts.attachmentsSkipped, 'skipped']
   ]);
 }
 
 export function issueCountSummary(job: ImportJob): string {
   const errorCount = reportedErrorCount(job);
   const warningCount = reportedWarningCount(job);
-  if (errorCount === 0 && warningCount === 0) return 'No issues';
+  if (errorCount === 0 && warningCount === 0) return t('web.importWorkspacePresentation.noIssues');
   return countParts([
-    [errorCount, 'blocking issue', 'blocking issues'],
-    [warningCount, 'warning', 'warnings']
+    [errorCount, 'blockingIssue'],
+    [warningCount, 'warning']
   ]);
 }
 
@@ -277,27 +280,27 @@ export function reportedWarningCount(job: ImportJob): number {
 export function changedRecordSummary(job: ImportJob): string {
   if (job.status === 'previewed') {
     return countParts([
-      [job.counts.locations, 'planned location', 'planned locations'],
-      [job.counts.assets, 'planned asset', 'planned assets'],
-      [job.counts.attachments, 'planned photo/file', 'planned photos/files']
+      [job.counts.locations, 'plannedLocation'],
+      [job.counts.assets, 'plannedAsset'],
+      [job.counts.attachments, 'plannedPhotoFile']
     ]);
   }
   if (job.status === 'cancelled_discarded') {
     return countParts([
-      [job.counts.recordsDiscarded, 'record discarded', 'records discarded'],
-      [job.counts.sourceLinksDiscarded, 'source link removed', 'source links removed']
+      [job.counts.recordsDiscarded, 'recordDiscarded'],
+      [job.counts.sourceLinksDiscarded, 'sourceLinkRemoved']
     ]);
   }
   return countParts([
-    [job.counts.locationsCreated, 'location saved', 'locations saved'],
-    [job.counts.assetsCreated, 'asset saved', 'assets saved'],
-    [job.counts.attachmentsCreated, 'photo/file saved', 'photos/files saved']
+    [job.counts.locationsCreated, 'locationSaved'],
+    [job.counts.assetsCreated, 'assetSaved'],
+    [job.counts.attachmentsCreated, 'photoFileSaved']
   ]);
 }
 
-export function countParts(parts: Array<[number, string, string]>): string {
-  const labels = parts.filter(([count]) => count > 0).map(([count, singular, plural]) => `${count} ${count === 1 ? singular : plural}`);
-  return labels.length > 0 ? labels.join(' · ') : 'No records changed';
+export function countParts(parts: Array<[number, ImportCountMetric]>): string {
+  const labels = parts.filter(([count]) => count > 0).map(([count, metric]) => t(`import.count.${metric}`, { count }));
+  return labels.length > 0 ? labels.join(' · ') : t('web.importWorkspacePresentation.noRecordsChanged');
 }
 
 function allJobMessages(job: ImportJob): ImportJob['messages'] {
@@ -306,28 +309,28 @@ function allJobMessages(job: ImportJob): ImportJob['messages'] {
 
 export function previewCountCells(job: ImportJob): CountCell[] {
   return [
-    countCell(job.counts.fields, 'field', 'fields'),
-    countCell(job.counts.locations, 'location', 'locations'),
-    countCell(job.counts.assets, 'asset', 'assets'),
-    countCell(job.counts.attachments, 'photo/file', 'photos/files'),
-    countCell(job.counts.fieldsExisting + job.counts.assetsSkipped + job.counts.attachmentsSkipped, 'duplicate/skip', 'duplicates/skips', true),
-    countCell(job.counts.warnings, 'warning', 'warnings', true),
-    countCell(job.counts.errors, 'blocking issue', 'blocking issues', job.counts.errors === 0)
+    countCell(job.counts.fields, 'field'),
+    countCell(job.counts.locations, 'location'),
+    countCell(job.counts.assets, 'asset'),
+    countCell(job.counts.attachments, 'photoFile'),
+    countCell(job.counts.fieldsExisting + job.counts.assetsSkipped + job.counts.attachmentsSkipped, 'duplicateSkip', true),
+    countCell(job.counts.warnings, 'warning', true),
+    countCell(job.counts.errors, 'blockingIssue', job.counts.errors === 0)
   ];
 }
 
 export function resultCountCells(job: ImportJob): CountCell[] {
   return [
-    countCell(job.counts.fieldsCreated, 'field created', 'fields created'),
-    countCell(job.counts.fieldsExisting, 'field reused', 'fields reused', true),
-    countCell(job.counts.locationsCreated, 'location created', 'locations created'),
-    countCell(job.counts.assetsCreated, 'asset created', 'assets created'),
-    countCell(job.counts.attachmentsCreated, 'photo/file imported', 'photos/files imported'),
-    countCell(job.counts.assetsSkipped, 'asset skipped', 'assets skipped', true),
-    countCell(job.counts.attachmentsSkipped, 'photo/file skipped', 'photos/files skipped', true),
-    countCell(job.counts.warnings, 'warning', 'warnings', true),
-    countCell(job.counts.errors, 'blocking issue', 'blocking issues', job.counts.errors === 0),
-    countCell(job.counts.recordsDiscarded, 'record discarded', 'records discarded', job.counts.recordsDiscarded === 0)
+    countCell(job.counts.fieldsCreated, 'fieldCreated'),
+    countCell(job.counts.fieldsExisting, 'fieldReused', true),
+    countCell(job.counts.locationsCreated, 'locationCreated'),
+    countCell(job.counts.assetsCreated, 'assetCreated'),
+    countCell(job.counts.attachmentsCreated, 'photoFileImported'),
+    countCell(job.counts.assetsSkipped, 'assetSkipped', true),
+    countCell(job.counts.attachmentsSkipped, 'photoFileSkipped', true),
+    countCell(job.counts.warnings, 'warning', true),
+    countCell(job.counts.errors, 'blockingIssue', job.counts.errors === 0),
+    countCell(job.counts.recordsDiscarded, 'recordDiscarded', job.counts.recordsDiscarded === 0)
   ];
 }
 
@@ -341,7 +344,7 @@ export function visiblePreviewCountCells(job: ImportJob): CountCell[] {
 }
 
 export function visibleCountCells(cells: CountCell[]): CountCell[] {
-  const visible = cells.filter((cell) => cell.value > 0 || cell.label.startsWith('blocking'));
+  const visible = cells.filter((cell) => cell.value > 0 || cell.metric === 'blockingIssue');
   return visible.length > 0 ? visible : cells.slice(0, 4);
 }
 
@@ -370,23 +373,23 @@ export function uniqueImportMessages(messages: ImportMessage[]): ImportMessage[]
 }
 
 export function previewReadinessTitle(job: ImportJob, previewStale: boolean): string {
-  if (previewStale) return 'Preview needs to be refreshed';
-  if (job.counts.errors > 0) return 'Fix blocking issues before importing';
-  return 'Ready to start';
+  if (previewStale) return t('web.importWorkspacePresentation.previewNeedsToBeRefreshed');
+  if (job.counts.errors > 0) return t('web.importWorkspacePresentation.fixBlockingIssuesBeforeImporting');
+  return t('web.importWorkspacePresentation.readyToStart');
 }
 
 export function previewReadinessDescription(job: ImportJob, previewStale: boolean): string {
-  if (previewStale) return 'The source settings changed after this preview. Confirm the source again before starting.';
-  if (job.counts.errors > 0) return 'Nothing has been saved. Review the blocking messages below and preview again after fixing the source.';
-  if (job.counts.warnings > 0) return 'Nothing has been saved. Warnings are shown below so you can decide whether to continue.';
-  return 'Nothing has been saved. Start the import when this plan looks right.';
+  if (previewStale) return t('web.importWorkspacePresentation.theSourceSettingsChangedAfterThisPreviewConfirmThe');
+  if (job.counts.errors > 0) return t('web.importWorkspacePresentation.nothingHasBeenSavedReviewTheBlockingMessagesBelow');
+  if (job.counts.warnings > 0) return t('web.importWorkspacePresentation.nothingHasBeenSavedWarningsAreShownBelowSo');
+  return t('web.importWorkspacePresentation.nothingHasBeenSavedStartTheImportWhenThis');
 }
 
 export function previewReadinessBadge(job: ImportJob, previewStale: boolean): string {
-  if (previewStale) return 'Re-preview required';
-  if (job.counts.errors > 0) return `${job.counts.errors} blocking`;
-  if (job.counts.warnings > 0) return `${job.counts.warnings} warnings`;
-  return 'Ready';
+  if (previewStale) return t('web.importWorkspacePresentation.rePreviewRequired');
+  if (job.counts.errors > 0) return t('web.importWorkspacePresentation.blocking', { errors: String(job.counts.errors) });
+  if (job.counts.warnings > 0) return t('web.importWorkspacePresentation.warnings', { warnings: String(job.counts.warnings) });
+  return t('web.importWorkspacePresentation.ready');
 }
 
 export function jobTimeLabel(label: string, value?: string): string {
@@ -397,13 +400,13 @@ export function jobTimeLabel(label: string, value?: string): string {
 export function shortDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('en-US', {
+  return localization.date(date, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit'
-  }).format(date);
+  });
 }
 
 export function statusVariant(job: ImportJob): 'default' | 'secondary' | 'destructive' {
@@ -414,35 +417,46 @@ export function statusVariant(job: ImportJob): 'default' | 'secondary' | 'destru
 
 export function resourceLabel(resource: ImportJob['resources'][number]): string {
   if (resource.displayName?.trim()) return resource.displayName.trim();
-  if (resource.resourceType === 'attachment') return 'Imported photo/file';
-  if (resource.sourceEntityType === 'asset' && resource.sourceEntityId.startsWith('location:')) return 'Imported location';
-  return 'Imported asset';
+  if (resource.resourceType === 'attachment') return t('web.importWorkspacePresentation.importedPhotoFile');
+  if (resource.sourceEntityType === 'asset' && resource.sourceEntityId.startsWith('location:')) return t('web.importWorkspacePresentation.importedLocation');
+  return t('web.importWorkspacePresentation.importedAsset');
 }
 
 export function resourceDiagnosticLabel(resource: ImportJob['resources'][number]): string {
-  return `Source ${resource.sourceEntityType}: ${resource.sourceEntityId}`;
+  return t('web.importWorkspacePresentation.source', { sourceEntityType: String(resource.sourceEntityType), sourceEntityId: String(resource.sourceEntityId) });
 }
 
 export function sourceSnapshotDescription(job: ImportJob): string {
-  if (job.source.type === 'legacy_homebox_csv') return 'CSV snapshot checked for this preview.';
-  return 'Homebox source checked for this preview.';
+  if (job.source.type === 'legacy_homebox_csv') return t('web.importWorkspacePresentation.cSVSnapshotCheckedForThisPreview');
+  return t('web.importWorkspacePresentation.homeboxSourceCheckedForThisPreview');
 }
 
 export function previewLocationContext(item: { parentSourceId?: string; archived: boolean }): string {
-  return `${item.parentSourceId ? 'inside another imported record' : 'top level'}${item.archived ? ' · archived source skipped' : ''}`;
+  return t(`import.preview.location.${item.parentSourceId ? 'nested' : 'root'}.${item.archived ? 'archived' : 'active'}`);
 }
 
 export function previewAssetContext(item: { kind: string; parentSourceId?: string; archived: boolean }): string {
-  return `${item.kind}${item.parentSourceId ? ' · inside another imported record' : ''}${item.archived ? ' · archived source skipped' : ''}`;
+  const kind = item.kind === 'item' || item.kind === 'container' || item.kind === 'location' ? item.kind : 'unknown';
+  return t(`import.preview.asset.${kind}.${item.parentSourceId ? 'nested' : 'root'}.${item.archived ? 'archived' : 'active'}`, { kind: item.kind });
 }
 
 export function fileSizeLabel(bytes: number): string {
-  if (bytes <= 0) return 'size unknown';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes <= 0) return t('web.importWorkspacePresentation.sizeUnknown');
+  if (bytes < 1024) return `${localization.number(bytes)} B`;
+  if (bytes < 1024 * 1024) return t('web.importWorkspacePresentation.kB', { value: localization.number(Math.round(bytes / 1024)) });
+  return t('web.importWorkspacePresentation.mB', { value: localization.number(bytes / (1024 * 1024), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
 }
 
-function countCell(value: number, singular: string, plural: string, muted = false): CountCell {
-  return { value, label: value === 1 ? singular : plural, muted };
+function countCell(value: number, metric: ImportCountMetric, muted = false): CountCell {
+  return { value, metric, label: t(`import.label.${metric}`, { count: value }), muted };
 }
+
+export function ledgerChangeSummary(job: ImportJob): string {
+  if (!isTerminal(job) || job.status === 'cancelled_discarded') return historyCountSummary(job);
+  const skipped = job.counts.assetsSkipped + job.counts.attachmentsSkipped;
+  const saved = changedRecordSummary(job);
+  if (skipped === 0) return saved;
+  const skippedLabel = t('import.history.skipped', { count: skipped });
+  if (job.counts.locationsCreated + job.counts.assetsCreated + job.counts.attachmentsCreated === 0) return skippedLabel;
+  return `${saved} · ${skippedLabel}`;
+  }

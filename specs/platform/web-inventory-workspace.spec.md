@@ -1052,3 +1052,33 @@ Before this direction is promoted into `apps/web`:
 - What is the final mobile order and labeling for bottom navigation once Search, Locations, Settings, and future voice interaction all exist?
 - Which asset detail actions belong in the first promoted implementation versus later asset management iterations?
 - How should expiration-oriented custom fields surface later without turning the home page into a noisy dashboard?
+
+## Inventory Conversation Panel — October 2026
+
+An `Ask Stuff Stash` action belongs in the existing workspace header action group,
+available for the selected inventory. It opens an accessible conversation dialog
+using the existing local shadcn-style primitives. Desktop uses a bounded panel;
+narrow layouts use the available viewport with a scrollable transcript and a
+composer that remains reachable above the keyboard. The main workspace must not
+scroll underneath the dialog, and Escape/Close restore focus to the opener.
+
+The familiar conversation hierarchy is transcript, pending action review, then
+composer. The inventory name remains visible in the dialog header. User messages
+and assistant responses have distinct semantic labels; answers render plain text,
+not untrusted HTML. Asset references link into the same inventory. Progress uses
+a concise status, and a polite live region announces completed responses without
+re-announcing the entire transcript. Enter sends; Shift+Enter inserts a newline;
+IME composition must not submit. Send is disabled for empty input or while a turn
+or approval is unresolved. Stop cancels processing; it is not approval.
+
+Proposed changes appear as a grouped review with a summary of affected records
+and command details, with one primary `Approve changes` action and a secondary
+`Cancel changes` action. No automatic approval or retries are allowed. A lost
+connection leaves a safe retry path for read turns and an explicit uncertain
+outcome for an in-flight approval; users must refresh before trying a write again.
+Successful changes refresh the inventory workspace. Closing a panel cancels live
+work and preserves its visible transcript only within the current authenticated
+inventory scope; scope changes discard it. No transcript/token is persisted in
+browser storage. Tests verify normal text, review/cancel, scope teardown, expired
+sessions, and keyboard/focus behavior; real browser journeys verify the connected
+workflow and layout rather than isolated component styling.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy } from 'svelte';
   import { createConversationSession } from '$lib/adapters/query/conversationSession';
   import type { ConversationScope } from '$lib/domain/conversation';
@@ -15,14 +16,14 @@
   const session = createConversationSession(scope, () => { denied = true; });
   onDestroy(() => { void session.dispose(); });
 </script>
-{#if denied}<section role="alert"><h2>Conversation settings unavailable</h2><p>Your account no longer has access to configure this tenant.</p></section>
+{#if denied}<section role="alert"><h2>{t('web.ConversationWorkspace.conversationSettingsUnavailable')}</h2><p>{t('web.ConversationWorkspace.yourAccountNoLongerHasAccessToConfigureThis')}</p></section>
 {:else}
-  <nav aria-label="Conversation settings sections" class="conversation-sections">
-    <Button.Root variant="outline" aria-pressed={section === 'workflows'} disabled={editing && section !== 'workflows'} onclick={() => { if (!editing) section = 'workflows'; }}>Workflows</Button.Root>
-    <Button.Root variant="outline" aria-pressed={section === 'cases'} disabled={editing && section !== 'cases'} onclick={() => { if (!editing) { visitedCases = true; section = 'cases'; } }}>Test cases</Button.Root>
-    <Button.Root variant="outline" aria-pressed={section === 'runs'} disabled={editing && section !== 'runs'} onclick={() => { if (!editing) { visitedRuns = true; section = 'runs'; } }}>Runs</Button.Root>
+  <nav aria-label={t('web.ConversationWorkspace.conversationSettingsSections')} class="conversation-sections">
+    <Button.Root variant="outline" aria-pressed={section === 'workflows'} disabled={editing && section !== 'workflows'} onclick={() => { if (!editing) section = 'workflows'; }}>{t('web.ConversationWorkspace.workflows')}</Button.Root>
+    <Button.Root variant="outline" aria-pressed={section === 'cases'} disabled={editing && section !== 'cases'} onclick={() => { if (!editing) { visitedCases = true; section = 'cases'; } }}>{t('web.ConversationWorkspace.testCases')}</Button.Root>
+    <Button.Root variant="outline" aria-pressed={section === 'runs'} disabled={editing && section !== 'runs'} onclick={() => { if (!editing) { visitedRuns = true; section = 'runs'; } }}>{t('web.ConversationWorkspace.runs')}</Button.Root>
   </nav>
-  {#if editing}<p>Finish loading or close the editor before switching sections.</p>{/if}
+  {#if editing}<p>{t('web.ConversationWorkspace.finishLoadingOrCloseTheEditorBeforeSwitchingSections')}</p>{/if}
   <div hidden={section !== 'workflows'}><WorkflowWorkspace {scope} {session} workflows={repositories.workflows} providers={repositories.providers} onNavigationBlockedChange={value => { blocked.workflows = value; }} onAccessLost={() => { denied = true; }} /></div>
   {#if visitedCases}<div hidden={section !== 'cases'}><CaseWorkspace {scope} {session} cases={repositories.cases} onNavigationBlockedChange={value => { blocked.cases = value; }} onAccessLost={() => { denied = true; }} /></div>{/if}
   {#if visitedRuns}<div hidden={section !== 'runs'}><RunWorkspace {scope} {session} {repositories} visible={section === 'runs'} onNavigationBlockedChange={value => { blocked.runs = value; }} onAccessLost={() => { denied = true; }} /></div>{/if}

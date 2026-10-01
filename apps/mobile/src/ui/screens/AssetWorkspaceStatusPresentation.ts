@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetLifecycleActionKind } from './AssetLifecyclePresentation';
 
@@ -12,19 +13,19 @@ export type AssetWorkspaceStatus = {
 export function assetWorkspaceWorkingStatus(action: Exclude<AssetWorkspacePendingAction, 'photos'>): AssetWorkspaceStatus {
   switch (action) {
     case 'archive':
-      return { kind: 'working', message: 'Archiving asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.archivingAsset') };
     case 'delete':
-      return { kind: 'working', message: 'Deleting asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.deletingAsset') };
     case 'edit':
-      return { kind: 'working', message: 'Saving changes...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.savingChanges') };
     case 'move':
-      return { kind: 'working', message: 'Moving asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.movingAsset') };
     case 'checkout':
-      return { kind: 'working', message: 'Checking out asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.checkingOutAsset') };
     case 'return':
-      return { kind: 'working', message: 'Returning asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.returningAsset') };
     case 'restore':
-      return { kind: 'working', message: 'Restoring asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.restoringAsset') };
   }
 }
 
@@ -48,15 +49,15 @@ export function assetWorkspaceSuccessStatus(
   switch (action) {
     case 'edit':
     case 'move':
-      return { kind: 'success', message: 'message' in source ? source.message : `Updated ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.updated', { title: String(source.title) }) };
     case 'checkout':
-      return { kind: 'success', message: 'message' in source ? source.message : `Checked out ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.checkedOut', { title: String(source.title) }) };
     case 'return':
-      return { kind: 'success', message: 'message' in source ? source.message : `Returned ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.returned', { title: String(source.title) }) };
     case 'archive':
-      return { kind: 'success', message: `Archived ${title}.` };
+      return { kind: 'success', message: t('mobile.AssetWorkspaceStatusPresentation.archived', { title: String(title) }) };
     case 'restore':
-      return { kind: 'success', message: `Restored ${title}.` };
+      return { kind: 'success', message: t('mobile.AssetWorkspaceStatusPresentation.restored', { title: String(title) }) };
   }
 }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { tick } from 'svelte';
   import Plus from '@lucide/svelte/icons/plus';
   import Check from '@lucide/svelte/icons/check';
@@ -48,7 +49,7 @@
   let initialColor = $derived(selected?.color ?? '');
   let normalizedFormColor = $derived(normalizeTagColor(color));
   let nameBytes = $derived(utf8ByteLength(displayName.trim()));
-  let nameByteError = $derived(nameBytes > 80 ? 'Tag name must be 80 UTF-8 bytes or fewer.' : '');
+  let nameByteError = $derived(nameBytes > 80 ? t('web.TagSettingsManager.tagNameMustBe80UTF8BytesOr') : '');
   let formValid = $derived(Boolean(displayName.trim()) && nameBytes <= 80 && normalizedFormColor !== null);
   let dirty = $derived(displayName !== initialName || (normalizedFormColor ?? '') !== initialColor);
 
@@ -72,10 +73,10 @@
       tags = sortSettingsRecords(page.items); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; appendError = '';
       observer.record('workspace.settings_collection_loaded', { resource: 'tag', scope: 'inventory', count: tags.length });
     } catch (caught) {
-      if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, 'Tags could not be loaded. Try again.'); observer.record('workspace.settings_collection_load_failed', { resource: 'tag', scope: 'inventory' }); await handlePermissionDenied(caught, 'load'); }
+      if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.tagsCouldNotBeLoadedTryAgain')); observer.record('workspace.settings_collection_load_failed', { resource: 'tag', scope: 'inventory' }); await handlePermissionDenied(caught, 'load'); }
     } finally { if (epoch === loadEpoch) loading = false; }
   }
-  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = await repository.listManagedAssetTags(inventory.tenantId, inventory.id, nextCursor); if (epoch !== loadEpoch) return; tags = sortSettingsRecords([...tags, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, 'More tags could not be loaded. Try again.'); } finally { if (epoch === loadEpoch) loadingMore = false; } }
+  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = await repository.listManagedAssetTags(inventory.tenantId, inventory.id, nextCursor); if (epoch !== loadEpoch) return; tags = sortSettingsRecords([...tags, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.moreTagsCouldNotBeLoadedTryAgain')); } finally { if (epoch === loadEpoch) loadingMore = false; } }
 
   function route(actionValue: SettingsResourceAction, id?: string): string {
     return settingsResourceHref({ level: 'inventory', tenantId: inventory.tenantId, inventoryId: inventory.id, collection: 'tags', resourceId: id, action: actionValue });
@@ -86,7 +87,7 @@
     const name = displayName.trim();
     const normalizedColor = normalizeTagColor(color);
     if (!name || utf8ByteLength(name) > 80 || normalizedColor === null) {
-      formError = !name ? 'Enter a tag name.' : utf8ByteLength(name) > 80 ? 'Tag name must be 80 UTF-8 bytes or fewer.' : 'Enter a six-digit hex color such as #2F80ED.';
+      formError = !name ? t('web.TagSettingsManager.enterATagName') : utf8ByteLength(name) > 80 ? t('web.TagSettingsManager.tagNameMustBe80UTF8BytesOr') : t('web.TagSettingsManager.enterASixDigitHexColorSuchAs2F80ED');
       await tick(); formErrorElement?.focus(); return;
     }
     saving = true; formError = '';
@@ -100,11 +101,11 @@
       if (!saved) throw new Error('Tag is unavailable.');
       tags = sortSettingsRecords(action === 'new' ? [...tags, saved] : tags.map((tag) => tag.id === saved.id ? saved : tag));
       onTagsChange(tags);
-      notifySuccess(action === 'new' ? 'Tag added' : 'Changes saved', { description: `${saved.displayName} is up to date.` });
+      notifySuccess(action === 'new' ? t('web.TagSettingsManager.added') : t('web.TagSettingsManager.changesSaved'), { description: t('web.TagSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) });
       observer.record('workspace.settings_mutation_succeeded', { resource: 'tag', action: action === 'new' ? 'create' : 'update', scope: 'inventory' });
       onNavigate(collectionHref);
     } catch (caught) {
-      formError = safeWorkspaceErrorMessage(caught, `Tag was not ${action === 'new' ? 'created' : 'saved'}. Try again.`);
+      formError = safeWorkspaceErrorMessage(caught, t(`web.TagSettingsManager.${action === 'new' ? 'create' : 'save'}Failed`));
       observer.record('workspace.settings_mutation_failed', { resource: 'tag', action: action === 'new' ? 'create' : 'update', scope: 'inventory' });
       await handlePermissionDenied(caught, action === 'new' ? 'create' : 'update');
       await tick(); formErrorElement?.focus();
@@ -122,7 +123,7 @@
       observer.record('workspace.settings_mutation_succeeded', { resource: 'tag', action: 'archive', scope: 'inventory' });
       onNavigate(collectionHref);
     } catch (caught) {
-      formError = safeWorkspaceErrorMessage(caught, 'Tag was not archived. Try again.');
+      formError = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.tagWasNotArchivedTryAgain'));
       observer.record('workspace.settings_mutation_failed', { resource: 'tag', action: 'archive', scope: 'inventory' });
       await handlePermissionDenied(caught, 'archive');
     } finally { saving = false; }
@@ -134,20 +135,20 @@
 
 <section class="settings-resource-page" aria-labelledby="tag-settings-title">
   <header class="settings-resource-header">
-    <div><p class="settings-eyebrow">{inventory.name}</p><h1 id="tag-settings-title">Tags</h1><p>Reusable labels for this inventory.</p></div>
-    {#if canManage}<Button.Root href={route('new')} onclick={(event) => { event.preventDefault(); onNavigate(route('new')); }}><Plus /> Add Tag</Button.Root>{/if}
+    <div><p class="settings-eyebrow">{inventory.name}</p><h1 id="tag-settings-title">{t('web.TagSettingsManager.tags')}</h1><p>{t('web.TagSettingsManager.reusableLabelsForThisInventory')}</p></div>
+    {#if canManage}<Button.Root href={route('new')} onclick={(event) => { event.preventDefault(); onNavigate(route('new')); }}><Plus /> {t('web.TagSettingsManager.addTag')}</Button.Root>{/if}
   </header>
-  {#if loading && tags.length === 0}<SettingsCollectionState kind="loading" title="Loading tags" message="Getting the current tag list." />
+  {#if loading && tags.length === 0}<SettingsCollectionState kind="loading" title={t('web.TagSettingsManager.loadingTags')} message={t('web.TagSettingsManager.gettingTheCurrentTagList')} />
   {:else}
-    {#if loading}<SettingsCollectionState kind="loading" title="Updating tags" message="Showing the last loaded tags while this list refreshes." />{/if}
-    {#if error}<SettingsCollectionState kind="error" title="Tags unavailable" message={error} onRetry={() => { void load(); }} />{/if}
+    {#if loading}<SettingsCollectionState kind="loading" title={t('web.TagSettingsManager.updatingTags')} message={t('web.TagSettingsManager.showingTheLastLoadedTagsWhileThisListRefreshes')} />{/if}
+    {#if error}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.tagsUnavailable')} message={error} onRetry={() => { void load(); }} />{/if}
     {#if tags.length > 12}
-      <div class="settings-search"><Search aria-hidden="true" /><Label class="visually-hidden" for="tag-settings-search">Search tags</Label><Input id="tag-settings-search" type="search" bind:value={query} placeholder="Search tags" /></div>
+      <div class="settings-search"><Search aria-hidden="true" /><Label class="visually-hidden" for="tag-settings-search">{t('web.TagSettingsManager.searchTags')}</Label><Input id="tag-settings-search" type="search" bind:value={query} placeholder={t('web.TagSettingsManager.searchTags')} /></div>
     {/if}
     {#if filtered.length === 0}
-      <SettingsCollectionState kind="empty" title={query ? 'No matching tags' : 'No active tags'} message={query ? 'Try a different name.' : canManage ? 'Add a tag to organize assets and filters.' : 'No tags are available in this inventory.'} />
+      <SettingsCollectionState kind="empty" title={query ? t('web.TagSettingsManager.noMatchingTags') : t('web.TagSettingsManager.noActiveTags')} message={query ? t('web.TagSettingsManager.tryADifferentName') : canManage ? t('web.TagSettingsManager.addATagToOrganizeAssetsAndFilters') : t('web.TagSettingsManager.noTagsAreAvailableInThisInventory')} />
     {:else}
-      <div class="settings-resource-list" aria-label="Active tags">
+      <div class="settings-resource-list" aria-label={t('web.TagSettingsManager.activeTags')}>
         {#each filtered as tag}
           <a class="settings-resource-row settings-tag-resource-row" href={route('edit', tag.id)} aria-label={`${tag.displayName} ${tagColorAccessibleLabel(tag.color)}`} onclick={(event) => { event.preventDefault(); onNavigate(route('edit', tag.id)); }}>
             <span class="settings-tag-row-primary">
@@ -158,45 +159,45 @@
         {/each}
       </div>
     {/if}
-    {#if appendError}<SettingsCollectionState kind="error" title="Could not load more" message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? 'Loading…' : 'Load more'}</Button.Root><small>More tags are available.</small></div>{/if}
+    {#if appendError}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.couldNotLoadMore')} message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? t('web.TagSettingsManager.loading') : t('web.TagSettingsManager.loadMore')}</Button.Root><small>{t('web.TagSettingsManager.moreTagsAreAvailable')}</small></div>{/if}
   {/if}
 </section>
 
-<WorkspaceTaskSheet open={formOpen} title={action === 'new' ? 'Add Tag' : selected ? `Edit ${selected.displayName}` : 'Tag unavailable'} description="Tags belong only to this inventory." busy={saving} dismissible={!saving} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); requestClose(); }} onOpenChange={(open) => { if (!open && !saving) requestClose(); }}>
-  {#if !canManage}<SettingsCollectionState kind="denied" title="Read only" message="Your draft is preserved, but this account can no longer change tags here." />{/if}
-  {#if action === 'edit' && !selected}<SettingsCollectionState kind="error" title="Tag unavailable" message="This tag may have been archived or is no longer available." />
+<WorkspaceTaskSheet open={formOpen} title={action === 'new' ? t('web.TagSettingsManager.addTag') : selected ? t('web.TagSettingsManager.edit', { displayName: String(selected.displayName) }) : t('web.TagSettingsManager.tagUnavailable')} description={t('web.TagSettingsManager.tagsBelongOnlyToThisInventory')} busy={saving} dismissible={!saving} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); requestClose(); }} onOpenChange={(open) => { if (!open && !saving) requestClose(); }}>
+  {#if !canManage}<SettingsCollectionState kind="denied" title={t('web.TagSettingsManager.readOnly')} message={t('web.TagSettingsManager.yourDraftIsPreservedButThisAccountCanNo')} />{/if}
+  {#if action === 'edit' && !selected}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.tagUnavailable')} message={t('web.TagSettingsManager.thisTagMayHaveBeenArchivedOrIsNo')} />
   {:else}
     {#if formError}<p class="settings-form-error" role="alert" tabindex="-1" bind:this={formErrorElement}>{formError}</p>{/if}
-    <div class="field-stack"><Label for="settings-tag-name">Display name</Label><Input id="settings-tag-name" bind:value={displayName} maxlength={80} disabled={!canManage} aria-invalid={!displayName.trim() || nameByteError ? 'true' : undefined} aria-describedby="settings-tag-name-help" /><small id="settings-tag-name-help" class:settings-field-error={Boolean(nameByteError)}>{nameByteError || `${nameBytes} of 80 UTF-8 bytes`}</small></div>
-    <fieldset class="settings-color-picker" disabled={!canManage}><legend>Color</legend>
+    <div class="field-stack"><Label for="settings-tag-name">{t('web.TagSettingsManager.displayName')}</Label><Input id="settings-tag-name" bind:value={displayName} maxlength={80} disabled={!canManage} aria-invalid={!displayName.trim() || nameByteError ? 'true' : undefined} aria-describedby="settings-tag-name-help" /><small id="settings-tag-name-help" class:settings-field-error={Boolean(nameByteError)}>{nameByteError || t('web.TagSettingsManager.of80UTF8Bytes', { nameBytes: String(nameBytes) })}</small></div>
+    <fieldset class="settings-color-picker" disabled={!canManage}><legend>{t('web.TagSettingsManager.color')}</legend>
       <div class="settings-color-swatches">
         {#each ['#2F80ED', '#6B90AA', '#F5AB4B', '#2E7D32', '#7C3AED', ''] as swatch}
-          <Button.Root type="button" variant="outline" class="settings-color-swatch" style={swatch ? `--swatch: ${swatch}` : undefined} aria-label={swatch ? `Use color ${swatch}` : 'Use no color'} aria-pressed={color.toUpperCase() === swatch} onclick={() => { color = swatch; }}>
+          <Button.Root type="button" variant="outline" class="settings-color-swatch" style={swatch ? `--swatch: ${swatch}` : undefined} aria-label={swatch ? t('web.TagSettingsManager.useColor', { swatch: String(swatch) }) : t('web.TagSettingsManager.useNoColor')} aria-pressed={color.toUpperCase() === swatch} onclick={() => { color = swatch; }}>
             <span style={swatch ? `background:${swatch}` : undefined}></span>{#if color.toUpperCase() === swatch}<Check aria-hidden="true" />{/if}
           </Button.Root>
         {/each}
       </div>
       <div class="settings-native-color-row">
-        <div class="field-stack"><Label for="settings-tag-native-color">Choose a custom color</Label><Input id="settings-tag-native-color" class="settings-native-color-input" type="color" value={normalizeTagColor(color) || '#2F80ED'} oninput={(event) => { color = event.currentTarget.value.toUpperCase(); }} /></div>
-        <Button.Root type="button" variant="outline" disabled={!color} onclick={() => { color = ''; }}>Clear color</Button.Root>
+        <div class="field-stack"><Label for="settings-tag-native-color">{t('web.TagSettingsManager.chooseACustomColor')}</Label><Input id="settings-tag-native-color" class="settings-native-color-input" type="color" value={normalizeTagColor(color) || '#2F80ED'} oninput={(event) => { color = event.currentTarget.value.toUpperCase(); }} /></div>
+        <Button.Root type="button" variant="outline" disabled={!color} onclick={() => { color = ''; }}>{t('web.TagSettingsManager.clearColor')}</Button.Root>
       </div>
-      <div class="field-stack"><Label for="settings-tag-color">Hex color (optional)</Label><Input id="settings-tag-color" bind:value={color} placeholder="#2F80ED" aria-describedby="settings-tag-color-help" /><small id="settings-tag-color-help">Leave blank for no color.</small></div>
+      <div class="field-stack"><Label for="settings-tag-color">{t('web.TagSettingsManager.hexColorOptional')}</Label><Input id="settings-tag-color" bind:value={color} placeholder={t('web.TagSettingsManager.2F80ED')} aria-describedby="settings-tag-color-help" /><small id="settings-tag-color-help">{t('web.TagSettingsManager.leaveBlankForNoColor')}</small></div>
     </fieldset>
   {/if}
   {#snippet footer()}
-    <Button.Root variant="outline" disabled={saving} onclick={requestClose}>Cancel</Button.Root>
-    {#if action === 'edit' && selected}<Button.Root variant="destructive" disabled={saving} href={route('archive', selected.id)} onclick={(event) => { event.preventDefault(); onNavigate(route('archive', selected.id)); }}>Archive</Button.Root>{/if}
-    <Button.Root disabled={saving || !canManage || !formValid || (action === 'edit' && !dirty)} onclick={() => { void save(); }}>Save</Button.Root>
+    <Button.Root variant="outline" disabled={saving} onclick={requestClose}>{t('web.TagSettingsManager.cancel')}</Button.Root>
+    {#if action === 'edit' && selected}<Button.Root variant="destructive" disabled={saving} href={route('archive', selected.id)} onclick={(event) => { event.preventDefault(); onNavigate(route('archive', selected.id)); }}>{t('web.TagSettingsManager.archive')}</Button.Root>{/if}
+    <Button.Root disabled={saving || !canManage || !formValid || (action === 'edit' && !dirty)} onclick={() => { void save(); }}>{t('web.TagSettingsManager.save')}</Button.Root>
   {/snippet}
 </WorkspaceTaskSheet>
 
-<WorkspaceConfirmationDialog open={discardOpen} title="Discard changes?" description="Your unsaved tag changes will be lost." onOpenChange={(open) => { discardOpen = open; }}>
-  {#snippet cancel()}<Button.Root variant="outline" onclick={() => { discardOpen = false; }}>Keep editing</Button.Root>{/snippet}
-  {#snippet action()}<Button.Root variant="destructive" onclick={() => { discardOpen = false; onNavigate(collectionHref); }}>Discard changes</Button.Root>{/snippet}
+<WorkspaceConfirmationDialog open={discardOpen} title={t('web.TagSettingsManager.discardChanges')} description={t('web.TagSettingsManager.yourUnsavedTagChangesWillBeLost')} onOpenChange={(open) => { discardOpen = open; }}>
+  {#snippet cancel()}<Button.Root variant="outline" onclick={() => { discardOpen = false; }}>{t('web.TagSettingsManager.keepEditing')}</Button.Root>{/snippet}
+  {#snippet action()}<Button.Root variant="destructive" onclick={() => { discardOpen = false; onNavigate(collectionHref); }}>{t('web.TagSettingsManager.discardChanges2')}</Button.Root>{/snippet}
 </WorkspaceConfirmationDialog>
 
-<WorkspaceConfirmationDialog open={archiveOpen} title="Archive tag" description={selected ? `${selected.displayName} will no longer be available for new assignments or normal filtering. Existing history remains.` : 'This tag is no longer available.'} busy={saving} onOpenChange={(open) => { if (!open && !saving) onNavigate(collectionHref); }}>
+<WorkspaceConfirmationDialog open={archiveOpen} title={t('web.TagSettingsManager.archiveTag')} description={selected ? t('web.TagSettingsManager.willNoLongerBeAvailableForNewAssignmentsOr', { displayName: String(selected.displayName) }) : t('web.TagSettingsManager.thisTagIsNoLongerAvailable')} busy={saving} onOpenChange={(open) => { if (!open && !saving) onNavigate(collectionHref); }}>
   {#if formError}<p class="settings-form-error" role="alert">{formError}</p>{/if}
-  {#snippet cancel()}<Button.Root variant="outline" disabled={saving} onclick={() => onNavigate(collectionHref)}>Cancel</Button.Root>{/snippet}
-  {#snippet action()}<Button.Root variant="destructive" disabled={saving || !selected || !canManage} onclick={() => { void archive(); }}>Archive</Button.Root>{/snippet}
+  {#snippet cancel()}<Button.Root variant="outline" disabled={saving} onclick={() => onNavigate(collectionHref)}>{t('web.TagSettingsManager.cancel')}</Button.Root>{/snippet}
+  {#snippet action()}<Button.Root variant="destructive" disabled={saving || !selected || !canManage} onclick={() => { void archive(); }}>{t('web.TagSettingsManager.archive')}</Button.Root>{/snippet}
 </WorkspaceConfirmationDialog>

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 export interface WorkspaceAddAvailabilityInput {
   hasInventory: boolean;
   canCreateAsset: boolean;
@@ -12,13 +13,13 @@ export function workspaceAddAvailability(input: WorkspaceAddAvailabilityInput): 
   if (!input.hasInventory) {
     return {
       canOpen: false,
-      disabledReason: 'Select an inventory before adding assets.'
+      disabledReason: t('web.workspaceAddAvailability.selectAnInventoryBeforeAddingAssets')
     };
   }
   if (!input.canCreateAsset) {
     return {
       canOpen: false,
-      disabledReason: 'Adding assets is unavailable for this inventory.'
+      disabledReason: t('web.workspaceAddAvailability.addingAssetsIsUnavailableForThisInventory')
     };
   }
   return {

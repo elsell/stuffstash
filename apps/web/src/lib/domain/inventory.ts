@@ -506,17 +506,6 @@ export const defaultMediaUploadPolicy: MediaUploadPolicy = {
   maxBytes: 25 * 1024 * 1024
 };
 
-export function assetKindLabel(kind: AssetKind): string {
-  switch (kind) {
-    case 'item':
-      return 'Item';
-    case 'container':
-      return 'Container';
-    case 'location':
-      return 'Location';
-  }
-}
-
 export function hasAccessPermission(access: AccessSummary | null | undefined, permission: string): boolean {
   return access?.permissions.includes(permission) ?? false;
 }

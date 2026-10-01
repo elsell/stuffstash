@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type AccessInvitationRouteAction, type SettingsCollection, type SettingsResourceAction } from './workspaceRoute';
 
@@ -16,15 +17,15 @@ export function settingsOverviewDestinations(input: {
   inventory: Pick<Inventory, 'id' | 'tenantId' | 'name'> | null;
 }): SettingsDestination[] {
   const rows: SettingsDestination[] = [{
-    label: 'Account and app', eyebrow: 'Personal', description: 'Account, connection, and app information',
+    label: t('web.settingsManagementNavigation.accountAndApp'), eyebrow: t('web.settingsManagementNavigation.personal'), description: t('web.settingsManagementNavigation.accountConnectionAndAppInformation'),
     href: '/settings/account/general', icon: 'account'
   }];
   if (input.tenant) rows.push({
-    label: input.tenant.name, eyebrow: 'Tenant settings', description: 'Fields and asset types shared with its inventories',
+    label: input.tenant.name, eyebrow: t('web.settingsManagementNavigation.tenantSettings'), description: t('web.settingsManagementNavigation.fieldsAndAssetTypesSharedWithItsInventories'),
     href: settingsResourceHref({ level: 'tenant', tenantId: input.tenant.id }), icon: 'tenant'
   });
   if (input.inventory) rows.push({
-    label: input.inventory.name, eyebrow: 'Inventory settings', description: `Belongs to ${input.tenant?.name ?? 'the selected tenant'}`,
+    label: input.inventory.name, eyebrow: t('web.settingsManagementNavigation.inventorySettings'), description: input.tenant ? t('web.settingsManagementNavigation.belongsTo', { value: input.tenant.name }) : t('web.settingsManagementNavigation.belongsToSelectedTenant'),
     href: settingsResourceHref({ level: 'inventory', tenantId: input.inventory.tenantId, inventoryId: input.inventory.id }), icon: 'inventory'
   });
   return rows;
@@ -47,20 +48,20 @@ export function settingsResourceHref(input: {
 
 export function tenantSettingsDestinations(tenant: Pick<Tenant, 'id'>): SettingsDestination[] {
   return [
-    { label: 'Conversations', eyebrow: 'Voice and models', description: 'Tune workflows and test realistic inventory requests', icon: 'conversations', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'conversations' }) },
-    { label: 'Custom fields', eyebrow: 'Shared schema', description: 'Fields available to every inventory', icon: 'fields', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'fields' }) },
-    { label: 'Asset types', eyebrow: 'Shared schema', description: 'Types available to every inventory', icon: 'asset-types', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'asset-types' }) }
+    { label: t('web.settingsManagementNavigation.conversations'), eyebrow: t('web.settingsManagementNavigation.voiceAndModels'), description: t('web.settingsManagementNavigation.tuneWorkflowsAndTestRealisticInventoryRequests'), icon: 'conversations', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'conversations' }) },
+    { label: t('web.settingsManagementNavigation.customFields'), eyebrow: t('web.settingsManagementNavigation.sharedSchema'), description: t('web.settingsManagementNavigation.fieldsAvailableToEveryInventory'), icon: 'fields', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'fields' }) },
+    { label: t('web.settingsManagementNavigation.assetTypes'), eyebrow: t('web.settingsManagementNavigation.sharedSchema'), description: t('web.settingsManagementNavigation.typesAvailableToEveryInventory'), icon: 'asset-types', href: settingsResourceHref({ level: 'tenant', tenantId: tenant.id, collection: 'asset-types' }) }
   ];
 }
 
 export function inventorySettingsDestinations(inventory: Pick<Inventory, 'id' | 'tenantId'>): SettingsDestination[] {
   const base = { level: 'inventory' as const, tenantId: inventory.tenantId, inventoryId: inventory.id };
   return [
-    { label: 'Notifications', eyebrow: 'Personal', description: 'Expiration reminders and asset type overrides', icon: 'notifications', href: settingsResourceHref({ ...base, collection: 'notifications' }) },
-    { label: 'Sharing', eyebrow: 'People', description: 'Access and invitations', icon: 'access', href: settingsResourceHref({ ...base, collection: 'access' }) },
-    { label: 'Tags', eyebrow: 'Organization', description: 'Reusable labels for this inventory', icon: 'tags', href: settingsResourceHref({ ...base, collection: 'tags' }) },
-    { label: 'Custom fields', eyebrow: 'Schema', description: 'Inherited and inventory-only fields', icon: 'fields', href: settingsResourceHref({ ...base, collection: 'fields' }) },
-    { label: 'Asset types', eyebrow: 'Schema', description: 'Inherited and inventory-only types', icon: 'asset-types', href: settingsResourceHref({ ...base, collection: 'asset-types' }) },
-    { label: 'Activity', eyebrow: 'History', description: 'Audit history for this inventory', icon: 'activity', href: settingsResourceHref({ ...base, collection: 'activity' }) }
+    { label: t('web.settingsManagementNavigation.notifications'), eyebrow: t('web.settingsManagementNavigation.personal'), description: t('web.settingsManagementNavigation.expirationRemindersAndAssetTypeOverrides'), icon: 'notifications', href: settingsResourceHref({ ...base, collection: 'notifications' }) },
+    { label: t('web.settingsManagementNavigation.sharing'), eyebrow: t('web.settingsManagementNavigation.people'), description: t('web.settingsManagementNavigation.accessAndInvitations'), icon: 'access', href: settingsResourceHref({ ...base, collection: 'access' }) },
+    { label: t('web.settingsManagementNavigation.tags'), eyebrow: t('web.settingsManagementNavigation.organization'), description: t('web.settingsManagementNavigation.reusableLabelsForThisInventory'), icon: 'tags', href: settingsResourceHref({ ...base, collection: 'tags' }) },
+    { label: t('web.settingsManagementNavigation.customFields'), eyebrow: t('web.settingsManagementNavigation.schema'), description: t('web.settingsManagementNavigation.inheritedAndInventoryOnlyFields'), icon: 'fields', href: settingsResourceHref({ ...base, collection: 'fields' }) },
+    { label: t('web.settingsManagementNavigation.assetTypes'), eyebrow: t('web.settingsManagementNavigation.schema'), description: t('web.settingsManagementNavigation.inheritedAndInventoryOnlyTypes'), icon: 'asset-types', href: settingsResourceHref({ ...base, collection: 'asset-types' }) },
+    { label: t('web.settingsManagementNavigation.activity'), eyebrow: t('web.settingsManagementNavigation.history'), description: t('web.settingsManagementNavigation.auditHistoryForThisInventory'), icon: 'activity', href: settingsResourceHref({ ...base, collection: 'activity' }) }
   ];
 }

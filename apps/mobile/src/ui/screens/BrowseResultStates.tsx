@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { StyleSheet, Text, View } from 'react-native';
 import {
@@ -53,9 +54,9 @@ export function BrowseLoadError({
 
   return (
     <View accessibilityLiveRegion="polite" style={styles.statePanel}>
-      <Text style={styles.title}>Could not load this inventory</Text>
+      <Text style={styles.title}>{t('mobile.BrowseResultStates.couldNotLoadThisInventory')}</Text>
       <Text style={styles.message}>{message}</Text>
-      <NativeCommandButton label="Retry" onPress={onRetry} prominence="primary" />
+      <NativeCommandButton label={t('mobile.BrowseResultStates.retry')} onPress={onRetry} prominence="primary" />
     </View>
   );
 }
@@ -74,7 +75,7 @@ export function BrowsePaginationRetry({
   return (
     <View accessibilityLiveRegion="polite" style={styles.paginationFooter}>
       <Text style={styles.paginationMessage}>{message}</Text>
-      <NativeCommandButton label="Try again" onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.BrowseResultStates.tryAgain')} onPress={onRetry} />
     </View>
   );
 }
@@ -88,25 +89,25 @@ function emptyStatePresentation(props: BrowseEmptyStateProps): {
   switch (props.kind) {
     case 'inventory':
       return {
-        title: `No items in ${props.inventoryName}`,
+        title: t('mobile.BrowseResultStates.noItemsIn', { inventoryName: String(props.inventoryName) }),
         message: props.onAdd
-          ? 'Add your first item, container, or place.'
-          : 'An inventory editor can add the first item, container, or place.',
-        actionLabel: props.onAdd ? 'Add item' : undefined,
+          ? t('mobile.BrowseResultStates.addYourFirstItemContainerOrPlace')
+          : t('mobile.BrowseResultStates.anInventoryEditorCanAddTheFirstItemContainer'),
+        actionLabel: props.onAdd ? t('mobile.BrowseResultStates.addItem') : undefined,
         onAction: props.onAdd
       };
     case 'search':
       return {
-        title: `No results for “${props.query.trim()}”`,
-        message: 'Try another search or clear it to browse everything.',
-        actionLabel: 'Clear search',
+        title: t('mobile.BrowseResultStates.noResultsFor', { value: String(props.query.trim()) }),
+        message: t('mobile.BrowseResultStates.tryAnotherSearchOrClearItToBrowseEverything'),
+        actionLabel: t('mobile.BrowseResultStates.clearSearch'),
         onAction: props.onClearSearch
       };
     case 'filters':
       return {
-        title: 'No items match these filters',
-        message: 'Remove a filter to see more of your inventory.',
-        actionLabel: 'Clear filters',
+        title: t('mobile.BrowseResultStates.noItemsMatchTheseFilters'),
+        message: t('mobile.BrowseResultStates.removeAFilterToSeeMoreOfYourInventory'),
+        actionLabel: t('mobile.BrowseResultStates.clearFilters'),
         onAction: props.onClearFilters
       };
   }

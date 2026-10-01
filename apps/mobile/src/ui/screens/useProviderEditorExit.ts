@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from 'expo-router';
@@ -23,9 +24,9 @@ export function useProviderEditorExit({ dirty, isSaving, capturePresentation }: 
       return;
     }
     let confirmed = false;
-    Alert.alert('Discard changes?', 'Your unsaved replacement will be lost.', [
-      { text: 'Keep Editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => {
+    Alert.alert(t('mobile.useProviderEditorExit.discardChanges'), t('mobile.useProviderEditorExit.yourUnsavedReplacementWillBeLost'), [
+      { text: t('mobile.useProviderEditorExit.keepEditing'), style: 'cancel' },
+      { text: t('mobile.useProviderEditorExit.discard'), style: 'destructive', onPress: () => {
         if (confirmed || isSaving() || !canPresent()) return;
         confirmed = true;
         setExit({ canPresent, leave: () => navigation.dispatch(data.action) });

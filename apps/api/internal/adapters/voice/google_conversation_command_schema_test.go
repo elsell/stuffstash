@@ -32,7 +32,7 @@ func TestGoogleCommandSchemaMergesRepeatedShapesWithoutExtraBranches(t *testing.
 }
 
 func TestGoogleCommandSchemaProjectsArgumentsWithoutMutatingContract(t *testing.T) {
-	input := json.RawMessage(`{"type":"object","properties":{"commands":{"type":"array","maxItems":10,"items":{"anyOf":[{"type":"object","properties":{"kind":{"type":"string","enum":["create"]},"arguments":{"type":"object","properties":{"title":{"type":"string"},"expiration":{"type":"object"}},"required":["title"],"additionalProperties":false}},"required":["kind","arguments"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","enum":["update"]},"arguments":{"type":"object","properties":{"assetId":{"type":"string"},"expiration":{"anyOf":[{"type":"object"},{"type":"null"}]}},"required":["assetId","expiration"],"additionalProperties":false}},"required":["kind","arguments"],"additionalProperties":false}]}}}}`)
+	input := json.RawMessage(`{"type":"object","properties":{"commands":{"type":"array","maxItems":10,"items":{"anyOf":[{"type":"object","properties":{"kind":{"type":"string","enum":["create"]},"arguments":{"type":"object","properties":{"title":{"type":"string"},"expiration":{"type":"object"}},"required":["title"],"additionalProperties":false}},"required":["kind","arguments"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","enum":["update"]},"arguments":{"type":"object","properties":{"assetId":{"type":"string"},"expiration":{"anyOf":[{"type":"object"},{"type":"null"}]}},"required":["assetId","expiration"],"minProperties":2,"additionalProperties":false}},"required":["kind","arguments"],"additionalProperties":false}]}}}}`)
 	result, err := googleConversationParameters(input)
 	if err != nil {
 		t.Fatal(err)

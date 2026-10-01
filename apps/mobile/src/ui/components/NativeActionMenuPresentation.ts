@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { NativeActionMenuGroup, NativeActionMenuItem } from './NativeActionMenu.types';
 
 export function actionableMenuGroups(groups: readonly NativeActionMenuGroup[]): readonly NativeActionMenuGroup[] {
@@ -7,7 +8,7 @@ export function actionableMenuGroups(groups: readonly NativeActionMenuGroup[]): 
 export function nativeMenuItemPresentation(item: NativeActionMenuItem): {
   readonly enabled: boolean;
   readonly role: 'default' | 'destructive';
-  readonly selectionAccessibilityValue: 'Selected' | 'Not selected' | undefined;
+  readonly selectionAccessibilityValue: string | undefined;
   readonly systemImage?: string;
 } {
   return {
@@ -15,7 +16,7 @@ export function nativeMenuItemPresentation(item: NativeActionMenuItem): {
     role: item.isDestructive ? 'destructive' : 'default',
     selectionAccessibilityValue: item.isSelected === undefined
       ? undefined
-      : item.isSelected ? 'Selected' : 'Not selected',
+      : item.isSelected ? t('mobile.NativeActionMenuPresentation.selected') : t('mobile.NativeActionMenuPresentation.notSelected'),
     systemImage: item.isSelected ? 'checkmark' : item.systemImage
   };
 }

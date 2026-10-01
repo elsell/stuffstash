@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useMemo, useState } from 'react';
 import { router, Stack } from 'expo-router';
 import type { ParentLookupQuery } from '../../application/add/ParentLookupQuery';
@@ -25,14 +26,14 @@ export function VoicePlanLocationRouteScreen({ params, parentLookupQuery }: {
   const begin = useTaskPresentation(undefined, JSON.stringify([scopeIdentity, params.planId, params.commandId, valid]));
   const candidates = useParentCandidates(query, parentLookupQuery, valid);
   const back = () => { if (!begin()()) return; if (router.canGoBack()) router.back(); else router.replace('/voice'); };
-  const backOptions = useNativeHeaderActionOptions([{ kind: 'back', label: 'Back to conversation', onPress: back }], 'left');
-  const headerOptions = useMemo(() => ({ title: 'Containing location', headerBackVisible: false, ...backOptions,
+  const backOptions = useNativeHeaderActionOptions([{ kind: 'back', label: t('mobile.VoicePlanLocationRouteScreen.backToConversation'), onPress: back }], 'left');
+  const headerOptions = useMemo(() => ({ title: t('mobile.VoicePlanLocationRouteScreen.containingLocation'), headerBackVisible: false, ...backOptions,
     ...(!valid ? { headerSearchBarOptions: undefined } : {}) }), [backOptions, valid]);
   if (!valid) return <>
     <Stack.Screen options={headerOptions} />
     <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ flex: 1, backgroundColor: palette.background }}>
-      <Text style={styles.errorMessage}>This proposal is no longer available for editing.</Text>
-      <NativeCommandButton label="Back to conversation" onPress={back} />
+      <Text style={styles.errorMessage}>{t('mobile.VoicePlanLocationRouteScreen.thisProposalIsNoLongerAvailableForEditing')}</Text>
+      <NativeCommandButton label={t('mobile.VoicePlanLocationRouteScreen.backToConversation')} onPress={back} />
     </ScrollView>
   </>;
   return <><Stack.Screen options={headerOptions} /><VoicePlanLocationScreen {...choices} matches={candidates.data ?? []} query={query}

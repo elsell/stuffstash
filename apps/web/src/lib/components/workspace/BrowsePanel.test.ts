@@ -128,6 +128,29 @@ describe('BrowsePanel', () => {
     expect(document.querySelector('.containment-jump-results small')?.textContent).toBe('Container');
   });
 
+  it('returns Map jump focus without treating accessible copy as element identity', async () => {
+    render('map');
+    const input = document.querySelector<HTMLInputElement>('.containment-jump input')!;
+    input.value = 'tool';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await tick();
+    // A translated accessible name must not change keyboard focus ownership.
+    input.setAttribute('aria-label', 'Aller à un emplacement');
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await tick();
+    const option = document.querySelector<HTMLElement>('#map-jump-option-0')!;
+    expect(document.activeElement).toBe(option);
+    option.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await tick();
+    expect(document.activeElement).toBe(input);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await tick();
+    option.click();
+    await tick();
+    expect(input.value).toBe('');
+    expect(document.activeElement).toBe(input);
+  });
+
   it('offers a direct recovery action when a submitted search has no matches', async () => {
     let searches = 0;
     render('list', 'all', {

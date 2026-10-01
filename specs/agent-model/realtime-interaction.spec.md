@@ -134,3 +134,47 @@ Speech-to-text and text-to-speech ports must also be project-owned. Their adapte
 ## Mobile typed turns
 
 `mobile-conversation-interface.spec.md` extends the authenticated realtime conversation with `text.input` turns, sharing the existing authorized model loop and explicit action-plan decisions. Text and audio can alternate within the same negotiated continuity window.
+
+## Browser Text Conversation — October 2026
+
+The authenticated web workspace exposes an inventory-scoped conversation panel
+with typed turns, answers, asset references, and explicit action-plan review.
+It uses the existing conversation loop and approval commands. Closing the panel
+must not approve a plan or replay a command. Switching household/inventory,
+signing out, or losing authentication closes the transport and discards scoped
+conversation data. An interrupted approval has an unknown outcome until inventory
+state is refreshed; the client must never resend approval automatically.
+
+### Browser authentication transport
+
+Native clients retain Authorization-header authentication. Browser clients use
+WebSocket subprotocol `stuffstash.browser.v1` and, immediately after upgrade,
+send exactly one `session.authenticate` frame containing a Bearer token in an
+`authorization` field. Tokens must never appear in URLs, selected subprotocols,
+logs, errors, or persistence. Authentication is handled in the HTTP transport
+adapter through the existing authentication port, before reading session scope,
+resolving providers, or accessing inventory data.
+
+The browser handshake requires one valid Origin equal to the API origin or an
+explicit `STUFF_STASH_CORS_ALLOWED_ORIGINS` entry. Missing, null, multiple, or
+unapproved origins fail before upgrade. Header-authenticated clients presenting
+an Origin follow the same origin policy. Browser mode is only available when
+that exact subprotocol is requested and no Authorization header is present;
+malformed header credentials must not fall back to browser mode.
+
+The authentication frame is limited to 16 KiB and five seconds, rejects unknown
+fields and non-text frames, and must be followed by the existing `session.start`
+sequence beginning at one. On success the server sends
+`session.authenticated` (outside the numbered inventory-session stream). Failure
+closes with policy violation and fixed safe text, with no session/provider work.
+Subsequent session frames cannot replace the authenticated principal.
+
+A browser conversation sends `text.input` over the same existing session protocol,
+uses source `web_text`, and negotiates conversation continuity. The UI does not
+request microphone access for typed input. Voice capture/playback is a separate
+capability-dependent extension and must not be inferred from typed acceptance.
+
+Critical boundary tests cover permitted origin and authenticated text success,
+invalid/absent credentials, rejected origins before upgrade, authentication-frame
+limits and timeout, cross-tenant scope, and no provider calls before authorization.
+Existing action-plan authorization and idempotency tests remain applicable.

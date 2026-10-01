@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 import { NewAssetTagScreen } from './NewAssetTagScreen';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -28,33 +29,33 @@ export function AssetTagSelectionScreen({ tags, initialSelectedIds, initialNewTa
   const ordered = useMemo(() => [...tags].sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' })), [tags]);
   const visible = ordered.filter(tag => view === 'selected' ? selected.includes(tag.id) : tag.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const unavailable = view === 'selected' ? selected.filter(id => !tags.some(tag => tag.id === id)) : [];
-  const empty = view === 'selected' ? 'No tags selected' : tags.length === 0 ? 'No tags available' : 'No matching tags';
+  const empty = view === 'selected' ? t('tags.noneSelected') : tags.length === 0 ? t('tags.noneAvailable') : t('tags.noneMatching');
   if (creating) return <NewAssetTagScreen tags={tags} selectedIds={selected} newTags={newTags} available={available}
     onCancel={() => setCreating(false)} onDone={(ids, pending) => { setSelected([...ids]); setNewTags(pending); setCreating(false); }} />;
   return <>
-    <Stack.Screen options={{ title: 'Tags' }} />
-    <NativeFilterSheet title="Tags" footerTestID="asset-tag-selection-actions"
-      search={available && view === 'all' ? { query, placeholder: 'Search tags', onChange: setQuery, onSubmit: setQuery, onClear: () => setQuery('') } : undefined}
-      actions={{ primaryLabel: 'Done', primaryAccessibilityLabel: 'Done selecting tags', secondaryLabel: 'Cancel', secondaryAccessibilityLabel: 'Cancel selecting tags', disabled: !available, onApply: () => onDone(selected, initialNewTags === undefined ? undefined : newTags), onBack: onCancel }}>
+    <Stack.Screen options={{ title: t('mobile.AssetTagSelectionScreen.tags') }} />
+    <NativeFilterSheet title={t('mobile.AssetTagSelectionScreen.tags')} footerTestID="asset-tag-selection-actions"
+      search={available && view === 'all' ? { query, placeholder: t('mobile.AssetTagSelectionScreen.searchTags'), onChange: setQuery, onSubmit: setQuery, onClear: () => setQuery('') } : undefined}
+      actions={{ primaryLabel: t('mobile.AssetTagSelectionScreen.done'), primaryAccessibilityLabel: t('mobile.AssetTagSelectionScreen.doneSelectingTags'), secondaryLabel: t('mobile.AssetTagSelectionScreen.cancel'), secondaryAccessibilityLabel: t('mobile.AssetTagSelectionScreen.cancelSelectingTags'), disabled: !available, onApply: () => onDone(selected, initialNewTags === undefined ? undefined : newTags), onBack: onCancel }}>
       <SettingsSection>
         <NativeSegmentedControl colors={palette} disabled={!available} value={view} onChange={setView}
-          segments={[{ value: 'all', label: 'All tags' }, { value: 'selected', label: 'Selected' }]} />
-        <Text accessibilityLiveRegion="polite" style={styles.rowContext}>{selected.length + newTags.length} selected</Text>
+          segments={[{ value: 'all', label: t('mobile.AssetTagSelectionScreen.allTags') }, { value: 'selected', label: t('mobile.AssetTagSelectionScreen.selected') }]} />
+        <Text accessibilityLiveRegion="polite" style={styles.rowContext}>{selected.length + newTags.length}{t('mobile.AssetTagSelectionScreen.selected2')}</Text>
       </SettingsSection>
       {initialNewTags !== undefined && available ? <SettingsSection>
-        <NativeCommandButton label="New tag" onPress={() => setCreating(true)} />
+        <NativeCommandButton label={t('mobile.AssetTagSelectionScreen.newTag')} onPress={() => setCreating(true)} />
         {newTags.map((tag, index) => <SettingsChoiceRow key={tag.displayName} multiple selected label={tag.displayName}
-          context="New tag" accessibilityLabel={`Remove new tag ${tag.displayName}`}
+          context={t('mobile.AssetTagSelectionScreen.newTag')} accessibilityLabel={t('mobile.AssetTagSelectionScreen.removeNewTag', { displayName: String(tag.displayName) })}
           onPress={() => setNewTags(current => current.filter((_, currentIndex) => currentIndex !== index))} />)}
       </SettingsSection> : null}
-      {!available ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>Tag selection is no longer available for this draft.</Text></SettingsSection> : (
+      {!available ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>{t('mobile.AssetTagSelectionScreen.tagSelectionIsNoLongerAvailableForThisDraft')}</Text></SettingsSection> : (
         <SettingsSection footer={visible.length || unavailable.length ? undefined : empty}>
           {visible.map(tag => <SettingsChoiceRow key={tag.id} multiple label={tag.label}
-            accessibilityLabel={`Select tag ${tag.label}`} selected={selected.includes(tag.id)}
+            accessibilityLabel={t('mobile.AssetTagSelectionScreen.selectTag', { label: String(tag.label) })} selected={selected.includes(tag.id)}
             onPress={() => setSelected(current => current.includes(tag.id) ? current.filter(id => id !== tag.id) : [...current, tag.id])} />)}
           {unavailable.map((id, index) => <SettingsChoiceRow key={id} multiple selected
-            label="Unavailable tag" context="Not in the current tag list"
-            accessibilityLabel={`Remove unavailable tag ${index + 1}`}
+            label={t('mobile.AssetTagSelectionScreen.unavailableTag')} context={t('mobile.AssetTagSelectionScreen.notInTheCurrentTagList')}
+            accessibilityLabel={t('mobile.AssetTagSelectionScreen.removeUnavailableTag', { value: String(index + 1) })}
             onPress={() => setSelected(current => current.filter(selectedId => selectedId !== id))} />)}
         </SettingsSection>
       )}

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -81,7 +82,7 @@ function AndroidSpectrum({ compact, disabled, onChange, value }: { readonly comp
     <View {...hueResponder.panHandlers} {...accessibility.hue} onAccessibilityAction={(event) => {
       gestures.current?.adjust('hue', event.nativeEvent.actionName);
     }} style={[styles.hue, { borderColor: palette.border }]}><Svg height="100%" width="100%"><Defs><LinearGradient id="hue" x1="0" y1="0" x2="1" y2="0">{['#FF0000','#FFFF00','#00FF00','#00FFFF','#0000FF','#FF00FF','#FF0000'].map((color, index) => <Stop key={color + index} offset={index / 6} stopColor={color} />)}</LinearGradient></Defs><Rect fill="url(#hue)" height="100%" width="100%" /></Svg><View pointerEvents="none" style={[styles.hueMarker, { borderColor: palette.surface, left: `${(hue / 360) * 100}%` }]} /></View>
-    {!compact ? <><Adjustment label="Hue" value={`${Math.round(hue)} degrees`} disabled={disabled} onDecrease={() => gestures.current?.adjust('hue', 'decrement')} onIncrease={() => gestures.current?.adjust('hue', 'increment')} /><Adjustment label="Saturation" value={`${Math.round(saturation * 100)} percent`} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decrement')} onIncrease={() => gestures.current?.adjust('spectrum', 'increment')} /><Adjustment label="Brightness" value={`${Math.round(brightness * 100)} percent`} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decreaseBrightness')} onIncrease={() => gestures.current?.adjust('spectrum', 'increaseBrightness')} /></> : null}
+    {!compact ? <><Adjustment label={t('mobile.FullSpectrumTagColorPicker.hue')} value={t("color.degrees", { value: Math.round(hue) })} disabled={disabled} onDecrease={() => gestures.current?.adjust('hue', 'decrement')} onIncrease={() => gestures.current?.adjust('hue', 'increment')} /><Adjustment label={t('mobile.FullSpectrumTagColorPicker.saturation')} value={t("color.percent", { value: Math.round(saturation * 100) })} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decrement')} onIncrease={() => gestures.current?.adjust('spectrum', 'increment')} /><Adjustment label={t('mobile.FullSpectrumTagColorPicker.brightness')} value={t("color.percent", { value: Math.round(brightness * 100) })} disabled={disabled} onDecrease={() => gestures.current?.adjust('spectrum', 'decreaseBrightness')} onIncrease={() => gestures.current?.adjust('spectrum', 'increaseBrightness')} /></> : null}
   </View>;
 }
 
@@ -90,11 +91,11 @@ function Adjustment({ disabled, label, onDecrease, onIncrease, value }: { readon
   return <View accessibilityLabel={`${label}, ${value}`} style={styles.adjustment}>
     <Text style={[styles.adjustmentLabel, { color: palette.text }]}>{label}</Text>
     <View style={styles.adjustmentControls}>
-      <Pressable accessibilityLabel={`Decrease ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+      <Pressable accessibilityLabel={t('mobile.FullSpectrumTagColorPicker.decrease', { value: String(label.toLocaleLowerCase()) })} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
         <Text style={[styles.adjustButtonText, { color: palette.action }]}>−</Text>
       </Pressable>
       <Text style={[styles.adjustmentValue, { color: palette.textMuted }]}>{value}</Text>
-      <Pressable accessibilityLabel={`Increase ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+      <Pressable accessibilityLabel={t('mobile.FullSpectrumTagColorPicker.increase', { value: String(label.toLocaleLowerCase()) })} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
         <Text style={[styles.adjustButtonText, { color: palette.action }]}>+</Text>
       </Pressable>
     </View>

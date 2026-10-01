@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
@@ -44,7 +45,7 @@
       if (!session.active) return;
       if (compare) comparison = revision;
       else editor = { key: revision.id, revision, definition: revision.definition };
-    } catch { if (session.active) message = 'Could not load the workflow. Try again.'; }
+    } catch { if (session.active) message = t('web.WorkflowWorkspace.couldNotLoadTheWorkflowTryAgain'); }
     finally { if (session.active) busy = false; }
   }
   async function save(definition: WorkflowDefinition) {
@@ -58,46 +59,46 @@
         void session.client.invalidateQueries({ queryKey: key('workflows') });
         void session.client.invalidateQueries({ queryKey: key('workflow-history', saved.workflowId) });
         editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null;
-        message = `Draft revision ${saved.number} saved. Run test cases before activation.`;
+        message = t("conversation.workflowRevisionSaved", { revision: saved.number });
       }); } finally { if (session.active) busy = false; }
   }
 </script>
 
 {#if denied}
-  <section role="alert"><h2>Conversation settings unavailable</h2><p>Your account no longer has access to configure this tenant.</p></section>
+  <section role="alert"><h2>{t('web.WorkflowWorkspace.conversationSettingsUnavailable')}</h2><p>{t('web.WorkflowWorkspace.yourAccountNoLongerHasAccessToConfigureThis')}</p></section>
 {:else}
   <section class="workflow-workspace" aria-labelledby="conversation-workflows-title">
-    <header><h1 id="conversation-workflows-title">Conversations</h1><p>Tune how your configured models work with your inventory.</p></header>
-    {#if selection.isError}<p role="alert">Could not load the active workflow. <Button.Root variant="outline" onclick={() => selection.refetch()}>Retry active workflow</Button.Root></p>
-    {:else if selection.isPending}<p role="status">Loading active workflow…</p>
-    {:else}<p>{selection.data ? `Active workflow: ${heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow'}` : 'Using the default conversation workflow.'}</p>{/if}
+    <header><h1 id="conversation-workflows-title">{t('web.WorkflowWorkspace.conversations')}</h1><p>{t('web.WorkflowWorkspace.tuneHowYourConfiguredModelsWorkWithYourInventory')}</p></header>
+    {#if selection.isError}<p role="alert">{t('web.WorkflowWorkspace.couldNotLoadTheActiveWorkflow')} <Button.Root variant="outline" onclick={() => selection.refetch()}>{t('web.WorkflowWorkspace.retryActiveWorkflow')}</Button.Root></p>
+    {:else if selection.isPending}<p role="status">{t('web.WorkflowWorkspace.loadingActiveWorkflow')}</p>
+    {:else}<p>{selection.data ? t('web.WorkflowWorkspace.activeWorkflow', { value: String(heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow') }) : t('web.WorkflowWorkspace.usingTheDefaultConversationWorkflow')}</p>{/if}
     {#if editor}
-      {#if editor.revision?.settingsMigration}<p role="status">This revision was converted from the previous workflow format. Its selected model and general guidance were retained; stage-specific rules were removed. Review the settings and run your test cases before activating a new revision.</p>{/if}
-      <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>Close editor and discard unsaved edits</Button.Root>
-      {#if models.isPending}<p role="status">Loading configured models…</p>
-      {:else if models.isError}<p role="alert">Could not load configured models. <Button.Root onclick={() => models.refetch()}>Retry models</Button.Root></p>
+      {#if editor.revision?.settingsMigration}<p role="status">{t('web.WorkflowWorkspace.thisRevisionWasConvertedFromThePreviousWorkflowFormat')}</p>{/if}
+      <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>{t('web.WorkflowWorkspace.closeEditorAndDiscardUnsavedEdits')}</Button.Root>
+      {#if models.isPending}<p role="status">{t('web.WorkflowWorkspace.loadingConfiguredModels')}</p>
+      {:else if models.isError}<p role="alert">{t('web.WorkflowWorkspace.couldNotLoadConfiguredModels')} <Button.Root onclick={() => models.refetch()}>{t('web.WorkflowWorkspace.retryModels')}</Button.Root></p>
       {:else}
         {#key editor.key}<WorkflowEditor disabled={busy} initial={editor.definition} providers={models.data ?? []} onSave={save}
           onReload={editor.revision ? () => { void load(editor!.revision!.workflowId, true); } : undefined} />{/key}
       {/if}
       {#if comparison}
-        <aside aria-label="Latest revision comparison"><h3>Latest saved revision {comparison.number}</h3><p>{comparison.definition.name}</p>
-          <dl><dt>Model</dt><dd>{models.data?.find(model => model.id === comparison?.definition.providerProfileId)?.name ?? (comparison.definition.providerProfileId ? 'Saved model profile' : 'Tenant default model')}</dd>
-            <dt>Per-turn limits</dt><dd>{comparison.definition.budget.toolCalls} tool calls · {comparison.definition.budget.modelCalls} model calls · {comparison.definition.budget.elapsedSeconds} seconds</dd>
-            <dt>Follow-ups</dt><dd>{comparison.definition.budget.followUpTurns}</dd></dl>
-          <p class="instructions">{comparison.definition.instructions || 'No additional instructions'}</p>
-          <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>Replace my edits with this revision</Button.Root>
+        <aside aria-label={t('web.WorkflowWorkspace.latestRevisionComparison')}><h3>{t('web.WorkflowWorkspace.latestSavedRevisionFull', { number: comparison.number })}</h3><p>{comparison.definition.name}</p>
+          <dl><dt>{t('web.WorkflowWorkspace.model')}</dt><dd>{models.data?.find(model => model.id === comparison?.definition.providerProfileId)?.name ?? (comparison.definition.providerProfileId ? t('web.WorkflowWorkspace.savedModelProfile') : t('web.WorkflowWorkspace.tenantDefaultModel'))}</dd>
+            <dt>{t('web.WorkflowWorkspace.perTurnLimits')}</dt><dd>{t('web.WorkflowWorkspace.toolCallsModelCallsSecondsFull', { toolCalls: comparison.definition.budget.toolCalls, modelCalls: comparison.definition.budget.modelCalls, elapsedSeconds: comparison.definition.budget.elapsedSeconds })}</dd>
+            <dt>{t('web.WorkflowWorkspace.followUps')}</dt><dd>{comparison.definition.budget.followUpTurns}</dd></dl>
+          <p class="instructions">{comparison.definition.instructions || t('web.WorkflowWorkspace.noAdditionalInstructions')}</p>
+          <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>{t('web.WorkflowWorkspace.replaceMyEditsWithThisRevision')}</Button.Root>
         </aside>
       {/if}
     {:else}
-      <Button.Root disabled={busy} onclick={startNew}>New workflow</Button.Root>
-      {#if heads.isPending}<p role="status">Loading workflows…</p>
-      {:else if heads.isError}<p role="alert">Could not load workflows. <Button.Root onclick={() => heads.refetch()}>Retry workflows</Button.Root></p>
+      <Button.Root disabled={busy} onclick={startNew}>{t('web.WorkflowWorkspace.newWorkflow')}</Button.Root>
+      {#if heads.isPending}<p role="status">{t('web.WorkflowWorkspace.loadingWorkflows')}</p>
+      {:else if heads.isError}<p role="alert">{t('web.WorkflowWorkspace.couldNotLoadWorkflows')} <Button.Root onclick={() => heads.refetch()}>{t('web.WorkflowWorkspace.retryWorkflows')}</Button.Root></p>
       {:else}
-        <ul>{#each heads.data?.items ?? [] as head (head.id)}<li><Button.Root variant="outline" disabled={busy} onclick={() => load(head.id)}>{head.name} · Revision {head.latestRevision}</Button.Root></li>{/each}</ul>
-        {#if !heads.data?.items.length}<p>No saved workflows yet. Create one to start tuning your conversations.</p>{/if}
-        {#if heads.data?.pagination.hasMore}<Button.Root variant="outline" onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>Next workflows</Button.Root>{/if}
-        {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>Back to first workflows</Button.Root>{/if}
+        <ul>{#each heads.data?.items ?? [] as head (head.id)}<li><Button.Root variant="outline" disabled={busy} onclick={() => load(head.id)}>{t('web.WorkflowWorkspace.revisionFull', { name: head.name, latestRevision: head.latestRevision })}</Button.Root></li>{/each}</ul>
+        {#if !heads.data?.items.length}<p>{t('web.WorkflowWorkspace.noSavedWorkflowsYetCreateOneToStartTuning')}</p>{/if}
+        {#if heads.data?.pagination.hasMore}<Button.Root variant="outline" onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>{t('web.WorkflowWorkspace.nextWorkflows')}</Button.Root>{/if}
+        {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>{t('web.WorkflowWorkspace.backToFirstWorkflows')}</Button.Root>{/if}
       {/if}
     {/if}
     <p role="status" aria-live="polite">{message}</p>

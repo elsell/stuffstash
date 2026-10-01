@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { customizationKeyIsValid, customizationKeyValidationMessage, suggestedCustomizationKey, type CustomizationScope } from '../../domain/customization/Customization';
 import type { CreateCustomAssetTypeInput, CustomizationContext, CustomizationRepository, DefinitionAddress, UpdateCustomAssetTypeInput } from './CustomizationRepository';
 import { CustomizationValidationError } from './CustomizationErrors';
@@ -10,8 +11,8 @@ export class ManageCustomAssetTypes {
   async create(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomAssetTypeInput) {
     const key = input.key.trim() || suggestedCustomizationKey(input.displayName);
     if (!customizationKeyIsValid(key)) throw new CustomizationValidationError(customizationKeyValidationMessage);
-    if (!input.displayName.trim()) throw new CustomizationValidationError('Asset type name is required.');
-    if (input.description.trim().length > 1000) throw new CustomizationValidationError('Description must be 1,000 characters or fewer.');
+    if (!input.displayName.trim()) throw new CustomizationValidationError(t('mobile.ManageCustomAssetTypes.assetTypeNameIsRequired'));
+    if (input.description.trim().length > 1000) throw new CustomizationValidationError(t('mobile.ManageCustomAssetTypes.descriptionMustBe1000CharactersOrFewer'));
     return this.singleFlight(scope, 'create', () => this.repository.createAssetType(context, scope, {
       key,
       displayName: input.displayName.trim(),
@@ -28,7 +29,7 @@ export class ManageCustomAssetTypes {
   delete(address: DefinitionAddress) { return this.singleFlight(address.scope, 'delete', () => this.repository.deleteAssetType(address)); }
 
   private async singleFlight<T>(scope: CustomizationScope, action: 'create' | 'update' | 'archive' | 'restore' | 'delete', operation: () => Promise<T>): Promise<T> {
-    if (this.saving) throw new CustomizationValidationError('This asset type change is already being saved.');
+    if (this.saving) throw new CustomizationValidationError(t('mobile.ManageCustomAssetTypes.thisAssetTypeChangeIsAlreadyBeingSaved'));
     this.saving = true;
     this.observability.record({ name: 'customization.mutation_requested', resource: 'asset-type', scope, action });
     try { const result = await operation(); this.observability.record({ name: 'customization.mutation_succeeded', resource: 'asset-type', scope, action }); return result; }

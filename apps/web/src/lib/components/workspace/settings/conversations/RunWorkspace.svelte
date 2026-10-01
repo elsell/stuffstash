@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
@@ -18,20 +19,20 @@
   $effect(() => { onNavigationBlockedChange(creating); });
   const heads = createQuery(() => ({ queryKey: conversationKey(session.scope, 'runs', cursor ?? ''), enabled: !denied,
     queryFn: ({ signal }) => repositories.runs.list(session.scope.tenantId, { limit: 20, cursor }, signal) }), () => session.client);
-  const names = { queued: 'Queued', running: 'Running', succeeded: 'Completed', failed: 'Failed', cancelled: 'Cancelled' };
+  const names = { queued: t('web.RunWorkspace.queued'), running: t('web.RunWorkspace.running'), succeeded: t('web.RunWorkspace.completed'), failed: t('web.RunWorkspace.failed'), cancelled: t('web.RunWorkspace.cancelled') };
 </script>
-{#if denied}<section role="alert"><h2>Runs unavailable</h2><p>You no longer have access to configure this tenant.</p></section>
-{:else}<section class="run-workspace" aria-labelledby="runs-title"><h2 id="runs-title">Runs</h2>
-  {#if creating}<Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy) creating = false; }}>Discard run setup</Button.Root>
+{#if denied}<section role="alert"><h2>{t('web.RunWorkspace.runsUnavailable')}</h2><p>{t('web.RunWorkspace.youNoLongerHaveAccessToConfigureThisTenant')}</p></section>
+{:else}<section class="run-workspace" aria-labelledby="runs-title"><h2 id="runs-title">{t('web.RunWorkspace.runs')}</h2>
+  {#if creating}<Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy) creating = false; }}>{t('web.RunWorkspace.discardRunSetup')}</Button.Root>
     <RunSetup {session} {repositories} onBusy={value => { busy = value; }} onQueued={run => { creating = false; busy = false; selectedId = run.id; }} />
-  {:else if selectedId}<Button.Root variant="outline" onclick={() => { selectedId = ''; void heads.refetch(); }}>Back to runs</Button.Root>
+  {:else if selectedId}<Button.Root variant="outline" onclick={() => { selectedId = ''; void heads.refetch(); }}>{t('web.RunWorkspace.backToRuns')}</Button.Root>
     {#key selectedId}<RunDetails {session} runs={repositories.runs} cases={repositories.cases} workflows={repositories.workflows} runId={selectedId} {visible} />{/key}
-  {:else}<Button.Root onclick={() => { creating = true; }}>New run</Button.Root>
-    {#if heads.isPending}<p role="status">Loading runs…</p>{:else if heads.isError}<p role="alert">Could not load runs. <Button.Root onclick={() => heads.refetch()}>Retry runs</Button.Root></p>
-    {:else}<ul>{#each heads.data.items as head (head.id)}<li><Button.Root variant="outline" onclick={() => { selectedId = head.id; }}>{names[head.state]} · {head.completedCases}/{head.totalCases} cases · {new Date(head.createdAt).toLocaleString()}</Button.Root></li>{/each}</ul>
-      {#if !heads.data.items.length}<p>No evaluation runs yet. Start with a saved workflow and test case.</p>{/if}
-      {#if heads.data.pagination.hasMore}<Button.Root onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>Next runs</Button.Root>{/if}
-      {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>First runs</Button.Root>{/if}
+  {:else}<Button.Root onclick={() => { creating = true; }}>{t('web.RunWorkspace.newRun')}</Button.Root>
+    {#if heads.isPending}<p role="status">{t('web.RunWorkspace.loadingRuns')}</p>{:else if heads.isError}<p role="alert">{t('web.RunWorkspace.couldNotLoadRuns')} <Button.Root onclick={() => heads.refetch()}>{t('web.RunWorkspace.retryRuns')}</Button.Root></p>
+    {:else}<ul>{#each heads.data.items as head (head.id)}<li><Button.Root variant="outline" onclick={() => { selectedId = head.id; }}>{t('web.RunWorkspace.casesFull', { value: names[head.state], completedCases: head.completedCases, totalCases: head.totalCases, value4: new Date(head.createdAt).toLocaleString() })}</Button.Root></li>{/each}</ul>
+      {#if !heads.data.items.length}<p>{t('web.RunWorkspace.noEvaluationRunsYetStartWithASavedWorkflow')}</p>{/if}
+      {#if heads.data.pagination.hasMore}<Button.Root onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunWorkspace.nextRuns')}</Button.Root>{/if}
+      {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>{t('web.RunWorkspace.firstRuns')}</Button.Root>{/if}
     {/if}
   {/if}
 </section>{/if}

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Share } from 'react-native';
 import type { InvitationLinkActions } from '../../application/sharing/InventorySharing';
 
@@ -9,8 +10,8 @@ export class ExpoInvitationLinkActions implements InvitationLinkActions {
 
   async share(input: { readonly link: string; readonly inventoryName: string }): Promise<void> {
     await Share.share({
-      message: `You’re invited to ${input.inventoryName} in Stuff Stash.\n\n${input.link}`,
-      title: 'Share Stuff Stash invitation'
+      message: t('sharing.invitation.message', { inventory: input.inventoryName, link: input.link }),
+      title: t('sharing.invitation.title')
     });
   }
 }

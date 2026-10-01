@@ -91,20 +91,14 @@ type realtimeVoiceTimeouts struct {
 	idle     time.Duration
 }
 
-func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) http.HandlerFunc {
+func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts, allowedOrigins []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.NotFound(w, r)
 			return
 		}
-		principal, err := application.Authenticate(r.Context(), r.Header.Get("Authorization"))
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		connection, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
-		if err != nil {
+		connection, principal, accepted := acceptRealtime(w, r, application, allowedOrigins)
+		if !accepted {
 			return
 		}
 		defer connection.Close(websocket.StatusInternalError, "voice session ended")
@@ -406,6 +400,7 @@ type realtimeActionPlanExpiration struct {
 }
 
 type realtimeActionPlanCommand struct {
+	Changes           []string                      `json:"changes,omitempty"`
 	ExpirationCleared bool                          `json:"expirationCleared,omitempty"`
 	Expiration        *realtimeActionPlanExpiration `json:"expiration,omitempty"`
 	ID                string                        `json:"id,omitempty"`
@@ -731,6 +726,7 @@ func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *re
 		commands = append(commands, realtimeActionPlanCommand{
 			Expiration:        expiration,
 			ExpirationCleared: command.ExpirationCleared,
+			Changes:           append([]string(nil), command.Changes...),
 			ID:                command.ID,
 			Kind:              command.Kind,
 			Summary:           command.Summary,

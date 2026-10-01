@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { formatHistoryTimestamp } from './AssetHistoryTimestamp';
 import { assertReadActive } from '../shared/ReadRequest';
 export type AssetActivityView = 'changes' | 'all';
@@ -88,10 +89,10 @@ export class AssetActivityQuery {
       records: entries.map(toActivityRecordViewModel),
       nextCursor: page.nextCursor,
       hasMore: page.hasMore,
-      emptyTitle: view === 'changes' ? 'No changes yet' : 'No activity yet',
+      emptyTitle: view === 'changes' ? t('history.activity.noChangesYet') : t('history.activity.noActivityYet'),
       emptyMessage: view === 'changes'
-        ? 'Edits to this item will appear here.'
-        : 'Technical reads and changes will appear here.'
+        ? t('history.activity.editsToThisItemWillAppearHere')
+        : t('history.activity.technicalReadsAndChangesWillAppearHere')
     };
   }
 
@@ -128,33 +129,33 @@ function toActivityRecordViewModel(entry: AssetActivityEntry): AssetActivityReco
     summary: activitySummary(entry),
     occurredAtLabel: formatHistoryTimestamp(entry.occurredAt, 'activity'),
     occurredAt: entry.occurredAt,
-    actorLabel: entry.principal?.email?.trim() || 'Someone with access',
+    actorLabel: entry.principal?.email?.trim() || t('history.activity.someoneWithAccess'),
     sourceLabel: sourceLabel(entry.source)
   };
 }
 
 function activityTitle(entry: AssetActivityEntry): string {
   const fields = new Set(entry.changes.map((change) => change.field));
-  if (fields.size === 1 && fields.has('title')) return 'Changed name';
-  if (fields.size === 1 && fields.has('description')) return 'Updated description';
-  if (fields.size === 1 && fields.has('tags')) return 'Changed tags';
-  if (fields.size === 1 && fields.has('parent')) return 'Moved item';
+  if (fields.size === 1 && fields.has('title')) return t('history.activity.changedName');
+  if (fields.size === 1 && fields.has('description')) return t('history.activity.updatedDescription');
+  if (fields.size === 1 && fields.has('tags')) return t('history.activity.changedTags');
+  if (fields.size === 1 && fields.has('parent')) return t('history.activity.movedItem');
   switch (entry.action) {
-    case 'asset.created': return 'Added item';
-    case 'asset.archived': return 'Archived item';
-    case 'asset.restored': return 'Restored item';
-    case 'asset.checked_out': return 'Checked out item';
-    case 'asset.returned': return 'Returned item';
-    case 'asset.viewed': return 'Viewed item';
-    case 'asset.listed': return 'Included in a list';
-    case 'asset.searched': return 'Included in search';
-    default: return entry.category === 'change' ? 'Updated item' : 'Accessed item';
+    case 'asset.created': return t('history.activity.addedItem');
+    case 'asset.archived': return t('history.activity.archivedItem');
+    case 'asset.restored': return t('history.activity.restoredItem');
+    case 'asset.checked_out': return t('history.activity.checkedOutItem');
+    case 'asset.returned': return t('history.activity.returnedItem');
+    case 'asset.viewed': return t('history.activity.viewedItem');
+    case 'asset.listed': return t('history.activity.includedInAList');
+    case 'asset.searched': return t('history.activity.includedInSearch');
+    default: return entry.category === 'change' ? t('history.activity.updatedItem') : t('history.activity.accessedItem');
   }
 }
 
 function activitySummary(entry: AssetActivityEntry): string {
   if (entry.changes.length === 0) {
-    return `${entry.principal?.email?.trim() || 'Someone with access'} · ${sourceLabel(entry.source)}`;
+    return `${entry.principal?.email?.trim() || t('history.activity.someoneWithAccess')} · ${sourceLabel(entry.source)}`;
   }
   const fields = [...new Set(entry.changes.map(change => change.field))];
   if (fields.length > 1) return fields.map(activityFieldLabel).join(' · ');
@@ -162,42 +163,42 @@ function activitySummary(entry: AssetActivityEntry): string {
     if (change.previousValue !== undefined || change.currentValue !== undefined) {
       return `${displayValue(change.previousValue)} → ${displayValue(change.currentValue)}`;
     }
-    return change.field === 'description' ? 'Description changed' : labelField(change.field);
+    return change.field === 'description' ? t('history.activity.descriptionChanged') : labelField(change.field);
   }).join(' · ');
 }
 
 function displayValue(value: string | undefined): string {
-  return value?.trim() || 'None';
+  return value?.trim() || t('history.activity.none');
 }
 
 function labelField(field: AssetActivityEntry['changes'][number]['field']): string {
   switch (field) {
-    case 'lifecycle_state': return 'Status changed';
-    case 'checkout_state': return 'Checkout changed';
-    case 'parent': return 'Location changed';
-    case 'tags': return 'Tags changed';
-    case 'title': return 'Name changed';
-    case 'description': return 'Description changed';
+    case 'lifecycle_state': return t('history.activity.statusChanged');
+    case 'checkout_state': return t('history.activity.checkoutChanged');
+    case 'parent': return t('history.activity.locationChanged');
+    case 'tags': return t('history.activity.tagsChanged');
+    case 'title': return t('history.activity.nameChanged');
+    case 'description': return t('history.activity.descriptionChanged');
   }
 }
 
 function sourceLabel(source: string): string {
   switch (source) {
-    case 'api': return 'App';
+    case 'api': return t('history.activity.app');
     case 'conversation':
-    case 'voice': return 'Voice';
-    case 'import': return 'Import';
-    default: return 'Stuff Stash';
+    case 'voice': return t('history.activity.voice');
+    case 'import': return t('history.activity.import');
+    default: return t('history.activity.stuffStash');
   }
 }
 
 export function activityFieldLabel(field: AssetActivityField): string {
   switch (field) {
-    case 'title': return 'Name';
-    case 'description': return 'Description';
-    case 'tags': return 'Tags';
-    case 'parent': return 'Location';
-    case 'lifecycle_state': return 'Status';
-    case 'checkout_state': return 'Checkout';
+    case 'title': return t('history.activity.name');
+    case 'description': return t('history.activity.description');
+    case 'tags': return t('history.activity.tags');
+    case 'parent': return t('history.activity.location');
+    case 'lifecycle_state': return t('history.activity.status');
+    case 'checkout_state': return t('history.activity.checkout');
   }
 }

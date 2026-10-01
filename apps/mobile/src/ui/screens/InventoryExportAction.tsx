@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
@@ -25,16 +26,16 @@ export function InventoryExportAction({ command, scope }: { readonly command: Ex
     catch (caught) {
       if (!request.signal.aborted) {
         const status = (caught as { status?: number }).status;
-        setError(status === 401 ? 'Sign in again to export this inventory.' : status === 403 ? 'You no longer have access to export this inventory.' : status === 422 ? 'This inventory exceeds the server’s export limit. Ask your administrator to increase it.' : 'Could not export this inventory. Try again.');
+        setError(status === 401 ? t('mobile.InventoryExportAction.signInAgainToExportThisInventory') : status === 403 ? t('mobile.InventoryExportAction.youNoLongerHaveAccessToExportThisInventory') : status === 422 ? t('mobile.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk') : t('mobile.InventoryExportAction.couldNotExportThisInventoryTryAgain'));
       }
     } finally { if (active.current === request) { active.current = undefined; setPending(false); } }
   };
-  return <SettingsSection footer="Includes archived items and attachment details. Photo and file contents are not included.">
-    <NativeActionMenu accessibilityLabel="Export inventory" disabled={pending || !focused} trigger={{ kind: 'row', label: 'Export inventory' }} groups={[{ id: 'formats', items: [
-      { id: 'json', label: 'JSON — complete inventory data', systemImage: 'doc', onPress: () => void run('json') },
-      { id: 'csv', label: 'CSV — spreadsheet rows', systemImage: 'tablecells', onPress: () => void run('csv') }
+  return <SettingsSection footer={t('mobile.InventoryExportAction.includesArchivedItemsAndAttachmentDetailsPhotoAndFile')}>
+    <NativeActionMenu accessibilityLabel={t('mobile.InventoryExportAction.exportInventory')} disabled={pending || !focused} trigger={{ kind: 'row', label: t('mobile.InventoryExportAction.exportInventory') }} groups={[{ id: 'formats', items: [
+      { id: 'json', label: t('mobile.InventoryExportAction.jSONCompleteInventoryData'), systemImage: 'doc', onPress: () => void run('json') },
+      { id: 'csv', label: t('mobile.InventoryExportAction.cSVSpreadsheetRows'), systemImage: 'tablecells', onPress: () => void run('csv') }
     ] }]} />
-    {pending ? <><SettingsSeparator /><SettingsLoadingRow label="Preparing export…" /><SettingsActionRow label="Cancel export" onPress={cancel} /></> : null}
-    {error ? <><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorMessage}>{error}</Text><SettingsActionRow label="Retry export" onPress={() => void run(lastFormat.current)} /></> : null}
+    {pending ? <><SettingsSeparator /><SettingsLoadingRow label={t('mobile.InventoryExportAction.preparingExport')} /><SettingsActionRow label={t('mobile.InventoryExportAction.cancelExport')} onPress={cancel} /></> : null}
+    {error ? <><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorMessage}>{error}</Text><SettingsActionRow label={t('mobile.InventoryExportAction.retryExport')} onPress={() => void run(lastFormat.current)} /></> : null}
   </SettingsSection>;
 }

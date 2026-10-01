@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { PhotoViewerSystemBars } from './PhotoViewerSystemBars';
 import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 import { AccessibilityInfo, Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
@@ -87,8 +88,8 @@ function PhotoViewerHeader({ imageIndex }: { imageIndex: number }) {
 
 export function PhotoViewerLoadError({ onRetry }: { readonly onRetry: () => void }) {
   return <View style={styles.loadError}>
-    <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.loadErrorText}>Photo unavailable</Text>
-    <NativeCommandButton label="Retry photo" prominence="primary" onPress={onRetry} />
+    <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.loadErrorText}>{t('mobile.FullScreenPhotoViewer.photoUnavailable')}</Text>
+    <NativeCommandButton label={t('mobile.FullScreenPhotoViewer.retryPhoto')} prominence="primary" onPress={onRetry} />
   </View>;
 }
 
@@ -115,7 +116,7 @@ function PhotoViewerToolbar({
   const state = fullScreenPhotoViewerActionState(photos, imageIndex, canShowRemoveAction);
   const currentPhoto = photos[imageIndex];
   useEffect(() => {
-    if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Removing photo…');
+    if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(t('mobile.FullScreenPhotoViewer.removingPhoto'));
   }, [isRemoving]);
 
   const groups: readonly NativeActionMenuGroup[] = [
@@ -124,22 +125,22 @@ function PhotoViewerToolbar({
       { id: 'name', label: state.fileLabel, disabled: true, onPress: () => {} },
       ...(state.metadataLabel ? [{ id: 'metadata', label: state.metadataLabel, disabled: true, onPress: () => {} }] : [])
     ] },
-    { id: 'actions', items: canShowRemoveAction ? [{ id: 'remove', label: 'Remove photo',
+    { id: 'actions', items: canShowRemoveAction ? [{ id: 'remove', label: t('mobile.FullScreenPhotoViewer.removePhoto'),
       systemImage: 'trash', isDestructive: true,
       disabled: isRemoving || !state.canRemove || !currentPhoto,
       onPress: () => { if (currentPhoto && !isRemoving) onRemove?.(currentPhoto, imageIndex); }
     }] : [] }
   ];
   return <View style={[styles.toolbarOuter, { paddingTop: Math.max(spacing.sm, safeTopInset) }]}>
-    <View accessible accessibilityRole="adjustable" accessibilityLabel={`Photo, ${state.positionLabel}`}
-      accessibilityHint="Swipe up or down to change photos"
-      accessibilityActions={[{ name: 'increment', label: 'Next photo' }, { name: 'decrement', label: 'Previous photo' }]}
+    <View accessible accessibilityRole="adjustable" accessibilityLabel={t('mobile.FullScreenPhotoViewer.photo', { positionLabel: String(state.positionLabel) })}
+      accessibilityHint={t('mobile.FullScreenPhotoViewer.swipeUpOrDownToChangePhotos')}
+      accessibilityActions={[{ name: 'increment', label: t('mobile.FullScreenPhotoViewer.nextPhoto') }, { name: 'decrement', label: t('mobile.FullScreenPhotoViewer.previousPhoto') }]}
       onAccessibilityAction={({ nativeEvent }) => {
         if (nativeEvent.actionName === 'increment' && state.canGoNext) onSelectIndex(imageIndex + 1);
         if (nativeEvent.actionName === 'decrement' && state.canGoPrevious) onSelectIndex(imageIndex - 1);
       }} style={styles.photoAccessibilityTarget} />
-    {isRemoving ? <Text accessibilityLiveRegion="polite" style={styles.progress}>Removing photo…</Text> : null}
-    <NativeActionMenu accessibilityLabel="Photo options" tone="onDark" groups={groups} />
+    {isRemoving ? <Text accessibilityLiveRegion="polite" style={styles.progress}>{t('mobile.FullScreenPhotoViewer.removingPhoto')}</Text> : null}
+    <NativeActionMenu accessibilityLabel={t('mobile.FullScreenPhotoViewer.photoOptions')} tone="onDark" groups={groups} />
     <PhotoViewerActionButton action="close" onPress={onClose} />
   </View>;
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { Text, View } from 'react-native';
@@ -24,20 +25,20 @@ export function NewAssetTagScreen({ tags, selectedIds, newTags, onDone, onCancel
   const resolution = resolveInlineAssetTag({ displayName: name, color,
     activeTags: tags.map(tag => ({ id: tag.id, key: tag.key ?? assetTagKeyFromDisplayName(tag.label) })), pendingTags: newTags });
   return <>
-    <Stack.Screen options={{ title: 'New tag' }} />
-    <NativeFilterSheet title="New tag" footerTestID="new-asset-tag-actions" actions={{ primaryLabel: 'Add tag', secondaryLabel: 'Cancel',
-      secondaryAccessibilityLabel: 'Cancel new tag', disabled: !available || !canApplyInlineAssetTagResolution(resolution),
+    <Stack.Screen options={{ title: t('mobile.NewAssetTagScreen.newTag') }} />
+    <NativeFilterSheet title={t('mobile.NewAssetTagScreen.newTag')} footerTestID="new-asset-tag-actions" actions={{ primaryLabel: t('mobile.NewAssetTagScreen.addTag'), secondaryLabel: t('mobile.NewAssetTagScreen.cancel'),
+      secondaryAccessibilityLabel: t('mobile.NewAssetTagScreen.cancelNewTag'), disabled: !available || !canApplyInlineAssetTagResolution(resolution),
       onApply: () => {
         if (!available) return;
         const next = applyInlineAssetTagResolution({ resolution, selectedTagIds: selectedIds, pendingTags: newTags });
         if (next.shouldClearInputs) onDone(next.selectedTagIds, next.pendingTags);
       }, onBack: onCancel }}>
-      <SettingsSection title="Name" footer="This tag will be saved with the asset.">
-        <View style={styles.navigationRow}><DraftTextField style={[styles.rowLabel, { flex: 1, minHeight: 48 }]} placeholderTextColor={palette.textMuted} accessibilityLabel="New tag name" placeholder="Tag name"
+      <SettingsSection title={t('mobile.NewAssetTagScreen.name')} footer={t('mobile.NewAssetTagScreen.thisTagWillBeSavedWithTheAsset')}>
+        <View style={styles.navigationRow}><DraftTextField style={[styles.rowLabel, { flex: 1, minHeight: 48 }]} placeholderTextColor={palette.textMuted} accessibilityLabel={t('mobile.NewAssetTagScreen.newTagName')} placeholder={t('mobile.NewAssetTagScreen.tagName')}
           value={name} onChangeText={setName} editable={available} /></View>
-        {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.rowContext}>Use a shorter tag name.</Text> : null}
+        {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.rowContext}>{t('mobile.NewAssetTagScreen.useAShorterTagName')}</Text> : null}
       </SettingsSection>
-      <SettingsSection title="Color (optional)"><View style={styles.navigationRow}>
+      <SettingsSection title={t('mobile.NewAssetTagScreen.colorOptional')}><View style={styles.navigationRow}>
         <FullSpectrumTagColorPicker disabled={!available} value={color} onChange={setColor} />
       </View></SettingsSection>
     </NativeFilterSheet>

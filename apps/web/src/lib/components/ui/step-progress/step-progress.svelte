@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   export type StepProgressStep = {
     id: string;
     label: string;
@@ -28,7 +29,7 @@
     steps,
     current,
     reachableStepIds = [],
-    ariaLabel = 'Progress',
+    ariaLabel = t('web.stepprogress.progress'),
     orientation = 'horizontal',
     density = 'compact',
     onNavigateStep
@@ -47,14 +48,14 @@
   }
 
   function stateLabel(state: StepProgressState): string {
-    if (state === 'complete') return 'Completed';
-    if (state === 'current') return 'Current';
-    return 'Not started';
+    if (state === 'complete') return t('web.stepprogress.completed');
+    if (state === 'current') return t('web.stepprogress.current');
+    return t('web.stepprogress.notStarted');
   }
 
   function navigationLabel(step: StepProgressStep, state: StepProgressState): string {
-    const prefix = state === 'current' ? `${step.label}, current step` : `Go to ${step.label}, ${stateLabel(state).toLowerCase()} step`;
-    return step.description ? `${prefix}. ${step.description}` : prefix;
+    const prefix = t(`progress.navigation.${state}`, { step: step.label });
+    return step.description ? t('progress.navigation.described', { label: prefix, description: step.description }) : prefix;
   }
 </script>
 

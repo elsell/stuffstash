@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetCardViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetContainedItemViewModel } from '../../application/assets/AssetViewModels';
@@ -36,8 +37,8 @@ export function containedAssetActions(
     return [];
   }
   return [
-    { kind: 'add_here', label: 'Add item here', isPrimary: true },
-    { kind: 'move_here', label: 'Move items here', isPrimary: false }
+    { kind: 'add_here', label: t('mobile.ContainedAssetsPresentation.addItemHere'), isPrimary: true },
+    { kind: 'move_here', label: t('mobile.ContainedAssetsPresentation.moveItemsHere'), isPrimary: false }
   ];
 }
 
@@ -45,10 +46,10 @@ export function containedAssetsEmptyState(
   asset: Pick<AssetDetailViewModel, 'canAddContainedAssets'>
 ): ContainedAssetsEmptyState {
   return {
-    title: 'Nothing inside yet',
+    title: t('mobile.ContainedAssetsPresentation.nothingInsideYet'),
     message: asset.canAddContainedAssets
-      ? 'Add an item here or move items into this space.'
-      : 'This space is empty.'
+      ? t('mobile.ContainedAssetsPresentation.addAnItemHereOrMoveItemsIntoThis')
+      : t('mobile.ContainedAssetsPresentation.thisSpaceIsEmpty')
   };
 }
 
@@ -56,7 +57,7 @@ export function containedAssetsSectionHeading(
   asset: Pick<AssetDetailViewModel, 'title' | 'containedAssetsLabel'>
 ): ContainedAssetsSectionHeading {
   return {
-    title: 'Contents',
+    title: t('mobile.ContainedAssetsPresentation.contents'),
     summary: asset.containedAssetsLabel
   };
 }
@@ -66,7 +67,7 @@ export function containedSpacesSectionHeading(
   counts?: ContainedAssetsFilteredCount
 ): ContainedAssetsSectionHeading {
   return {
-    title: `Spaces in ${asset.title}`,
+    title: t('mobile.ContainedAssetsPresentation.spacesIn', { title: String(asset.title) }),
     summary: filteredCountLabel(asset.containedSpacesLabel, counts)
   };
 }
@@ -76,7 +77,7 @@ export function containedItemsSectionHeading(
   counts?: ContainedAssetsFilteredCount
 ): ContainedAssetsSectionHeading {
   return {
-    title: `Items in ${asset.title}`,
+    title: t('mobile.ContainedAssetsPresentation.itemsIn', { title: String(asset.title) }),
     summary: filteredCountLabel(asset.containedItemsLabel, counts)
   };
 }
@@ -93,13 +94,13 @@ function filteredCountLabel(
   if (!counts || counts.visibleCount === counts.totalCount) {
     return totalLabel;
   }
-  return `${counts.visibleCount.toString()} of ${totalLabel}`;
+  return t('mobile.ContainedAssetsPresentation.of', { value: String(counts.visibleCount.toString()), totalLabel: String(totalLabel) });
 }
 
 export function containedSpacesEmptyState(): ContainedAssetsEmptyState {
   return {
-    title: 'No spaces here yet',
-    message: 'Containers and nested places will appear here.'
+    title: t('mobile.ContainedAssetsPresentation.noSpacesHereYet'),
+    message: t('mobile.ContainedAssetsPresentation.containersAndNestedPlacesWillAppearHere')
   };
 }
 
@@ -107,10 +108,10 @@ export function containedItemsEmptyState(
   asset: Pick<AssetDetailViewModel, 'canAddContainedAssets'>
 ): ContainedAssetsEmptyState {
   return {
-    title: 'Nothing here yet',
+    title: t('mobile.ContainedAssetsPresentation.nothingHereYet'),
     message: asset.canAddContainedAssets
-      ? 'Add an item here or move items into this place.'
-      : 'There are no items in this place.'
+      ? t('mobile.ContainedAssetsPresentation.addAnItemHereOrMoveItemsIntoThis2')
+      : t('mobile.ContainedAssetsPresentation.thereAreNoItemsInThisPlace')
   };
 }
 

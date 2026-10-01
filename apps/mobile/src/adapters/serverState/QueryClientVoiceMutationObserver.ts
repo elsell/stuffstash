@@ -10,6 +10,7 @@ export class QueryClientVoiceMutationObserver implements VoiceInventoryMutationO
     void this.client.invalidateQueries({ predicate: ({ queryKey }) => {
       if (!prefix.every((value, index) => queryKey[index] === value)) return false;
       const resource = queryKey[prefix.length];
+      if (resource === 'customization') return impact.configurationChanged === true;
       if (resource !== 'asset') return ['home', 'map', 'assets', 'locations', 'location', 'browse', 'parent-candidates'].includes(String(resource));
       const region = queryKey[prefix.length + 2];
       if (region === 'photos') return false;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -69,19 +70,19 @@
 </script>
 
 <section class="workspace-main location-view" aria-labelledby="location-title">
-  <Button.Root href={locationBackHref(location)} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> Back</Button.Root>
+  <Button.Root href={locationBackHref(location)} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> {t('web.LocationView.back')}</Button.Root>
   <header class="location-detail-hero">
     <AssetThumb asset={location} size="lg" />
     <div class="location-identity">
-      <span class="location-kind-label">Location</span>
+      <span class="location-kind-label">{t('web.LocationView.location')}</span>
       <h1 id="location-title" data-workspace-add-result-focus tabindex="-1">{location.title}</h1>
       {#if location.description}<p>{location.description}</p>{/if}
     </div>
     {#if canEdit}
-      <div class="location-maintenance-actions" aria-label="Place maintenance">
-        <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> Edit location</Button.Root>
-        <Button.Root href={assetActionHref(location, 'move')} variant="outline"><MoveRight /> Move place</Button.Root>
-        <Button.Root href={assetActionHref(location, 'archive')} variant="ghost"><Archive /> Archive</Button.Root>
+      <div class="location-maintenance-actions" aria-label={t('web.LocationView.placeMaintenance')}>
+        <Button.Root href={locationEditHref(location)} variant="outline" onclick={openEditLocation}><Pencil /> {t('web.LocationView.editLocation')}</Button.Root>
+        <Button.Root href={assetActionHref(location, 'move')} variant="outline"><MoveRight /> {t('web.LocationView.movePlace')}</Button.Root>
+        <Button.Root href={assetActionHref(location, 'archive')} variant="ghost"><Archive /> {t('web.LocationView.archive')}</Button.Root>
       </div>
     {/if}
   </header>

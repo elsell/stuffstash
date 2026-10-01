@@ -1,13 +1,16 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsPickerRow } from './SettingsPickerRow';
 import { useEffect, useRef, useState } from 'react';
 import type { ExpirationReminderPolicy } from '../../domain/notifications/Notification';
 import { SettingsActionRow, SettingsLoadingRow, SettingsNavigationRow, SettingsSection, SettingsSeparator, SettingsSwitchRow } from '../screens/SettingsList';
 
-export function reminderDaysLabel(days: number): string { return days === 0 ? 'Same day' : `${days} ${days === 1 ? 'day' : 'days'}`; }
+export function reminderDaysLabel(days: number): string { return days === 0 ? t('reminder.sameDay') : t('reminder.days', { count: days }); }
 export function reminderSummary(policy: ExpirationReminderPolicy): string {
-  if (!policy.enabled) return 'Off';
-  return [policy.upcoming ? policy.advanceDays === 0 ? 'On the expiration date' : `${reminderDaysLabel(policy.advanceDays)} before` : '', policy.expired ? 'when expired' : ''].filter(Boolean).join(' and ') || 'No reminders selected';
+  if (!policy.enabled) return t('reminder.off');
+  if (!policy.upcoming) return policy.expired ? t('reminder.expired') : t('reminder.none');
+  if (policy.advanceDays === 0) return policy.expired ? t('reminder.todayAndExpired') : t('reminder.today');
+  return t(policy.expired ? 'reminder.beforeAndExpired' : 'reminder.before', { count: policy.advanceDays });
 }
 type Mode = 'defaults' | 'custom' | 'off';
 const policyMode = (policy: ExpirationReminderPolicy | null): Mode => policy === null ? 'defaults' : policy.enabled ? 'custom' : 'off';
@@ -55,21 +58,21 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
     }
   }
   return <>
-    {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? `Inventory defaults: ${reminderSummary(displayed)}.` : undefined}>
-      <SettingsPickerRow label="Reminders" accessibilityLabel="Choose reminder mode" value={mode}
-        options={[{value:'defaults',label:'Use defaults'},{value:'custom',label:'Custom'},{value:'off',label:'Off'}] as const}
+    {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? t('mobile.ExpirationReminderEditor.inventoryDefaults2', { value: String(reminderSummary(displayed)) }) : undefined}>
+      <SettingsPickerRow label={t('mobile.ExpirationReminderEditor.reminders')} accessibilityLabel={t('mobile.ExpirationReminderEditor.chooseReminderMode')} value={mode}
+        options={[{value:'defaults',label:t('mobile.ExpirationReminderEditor.useDefaults')},{value:'custom',label:t('mobile.ExpirationReminderEditor.custom')},{value:'off',label:t('mobile.ExpirationReminderEditor.off')}] as const}
         disabled={locked || error} onChange={nextMode => { if (nextMode !== mode) void commit(displayed, nextMode); }} />
-    </SettingsSection> : <SettingsSection title="Inventory defaults" footer="Types use these rules unless you customize them below.">
-      <SettingsSwitchRow label="Default reminders" value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
+    </SettingsSection> : <SettingsSection title={t('mobile.ExpirationReminderEditor.inventoryDefaults')} footer={t('mobile.ExpirationReminderEditor.typesUseTheseRulesUnlessYouCustomizeThemBelow')}>
+      <SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.defaultReminders')} value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
     </SettingsSection>}
     {mode === 'custom' ? <SettingsSection>
-      <SettingsNavigationRow label="Before expiration" accessibilityLabel="Before expiration" value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : 'Off'} disabled={locked || error} onPress={onEditDays} />
-      <SettingsSeparator /><SettingsSwitchRow label="When expired" value={draft.expired} disabled={locked || error} onValueChange={expired => void commit({ ...draft, expired })} />
+      <SettingsNavigationRow label={t('mobile.ExpirationReminderEditor.beforeExpiration')} accessibilityLabel={t('mobile.ExpirationReminderEditor.beforeExpiration')} value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : t('mobile.ExpirationReminderEditor.off')} disabled={locked || error} onPress={onEditDays} />
+      <SettingsSeparator /><SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.whenExpired')} value={draft.expired} disabled={locked || error} onValueChange={expired => void commit({ ...draft, expired })} />
     </SettingsSection> : null}
-    {saving ? <SettingsSection><SettingsLoadingRow label="Saving reminders…" /></SettingsSection> : null}
-    {error ? <SettingsSection footer="Could not save. Your change is kept here until you retry or discard it.">
-      <SettingsActionRow accessibilityLabel="Retry saving reminders" label="Retry" disabled={locked} onPress={() => void commit(draft)} />
-      <SettingsSeparator /><SettingsActionRow accessibilityLabel="Discard reminder changes" label="Discard change" disabled={locked} onPress={() => setError(false)} />
+    {saving ? <SettingsSection><SettingsLoadingRow label={t('mobile.ExpirationReminderEditor.savingReminders')} /></SettingsSection> : null}
+    {error ? <SettingsSection footer={t('mobile.ExpirationReminderEditor.couldNotSaveYourChangeIsKeptHereUntil')}>
+      <SettingsActionRow accessibilityLabel={t('mobile.ExpirationReminderEditor.retrySavingReminders')} label={t('mobile.ExpirationReminderEditor.retry')} disabled={locked} onPress={() => void commit(draft)} />
+      <SettingsSeparator /><SettingsActionRow accessibilityLabel={t('mobile.ExpirationReminderEditor.discardReminderChanges')} label={t('mobile.ExpirationReminderEditor.discardChange')} disabled={locked} onPress={() => setError(false)} />
     </SettingsSection> : null}
   </>;
 }

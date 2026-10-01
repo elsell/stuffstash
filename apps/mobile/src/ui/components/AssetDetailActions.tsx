@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { StyleSheet, View } from 'react-native';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { NativeCommandButton } from './NativeCommandButton';
@@ -19,13 +20,13 @@ export function AssetDetailActions({ asset, isActionPending, isPhotosLoading = f
 }) {
   const availability = asset.kind === 'location' ? undefined : assetDetailAvailabilityAction(asset);
   const actions: readonly { label: string; handler?: () => void; pending?: boolean }[] = [
-    ...(showEditAction && asset.canEdit ? [{ label: 'Edit', handler: onEdit }] : []),
-    ...(showEditAction && asset.canAddPhotos ? [{ label: 'Add photos', handler: onAddPhotos, pending: isPhotosLoading }] : []),
-    ...(showEditAction && asset.canMove ? [{ label: asset.kind === 'location' ? 'Move place' : 'Move', handler: onMove }] : []),
+    ...(showEditAction && asset.canEdit ? [{ label: t('mobile.AssetDetailActions.edit'), handler: onEdit }] : []),
+    ...(showEditAction && asset.canAddPhotos ? [{ label: t('mobile.AssetDetailActions.addPhotos'), handler: onAddPhotos, pending: isPhotosLoading }] : []),
+    ...(showEditAction && asset.canMove ? [{ label: asset.kind === 'location' ? t('mobile.AssetDetailActions.movePlace') : t('mobile.AssetDetailActions.move'), handler: onMove }] : []),
     ...(availability && showEditAction ? [{ label: availability.label, handler: availability.id === 'return' ? onReturn : onCheckout }] : [])
   ];
   if (!actions.length) return null;
-  return <View accessibilityLabel="Asset actions" style={styles.actions}>
+  return <View accessibilityLabel={t('mobile.AssetDetailActions.assetActions')} style={styles.actions}>
     {actions.map(action => <View key={action.label} style={styles.action}>
       <NativeCommandButton label={action.label} disabled={isActionPending || action.pending || !action.handler}
         onPress={() => { if (!isActionPending && !action.pending) action.handler?.(); }} />

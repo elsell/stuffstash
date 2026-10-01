@@ -106,6 +106,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderProfileTester:            voice.NewProviderProfileTester(providerProfileFactory(cfg)),
 		RealtimeSessions:                 repositories.realtimeSessions,
 		ActionPlans:                      repositories.actionPlans,
+		ActionPlanCustomizations:         repositories.actionPlanCustomizations,
 		ImportSources:                    importer,
 		ImportAttachmentSources:          importer,
 		ImportJobs:                       repositories.importJobs,

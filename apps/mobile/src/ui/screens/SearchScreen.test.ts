@@ -252,7 +252,7 @@ describe('SearchScreen presentation helpers', () => {
         description: 'Cooking and pantry storage',
         containedAssetCountLabel: '12 assets',
         recentAssetLabel: 'Water bottle, travel mug',
-        photoLabel: 'Needs photo'
+        photoLabel: 'Needs photo', hasPhoto: false
       },
       {
         id: 'garage',
@@ -260,7 +260,7 @@ describe('SearchScreen presentation helpers', () => {
         description: 'Tools and seasonal bins',
         containedAssetCountLabel: '8 assets',
         recentAssetLabel: 'Drill, socket set',
-        photoLabel: 'Photo ready'
+        photoLabel: 'Photo ready', hasPhoto: true
       }
     ]);
 

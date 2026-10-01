@@ -32,10 +32,27 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		Summary:   command.Summary,
 		Operation: actionPlanCommandOperation(command.Kind),
 	}
+	if isCustomizationCommand(command.Kind) {
+		prepared, err := a.prepareActionPlanCustomization(ctx, ActionPlanDecisionInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID}, command)
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		proposal.Changes = prepared.changes
+		if prepared.assetType != nil {
+			proposal.Title = prepared.assetType.Item.DisplayName.String()
+		} else {
+			proposal.Title = prepared.definition.Item.DisplayName.String()
+		}
+		return proposal, nil
+	}
 	if command.Kind == actionplan.CommandKindCreateAsset || command.Kind == actionplan.CommandKindCreateLocation {
 		args, err := parseActionPlanCreateArguments(command)
 		if err == nil {
 			proposal.Title = args.Title
+			proposal.Changes, err = a.actionPlanDetailChanges(ctx, session, nil, nil, args.CustomFields)
+			if err != nil {
+				return RealtimeVoiceActionPlanCommand{}, err
+			}
 			if args.Expiration != nil {
 				proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
 			}
@@ -58,7 +75,7 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 			proposal.ParentCommandID = args.ParentCommandID
 		}
 	} else if command.Kind == actionplan.CommandKindUpdateAsset {
-		args, err := parseActionPlanExpirationArguments(command)
+		args, err := parseActionPlanUpdateArguments(command)
 		if err != nil {
 			return RealtimeVoiceActionPlanCommand{}, err
 		}
@@ -68,7 +85,11 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		}
 		proposal.Title = item.Title.String()
 		proposal.AssetKind = item.Kind.String()
-		proposal.ExpirationCleared = args.Expiration == nil
+		proposal.Changes, err = a.actionPlanDetailChanges(ctx, session, args.Title, args.Description, args.CustomFields)
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		proposal.ExpirationCleared = args.ExpirationPresent && args.Expiration == nil
 		if args.Expiration != nil {
 			proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
 		}
@@ -133,6 +154,8 @@ func (a App) realtimeVoiceReviewAsset(ctx context.Context, session RealtimeVoice
 
 func actionPlanCommandOperation(kind actionplan.CommandKind) string {
 	switch kind {
+	case actionplan.CommandKindCreateCustomAssetType, actionplan.CommandKindCreateCustomFieldDefinition:
+		return "configure"
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		return "create"
 	case actionplan.CommandKindMoveAsset:

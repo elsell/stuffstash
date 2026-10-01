@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type {
   CustomAssetType,
   CustomDefinitionScope,
@@ -14,22 +15,22 @@ export interface CustomizationOption<TValue extends string = string> {
 }
 
 const scopeLabels: Record<CustomDefinitionScope, string> = {
-  inventory: 'Inventory',
-  tenant: 'Tenant'
+  inventory: t('web.workspaceCustomizationPresentation.inventory'),
+  tenant: t('web.workspaceCustomizationPresentation.tenant')
 };
 
 const fieldTypeLabels: Record<CustomFieldType, string> = {
-  text: 'Text',
-  number: 'Number',
+  text: t('web.workspaceCustomizationPresentation.text'),
+  number: t('web.workspaceCustomizationPresentation.number'),
   boolean: 'Yes/no',
-  date: 'Date',
-  url: 'URL',
-  enum: 'List'
+  date: t('web.workspaceCustomizationPresentation.date'),
+  url: t('web.workspaceCustomizationPresentation.uRL'),
+  enum: t('web.workspaceCustomizationPresentation.list')
 };
 
 const applicabilityLabels: Record<CustomFieldApplicability, string> = {
-  all_assets: 'All assets',
-  custom_asset_types: 'Custom types'
+  all_assets: t('web.workspaceCustomizationPresentation.allAssets'),
+  custom_asset_types: t('web.workspaceCustomizationPresentation.customTypes')
 };
 
 export function customizationScopeOptions(input: {

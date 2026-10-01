@@ -33,13 +33,14 @@ func actionPlanCreateAssetInput(input ActionPlanDecisionInput, command ports.Act
 		Title:             args.Title,
 		Description:       args.Description,
 		ParentAssetID:     args.ParentAssetID,
-		CustomFields:      map[string]any{},
+		CustomFields:      args.CustomFields,
 		CustomAssetTypeID: args.CustomAssetTypeID,
 		Expiration:        args.Expiration,
 	}, nil
 }
 
 type actionPlanCreateArguments struct {
+	CustomFields      map[string]any
 	CustomAssetTypeID string
 	Expiration        *assetapp.ExpirationInput
 	Title             string
@@ -57,6 +58,17 @@ func parseActionPlanCreateArguments(command ports.ActionPlanCommandRecord) (acti
 	args := actionPlanCreateArguments{}
 	for key, value := range raw {
 		switch key {
+		case "customFields":
+			fields, err := parseActionPlanCustomFields(value)
+			if err != nil {
+				return actionPlanCreateArguments{}, err
+			}
+			for _, fieldValue := range fields {
+				if fieldValue == nil {
+					return actionPlanCreateArguments{}, ErrValidation
+				}
+			}
+			args.CustomFields = fields
 		case "customAssetTypeId":
 			text, err := actionPlanStringArgument(value)
 			if err != nil || text == "" {

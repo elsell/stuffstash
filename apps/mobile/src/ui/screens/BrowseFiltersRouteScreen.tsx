@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { FilterLoadingScreen } from '../components/FilterLoadingScreen';
 import { returnToPreviousOrHome } from '../navigation/returnToPreviousOrHome';
 import { useQuery } from '@tanstack/react-query';
@@ -34,9 +35,9 @@ export function BrowseFiltersRouteScreen({ inventoryAssetTagsQuery }: { readonly
   });
   const matches = identity.data && target.sessionScope === scope.scopeId && target.tenantId === identity.data.tenantId && target.inventoryId === identity.data.inventoryId;
   if (choices.isError || identity.isError || (identity.data && !matches)) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic">
-    <Text accessibilityRole="alert" style={styles.errorMessage}>Filters are unavailable for this inventory.</Text>
-    <SettingsActionRow label="Retry" onPress={() => { void identity.refetch(); void choices.refetch(); }} />
-    <SettingsActionRow label="Cancel" onPress={dismiss} />
+    <Text accessibilityRole="alert" style={styles.errorMessage}>{t('mobile.BrowseFiltersRouteScreen.filtersAreUnavailableForThisInventory')}</Text>
+    <SettingsActionRow label={t('mobile.BrowseFiltersRouteScreen.retry')} onPress={() => { void identity.refetch(); void choices.refetch(); }} />
+    <SettingsActionRow label={t('mobile.BrowseFiltersRouteScreen.cancel')} onPress={dismiss} />
   </ScrollView>;
   if (!choices.data || !matches) return <FilterLoadingScreen onCancel={dismiss} />;
   return <BrowseFiltersScreen key={JSON.stringify([scope.scopeId, target.tenantId, target.inventoryId])}

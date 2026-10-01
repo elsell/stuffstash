@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -126,7 +127,7 @@ export function InventoryMapScreen({
   const state: InventoryMapState = mapQuery.data
     ? { status: 'ready', map: mapQuery.data }
     : mapQuery.isError || retrying
-      ? { status: 'error', message: 'Inventory map could not load.' }
+      ? { status: 'error', message: t('mobile.InventoryMapScreen.inventoryMapCouldNotLoad') }
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
   const [localQuery, setLocalQuery] = useState('');
@@ -167,7 +168,7 @@ export function InventoryMapScreen({
 
   useEffect(() => {
     if (mapQuery.isError && mapQuery.data) {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh Map', message: 'Your last loaded map is still available. Pull to refresh.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.InventoryMapScreen.couldNotRefreshMap'), message: t('mobile.InventoryMapScreen.yourLastLoadedMapIsStillAvailablePullTo') });
     }
   }, [mapQuery.isError, mapQuery.error, feedback]);
 
@@ -461,13 +462,13 @@ export function InventoryMapScreen({
 
     const match = findInventoryMapSearchMatch(map, text);
     if (!match) {
-      setSearchOutcome({ query: text.trim(), map, message: 'No matching items. Try another name, kind or location.' });
+      setSearchOutcome({ query: text.trim(), map, message: t('mobile.InventoryMapScreen.noMatchingItemsTryAnotherNameKindOrLocation') });
       setHighlightedAssetId(undefined);
       return;
     }
 
     const asset = assetsById.get(match.assetId);
-    setSearchOutcome(asset ? { query: text.trim(), map, message: `Found ${asset.title} · ${asset.placementLabel}` } : undefined);
+    setSearchOutcome(asset ? { query: text.trim(), map, message: t('mobile.InventoryMapScreen.found', { title: String(asset.title), placementLabel: String(asset.placementLabel) }) } : undefined);
     setOpenPath(match.openPath);
     setHighlightedAssetId(match.assetId);
     setPendingScrollLevel(match.openPath.length);
@@ -556,7 +557,7 @@ export function InventoryMapScreen({
           </View>
 
         </View>
-        <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
+        <NativeNavigationSearch query={query} placeholder={t('mobile.InventoryMapScreen.findAndExpandPath')} onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
         {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
           <Text accessibilityLiveRegion="polite" style={styles.searchStatus}>{searchOutcome.message}</Text>
         ) : null}
@@ -573,7 +574,7 @@ export function InventoryMapScreen({
                 <View key={breadcrumb.key} style={styles.breadcrumbItem}>
                   {index > 0 ? <ChevronRight color={colors.textMuted} size={14} strokeWidth={2.5} /> : null}
                   <Pressable
-                    accessibilityLabel={`Open location ${breadcrumb.title}`}
+                    accessibilityLabel={t('mobile.InventoryMapScreen.openLocation', { title: String(breadcrumb.title) })}
                     accessibilityRole="button"
                     onPress={() => openBreadcrumb(breadcrumb.level)}
                     style={({ pressed }) => [
@@ -592,14 +593,14 @@ export function InventoryMapScreen({
       {state.status === 'loading' ? (
         <View style={styles.centerState}>
           <ActivityIndicator color={colors.accent} />
-          <Text style={styles.centerText}>Loading map</Text>
+          <Text style={styles.centerText}>{t('mobile.InventoryMapScreen.loadingMap')}</Text>
         </View>
       ) : null}
       {state.status === 'error' ? (
         <View style={styles.centerState}>
-          <Text style={styles.errorTitle}>Map unavailable</Text>
+          <Text style={styles.errorTitle}>{t('mobile.InventoryMapScreen.mapUnavailable')}</Text>
           <Text style={styles.centerText}>{state.message}</Text>
-          <NativeCommandButton label="Retry map" disabled={retrying} onPress={() => { void retryMap(); }} />
+          <NativeCommandButton label={t('mobile.InventoryMapScreen.retryMap')} disabled={retrying} onPress={() => { void retryMap(); }} />
         </View>
       ) : null}
       {state.status === 'ready' ? (
@@ -914,11 +915,11 @@ function InventoryMapRow({
   const onBranchSwipeProgressRef = useRef(onBranchSwipeProgress);
   const canSwipeBranch = asset.canContainAssets;
   const rowAccessibilityLabel = asset.canContainAssets
-    ? `${asset.title}, ${asset.kindLabel}, ${asset.childCount.toString()} inside`
+    ? t('mobile.InventoryMapScreen.inside', { title: String(asset.title), kindLabel: String(asset.kindLabel), value: String(asset.childCount.toString()) })
     : `${asset.title}, ${asset.kindLabel}`;
   const rowAccessibilityHint = asset.canContainAssets
-    ? 'Opens the next containment column. Swipe left to open this branch.'
-    : 'Shows item details.';
+    ? t('mobile.InventoryMapScreen.opensTheNextContainmentColumnSwipeLeftToOpen')
+    : t('mobile.InventoryMapScreen.showsItemDetails');
 
   const resetRowOffset = useCallback(() => {
     if (reduceMotionEnabled) {
@@ -1089,7 +1090,7 @@ function InventoryMapRow({
           </Pressable>
         </Animated.View>
         <Pressable
-          accessibilityLabel={`Show details for ${asset.title}`}
+          accessibilityLabel={t('mobile.InventoryMapScreen.showDetailsFor', { title: String(asset.title) })}
           accessibilityRole="button"
           hitSlop={8}
           onPress={onOpenInfo}

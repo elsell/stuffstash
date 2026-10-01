@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Check } from 'lucide-react-native';
 import { SelectionRow } from './SelectionRow';
 import { AppTextInput } from './AppTextInput';
@@ -37,26 +38,26 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
       onChange({ ...base, customAssetTypeId: id, expiration: null, expirationValid: true });
       setChoosingType(false);
     };
-    if (expiration) Alert.alert('Change item type?', 'Changing type removes the expiration date from this draft.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Change type', onPress: apply }]);
+    if (expiration) Alert.alert(t('mobile.AssetExpirationEditor.changeItemType'), t('mobile.AssetExpirationEditor.changingTypeRemovesTheExpirationDateFromThisDraft'), [{ text: t('mobile.AssetExpirationEditor.cancel'), style: 'cancel' }, { text: t('mobile.AssetExpirationEditor.changeType'), onPress: apply }]);
     else apply();
   }
-  if (!types) return <Text style={{ color: colors.textMuted }}>Loading expiration settings…</Text>;
-  const matchingTypes = [{ id: undefined, displayName: 'None', expirationEnabled: false }, ...types]
+  if (!types) return <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.loadingExpirationSettings')}</Text>;
+  const matchingTypes = [{ id: undefined, displayName: t('mobile.AssetExpirationEditor.none'), expirationEnabled: false }, ...types]
     .filter(type => !query || type.displayName.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <View style={{ gap: spacing.sm }}>
-    {!asset.customAssetTypeId && types.length ? <SelectionRow label="Item type" value={selectedType?.displayName ?? 'None'} expanded={choosingType} disabled={disabled} onPress={() => setChoosingType(value => !value)}>
-      <AppTextInput accessibilityLabel="Search item types" placeholder="Search types" value={query} onChangeText={setQuery} style={{ minHeight: 44, padding: spacing.sm, color: colors.text }} />
-      {matchingTypes.length === 0 ? <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>No matching item types.</Text> : null}
+    {!asset.customAssetTypeId && types.length ? <SelectionRow label={t('mobile.AssetExpirationEditor.itemType')} value={selectedType?.displayName ?? t('mobile.AssetExpirationEditor.none')} expanded={choosingType} disabled={disabled} onPress={() => setChoosingType(value => !value)}>
+      <AppTextInput accessibilityLabel={t('mobile.AssetExpirationEditor.searchItemTypes')} placeholder={t('mobile.AssetExpirationEditor.searchTypes')} value={query} onChangeText={setQuery} style={{ minHeight: 44, padding: spacing.sm, color: colors.text }} />
+      {matchingTypes.length === 0 ? <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.noMatchingItemTypes')}</Text> : null}
       {matchingTypes.map(type => <Pressable key={type.id ?? 'base'} accessibilityRole="radio" accessibilityState={{ checked: typeId === type.id, disabled }} accessibilityLabel={type.displayName} disabled={disabled} onPress={() => selectType(type.id)} style={{ minHeight: 48, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <View style={{ flex: 1 }}><Text style={{ color: colors.text, fontSize: 17 }}>{type.displayName}</Text>{type.expirationEnabled ? <Text style={{ color: colors.textMuted }}>Tracks expiration dates</Text> : null}</View>
+        <View style={{ flex: 1 }}><Text style={{ color: colors.text, fontSize: 17 }}>{type.displayName}</Text>{type.expirationEnabled ? <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.tracksExpirationDates')}</Text> : null}</View>
         {typeId === type.id ? <Check size={22} color={colors.action} /> : null}
       </Pressable>)}
     </SelectionRow> : null}
     {selectedType?.expirationEnabled ? <ExpirationField key={`${asset.id}:${typeId}`} initialValue={expiration ?? undefined} initialPickerDate={initialPickerDate} disabled={disabled}
       onChange={(value, valid) => onChange({ ...base, expiration: value ?? null, expirationValid: valid })} />
       : asset.expiration || draft?.expiration !== undefined || draft?.expirationValid === false ? <View>
-        <Text style={{ color: colors.textMuted }}>Expiration: {expiration?.date ?? 'Cleared'}. Tracking is disabled for this type.</Text>
-        {expiration || draft?.expirationValid === false ? <Pressable accessibilityRole="button" accessibilityLabel="Clear expiration" disabled={disabled} onPress={() => onChange({ ...base, expiration: null, expirationValid: true })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.action }}>Clear expiration</Text></Pressable> : null}
+        <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.expiration')}{expiration?.date ?? t('mobile.AssetExpirationEditor.cleared')}{t('mobile.AssetExpirationEditor.trackingIsDisabledForThisType')}</Text>
+        {expiration || draft?.expirationValid === false ? <Pressable accessibilityRole="button" accessibilityLabel={t('mobile.AssetExpirationEditor.clearExpiration')} disabled={disabled} onPress={() => onChange({ ...base, expiration: null, expirationValid: true })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.action }}>{t('mobile.AssetExpirationEditor.clearExpiration')}</Text></Pressable> : null}
       </View> : null}
   </View>;
 }

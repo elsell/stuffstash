@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useRef } from 'react';
 import { router, usePathname } from 'expo-router';
 import { Mic, SendHorizontal } from 'lucide-react-native';
@@ -66,7 +67,7 @@ export function VoiceAccessoryContent({ placement }: { readonly placement: 'regu
     >
       {isInline ? null : (
         <Pressable
-          accessibilityLabel={`Open voice session. ${presentation.title}. ${presentation.subtitle}`}
+          accessibilityLabel={t('mobile.VoiceAccessoryContent.openVoiceSession', { title: String(presentation.title), subtitle: String(presentation.subtitle) })}
           accessibilityRole="button"
           onPress={openVoiceSheet}
           style={styles.statusRegion}

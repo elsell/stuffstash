@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Plus from '@lucide/svelte/icons/plus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { shellAddOptions, type ShellAddOption } from '$lib/application/workspaceShellNavigation';
@@ -55,15 +56,14 @@
           disabled={!canOpen}
           aria-describedby={disabledReason ? deniedNoteId : undefined}
         >
-          <Plus /> Add
-        </Button.Root>
+          <Plus /> {t('web.WorkspaceAddMenu.add')} </Button.Root>
       {/snippet}
     </DropdownMenu.Trigger>
     <DropdownMenu.Content
       id="header-add-menu"
       class="add-menu"
       align="end"
-      aria-label="Add asset kind"
+      aria-label={t('web.WorkspaceAddMenu.addAssetKind')}
       forceMount={disablePortal}
       portalProps={{ disabled: disablePortal }}
     >

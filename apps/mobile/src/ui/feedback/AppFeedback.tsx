@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NoticeWindowContext } from './NoticeWindowContext';
 import { NoticeWindowOverlay } from './NoticeWindowOverlay';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
@@ -284,7 +285,7 @@ function AppNotice({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${presentation.accessibilityLabel}. Dismiss message`}
+          accessibilityLabel={t('mobile.AppFeedback.dismissMessage', { accessibilityLabel: String(presentation.accessibilityLabel) })}
           hitSlop={spacing.sm}
           onPress={() => dismissWithAnimation()}
           style={[styles.noticeBody, fontScale >= 1.3 && { flex: 0 }]}

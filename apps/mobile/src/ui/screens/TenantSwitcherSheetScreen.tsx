@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeActionRow } from '../components/NativeActionRow';
 import type { CreateWorkspace, CreatedHousehold, CreatedInventory } from '../../application/inventories/CreateWorkspace';
 import { WorkspaceCreationForm, type WorkspaceCreationTask } from './WorkspaceCreationForm';
@@ -73,7 +74,7 @@ function TenantSwitcherVisit({
       await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
       if (focused.current && !request.signal.aborted) returnToPreviousOrHome(router);
     } catch {
-      if (focused.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
+      if (focused.current && !request.signal.aborted) setSelectionError(t('mobile.TenantSwitcherSheetScreen.couldNotSwitchInventoriesTryAgain'));
     } finally {
       if (pending.current === request) pending.current = undefined;
       if (focused.current) setSelecting(false);
@@ -84,16 +85,16 @@ function TenantSwitcherVisit({
   const displayed = data ? { ...data,
     tenants: [...data.tenants, ...createdHouseholds.filter(item => !data.tenants.some(tenant => tenant.id === item.id))],
     inventories: [...data.inventories, ...createdInventories.filter(item => !data.inventories.some(inventory => inventory.id === item.id)).map(item => ({ ...item,
-      tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: 'Owner', updatedAtLabel: 'Just created' }))]
+      tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: t('mobile.TenantSwitcherSheetScreen.owner'), updatedAtLabel: t('mobile.TenantSwitcherSheetScreen.justCreated') }))]
   } : undefined;
-  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? 'Cancel creation' : 'Close inventory switcher', disabled: creating, onPress: () => {
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? t('mobile.TenantSwitcherSheetScreen.cancelCreation') : t('mobile.TenantSwitcherSheetScreen.closeInventorySwitcher'), disabled: creating, onPress: () => {
     if (creating) return;
     if (creation) { setCreation(undefined); return; }
     if (!visit?.active) return;
     visit.active = false;
     pending.current?.abort(); returnToPreviousOrHome(router);
   } }]);
-  const headerOptions = useMemo(() => ({ title: creation ? creation.kind === 'household' ? 'New household' : 'New inventory' : 'Inventories', ...actionOptions }), [actionOptions, creation]);
+  const headerOptions = useMemo(() => ({ title: creation ? creation.kind === 'household' ? t('mobile.TenantSwitcherSheetScreen.newHousehold') : t('mobile.TenantSwitcherSheetScreen.newInventory') : t('mobile.TenantSwitcherSheetScreen.inventories'), ...actionOptions }), [actionOptions, creation]);
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
@@ -163,16 +164,16 @@ function TenantSwitcher({
             textStyle={styles.sheetTitle}
           />
         </View>
-        <View style={styles.switchAction}><NativeCommandButton prominence="standard" label={mode === 'tenants' ? 'Back' : 'Switch household'}
+        <View style={styles.switchAction}><NativeCommandButton prominence="standard" label={mode === 'tenants' ? t('mobile.TenantSwitcherSheetScreen.back') : t('mobile.TenantSwitcherSheetScreen.switchHousehold')}
           disabled={selecting} onPress={() => setMode(mode === 'tenants' ? 'inventories' : 'tenants')} /></View>
       </View>
 
       {mode === 'inventories' ? (
         <>
-          <Text style={styles.sectionLabel}>Inventories</Text>
-          {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label="New inventory" disabled={selecting}
+          <Text style={styles.sectionLabel}>{t('mobile.TenantSwitcherSheetScreen.inventories')}</Text>
+          {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label={t('mobile.TenantSwitcherSheetScreen.newInventory')} disabled={selecting}
             onPress={() => onCreate({ kind: 'inventory', household: selectedTenant })} /> : null}
-          {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>No inventories are available in this household.</Text> : null}
+          {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.noInventoriesAreAvailableInThisHousehold')}</Text> : null}
 
           {selectedTenantInventories.map((inventory, index) => {
             const isSelected = inventory.id === dashboard.inventoryId;
@@ -180,7 +181,7 @@ function TenantSwitcher({
             return (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Switch to inventory ${inventory.name}`}
+                accessibilityLabel={t('mobile.TenantSwitcherSheetScreen.switchToInventory', { name: String(inventory.name) })}
                 accessibilityState={{ selected: isSelected, disabled: selecting, busy: selecting }}
                 disabled={selecting}
                 key={inventory.id}
@@ -203,8 +204,8 @@ function TenantSwitcher({
         </>
       ) : (
         <>
-          <Text style={styles.sectionLabel}>Households</Text>
-          {onCreate ? <NativeActionRow label="New household" disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
+          <Text style={styles.sectionLabel}>{t('mobile.TenantSwitcherSheetScreen.households')}</Text>
+          {onCreate ? <NativeActionRow label={t('mobile.TenantSwitcherSheetScreen.newHousehold')} disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
@@ -229,7 +230,7 @@ function TenantSwitcher({
                 <View style={styles.optionText}>
                   <Text style={styles.optionName}>{tenant.name}</Text>
                   <Text style={styles.optionMeta}>
-                    {`${inventoryCount} ${inventoryCount === 1 ? 'inventory' : 'inventories'}`}
+                    {t('inventory.count', { count: inventoryCount })}
                   </Text>
                 </View>
               </Pressable>
@@ -247,7 +248,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading inventories</Text>
+      <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.loadingInventories')}</Text>
     </View>
   );
 }
@@ -256,9 +257,9 @@ function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>Inventories could not be loaded. Try again.</Text>
-      <NativeCommandButton label="Retry inventories" onPress={onRetry} />
+      <Text style={styles.errorTitle}>{t('mobile.TenantSwitcherSheetScreen.couldNotLoad')}</Text>
+      <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.inventoriesCouldNotBeLoadedTryAgain')}</Text>
+      <NativeCommandButton label={t('mobile.TenantSwitcherSheetScreen.retryInventories')} onPress={onRetry} />
     </View>
   );
 }

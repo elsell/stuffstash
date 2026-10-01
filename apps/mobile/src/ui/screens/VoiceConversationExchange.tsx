@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { VoicePlanHistorySummary } from './VoicePlanHistorySummary';
 import { VoicePlanProgress } from './VoicePlanProgress';
@@ -20,16 +21,16 @@ export function VoiceConversationExchange({ exchange, railKey, onOpen }: { reado
   const { retryRealtimeActionPlanPhotos } = useVoiceInteractionState();
   const colors = useAppearancePalette();
   return <View style={[styles.exchange, { borderBottomColor: colors.border }]}>
-    {exchange.startsNewContext ? <Text style={{ color: colors.textMuted }}>New conversation context</Text> : null}
+    {exchange.startsNewContext ? <Text style={{ color: colors.textMuted }}>{t('mobile.VoiceConversationExchange.newConversationContext')}</Text> : null}
     {exchange.transcript ? <View style={[styles.user, { backgroundColor: colors.surfaceMuted }]}>
-      <Text style={{ color: colors.textMuted }}>You</Text>
+      <Text style={{ color: colors.textMuted }}>{t('mobile.VoiceConversationExchange.you')}</Text>
       <VoiceResponseEntityText enabled onOpen={onOpen} showFallbackReferences={false} references={voiceConversationReferences(exchange)} text={exchange.transcript} />
     </View> : null}
     {exchange.spokenResponse ? <VoiceResponseEntityText markdown enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.spokenResponse} /> : null}
     {exchange.errorMessage ? <Text selectable style={{ color: colors.warning }}>{exchange.errorMessage}</Text> : null}
     {exchange.actionPlan ? <VoicePlanHistorySummary plan={exchange.actionPlan} /> : null}
     {exchange.photoAttachmentStatus ? <VoicePlanProgress state={exchange} /> : null}
-    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <NativeCommandButton label="Retry photos" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} /> : null}
+    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <NativeCommandButton label={t('mobile.VoiceConversationExchange.retryPhotos')} onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} /> : null}
     <VoiceResultRail references={voiceConversationReferences(exchange)} railKey={railKey} onOpen={onOpen} />
   </View>;
 }
@@ -65,7 +66,7 @@ function VoiceResultCard({ reference, onOpen }: { readonly reference: VoiceRespo
   const { assetDetailQuery } = useAppServices();
   const colors = useAppearancePalette();
   const detail = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => ['voice-card', scope, tenant, inventory, reference.assetId], query: signal => assetDetailQuery.execute(reference.assetId, { signal }) });
-  if (!detail.data) return <View style={[styles.placeholder, { backgroundColor: colors.surfaceMuted }]}><Text style={{ color: colors.textMuted }}>{detail.isError ? 'Asset unavailable' : 'Loading asset…'}</Text></View>;
+  if (!detail.data) return <View style={[styles.placeholder, { backgroundColor: colors.surfaceMuted }]}><Text style={{ color: colors.textMuted }}>{detail.isError ? t('mobile.VoiceConversationExchange.assetUnavailable') : t('mobile.VoiceConversationExchange.loadingAsset')}</Text></View>;
   return <AssetCard asset={detail.data} density="row" style={{ backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: spacing.sm, alignItems: 'flex-start' }} showTags={false} onPress={() => onOpen(reference)} onParentLocationPress={parent => onOpen({ type: 'asset_reference', assetId: parent.id, title: parent.title, assetKind: 'location' })} />;
 }
 const styles = StyleSheet.create({

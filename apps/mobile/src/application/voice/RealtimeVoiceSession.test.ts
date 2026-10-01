@@ -2662,3 +2662,19 @@ it.each([undefined, false])('rejects incomplete expiration correction %s', async
  const states = await controller.stop();
  expect(states.at(-1)?.status).toBe('failed');
 });
+
+
+it('preserves every reviewed detail change without summary truncation', async () => {
+ const changes = ['Name: Blue bottle', 'Description: ' + 'x'.repeat(300), 'Capacity: Clear value'];
+ const controller = new RealtimeVoiceSessionController(new FakeInventoryRepository(), new FakeRecorder(), new FakeTransport([{ type: 'action.plan.proposed', seq: 1, sessionId: 'session-1', actionPlan: { planId: 'plan-1', status: 'proposed', confirmationSummary: 'Update bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Update bottle', changes }] } }, { type: 'session.completed', seq: 2, sessionId: 'session-1' }]), new FakePlayer());
+ await controller.start(); const states = await controller.stop();
+ expect(states.at(-1)?.actionPlan?.commands[0]?.changes).toEqual(changes);
+});
+
+it.each(['create_custom_asset_type', 'create_custom_field_definition'])('reviews %s as configuration, with no asset link or automatic write', async kind => {
+ const changes=['Field name: Warranty','Key: warranty','Field type: date'];
+ const controller=new RealtimeVoiceSessionController(new FakeInventoryRepository(),new FakeRecorder(),new FakeTransport([{type:'action.plan.proposed',seq:1,sessionId:'session-1',actionPlan:{planId:'plan-1',status:'proposed',confirmationSummary:'Create Warranty',risks:[],commands:[{id:'configure',kind,operation:'configure',title:'Warranty',summary:'Create Warranty',changes}]}},{type:'session.completed',seq:2,sessionId:'session-1'}]),new FakePlayer());
+ await controller.start();const states=await controller.stop();
+ expect(states.at(-1)?.actionPlan?.status).toBe('proposed');
+ expect(states.at(-1)?.actionPlan?.commands[0]?.changes).toEqual(changes);
+});

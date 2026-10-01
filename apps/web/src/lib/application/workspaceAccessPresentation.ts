@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { InventoryAccessRelationship } from '$lib/domain/inventory';
 import { inventoryAccessRelationships } from '$lib/domain/inventory';
 
@@ -23,18 +24,18 @@ export interface InventoryAccessManagerStatusPresentation {
 }
 
 const relationshipLabels: Record<InventoryAccessRelationship, string> = {
-  viewer: 'Viewer',
-  editor: 'Editor'
+  viewer: t('access.relationship.viewer'),
+  editor: t('access.relationship.editor')
 };
 
 const listCopy: Record<InventoryAccessListKind, { loading: string; empty: string }> = {
   grants: {
-    loading: 'Loading grants...',
-    empty: 'No direct grants.'
+    loading: t('web.workspaceAccessPresentation.loadingGrants'),
+    empty: t('web.workspaceAccessPresentation.noDirectGrants')
   },
   invitations: {
-    loading: 'Loading invitations...',
-    empty: 'No invitations.'
+    loading: t('web.workspaceAccessPresentation.loadingInvitations'),
+    empty: t('web.workspaceAccessPresentation.noInvitations')
   }
 };
 
@@ -71,13 +72,13 @@ export function inventoryAccessManagerAccessStatus(input: {
   if (!input.hasInventory) {
     return {
       kind: 'missing-context',
-      message: 'Select an inventory before managing sharing.'
+      message: t('web.workspaceAccessPresentation.selectAnInventoryBeforeManagingSharing')
     };
   }
   if (!input.canShare) {
     return {
       kind: 'denied',
-      message: 'You can view this inventory, but you cannot manage sharing.',
+      message: t('web.workspaceAccessPresentation.youCanViewThisInventoryButYouCannotManage'),
       role: 'alert'
     };
   }

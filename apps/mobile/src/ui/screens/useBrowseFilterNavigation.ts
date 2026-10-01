@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
@@ -23,7 +24,7 @@ export function useBrowseFilterNavigation(scopeKey: string, verify: (signal: Abo
       await verify(controller.signal);
       if (!controller.signal.aborted && ownsPresentation()) action();
     } catch {
-      if (!controller.signal.aborted && ownsPresentation()) setError('Inventory changed or could not be verified. Reopen Browse filters.');
+      if (!controller.signal.aborted && ownsPresentation()) setError(t('mobile.useBrowseFilterNavigation.inventoryChangedOrCouldNotBeVerifiedReopenBrowse'));
     } finally {
       if (request.current === controller) {
         request.current = undefined;

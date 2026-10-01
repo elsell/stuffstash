@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { retainFailedConversation } from './VoiceConversationFailure';
 import { appendConversationExchange, canCancelConversation, canSubmitConversation } from './VoiceConversationHistory';
 import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
@@ -79,7 +80,7 @@ type VoiceInteractionStateProviderProps = {
 
 export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
   const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
-  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, 'Voice preview is not available.') } : { status: 'loading' };
+  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, t('mobile.VoiceInteractionStateContext.voicePreviewIsNotAvailable')) } : { status: 'loading' };
   return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState}
     retryPreview={async () => { await preview.refetch({ cancelRefetch: false }); }} />;
 }
@@ -280,13 +281,13 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           setTitleEditor(null);
         }
         const lifetime = interactionLifetime.current;
-        setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'approve'));
         try {
           await realtimeController.approveActionPlan(planId, photoDrafts, reviewedEdits);
         } catch (error) {
           if (interactionLifetime.current !== lifetime) return;
           if (isObject(error) && error.code === 'review_validation_failed') {
-            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: 'Check review details', errorMessage: 'Check the staged photos and edited fields, then approve again.' } : current);
+            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: t('mobile.VoiceInteractionStateContext.checkReviewDetails'), errorMessage: t('mobile.VoiceInteractionStateContext.checkTheStagedPhotosAndEditedFieldsThenApprove') } : current);
             setStage('review');
             return;
           }
@@ -297,7 +298,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
       },
       cancelRealtimeActionPlan: async (planId: string) => {
         const lifetime = interactionLifetime.current;
-        setRealtime((current) => markReviewDecisionPending(current, 'Cancelling change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'cancel'));
         try {
           await realtimeController.cancelActionPlan(planId);
         } catch (error) {
@@ -362,20 +363,21 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
   );
 }
 
-export function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLabel: string): VoiceRealtimeState | null {
+export function markReviewDecisionPending(state: VoiceRealtimeState | null, reviewDecision: 'approve' | 'cancel'): VoiceRealtimeState | null {
   if (!state?.actionPlan || state.actionPlan.status !== 'proposed' || state.reviewDecisionPending) {
     return state;
   }
 
   return {
     ...state,
-    progressLabel,
+    progressLabel: t(reviewDecision === 'cancel' ? 'voice.review.cancelling' : 'voice.review.approving'),
+    reviewDecision,
     reviewDecisionPending: true
   };
 }
 
 export function markPhotoRetryInProgress(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
-  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos', ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: 'Adding photos…', canRetry: false } } : {}) } : state;
+  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: t('mobile.VoiceInteractionStateContext.addingPhotos2'), ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: t('mobile.VoiceInteractionStateContext.addingPhotos'), canRetry: false } } : {}) } : state;
 }
 
 export function markPhotoRetryResult(
@@ -385,7 +387,7 @@ export function markPhotoRetryResult(
 ): VoiceRealtimeState | null {
   return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
-    progressLabel: photoAttachmentStatus.status === 'uploading' ? 'Adding photos' : photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
+    progressLabel: photoAttachmentStatus.status === 'uploading' ? t('mobile.VoiceInteractionStateContext.addingPhotos2') : photoAttachmentStatus.status === 'attached' ? t('mobile.VoiceInteractionStateContext.photosUpdated') : t('mobile.VoiceInteractionStateContext.photoUploadFailed'),
     photoAttachmentStatus
   } : state;
 }
@@ -393,10 +395,10 @@ export function markPhotoRetryResult(
 export function markPhotoRetryFailure(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
   return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
-    progressLabel: 'Photo upload failed',
+    progressLabel: t('mobile.VoiceInteractionStateContext.photoUploadFailed'),
     photoAttachmentStatus: {
       status: 'failed',
-      message: 'Photos could not be attached. Try again.',
+      message: t('mobile.VoiceInteractionStateContext.photosCouldNotBeAttachedTryAgain'),
       canRetry: true
     }
   } : state;
@@ -463,10 +465,10 @@ export function buildFailedVoiceRealtimeState(error: unknown, context: VoiceFail
     status: 'failed',
     tenantName: safeContextLabel(context.tenantName),
     inventoryName: safeContextLabel(context.inventoryName),
-    progressLabel: 'Voice failed',
+    progressLabel: t('mobile.VoiceInteractionStateContext.voiceFailed'),
     debugEvents: [],
     failureCode,
-    errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? 'The connection was interrupted. Try again when you are connected.' : 'Could not finish this request. Try again or start a new conversation.')
+    errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? t('mobile.VoiceInteractionStateContext.theConnectionWasInterruptedTryAgainWhenYouAre') : t('mobile.VoiceInteractionStateContext.couldNotFinishThisRequestTryAgainOrStart'))
   };
 }
 
@@ -504,8 +506,8 @@ function providerReadinessFailure(error: unknown): { readonly message: string } 
 
   return {
     message: missingCapabilities.length > 0
-      ? `Voice provider profiles are not ready: ${missingCapabilities.join(', ')}.`
-      : 'Voice provider profiles are not ready.'
+      ? t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady', { value: String(missingCapabilities.join(', ')) })
+      : t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady2')
   };
 }
 

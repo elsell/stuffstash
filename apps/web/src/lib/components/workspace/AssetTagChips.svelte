@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { AssetTag } from '$lib/domain/inventory';
 
@@ -33,7 +34,7 @@
     class="tag-chip-list"
     data-compact={compact ? 'true' : undefined}
     data-overflow={overflowLimit !== undefined ? 'true' : undefined}
-    aria-label="Asset tags"
+    aria-label={t('web.AssetTagChips.assetTags')}
   >
     {#each visibleTags as tag}
       {@const selected = selectedTagIdSet.has(tag.id)}
@@ -43,7 +44,7 @@
           variant="ghost"
           class={`tag-chip tag-chip-action${tag.color ? ' tag-chip-colored' : ''}`}
           style={tag.color ? `--tag-color: ${tag.color}` : undefined}
-          aria-label={`Search for tag ${tag.displayName}`}
+          aria-label={t('web.AssetTagChips.searchForTag', { displayName: String(tag.displayName) })}
           aria-pressed={selected}
           data-selected={selected ? 'true' : undefined}
           onclick={(event) => selectTag(event, tag)}
@@ -57,7 +58,7 @@
       {/if}
     {/each}
     {#if hiddenCount > 0}
-      <span class="tag-chip tag-chip-overflow" aria-label={`${hiddenCount} more tags`}>+{hiddenCount}</span>
+      <span class="tag-chip tag-chip-overflow" aria-label={t('web.AssetTagChips.moreTags', { hiddenCount: String(hiddenCount) })}>+{hiddenCount}</span>
     {/if}
   </span>
 {/if}

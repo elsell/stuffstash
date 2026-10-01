@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { RefObject } from 'react';
 import type { TextInput } from 'react-native';
 import type {
@@ -63,21 +64,21 @@ export function buildBrowseFilterTokens(
   if (filters.scope !== 'all') {
     tokens.push({
       key: 'scope',
-      label: buildBrowseScopeOptions().find((option) => option.value === filters.scope)?.label ?? 'Type',
+      label: buildBrowseScopeOptions().find((option) => option.value === filters.scope)?.label ?? t('mobile.SearchScreenPresentation.type'),
       type: 'scope'
     });
   }
   if (filters.lifecycleState !== 'active') {
     tokens.push({
       key: 'lifecycle',
-      label: filters.lifecycleState === 'archived' ? 'Archived' : 'All statuses',
+      label: filters.lifecycleState === 'archived' ? t('mobile.SearchScreenPresentation.archived') : t('mobile.SearchScreenPresentation.allStatuses'),
       type: 'lifecycle'
     });
   }
   if (filters.checkoutState !== 'any') {
     tokens.push({
       key: 'checkout',
-      label: filters.checkoutState === 'checked_out' ? 'Checked out' : 'Available',
+      label: filters.checkoutState === 'checked_out' ? t('mobile.SearchScreenPresentation.checkedOut') : t('mobile.SearchScreenPresentation.available'),
       type: 'checkout'
     });
   }
@@ -85,7 +86,7 @@ export function buildBrowseFilterTokens(
     const tag = tagsById.get(tagId);
     tokens.push({
       key: `tag:${tagId}`,
-      label: tag?.label ?? 'Tag',
+      label: tag?.label ?? t('mobile.SearchScreenPresentation.tag'),
       type: 'tag',
       tagId
     });
@@ -117,7 +118,7 @@ export function commitBrowseFilterDraft(draft: BrowseSecondaryFilters): BrowseSe
 }
 
 export function sortLabel(sort: AssetBrowseSort): string {
-  return sort === 'updated_desc' ? 'Recently changed' : 'Default order';
+  return sort === 'updated_desc' ? t('mobile.SearchScreenPresentation.recentlyChanged') : t('mobile.SearchScreenPresentation.defaultOrder');
 }
 
 const minimumTabletCardWidth = 220;
@@ -205,10 +206,10 @@ export function browseLoadingFlagsForRefresh() {
 
 export function buildBrowseScopeOptions(): readonly BrowseScopeOption[] {
   return [
-    { label: 'All', value: 'all' },
-    { label: 'Places', value: 'places' },
-    { label: 'Containers', value: 'containers' },
-    { label: 'Items', value: 'items' }
+    { label: t('mobile.SearchScreenPresentation.all'), value: 'all' },
+    { label: t('mobile.SearchScreenPresentation.places'), value: 'places' },
+    { label: t('mobile.SearchScreenPresentation.containers'), value: 'containers' },
+    { label: t('mobile.SearchScreenPresentation.items'), value: 'items' }
   ];
 }
 
@@ -256,10 +257,10 @@ export function searchResultSummaryLabel({
   const trimmedQuery = query.trim();
   if (trimmedQuery.length > 0 || hasTagFilters) {
     return trimmedQuery.length > 0
-      ? `${resultCount.toString()} shown for “${trimmedQuery}” · relevance`
-      : `${resultCount.toString()} shown · relevance`;
+      ? t('mobile.SearchScreenPresentation.shownForRelevance', { value: String(resultCount.toString()), trimmedQuery: String(trimmedQuery) })
+      : t('mobile.SearchScreenPresentation.shownRelevance', { value: String(resultCount.toString()) });
   }
-  return `${resultCount.toString()} shown · ${sortLabel(sort)}`;
+  return t('mobile.SearchScreenPresentation.shown', { value: String(resultCount.toString()), value2: String(sortLabel(sort)) });
 }
 
 export function locationRowsFromAssetCards(
@@ -273,7 +274,7 @@ export function locationRowsFromAssetCards(
       id: asset.id,
       title: asset.title,
       description: asset.description,
-      containedAssetCountLabel: location?.containedAssetCountLabel ?? 'Contents not summarized',
+      containedAssetCountLabel: location?.containedAssetCountLabel ?? t('mobile.SearchScreenPresentation.contentsNotSummarized'),
       recentAssetLabel: location?.recentAssetLabel ?? asset.locationTrailLabel,
       photo: asset.photo
     };

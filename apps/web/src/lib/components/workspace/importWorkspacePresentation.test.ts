@@ -1,8 +1,22 @@
+import { t } from '$lib/presentation/localization';
+import { ledgerChangeSummary } from './importWorkspacePresentation';
 import { describe, expect, it } from 'vitest';
 import type { ImportJob } from '$lib/domain/inventory';
 import { sourceDescription, sourceOptionsSummary, statusSentence, visiblePreviewMessages } from './importWorkspacePresentation';
 
 describe('importWorkspacePresentation', () => {
+  it('uses record counts for skipped-only history under any display locale', () => {
+    const job = importJobWithMessages([]);
+    job.status = 'succeeded';
+    job.counts.locationsCreated = 0;
+    job.counts.assetsCreated = 0;
+    job.counts.attachmentsCreated = 0;
+    job.counts.assetsSkipped = 2;
+    expect(ledgerChangeSummary(job)).toBe(t('import.history.skipped', { count: 2 }));
+    job.counts.assetsCreated = 1;
+    expect(ledgerChangeSummary(job)).toContain(t('import.count.assetSaved', { count: 1 }));
+    expect(ledgerChangeSummary(job)).toContain(t('import.history.skipped', { count: 2 }));
+  });
   it('deduplicates fallback job messages before limiting preview-visible messages', () => {
     const job = importJobWithMessages([
       ...Array.from({ length: 8 }, () => message('duplicate-source')),

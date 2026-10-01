@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import type { ConnectionProfile, ConnectionProfileStore } from '../../application/onboarding/ConnectionProfile';
 import type { OnboardingCommand, OnboardingStartState } from '../../application/onboarding/OnboardingCommand';
@@ -67,9 +68,9 @@ function ServicesController<C extends AppServicesGateComposition>({ runtime, sta
         if (!retireComposition(visit)) return;
         setState(appServicesStateAfterAuthenticationRequired(onboardingState.profile ?? profile));
         showDialog({
-          title: 'Session expired',
-          message: 'Please sign in again to continue using Stuff Stash.',
-          primaryAction: { label: 'Continue' }
+          title: t('mobile.AppServicesFeedbackGate.sessionExpired'),
+          message: t('mobile.AppServicesFeedbackGate.pleaseSignInAgainToContinueUsingStuffStash'),
+          primaryAction: { label: t('mobile.AppServicesFeedbackGate.continue') }
         });
       }).catch(() => {
         if (!retireComposition(visit)) return;

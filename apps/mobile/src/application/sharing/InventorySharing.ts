@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReadRequest } from '../shared/ReadRequest';
 export type InventoryInvitationRelationship = 'viewer' | 'editor';
 export type InventoryInvitationStatus = 'pending' | 'accepted' | 'revoked' | 'cancelled' | 'expired';
@@ -46,14 +47,14 @@ export interface InvitationLinkActions {
 /** The server confirmed scope metadata, but its one-time link could not be used. */
 export class InventoryInvitationLinkUnavailableError extends Error {
   constructor() {
-    super('Stuff Stash did not return the one-time invitation link.');
+    super(t('mobile.InventorySharing.stuffStashDidNotReturnTheOneTimeInvitation'));
     this.name = 'InventoryInvitationLinkUnavailableError';
   }
 }
 
 export class InventorySharingPermissionError extends Error {
   constructor() {
-    super('You do not have permission to manage invitations for this inventory.');
+    super(t('mobile.InventorySharing.youDoNotHavePermissionToManageInvitationsFor'));
     this.name = 'InventorySharingPermissionError';
   }
 }

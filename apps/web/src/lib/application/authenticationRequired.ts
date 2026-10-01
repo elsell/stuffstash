@@ -1,7 +1,8 @@
+import { t } from '$lib/presentation/localization';
 export class AuthenticationRequiredError extends Error {
   readonly status = 401;
 
-  constructor(message = 'Authentication required.') {
+  constructor(message = t('web.authenticationRequired.authenticationRequired')) {
     super(message);
     this.name = 'AuthenticationRequiredError';
   }

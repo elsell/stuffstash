@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ProviderProfileSettingsQuery } from './ProviderProfileSettingsQuery';
 import type { ProviderProfileCapability } from './ProviderProfileRepository';
 
@@ -29,8 +30,8 @@ export class ProviderProfileVoiceReadinessCheck {
 
 function readinessMessage(missingCapabilities: readonly VoiceRequiredProviderCapability[]): string {
   return missingCapabilities.length > 0
-    ? `Voice provider profiles are not ready: ${missingCapabilities.join(', ')}.`
-    : 'Voice provider profiles are not ready.';
+    ? t('provider.readinessMissing', { capabilities: missingCapabilities.join(', ') })
+    : t('mobile.ProviderProfileVoiceReadinessCheck.voiceProviderProfilesAreNotReady');
 }
 
 function isVoiceRequiredProviderCapability(

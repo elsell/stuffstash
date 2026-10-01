@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { InventoryInvitationReference } from './InventoryInvitationRepository';
 
 const maximumLinkLength = 4096;
@@ -10,7 +11,7 @@ const expectedFragmentFields = new Set(['token']);
 
 export class InvalidInventoryInvitationLinkError extends Error {
   constructor() {
-    super('This invitation link is invalid.');
+    super(t('mobile.InvitationLinkParser.thisInvitationLinkIsInvalid'));
     this.name = 'InvalidInventoryInvitationLinkError';
   }
 }

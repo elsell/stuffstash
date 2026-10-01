@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   Alert,
@@ -26,7 +27,7 @@ export function showVoicePlanPhotoSourceChooser({
     if (!isCurrent()) return;
     action().catch((error: unknown) => {
       if (!isCurrent()) return;
-      Alert.alert('Could not add photos', error instanceof Error ? error.message : 'Photo selection failed.');
+      Alert.alert(t('mobile.VoicePlanPhotoDrafts.couldNotAddPhotos'), error instanceof Error ? error.message : t('mobile.VoicePlanPhotoDrafts.photoSelectionFailed'));
     });
   };
 
@@ -54,7 +55,7 @@ export function VoicePlanPhotoDraftStrip({
   const styles = createStyles(palette);
   return (
     <View style={styles.planPhotoStrip}>
-      {!readOnly ? <NativeCommandButton label="Add photos" onPress={() => onAddPhotos(commandKey)} /> : null}
+      {!readOnly ? <NativeCommandButton label={t('mobile.VoicePlanPhotoDrafts.addPhotos')} onPress={() => onAddPhotos(commandKey)} /> : null}
       {photos.length > 0 ? (
         <ScrollView
           testID="voice-plan-photo-previews"
@@ -69,7 +70,7 @@ export function VoicePlanPhotoDraftStrip({
                 source={{ uri: photo.uri }}
                 style={styles.planPhotoPreview}
               />
-              {!readOnly ? <NativeCommandButton label={`Remove photo ${index + 1}`}
+              {!readOnly ? <NativeCommandButton label={t('mobile.VoicePlanPhotoDrafts.removePhoto', { value: String(index + 1) })}
                 onPress={() => onRemovePhoto(commandKey, photo.id)} /> : null}
             </View>
           ))}
@@ -77,7 +78,7 @@ export function VoicePlanPhotoDraftStrip({
         </ScrollView>
       ) : null}
       {photos.length > 0 ? (
-        <Text style={styles.planPhotoDraftNote}>{readOnly ? 'Draft kept on this device.' : 'Attaches after approval.'}</Text>
+        <Text style={styles.planPhotoDraftNote}>{readOnly ? t('mobile.VoicePlanPhotoDrafts.draftKeptOnThisDevice') : t('mobile.VoicePlanPhotoDrafts.attachesAfterApproval')}</Text>
       ) : null}
     </View>
   );

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
@@ -168,11 +169,11 @@ export function AssetDetailRouteScreen({
     if (completion.action === 'edit') {
       feedback.showNotice({
         tone: 'success',
-        title: `Saved "${asset.title}"`,
-        message: 'The change is now in History.',
+        title: t('mobile.AssetDetailRouteScreen.saved', { title: String(asset.title) }),
+        message: t('mobile.AssetDetailRouteScreen.theChangeIsNowInHistory'),
         ...(completion.undoableOperationId ? {
           action: {
-            label: 'Undo',
+            label: t('mobile.AssetDetailRouteScreen.undo'),
             onPress: () => void undoSavedEdit({
               operationId: completion.undoableOperationId!,
               tenantId: asset.tenantId ?? '',
@@ -191,15 +192,15 @@ export function AssetDetailRouteScreen({
     try {
       await undoAssetEditCommand.execute(input);
       await coreAsset.reconcile();
-      feedback.showNotice({ tone: 'success', title: 'Edit undone', message: 'The previous values were reapplied.' });
+      feedback.showNotice({ tone: 'success', title: t('mobile.AssetDetailRouteScreen.editUndone'), message: t('mobile.AssetDetailRouteScreen.thePreviousValuesWereReapplied') });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Could not undo edit', message: readableError(error, 'Undo failed.') });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: readableError(error, t('mobile.AssetDetailRouteScreen.undoFailed')) });
     }
   }
 
   function openHistory(asset: AssetDetailViewModel): void {
     if (!asset.tenantId || !asset.inventoryId) {
-      feedback.showNotice({ tone: 'error', title: 'Could not open History', message: 'The item scope is unavailable. Refresh and try again.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotOpenHistory'), message: t('mobile.AssetDetailRouteScreen.theItemScopeIsUnavailableRefreshAndTryAgain') });
       return;
     }
     router.push({
@@ -218,8 +219,8 @@ export function AssetDetailRouteScreen({
       if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Could not refresh asset',
-        message: readableError(error, 'Could not refresh asset.')
+        title: t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset'),
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset2'))
       });
     }
   });
@@ -249,13 +250,13 @@ export function AssetDetailRouteScreen({
       () => source === 'camera'
         ? photoSelectionQuery.captureFromCamera(currentPhotoCount)
         : photoSelectionQuery.selectFromLibrary(currentPhotoCount),
-      'Could not add photos'
+      t('mobile.AssetDetailRouteScreen.couldNotAddPhotos')
     );
   }
 
   async function retryPhotos(): Promise<void> {
     if (failedPhotoDrafts.length === 0) return;
-    await uploadPhotos(async () => failedPhotoDrafts, 'Could not retry photos');
+    await uploadPhotos(async () => failedPhotoDrafts, t('mobile.AssetDetailRouteScreen.couldNotRetryPhotos'));
   }
 
   async function uploadPhotos(
@@ -289,7 +290,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: failureTitle,
-        message: readableError(error, 'Photo upload failed.')
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoUploadFailed'))
       });
     } finally {
       scope.pending = false;
@@ -322,9 +323,9 @@ export function AssetDetailRouteScreen({
       if (!scope.active) return;
       if (!canPresent()) return;
       feedback.showDialog({
-        title: 'Could not remove photo',
-        message: readableError(error, 'Photo removal failed.'),
-        primaryAction: { label: 'OK' }
+        title: t('mobile.AssetDetailRouteScreen.couldNotRemovePhoto'),
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoRemovalFailed')),
+        primaryAction: { label: t('mobile.AssetDetailRouteScreen.oK') }
       });
     } finally {
       scope.pending = false;
@@ -360,7 +361,7 @@ export function AssetDetailRouteScreen({
     let confirmed = false;
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
-      { text: 'Cancel', style: 'cancel' },
+      { text: t('mobile.AssetDetailRouteScreen.cancel'), style: 'cancel' },
       {
         text: confirmation.confirmLabel,
         style: confirmation.isDestructive ? 'destructive' : 'default',
@@ -397,8 +398,8 @@ export function AssetDetailRouteScreen({
         if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
-          title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
-          message: 'The latest asset state could not be refreshed yet. Pull to refresh.'
+          title: t('mobile.AssetDetailRouteScreen.succeeded', { value: String(action === 'archive' ? 'Archive' : 'Restore') }),
+          message: t('mobile.AssetDetailRouteScreen.theLatestAssetStateCouldNotBeRefreshedYet')
         });
       }
     } catch (error) {
@@ -406,7 +407,7 @@ export function AssetDetailRouteScreen({
       const failure = assetLifecycleFailurePresentation(
         action,
         asset,
-        readableError(error, 'Lifecycle action failed.')
+        readableError(error, t('mobile.AssetDetailRouteScreen.lifecycleActionFailed'))
       );
       feedback.showNotice({
         tone: 'error',
@@ -437,16 +438,16 @@ export function AssetDetailRouteScreen({
         if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
-          title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
-          message: 'The latest availability could not be refreshed yet. Pull to refresh.'
+          title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.checkoutSucceeded') : t('mobile.AssetDetailRouteScreen.returnSucceeded'),
+          message: t('mobile.AssetDetailRouteScreen.theLatestAvailabilityCouldNotBeRefreshedYetPull')
         });
       }
     } catch (error) {
       if (!scope.active || !canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: action === 'checkout' ? 'Could not checkout asset' : 'Could not return asset',
-        message: readableError(error, 'Checkout action failed.')
+        title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.couldNotCheckoutAsset') : t('mobile.AssetDetailRouteScreen.couldNotReturnAsset'),
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.checkoutActionFailed'))
       });
     } finally {
       scope.pending = false;
@@ -471,10 +472,10 @@ export function AssetDetailRouteScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
-        placeholder="Search this place" onChange={changeContentsQuery} onSubmit={changeContentsQuery}
+        placeholder={t('mobile.AssetDetailRouteScreen.searchThisPlace')} onChange={changeContentsQuery} onSubmit={changeContentsQuery}
         onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
-        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
+        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : t('mobile.AssetDetailRouteScreen.details'),
         ...headerOverflowOptions
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}
@@ -536,7 +537,7 @@ export function AssetDetailRouteScreen({
             onRetryPhotos={() => void retryPhotos()}
             onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
             photoUploads={photoUploads}
-            photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
+            photoStatusMessage={pendingAction === 'photos' ? t('mobile.AssetDetailRouteScreen.updatingPhotos') : photoStatus?.message}
             workspaceStatusKind={presentedWorkspaceStatus?.kind}
             workspaceStatusMessage={presentedWorkspaceStatus?.message}
             refreshControl={
@@ -559,7 +560,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading asset</Text>
+      <Text style={styles.stateText}>{t('mobile.AssetDetailRouteScreen.loadingAsset')}</Text>
     </View>
   );
 }

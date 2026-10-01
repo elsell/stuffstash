@@ -13,6 +13,10 @@ import (
 func (s *Store) SaveCustomFieldDefinition(_ context.Context, definition customfield.Definition, auditRecord audit.Record) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.saveCustomFieldDefinitionLocked(definition, auditRecord)
+}
+
+func (s *Store) saveCustomFieldDefinitionLocked(definition customfield.Definition, auditRecord audit.Record) error {
 
 	if err := s.customFieldDefinitionParentIsValid(definition); err != nil {
 		return err

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -22,7 +23,7 @@ export function InventorySharingGuard({
     return (
       <View style={[styles.shell, styles.errorContainer]}>
         <ActivityIndicator color={palette.action} />
-        <Text style={styles.errorMessage}>Checking Sharing access</Text>
+        <Text style={styles.errorMessage}>{t('mobile.InventorySharingGuard.checkingSharingAccess')}</Text>
       </View>
     );
   }
@@ -32,14 +33,14 @@ export function InventorySharingGuard({
   return (
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
       <Text accessibilityRole="header" style={styles.errorTitle}>
-        {unavailable ? 'Sharing unavailable' : 'Could not verify Sharing access'}
+        {unavailable ? t('mobile.InventorySharingGuard.sharingUnavailable') : t('mobile.InventorySharingGuard.couldNotVerifySharingAccess')}
       </Text>
       <Text style={styles.errorMessage}>
         {unavailable
-          ? `You don’t have permission to manage invitations for ${decision.inventoryName}.`
+          ? t('mobile.InventorySharingGuard.youDonTHavePermissionToManageInvitationsFor', { inventoryName: String(decision.inventoryName) })
           : decision.message}
       </Text>
-      <NativeCommandButton label={unavailable ? 'Check Again' : 'Retry'} onPress={() => void load()} />
+      <NativeCommandButton label={unavailable ? t('mobile.InventorySharingGuard.checkAgain') : t('mobile.InventorySharingGuard.retry')} onPress={() => void load()} />
     </ScrollView>
   );
 }

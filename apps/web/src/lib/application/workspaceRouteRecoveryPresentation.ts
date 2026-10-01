@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 export type WorkspaceRouteRecoveryPresentation = {
   title: string;
   message: string;
@@ -7,9 +8,9 @@ export type WorkspaceRouteRecoveryPresentation = {
 
 export function workspaceUnavailableRoutePresentation(message: string): WorkspaceRouteRecoveryPresentation {
   return {
-    title: 'Workspace unavailable',
+    title: t('web.workspaceRouteRecoveryPresentation.workspaceUnavailable'),
     message,
-    actionLabel: 'Go home',
+    actionLabel: t('web.workspaceRouteRecoveryPresentation.goHome'),
     role: 'alert'
   };
 }
@@ -20,13 +21,13 @@ export function workspaceNoInventoryPresentation(
 ): WorkspaceRouteRecoveryPresentation {
   if (!canCreateStarter) {
     return {
-      title: 'No inventory yet',
-      message: 'You can view this tenant, but you cannot create inventories in it.'
+      title: t('web.workspaceRouteRecoveryPresentation.noInventoryYet'),
+      message: t('web.workspaceRouteRecoveryPresentation.youCanViewThisTenantButYouCannotCreate')
     };
   }
 
   return {
-    title: 'No inventory yet',
-    message: selectedTenantId ? 'Create the first inventory for this tenant.' : 'Create your first tenant and inventory.'
+    title: t('web.workspaceRouteRecoveryPresentation.noInventoryYet'),
+    message: selectedTenantId ? t('web.workspaceRouteRecoveryPresentation.createTheFirstInventoryForThisTenant') : t('web.workspaceRouteRecoveryPresentation.createYourFirstTenantAndInventory')
   };
 }

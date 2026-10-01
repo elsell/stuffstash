@@ -1,6 +1,9 @@
+<script lang="ts">
+  import { t } from '$lib/presentation/localization';
+</script>
 <div class="auth-brand">
   <img class="auth-brand-mark" src="/favicon.svg" alt="" />
-  <strong>Stuff Stash</strong>
+  <strong>{t('web.AuthBrand.stuffStash')}</strong>
 </div>
 
 <style>

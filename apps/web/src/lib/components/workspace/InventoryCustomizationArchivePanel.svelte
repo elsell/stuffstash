@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { CustomAssetType, CustomFieldDefinition } from '$lib/domain/inventory';
 
   export type InventoryCustomizationArchivePanelProps = {
@@ -93,7 +94,7 @@
 <WorkspaceConfirmationDialog
   {open}
   title={confirmation.title}
-  description={confirmation.unavailable ? 'The requested archive target is not available.' : confirmation.description}
+  description={confirmation.unavailable ? t('web.InventoryCustomizationArchivePanel.theRequestedArchiveTargetIsNotAvailable') : confirmation.description}
   {busy}
   onOpenChange={(nextOpen) => { if (!nextOpen) requestDismiss(); }}
   onCloseAutoFocus={handleCloseAutoFocus}
@@ -104,7 +105,7 @@
   {/snippet}
   {#snippet cancel()}
     <Button.Root href={fieldsHref} variant="outline" class="min-h-11" disabled={busy} onclick={handleClose} autofocus>
-      {confirmation.unavailable ? confirmation.buttonLabel : 'Cancel'}
+      {confirmation.unavailable ? confirmation.buttonLabel : t('web.InventoryCustomizationArchivePanel.cancel')}
     </Button.Root>
   {/snippet}
   {#snippet action()}

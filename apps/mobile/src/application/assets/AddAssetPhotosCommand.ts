@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type {
   CreateInventoryAssetPhotoInput,
@@ -32,7 +33,7 @@ export class AddAssetPhotosCommand {
 
   async execute(input: AddAssetPhotosCommandInput): Promise<AddAssetPhotosCommandResult> {
     if (input.photos.length === 0) {
-      throw new Error('Choose at least one photo.');
+      throw new Error(t('recovery.choosePhoto'));
     }
 
     const targetAssetId = assetId(input.assetId);
@@ -79,15 +80,15 @@ export class AddAssetPhotosCommand {
 
 function photoUploadMessage(attachedCount: number, failedCount: number, failureMessage: string | undefined): string {
   if (failedCount === 0) {
-    return `${attachedCount.toString()} ${attachedCount === 1 ? 'photo' : 'photos'} added.`;
+    return t("photos.added", { count: attachedCount });
   }
   if (attachedCount === 0) {
     if (failureMessage) {
-      return `Photos could not be uploaded: ${failureMessage}`;
+      return t("photos.failedReason", { reason: failureMessage });
     }
-    return 'Photos could not be uploaded.';
+    return t('mobile.AddAssetPhotosCommand.photosCouldNotBeUploaded');
   }
-  return `${attachedCount.toString()} of ${(attachedCount + failedCount).toString()} photos added.`;
+  return t("photos.partiallyAdded", { added: attachedCount, total: attachedCount + failedCount });
 }
 
 function readableUploadError(error: unknown): string | undefined {

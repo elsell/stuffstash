@@ -8,7 +8,7 @@ import type {
   VoiceActionPlanCommandEdit,
   VoiceRealtimeEvent
 } from '../../application/voice/RealtimeVoiceSession';
-import { isValidVoiceActionPlanProposal, VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
+import { isValidVoiceActionPlanChanges, isValidVoiceActionPlanProposal, VoiceRealtimeCancelledError } from '../../application/voice/RealtimeVoiceSession';
 import {
   directUploadMethod,
   isDirectUploadTargetSupported,
@@ -734,12 +734,14 @@ function actionPlanField(message: Record<string, unknown>) {
     confirmationSummary: stringField(actionPlan, 'confirmationSummary'),
     commands: arrayField(actionPlan, 'commands').map((item) => {
       const command = objectValue(item, 'actionPlan.commands');
-      if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true) throw new Error('Voice action plan expiration correction is missing.');
+      if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true && !isValidVoiceActionPlanChanges(command.changes)) throw new Error('Voice action plan expiration correction is missing.');
       if (command.expirationCleared !== undefined && (typeof command.expirationCleared !== 'boolean' || (command.expirationCleared && (command.kind !== 'update_asset' || command.expiration !== undefined)))) throw new Error('Voice action plan expiration removal is invalid.');
+      if (command.changes !== undefined && !isValidVoiceActionPlanChanges(command.changes)) throw new Error('Voice action plan changes are invalid.');
       if (command.expiration !== undefined && !isAssetExpiration(command.expiration)) throw new Error('Voice action plan expiration is invalid.');
       return {
         kind: stringField(command, 'kind'),
         summary: stringField(command, 'summary'),
+        ...(isValidVoiceActionPlanChanges(command.changes) ? { changes: [...command.changes] } : {}),
         ...optionalObjectField('id', optionalStringField(command, 'id')),
         ...optionalObjectField('operation', optionalStringField(command, 'operation')),
         ...optionalObjectField('title', optionalStringField(command, 'title')),

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import ChevronUp from '@lucide/svelte/icons/chevron-up';
   import LogOut from '@lucide/svelte/icons/log-out';
   import Settings from '@lucide/svelte/icons/settings';
@@ -59,7 +60,7 @@
 {#snippet identity()}
   <span class="account-icon" aria-hidden="true"><UserRound /></span>
   <span class="account-copy">
-    <strong>Account</strong>
+    <strong>{t('web.AccountMenu.account')}</strong>
     <small>{userLabel}</small>
   </span>
 {/snippet}
@@ -75,7 +76,7 @@
             size="icon"
             class="mobile-account-trigger"
             style="min-width: 44px; min-height: 44px"
-            aria-label="Open account menu"
+            aria-label={t('web.AccountMenu.openAccountMenu')}
           ><UserRound /></Button.Root>
         {/snippet}
       </Sheet.Trigger>
@@ -87,17 +88,17 @@
           portalProps={{ disabled: disablePortal }}
         >
           <Sheet.Header class="account-sheet-header">
-            <Sheet.Title>Account</Sheet.Title>
-            <Sheet.Description>Signed in to Stuff Stash</Sheet.Description>
+            <Sheet.Title>{t('web.AccountMenu.account')}</Sheet.Title>
+            <Sheet.Description>{t('web.AccountMenu.signedInToStuffStash')}</Sheet.Description>
           </Sheet.Header>
           <div class="account-sheet-identity">
             {@render identity()}
           </div>
           <div class="account-sheet-navigation">
-            <Button.Root href={settingsHref} variant="outline" class="account-settings" onclick={openSettings}><Settings /> Settings</Button.Root>
+            <Button.Root href={settingsHref} variant="outline" class="account-settings" onclick={openSettings}><Settings /> {t('web.AccountMenu.settings')}</Button.Root>
           </div>
           <Sheet.Footer class="account-sheet-footer">
-            <Button.Root data-variant="destructive" variant="destructive" class="account-sign-out" onclick={signOut}><LogOut /> Sign out</Button.Root>
+            <Button.Root data-variant="destructive" variant="destructive" class="account-sign-out" onclick={signOut}><LogOut /> {t('web.AccountMenu.signOut')}</Button.Root>
           </Sheet.Footer>
         </Sheet.Content>
       {/if}
@@ -111,7 +112,7 @@
           {...props}
           variant="ghost"
           class="account-trigger"
-          aria-label={`Account menu for ${userLabel}`}
+          aria-label={t('web.AccountMenu.accountMenuFor', { userLabel: String(userLabel) })}
         >
           {@render identity()}
           <ChevronUp class="account-chevron" aria-hidden="true" />
@@ -127,7 +128,7 @@
       class="account-dropdown w-64"
     >
       <DropdownMenu.Label class="account-dropdown-identity">
-        <span>Signed in as</span>
+        <span>{t('web.AccountMenu.signedInAs')}</span>
         <strong>{userLabel}</strong>
       </DropdownMenu.Label>
       <DropdownMenu.Separator />
@@ -138,11 +139,11 @@
             class={accountMenuLinkClass(props.class)}
             href={settingsHref}
             onclick={(event) => openSettingsFromMenu(event, props.onclick)}
-          ><Settings /> Settings</a>
+          ><Settings /> {t('web.AccountMenu.settings')}</a>
         {/snippet}
       </DropdownMenu.Item>
       <DropdownMenu.Separator />
-      <DropdownMenu.Item variant="destructive" class="min-h-11" onclick={signOut}><LogOut /> Sign out</DropdownMenu.Item>
+      <DropdownMenu.Item variant="destructive" class="min-h-11" onclick={signOut}><LogOut /> {t('web.AccountMenu.signOut')}</DropdownMenu.Item>
     </DropdownMenu.Content>
   </DropdownMenu.Root>
 {/if}

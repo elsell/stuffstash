@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AssetKind } from '$lib/domain/inventory';
 import type { WorkspaceRouteState } from './workspaceRoute';
 
@@ -27,7 +28,7 @@ export function resolveWorkspaceAddRoute(
   if (!input.createAllowed) {
     return {
       ...closedResolution(kind),
-      deniedMessage: 'You do not have permission to add assets in this inventory.'
+      deniedMessage: t('web.workspaceAddRoute.youDoNotHavePermissionToAddAssetsIn')
     };
   }
   const parentAssetId = validAddParentId(route.addParentAssetId, input.validParentIds);

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AccessInvitationRouteAction } from './workspaceRoute';
 import { workspaceRouteHref } from './workspaceRoute';
 import type { InventoryAccessInvitation, InvitationStatusFilter } from '$lib/domain/inventory';
@@ -33,26 +34,26 @@ interface InvitationActionMetadata {
 
 const invitationActionMetadata: Record<InvitationAction, InvitationActionMetadata> = {
   expire: {
-    rowLabel: 'Expire',
-    confirmationTitle: 'Expire invitation',
-    confirmationButtonLabel: 'Expire',
-    description: (invitation) => `Set the invitation for ${invitation.email} to expire immediately.`,
+    rowLabel: t('web.workspaceInvitationActions.expire'),
+    confirmationTitle: t('web.workspaceInvitationActions.expireInvitation'),
+    confirmationButtonLabel: t('web.workspaceInvitationActions.expire'),
+    description: (invitation) => t('web.workspaceInvitationActions.expireDescription', { email: invitation.email }),
     destructive: false,
     iconOnly: false
   },
   cancel: {
-    rowLabel: 'Cancel',
-    confirmationTitle: 'Cancel invitation',
-    confirmationButtonLabel: 'Cancel invitation',
-    description: (invitation) => `Cancel the pending invitation for ${invitation.email}.`,
+    rowLabel: t('web.workspaceInvitationActions.cancel'),
+    confirmationTitle: t('web.workspaceInvitationActions.cancelInvitation'),
+    confirmationButtonLabel: t('web.workspaceInvitationActions.cancelInvitation'),
+    description: (invitation) => t('web.workspaceInvitationActions.cancelDescription', { email: invitation.email }),
     destructive: false,
     iconOnly: false
   },
   delete: {
-    rowLabel: 'Delete',
-    confirmationTitle: 'Delete invitation',
-    confirmationButtonLabel: 'Delete',
-    description: (invitation) => `Permanently remove the invitation record for ${invitation.email}.`,
+    rowLabel: t('web.workspaceInvitationActions.delete'),
+    confirmationTitle: t('web.workspaceInvitationActions.deleteInvitation'),
+    confirmationButtonLabel: t('web.workspaceInvitationActions.delete'),
+    description: (invitation) => t('web.workspaceInvitationActions.deleteDescription', { email: invitation.email }),
     destructive: true,
     iconOnly: true
   }
@@ -109,7 +110,7 @@ export function invitationActionOptions(input: {
   return invitationActions.map((action) => ({
     action,
     label: invitationActionMetadata[action].rowLabel,
-    ariaLabel: action === 'delete' ? `Delete invitation for ${input.invitation.email}` : undefined,
+    ariaLabel: action === 'delete' ? t('web.workspaceInvitationActions.deleteInvitationFor', { email: String(input.invitation.email) }) : undefined,
     href: invitationActionHref(input.tenantId, input.inventoryId, input.invitationStatus, input.invitation, action),
     disabled: input.busy || !invitationActionIsAvailable(action, input.invitation),
     destructive: invitationActionMetadata[action].destructive,
@@ -124,9 +125,9 @@ export function invitationActionConfirmation(
 ): InvitationActionConfirmation {
   if (!action) {
     return {
-      title: 'Invitation action',
-      description: 'This invitation action is unavailable.',
-      buttonLabel: 'Continue',
+      title: t('web.workspaceInvitationActions.invitationAction'),
+      description: t('web.workspaceInvitationActions.thisInvitationActionIsUnavailable'),
+      buttonLabel: t('web.workspaceInvitationActions.continue'),
       destructive: false,
       disabled: true
     };

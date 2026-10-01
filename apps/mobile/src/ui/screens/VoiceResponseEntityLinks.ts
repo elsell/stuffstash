@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
 
 export type VoiceResponseEntityLinkSegment = {
@@ -92,7 +93,7 @@ export function voiceResponseEntityOpenLabel(
   references: readonly VoiceResponseArtifact[]
 ): string {
   const context = reference.context?.trim();
-  const base = `Open ${reference.title}${context ? ` in ${context}` : ''}`;
+  const base = context ? t("voice.openEntityIn", { title: reference.title, context }) : t("voice.openEntity", { title: reference.title });
   const indistinguishable = references.filter((candidate) =>
     candidate.title === reference.title && (candidate.context?.trim() ?? '') === (context ?? '')
   );
@@ -100,5 +101,5 @@ export function voiceResponseEntityOpenLabel(
     return base;
   }
   const index = indistinguishable.findIndex((candidate) => candidate.assetId === reference.assetId);
-  return `${base} (${index + 1} of ${indistinguishable.length})`;
+  return t("voice.entityPosition", { label: base, position: index + 1, total: indistinguishable.length });
 }

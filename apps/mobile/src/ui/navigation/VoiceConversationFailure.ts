@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import type { VoiceRealtimeState } from '../../application/voice/RealtimeVoiceSession';
 
 export function retainFailedConversation(current: VoiceRealtimeState | null, failure: VoiceRealtimeState): VoiceRealtimeState {
@@ -11,7 +12,7 @@ export function retainFailedConversation(current: VoiceRealtimeState | null, fai
     actionPlan: interrupted ? { ...plan, status: 'failed' } : plan,
     reviewDecisionPending: false,
     errorMessage: interrupted
-      ? `${failure.errorMessage} This review is disconnected. Your draft is kept here. Check the inventory before submitting the change again.`
+      ? t("voice.disconnectedReview", { reason: failure.errorMessage ?? "" })
       : failure.errorMessage
   };
 }

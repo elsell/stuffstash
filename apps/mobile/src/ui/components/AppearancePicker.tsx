@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { appearancePreferences, isAppearancePreference } from '../../application/settings/AppearancePreference';
@@ -23,9 +24,9 @@ export function AppearancePicker() {
     try { await setPreference(value); }
     catch {
       if (!focused.current || selection.current !== request) return;
-      feedback.showNotice({ tone: 'error', title: 'Appearance not saved', message: 'Stuff Stash could not save the appearance setting.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AppearancePicker.appearanceNotSaved'), message: t('mobile.AppearancePicker.stuffStashCouldNotSaveTheAppearanceSetting') });
     }
   }
-  return <NativeChoicePicker label="Appearance" accessibilityLabel="Choose appearance"
+  return <NativeChoicePicker label={t('mobile.AppearancePicker.appearance')} accessibilityLabel={t('mobile.AppearancePicker.chooseAppearance')}
     includeEmptyOption={false} value={preference} options={options} onChange={value => void select(value)} />;
 }

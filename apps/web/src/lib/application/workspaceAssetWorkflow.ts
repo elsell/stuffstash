@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type {
   AddAssetDraft,
   AddAssetSaveResult,
@@ -113,12 +114,12 @@ export async function createAssetWorkflow(
   } catch (caught) {
     if (createdAsset) {
       const selectedAsset = savedAsset ?? createdAsset;
-      const failure = caught instanceof Error ? caught.message : 'Action failed.';
+      const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
       return {
         data: dataWithTags(data, createdTags),
         saveResult: { saved: true },
         message: createAssetMessage(createdAsset, uploadResult, createdParent),
-        error: `Saved ${createdAsset.title}, but could not refresh the active view. ${failure}`,
+        error: t('web.workspaceAssetWorkflow.savedButCouldNotRefreshTheActiveView', { title: String(createdAsset.title), failure: String(failure) }),
         closeAdd: true,
         mode: selectedAsset.kind === 'location' ? 'location' : 'asset',
         selectedAsset,
@@ -129,11 +130,11 @@ export async function createAssetWorkflow(
       createdParent && data.context.assetLifecycleState === 'active' && !data.assets.some((asset) => asset.id === createdParent?.id)
         ? { ...dataWithTags(data, createdTags), assets: [createdParent, ...data.assets] }
         : dataWithTags(data, createdTags);
-    const failure = caught instanceof Error ? caught.message : 'Action failed.';
+    const failure = caught instanceof Error ? caught.message : t('web.workspaceAssetWorkflow.actionFailed');
     return {
       data: nextData,
       saveResult: createdParent ? { saved: false, createdParentId: createdParent.id } : { saved: false },
-      error: createdParent ? `Created ${createdParent.title}, but could not save ${draft.title}. ${failure}` : failure,
+      error: createdParent ? t('web.workspaceAssetWorkflow.createdButCouldNotSave', { title: String(createdParent.title), title2: String(draft.title), failure: String(failure) }) : failure,
       closeAdd: false
     };
   }
@@ -277,19 +278,18 @@ async function uploadPhotos(
 }
 
 function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, createdParent: Asset | null): string {
-  const locationSuffix = createdParent ? ` in ${createdParent.title}` : '';
-  const uploadSuffix =
-    uploadResult.uploaded.length > 0 ? ` with ${photoUploadCountLabel(uploadResult.uploaded.length)}` : '';
-  const savedMessage = `Saved ${asset.title}${locationSuffix}${uploadSuffix}.`;
-  if (uploadResult.failures > 0) {
-    const reasonSuffix = uploadResult.failureReasons.length > 0 ? ` ${uploadResult.failureReasons.join(' ')}` : '';
-    return `${savedMessage} ${photoUploadCountLabel(uploadResult.failures)} failed.${reasonSuffix}`;
-  }
-  return savedMessage;
-}
-
-function photoUploadCountLabel(count: number): string {
-  return `${count} ${count === 1 ? 'photo upload' : 'photo uploads'}`;
+  const count = uploadResult.uploaded.length;
+  const savedMessage = createdParent
+    ? count > 0
+      ? t('assets.savedInWithUploads', { title: asset.title, parent: createdParent.title, count })
+      : t('assets.savedIn', { title: asset.title, parent: createdParent.title })
+    : count > 0
+      ? t('assets.savedWithUploads', { title: asset.title, count })
+      : t('assets.savedNamed', { title: asset.title });
+  if (uploadResult.failures === 0) return savedMessage;
+  return uploadResult.failureReasons.length > 0
+    ? t('photos.saveWarningWithReason', { saved: savedMessage, count: uploadResult.failures, reason: uploadResult.failureReasons.join(' ') })
+    : t('photos.saveWarning', { saved: savedMessage, count: uploadResult.failures });
 }
 
 function uniqueFailureReasons(reasons: string[]): string[] {

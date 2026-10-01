@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { tick } from 'svelte';
   import Building2 from '@lucide/svelte/icons/building-2';
@@ -170,7 +171,7 @@
       }
       handleOpenChange(false);
     } catch (caught) {
-      createError = caught instanceof Error ? caught.message : 'Could not create workspace.';
+      createError = caught instanceof Error ? caught.message : t('web.WorkspaceContextSwitcher.couldNotCreateWorkspace');
     } finally {
       creating = false;
     }
@@ -208,7 +209,7 @@
         </span>
         {#if tenants.length > 0}
           <Button.Root variant="ghost" class={mobile ? 'context-switch-action' : undefined} onclick={() => { showingTenants = !showingTenants; }}>
-            {showingTenants ? 'Back' : 'Switch tenant'}
+            {showingTenants ? t('web.WorkspaceContextSwitcher.back') : t('web.WorkspaceContextSwitcher.switchTenant')}
           </Button.Root>
         {/if}
       </div>
@@ -217,7 +218,7 @@
         <form class="context-create-form" onsubmit={(event) => { event.preventDefault(); void submitCreate(); }}>
           {#if createMode === 'tenant_and_inventory'}
             <div class="field-stack">
-              <Label for="context-tenant-name">Tenant name</Label>
+              <Label for="context-tenant-name">{t('web.WorkspaceContextSwitcher.tenantName')}</Label>
               <Input
                 id="context-tenant-name"
                 bind:value={tenantDraft}
@@ -228,7 +229,7 @@
             </div>
           {/if}
           <div class="field-stack">
-            <Label for="context-inventory-name">Inventory name</Label>
+            <Label for="context-inventory-name">{t('web.WorkspaceContextSwitcher.inventoryName')}</Label>
             <Input
               id="context-inventory-name"
               bind:value={inventoryDraft}
@@ -239,13 +240,13 @@
           </div>
           {#if createError}<p class="form-error" role="alert">{createError}</p>{/if}
           <div class="context-create-actions">
-            <Button.Root type="button" variant="ghost" onclick={cancelCreate}>Cancel</Button.Root>
-            <Button.Root type="submit" disabled={creating}>{creating ? 'Creating...' : createMode === 'tenant_and_inventory' ? 'Create workspace' : 'Create inventory'}</Button.Root>
+            <Button.Root type="button" variant="ghost" onclick={cancelCreate}>{t('web.WorkspaceContextSwitcher.cancel')}</Button.Root>
+            <Button.Root type="submit" disabled={creating}>{creating ? t('web.WorkspaceContextSwitcher.creating') : createMode === 'tenant_and_inventory' ? t('web.WorkspaceContextSwitcher.createWorkspace') : t('web.WorkspaceContextSwitcher.createInventory')}</Button.Root>
           </div>
         </form>
       {:else if showingTenants}
-        <p class="context-section-label">Tenants</p>
-        <div class="context-option-list" aria-label="Tenants">
+        <p class="context-section-label">{t('web.WorkspaceContextSwitcher.tenants')}</p>
+        <div class="context-option-list" aria-label={t('web.WorkspaceContextSwitcher.tenants')}>
           {#each tenantOptions as tenant}
             <Button.Root
               variant={tenant.selected ? 'secondary' : 'ghost'}
@@ -262,11 +263,11 @@
           {/each}
         </div>
         {#if canCreateTenant}
-          <Button.Root variant="ghost" class="context-create-button" onclick={openTenantCreate}>New tenant</Button.Root>
+          <Button.Root variant="ghost" class="context-create-button" onclick={openTenantCreate}>{t('web.WorkspaceContextSwitcher.newTenant')}</Button.Root>
         {/if}
       {:else if inventoryOptions.length > 0}
-        <p class="context-section-label">Inventories</p>
-        <div class="context-option-list" aria-label="Inventories">
+        <p class="context-section-label">{t('web.WorkspaceContextSwitcher.inventories')}</p>
+        <div class="context-option-list" aria-label={t('web.WorkspaceContextSwitcher.inventories')}>
           {#each inventoryOptions as inventory}
             <Button.Root
               href={inventory.href}
@@ -285,12 +286,12 @@
           {/each}
         </div>
         {#if canCreateInventoryInSelectedTenant}
-          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>New inventory</Button.Root>
+          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>{t('web.WorkspaceContextSwitcher.newInventory')}</Button.Root>
         {/if}
       {:else}
         <p class="muted small-copy">{presentation.emptyInventoryMessage}</p>
         {#if canCreateInventoryInSelectedTenant}
-          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>New inventory</Button.Root>
+          <Button.Root variant="ghost" class="context-create-button" onclick={openInventoryCreate}>{t('web.WorkspaceContextSwitcher.newInventory')}</Button.Root>
         {/if}
       {/if}
 {/snippet}
@@ -314,8 +315,8 @@
         onOpenAutoFocus={(event) => { event.preventDefault(); void focusPanel(); }}
       >
         <Sheet.Header class="context-sheet-header">
-          <Sheet.Title>Inventory context</Sheet.Title>
-          <Sheet.Description class="sr-only">Choose the tenant and inventory to use.</Sheet.Description>
+          <Sheet.Title>{t('web.WorkspaceContextSwitcher.inventoryContext')}</Sheet.Title>
+          <Sheet.Description class="sr-only">{t('web.WorkspaceContextSwitcher.chooseTheTenantAndInventoryToUse')}</Sheet.Description>
         </Sheet.Header>
         <div class="grid min-h-0 gap-2.5 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {@render contextOptions()}

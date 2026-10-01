@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   export type ChoiceGridOption = {
     value: string;
     label: string;
@@ -14,7 +15,7 @@
     label,
     options,
     selectedValues,
-    emptyMessage = 'No choices available.',
+    emptyMessage = t('web.ChoiceGrid.noChoicesAvailable'),
     onSelect
   }: {
     label: string;

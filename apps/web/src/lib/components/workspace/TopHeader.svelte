@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { Snippet } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Search from '@lucide/svelte/icons/search';
@@ -168,8 +169,8 @@
         <Input
           bind:ref={searchInput}
           bind:value={query}
-          placeholder="Search this inventory"
-          aria-label="Search this inventory"
+          placeholder={t('web.TopHeader.searchThisInventory')}
+          aria-label={t('web.TopHeader.searchThisInventory')}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={visibleSuggestions.length > 0}
@@ -179,7 +180,7 @@
           oninput={() => { activeSuggestionIndex = -1; }}
           onkeydown={handleSearchKeydown}
         />
-        <Button.Root type="submit" variant="ghost" size="icon" aria-label="Run search"><Search /></Button.Root>
+        <Button.Root type="submit" variant="ghost" size="icon" aria-label={t('web.TopHeader.runSearch')}><Search /></Button.Root>
       </form>
       <SearchSuggestions
         id="global-search-suggestions"
@@ -195,8 +196,8 @@
       />
     </div>
   {:else if inventory}
-    <p class="desktop-header-context" aria-label={`Current inventory: ${inventory.name}`}>
-      <small>Current inventory</small>
+    <p class="desktop-header-context" aria-label={t('web.TopHeader.currentInventory2', { name: String(inventory.name) })}>
+      <small>{t('web.TopHeader.currentInventory')}</small>
       <strong>{inventory.name}</strong>
     </p>
   {/if}

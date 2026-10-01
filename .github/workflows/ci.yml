@@ -204,6 +204,11 @@ jobs:
         run: pnpm --dir apps/web exec playwright install --with-deps chromium
       - name: Exercise conversation settings
         run: pnpm --dir apps/web exec playwright test conversation-workspace.spec.ts inventory-export.spec.ts expiration-workspace.spec.ts
+      - name: Exercise typed conversation in English, expanded text and RTL
+        run: |
+          for locale in en-US en-XA ar-XB; do
+            VITE_STUFF_STASH_UI_LOCALE="$locale" pnpm --dir apps/web exec playwright test inventory-conversation.spec.ts --output "test-results/localization-$locale"
+          done
       - name: Retain browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { Snippet } from 'svelte';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
   import X from '@lucide/svelte/icons/x';
@@ -14,7 +15,7 @@
     busy = false,
     dismissible = true,
     closeHref,
-    closeLabel = 'Close',
+    closeLabel = t('web.WorkspaceTaskSheet.close'),
     initialFocusSelector,
     onCloseLink,
     onCloseAutoFocus,
@@ -63,9 +64,7 @@
       {#if description}<Sheet.Description>{description}</Sheet.Description>{/if}
       {#if busy}
         <p class="workspace-surface-progress mt-2 flex min-h-5 items-center gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-          <LoaderCircle class="size-4 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          Saving changes…
-        </p>
+          <LoaderCircle class="size-4 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" /> {t('web.WorkspaceTaskSheet.savingChanges')} </p>
       {/if}
     </Sheet.Header>
     {#if closeHref && !busy && dismissible}

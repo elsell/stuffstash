@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset, AssetLifecycleFilter, LocationAsset } from '$lib/domain/inventory';
 import { workspaceRouteHref } from './workspaceRoute';
 
@@ -88,58 +89,58 @@ export function locationRowHref(asset: Asset): string {
 }
 
 export function visibleAssetCountLabel(count: number): string {
-  return `${count} visible ${count === 1 ? 'asset' : 'assets'}`;
+  return t('assets.visibleCount', { count });
 }
 
 export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter): HomeHeadingPresentation {
   if (lifecycleState === 'archived') {
     return {
-      title: 'Archived assets',
-      description: 'Assets removed from active browsing.'
+      title: t('web.workspaceBrowseNavigation.archivedAssets'),
+      description: t('web.workspaceBrowseNavigation.assetsRemovedFromActiveBrowsing')
     };
   }
   return {
-    title: 'Home',
-    description: 'Recently changed and the places where your things live.'
+    title: t('web.workspaceBrowseNavigation.home'),
+    description: t('web.workspaceBrowseNavigation.recentlyChangedAndThePlacesWhereYourThingsLive')
   };
 }
 
 export function homeLifecycleOptions(tenantId: string | null, inventoryId: string | null): HomeLifecycleOption[] {
   return [
-    { value: 'active', label: 'Active', href: homeLifecycleHref(tenantId, inventoryId, 'active') },
-    { value: 'archived', label: 'Archived', href: homeLifecycleHref(tenantId, inventoryId, 'archived') }
+    { value: 'active', label: t('web.workspaceBrowseNavigation.active'), href: homeLifecycleHref(tenantId, inventoryId, 'active') },
+    { value: 'archived', label: t('web.workspaceBrowseNavigation.archived'), href: homeLifecycleHref(tenantId, inventoryId, 'archived') }
   ];
 }
 
 export function homeRecentEmptyState(): HomeEmptyStatePresentation {
-  return { message: 'No items or containers yet.' };
+  return { message: t('web.workspaceBrowseNavigation.noItemsOrContainersYet') };
 }
 
 export function homeArchivedEmptyState(): HomeEmptyStatePresentation {
-  return { title: 'No archived assets' };
+  return { title: t('web.workspaceBrowseNavigation.noArchivedAssets') };
 }
 
 export function homeLocationsEmptyState(): HomeEmptyStatePresentation {
   return {
-    title: 'No locations yet',
-    message: 'Locations make browsing easier, but you can capture an item now.',
-    actionLabel: 'Add first location',
-    secondaryActionLabel: 'Add item'
+    title: t('web.workspaceBrowseNavigation.noLocationsYet'),
+    message: t('web.workspaceBrowseNavigation.locationsMakeBrowsingEasierButYouCanCaptureAn'),
+    actionLabel: t('web.workspaceBrowseNavigation.addFirstLocation'),
+    secondaryActionLabel: t('web.workspaceBrowseNavigation.addItem')
   };
 }
 
 export function homeCreateLocationDenied(): HomeDeniedPresentation {
   return {
     id: 'home-add-location-denied',
-    message: 'Creating locations is unavailable for this inventory.'
+    message: t('web.workspaceBrowseNavigation.creatingLocationsIsUnavailableForThisInventory')
   };
 }
 
 export function locationEmptyState(canCreateAsset: boolean): LocationEmptyStatePresentation {
   return {
-    title: 'No stuff here yet',
-    message: canCreateAsset ? 'Add an item or move existing stuff into this location.' : 'This location is empty.',
-    actionLabel: 'Add item here',
-    deniedMessage: 'Adding items is unavailable for this inventory.'
+    title: t('web.workspaceBrowseNavigation.noStuffHereYet'),
+    message: canCreateAsset ? t('web.workspaceBrowseNavigation.addAnItemOrMoveExistingStuffIntoThis') : t('web.workspaceBrowseNavigation.thisLocationIsEmpty'),
+    actionLabel: t('web.workspaceBrowseNavigation.addItemHere'),
+    deniedMessage: t('web.workspaceBrowseNavigation.addingItemsIsUnavailableForThisInventory')
   };
 }

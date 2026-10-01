@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Label from '$lib/components/ui/label/index.js';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
@@ -28,8 +29,8 @@
   let alive = true;
   onDestroy(() => { alive = false; });
   const budgets = [
-    { key: 'toolCalls', label: 'Tool calls per turn' }, { key: 'modelCalls', label: 'Model calls per turn' },
-    { key: 'elapsedSeconds', label: 'Processing time per turn (seconds)' }, { key: 'followUpTurns', label: 'Follow-up turns' }
+    { key: 'toolCalls', label: t('web.WorkflowEditor.toolCallsPerTurn') }, { key: 'modelCalls', label: t('web.WorkflowEditor.modelCallsPerTurn') },
+    { key: 'elapsedSeconds', label: t('web.WorkflowEditor.processingTimePerTurnSeconds') }, { key: 'followUpTurns', label: t('web.WorkflowEditor.followUpTurns') }
   ] as const;
   async function save(event: SubmitEvent) {
     event.preventDefault();
@@ -37,37 +38,37 @@
     saving = true; message = ''; conflict = false; invalid = false;
     try {
       await onSave($state.snapshot(draft));
-      if (alive) message = 'Draft saved. Run test cases before activating it.';
+      if (alive) message = t('web.WorkflowEditor.draftSavedRunTestCasesBeforeActivatingIt');
     } catch (error) {
       if (!alive) return;
       invalid = error instanceof ConversationFailure && error.kind === 'invalid';
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'A newer revision exists. Your edits are still here. Load the latest revision to compare.'
+      message = conflict ? t('web.WorkflowEditor.aNewerRevisionExistsYourEditsAreStillHere')
         : error instanceof ConversationFailure && ['forbidden', 'unauthenticated'].includes(error.kind)
-          ? 'You no longer have access to save this workflow.'
+          ? t('web.WorkflowEditor.youNoLongerHaveAccessToSaveThisWorkflow')
           : error instanceof ConversationFailure && error.kind === 'invalid'
-            ? 'These settings could not be saved. Check the values against your server’s configured limits.'
-            : 'Could not save the draft. Your edits are still here; try again.';
+            ? t('web.WorkflowEditor.theseSettingsCouldNotBeSavedCheckTheValues')
+            : t('web.WorkflowEditor.couldNotSaveTheDraftYourEditsAreStill');
       if (invalid) { await tick(); if (alive) errorSummary?.focus(); }
     } finally { if (alive) saving = false; }
   }
 </script>
 
 <form class="conversation-editor" onsubmit={save}>
-  <header><h2>Workflow settings</h2><p>Choose a model and give it guidance for your inventory. Saving creates a draft.</p></header>
-  <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
-  <WorkflowSelect id="provider-model" label="Model profile" value={draft.providerProfileId ?? ''}
+  <header><h2>{t('web.WorkflowEditor.workflowSettings')}</h2><p>{t('web.WorkflowEditor.chooseAModelAndGiveItGuidanceForYour')}</p></header>
+  <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.workflowName')}<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
+  <WorkflowSelect id="provider-model" label={t('web.WorkflowEditor.modelProfile')} value={draft.providerProfileId ?? ''}
     disabled={saving || disabled}
     options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
       ...(draft.providerProfileId && !providers.some(provider => provider.id === draft.providerProfileId) ? [{ value: draft.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
     onChange={value => { draft.providerProfileId = value || null; }} />
-  <Label.Root class="grid gap-2 text-sm">Additional instructions<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
-  <details><summary>Conversation limits</summary>
+  <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.additionalInstructions')}<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
+  <details><summary>{t('web.WorkflowEditor.conversationLimits')}</summary>
     <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving || disabled} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
-    <p class="help">Call and processing limits apply to each turn. Time spent waiting for you does not count. Follow-up turns limit the conversation. Values must fit your server’s configured maximums.</p>
+    <p class="help">{t('web.WorkflowEditor.callAndProcessingLimitsApplyToEachTurnTime')}</p>
   </details>
-  <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
+  <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? t('web.WorkflowEditor.saving') : t('web.WorkflowEditor.saveDraft')}</Button.Root>
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.WorkflowEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p bind:this={errorSummary} tabindex="-1" role={invalid ? "alert" : "status"} aria-live="polite">{message}</p>
 </form>

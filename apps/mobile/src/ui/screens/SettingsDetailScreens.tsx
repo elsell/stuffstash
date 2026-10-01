@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerQuery } from '../serverState/useMobileServerQuery';
@@ -30,7 +31,7 @@ export function AccountSettingsScreen({
   const feedback = useAppFeedback();
   const { styles } = useSettingsListStyles();
   const principal = useMobileServerQuery({ key: mobileQueryKeys.principal, query: signal => settingsQuery.getPrincipal({ signal }) });
-  const principalLabel = principal.data?.email ?? 'Current account';
+  const principalLabel = principal.data?.email ?? t('mobile.SettingsDetailScreens.currentAccount');
   const capturePresentation = useTaskPresentation(settingsQuery, principal.data?.id ?? '');
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
@@ -44,7 +45,7 @@ export function AccountSettingsScreen({
     } catch (error) {
       if (canPresent()) feedback.showNotice({
         tone: 'error',
-        title: 'Could not sign out',
+        title: t('mobile.SettingsDetailScreens.couldNotSignOut'),
         message: readableError(error)
       });
       workingRef.current = false;
@@ -54,14 +55,14 @@ export function AccountSettingsScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : 'Could not load account details. You can retry or sign out.'} onRetry={async () => { await principal.refetch(); }} />
-          <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
-            <SettingsValueRow label="Signed in as" value={principalLabel} />
+      <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : t('mobile.SettingsDetailScreens.couldNotLoadAccountDetailsYouCanRetryOr')} onRetry={async () => { await principal.refetch(); }} />
+          <SettingsSection footer={t('mobile.SettingsDetailScreens.signingOutKeepsThisServerOnYourDeviceSo')}>
+            <SettingsValueRow label={t('mobile.SettingsDetailScreens.signedInAs')} value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
             <SettingsActionRow
               disabled={working}
-              label={working ? 'Signing Out…' : 'Sign Out'}
+              label={working ? t('mobile.SettingsDetailScreens.signingOut') : t('mobile.SettingsDetailScreens.signOut')}
               onPress={() => confirmSignOut(principalLabel, ownConfirmation(capturePresentation(), signOut))}
             />
           </SettingsSection>
@@ -72,7 +73,7 @@ export function AccountSettingsScreen({
 export function AppearanceSettingsScreen() {
   const { styles } = useSettingsListStyles();
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-    <SettingsSection footer="System follows your device’s appearance setting.">
+    <SettingsSection footer={t('mobile.SettingsDetailScreens.systemFollowsYourDeviceSAppearanceSetting')}>
       <SettingsAppearanceRow />
     </SettingsSection>
   </ScrollView>;
@@ -101,7 +102,7 @@ export function ConnectionSettingsScreen({
     } catch (error) {
       if (canPresent()) feedback.showNotice({
         tone: 'error',
-        title: 'Could not change server',
+        title: t('mobile.SettingsDetailScreens.couldNotChangeServer'),
         message: readableError(error)
       });
       workingRef.current = false;
@@ -112,17 +113,17 @@ export function ConnectionSettingsScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsSection
-        footer="This server determines where the app signs in and stores your Stuff Stash data."
-        title="Current Server"
+        footer={t('mobile.SettingsDetailScreens.thisServerDeterminesWhereTheAppSignsInAnd')}
+        title={t('mobile.SettingsDetailScreens.currentServer')}
       >
-        <SettingsValueRow label="Server" value={serverHostname(diagnostics.apiBaseUrl)} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.server')} value={serverHostname(diagnostics.apiBaseUrl)} />
         <SettingsSeparator />
-        <SettingsValueRow label="Address" value={diagnostics.apiBaseUrl} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.address')} value={diagnostics.apiBaseUrl} />
       </SettingsSection>
-      <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
+      <SettingsSection footer={t('mobile.SettingsDetailScreens.changingServersSignsYouOutAndForgetsThisServer')}>
         <SettingsActionRow
           disabled={working}
-          label={working ? 'Changing Server…' : 'Change Server'}
+          label={working ? t('mobile.SettingsDetailScreens.changingServer') : t('mobile.SettingsDetailScreens.changeServer')}
           onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, ownConfirmation(capturePresentation(), changeServer))}
         />
       </SettingsSection>
@@ -137,23 +138,23 @@ export function DiagnosticsSettingsScreen({ settingsQuery }: { readonly settings
   const scope = useMobileInventoryServerQuery({ key: mobileQueryKeys.settingsScope, query: signal => settingsQuery.getSelectedScope({ signal }) });
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsSection title="Connection">
-        <SettingsValueRow label="API URL" value={diagnostics.apiBaseUrl} />
+      <SettingsSection title={t('mobile.SettingsDetailScreens.connection')}>
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.aPIURL')} value={diagnostics.apiBaseUrl} />
         <SettingsSeparator />
-        <SettingsValueRow label="Authentication" value={authenticationLabel(diagnostics.authenticationMode)} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.authentication')} value={authenticationLabel(diagnostics.authenticationMode)} />
       </SettingsSection>
-      <SettingsSection title="Identity">
-        <DiagnosticIdentity label="Principal ID" task="account identity"
+      <SettingsSection title={t('mobile.SettingsDetailScreens.identity')}>
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.principalID')} task="account"
           value={isAccessFailure(principal.error) ? undefined : principal.data?.id}
           pending={principal.isPending} failed={principal.isError} retrying={principal.isFetching}
           onRetry={async () => { await principal.refetch({ cancelRefetch: false }); }} />
         <SettingsSeparator />
-        <DiagnosticIdentity label="Tenant ID" task="household identity" value={scope.data?.tenant.id}
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.tenantID')} task="household" value={scope.data?.tenant.id}
           pending={scope.isPending} failed={scope.isError} retrying={scope.isFetching}
           onRetry={async () => { await scope.refetch({ cancelRefetch: false }); }} />
       </SettingsSection>
-      <SettingsSection title="Application">
-        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+      <SettingsSection title={t('mobile.SettingsDetailScreens.application')}>
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.version')} value={diagnostics.appVersion} />
       </SettingsSection>
     </ScrollView>
   );
@@ -165,55 +166,55 @@ export function AboutSettingsScreen({ settingsQuery }: { readonly settingsQuery:
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <View style={styles.detailHeader}>
-        <Text accessibilityRole="header" style={styles.detailTitle}>Stuff Stash</Text>
-        <Text style={styles.detailSubtitle}>A calm, flexible home inventory for knowing what you have and where it lives.</Text>
+        <Text accessibilityRole="header" style={styles.detailTitle}>{t('mobile.SettingsDetailScreens.stuffStash')}</Text>
+        <Text style={styles.detailSubtitle}>{t('mobile.SettingsDetailScreens.aCalmFlexibleHomeInventoryForKnowingWhatYou')}</Text>
       </View>
       <SettingsSection>
-        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.version')} value={diagnostics.appVersion} />
       </SettingsSection>
     </ScrollView>
   );
 }
 
 function DiagnosticIdentity({ label, task, value, pending, failed, retrying, onRetry }: {
-  readonly label: string; readonly task: string; readonly value?: string;
+  readonly label: string; readonly task: 'account' | 'household'; readonly value?: string;
   readonly pending: boolean; readonly failed: boolean; readonly retrying: boolean;
   readonly onRetry: () => Promise<void>;
 }) {
   const { styles } = useSettingsListStyles();
   return <View>
-    {pending ? <SettingsLoadingRow label={`Loading ${task}`} /> : <SettingsValueRow label={label} value={value || 'Unavailable'} />}
+    {pending ? <SettingsLoadingRow label={t(`identity.${task}.loading`)} /> : <SettingsValueRow label={label} value={value || t('mobile.SettingsDetailScreens.unavailable')} />}
     {failed ? <>
-      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? `Could not refresh ${task}. Previously loaded value is shown.` : `Could not load ${task}.`}</Text>
-      <NativeCommandButton label={retrying ? `Retrying ${task}…` : `Retry ${task}`} disabled={retrying} onPress={() => void onRetry()} />
+      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? t(`identity.${task}.refreshFailed`) : t(`identity.${task}.loadFailed`)}</Text>
+      <NativeCommandButton label={retrying ? t(`identity.${task}.retrying`) : t(`identity.${task}.retry`)} disabled={retrying} onPress={() => void onRetry()} />
     </> : null}
   </View>;
 }
 
 function confirmSignOut(label: string, onSignOut: () => Promise<void>): void {
-  Alert.alert('Sign out?', `You’ll need to sign in again as ${label}. This Stuff Stash server will stay saved on your device.`, [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Sign Out', onPress: () => void onSignOut() }
+  Alert.alert(t('mobile.SettingsDetailScreens.signOut2'), t('mobile.SettingsDetailScreens.youLlNeedToSignInAgainAsThis', { label: String(label) }), [
+    { text: t('mobile.SettingsDetailScreens.cancel'), style: 'cancel' },
+    { text: t('mobile.SettingsDetailScreens.signOut'), onPress: () => void onSignOut() }
   ]);
 }
 
 function confirmChangeServer(serverUrl: string, onChangeServer: () => Promise<void>): void {
   Alert.alert(
-    'Change Stuff Stash server?',
-    `You’ll be signed out of ${serverHostname(serverUrl)}, and this device will forget its saved server and household selection. Your Stuff Stash data won’t be deleted.`,
+    t('mobile.SettingsDetailScreens.changeStuffStashServer'),
+    t('mobile.SettingsDetailScreens.youLlBeSignedOutOfAndThisDevice', { value: String(serverHostname(serverUrl)) }),
     [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Change Server', onPress: () => void onChangeServer() }
+      { text: t('mobile.SettingsDetailScreens.cancel'), style: 'cancel' },
+      { text: t('mobile.SettingsDetailScreens.changeServer'), onPress: () => void onChangeServer() }
     ]
   );
 }
 
 function authenticationLabel(value: SettingsViewModel['authenticationMode']): string {
-  return value === 'oidc-sso' ? 'OIDC SSO' : 'Not configured';
+  return value === 'oidc-sso' ? t('mobile.SettingsDetailScreens.oIDCSSO') : t('mobile.SettingsDetailScreens.notConfigured');
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'The action failed safely. Try again.';
+  return error instanceof Error ? error.message : t('mobile.SettingsDetailScreens.theActionFailedSafelyTryAgain');
 }
 
 

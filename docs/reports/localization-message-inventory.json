@@ -1,0 +1,467 @@
+{
+  "purpose": "Remaining literal-message candidates for manual classification. Includes technical errors and constants; not a test-cell count or proof of a product defect.",
+  "reviewedClassifications": [
+    {
+      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "strings": [
+        "Enter a message of up to 8,000 characters.",
+        "Review fields could not be validated.",
+        "Too many voice plan edits were provided.",
+        "Voice plan edits could not be reviewed safely.",
+        "Photo size is required before approving this change.",
+        "Action plan review is no longer available."
+      ],
+      "classification": "technical-diagnostic",
+      "reason": "Production callers replace these errors with cataloged guidance; translating them would not change visible copy.",
+      "evidence": [
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve/retry/send handlers",
+        "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Thrown transport/validation errors become typed failure categories or are caught by InventoryConversation; raw exception messages are not rendered.",
+      "evidence": [
+        "apps/web/src/lib/application/inventoryConversation.ts: send, decide, fail",
+        "apps/web/src/lib/components/workspace/InventoryConversationPanel.svelte: view.error"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/testing/InventoryApiClient.ts",
+      "classification": "test-fixture",
+      "reason": "In-memory test API data and diagnostics are not production product copy."
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
+      "classification": "benchmark-fixture",
+      "reason": "Benchmark corpus and case labels are not production product copy."
+    }
+  ],
+  "files": [
+    {
+      "file": "apps/mobile/src/adapters/voice/WebSocketRealtimeVoiceTransport.ts",
+      "candidates": 61
+    },
+    {
+      "file": "apps/web/src/lib/adapters/memory/seededInventoryRepository.ts",
+      "candidates": 31
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/testing/InventoryApiClient.ts",
+      "candidates": 25
+    },
+    {
+      "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
+      "candidates": 15
+    },
+    {
+      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "candidates": 14
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/button/button.svelte",
+      "candidates": 14
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
+      "candidates": 12
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/HouseholdSetup.ts",
+      "candidates": 9
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/OnboardingPresentation.ts",
+      "candidates": 7
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/badge/badge.svelte",
+      "candidates": 7
+    },
+    {
+      "file": "apps/mobile/src/adapters/auth/ApiMobileAuthMetadataGateway.ts",
+      "candidates": 6
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/ExpoVoiceAudioCore.ts",
+      "candidates": 6
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/OnboardingCommand.ts",
+      "candidates": 6
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/AssetLifecyclePresentation.ts",
+      "candidates": 6
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
+      "candidates": 6
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/BrowsePanel.svelte",
+      "candidates": 6
+    },
+    {
+      "file": "apps/mobile/src/adapters/auth/ExpoOidcNativeClientCore.ts",
+      "candidates": 5
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetCheckoutCommand.ts",
+      "candidates": 5
+    },
+    {
+      "file": "apps/mobile/src/application/auth/MobileAuthSession.ts",
+      "candidates": 5
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
+      "candidates": 5
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetDetailReads.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "candidates": 4
+    },
+    {
+      "file": "apps/web/src/lib/auth.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/importMessagePresentation.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/mobile/src/adapters/expiration/ApiExpirationRepository.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/adapters/uploads/ExpoDirectUploadTransport.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/application/customization/CustomizationEditorCommands.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/application/onboarding/ConnectionProfile.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/application/voice/VoiceTextSafety.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/config/mobileRuntimeConfigCore.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/boundedTaskScheduler.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert/alert.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/tabs/tabs-list.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/runtimeConfig.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetBrowse.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/adapters/settings/ExpoSettingsDiagnosticsProvider.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/adapters/shared/ReadPageGuard.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/app/expiration-filters.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetDetailQuery.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/home/HomeDashboardQuery.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/inventories/CreateWorkspace.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/notifications/NotificationPreferencesSession.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/providerProfiles/TestProviderProfileCommand.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/sharing/InventorySharing.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/domain/inventories/InventorySummary.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/AppServicesContext.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/theme/tokens.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/cursorPagination.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/inventoryMapper.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/adapters/api/stuffStashExpirationRepository.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/adapters/query/conversationSession.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationInbox.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationPreferencesSession.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/application/settingsManagement.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/application/workspaceImportRequest.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/application/workspaceSafeError.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/action-surface/WorkspaceConfirmationDialog.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/TopHeader.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/WorkspaceContextSwitcher.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/test/BitsScrollLockHarness.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/adapters/customization/ApiCustomizationRepository.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetCommands.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetPhotos.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/network/TimeoutFetch.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/providerProfiles/ApiProviderProfileRepository.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/serverState/MobileQueryClient.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/uploads/DirectUploadPolicy.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/adapters/voice/DevelopmentVoiceAudioRecorder.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetCheckoutHistoryQuery.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetLifecycleCommand.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/assets/DeleteAssetPhotoCommand.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/shared/ReadRequest.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/domain/assets/AssetSummary.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/domain/customization/Customization.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/components/PhotoViewerActionButton.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/AddDestinationTask.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/AssetTagSelectionTask.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/HomeReturnTaskPresentation.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/InventoryInvitationLinkContext.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/MobileServerStateProvider.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/AddAssetInitialParent.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/application/expirationList.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationInboxBatch.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/application/workspaceAddFocus.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/action-surface/WorkspaceTaskSheet.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/AddAssetPhotosSection.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/AssetDetail.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/HomeWorkspace.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ParentTargetPicker.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/AssetTypeSettingsManager.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
+      "candidates": 1
+    }
+  ]
+}

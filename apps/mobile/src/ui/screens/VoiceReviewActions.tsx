@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeSheetActions } from '../components/NativeSheetActions';
 import { useFocusedSheetActions } from '../components/useFocusedSheetActions';
 import { useVoiceInteractionState } from '../navigation/VoiceInteractionStateContext';
@@ -15,8 +16,8 @@ function ReviewDecision({ planId }: { readonly planId: string }) {
   const { titleEditor, photoDrafts, commandDraftState, approveRealtimeActionPlan, cancelRealtimeActionPlan } = useVoiceInteractionState();
   const drafts = commandDraftState.planId === planId ? commandDraftState.drafts : {};
   const actions = useFocusedSheetActions({
-    primaryLabel: 'Approve', primaryAccessibilityLabel: 'Approve voice change',
-    secondaryLabel: 'Cancel', secondaryAccessibilityLabel: 'Cancel voice change',
+    primaryLabel: t('mobile.VoiceReviewActions.approve'), primaryAccessibilityLabel: t('mobile.VoiceReviewActions.approveVoiceChange'),
+    secondaryLabel: t('mobile.VoiceReviewActions.cancel'), secondaryAccessibilityLabel: t('mobile.VoiceReviewActions.cancelVoiceChange'),
     disabled: !!titleEditor && !titleEditor.value.trim(),
     onApply: () => { void approveRealtimeActionPlan(planId, photoDrafts, voicePlanCommandEdits(drafts)); },
     onBack: () => { void cancelRealtimeActionPlan(planId); }

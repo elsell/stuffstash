@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Plus from '@lucide/svelte/icons/plus';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -130,14 +131,14 @@
 </script>
 
 <fieldset class="tag-selector">
-  <legend>Tags</legend>
+  <legend>{t('web.AssetTagSelector.tags')}</legend>
   {#if hasSelection}
     <div class="selected-tag-summary">
       <AssetTagChips tags={selectedExistingTags} compact />
       {#each newTags as tag, index}
         <span class={`tag-chip pending-tag${tag.color ? ' tag-chip-colored' : ''}`} style={tag.color ? `--tag-color: ${tag.color}` : undefined}>
           <span>{tag.displayName}</span>
-          <Button.Root type="button" variant="ghost" size="icon-sm" class="size-11" aria-label={`Remove ${tag.displayName}`} onclick={() => removeNewTag(index)}>
+          <Button.Root type="button" variant="ghost" size="icon-sm" class="size-11" aria-label={t('web.AssetTagSelector.remove', { displayName: String(tag.displayName) })} onclick={() => removeNewTag(index)}>
             <X />
           </Button.Root>
         </span>
@@ -146,7 +147,7 @@
   {/if}
 
   {#if tags.length > 0}
-    <div class="tag-options" aria-label="Available tags">
+    <div class="tag-options" aria-label={t('web.AssetTagSelector.availableTags')}>
       {#each availableTags as tag}
         <Button.Root
           type="button"
@@ -162,30 +163,30 @@
     </div>
     {#if tags.length > 12}
       <Button.Root type="button" variant="ghost" class="min-h-11" onclick={() => { allTagsVisible = !allTagsVisible; }}>
-        {allTagsVisible ? 'Show fewer tags' : `Show all ${tags.length} tags`}
+        {allTagsVisible ? t('web.AssetTagSelector.showFewerTags') : t('web.AssetTagSelector.showAllTags', { length: String(tags.length) })}
       </Button.Root>
     {/if}
   {/if}
 
   <div class="new-tag-row">
     <div class="field-stack">
-      <Label for="new-tag-name">New tag</Label>
-      <Input id="new-tag-name" bind:value={newTagName} placeholder="Workshop" />
+      <Label for="new-tag-name">{t('web.AssetTagSelector.newTag')}</Label>
+      <Input id="new-tag-name" bind:value={newTagName} placeholder={t('web.AssetTagSelector.workshop')} />
     </div>
     <div class="field-stack color-field">
-      <Label for="new-tag-color">Color</Label>
+      <Label for="new-tag-color">{t('web.AssetTagSelector.color')}</Label>
       <div class="tag-color-controls">
-        <Input id="new-tag-color" bind:value={newTagColor} placeholder="#2F80ED" />
+        <Input id="new-tag-color" bind:value={newTagColor} placeholder={t('web.AssetTagSelector.2F80ED')} />
         <Input
           id="new-tag-color-picker"
           type="color"
           class="size-11"
           value={colorPickerValue}
-          aria-label="Pick new tag color"
+          aria-label={t('web.AssetTagSelector.pickNewTagColor')}
           onchange={chooseColor}
         />
       </div>
     </div>
-    <Button.Root type="button" variant="outline" class="min-h-11" disabled={!canAddTag} onclick={addTag}><Plus /> Add</Button.Root>
+    <Button.Root type="button" variant="outline" class="min-h-11" disabled={!canAddTag} onclick={addTag}><Plus /> {t('web.AssetTagSelector.add')}</Button.Root>
   </div>
 </fieldset>

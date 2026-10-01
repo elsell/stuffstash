@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { WorkspaceObserver } from '$lib/observability/workspaceObserver';
 import type { ExpirationRepository, ExpirationPage } from '$lib/ports/expirationRepository';
 export interface ExpirationHomeState {page?:ExpirationPage;error:string;}
@@ -17,7 +18,7 @@ export class ExpirationHomeQuery {
    if(controller.signal.aborted)return false;
    this.observer?.record('workspace.expiration_load_failed');
    const denied=typeof error==='object'&&error!==null&&'status'in error&&[401,403,404].includes(Number(error.status));
-   this.update({page:denied?undefined:this.state.page,error:'Expiration could not be refreshed.'});return false;
+   this.update({page:denied?undefined:this.state.page,error:t('web.expirationHome.expirationCouldNotBeRefreshed')});return false;
   }
  }
  private update(state:ExpirationHomeState){this.state=state;this.changed(state);}

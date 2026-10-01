@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Text, View } from 'react-native';
 import { useAppearanceAwarePalette } from '../theme/appearance';
 import { spacing } from '../theme/tokens';
@@ -12,8 +13,8 @@ export function AssetRegionRecovery({ region, isRetrying, onRetry }: {
   const palette = useAppearanceAwarePalette();
   return <View style={{ gap: spacing.sm }}>
     <Text accessibilityRole="alert" style={{ color: palette.text, fontSize: 16 }}>
-      {isRetrying ? `Loading ${region}…` : `Could not load ${region}.`}
+      {isRetrying ? t('mobile.AssetRegionRecovery.loading', { region: String(region) }) : t('mobile.AssetRegionRecovery.couldNotLoad', { region: String(region) })}
     </Text>
-    <NativeCommandButton label={`Retry ${region}`} disabled={isRetrying} onPress={onRetry} />
+    <NativeCommandButton label={t('mobile.AssetRegionRecovery.retry', { region: String(region) })} disabled={isRetrying} onPress={onRetry} />
   </View>;
 }

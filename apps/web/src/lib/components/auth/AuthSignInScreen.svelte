@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import LogIn from '@lucide/svelte/icons/log-in';
   import * as Button from '$lib/components/ui/button/index.js';
   import AuthSurface from './AuthSurface.svelte';
 
   let {
-    title = 'Sign in to Stuff Stash',
-    description = 'Continue to your secure sign-in page. You’ll return here when you’re done.',
+    title = t('web.AuthSignInScreen.signInToStuffStash'),
+    description = t('web.AuthSignInScreen.continueToYourSecureSignInPageYouLl'),
     error = '',
     canSignIn = true,
     onSignIn
@@ -41,7 +42,7 @@
     <div>
       <Button.Root class="signin-button" style="min-height: 48px" size="lg" disabled={!canSignIn || signingIn} onclick={() => { void handleSignIn(); }}>
         <LogIn aria-hidden="true" />
-        {signingIn ? 'Opening sign-in…' : 'Continue to sign in'}
+        {signingIn ? t('web.AuthSignInScreen.openingSignIn') : t('web.AuthSignInScreen.continueToSignIn')}
       </Button.Root>
     </div>
   </div>

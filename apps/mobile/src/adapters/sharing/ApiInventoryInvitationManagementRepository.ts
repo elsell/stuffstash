@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { InventoryAccessInvitation, StuffStashClient } from '@stuff-stash/api-client';
@@ -30,7 +31,7 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
     );
     assertReadActive(request.signal);
     const nextCursor = page.pagination.nextCursor ?? undefined;
-    if (nextCursor && nextCursor === request.cursor) throw new Error('Stuff Stash returned an invalid invitation page.');
+    if (nextCursor && nextCursor === request.cursor) throw new Error(t('recovery.invitationPage'));
     return { items: page.items.map((invitation) => mapSafeInvitation(invitation, scope)), nextCursor };
   }
 
@@ -44,7 +45,7 @@ export class ApiInventoryInvitationManagementRepository implements InventoryInvi
       input
     );
     if (invitation.tenantId !== scope.tenantId || invitation.inventoryId !== scope.inventoryId) {
-      throw new Error('Stuff Stash did not return the one-time invitation link.');
+      throw new Error(t('recovery.invitationLink'));
     }
     if (!invitation.inviteUrl) {
       throw new InventoryInvitationLinkUnavailableError();
@@ -79,7 +80,7 @@ function mapSafeInvitation(
   scope: InventorySharingScope
 ): InventoryInvitationSummary {
   if (invitation.tenantId !== scope.tenantId || invitation.inventoryId !== scope.inventoryId) {
-    throw new Error('Stuff Stash returned an invalid invitation response.');
+    throw new Error(t('recovery.invitationResponse'));
   }
   return {
     id: invitation.id,

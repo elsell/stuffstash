@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { importCountIcon } from './importCountMetrics';
+  import { localization } from '$lib/presentation/localization';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import CircleDashed from '@lucide/svelte/icons/circle-dashed';
   import FileImage from '@lucide/svelte/icons/file-image';
@@ -28,13 +30,12 @@
   }
 
   function iconForCell(count: CountCell) {
-    const label = count.label.toLowerCase();
-    if (count.tone === 'warning' || label.includes('warning')) return AlertCircle;
-    if (count.tone === 'action' || label.includes('blocking')) return AlertCircle;
-    if (label.includes('location')) return MapPin;
-    if (label.includes('photo') || label.includes('file')) return FileImage;
-    if (label.includes('asset') || label.includes('record')) return PackageCheck;
-    if (label.includes('skip') || label.includes('duplicate') || count.muted) return CircleDashed;
+    const icon = importCountIcon(count.metric);
+    if (count.tone === 'warning' || count.tone === 'action' || icon === 'issue') return AlertCircle;
+    if (icon === 'location') return MapPin;
+    if (icon === 'attachment') return FileImage;
+    if (icon === 'asset') return PackageCheck;
+    if (icon === 'skipped' || count.muted) return CircleDashed;
     return Rows3;
   }
 </script>
@@ -45,13 +46,13 @@
     {#if isActionable(count)}
       <Button.Root variant="ghost" class={tileClass(count)} onclick={() => actionForCell?.(count)} aria-label={count.actionLabel}>
         <span class="summary-icon"><Icon size={16} aria-hidden="true" /></span>
-        <strong>{count.value}</strong>
+        <strong>{localization.number(count.value)}</strong>
         <span>{count.label}</span>
       </Button.Root>
     {:else}
       <div class={tileClass(count)}>
         <span class="summary-icon"><Icon size={16} aria-hidden="true" /></span>
-        <strong>{count.value}</strong>
+        <strong>{localization.number(count.value)}</strong>
         <span>{count.label}</span>
       </div>
     {/if}

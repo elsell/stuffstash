@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { nativeHeaderActionOptions } from '../components/NativeHeaderActions.ios';
 import type { StackScreenProps } from 'expo-router';
 import { assetOverflowMenuGroups } from './AssetOverflowMenu';
@@ -25,11 +26,11 @@ export function assetHeaderOverflowScreenOptions({
   return {
     headerShown: true as const,
     unstable_headerRightItems: (context): NativeHeaderItem[] => [
-      ...(onEdit ? nativeHeaderActionOptions([{ kind: 'compose', label: 'Edit', disabled,
+      ...(onEdit ? nativeHeaderActionOptions([{ kind: 'compose', label: t('mobile.AssetHeaderOverflowios.edit'), disabled,
         onPress: onEdit }]).unstable_headerRightItems?.(context) ?? [] : []), {
       type: 'menu',
       label: '',
-      accessibilityLabel: `More actions for ${asset.title}`,
+      accessibilityLabel: t('mobile.AssetHeaderOverflowios.moreActionsFor', { title: String(asset.title) }),
       disabled,
       icon: { type: 'sfSymbol', name: 'ellipsis' },
       sharesBackground: true,

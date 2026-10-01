@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	RealtimeVoiceSourceMobile = "mobile_voice"
+	RealtimeVoiceSourceMobile  = "mobile_voice"
+	RealtimeVoiceSourceWebText = "web_text"
 
 	RealtimeVoiceEventTranscriptFinal             = "transcript.final"
 	RealtimeVoiceEventAgentProgress               = "agent.progress"
@@ -136,6 +137,7 @@ type RealtimeVoiceActionPlanExpiration struct {
 }
 
 type RealtimeVoiceActionPlanCommand struct {
+	Changes           []string
 	ExpirationCleared bool
 	Expiration        *RealtimeVoiceActionPlanExpiration
 	ID                string

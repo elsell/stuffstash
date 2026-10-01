@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
 
 export type AssetPhotoViewerModel = {
@@ -31,7 +32,7 @@ export function assetPhotoViewerModel(
 
   return {
     photo: photos[selectedIndex] as AssetPhotoViewModel,
-    positionLabel: `${(selectedIndex + 1).toString()} of ${photos.length.toString()}`,
+    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: String((selectedIndex + 1).toString()), value2: String(photos.length.toString()) }),
     previousPhotoId: photos[selectedIndex - 1]?.id,
     nextPhotoId: photos[selectedIndex + 1]?.id
   };
@@ -64,9 +65,9 @@ export function assetPhotoViewerControls(
     canGoPrevious: model?.previousPhotoId !== undefined,
     canGoNext: model?.nextPhotoId !== undefined,
     canRemove: canRemoveAssetPhoto && model?.photo.id !== undefined,
-    fileLabel: model?.photo.fileName ?? model?.photo.label ?? 'Photo',
+    fileLabel: model?.photo.fileName ?? model?.photo.label ?? t('mobile.AssetPhotoWorkspacePresentation.photo'),
     metadataLabel: assetPhotoMetadataLabel(model?.photo),
-    positionLabel: model?.positionLabel ?? '0 of 0'
+    positionLabel: model?.positionLabel ?? t('mobile.AssetPhotoWorkspacePresentation.0Of0')
   };
 }
 
@@ -80,7 +81,7 @@ export function assetPhotoViewerModelAtIndex(
   }
   return {
     photo,
-    positionLabel: `${(imageIndex + 1).toString()} of ${photos.length.toString()}`,
+    positionLabel: t('mobile.AssetPhotoWorkspacePresentation.of', { value: String((imageIndex + 1).toString()), value2: String(photos.length.toString()) }),
     previousPhotoId: photos[imageIndex - 1]?.id,
     nextPhotoId: photos[imageIndex + 1]?.id
   };
@@ -96,7 +97,7 @@ export function assetPhotoStatusLabel({
   if (index !== 0) {
     return label;
   }
-  return 'First photo';
+  return t('mobile.AssetPhotoWorkspacePresentation.firstPhoto');
 }
 
 export function assetPhotoMetadataLabel(photo: AssetPhotoViewModel | undefined): string | undefined {
@@ -122,11 +123,11 @@ export function photoMetadataLabel(photo: {
 function safeImageContentTypeLabel(contentType: string | undefined): string | undefined {
   switch (contentType?.trim().toLocaleLowerCase()) {
     case 'image/jpeg':
-      return 'JPEG image';
+      return t('mobile.AssetPhotoWorkspacePresentation.jPEGImage');
     case 'image/png':
-      return 'PNG image';
+      return t('mobile.AssetPhotoWorkspacePresentation.pNGImage');
     case 'image/webp':
-      return 'WebP image';
+      return t('mobile.AssetPhotoWorkspacePresentation.webPImage');
     default:
       return undefined;
   }

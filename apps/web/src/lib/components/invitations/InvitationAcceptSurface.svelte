@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Check from '@lucide/svelte/icons/check';
   import LogIn from '@lucide/svelte/icons/log-in';
   import Users from '@lucide/svelte/icons/users';
@@ -30,7 +31,7 @@
 </script>
 
 <svelte:head>
-  <title>Inventory invitation · Stuff Stash</title>
+  <title>{t('web.InvitationAcceptSurface.inventoryInvitationStuffStash')}</title>
 </svelte:head>
 
 <main class="invitation-shell">
@@ -42,29 +43,10 @@
       </div>
       <div class="heading-copy">
         <Card.Title role="heading" aria-level={1}>
-          {#if state === 'loading'}Checking invitation…
-          {:else if state === 'signed_out'}You’ve been invited
-          {:else if state === 'ready' && preview}Join {preview.inventoryName}
-          {:else if state === 'accepted' && preview}You already joined {preview.inventoryName}
-          {:else if state === 'success' && preview}You joined {preview.inventoryName}
-          {:else if state === 'expired'}This invitation expired
-          {:else if state === 'revoked'}This invitation was revoked
-          {:else if state === 'cancelled'}This invitation was cancelled
-          {:else if state === 'email_mismatch'}This invitation is for another account
-          {:else if state === 'unavailable'}Invitation could not be checked
-          {:else}This invitation link is invalid{/if}
+          {#if state === 'loading'}{t('web.InvitationAcceptSurface.checkingInvitation')} {:else if state === 'signed_out'}{t('web.InvitationAcceptSurface.youVeBeenInvited')} {:else if state === 'ready' && preview}{t('web.InvitationAcceptSurface.joinFull', { inventoryName: preview.inventoryName })} {:else if state === 'accepted' && preview}{t('web.InvitationAcceptSurface.youAlreadyJoinedFull', { inventoryName: preview.inventoryName })} {:else if state === 'success' && preview}{t('web.InvitationAcceptSurface.youJoinedFull', { inventoryName: preview.inventoryName })} {:else if state === 'expired'}{t('web.InvitationAcceptSurface.thisInvitationExpired')} {:else if state === 'revoked'}{t('web.InvitationAcceptSurface.thisInvitationWasRevoked')} {:else if state === 'cancelled'}{t('web.InvitationAcceptSurface.thisInvitationWasCancelled')} {:else if state === 'email_mismatch'}{t('web.InvitationAcceptSurface.thisInvitationIsForAnotherAccount')} {:else if state === 'unavailable'}{t('web.InvitationAcceptSurface.invitationCouldNotBeChecked')} {:else}{t('web.InvitationAcceptSurface.thisInvitationLinkIsInvalid')}{/if}
         </Card.Title>
         <Card.Description>
-          {#if state === 'loading'}This will only take a moment.
-          {:else if state === 'signed_out'}Sign in to view the inventory and access level before accepting.
-          {:else if state === 'ready'}Review the details, then accept when you’re ready.
-          {:else if state === 'accepted' || state === 'success'}You can open the inventory now.
-          {:else if state === 'expired'}Ask the inventory owner to send a new invitation.
-          {:else if state === 'revoked'}The inventory owner revoked this invitation. Ask them to send a new one if you still need access.
-          {:else if state === 'cancelled'}The inventory owner cancelled this invitation. Ask them to send a new one if you still need access.
-          {:else if state === 'email_mismatch'}Sign out, then use the account that received the invitation.
-          {:else if state === 'unavailable'}Your access has not changed. Check your connection and try again.
-          {:else}Check that you opened the complete link, or ask for a new invitation.{/if}
+          {#if state === 'loading'}{t('web.InvitationAcceptSurface.thisWillOnlyTakeAMoment')} {:else if state === 'signed_out'}{t('web.InvitationAcceptSurface.signInToViewTheInventoryAndAccessLevel')} {:else if state === 'ready'}{t('web.InvitationAcceptSurface.reviewTheDetailsThenAcceptWhenYouReReady')} {:else if state === 'accepted' || state === 'success'}{t('web.InvitationAcceptSurface.youCanOpenTheInventoryNow')} {:else if state === 'expired'}{t('web.InvitationAcceptSurface.askTheInventoryOwnerToSendANewInvitation')} {:else if state === 'revoked'}{t('web.InvitationAcceptSurface.theInventoryOwnerRevokedThisInvitationAskThemTo')} {:else if state === 'cancelled'}{t('web.InvitationAcceptSurface.theInventoryOwnerCancelledThisInvitationAskThemTo')} {:else if state === 'email_mismatch'}{t('web.InvitationAcceptSurface.signOutThenUseTheAccountThatReceivedThe')} {:else if state === 'unavailable'}{t('web.InvitationAcceptSurface.yourAccessHasNotChangedCheckYourConnectionAnd')} {:else}{t('web.InvitationAcceptSurface.checkThatYouOpenedTheCompleteLinkOrAsk')}{/if}
         </Card.Description>
       </div>
     </Card.Header>
@@ -72,9 +54,9 @@
     {#if preview && ['ready', 'accepted', 'success'].includes(state)}
       <Card.Content>
         <dl class="invitation-details">
-          <div><dt>Inventory</dt><dd>{preview.inventoryName}</dd></div>
-          <div><dt>Access</dt><dd><span class="access-pill">{invitationRelationshipLabel(preview)}</span></dd></div>
-          <div><dt>Invitation expires</dt><dd>{invitationExpirationLabel(preview)}</dd></div>
+          <div><dt>{t('web.InvitationAcceptSurface.inventory')}</dt><dd>{preview.inventoryName}</dd></div>
+          <div><dt>{t('web.InvitationAcceptSurface.access')}</dt><dd><span class="access-pill">{invitationRelationshipLabel(preview)}</span></dd></div>
+          <div><dt>{t('web.InvitationAcceptSurface.invitationExpires')}</dt><dd>{invitationExpirationLabel(preview)}</dd></div>
         </dl>
       </Card.Content>
     {/if}
@@ -82,15 +64,15 @@
     {#if state === 'signed_out' || state === 'email_mismatch' || state === 'ready' || state === 'unavailable' || state === 'accepted' || state === 'success'}
       <Card.Footer class="invitation-actions">
         {#if state === 'signed_out'}
-          <Button.Root size="lg" disabled={busy} onclick={() => { void onSignIn?.(); }}><LogIn aria-hidden="true" />{busy ? 'Opening sign-in…' : 'Continue to sign in'}</Button.Root>
+          <Button.Root size="lg" disabled={busy} onclick={() => { void onSignIn?.(); }}><LogIn aria-hidden="true" />{busy ? t('web.InvitationAcceptSurface.openingSignIn') : t('web.InvitationAcceptSurface.continueToSignIn')}</Button.Root>
         {:else if state === 'email_mismatch'}
-          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onSwitchAccount?.(); }}><LogIn aria-hidden="true" />{busy ? 'Opening sign-in…' : 'Switch account'}</Button.Root>
+          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onSwitchAccount?.(); }}><LogIn aria-hidden="true" />{busy ? t('web.InvitationAcceptSurface.openingSignIn') : t('web.InvitationAcceptSurface.switchAccount')}</Button.Root>
         {:else if state === 'ready'}
-          <Button.Root size="lg" disabled={busy} onclick={() => { void onAccept?.(); }}>{busy ? 'Accepting…' : 'Accept invitation'}</Button.Root>
+          <Button.Root size="lg" disabled={busy} onclick={() => { void onAccept?.(); }}>{busy ? t('web.InvitationAcceptSurface.accepting') : t('web.InvitationAcceptSurface.acceptInvitation')}</Button.Root>
         {:else if state === 'unavailable'}
-          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onRetry?.(); }}>{busy ? 'Checking…' : 'Try again'}</Button.Root>
+          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onRetry?.(); }}>{busy ? t('web.InvitationAcceptSurface.checking') : t('web.InvitationAcceptSurface.tryAgain')}</Button.Root>
         {:else}
-          <Button.Root href={openInventoryHref} size="lg">Open inventory</Button.Root>
+          <Button.Root href={openInventoryHref} size="lg">{t('web.InvitationAcceptSurface.openInventory')}</Button.Root>
         {/if}
       </Card.Footer>
     {/if}

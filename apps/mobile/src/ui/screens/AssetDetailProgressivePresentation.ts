@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {
   AssetDetailViewModel,
   AssetPhotoViewModel
@@ -25,7 +26,7 @@ export function mergeProgressiveAssetDetail(
       containedItemsLabel: contents.containedItemsLabel
     } : {}),
     photos: resolvedPhotos,
-    photoLabel: resolvedPhotos.length > 0 ? 'Photo ready' : 'Needs photo',
+    photoLabel: resolvedPhotos.length > 0 ? t('mobile.AssetDetailProgressivePresentation.photoReady') : t('mobile.AssetDetailProgressivePresentation.needsPhoto'),
     ...(primaryPhoto ? {
       photo: { uri: primaryPhoto.uri, headers: primaryPhoto.headers }
     } : { photo: undefined })

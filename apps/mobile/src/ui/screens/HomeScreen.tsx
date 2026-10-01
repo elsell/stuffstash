@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { type ReactNode } from 'react';
 import { useHomeReturnActions } from './useHomeReturnActions';
@@ -57,8 +58,8 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       if (!shouldNotify()) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Could not refresh Home',
-        message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
+        title: t('mobile.HomeScreen.couldNotRefreshHome'),
+        message: readableError(error, t('mobile.HomeScreen.stuffStashCouldNotRefreshTheMobileHomeScreen'))
       });
     }
   }
@@ -71,7 +72,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       {dashboardState.isPending && !dashboardState.data ? <LoadingState /> : null}
       {dashboardState.isError && !dashboardState.data ? (
         <ErrorState
-          message={readableError(dashboardState.error, 'Stuff Stash could not load the mobile home screen.')}
+          message={readableError(dashboardState.error, t('mobile.HomeScreen.stuffStashCouldNotLoadTheMobileHomeScreen'))}
           onRetry={() => { void dashboardState.refetch(); }}
         />
       ) : null}
@@ -95,7 +96,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={colors.accent} />
-      <Text style={styles.stateText}>Loading Stuff Stash</Text>
+      <Text style={styles.stateText}>{t('mobile.HomeScreen.loadingStuffStash')}</Text>
     </View>
   );
 }
@@ -104,9 +105,9 @@ function ErrorState({ message, onRetry }: { readonly message: string; readonly o
   const styles = createHomeScreenStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.HomeScreen.couldNotLoad')}</Text>
       <Text style={styles.stateText}>{message}</Text>
-      <NativeCommandButton label="Retry loading Home" onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.HomeScreen.retryLoadingHome')} onPress={onRetry} />
     </View>
   );
 }
@@ -190,14 +191,14 @@ function DashboardHeader({
 
       {expirationSection}
       <View style={styles.sectionHeader}>
-        <Text accessibilityRole="header" style={styles.sectionTitle}>Recently changed</Text>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>{t('mobile.HomeScreen.recentlyChanged')}</Text>
         <Pressable
-          accessibilityLabel="View all recently changed assets"
+          accessibilityLabel={t('mobile.HomeScreen.viewAllRecentlyChangedAssets')}
           accessibilityRole="button"
           onPress={() => router.navigate(homeCollectionHref('recent'))}
           style={styles.sectionActionButton}
         >
-          <Text style={styles.sectionAction}>See all</Text>
+          <Text style={styles.sectionAction}>{t('mobile.HomeScreen.seeAll')}</Text>
         </Pressable>
       </View>
       <View style={styles.recentTicker}>
@@ -213,21 +214,21 @@ function DashboardHeader({
           />
         ))}
         {dashboard.recentAssets.length === 0 ? (
-          <Text style={styles.emptyText}>No assets yet.</Text>
+          <Text style={styles.emptyText}>{t('mobile.HomeScreen.noAssetsYet')}</Text>
         ) : null}
       </View>
 
       {dashboard.checkedOutAssets.length > 0 ? (
         <View style={styles.attentionSection}>
           <View style={styles.sectionHeader}>
-            <Text accessibilityRole="header" style={styles.sectionTitle}>Checked out</Text>
+            <Text accessibilityRole="header" style={styles.sectionTitle}>{t('mobile.HomeScreen.checkedOut')}</Text>
             <Pressable
-              accessibilityLabel="View all checked-out assets"
+              accessibilityLabel={t('mobile.HomeScreen.viewAllCheckedOutAssets')}
               accessibilityRole="button"
               onPress={() => router.navigate(homeCollectionHref('checked_out'))}
               style={styles.sectionActionButton}
             >
-              <Text style={styles.sectionAction}>View all</Text>
+              <Text style={styles.sectionAction}>{t('mobile.HomeScreen.viewAll')}</Text>
             </Pressable>
           </View>
           <View style={styles.recentTicker}>
@@ -236,9 +237,9 @@ function DashboardHeader({
                 asset={asset}
                 density="row"
                 footerAction={dashboard.canReturn ? {
-                  accessibilityLabel: `Return ${asset.title}`,
+                  accessibilityLabel: t('mobile.HomeScreen.return', { title: String(asset.title) }),
                   disabled: isReturnDisabled(asset),
-                  label: returningAssetId === asset.id ? 'Returning...' : 'Return',
+                  label: returningAssetId === asset.id ? t('mobile.HomeScreen.returning') : t('mobile.HomeScreen.return2'),
                   onPress: () => void returnAsset(asset)
                 } : undefined}
                 key={asset.id}

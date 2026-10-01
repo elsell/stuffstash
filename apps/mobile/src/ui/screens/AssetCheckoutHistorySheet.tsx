@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -27,7 +28,7 @@ export function AssetCheckoutHistorySheet({
   return (
     <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} contentInsetAdjustmentBehavior="automatic">
       <Text accessibilityRole="header" style={styles.sheetSubtitle}>
-        {state.status === 'closed' ? 'Asset checkout history' : state.assetTitle}
+        {state.status === 'closed' ? t('mobile.AssetCheckoutHistorySheet.assetCheckoutHistory') : state.assetTitle}
       </Text>
       {state.status === 'loading' ? <LoadingHistory /> : null}
       {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}
@@ -43,7 +44,7 @@ function LoadingHistory() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.action} />
-      <Text style={styles.stateText}>Loading checkout history</Text>
+      <Text style={styles.stateText}>{t('mobile.AssetCheckoutHistorySheet.loadingCheckoutHistory')}</Text>
     </View>
   );
 }
@@ -52,7 +53,7 @@ function ErrorHistory({ message }: { readonly message: string }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load checkout history</Text>
+      <Text style={styles.errorTitle}>{t('mobile.AssetCheckoutHistorySheet.couldNotLoadCheckoutHistory')}</Text>
       <Text style={styles.stateText}>{message}</Text>
     </View>
   );
@@ -77,7 +78,7 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
           <View style={styles.timelineRail}>
             <View style={[
               styles.timelineDot,
-              record.statusLabel === 'Checked out' ? styles.timelineDotOpen : null
+              record.isOpen ? styles.timelineDotOpen : null
             ]} />
           </View>
           <View style={styles.recordContent}>
@@ -89,13 +90,13 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
             {record.returnedLabel ? <Text style={styles.recordFinePrint}>{record.returnedLabel}</Text> : null}
             {record.checkoutDetails ? (
               <View style={styles.detailBlock}>
-                <Text style={styles.detailLabel}>Checkout details</Text>
+                <Text style={styles.detailLabel}>{t('mobile.AssetCheckoutHistorySheet.checkoutDetails')}</Text>
                 <Text style={styles.detailValue}>{record.checkoutDetails}</Text>
               </View>
             ) : null}
             {record.returnDetails ? (
               <View style={styles.detailBlock}>
-                <Text style={styles.detailLabel}>Return details</Text>
+                <Text style={styles.detailLabel}>{t('mobile.AssetCheckoutHistorySheet.returnDetails')}</Text>
                 <Text style={styles.detailValue}>{record.returnDetails}</Text>
               </View>
             ) : null}

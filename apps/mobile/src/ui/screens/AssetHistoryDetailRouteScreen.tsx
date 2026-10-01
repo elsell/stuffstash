@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { formatHistoryTimestamp } from '../../application/assets/AssetHistoryTimestamp';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
@@ -76,16 +77,16 @@ export function AssetHistoryDetailRouteScreen({
   }, [operationScope]));
 
   if (isLoading) {
-    return <View style={styles.centerState}><Stack.Screen options={{ title: 'History detail' }} /><Text style={styles.muted}>Loading activity…</Text></View>;
+    return <View style={styles.centerState}><Stack.Screen options={{ title: t('mobile.AssetHistoryDetailRouteScreen.historyDetail') }} /><Text style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.loadingActivity')}</Text></View>;
   }
 
   if (loadFailure) {
     return (
       <View style={styles.centerState}>
-        <Stack.Screen options={{ title: 'History detail' }} />
+        <Stack.Screen options={{ title: t('mobile.AssetHistoryDetailRouteScreen.historyDetail') }} />
         <Text accessibilityRole="header" style={styles.title}>{loadFailure.title}</Text>
         <Text style={styles.muted}>{loadFailure.message}</Text>
-        {loadFailure.canRetry ? <NativeCommandButton label="Try again" onPress={() => void detail.refetch()} /> : null}
+        {loadFailure.canRetry ? <NativeCommandButton label={t('mobile.AssetHistoryDetailRouteScreen.tryAgain')} onPress={() => void detail.refetch()} /> : null}
       </View>
     );
   }
@@ -93,10 +94,10 @@ export function AssetHistoryDetailRouteScreen({
   if (!entry) {
     return (
       <View style={styles.centerState}>
-        <Stack.Screen options={{ title: 'History detail' }} />
-        <Text accessibilityRole="header" style={styles.title}>Activity is no longer available</Text>
-        <Text style={styles.muted}>Return to History and open it again.</Text>
-        <NativeCommandButton label="Back to History" onPress={() => router.back()} />
+        <Stack.Screen options={{ title: t('mobile.AssetHistoryDetailRouteScreen.historyDetail') }} />
+        <Text accessibilityRole="header" style={styles.title}>{t('mobile.AssetHistoryDetailRouteScreen.activityIsNoLongerAvailable')}</Text>
+        <Text style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.returnToHistoryAndOpenItAgain')}</Text>
+        <NativeCommandButton label={t('mobile.AssetHistoryDetailRouteScreen.backToHistory')} onPress={() => router.back()} />
       </View>
     );
   }
@@ -108,7 +109,7 @@ export function AssetHistoryDetailRouteScreen({
     requestHistoryRevertConfirmation(
       entry,
       (confirmation, confirm) => Alert.alert(confirmation.title, confirmation.message, [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('mobile.AssetHistoryDetailRouteScreen.cancel'), style: 'cancel' },
         { text: confirmation.confirmLabel, onPress: confirm }
       ]),
       () => { if (ownsSnapshot()) void revertChange(session); }
@@ -124,7 +125,7 @@ export function AssetHistoryDetailRouteScreen({
       { tenantId, inventoryId, operationId: entry.undo.operationId },
       {
         invalidateActivity: () => { void queryClient.invalidateQueries({ queryKey, exact: true, refetchType: 'none' }); },
-        showSuccess: () => { if (operationScope.active && session.active) feedback.showNotice({ tone: 'success', title: 'Change reverted', message: `“${assetTitle}” was updated. The reversal is now in History.` }); },
+        showSuccess: () => { if (operationScope.active && session.active) feedback.showNotice({ tone: 'success', title: t('mobile.AssetHistoryDetailRouteScreen.changeReverted'), message: t('mobile.AssetHistoryDetailRouteScreen.wasUpdatedTheReversalIsNowInHistory', { assetTitle: String(assetTitle) }) }); },
         navigateBack: () => { if (operationScope.active && session.active) router.back(); }
       }
     );
@@ -143,43 +144,43 @@ export function AssetHistoryDetailRouteScreen({
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content} style={styles.screen}>
-      <Stack.Screen options={{ title: 'History detail' }} />
+      <Stack.Screen options={{ title: t('mobile.AssetHistoryDetailRouteScreen.historyDetail') }} />
       {detail.isRefetchError ? <View style={styles.section}>
-        <Text accessibilityRole="alert" style={styles.muted}>Activity could not be refreshed. Previously loaded details are shown.</Text>
-        <NativeCommandButton label="Try refreshing again" onPress={() => void detail.refetch()} />
+        <Text accessibilityRole="alert" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.activityCouldNotBeRefreshedPreviouslyLoadedDetailsAre')}</Text>
+        <NativeCommandButton label={t('mobile.AssetHistoryDetailRouteScreen.tryRefreshingAgain')} onPress={() => void detail.refetch()} />
       </View> : null}
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
         <Text style={styles.timestamp}>{formatHistoryTimestamp(entry.occurredAt, 'exact')}</Text>
-        <Text style={styles.muted}>{entry.principal?.email?.trim() || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
+        <Text style={styles.muted}>{entry.principal?.email?.trim() || t('mobile.AssetHistoryDetailRouteScreen.someoneWithAccess')} · {sourceLabel(entry.source)}</Text>
       </View>
 
       {entry.changes.length > 0 ? (
         <View style={styles.section}>
-          <Text accessibilityRole="header" style={styles.sectionTitle}>What changed</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>{t('mobile.AssetHistoryDetailRouteScreen.whatChanged')}</Text>
           {entry.changes.map((change, index) => (
             <View key={`${change.field}-${index.toString()}`} style={styles.detailRow}>
               <Text accessibilityRole="header" style={styles.changeField}>{activityFieldLabel(change.field)}</Text>
               {change.previousValue?.trim() || change.currentValue?.trim() ? <>
-                <Text style={styles.label}>Before</Text>
-                <Text style={styles.value}>{change.previousValue?.trim() || 'None'}</Text>
-                <Text style={styles.label}>After</Text>
-                <Text style={styles.value}>{change.currentValue?.trim() || 'None'}</Text>
-              </> : <Text style={styles.value}>Changed</Text>}
+                <Text style={styles.label}>{t('mobile.AssetHistoryDetailRouteScreen.before')}</Text>
+                <Text style={styles.value}>{change.previousValue?.trim() || t('mobile.AssetHistoryDetailRouteScreen.none')}</Text>
+                <Text style={styles.label}>{t('mobile.AssetHistoryDetailRouteScreen.after')}</Text>
+                <Text style={styles.value}>{change.currentValue?.trim() || t('mobile.AssetHistoryDetailRouteScreen.none')}</Text>
+              </> : <Text style={styles.value}>{t('mobile.AssetHistoryDetailRouteScreen.changed')}</Text>}
             </View>
           ))}
         </View>
       ) : null}
 
       {entry.undo?.status === 'available' && revertOutcome === 'available' && !detail.isRefetchError ? (
-        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : 'Revert change'} />
+        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? t('mobile.AssetHistoryDetailRouteScreen.reverting') : t('mobile.AssetHistoryDetailRouteScreen.revertChange')} />
       ) : null}
-      {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>This change can no longer be safely reverted.</Text> : null}
-      {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>This change has been reverted.</Text> : null}
+      {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeCanNoLongerBeSafelyReverted')}</Text> : null}
+      {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeHasBeenReverted')}</Text> : null}
 
       <View style={styles.section}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: showsTechnical }} onPress={() => setShowsTechnical((value) => !value)} style={styles.disclosureButton}>
-          <Text style={styles.sectionTitle}>Technical details</Text><Text style={styles.disclosureText}>{showsTechnical ? '−' : '+'}</Text>
+          <Text style={styles.sectionTitle}>{t('mobile.AssetHistoryDetailRouteScreen.technicalDetails')}</Text><Text style={styles.disclosureText}>{showsTechnical ? '−' : '+'}</Text>
         </Pressable>
         {showsTechnical ? <>
           {technicalDetailRows(entry).map((row) => <TechnicalRow key={row.label} label={row.label} value={row.value} styles={styles} />)}
@@ -195,21 +196,21 @@ function TechnicalRow({ label, value, styles }: { readonly label: string; readon
 
 function detailTitle(action: string): string {
   switch (action) {
-    case 'asset.created': return 'Item added';
-    case 'asset.archived': return 'Item archived';
-    case 'asset.restored': return 'Item restored';
-    case 'asset.checked_out': return 'Item checked out';
-    case 'asset.returned': return 'Item returned';
-    case 'asset.viewed': return 'Item viewed';
-    default: return action.startsWith('asset.') ? 'Item updated' : 'Item activity';
+    case 'asset.created': return t('mobile.AssetHistoryDetailRouteScreen.itemAdded');
+    case 'asset.archived': return t('mobile.AssetHistoryDetailRouteScreen.itemArchived');
+    case 'asset.restored': return t('mobile.AssetHistoryDetailRouteScreen.itemRestored');
+    case 'asset.checked_out': return t('mobile.AssetHistoryDetailRouteScreen.itemCheckedOut');
+    case 'asset.returned': return t('mobile.AssetHistoryDetailRouteScreen.itemReturned');
+    case 'asset.viewed': return t('mobile.AssetHistoryDetailRouteScreen.itemViewed');
+    default: return action.startsWith('asset.') ? t('mobile.AssetHistoryDetailRouteScreen.itemUpdated') : t('mobile.AssetHistoryDetailRouteScreen.itemActivity');
   }
 }
 
 function sourceLabel(source: string): string {
-  if (source === 'api') return 'App';
-  if (source === 'conversation' || source === 'voice') return 'Voice';
-  if (source === 'import') return 'Import';
-  return 'Stuff Stash';
+  if (source === 'api') return t('mobile.AssetHistoryDetailRouteScreen.app');
+  if (source === 'conversation' || source === 'voice') return t('mobile.AssetHistoryDetailRouteScreen.voice');
+  if (source === 'import') return t('mobile.AssetHistoryDetailRouteScreen.import');
+  return t('mobile.AssetHistoryDetailRouteScreen.stuffStash');
 }
 
 function createStyles(colors: MobileColorPalette) {

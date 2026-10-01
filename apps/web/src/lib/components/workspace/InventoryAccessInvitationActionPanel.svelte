@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import type { InventoryAccessInvitation } from '$lib/domain/inventory';
 
@@ -42,11 +43,11 @@
 
   let available = $derived(Boolean(invitation && invitationActionIsAvailable(routeAction, invitation)));
   let confirmation = $derived(invitation ? invitationActionConfirmation(routeAction, invitation, busy) : null);
-  let title = $derived(available ? confirmation?.title ?? 'Confirm invitation action' : 'Invitation unavailable');
+  let title = $derived(available ? confirmation?.title ?? t('web.InventoryAccessInvitationActionPanel.confirmInvitationAction') : t('web.InventoryAccessInvitationActionPanel.invitationUnavailable'));
   let description = $derived(
     available
       ? confirmation?.description ?? ''
-      : 'This invitation is not available in the current access list.'
+      : t('web.InventoryAccessInvitationActionPanel.thisInvitationIsNotAvailableInTheCurrentAccess')
   );
   let open = $state(true);
   let dismissAfterClose = false;
@@ -96,7 +97,7 @@
   {/snippet}
   {#snippet cancel()}
     <Button.Root href={accessHref} variant="outline" class="min-h-11" disabled={busy} onclick={handleClose} autofocus>
-      {available ? 'Cancel' : 'Back to invitations'}
+      {available ? t('web.InventoryAccessInvitationActionPanel.cancel') : t('web.InventoryAccessInvitationActionPanel.backToInvitations')}
     </Button.Root>
   {/snippet}
   {#snippet action()}

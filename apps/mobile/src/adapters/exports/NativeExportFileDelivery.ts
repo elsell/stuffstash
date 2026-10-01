@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { InventoryExportFile, InventoryExportFileDelivery, InventoryExportObserver } from '../../application/exports/InventoryExport';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 
@@ -14,7 +15,7 @@ export class NativeExportFileDelivery implements InventoryExportFileDelivery {
   constructor(private readonly files: ExportTemporaryFiles, private readonly sheet: ExportShareSheet, private readonly platform: 'ios' | 'android', private readonly observer: InventoryExportObserver) {}
   async share(file: InventoryExportFile, signal: AbortSignal): Promise<void> {
     assertReadActive(signal);
-    if (!await this.sheet.isAvailable()) throw new Error('File sharing is unavailable on this device.');
+    if (!await this.sheet.isAvailable()) throw new Error(t('recovery.sharingUnavailable'));
     assertReadActive(signal);
     await this.files.sweep();
     assertReadActive(signal);

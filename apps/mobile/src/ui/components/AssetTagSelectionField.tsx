@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 import { useAssetTagSelectionVisit } from '../navigation/AssetTagSelectionTask';
 import type { AssetTagSelectionOption } from '../screens/AssetTagSelectionScreen';
@@ -13,6 +14,6 @@ export function AssetTagSelectionField({ scope, tags, selectedIds, newTags, disa
 }) {
   const open = useAssetTagSelectionVisit({ scope, tags, selectedIds, newTags, disabled, onChange });
   const labels = [...tags.filter(tag => selectedIds.includes(tag.id)).map(tag => tag.label), ...(newTags ?? []).map(tag => tag.displayName)];
-  return <SettingsNavigationRow label="Tags" accessibilityLabel="Choose tags" disabled={disabled} onPress={open}
-    value={`${selectedIds.length + (newTags?.length ?? 0)}`} context={labels.length ? labels.join(', ') : 'None selected'} />;
+  return <SettingsNavigationRow label={t('mobile.AssetTagSelectionField.tags')} accessibilityLabel={t('mobile.AssetTagSelectionField.chooseTags')} disabled={disabled} onPress={open}
+    value={`${selectedIds.length + (newTags?.length ?? 0)}`} context={labels.length ? labels.join(', ') : t('mobile.AssetTagSelectionField.noneSelected')} />;
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { useMemo } from 'react';
@@ -40,13 +41,13 @@ export function LocationAssetsRouteScreen({
     query: (signal) => locationAssetsQuery.execute(locationId, { signal })
   });
 
-  const pullRefresh = usePullRefreshFeedback({ refresh: () => locationAssets.refetch({ throwOnError: true }), resourceKey: locationAssets.resourceKey, failureTitle: 'Could not refresh location' });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => locationAssets.refetch({ throwOnError: true }), resourceKey: locationAssets.resourceKey, failureTitle: t('mobile.LocationAssetsRouteScreen.couldNotRefreshLocation') });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {locationAssets.isPending && !locationAssets.data ? <LoadingState /> : null}
       {locationAssets.isError && !locationAssets.data ? (
-        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, 'Could not load location.')} />
+        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, t('mobile.LocationAssetsRouteScreen.couldNotLoadLocation'))} />
       ) : null}
       {locationAssets.data ? (
         <LocationAssetList
@@ -93,7 +94,7 @@ export function LocationAssetList({
             />
           </View>
         }
-        ListEmptyComponent={<Text style={styles.emptyText}>No assets in this location.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>{t('mobile.LocationAssetsRouteScreen.noAssetsInThisLocation')}</Text>}
         renderItem={({ item }) => (
           <AssetCard
             asset={item}
@@ -114,7 +115,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading location</Text>
+      <Text style={styles.stateText}>{t('mobile.LocationAssetsRouteScreen.loadingLocation')}</Text>
     </View>
   );
 }
@@ -124,9 +125,9 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.LocationAssetsRouteScreen.couldNotLoad')}</Text>
       <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
-      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.LocationAssetsRouteScreen.retry')} disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

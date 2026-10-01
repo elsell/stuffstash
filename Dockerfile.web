@@ -13,11 +13,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY patches patches
 COPY apps/web/package.json apps/web/package.json
 COPY packages/api-client/package.json packages/api-client/package.json
+COPY packages/localization/package.json packages/localization/package.json
 RUN node -e 'if (!process.env.PNPM_VERSION || require("./package.json").packageManager !== "pnpm@" + process.env.PNPM_VERSION) throw new Error("PNPM_VERSION must match the workspace packageManager")' \
     && npm install --global --ignore-scripts "pnpm@${PNPM_VERSION}" \
     && test "$(pnpm --version)" = "${PNPM_VERSION}"
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/api-client packages/api-client
+COPY packages/localization packages/localization
 COPY apps/web apps/web
 COPY deploy/web/nginx.conf deploy/web/nginx.conf
 COPY deploy/web/start-web-runtime.sh deploy/web/start-web-runtime.sh

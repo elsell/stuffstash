@@ -356,6 +356,16 @@ func (s Service) prepareUpdateAsset(ctx context.Context, input UpdateAssetInput,
 			fieldsChanged = true
 		}
 	}
+	if input.CustomFieldPatch != nil {
+		if input.CustomFields != nil {
+			return PreparedUpdateAsset{}, apperrors.ErrInvalidInput
+		}
+		merged, err := ApplyCustomFieldPatch(ctx, s.customFields, input.TenantID, input.InventoryID, updated.CustomAssetTypeID, current.CustomFields.Values(), input.CustomFieldPatch)
+		if err != nil {
+			return PreparedUpdateAsset{}, err
+		}
+		input.CustomFields = merged
+	}
 	if input.CustomFields != nil {
 		customFields, err := s.validatedCustomFields(ctx, input.TenantID, input.InventoryID, updated.CustomAssetTypeID, input.CustomFields)
 		if err != nil {

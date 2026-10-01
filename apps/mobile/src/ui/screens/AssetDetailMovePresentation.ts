@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 
@@ -44,9 +45,9 @@ export function parentFromCurrentAssetPath(asset: AssetDetailViewModel): ParentL
     id: asset.parentAssetId,
     title: asset.parentLocationTrailLabel,
     kind: 'container',
-    subtitle: 'Current parent',
+    subtitle: t('mobile.AssetDetailMovePresentation.currentParent'),
     pathLabel: asset.parentLocationTrailLabel,
-    selectionHint: 'Current parent',
+    selectionHint: t('mobile.AssetDetailMovePresentation.currentParent'),
     willPromoteToContainer: false
   };
 }
@@ -75,7 +76,7 @@ export function movePlacementPreview(
   const currentLocationLabel = asset.parentLocationTrailLabel;
   const proposedLocationLabel = selectedParent
     ? selectedParent.pathLabel
-    : 'Inventory root';
+    : t('mobile.AssetDetailMovePresentation.inventoryRoot');
 
   return {
     currentLocationLabel,
@@ -87,7 +88,7 @@ export function movePlacementPreview(
 export function moveDestinationRow(parent: ParentLookupResult): MoveDestinationRow {
   return {
     title: parent.title,
-    kindLabel: parent.kind === 'location' ? 'Location' : 'Container',
+    kindLabel: parent.kind === 'location' ? t('mobile.AssetDetailMovePresentation.location') : t('mobile.AssetDetailMovePresentation.container'),
     pathLabel: parent.pathLabel
   };
 }
@@ -120,13 +121,13 @@ export function isSelectableMoveIntoCandidate(
 export function moveIntoEmptyState(query: string): MoveIntoEmptyState {
   if (query.trim().length === 0) {
     return {
-      title: 'Search for something to move here',
-      message: 'Start typing to find an item, box, or place from this inventory.'
+      title: t('mobile.AssetDetailMovePresentation.searchForSomethingToMoveHere'),
+      message: t('mobile.AssetDetailMovePresentation.startTypingToFindAnItemBoxOrPlace')
     };
   }
   return {
-    title: 'No movable matches',
-    message: 'Search for something that is not already inside this place.'
+    title: t('mobile.AssetDetailMovePresentation.noMovableMatches'),
+    message: t('mobile.AssetDetailMovePresentation.searchForSomethingThatIsNotAlreadyInsideThis')
   };
 }
 
@@ -179,21 +180,21 @@ export function moveDestinationCreateInput(
 }
 
 export function moveDestinationCreateKindLabel(kind: MoveDestinationCreateKind): string {
-  return kind === 'location' ? 'Location' : 'Container';
+  return kind === 'location' ? t('mobile.AssetDetailMovePresentation.location') : t('mobile.AssetDetailMovePresentation.container');
 }
 
 export function moveDestinationCreateKindHelp(kind: MoveDestinationCreateKind): string {
   return kind === 'location'
-    ? 'Best for rooms, places, and areas.'
-    : 'Best for boxes, shelves, bins, and cabinets.';
+    ? t('mobile.AssetDetailMovePresentation.bestForRoomsPlacesAndAreas')
+    : t('mobile.AssetDetailMovePresentation.bestForBoxesShelvesBinsAndCabinets');
 }
 
 export function moveDestinationCreateButtonLabel(kind: MoveDestinationCreateKind, title: string): string {
-  return `Create ${kind} "${title}"`;
+  return t(kind === 'location' ? 'mobile.move.createLocation' : 'mobile.move.createContainer', { title });
 }
 
 export function moveDestinationCreatePlacementLabel(placement: MoveDestinationCreatePlacement): string {
-  return placement.parentPathLabel ? `Creates inside ${placement.parentPathLabel}` : 'Creates at inventory root';
+  return placement.parentPathLabel ? t('mobile.AssetDetailMovePresentation.createsInside', { parentPathLabel: String(placement.parentPathLabel) }) : t('mobile.AssetDetailMovePresentation.createsAtInventoryRoot');
 }
 
 export function createdMoveDestinationParent({
@@ -213,7 +214,7 @@ export function createdMoveDestinationParent({
     title,
     kind,
     parentAssetId: placement.parentAssetId,
-    subtitle: `New ${kind}`,
+    subtitle: t(`move.new.${kind}`),
     pathLabel: placement.parentPathLabel ? `${placement.parentPathLabel} / ${title}` : title,
     selectionHint: kindLabel,
     willPromoteToContainer: false
@@ -227,10 +228,10 @@ function normalizeForMoveDestination(value: string): string {
 function moveCandidateKindLabel(kind: ParentLookupResult['kind']): string {
   switch (kind) {
     case 'container':
-      return 'Container';
+      return t('mobile.AssetDetailMovePresentation.container');
     case 'item':
-      return 'Item';
+      return t('mobile.AssetDetailMovePresentation.item');
     case 'location':
-      return 'Location';
+      return t('mobile.AssetDetailMovePresentation.location');
   }
 }

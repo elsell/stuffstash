@@ -1,3 +1,4 @@
+import { t } from '../presentation/localization';
 import { AddDestinationTaskProvider } from '../ui/navigation/AddDestinationTask';
 import { AssetTagSelectionTaskProvider } from '../ui/navigation/AssetTagSelectionTask';
 import { inventorySwitcherNativeOptions } from '../ui/screens/InventorySwitcherNativeOptions';
@@ -51,7 +52,7 @@ function ThemedApp() {
         screenLayout={AppNoticeScreenLayout}
         screenOptions={{
           contentStyle: { backgroundColor: palette.background },
-          headerBackTitle: 'Back',
+          headerBackTitle: t('mobile.layout.back'),
           headerStyle: { backgroundColor: palette.surface },
           headerTintColor: palette.action,
           headerTitleStyle: {
@@ -60,7 +61,7 @@ function ThemedApp() {
           }
         }}
       >
-        <Stack.Screen name="voice-plan-location" options={{ title: 'Containing location' }} />
+        <Stack.Screen name="voice-plan-location" options={{ title: t('mobile.layout.containingLocation') }} />
         <Stack.Screen name="browse-filters" options={sheetOptions.filters} />
         <Stack.Screen name="expiration-filters" options={sheetOptions.filters} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -68,7 +69,7 @@ function ThemedApp() {
           name="voice"
           options={voiceNativeSheetOptions(palette)}
         />
-        <Stack.Screen name="invitations/accept" options={{ title: 'Invitation' }} />
+        <Stack.Screen name="invitations/accept" options={{ title: t('mobile.layout.invitation') }} />
         <Stack.Screen name="add" options={sheetOptions.add} />
         <Stack.Screen name="provider-profiles" options={{ headerShown: false }} />
         <Stack.Screen
@@ -83,9 +84,9 @@ function ThemedApp() {
           name="assets/[assetId]/move-here"
           options={sheetOptions.moveHere}
         />
-        <Stack.Screen name="add-destination" options={{ ...sheetOptions.selection, title: 'Put in' }} />
-        <Stack.Screen name="asset-tag-selection" options={{ ...sheetOptions.selection, title: 'Tags' }} />
-        <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: 'Return details', gestureEnabled: false }} />
+        <Stack.Screen name="add-destination" options={{ ...sheetOptions.selection, title: t('mobile.layout.putIn') }} />
+        <Stack.Screen name="asset-tag-selection" options={{ ...sheetOptions.selection, title: t('mobile.layout.tags') }} />
+        <Stack.Screen name="home-return-details" options={{ ...sheetOptions.checkoutHistory, title: t('mobile.layout.returnDetails'), gestureEnabled: false }} />
         <Stack.Screen
           name="assets/[assetId]/checkouts"
           options={sheetOptions.checkoutHistory}

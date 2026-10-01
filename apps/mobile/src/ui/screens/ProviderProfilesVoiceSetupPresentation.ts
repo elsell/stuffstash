@@ -1,78 +1,79 @@
+import { t } from '../../presentation/localization';
 export function formatVoiceProviderReadinessLabel(readiness: string): string {
   switch (readiness) {
     case 'ready':
-      return 'Ready';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.ready');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     case 'disabled':
-      return 'Disabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.disabled');
     case 'archived':
-      return 'Archived';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.archived');
     case 'credential_missing':
-      return 'Needs credentials';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsCredentials');
     case 'untested':
-      return 'Needs test';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsTest');
     case 'duplicate_candidates':
-      return 'Choose profile';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.chooseProfile');
     case 'invalid_selection':
-      return 'Fix selection';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.fixSelection');
     default:
-      return 'Needs attention';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsAttention');
   }
 }
 
 export function formatVoiceProviderCapabilityLabel(capability: string): string {
   switch (capability) {
     case 'speech_to_text':
-      return 'Speech input';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.speechInput');
     case 'language_inference':
-      return 'Agent brain';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.agentBrain');
     case 'text_to_speech':
-      return 'Spoken output';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.spokenOutput');
     default:
-      return 'Unknown capability';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknownCapability');
   }
 }
 
 export function formatVoiceProviderSelectionSourceLabel(selectionSource: string): string {
   switch (selectionSource) {
     case 'explicit':
-      return 'Selected';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.selected');
     case 'implicit':
-      return 'Auto-selected';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.autoSelected');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     default:
-      return 'Selection unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.selectionUnknown');
   }
 }
 
 export function formatProviderProfileCredentialStatusLabel(credentialStatus: string): string {
   switch (credentialStatus) {
     case 'configured':
-      return 'Configured';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.configured');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     default:
-      return 'Unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknown');
   }
 }
 
 export function formatProviderProfileLifecycleLabel(lifecycleState: string): string {
   switch (lifecycleState) {
     case 'enabled':
-      return 'Enabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.enabled');
     case 'disabled':
-      return 'Disabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.disabled');
     case 'archived':
-      return 'Archived';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.archived');
     default:
-      return 'Unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknown');
   }
 }
 
 export function formatProviderProfileTestStatusLabel(lastTestedAt?: string): string {
-  return lastTestedAt ? 'Tested' : 'Needs test';
+  return lastTestedAt ? t('mobile.ProviderProfilesVoiceSetupPresentation.tested') : t('mobile.ProviderProfilesVoiceSetupPresentation.needsTest');
 }
 
 export function voiceProviderSetupIssueLabels(readiness: string, recommendedAction: string): readonly string[] {
@@ -80,15 +81,15 @@ export function voiceProviderSetupIssueLabels(readiness: string, recommendedActi
     case 'none':
       return readiness === 'ready' ? [] : voiceProviderSetupIssueLabelsForReadiness(readiness);
     case 'add_profile':
-      return ['Choose a provider profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAProviderProfileForThisSlot')];
     case 'choose_profile':
-      return ['Choose which profile this voice slot should use.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseWhichProfileThisVoiceSlotShouldUse')];
     case 'replace_credential':
-      return ['Add a credential for the selected profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.addACredentialForTheSelectedProfile')];
     case 'enable_profile':
-      return ['Enable the selected provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.enableTheSelectedProviderProfile')];
     case 'test_profile':
-      return ['Test the selected profile before using voice.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.testTheSelectedProfileBeforeUsingVoice')];
     default:
       return voiceProviderSetupIssueLabelsForReadiness(readiness);
   }
@@ -99,20 +100,20 @@ function voiceProviderSetupIssueLabelsForReadiness(readiness: string): readonly 
     case 'ready':
       return [];
     case 'missing':
-      return ['Choose a provider profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAProviderProfileForThisSlot')];
     case 'disabled':
-      return ['Enable the selected provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.enableTheSelectedProviderProfile')];
     case 'archived':
-      return ['Choose an active provider profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAnActiveProviderProfile')];
     case 'credential_missing':
-      return ['Add a credential for the selected profile.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.addACredentialForTheSelectedProfile')];
     case 'untested':
-      return ['Test the selected profile before using voice.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.testTheSelectedProfileBeforeUsingVoice')];
     case 'duplicate_candidates':
-      return ['Choose which ready profile this voice slot should use.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseWhichReadyProfileThisVoiceSlotShouldUse')];
     case 'invalid_selection':
-      return ['Choose a valid profile for this slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.chooseAValidProfileForThisSlot')];
     default:
-      return ['Review this voice provider slot.'];
+      return [t('mobile.ProviderProfilesVoiceSetupPresentation.reviewThisVoiceProviderSlot')];
   }
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from './NativeCommandButton';
 import { NativeChoicePicker } from './NativeChoicePicker';
 import { SelectionRow } from './SelectionRow';
@@ -76,26 +77,26 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
     onChange(undefined, true);
   }
   const current = precision === 'day' ? (day ? { date: day, precision } : undefined) : (month && year && monthValid ? { date: `${year}-${month.padStart(2, '0')}`, precision } : undefined);
-  return <SelectionRow label="Expiration" value={current ? formatAssetExpiration(current) : 'Not set'} expanded={editing} disabled={disabled} onPress={() => setEditing(value => !value)}>
+  return <SelectionRow label={t('mobile.ExpirationField.expiration')} value={current ? formatAssetExpiration(current) : t('mobile.ExpirationField.notSet')} expanded={editing} disabled={disabled} onPress={() => setEditing(value => !value)}>
     <View style={styles.field}>
     <NativeSegmentedControl colors={colors} disabled={disabled} value={precision} onChange={selectPrecision}
-      segments={[{ value: 'day', label: 'Exact date' }, { value: 'month', label: 'Month and year' }]} />
+      segments={[{ value: 'day', label: t('mobile.ExpirationField.exactDate') }, { value: 'month', label: t('mobile.ExpirationField.monthAndYear') }]} />
     {precision === 'month' ? <>
       {monthCalendarNotice ? <Text style={{ color: colors.textMuted }}>{monthCalendarNotice}</Text> : null}
-      <NativeChoicePicker label="Month" accessibilityLabel="Expiration month" value={month ? String(Number(month)) : ''} disabled={disabled} options={expirationMonthOptions()} onChange={value => { setMonth(value); publishMonth(value, year); }} />
-      <Text style={{ color: colors.text }}>Year</Text>
-      <AppTextInput accessibilityLabel="Expiration year" editable={!disabled} keyboardType="number-pad" value={year} placeholder="YYYY" style={[styles.input, { color: colors.text, borderColor: colors.controlBorder }]} onChangeText={(value) => { if (disabled) return; setYear(value); publishMonth(month, value); }} />
-      <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{monthValid ? 'Tracked through the end of this month.' : 'Enter a month from 1 to 12 and a four-digit year.'}</Text>
+      <NativeChoicePicker label={t('mobile.ExpirationField.month')} accessibilityLabel={t('mobile.ExpirationField.expirationMonth')} value={month ? String(Number(month)) : ''} disabled={disabled} options={expirationMonthOptions()} onChange={value => { setMonth(value); publishMonth(value, year); }} />
+      <Text style={{ color: colors.text }}>{t('mobile.ExpirationField.year')}</Text>
+      <AppTextInput accessibilityLabel={t('mobile.ExpirationField.expirationYear')} editable={!disabled} keyboardType="number-pad" value={year} placeholder={t('mobile.ExpirationField.yYYY')} style={[styles.input, { color: colors.text, borderColor: colors.controlBorder }]} onChangeText={(value) => { if (disabled) return; setYear(value); publishMonth(month, value); }} />
+      <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{monthValid ? t('mobile.ExpirationField.trackedThroughTheEndOfThisMonth') : t('mobile.ExpirationField.enterAMonthFrom1To12AndA')}</Text>
     </> : <>
       {Platform.OS === 'ios' ? day ?
-        <DateTimePicker accessibilityLabel="Expiration date" disabled={disabled} mode="date" display="compact" value={currentPickerDate()} onChange={pickerChanged} /> :
-        <NativeCommandButton label="Add expiration date" disabled={disabled} onPress={() => { if (!disabled) commitDate(initialPickerDate); }} /> : <>
-        <NativeCommandButton label="Choose expiration date" disabled={disabled} onPress={openPicker} />
+        <DateTimePicker accessibilityLabel={t('mobile.ExpirationField.expirationDate')} disabled={disabled} mode="date" display="compact" value={currentPickerDate()} onChange={pickerChanged} /> :
+        <NativeCommandButton label={t('mobile.ExpirationField.addExpirationDate')} disabled={disabled} onPress={() => { if (!disabled) commitDate(initialPickerDate); }} /> : <>
+        <NativeCommandButton label={t('mobile.ExpirationField.chooseExpirationDate')} disabled={disabled} onPress={openPicker} />
         {pickerOpen && !disabled ? <DateTimePicker mode="date" display="default" value={pickerDate} onChange={pickerChanged} /> : null}
       </>}
-      <Text style={{ color: colors.textMuted }}>Tracked through the end of this day.</Text>
+      <Text style={{ color: colors.textMuted }}>{t('mobile.ExpirationField.trackedThroughTheEndOfThisDay')}</Text>
     </>}
-    {(day || month || year) ? <NativeCommandButton label="Clear expiration" disabled={disabled} onPress={clear} /> : null}
+    {(day || month || year) ? <NativeCommandButton label={t('mobile.ExpirationField.clearExpiration')} disabled={disabled} onPress={clear} /> : null}
   </View></SelectionRow>;
 }
 const styles = StyleSheet.create({

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReactNode } from 'react';
 import type { NativeHeaderAction } from './NativeHeaderActions.types';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ export function NotificationBell({ tenantId, inventoryId, initialize, count, onO
   const unread = useQuery({ queryKey: mobileQueryKeys.notificationCount(scopeId, tenantId, inventoryId), queryFn: ({ signal }) => count(signal), enabled: registration.isSuccess, refetchInterval: 30_000, refetchIntervalInBackground: false });
   const failed = registration.isError || unread.isError;
   const total = unread.data;
-  const label = failed ? 'Notifications, unread count unavailable' : total === undefined ? 'Notifications, loading unread count' : `Notifications, ${total} unread`;
+  const label = failed ? t('mobile.NotificationBell.notificationsUnreadCountUnavailable') : total === undefined ? t('mobile.NotificationBell.notificationsLoadingUnreadCount') : t('mobile.NotificationBell.notificationsUnread', { total: String(total) });
   const onPress = () => { if (registration.isError) void registration.refetch(); if (registration.isSuccess) void unread.refetch(); onOpen(); };
   if (renderAction) return renderAction({ kind: 'notifications', label, badgeCount: total, onPress });
   return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.button}>

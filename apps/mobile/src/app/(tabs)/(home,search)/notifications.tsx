@@ -1,3 +1,4 @@
+import { t } from '../../../presentation/localization';
 import { NativeCommandButton } from '../../../ui/components/NativeCommandButton';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -17,8 +18,8 @@ export default function NotificationInboxRoute() {
   const client = useQueryClient();
   const router = useRouter();
   const { styles, palette } = useSettingsListStyles();
-  if (model.state.status === 'loading') return <View style={styles.shell}><ActivityIndicator accessibilityLabel="Loading inventory" color={palette.action} /></View>;
-  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={[styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label="Retry" onPress={() => void model.load()} /></ScrollView>;
+  if (model.state.status === 'loading') return <View style={styles.shell}><ActivityIndicator accessibilityLabel={t('mobile.notifications.loadingInventory')} color={palette.action} /></View>;
+  if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={[styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label={t('mobile.notifications.retry')} onPress={() => void model.load()} /></ScrollView>;
   const { selectedTenant, selectedInventory } = model.state.settings;
   return <NotificationInboxScreen key={JSON.stringify([scopeId, selectedTenant.id, selectedInventory.id])} tenantId={selectedTenant.id} inventoryId={selectedInventory.id} queries={services.notificationInboxQueries}
     onOpenAsset={(assetId) => router.push(assetDetailHref(assetId))}

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { CustomizationPage } from '$lib/ports/inventoryCustomizationRepository';
 
 type SharedSettingsLoad = { promise: Promise<unknown>; resolvedAt: number | null };
@@ -91,20 +92,20 @@ export function isSettingsPermissionDenied(caught: unknown): boolean {
 }
 
 const namedColors = [
-  { name: 'Red', rgb: [220, 38, 38] }, { name: 'Orange', rgb: [234, 88, 12] },
-  { name: 'Yellow', rgb: [202, 138, 4] }, { name: 'Green', rgb: [22, 163, 74] },
-  { name: 'Blue', rgb: [37, 99, 235] }, { name: 'Purple', rgb: [124, 58, 237] },
-  { name: 'Pink', rgb: [219, 39, 119] }, { name: 'Gray', rgb: [107, 114, 128] },
-  { name: 'Black', rgb: [0, 0, 0] }, { name: 'White', rgb: [255, 255, 255] }
+  { name: t('web.settingsManagement.red'), rgb: [220, 38, 38] }, { name: t('web.settingsManagement.orange'), rgb: [234, 88, 12] },
+  { name: t('web.settingsManagement.yellow'), rgb: [202, 138, 4] }, { name: t('web.settingsManagement.green'), rgb: [22, 163, 74] },
+  { name: t('web.settingsManagement.blue'), rgb: [37, 99, 235] }, { name: t('web.settingsManagement.purple'), rgb: [124, 58, 237] },
+  { name: t('web.settingsManagement.pink'), rgb: [219, 39, 119] }, { name: t('web.settingsManagement.gray'), rgb: [107, 114, 128] },
+  { name: t('web.settingsManagement.black'), rgb: [0, 0, 0] }, { name: t('web.settingsManagement.white'), rgb: [255, 255, 255] }
 ] as const;
 
 export function tagColorAccessibleLabel(color?: string): string {
   const normalized = color ? normalizeTagColor(color) : undefined;
-  if (!normalized) return 'No color';
+  if (!normalized) return t('web.settingsManagement.noColor');
   const rgb = [1, 3, 5].map((index) => Number.parseInt(normalized.slice(index, index + 2), 16));
   const closest = namedColors.reduce((best, candidate) => {
     const distance = candidate.rgb.reduce<number>((total, channel, index) => total + ((channel - rgb[index]) ** 2), 0);
     return distance < best.distance ? { name: candidate.name, distance } : best;
-  }, { name: 'Color', distance: Number.POSITIVE_INFINITY });
-  return `${closest.name} color (${normalized})`;
+  }, { name: t('web.settingsManagement.color'), distance: Number.POSITIVE_INFINITY });
+  return t('web.settingsManagement.colorDescription', { name: closest.name, code: normalized });
 }

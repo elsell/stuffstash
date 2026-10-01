@@ -19,8 +19,8 @@ implementation-mirroring tests or weaken security coverage to meet a batch size.
 | Batch | Three gaps | State |
 | --- | --- | --- |
 | Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | PR #213; required checks passed, merge pending |
-| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | PR #214: all three implemented; CI at 803e2c78 passed; native export acceptance pending |
-| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Planned |
+| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | PR #214 ready for review: CI and native export share/cancel/cleanup passed at d8dd2c45 (run 36862474560); recipient saving remains V1 |
+| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Draft PR #215. G4/G5 implemented. G6 shared catalogs, client presentation migration and copy gate implemented. CI [36880111295](https://github.com/elsell/stuffstash/actions/runs/36880111295) passed at 7da1b82b. Expanded native Add/recovery run 36876189076 passed on iPhone 17/iPad mini at 3ba9fa2f; RTL-configured run 36880433939 passed at 7da1b82b, with recovery screenshots inspected on both devices. RTL screenshots do not establish mirrored native layout. Follow-up localizes variable-derived notices/accessibility labels and complete expiration/upload messages; Map focus uses element identity instead of English labels. Focused tests, both client typechecks and critic review pass. Remaining: residual copy classification/migration, native RTL layout acceptance and current-head CI. |
 | Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | Planned |
 
 V1 includes authenticated browser journeys, representative connected native
@@ -58,10 +58,10 @@ undo/redo, scoped server state, expiration workspace and notification adapters.
 The user has verified notification delivery; historical APNs setup notes do not
 reopen that issue. Source presence does not certify every runtime boundary.
 
-The eight G1–G8 gaps above remain open. In particular, administrative conversation
-evaluation is not web inventory conversation; a supported profile enum is not an
-executable provider; request telemetry is not visible-image telemetry; and import
-is not export.
+Implementation and verification status for G1–G8 is recorded in the batch table.
+The audit baseline predates the open PRs; do not present its original absence
+findings as the current branch state. Unmerged delivery and missing acceptance
+evidence remain explicit rather than being treated as completed releases.
 
 Deliberate scope limits are not defects: offline writes/sync, cross-inventory
 moves, multi-inventory plans, calendar-grid expiration, non-asset undo, whole-asset

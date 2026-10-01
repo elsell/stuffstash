@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 export interface PendingSignInCallbackPresentation {
   title: string;
   description: string;
@@ -9,15 +10,15 @@ export interface FailedSignInCallbackPresentation extends PendingSignInCallbackP
 
 export function pendingSignInCallbackPresentation(): PendingSignInCallbackPresentation {
   return {
-    title: 'Finishing secure sign-in…',
-    description: 'Stuff Stash is confirming your session.'
+    title: t('web.signInCallbackPresentation.finishingSecureSignIn'),
+    description: t('web.signInCallbackPresentation.stuffStashIsConfirmingYourSession')
   };
 }
 
 export function failedSignInCallbackPresentation(_error: unknown): FailedSignInCallbackPresentation {
   return {
-    title: 'We couldn’t finish signing you in.',
-    description: 'Stuff Stash couldn’t confirm your session. Return to sign in and try again.',
-    actionLabel: 'Return to sign in'
+    title: t('web.signInCallbackPresentation.weCouldnTFinishSigningYouIn'),
+    description: t('web.signInCallbackPresentation.stuffStashCouldnTConfirmYourSessionReturnTo'),
+    actionLabel: t('web.signInCallbackPresentation.returnToSignIn')
   };
 }

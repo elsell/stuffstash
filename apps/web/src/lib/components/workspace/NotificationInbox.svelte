@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Settings from '@lucide/svelte/icons/settings';
   import CheckCheck from '@lucide/svelte/icons/check-check';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -51,7 +52,7 @@
       hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor;
     } catch (caught) {
       if (controller.signal.aborted) return;
-      const message = safeWorkspaceErrorMessage(caught, 'Notifications could not be loaded. Try again.');
+      const message = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.notificationsCouldNotBeLoadedTryAgain'));
       if (append) appendError = message; else error = message;
     } finally { if (!controller.signal.aborted) { loading = false; appendLoading = false; } }
   }
@@ -66,7 +67,7 @@
       onRead();
       await load();
     } catch (caught) {
-      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'Not all notifications could be marked read. Try again.');
+      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.notAllNotificationsCouldBeMarkedReadTryAgain'));
     } finally { if (!controller.signal.aborted) marking = false; }
   }
   async function open(item: ExpirationNotification) {
@@ -80,7 +81,7 @@
       if (filter === 'unread') items = items.filter((value) => value.id !== item.id);
       onRead(); onOpenAsset(assetId);
     } catch (caught) {
-      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'This notification could not be opened. Refresh to check whether it is still available.');
+      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.thisNotificationCouldNotBeOpenedRefreshToCheck'));
     } finally { if (!controller.signal.aborted) opening = null; }
   }
   async function toggleRead(item: ExpirationNotification) {
@@ -92,36 +93,36 @@
       if (controller.signal.aborted) return;
       readIds = new Set([...readIds].filter(id => id !== item.id));
       onRead(); await load();
-    } catch (caught) { if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'Could not change read state. Try again.'); }
+    } catch (caught) { if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.couldNotChangeReadStateTryAgain')); }
     finally { if (!controller.signal.aborted) marking = false; }
   }
 </script>
 
-<section aria-label="Notification inbox">
+<section aria-label={t('web.NotificationInbox.notificationInbox')}>
   <div class="toolbar">
-    <SegmentedControl label="Notification filter" value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
-    <Button.Root variant="ghost" size="icon" aria-label="Mark all read" title="Mark all read" disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
-    <Button.Root variant="ghost" size="icon" aria-label="Refresh" title="Refresh" disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
-    {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label="Notification settings" title="Notification settings" onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}
+    <SegmentedControl label={t('web.NotificationInbox.notificationFilter')} value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
+    <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.markAllRead')} title={t('web.NotificationInbox.markAllRead')} disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
+    <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.refresh')} title={t('web.NotificationInbox.refresh')} disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
+    {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.notificationSettings')} title={t('web.NotificationInbox.notificationSettings')} onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}
   </div>
   {#if openError}<p role="alert">{openError}</p>{/if}
-  {#if loading && items.length === 0}<p role="status">Loading notifications…</p>
+  {#if loading && items.length === 0}<p role="status">{t('web.NotificationInbox.loadingNotifications')}</p>
   {:else}
-    {#if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>Retry notifications</Button.Root>{/if}
-    {#if items.length === 0 && !hasMore && !error}<p>{filter === 'unread' ? 'No unread notifications.' : 'No expiration notifications yet.'}</p>{/if}
+    {#if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>{t('web.NotificationInbox.retryNotifications')}</Button.Root>{/if}
+    {#if items.length === 0 && !hasMore && !error}<p>{filter === 'unread' ? t('web.NotificationInbox.noUnreadNotifications') : t('web.NotificationInbox.noExpirationNotificationsYet')}</p>{/if}
     <ul>
       {#each items as item (item.id)}
         <li class:unread={!item.readAt && !readIds.has(item.id)}><Button.Root variant="ghost" class="notification-row" disabled={!!opening || marking} onclick={() => open(item)}>
-          <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
-          {#if opening === item.id}<span>Opening…</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">Unread</span>{/if}
+          <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? t('web.NotificationInbox.expired') : t('web.NotificationInbox.expires')} {dateLabel(item)}</span></span>
+          {#if opening === item.id}<span>{t('web.NotificationInbox.opening')}</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">{t('web.NotificationInbox.unread')}</span>{/if}
         </Button.Root>
-          <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={`Mark ${item.title} ${item.readAt || readIds.has(item.id) ? 'unread' : 'read'}`} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
+          <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={t('web.NotificationInbox.mark', { title: String(item.title), value: String(item.readAt || readIds.has(item.id) ? 'unread' : 'read') })} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
           <AssetLocationTrail segments={item.parentTrail} incomplete={item.parentTrailIncomplete} disabled={!!opening || marking} onOpen={onOpenAsset} />
         </li>
       {/each}
     </ul>
     {#if appendError}<p role="alert">{appendError}</p>{/if}
-    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening || marking} onclick={() => load(true)}>{appendLoading ? 'Loading more…' : appendError ? 'Retry more notifications' : 'Load more'}</Button.Root>{/if}
+    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening || marking} onclick={() => load(true)}>{appendLoading ? t('web.NotificationInbox.loadingMore') : appendError ? t('web.NotificationInbox.retryMoreNotifications') : t('web.NotificationInbox.loadMore')}</Button.Root>{/if}
   {/if}
 </section>
 

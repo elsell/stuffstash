@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { CustomFieldDefinition } from '$lib/domain/inventory';
 
   export type CustomFieldControlsProps = {
@@ -25,9 +26,9 @@
   }: CustomFieldControlsProps = $props();
 
   const booleanOptions = [
-    { value: '', label: 'Unset' },
-    { value: 'true', label: 'Yes' },
-    { value: 'false', label: 'No' }
+    { value: '', label: t('web.CustomFieldControls.unset') },
+    { value: 'true', label: t('web.CustomFieldControls.yes') },
+    { value: 'false', label: t('web.CustomFieldControls.no') }
   ];
 
   function inputType(field: CustomFieldDefinition): string {

@@ -87,6 +87,16 @@ func (a App) CreateActionPlan(ctx context.Context, input CreateActionPlanInput) 
 	if err != nil {
 		return ports.ActionPlanRecord{}, err
 	}
+	for _, command := range commands {
+		if isCustomizationCommand(command.Kind) {
+			if len(commands) != 1 {
+				return ports.ActionPlanRecord{}, ErrValidation
+			}
+			if err := a.ensureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+				return ports.ActionPlanRecord{}, err
+			}
+		}
+	}
 	risks, err := boundedActionPlanStrings(input.Risks, maxActionPlanRiskCount, maxActionPlanRiskTextLength)
 	if err != nil {
 		return ports.ActionPlanRecord{}, err
@@ -211,6 +221,8 @@ func (a App) executeApprovedActionPlanCommands(ctx context.Context, input Action
 	}
 	command := record.Commands[0]
 	switch command.Kind {
+	case actionplan.CommandKindCreateCustomAssetType, actionplan.CommandKindCreateCustomFieldDefinition:
+		return a.executeApprovedCustomization(ctx, input, command)
 	case actionplan.CommandKindCreateAsset, actionplan.CommandKindCreateLocation:
 		assetInput, err := actionPlanCreateAssetInput(input, command)
 		if err != nil {

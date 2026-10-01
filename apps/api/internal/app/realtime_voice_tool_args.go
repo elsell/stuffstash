@@ -217,22 +217,24 @@ type realtimeVoiceAssetToolOutput struct {
 }
 
 type realtimeVoiceAssetToolItem struct {
-	Expiration      *realtimeVoiceExpiration           `json:"expiration"`
-	TagNames        []string                           `json:"tagNames"`
-	AssetID         string                             `json:"assetId,omitempty"`
-	Title           string                             `json:"title"`
-	Kind            string                             `json:"kind"`
-	Description     string                             `json:"description,omitempty"`
-	InventoryName   string                             `json:"inventoryName"`
-	LifecycleState  string                             `json:"lifecycleState"`
-	ParentAssetID   string                             `json:"parentAssetId,omitempty"`
-	ParentTitle     string                             `json:"parentTitle,omitempty"`
-	ParentKind      string                             `json:"parentKind,omitempty"`
-	LocationTitle   string                             `json:"locationTitle,omitempty"`
-	ContainmentPath []string                           `json:"containmentPath,omitempty"`
-	MatchFields     []string                           `json:"matchFields,omitempty"`
-	CurrentCheckout *realtimeVoiceCurrentCheckoutEntry `json:"currentCheckout,omitempty"`
-	CheckoutState   *realtimeVoiceCheckoutState        `json:"checkoutState,omitempty"`
+	CustomAssetTypeID string                             `json:"customAssetTypeId,omitempty"`
+	CustomFields      map[string]any                     `json:"customFields,omitempty"`
+	Expiration        *realtimeVoiceExpiration           `json:"expiration"`
+	TagNames          []string                           `json:"tagNames"`
+	AssetID           string                             `json:"assetId,omitempty"`
+	Title             string                             `json:"title"`
+	Kind              string                             `json:"kind"`
+	Description       string                             `json:"description,omitempty"`
+	InventoryName     string                             `json:"inventoryName"`
+	LifecycleState    string                             `json:"lifecycleState"`
+	ParentAssetID     string                             `json:"parentAssetId,omitempty"`
+	ParentTitle       string                             `json:"parentTitle,omitempty"`
+	ParentKind        string                             `json:"parentKind,omitempty"`
+	LocationTitle     string                             `json:"locationTitle,omitempty"`
+	ContainmentPath   []string                           `json:"containmentPath,omitempty"`
+	MatchFields       []string                           `json:"matchFields,omitempty"`
+	CurrentCheckout   *realtimeVoiceCurrentCheckoutEntry `json:"currentCheckout,omitempty"`
+	CheckoutState     *realtimeVoiceCheckoutState        `json:"checkoutState,omitempty"`
 }
 
 type realtimeVoiceCurrentCheckoutEntry struct {

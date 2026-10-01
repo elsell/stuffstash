@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Activity from '@lucide/svelte/icons/activity';
   import Boxes from '@lucide/svelte/icons/boxes';
@@ -100,7 +101,7 @@
   let activeSection = $derived(
     sectionOptions.find((option) => option.current) ??
       (section === 'administration'
-        ? { label: 'Administration', description: 'No web administration actions are available' }
+        ? { label: t('web.InventorySettings.administration'), description: t('web.InventorySettings.noWebAdministrationActionsAreAvailable') }
         : sectionOptions[0])
   );
   let shellPresentation = $derived(settingsShellPresentation({ tenant, inventory, activeSection }));
@@ -137,7 +138,7 @@
     </div>
   {:else}
     <div class="settings-shell">
-      <nav class="settings-section-nav" aria-label="Settings sections">
+      <nav class="settings-section-nav" aria-label={t('web.InventorySettings.settingsSections')}>
         {#each sectionOptions as option}
           {@const Icon = sectionIconComponents[option.icon]}
           <Button.Root
@@ -220,7 +221,7 @@
             <p>{administrationPresentation.description}</p>
           </div>
         </div>
-        <p class="muted-note">Return to Overview, Access, Fields, or Activity to manage this inventory.</p>
+        <p class="muted-note">{t('web.InventorySettings.returnToOverviewAccessFieldsOrActivityToManage')}</p>
       </section>
       {/if}
       </div>

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset, AssetViewModel, CustomAssetType, LocationAsset, LocationSummary, ParentTargetViewModel } from '$lib/domain/inventory';
 import { compareNaturalText } from './textCollation';
 
@@ -118,7 +119,7 @@ export function containmentTrail(asset: Asset, assets: Asset[]): string {
     trail.unshift(parent.title);
     parentId = parent.parentAssetId;
   }
-  return trail.length > 0 ? trail.join(' / ') : 'Inventory root';
+  return trail.length > 0 ? trail.join(' / ') : t('web.workspace.inventoryRoot');
 }
 
 export function filterAssets(assets: Asset[], query: string): Asset[] {

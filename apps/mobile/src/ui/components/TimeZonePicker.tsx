@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -22,18 +23,18 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
     const canPresent = capturePresentation();
     if(!canPresent() || disabled || pending.current)return;
     pending.current=true;setSaving(true);setError('');
-    try { await onChange(zone); } catch { if(canPresent())setError('Could not save the time zone. Try again.'); }
+    try { await onChange(zone); } catch { if(canPresent())setError(t('mobile.TimeZonePicker.couldNotSaveTheTimeZoneTryAgain')); }
     finally {pending.current=false;if(mounted.current)setSaving(false);}
   }
   let validQuery = false;
   try { new Intl.DateTimeFormat(undefined, { timeZone: query.trim() }); validQuery = !!query.trim(); } catch { /* An incomplete search remains editable. */ }
   const choices=[...new Set([...matches, ...(validQuery ? [query.trim()] : [])])];
   return <>
-    <NativeNavigationSearch query={query} placeholder="Search city or time zone" onChange={setQuery} onSubmit={setQuery} onClear={() => setQuery('')} />
-    <View style={styles.detailHeader}><Text style={styles.secondaryText}>Dates end at midnight in this time zone. It stays the same when you travel.</Text></View>
-    <SettingsSection footer={matches.length === 30 ? 'Search to find another city or time zone.' : undefined}>
+    <NativeNavigationSearch query={query} placeholder={t('mobile.TimeZonePicker.searchCityOrTimeZone')} onChange={setQuery} onSubmit={setQuery} onClear={() => setQuery('')} />
+    <View style={styles.detailHeader}><Text style={styles.secondaryText}>{t('mobile.TimeZonePicker.datesEndAtMidnightInThisTimeZoneIt')}</Text></View>
+    <SettingsSection footer={matches.length === 30 ? t('mobile.TimeZonePicker.searchToFindAnotherCityOrTimeZone') : undefined}>
       {choices.map((zone,index)=><View key={zone}>{index ? <SettingsSeparator /> : null}<SettingsChoiceRow label={readableTimeZone(zone)} selected={value===zone} disabled={disabled || saving} onPress={()=>void select(zone)}/></View>)}
-      {!choices.length ? <View style={styles.navigationRow}><Text style={styles.secondaryText}>No matching time zones.</Text></View> : null}
+      {!choices.length ? <View style={styles.navigationRow}><Text style={styles.secondaryText}>{t('mobile.TimeZonePicker.noMatchingTimeZones')}</Text></View> : null}
     </SettingsSection>
     {error ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:palette.danger}}>{error}</Text></View> : null}
   </>;

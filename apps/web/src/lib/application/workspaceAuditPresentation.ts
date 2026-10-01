@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AuditRecord, AuditScope } from '$lib/domain/inventory';
 
 export type AuditStatusKind = 'none' | 'missing-context' | 'denied' | 'error' | 'loading' | 'empty';
@@ -42,7 +43,7 @@ export function groupAuditRecordsByDay(
     const key = valid
       ? new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone }).format(date)
       : record.occurredAt;
-    const label = valid ? formatter.format(date) : 'Date unavailable';
+    const label = valid ? formatter.format(date) : t('web.workspaceAuditPresentation.dateUnavailable');
     const group = groups.get(key) ?? { key, label, records: [] };
     group.records.push(record);
     groups.set(key, group);
@@ -61,15 +62,15 @@ export function auditStatusPresentation(input: {
   recordCount: number;
 }): AuditStatusPresentation {
   if (!input.hasTenant || (input.scope === 'inventory' && !input.hasInventory)) {
-    return { kind: 'missing-context', message: 'Select an inventory before viewing audit history.' };
+    return { kind: 'missing-context', message: t('web.workspaceAuditPresentation.selectAnInventoryBeforeViewingAuditHistory') };
   }
   if (!input.canReadScope) {
     return {
       kind: 'denied',
       message:
         input.scope === 'tenant'
-          ? 'Tenant audit history requires tenant configuration access.'
-          : 'Inventory audit history requires inventory view access.',
+          ? t('web.workspaceAuditPresentation.tenantAuditHistoryRequiresTenantConfigurationAccess')
+          : t('web.workspaceAuditPresentation.inventoryAuditHistoryRequiresInventoryViewAccess'),
       role: 'alert'
     };
   }
@@ -77,10 +78,10 @@ export function auditStatusPresentation(input: {
     return { kind: 'error', message: input.error, role: 'alert' };
   }
   if (input.busy && !input.loaded) {
-    return { kind: 'loading', message: 'Loading audit history...', role: 'status' };
+    return { kind: 'loading', message: t('web.workspaceAuditPresentation.loadingAuditHistory'), role: 'status' };
   }
   if (input.loaded && input.recordCount === 0) {
-    return { kind: 'empty', message: 'No audit records found.' };
+    return { kind: 'empty', message: t('web.workspaceAuditPresentation.noAuditRecordsFound') };
   }
   return { kind: 'none', message: '' };
 }
@@ -99,77 +100,77 @@ export function auditRecordPresentation(record: AuditRecord): AuditRecordPresent
     occurredAtLabel,
     primaryText: `${title} ${actorLabel} ${sourceLabel} ${targetLabel} ${occurredAtLabel}`,
     technicalDetails: [
-      { label: 'Action code', value: record.action },
-      { label: 'Target ID', value: record.targetId },
-      { label: 'Principal ID', value: record.principalId },
-      { label: 'Source', value: record.source },
-      ...(record.requestId ? [{ label: 'Request ID', value: record.requestId }] : []),
-      ...Object.entries(record.metadata).map(([key, value]) => ({ label: `Metadata ${humanizeMetadataKey(key)}`, value }))
+      { label: t('web.workspaceAuditPresentation.actionCode'), value: record.action },
+      { label: t('web.workspaceAuditPresentation.targetID'), value: record.targetId },
+      { label: t('web.workspaceAuditPresentation.principalID'), value: record.principalId },
+      { label: t('web.workspaceAuditPresentation.source'), value: record.source },
+      ...(record.requestId ? [{ label: t('web.workspaceAuditPresentation.requestID'), value: record.requestId }] : []),
+      ...Object.entries(record.metadata).map(([key, value]) => ({ label: t('web.workspaceAuditPresentation.metadata', { value: String(humanizeMetadataKey(key)) }), value }))
     ].filter((detail) => detail.value.trim().length > 0)
   };
 }
 
 function humanizeAction(value: string): string {
   const knownActions: Record<string, string> = {
-    'asset.created': 'Asset created',
-    'asset.updated': 'Asset updated',
-    'asset.archived': 'Asset archived',
-    'asset.restored': 'Asset restored',
-    'asset.deleted': 'Asset deleted',
-    'attachment.created': 'Attachment added',
-    'attachment.deleted': 'Attachment removed',
-    'inventory.created': 'Inventory created',
-    'tenant.created': 'Tenant created'
+    'asset.created': t('web.workspaceAuditPresentation.assetCreated'),
+    'asset.updated': t('web.workspaceAuditPresentation.assetUpdated'),
+    'asset.archived': t('web.workspaceAuditPresentation.assetArchived'),
+    'asset.restored': t('web.workspaceAuditPresentation.assetRestored'),
+    'asset.deleted': t('web.workspaceAuditPresentation.assetDeleted'),
+    'attachment.created': t('web.workspaceAuditPresentation.attachmentAdded'),
+    'attachment.deleted': t('web.workspaceAuditPresentation.attachmentRemoved'),
+    'inventory.created': t('web.workspaceAuditPresentation.inventoryCreated'),
+    'tenant.created': t('web.workspaceAuditPresentation.tenantCreated')
   };
   return knownActions[value] ?? sentenceCase(value);
 }
 
 function humanizePrincipal(value: string): string {
   if (!value.trim()) {
-    return 'Unknown actor';
+    return t('web.workspaceAuditPresentation.unknownActor');
   }
   if (value.includes('@')) {
     return value;
   }
   if (value === 'api') {
-    return 'API';
+    return t('web.workspaceAuditPresentation.api');
   }
   if (value === 'principal-owner') {
-    return 'Owner';
+    return t('web.workspaceAuditPresentation.owner');
   }
   if (value.startsWith('oidc_') || value.startsWith('oidc:')) {
-    return 'Signed-in user';
+    return t('web.workspaceAuditPresentation.signedInUser');
   }
   if (value.startsWith('principal-')) {
-    return 'User';
+    return t('web.workspaceAuditPresentation.user');
   }
   if (value === 'system') {
-    return 'System';
+    return t('web.workspaceAuditPresentation.system');
   }
-  return 'User';
+  return t('web.workspaceAuditPresentation.user');
 }
 
 function humanizeSource(value: string): string {
   const knownSources: Record<string, string> = {
-    api: 'API',
-    web: 'Web',
-    mobile: 'Mobile',
-    system: 'System',
-    import: 'Import',
-    local_demo: 'Local demo'
+    api: t('web.workspaceAuditPresentation.api'),
+    web: t('web.workspaceAuditPresentation.web'),
+    mobile: t('web.workspaceAuditPresentation.mobile'),
+    system: t('web.workspaceAuditPresentation.system'),
+    import: t('web.workspaceAuditPresentation.import'),
+    local_demo: t('web.workspaceAuditPresentation.localDemo')
   };
-  return knownSources[value] ?? 'Recorded source';
+  return knownSources[value] ?? t('web.workspaceAuditPresentation.recordedSource');
 }
 
 function humanizeTarget(value: string): string {
   const knownTargets: Record<string, string> = {
-    asset: 'Asset',
-    inventory: 'Inventory',
-    tenant: 'Tenant',
-    attachment: 'Attachment',
-    invitation: 'Invitation',
-    custom_field: 'Custom field',
-    custom_asset_type: 'Custom asset type'
+    asset: t('web.workspaceAuditPresentation.asset'),
+    inventory: t('web.workspaceAuditPresentation.inventory'),
+    tenant: t('web.workspaceAuditPresentation.tenant'),
+    attachment: t('web.workspaceAuditPresentation.attachment'),
+    invitation: t('web.workspaceAuditPresentation.invitation'),
+    custom_field: t('web.workspaceAuditPresentation.customField'),
+    custom_asset_type: t('web.workspaceAuditPresentation.customAssetType')
   };
   return knownTargets[value] ?? sentenceCase(value);
 }
@@ -194,7 +195,7 @@ function sentenceCase(value: string): string {
     .trim()
     .replace(/\s+/g, ' ');
   if (!words) {
-    return 'Activity recorded';
+    return t('web.workspaceAuditPresentation.activityRecorded');
   }
   return words.charAt(0).toUpperCase() + words.slice(1);
 }

@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
 	export type Side = "top" | "right" | "bottom" | "left";
 </script>
 
@@ -46,7 +47,7 @@
 				{#snippet child({ props })}
 					<Button variant="ghost" class="absolute top-4 right-4 z-20 size-11" size="icon-sm" {...props}>
 						<XIcon  />
-						<span class="sr-only">Close</span>
+						<span class="sr-only">{t('web.sheetcontent.close')}</span>
 					</Button>
 				{/snippet}
 			</SheetPrimitive.Close>

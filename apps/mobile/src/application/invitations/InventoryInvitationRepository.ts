@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type InventoryInvitationRelationship = 'viewer' | 'editor';
 
 export type InventoryInvitationStatus =
@@ -39,28 +40,28 @@ export interface InventoryInvitationRepository {
 
 export class InventoryInvitationAuthenticationRequiredError extends Error {
   constructor() {
-    super('Sign in to view this invitation.');
+    super(t('mobile.InventoryInvitationRepository.signInToViewThisInvitation'));
     this.name = 'InventoryInvitationAuthenticationRequiredError';
   }
 }
 
 export class InventoryInvitationEmailMismatchError extends Error {
   constructor() {
-    super('This invitation belongs to another signed-in account.');
+    super(t('mobile.InventoryInvitationRepository.thisInvitationBelongsToAnotherSignedInAccount'));
     this.name = 'InventoryInvitationEmailMismatchError';
   }
 }
 
 export class InventoryInvitationInvalidError extends Error {
   constructor() {
-    super('This invitation link is invalid.');
+    super(t('mobile.InventoryInvitationRepository.thisInvitationLinkIsInvalid'));
     this.name = 'InventoryInvitationInvalidError';
   }
 }
 
 export class InventoryInvitationInvalidResponseError extends Error {
   constructor() {
-    super('Stuff Stash returned an invalid invitation response.');
+    super(t('mobile.InventoryInvitationRepository.stuffStashReturnedAnInvalidInvitationResponse'));
     this.name = 'InventoryInvitationInvalidResponseError';
   }
 }

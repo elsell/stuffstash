@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Button, Host, HStack, Image, List, Section, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import { accessibilityLabel, accessibilityValue, buttonStyle, contentShape, shapes, disabled, font, foregroundStyle, frame, listStyle } from '@expo/ui/swift-ui/modifiers';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -17,11 +18,11 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
   const contextColor = foregroundStyle(palette.textMuted);
   return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>
-      <Section title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
+      <Section title={props.subjectLabel}>
         <VStack alignment="leading" spacing={spacing.sm}>
           <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
           <Text modifiers={[contextColor]}>{props.context}</Text>
-          {props.destinationLabel ? <Text modifiers={[contextColor]}>{`Move to: ${props.destinationLabel}`}</Text> : null}
+          {props.destinationLabel ? <Text modifiers={[contextColor]}>{t('mobile.MoveSelectionListios.moveTo', { destinationLabel: String(props.destinationLabel) })}</Text> : null}
         </VStack>
       </Section>
       <Section title={props.title}>
@@ -37,7 +38,7 @@ function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
   const actions = useFocusedSheetActions({ primaryLabel: row.accessibilityLabel, secondaryLabel: '',
     disabled: !!row.disabled, onApply: row.onPress, onBack: () => {} });
   return <Button onPress={actions.onApply} modifiers={[buttonStyle('plain'), disabled(!!row.disabled),
-    accessibilityLabel(row.accessibilityLabel), accessibilityValue(row.selected ? 'Selected' : 'Not selected')]}>
+    accessibilityLabel(row.accessibilityLabel), accessibilityValue(row.selected ? t('mobile.MoveSelectionListios.selected') : t('mobile.MoveSelectionListios.notSelected'))]}>
     <HStack spacing={spacing.md} modifiers={[contentShape(shapes.rectangle())]}>
       <Image systemName={symbols[row.kind]} modifiers={[secondary, frame({ width: 24 })]} />
       <VStack alignment="leading" spacing={spacing.xs}>

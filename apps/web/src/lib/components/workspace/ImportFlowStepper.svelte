@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { StepProgress, type StepProgressStep } from '$lib/components/ui/step-progress/index.js';
 
   type StepID = 'source' | 'connect' | 'preview' | 'run';
@@ -10,10 +11,10 @@
   };
 
   const steps: StepProgressStep[] = [
-    { id: 'source', label: 'Source' },
-    { id: 'connect', label: 'Connect' },
-    { id: 'preview', label: 'Preview' },
-    { id: 'run', label: 'Run' }
+    { id: 'source', label: t('web.ImportFlowStepper.source') },
+    { id: 'connect', label: t('web.ImportFlowStepper.connect') },
+    { id: 'preview', label: t('web.ImportFlowStepper.preview') },
+    { id: 'run', label: t('web.ImportFlowStepper.run') }
   ];
 
   let { current, availableSteps = ['source'], onNavigateStep }: Props = $props();
@@ -25,4 +26,4 @@
   }
 </script>
 
-<StepProgress {steps} {current} reachableStepIds={availableSteps} ariaLabel="Import progress" onNavigateStep={navigate} />
+<StepProgress {steps} {current} reachableStepIds={availableSteps} ariaLabel={t('web.ImportFlowStepper.importProgress')} onNavigateStep={navigate} />

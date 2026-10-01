@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BrowsePlaceItemViewModel } from './SearchScreenPresentation';
 import {
@@ -20,7 +21,7 @@ export function BrowsePlaceRow({ location, palette, onPress }: BrowsePlaceRowPro
 
   return (
     <Pressable
-      accessibilityLabel={`Open place ${location.title}, ${location.containedAssetCountLabel}`}
+      accessibilityLabel={t('mobile.BrowsePlaceRow.openPlace', { title: String(location.title), containedAssetCountLabel: String(location.containedAssetCountLabel) })}
       accessibilityHint={accessibilityHint || undefined}
       accessibilityRole="button"
       onPress={onPress}
@@ -34,7 +35,7 @@ export function BrowsePlaceRow({ location, palette, onPress }: BrowsePlaceRowPro
             style={styles.image}
           />
         ) : (
-          <Text style={styles.imagePlaceholder}>Place</Text>
+          <Text style={styles.imagePlaceholder}>{t('mobile.BrowsePlaceRow.place')}</Text>
         )}
       </View>
       <View style={styles.body}>

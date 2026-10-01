@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Stack } from 'expo-router';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { useProviderEditorExit } from './useProviderEditorExit';
@@ -32,11 +33,11 @@ export function ProviderCredentialScreen({
 }: ProviderEditorProps) {
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView taskLabel="credential settings" state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileEditorScreens.credentialSettings')} state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile?.credentialPurpose) {
-    return <ProviderStateView taskLabel="credential settings" state={{ status: 'error', message: 'This profile does not support mobile credential editing.' }} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileEditorScreens.credentialSettings')} state={{ status: 'error', message: t('mobile.ProviderProfileEditorScreens.thisProfileDoesNotSupportMobileCredentialEditing') }} onRetry={providers.retry} />;
   }
   return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><CredentialForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={{ ...profile, credentialPurpose: profile.credentialPurpose }} /></>;
 }
@@ -49,11 +50,11 @@ export function ProviderPromptScreen({
 }: ProviderEditorProps) {
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView taskLabel="prompt guidance" state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileEditorScreens.promptGuidance')} state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
-    return <ProviderStateView taskLabel="prompt guidance" state={{ status: 'error', message: 'This provider profile is no longer available.' }} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileEditorScreens.promptGuidance')} state={{ status: 'error', message: t('mobile.ProviderProfileEditorScreens.thisProviderProfileIsNoLongerAvailable') }} onRetry={providers.retry} />;
   }
   return <><SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} /><PromptForm key={`${providers.ownerKey}:${profile.id}`} manageCommand={manageCommand} onSaved={onSaved} profile={profile} /></>;
 }
@@ -94,7 +95,7 @@ function CredentialForm({
       setValue('');
       if (!canPresent()) return;
       authorizeExit(canPresent, () => {
-        feedback.showNotice({ tone: 'success', title: 'Credential saved', message: `${profile.displayName} is ready to test.` });
+        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.credentialSaved'), message: t('mobile.ProviderProfileEditorScreens.isReadyToTest', { displayName: String(profile.displayName) }) });
         onSaved();
       });
     } catch (error) {
@@ -106,14 +107,14 @@ function CredentialForm({
     }
   }
 
-  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save Credential', disabled: saving || !valid, onPress: () => void save() }]);
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.ProviderProfileEditorScreens.saveCredential'), disabled: saving || !valid, onPress: () => void save() }]);
   const headerOptions = useMemo(() => ({ ...saveOptions, gestureEnabled: !saving, headerBackVisible: !saving }), [saveOptions, saving]);
   return (<>
     <Stack.Screen options={headerOptions} />
     <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
-      <Text style={styles.detailSubtitle}>{profile.displayName}. Secrets are sent directly to your Stuff Stash server and aren’t stored on this device.</Text>
+      <Text style={styles.detailSubtitle}>{profile.displayName}{t('mobile.ProviderProfileEditorScreens.secretsAreSentDirectlyToYourStuffStashServer')}</Text>
       {profile.credentialPurpose === 'server_adc' ? (
-        <Text style={local.explanation}>Use the Application Default Credentials configured by the server operator. No provider secret is entered here.</Text>
+        <Text style={local.explanation}>{t('mobile.ProviderProfileEditorScreens.useTheApplicationDefaultCredentialsConfiguredByTheServer')}</Text>
       ) : (
         <View>
           <Text style={local.label}>{credentialLabel(profile.credentialPurpose)}</Text>
@@ -129,7 +130,7 @@ function CredentialForm({
         </View>
       )}
       {error ? <ProviderEditorError message={error} /> : null}
-      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Saving…</Text> : null}
+      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>{t('mobile.ProviderProfileEditorScreens.saving')}</Text> : null}
     </ScrollView>
   </>);
 }
@@ -165,7 +166,7 @@ function PromptForm({
       setValue('');
       if (!canPresent()) return;
       authorizeExit(canPresent, () => {
-        feedback.showNotice({ tone: 'success', title: 'Prompt guidance saved', message: `${profile.displayName} was updated.` });
+        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.promptGuidanceSaved'), message: t('mobile.ProviderProfileEditorScreens.wasUpdated', { displayName: String(profile.displayName) }) });
         onSaved();
       });
     } catch (error) {
@@ -177,16 +178,16 @@ function PromptForm({
     }
   }
 
-  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save Guidance', disabled: saving || !valid, onPress: () => void save() }]);
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.ProviderProfileEditorScreens.saveGuidance'), disabled: saving || !valid, onPress: () => void save() }]);
   const headerOptions = useMemo(() => ({ ...saveOptions, gestureEnabled: !saving, headerBackVisible: !saving }), [saveOptions, saving]);
   return (<>
     <Stack.Screen options={headerOptions} />
     <ScrollView contentContainerStyle={[styles.content, local.form]} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.shell}>
-      <Text style={styles.detailSubtitle}>Optional tenant guidance for {profile.displayName}. Existing hidden prompt text is never returned to the phone.</Text>
-      <Text style={local.label}>New prompt guidance</Text>
-      <AppTextInput accessibilityLabel="New prompt guidance" multiline editable={!saving} onChangeText={next => { if (!savingRef.current) { setValue(next); setError(undefined); } }} style={[local.input, local.multiline]} value={value} />
+      <Text style={styles.detailSubtitle}>{t('mobile.ProviderProfileEditorScreens.optionalTenantGuidanceFor')}{profile.displayName}{t('mobile.ProviderProfileEditorScreens.existingHiddenPromptTextIsNeverReturnedToThe')}</Text>
+      <Text style={local.label}>{t('mobile.ProviderProfileEditorScreens.newPromptGuidance')}</Text>
+      <AppTextInput accessibilityLabel={t('mobile.ProviderProfileEditorScreens.newPromptGuidance')} multiline editable={!saving} onChangeText={next => { if (!savingRef.current) { setValue(next); setError(undefined); } }} style={[local.input, local.multiline]} value={value} />
       {error ? <ProviderEditorError message={error} /> : null}
-      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Saving…</Text> : null}
+      {saving ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>{t('mobile.ProviderProfileEditorScreens.saving')}</Text> : null}
     </ScrollView>
   </>);
 }
@@ -202,10 +203,10 @@ function ProviderEditorError({ message }: { readonly message: string }) {
 
 function credentialLabel(purpose: ProviderCredentialPurpose): string {
   return purpose === 'api_key'
-    ? 'API key'
+    ? t('mobile.ProviderProfileEditorScreens.aPIKey')
     : purpose === 'oauth_bearer'
-      ? 'OAuth bearer token'
-      : 'Server credentials';
+      ? t('mobile.ProviderProfileEditorScreens.oAuthBearerToken')
+      : t('mobile.ProviderProfileEditorScreens.serverCredentials');
 }
 
 function editorStyles(colors: MobileColorPalette) {

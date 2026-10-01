@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 
 export type AssetCardViewModel = {
@@ -126,9 +127,9 @@ export function toAssetCardViewModel(asset: AssetSummary): AssetCardViewModel {
     locationTrailLabel: labelLocationTrail(asset.locationTrail),
     parentLocationTrail: parentLocationTrail(asset),
     updatedAtLabel: asset.updatedAtLabel,
-    photoLabel: asset.hasPhoto ? 'Photo ready' : 'Needs photo',
+    photoLabel: asset.hasPhoto ? t('mobile.AssetViewModels.photoReady') : t('mobile.AssetViewModels.needsPhoto'),
     hasPhoto: asset.hasPhoto,
-    ...(asset.currentCheckout ? { checkedOutLabel: 'Checked out' } : {}),
+    ...(asset.currentCheckout ? { checkedOutLabel: t('mobile.AssetViewModels.checkedOut') } : {}),
     ...(tags.length > 0 ? { tags } : {}),
     imagePlaceholderLabel: placeholderForKind(asset.kind),
     ...(asset.photo ? { photo: asset.photo } : {})
@@ -171,7 +172,7 @@ export function toAssetDetailViewModel(
     parentLocationTrailLabel: labelParentLocationTrail(asset),
     isPlacementLoading: options.isPlacementLoading,
     photos: toAssetPhotoViewModels(asset.photos ?? (asset.photo ? [asset.photo] : [])),
-    lifecycleLabel: asset.lifecycleState === 'active' ? 'Active' : 'Archived',
+    lifecycleLabel: asset.lifecycleState === 'active' ? t('mobile.AssetViewModels.active') : t('mobile.AssetViewModels.archived'),
     isActive: asset.lifecycleState === 'active',
     canEdit: canEditAsset && asset.lifecycleState === 'active',
     canMove: canEditAsset && asset.lifecycleState === 'active',
@@ -189,11 +190,11 @@ export function toAssetDetailViewModel(
       && asset.currentCheckout === undefined,
     canReturn: canEditAsset && asset.currentCheckout !== undefined,
     containedAssets,
-    containedAssetsLabel: containedAssets.length === 1 ? '1 thing inside' : `${containedAssets.length.toString()} things inside`,
+    containedAssetsLabel: t('asset.thingsInside', { count: containedAssets.length }),
     containedSpaces: locationContents.spaces,
-    containedSpacesLabel: countLabel(locationContents.spaces.length, 'space'),
+    containedSpacesLabel: t('spaces.count', { count: locationContents.spaces.length }),
     containedItems: locationContents.items,
-    containedItemsLabel: countLabel(locationContents.items.length, 'item'),
+    containedItemsLabel: t('items.count', { count: locationContents.items.length }),
     canContainAssets: asset.kind === 'container' || asset.kind === 'location',
     canAddContainedAssets: canCreateAsset && canEditAsset && asset.lifecycleState === 'active' && (asset.kind === 'container' || asset.kind === 'location')
   };
@@ -207,7 +208,7 @@ export function toAssetPhotoViewModels(
     fileName: photo.fileName,
     contentType: photo.contentType,
     sizeBytes: photo.sizeBytes,
-    label: photo.fileName ?? `Photo ${(index + 1).toString()}`,
+    label: photo.fileName ?? t('asset.photoPosition', { position: index + 1 }),
     uri: photo.uri,
     heroUri: photo.heroUri,
     heroHeaders: photo.heroHeaders,
@@ -308,23 +309,19 @@ function compareContainedItems(
   return left.id.localeCompare(right.id);
 }
 
-function countLabel(count: number, noun: string): string {
-  return `${count.toString()} ${count === 1 ? noun : `${noun}s`}`;
-}
-
 function checkoutLabel(asset: AssetSummary): string {
   if (!asset.currentCheckout) {
-    return 'Available';
+    return t('mobile.AssetViewModels.available');
   }
   const date = new Date(asset.currentCheckout.checkedOutAt);
   if (Number.isNaN(date.getTime())) {
-    return 'Checked out';
+    return t('mobile.AssetViewModels.checkedOut');
   }
-  return `Checked out ${date.toLocaleDateString(undefined, {
+  return t('mobile.AssetViewModels.checkedOut2', { value: String(date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  })}`;
+  })) });
 }
 
 function compareContainedAssetSummaries(left: AssetSummary, right: AssetSummary): number {
@@ -366,7 +363,7 @@ function labelLocationTrail(locationTrail: readonly string[]): string {
   const localTrail = locationTrail.slice(1);
 
   if (localTrail.length === 0) {
-    return locationTrail[0] ?? 'Unplaced';
+    return locationTrail[0] ?? t('mobile.AssetViewModels.unplaced');
   }
 
   return localTrail.join(' / ');
@@ -374,7 +371,7 @@ function labelLocationTrail(locationTrail: readonly string[]): string {
 
 function labelParentLocationTrail(asset: AssetSummary): string {
   if (asset.parentLocationTrail.length === 0) {
-    return 'Inventory root';
+    return t('mobile.AssetViewModels.inventoryRoot');
   }
 
   return asset.parentLocationTrail.map((segment) => segment.title).join(' / ');
@@ -391,21 +388,21 @@ function parentLocationTrail(asset: AssetSummary): readonly AssetParentLocationC
 function labelAssetKind(kind: AssetSummary['kind']): string {
   switch (kind) {
     case 'container':
-      return 'Container';
+      return t('mobile.AssetViewModels.container');
     case 'item':
-      return 'Item';
+      return t('mobile.AssetViewModels.item');
     case 'location':
-      return 'Place';
+      return t('mobile.AssetViewModels.place');
   }
 }
 
 function placeholderForKind(kind: AssetSummary['kind']): string {
   switch (kind) {
     case 'container':
-      return 'Box';
+      return t('mobile.AssetViewModels.box');
     case 'item':
-      return 'Item';
+      return t('mobile.AssetViewModels.item');
     case 'location':
-      return 'Place';
+      return t('mobile.AssetViewModels.place');
   }
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,7 +69,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       setCollection((current) => ({ ...current, rows: [], pendingLifecycle: undefined }));
       setStatus('denied');
     } else if (reads.resource.isRefetchError) {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: 'Previously loaded settings are still shown. Refresh to retry.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.CustomizationCollectionScreen.couldNotRefreshSettings'), message: t('mobile.CustomizationCollectionScreen.previouslyLoadedSettingsAreStillShownRefreshToRetry') });
     }
   }, [reads.contextError, reads.resource.error, reads.context?.tenantPermissions.join(','), reads.context?.inventoryPermissions.join(',')]);
 
@@ -89,7 +90,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
           : await query.assetTypes(nextContext, scope, targetLifecycle);
       if (request !== requestRef.current) return;
       setContext(nextContext); setCollection((current) => commitLifecycleTransition(current, targetLifecycle, result.items)); setIncomplete(!result.complete); setStatus('ready');
-      if (!result.complete) feedback.showNotice({ tone: 'warning', title: 'Some settings could not be loaded', message: 'Refresh to try loading the complete list.' });
+      if (!result.complete) feedback.showNotice({ tone: 'warning', title: t('mobile.CustomizationCollectionScreen.someSettingsCouldNotBeLoaded'), message: t('mobile.CustomizationCollectionScreen.refreshToTryLoadingTheCompleteList') });
     } catch (error) {
       if (request !== requestRef.current) return;
       if (error instanceof CustomizationFailure && error.kind === 'permission-denied') {
@@ -103,7 +104,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
         setStatus('denied');
         return;
       }
-      if (rows.length) { feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: safeCustomizationMessage(error, 'Try again.') }); setCollection(rollbackLifecycleTransition); setStatus('ready'); }
+      if (rows.length) { feedback.showNotice({ tone: 'error', title: t('mobile.CustomizationCollectionScreen.couldNotRefreshSettings'), message: safeCustomizationMessage(error, t('mobile.CustomizationCollectionScreen.tryAgain')) }); setCollection(rollbackLifecycleTransition); setStatus('ready'); }
       else setStatus('error');
     }
   }, [accessPolicy, contextQuery, feedback, kind, lifecycle, query, rows.length, scope]);
@@ -121,10 +122,10 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
     && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error)
     && Boolean(reads.context && accessPolicy.canRead(reads.context, scope));
   const headerActions = useNativeHeaderActionOptions(headerEnabled && canEdit && lifecycle === 'active'
-    ? [{ kind: 'add', label: `Add ${singular(kind)}`, onPress: onAdd }] : []);
+    ? [{ kind: 'add', label: t(`customization.add.${kind}`), onPress: onAdd }] : []);
   const withHeader = (body: ReactNode) => <>
     <Stack.Screen options={headerActions} />
-    <NativeNavigationSearch enabled={headerEnabled} query={search} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`}
+    <NativeNavigationSearch enabled={headerEnabled} query={search} placeholder={t(`customization.search.${kind}`)}
       onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
     {body}
   </>;
@@ -141,34 +142,32 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       : scroll);
   };
 
-  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
-  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label="Loading settings…" />);
-  if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View>);
-  if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></>);
-  if (status === 'denied') return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
+  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
+  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loadingSettings')} />);
+  if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={t(`customization.loading.${kind}`)} /></View>);
+  if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>{t(`customization.loadFailed.${kind}`)}</Text><Text style={settings.styles.errorMessage}>{t('mobile.CustomizationCollectionScreen.yourSettingsWereNotChanged')}</Text><NativeCommandButton label={t('mobile.CustomizationCollectionScreen.retry')} onPress={() => void load()} /></>);
+  if (status === 'denied') return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
   if (!context) return withHeader(null);
 
   return withScrollContent(<>
-    {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value={lifecycle} /></View> : null}
-    {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${pendingLifecycle} settings…`} /></View> : null}
-    {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>Some settings may be missing</Text><Text style={styles.incompleteText}>Pull to refresh and try loading the complete list.</Text></View> : null}
-    {search && filtered.length === 0 ? <Empty title="No matches" message={`No ${plural(kind).toLocaleLowerCase()} match “${search}”.`} />
-      : filtered.length === 0 ? <Empty title={`No ${lifecycle} ${plural(kind).toLocaleLowerCase()}`} message={canEdit && lifecycle === 'active' ? `Add the first ${singular(kind).toLocaleLowerCase()} here.` : 'There is nothing to show.'} />
+    {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: t('mobile.CustomizationCollectionScreen.active'), value: 'active' }, { label: t('mobile.CustomizationCollectionScreen.archived'), value: 'archived' }]} value={lifecycle} /></View> : null}
+    {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loadingSettings2', { pendingLifecycle: String(pendingLifecycle) })} /></View> : null}
+    {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>{t('mobile.CustomizationCollectionScreen.someSettingsMayBeMissing')}</Text><Text style={styles.incompleteText}>{t('mobile.CustomizationCollectionScreen.pullToRefreshAndTryLoadingTheCompleteList')}</Text></View> : null}
+    {search && filtered.length === 0 ? <Empty title={t('mobile.CustomizationCollectionScreen.noMatches')} message={t(`customization.noMatch.${kind}`, { search })} />
+      : filtered.length === 0 ? <Empty title={t(`customization.empty.${kind}.${lifecycle}`)} message={canEdit && lifecycle === 'active' ? t(`customization.addFirst.${kind}`) : t('mobile.CustomizationCollectionScreen.thereIsNothingToShow')} />
       : <>
-        {inherited.length ? <ResourceSection name={`From ${context.tenantName}`} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
-        {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? `Only in ${context.inventoryName}` : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
+        {inherited.length ? <ResourceSection name={t('customization.fromTenant', { tenant: context.tenantName })} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
+        {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? t("customization.onlyIn", { inventory: context.inventoryName }) : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
       </>}
   </>, true);
 }
 
 function ResourceSection({ inherited = false, name, onOpen, rows }: { readonly inherited?: boolean; readonly name?: string; readonly onOpen: (row: Row) => void; readonly rows: readonly Row[] }) {
   const colors = useAppearancePalette(); const styles = createStyles(colors);
-  return <SettingsSection title={name}>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<Pressable accessibilityLabel={`${row.displayName}${row.kind === 'tag' ? `, ${tagColorName(row.color)}` : ''}${inherited ? ', inherited' : ''}`} accessibilityRole="button" onPress={() => onOpen(row)} style={({ pressed }) => [styles.row, row.kind === 'tag' && styles.compactRow, pressed && styles.pressed]}><View style={styles.rowBody}>{row.kind === 'tag' ? <View accessibilityElementsHidden style={[styles.color, row.color ? { backgroundColor: row.color } : styles.noColor]} /> : null}<View style={styles.rowText}><Text style={styles.rowTitle}>{row.displayName}</Text>{row.kind !== 'tag' ? <Text style={styles.rowMeta}>{row.kind === 'field' ? `${fieldType(row.type)} · ${row.applicability === 'all_assets' ? 'All assets' : 'Selected asset types'}` : row.description || row.key}{inherited ? ' · Inherited' : ''}</Text> : null}</View></View><ChevronRight color={colors.textMuted} size={18} /></Pressable></View>)}</SettingsSection>;
+  return <SettingsSection title={name}>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<Pressable accessibilityLabel={row.kind === 'tag' ? t(inherited ? 'customization.accessibility.tagInherited' : 'customization.accessibility.tag', { name: row.displayName, color: tagColorName(row.color) }) : inherited ? t('customization.accessibility.inherited', { name: row.displayName }) : row.displayName} accessibilityRole="button" onPress={() => onOpen(row)} style={({ pressed }) => [styles.row, row.kind === 'tag' && styles.compactRow, pressed && styles.pressed]}><View style={styles.rowBody}>{row.kind === 'tag' ? <View accessibilityElementsHidden style={[styles.color, row.color ? { backgroundColor: row.color } : styles.noColor]} /> : null}<View style={styles.rowText}><Text style={styles.rowTitle}>{row.displayName}</Text>{row.kind !== 'tag' ? <Text style={styles.rowMeta}>{row.kind === 'field' ? `${fieldType(row.type)} · ${row.applicability === 'all_assets' ? t('mobile.CustomizationCollectionScreen.allAssets') : t('mobile.CustomizationCollectionScreen.selectedAssetTypes')}` : row.description || row.key}{inherited ? t('mobile.CustomizationCollectionScreen.inherited') : ''}</Text> : null}</View></View><ChevronRight color={colors.textMuted} size={18} /></Pressable></View>)}</SettingsSection>;
 }
 
 function Empty({ message, title }: { readonly message: string; readonly title: string }) { const styles = useSettingsListStyles().styles; return <View style={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>{title}</Text><Text style={styles.errorMessage}>{message}</Text></View>; }
-function singular(kind: CustomizationKind) { return kind === 'tag' ? 'Tag' : kind === 'field' ? 'Custom field' : 'Asset type'; }
-function plural(kind: CustomizationKind) { return `${singular(kind)}s`; }
 function fieldType(value: string) { return value.charAt(0).toUpperCase() + value.slice(1); }
 function createStyles(colors: MobileColorPalette) { return StyleSheet.create({
   lifecycleControl: { marginTop: spacing.sm }, loadingGroup: { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: spacing.sm, overflow: 'hidden' }, incomplete: { backgroundColor: colors.warningSurface, borderRadius: radius.md, gap: spacing.xs, marginTop: spacing.sm, padding: spacing.md }, incompleteTitle: { color: colors.warning, fontSize: 14, fontWeight: '700' }, incompleteText: { color: colors.text, fontSize: 13 }, row: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', minHeight: 58, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, compactRow: { minHeight: 52, paddingVertical: spacing.xs }, pressed: { backgroundColor: colors.surfaceMuted }, rowBody: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: spacing.sm, minWidth: 0 }, color: { borderColor: colors.border, borderRadius: 12, borderWidth: 1, height: 24, width: 24 }, noColor: { backgroundColor: 'transparent', borderWidth: 2 }, rowText: { flex: 1, gap: 2, minWidth: 0 }, rowTitle: { color: colors.text, fontSize: 16, fontWeight: '600' }, rowMeta: { color: colors.textMuted, fontSize: 13, lineHeight: 18 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
@@ -48,10 +49,10 @@ export function AssetPhotoViewerSheet({
 
     const isCurrent = capturePresentation();
     let accepted = false;
-    Alert.alert('Remove photo?', 'This removes the photo from this asset.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('mobile.AssetPhotoViewerSheet.removePhoto'), t('mobile.AssetPhotoViewerSheet.thisRemovesThePhotoFromThisAsset'), [
+      { text: t('mobile.AssetPhotoViewerSheet.cancel'), style: 'cancel' },
       {
-        text: 'Remove',
+        text: t('mobile.AssetPhotoViewerSheet.remove'),
         style: 'destructive',
         onPress: () => {
           if (!isCurrent() || accepted) return;

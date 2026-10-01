@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Inventory, Tenant } from '$lib/domain/inventory';
 import { contextInventoryHref } from './workspaceShellNavigation';
 
@@ -51,7 +52,7 @@ export function inventoryContextOptions(input: {
       id: inventory.id,
       tenantId: inventory.tenantId,
       name: inventory.name,
-      tenantName: selectedTenant?.name ?? 'Inventory',
+      tenantName: selectedTenant?.name ?? t('web.workspaceContextSwitching.inventory'),
       relationshipLabel: relationshipLabel(inventory.access.relationship),
       href: contextInventoryHref(inventory),
       selected: inventory.id === input.selectedInventoryId
@@ -65,7 +66,7 @@ export function inventoryCountLabel(inventories: Inventory[], tenantId: string):
 
 export function relationshipLabel(relationship: string | undefined): string {
   if (!relationship) {
-    return 'Member';
+    return t('web.workspaceContextSwitching.member');
   }
   return relationship
     .split(/[\s_-]+/)
@@ -78,11 +79,11 @@ export function contextSwitcherPresentation(input: {
   selectedTenant: Pick<Tenant, 'name'> | null;
   selectedInventory: Pick<Inventory, 'name'> | null;
 }): ContextSwitcherPresentation {
-  const tenantLabel = input.selectedTenant?.name ?? 'No tenant';
+  const tenantLabel = input.selectedTenant?.name ?? t('web.workspaceContextSwitching.noTenant');
   return {
-    triggerInventoryLabel: input.selectedInventory?.name ?? 'No inventory',
+    triggerInventoryLabel: input.selectedInventory?.name ?? t('web.workspaceContextSwitching.noInventory'),
     triggerTenantLabel: tenantLabel,
     activeTenantLabel: tenantLabel,
-    emptyInventoryMessage: 'No inventories in this tenant.'
+    emptyInventoryMessage: t('web.workspaceContextSwitching.noInventoriesInThisTenant')
   };
 }

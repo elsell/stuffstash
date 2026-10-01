@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -40,16 +41,16 @@ export function voiceAdminGuardPresentation(
 ): VoiceAdminGuardPresentation {
   if (decision.status === 'unavailable') {
     return {
-      title: 'Voice settings unavailable',
-      message: `Only tenant administrators can configure Voice for ${decision.tenantName}.`,
-      retryLabel: 'Check Again'
+      title: t('mobile.VoiceAdminGuard.voiceSettingsUnavailable'),
+      message: t('mobile.VoiceAdminGuard.onlyTenantAdministratorsCanConfigureVoiceFor', { tenantName: String(decision.tenantName) }),
+      retryLabel: t('mobile.VoiceAdminGuard.checkAgain')
     };
   }
 
   return {
-    title: 'Could not verify Voice settings access',
+    title: t('mobile.VoiceAdminGuard.couldNotVerifyVoiceSettingsAccess'),
     message: decision.message,
-    retryLabel: 'Retry'
+    retryLabel: t('mobile.VoiceAdminGuard.retry')
   };
 }
 
@@ -68,7 +69,7 @@ export function VoiceAdminGuard({
     return (
       <View style={[styles.shell, styles.errorContainer]}>
         <ActivityIndicator color={palette.action} />
-        <Text style={styles.errorMessage}>Checking Voice settings access</Text>
+        <Text style={styles.errorMessage}>{t('mobile.VoiceAdminGuard.checkingVoiceSettingsAccess')}</Text>
       </View>
     );
   }

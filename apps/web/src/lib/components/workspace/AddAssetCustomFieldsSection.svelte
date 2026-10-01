@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { CustomAssetType, CustomFieldDefinition } from '$lib/domain/inventory';
 
   export type AddAssetCustomFieldsSectionProps = {
@@ -25,7 +26,7 @@
   }: AddAssetCustomFieldsSectionProps = $props();
 
   let customTypeOptions = $derived<ChoiceGridOption[]>([
-    { value: '', label: 'Base asset' },
+    { value: '', label: t('web.AddAssetCustomFieldsSection.baseAsset') },
     ...activeCustomAssetTypes.map((assetType) => ({
       value: assetType.id,
       label: assetType.displayName,
@@ -37,9 +38,9 @@
 {#if activeCustomAssetTypes.length > 0}
   <div class="field-stack">
     <fieldset class="selection-field">
-      <legend>Custom type</legend>
+      <legend>{t('web.AddAssetCustomFieldsSection.customType')}</legend>
       <ChoiceGrid
-        label="Custom asset type"
+        label={t('web.AddAssetCustomFieldsSection.customAssetType')}
         options={customTypeOptions}
         selectedValues={[customAssetTypeId]}
         onSelect={onCustomAssetTypeSelect}
@@ -52,6 +53,6 @@
   fields={applicableFields}
   values={customFieldValues}
   idPrefix="custom-field"
-  label="Custom fields"
+  label={t('web.AddAssetCustomFieldsSection.customFields')}
   onValueChange={onCustomFieldValueChange}
 />

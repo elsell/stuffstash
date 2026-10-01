@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { Toaster as Sonner, type ToasterProps } from 'svelte-sonner';
 
   let {
@@ -7,8 +8,8 @@
     richColors = false,
     duration = 4200,
     visibleToasts = 4,
-    containerAriaLabel = 'Stuff Stash notifications',
-    closeButtonAriaLabel = 'Dismiss notification',
+    containerAriaLabel = t('web.sonner.stuffStashNotifications'),
+    closeButtonAriaLabel = t('web.sonner.dismissNotification'),
     toastOptions = {},
     ...restProps
   }: ToasterProps = $props();

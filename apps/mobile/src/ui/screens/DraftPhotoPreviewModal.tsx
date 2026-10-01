@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useMemo } from 'react';
 import { Alert } from 'react-native';
@@ -37,10 +38,10 @@ export function DraftPhotoPreviewModal({
 
     const isCurrent = capturePresentation();
     let accepted = false;
-    Alert.alert('Remove photo?', 'This removes the photo from this new item draft.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('mobile.DraftPhotoPreviewModal.removePhoto'), t('mobile.DraftPhotoPreviewModal.thisRemovesThePhotoFromThisNewItemDraft'), [
+      { text: t('mobile.DraftPhotoPreviewModal.cancel'), style: 'cancel' },
       {
-        text: 'Remove',
+        text: t('mobile.DraftPhotoPreviewModal.remove'),
         style: 'destructive',
         onPress: () => {
           if (!isCurrent() || accepted) return;

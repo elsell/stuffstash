@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Check, Palette, X } from 'lucide-react-native';
@@ -16,7 +17,7 @@ export const tagColorChoices = [
   '#DC2626',
   '#0F766E'
 ] as const;
-const tagColorNames: Readonly<Record<string, string>> = { '#2F80ED': 'Blue', '#2E7D32': 'Green', '#7C3AED': 'Purple', '#D97706': 'Orange', '#DC2626': 'Red', '#0F766E': 'Teal' };
+const tagColorNames: Readonly<Record<string, string>> = { '#2F80ED': t('mobile.TagColorPicker.blue'), '#2E7D32': t('mobile.TagColorPicker.green'), '#7C3AED': t('mobile.TagColorPicker.purple'), '#D97706': t('mobile.TagColorPicker.orange'), '#DC2626': t('mobile.TagColorPicker.red'), '#0F766E': t('mobile.TagColorPicker.teal') };
 
 type TagColorPickerProps = {
   readonly value: string;
@@ -57,10 +58,10 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
   }
 
   return (
-    <View accessibilityLabel="Tag color choices" style={styles.shell}>
+    <View accessibilityLabel={t('mobile.TagColorPicker.tagColorChoices')} style={styles.shell}>
       <View style={styles.swatches}>
         <Pressable
-          accessibilityLabel="No tag color"
+          accessibilityLabel={t('mobile.TagColorPicker.noTagColor')}
           accessibilityRole="button"
           accessibilityState={{ disabled, selected: !hasTypedColor }}
           disabled={disabled}
@@ -73,7 +74,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           const selected = normalizedValue === color;
           return (
             <Pressable
-              accessibilityLabel={`Choose ${tagColorName(color)} tag color`}
+              accessibilityLabel={t('mobile.TagColorPicker.chooseTagColor', { value: String(tagColorName(color)) })}
               accessibilityRole="button"
               accessibilityState={{ disabled, selected }}
               disabled={disabled}
@@ -92,7 +93,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
         })}
       </View>
       {nativePicker ? <FullSpectrumTagColorPicker disabled={disabled} value={normalizedValue ?? ''} onChange={next => { if (!disabled) onChange(next); }} /> : <Pressable
-        accessibilityLabel="Choose a custom tag color"
+        accessibilityLabel={t('mobile.TagColorPicker.chooseACustomTagColor')}
         accessibilityRole="button"
         accessibilityState={{ disabled, selected: customSelected }}
         disabled={disabled}
@@ -102,24 +103,24 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
         <View testID="custom-tag-color-indicator" style={[styles.customIndicator, normalizedValue && customSelected ? { backgroundColor: normalizedValue } : null]}>
           {customSelected && normalizedValue ? <Check color={swatchForeground(normalizedValue)} size={14} strokeWidth={2.8} /> : <Palette color={colors.textMuted} size={16} />}
         </View>
-        <Text style={styles.customLabel}>Custom…</Text>
+        <Text style={styles.customLabel}>{t('mobile.TagColorPicker.custom')}</Text>
       </Pressable>}
-      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{nativePicker ? 'Choose a color to correct this value.' : 'Choose Custom… to correct this color.'}</Text> : null}
+      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{nativePicker ? t('mobile.TagColorPicker.chooseAColorToCorrectThisValue') : t('mobile.TagColorPicker.chooseCustomToCorrectThisColor')}</Text> : null}
       {customOpen ? (
         <View onLayout={(event) => setCustomPanelHeight(event.nativeEvent.layout.height)} style={styles.customPanel} testID="custom-tag-color-panel">
-          <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>Custom color</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
+          <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>{t('mobile.TagColorPicker.customColor')}</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : t('mobile.TagColorPicker.noColor')}</Text></View></View>
           <View style={styles.pickerSurface}>
             <FullSpectrumTagColorPicker disabled={disabled} compact={customPanelLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={value => { if (!disabled) setCustomDraft(value); }} />
           </View>
           <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.supplementaryContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled" style={styles.supplementaryScroll}>
-            <Text style={styles.inputLabel}>Hex color</Text>
-            <AppTextInput editable={!disabled} accessibilityLabel="Custom tag color hex value" autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder="#2F80ED" placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
-            {!validDraft ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>Enter a #RRGGBB color.</Text> : null}
-            <Pressable accessibilityRole="button" disabled={disabled} onPress={() => { if (!disabled) setCustomDraft(''); }} style={styles.clearAction}><Text style={styles.clearActionText}>Clear color</Text></Pressable>
+            <Text style={styles.inputLabel}>{t('mobile.TagColorPicker.hexColor')}</Text>
+            <AppTextInput editable={!disabled} accessibilityLabel={t('mobile.TagColorPicker.customTagColorHexValue')} autoCapitalize="characters" autoCorrect={false} onChangeText={setCustomDraft} placeholder={t('mobile.TagColorPicker.2F80ED')} placeholderTextColor={colors.textMuted} style={styles.hexInput} value={customDraft} />
+            {!validDraft ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{t('mobile.TagColorPicker.enterARRGGBBColor')}</Text> : null}
+            <Pressable accessibilityRole="button" disabled={disabled} onPress={() => { if (!disabled) setCustomDraft(''); }} style={styles.clearAction}><Text style={styles.clearActionText}>{t('mobile.TagColorPicker.clearColor')}</Text></Pressable>
           </ScrollView>
           <View style={styles.modalActions}>
-            <Pressable accessibilityRole="button" onPress={closeCustom} style={styles.cancelAction}><Text style={styles.cancelActionText}>Cancel</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: disabled || !validDraft }} disabled={disabled || !validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>Done</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={closeCustom} style={styles.cancelAction}><Text style={styles.cancelActionText}>{t('mobile.TagColorPicker.cancel')}</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: disabled || !validDraft }} disabled={disabled || !validDraft} onPress={applyCustom} style={[styles.doneAction, !validDraft ? styles.disabled : null]}><Text style={styles.doneActionText}>{t('mobile.TagColorPicker.done')}</Text></Pressable>
           </View>
         </View>
       ) : null}
@@ -128,9 +129,9 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
 }
 
 export function tagColorName(color: string | undefined): string {
-  if (!color) return 'No color';
+  if (!color) return t('mobile.TagColorPicker.noColor');
   const normalized = normalizeColor(color);
-  return normalized ? tagColorNames[normalized] ?? `Custom color ${normalized}` : 'Invalid color';
+  return normalized ? tagColorNames[normalized] ?? t('tag.customColor', { color: normalized }) : t('mobile.TagColorPicker.invalidColor');
 }
 
 export function swatchForeground(color: string): '#000000' | '#FFFFFF' {

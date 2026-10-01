@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import { assetId, type AssetKind, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type { ActiveAssetTagReference, CreateAssetTagDraft } from '../assets/AssetTagDraftResolution';
 import { createPendingAssetTags, reconcilePendingAssetTagDrafts } from '../assets/AssetTagDraftResolution';
@@ -33,7 +34,7 @@ export class CreateAssetCommand {
   async execute(input: CreateAssetCommandInput): Promise<CreateAssetCommandResult> {
     const title = input.title.trim();
     if (title.length === 0) {
-      throw new Error('Name is required.');
+      throw new Error(t('recovery.nameRequired'));
     }
 
     const reconciledTags = reconcilePendingAssetTagDrafts({
@@ -67,8 +68,8 @@ export class CreateAssetCommand {
       title: asset.title,
       message:
         failedPhotoCount > 0
-          ? `Saved ${asset.title}, but ${failedPhotoCount.toString()} photo upload failed.`
-          : `Saved ${asset.title}.`
+          ? t("assets.savedWithPhotoFailures", { title: asset.title, count: failedPhotoCount })
+          : t("assets.savedNamed", { title: asset.title })
     };
   }
 }

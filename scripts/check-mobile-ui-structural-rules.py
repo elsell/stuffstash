@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 IMPORT_PATTERN = re.compile(
-    r"^[ \t]*import\s+(?P<clause>.*?)\s+from\s+['\"]react-native['\"]\s*;",
+    r"^[ \t]*import\s+(?P<clause>[^;\'\"]*?)\s+from\s+['\"]react-native['\"]\s*;",
     re.DOTALL | re.MULTILINE,
 )
 REQUIRE_PATTERN = re.compile(
@@ -21,7 +21,7 @@ NAMESPACE_REQUIRE_PATTERN = re.compile(
 )
 RAW_PRODUCT_MODAL_PATTERN = re.compile(r"<Modal\b|\bModal\s*,|\bModal\s*\(")
 FRAMEWORK_IMPORT_PATTERN = re.compile(
-    r"^[ \t]*import(?:\s+type)?\s+.*?\s+from\s+['\"](?P<module>[^'\"]+)['\"]\s*;",
+    r"^[ \t]*import(?:\s+type)?\s+[^;\'\"]*?\s+from\s+['\"](?P<module>[^'\"]+)['\"]\s*;",
     re.DOTALL | re.MULTILINE,
 )
 FRAMEWORK_REQUIRE_PATTERN = re.compile(

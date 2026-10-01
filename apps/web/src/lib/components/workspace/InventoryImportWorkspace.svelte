@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import { onMount, tick, untrack } from 'svelte';
@@ -250,7 +251,7 @@
     } catch (loadError) {
       if (options.quiet) pollFailureCount = Math.min(pollFailureCount + 1, 4);
       if (!options.quiet && isCurrentJobLoad(sequence, scope)) {
-        error = errorMessage(loadError, 'Import history could not be loaded.');
+        error = errorMessage(loadError, t('web.InventoryImportWorkspace.importHistoryCouldNotBeLoaded'));
       }
     } finally {
       if (!options.quiet && visibleJobLoadSequence === sequence && isCurrentScope(scope)) {
@@ -375,7 +376,7 @@
     includeImages = job.source.imageImport !== 'disabled';
     onImportSourceChange(importSourceRouteForChoice(sourceChoice));
     error = '';
-    notice = 'Confirm the source again to continue this import. Credentials and CSV contents are not kept in the browser.';
+    notice = t('web.InventoryImportWorkspace.confirmTheSourceAgainToContinueThisImportCredentials');
     step = 'setup';
   }
 
@@ -433,7 +434,7 @@
       jobs = jobs.map((candidate) => (candidate.id === detail.id ? mergeImportJobDetailSnapshot(mergedDetail, candidate) : candidate));
     } catch {
       if (sequence !== detailLoadSequence || !isCurrentScope(scope) || selectedJob?.id !== job.id) return;
-      notice = 'Import details could not be refreshed.';
+      notice = t('web.InventoryImportWorkspace.importDetailsCouldNotBeRefreshed');
     } finally {
       if (sequence === detailLoadSequence) {
         detailLoading = false;
@@ -456,7 +457,7 @@
       step = 'preview';
     } catch (previewError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(previewError, sourceChoice === 'homebox_live' ? 'Homebox connection could not be confirmed.' : 'CSV preview could not be prepared.');
+      error = errorMessage(previewError, sourceChoice === 'homebox_live' ? t('web.InventoryImportWorkspace.homeboxConnectionCouldNotBeConfirmed') : t('web.InventoryImportWorkspace.cSVPreviewCouldNotBePrepared'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -484,7 +485,7 @@
       notice = '';
     } catch (startError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(startError, 'Import could not be started. Preview again if the source changed.');
+      error = errorMessage(startError, t('web.InventoryImportWorkspace.importCouldNotBeStartedPreviewAgainIfThe'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -509,7 +510,7 @@
       cancelIntent = null;
     } catch (cancelError) {
       if (!isCurrentAction(action)) return;
-      confirmationError = errorMessage(cancelError, 'Cancellation could not be requested.');
+      confirmationError = errorMessage(cancelError, t('web.InventoryImportWorkspace.cancellationCouldNotBeRequested'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -537,7 +538,7 @@
       }
     } catch (removeError) {
       if (!isCurrentAction(action)) return;
-      confirmationError = errorMessage(removeError, 'Import run could not be removed. Try again.');
+      confirmationError = errorMessage(removeError, t('web.InventoryImportWorkspace.importRunCouldNotBeRemovedTryAgain'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -556,7 +557,7 @@
       fileName = '';
       contentBase64 = '';
       csvSelection = null;
-      error = 'CSV is too large. Choose a Homebox CSV export under 10 MiB.';
+      error = t('web.InventoryImportWorkspace.cSVIsTooLargeChooseAHomeboxCSVExport');
       return;
     }
     fileName = file.name;
@@ -571,7 +572,7 @@
       fileName = '';
       contentBase64 = '';
       csvSelection = null;
-      error = 'CSV could not be read. Choose the Homebox export again.';
+      error = t('web.InventoryImportWorkspace.cSVCouldNotBeReadChooseTheHomeboxExport');
     }
   }
 
@@ -639,7 +640,7 @@
     const routedJob = jobs.find((job) => job.id === importJobId) ?? (selectedJob?.id === importJobId ? selectedJob : null);
     if (!routedJob) {
       if (!loading && jobs.length > 0) {
-        error = 'That import run is not available in this inventory.';
+        error = t('web.InventoryImportWorkspace.thatImportRunIsNotAvailableInThisInventory');
         step = 'history';
       }
       return;
@@ -678,19 +679,19 @@
     try {
       await onImportJobInventoryChanged(scope);
       if (!isCurrentScope(scope)) return;
-      notice = 'Import finished. Workspace data has been refreshed.';
+      notice = t('web.InventoryImportWorkspace.importFinishedWorkspaceDataHasBeenRefreshed');
     } catch (refreshError) {
       if (!isCurrentScope(scope)) return;
-      notice = errorMessage(refreshError, 'Import finished, but workspace data could not be refreshed.');
+      notice = errorMessage(refreshError, t('web.InventoryImportWorkspace.importFinishedButWorkspaceDataCouldNotBeRefreshed'));
     }
   }
 
   function historySummaryDescription(): string {
-    if (activeJobs.length > 0) return `${activeJobs.length} running now. You can leave this page and return later.`;
-    if (draftJobs.length > 0) return `${draftJobs.length} preview waiting for confirmation.`;
-    if (attentionJobs.length > 0) return `${attentionJobs.length} ${attentionJobs.length === 1 ? 'import requires' : 'imports require'} action.`;
-    if (completedJobs.length > 0) return `${completedJobs.length} completed import ${completedJobs.length === 1 ? 'run' : 'runs'} in this inventory.`;
-    return 'No import runs yet.';
+    if (activeJobs.length > 0) return t('import.runningSummary', { count: activeJobs.length });
+    if (draftJobs.length > 0) return t('import.previewSummary', { count: draftJobs.length });
+    if (attentionJobs.length > 0) return t('import.attentionSummary', { count: attentionJobs.length });
+    if (completedJobs.length > 0) return t('import.completedSummary', { count: completedJobs.length });
+    return t('import.noRuns');
   }
 
   function resourceCanOpen(job: ImportJob, resource: ImportJob['resources'][number]): boolean {
@@ -809,19 +810,19 @@
   }
 
   function workspaceTitle(): string {
-    if (step === 'history') return 'Imports';
-    if (step === 'detail') return selectedJob ? `${selectedJob.source.name} import` : 'Import details';
-    if (step === 'run') return 'Import running';
-    return 'New import';
+    if (step === 'history') return t('web.InventoryImportWorkspace.imports');
+    if (step === 'detail') return selectedJob ? t('import.sourceTitle', { name: selectedJob.source.name }) : t('web.InventoryImportWorkspace.importDetails');
+    if (step === 'run') return t('web.InventoryImportWorkspace.importRunning');
+    return t('web.InventoryImportWorkspace.newImport');
   }
 
   function workspaceSubtitle(): string {
-    if (step === 'history') return `View current and past data imports for ${inventory?.name ?? 'this inventory'}.`;
+    if (step === 'history') return t('import.historyFor', { inventory: inventory?.name ?? t('browse.currentInventory') });
     if (step === 'detail') {
-      return selectedJob ? sourceDescription(selectedJob) : `Import details for ${inventory?.name ?? 'this inventory'}.`;
+      return selectedJob ? sourceDescription(selectedJob) : t('import.detailsFor', { inventory: inventory?.name ?? t('browse.currentInventory') });
     }
-    if (step === 'run') return 'The job is running in the background.';
-    return 'Confirm the source, preview the plan, then run it in the background.';
+    if (step === 'run') return t('web.InventoryImportWorkspace.theJobIsRunningInTheBackground');
+    return t('web.InventoryImportWorkspace.confirmTheSourcePreviewThePlanThenRunIt');
   }
 
 </script>
@@ -834,16 +835,16 @@
     </div>
     {#if step === 'history'}
       <Button.Root variant="outline" size="sm" onclick={() => { void loadJobs(); }} disabled={loading || !canViewImports}>
-        <Button.BusyContent busy={loading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
+        <Button.BusyContent busy={loading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel={t('web.InventoryImportWorkspace.refreshing')} />
       </Button.Root>
     {:else}
       <div class="toolbar-actions">
         {#if step === 'detail' || step === 'run'}
           <Button.Root variant="outline" size="sm" onclick={() => { void refreshVisibleImportView(); }} disabled={loading || detailLoading || manualRefreshLoading || !canViewImports}>
-            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
+            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel={t('web.InventoryImportWorkspace.refreshing')} />
           </Button.Root>
         {/if}
-        <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>Back to history</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>{t('web.InventoryImportWorkspace.backToHistory')}</Button.Root>
       </div>
     {/if}
   </div>
@@ -860,8 +861,8 @@
       <Card.Content class="empty-state">
         <AlertCircle size={28} aria-hidden="true" />
         <div>
-          <h2>Import access needed</h2>
-          <p>You can view this inventory, but importing records requires import job access.</p>
+          <h2>{t('web.InventoryImportWorkspace.importAccessNeeded')}</h2>
+          <p>{t('web.InventoryImportWorkspace.youCanViewThisInventoryButImportingRecordsRequires')}</p>
         </div>
       </Card.Content>
     </Card.Root>

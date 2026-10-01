@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Stack } from 'expo-router';
 import { useMemo } from 'react';
 import type { VoiceRealtimeState } from '../../application/voice/RealtimeVoiceSession';
@@ -14,8 +15,8 @@ export function VoiceConversationHeader({ realtime, photoDrafts, commandDrafts, 
   readonly onClose: () => void;
 }) {
   const startNew = useNewConversation(realtime, photoDrafts, commandDrafts, onReset);
-  const leading = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close voice session', onPress: onClose }], 'left');
-  const trailing = useNativeHeaderActionOptions([{ kind: 'compose', label: 'New conversation', onPress: startNew }]);
-  const options = useMemo(() => ({ title: 'Conversation', headerShown: true, headerBackVisible: false, ...leading, ...trailing }), [leading, trailing]);
+  const leading = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.VoiceConversationHeader.closeVoiceSession'), onPress: onClose }], 'left');
+  const trailing = useNativeHeaderActionOptions([{ kind: 'compose', label: t('mobile.VoiceConversationHeader.newConversation'), onPress: startNew }]);
+  const options = useMemo(() => ({ title: t('mobile.VoiceConversationHeader.conversation'), headerShown: true, headerBackVisible: false, ...leading, ...trailing }), [leading, trailing]);
   return <Stack.Screen options={options} />;
 }

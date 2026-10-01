@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { BrowseSurfaceHeader } from './BrowseSurfaceHeader';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -195,7 +196,7 @@ export function SearchScreen({
   };
   const error = inventoryScope.error ?? browse.error ?? (accessDenied ? context.error : null);
   const state: BrowseState = error
-    ? { status: 'error', results, phase: browse.isFetchNextPageError ? 'pagination' : data ? 'replacement' : 'initial', message: 'This inventory could not be loaded.' }
+    ? { status: 'error', results, phase: browse.isFetchNextPageError ? 'pagination' : data ? 'replacement' : 'initial', message: t('mobile.SearchScreen.thisInventoryCouldNotBeLoaded') }
     : browse.isPending || !identity
       ? { status: 'loading', results, isInitial: !data }
       : { status: 'ready', results };
@@ -400,7 +401,7 @@ export function SearchScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <BrowseAddHeader canAdd={inventoryContext?.canAdd ?? false} onAdd={() => router.navigate('/add')}
         onFilters={openFilters} filterCount={activeFilterCount} />
-      <NativeNavigationSearch query={query} placeholder="Search names, places, or tags" onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
+      <NativeNavigationSearch query={query} placeholder={t('mobile.SearchScreen.searchNamesPlacesOrTags')} onChange={scheduleSearch} onSubmit={text => {setQuery(text);submitQuery(text);}} onClear={clearSearch} />
       <FlatList
         key={`${resultScope}:${numColumns.toString()}`}
         data={listItems}
@@ -430,7 +431,7 @@ export function SearchScreen({
             sort={sort}
             statusMessage={state.status === 'error' && state.phase === 'replacement'
               ? state.message
-              : scope === 'places' && places.isError ? 'Place summaries could not load. Your places are still available.' : undefined}
+              : scope === 'places' && places.isError ? t('mobile.SearchScreen.placeSummariesCouldNotLoadYourPlacesAreStill') : undefined}
             submittedQuery={state.results.query}
             tagFilters={tagFilters}
             onClearFilters={clearFilters}
@@ -442,7 +443,7 @@ export function SearchScreen({
           state.status === 'loading' ? null : isInitialError ? (
             <BrowseLoadError message={state.message} palette={palette} onRetry={retryResults} />
           ) : state.results.hasMore ? (
-            <View style={styles.footer}><Text style={{ color: palette.textMuted }}>No matching items in the pages loaded so far.</Text></View>
+            <View style={styles.footer}><Text style={{ color: palette.textMuted }}>{t('mobile.SearchScreen.noMatchingItemsInThePagesLoadedSoFar')}</Text></View>
           ) : state.results.query.trim() ? (
             <BrowseEmptyState kind="search" palette={palette} query={state.results.query} onClearSearch={clearSearch} />
           ) : hasActiveFilters ? (
@@ -450,7 +451,7 @@ export function SearchScreen({
           ) : (
             <BrowseEmptyState
               kind="inventory"
-              inventoryName={inventoryContext?.inventoryName ?? 'this inventory'}
+              inventoryName={inventoryContext?.inventoryName ?? t("browse.currentInventory")}
               palette={palette}
               onAdd={inventoryContext?.canAdd ? () => router.navigate('/add') : undefined}
             />
@@ -462,7 +463,7 @@ export function SearchScreen({
           ) : isLoadingMore ? (
             <View style={styles.footer}><ActivityIndicator color={palette.accent} /></View>
           ) : state.results.hasMore ? (
-            <View style={styles.footer}><NativeCommandButton label="Continue loading results" onPress={() => void loadNextPage()} /></View>
+            <View style={styles.footer}><NativeCommandButton label={t('mobile.SearchScreen.continueLoadingResults')} onPress={() => void loadNextPage()} /></View>
           ) : null
         }
         renderItem={({ item, index }) => item.type === 'place' ? (

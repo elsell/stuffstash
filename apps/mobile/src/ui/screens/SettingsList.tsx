@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeActionRow } from '../components/NativeActionRow';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { AppearancePicker } from '../components/AppearancePicker';
@@ -78,7 +79,7 @@ export function SettingsNavigationRow({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      accessibilityHint="Opens a settings screen"
+      accessibilityHint={t('mobile.SettingsList.opensASettingsScreen')}
       accessibilityValue={value ? { text: value } : undefined}
       accessibilityState={{ disabled }}
       disabled={disabled}

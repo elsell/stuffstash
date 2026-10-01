@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Asset } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import AssetThumb from './AssetThumb.svelte';
 
@@ -10,7 +11,7 @@
     idPrefix,
     suggestions,
     activeIndex,
-    label = 'Search suggestions',
+    label = t('web.SearchSuggestions.searchSuggestions'),
     query = '',
     showEmpty = false,
     assetHref,
@@ -40,7 +41,7 @@
   }
 
   let normalizedQuery = $derived(query.trim());
-  let emptyLabel = $derived(`No suggestions for "${normalizedQuery}". Press Search to run a full search.`);
+  let emptyLabel = $derived(t("search.noSuggestions", { query: normalizedQuery }));
 </script>
 
 {#if suggestions.length > 0}
@@ -53,7 +54,7 @@
           variant="ghost"
           class="suggestion-row"
           data-active={activeIndex === index}
-          aria-label={`Open ${suggestion.title}`}
+          aria-label={t('web.SearchSuggestions.open', { title: String(suggestion.title) })}
           role="option"
           tabindex={-1}
           aria-selected={activeIndex === index}
@@ -68,7 +69,7 @@
             <strong>{suggestion.title}</strong><AssetExpirationLabel expiration={suggestion.expiration} context={suggestion.expirationContext} />
             <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>
             {#if suggestion.photoUnavailable}
-              <small id={photoUnavailableId(index)} class="visually-hidden">Photo unavailable</small>
+              <small id={photoUnavailableId(index)} class="visually-hidden">{t('web.SearchSuggestions.photoUnavailable')}</small>
             {/if}
           </span>
         </Button.Root>

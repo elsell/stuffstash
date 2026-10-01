@@ -16,6 +16,7 @@ export function AppTextInput() { return <TextInput />; }
 EOF
 
 cat > "$workdir/apps/mobile/src/ui/screens/Allowed.tsx" <<'EOF'
+import { t } from '../../presentation/localization';
 import type { TextInput } from 'react-native';
 import { AppTextInput } from '../components/AppTextInput';
 export const inputRef = null as TextInput | null;
@@ -25,6 +26,7 @@ EOF
 "$checker" "$workdir/apps/mobile/src"
 
 cat > "$workdir/apps/mobile/src/ui/screens/Bypassed.tsx" <<'EOF'
+import type { RefObject } from 'react';
 import { TextInput } from 'react-native';
 export function Bypassed() { return <TextInput />; }
 EOF

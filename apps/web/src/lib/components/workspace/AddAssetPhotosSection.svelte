@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { MediaUploadPolicy, SelectedPhoto } from '$lib/domain/inventory';
 
   export type AddAssetPhotosSectionProps = {
@@ -65,7 +66,7 @@
 </script>
 
 <fieldset class="selection-field attachment-section" aria-describedby={describedBy}>
-  <legend>Photos</legend>
+  <legend>{t('web.AddAssetPhotosSection.photos')}</legend>
   <p id="photo-help" class="selection-summary">{helpText}</p>
   <div class="photo-actions" role="group" aria-label={addPhotoPickerPresentation.actionGroupLabel} aria-describedby={describedBy}>
     <Button.Root type="button" variant="outline" class="photo-label min-h-11" aria-describedby={describedBy} onclick={openPhotoPicker}>

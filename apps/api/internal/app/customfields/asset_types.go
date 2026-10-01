@@ -230,59 +230,11 @@ func (s Service) DeleteInventoryCustomAssetType(ctx context.Context, input Archi
 }
 
 func (s Service) createCustomAssetType(ctx context.Context, input CreateCustomAssetTypeInput, scope customfield.Scope) (customfield.AssetType, error) {
-	id, ok := customfield.NewAssetTypeID(s.ids.NewID())
-	if !ok {
-		return customfield.AssetType{}, apperrors.ErrInvalidInput
-	}
-	key, ok := customfield.NewKey(input.Key)
-	if !ok {
-		return customfield.AssetType{}, apperrors.ErrInvalidInput
-	}
-	displayName, ok := customfield.NewDisplayName(input.DisplayName)
-	if !ok {
-		return customfield.AssetType{}, apperrors.ErrInvalidInput
-	}
-	description, ok := customfield.NewDescription(input.Description)
-	if !ok {
-		return customfield.AssetType{}, apperrors.ErrInvalidInput
-	}
-
-	inventoryID := customfield.InventoryID("")
-	if scope == customfield.ScopeInventory {
-		inventoryID = customfield.InventoryID(input.InventoryID.String())
-	}
-	assetType, ok := customfield.NewAssetType(
-		id,
-		customfield.TenantID(input.TenantID.String()),
-		inventoryID,
-		scope,
-		key,
-		displayName,
-		description,
-	)
-	if !ok {
-		return customfield.AssetType{}, apperrors.ErrInvalidInput
-	}
-
-	assetType.ExpirationEnabled = input.ExpirationEnabled
-
-	auditRecord, err := s.newAuditRecord(appsupport.AuditRecordInput{
-		Principal:   input.Principal,
-		TenantID:    input.TenantID,
-		InventoryID: input.InventoryID,
-		Source:      input.Source,
-		RequestID:   input.RequestID,
-		Action:      audit.ActionCustomAssetTypeCreated,
-		TargetType:  audit.TargetCustomAssetType,
-		TargetID:    assetType.ID.String(),
-		Metadata: map[string]string{
-			"type_key": assetType.Key.String(),
-			"scope":    assetType.Scope.String(),
-		},
-	})
+	prepared, err := s.prepareCustomAssetType(ctx, input, scope)
 	if err != nil {
 		return customfield.AssetType{}, err
 	}
+	assetType, auditRecord := prepared.Item, prepared.AuditRecord
 
 	if err := s.customAssetTypeUnitOfWork.SaveCustomAssetType(ctx, assetType, auditRecord); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
@@ -291,19 +243,7 @@ func (s Service) createCustomAssetType(ctx context.Context, input CreateCustomAs
 		return customfield.AssetType{}, err
 	}
 
-	s.observer.Record(ctx, ports.Event{
-		Name:    ports.EventCustomAssetTypeCreated,
-		Message: "custom asset type created",
-		Fields: map[string]string{
-			"tenant_id":     input.TenantID.String(),
-			"inventory_id":  input.InventoryID.String(),
-			"principal_id":  input.Principal.ID.String(),
-			"asset_type_id": assetType.ID.String(),
-			"type_key":      assetType.Key.String(),
-			"scope":         assetType.Scope.String(),
-		},
-	})
-
+	s.RecordCustomAssetTypeCreated(ctx, input, assetType)
 	return assetType, nil
 }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Play from '@lucide/svelte/icons/play';
   import type { ImportJob } from '$lib/domain/inventory';
   import { Badge } from '$lib/components/ui/badge/index.js';
@@ -47,8 +48,8 @@
 <Card.Root>
   <Card.Header>
     <ImportFlowStepper current="preview" {availableSteps} {onNavigateStep} />
-    <Card.Title>Preview import</Card.Title>
-    <Card.Description>Review the plan before starting the background import.</Card.Description>
+    <Card.Title>{t('web.ImportPreviewPanel.previewImport')}</Card.Title>
+    <Card.Description>{t('web.ImportPreviewPanel.reviewThePlanBeforeStartingTheBackgroundImport')}</Card.Description>
   </Card.Header>
   <Card.Content class="import-preview-content">
     {#if previewJob}
@@ -66,30 +67,30 @@
           <span>{sourceDescription(previewJob)}</span>
           <small>{sourceSnapshotDescription(previewJob)}</small>
         </div>
-        <ul class="source-option-list" aria-label="Selected source options">
+        <ul class="source-option-list" aria-label={t('web.ImportPreviewPanel.selectedSourceOptions')}>
           {#each sourceOptionsSummary(previewJob) as option}
             <li>{option}</li>
           {/each}
         </ul>
       </div>
       <ImportCountGrid cells={visiblePreviewCountCells(previewJob)} />
-      <section class="preview-issues-section" aria-label="Preview issues">
+      <section class="preview-issues-section" aria-label={t('web.ImportPreviewPanel.previewIssues')}>
         <div class="preview-section-heading">
-          <h3>Issues</h3>
-          <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? 'No blockers' : 'Grouped by cause'}</small>
+          <h3>{t('web.ImportPreviewPanel.issues')}</h3>
+          <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? t('web.ImportPreviewPanel.noBlockers') : t('web.ImportPreviewPanel.groupedByCause')}</small>
         </div>
         <ImportMessagesList
           messages={visiblePreviewMessages(previewJob)}
-          emptyText="No blocking issues found."
+          emptyText={t('web.ImportPreviewPanel.noBlockingIssuesFound')}
           truncated={previewJob.preview.messagesTruncated}
           reportedWarnings={reportedWarningCount(previewJob)}
           reportedErrors={reportedErrorCount(previewJob)}
         />
       </section>
-      <section class="preview-plan-section" aria-label="Plan preview">
+      <section class="preview-plan-section" aria-label={t('web.ImportPreviewPanel.planPreview')}>
         <div class="preview-section-heading">
-          <h3>Plan preview</h3>
-          <small>Planned records by section</small>
+          <h3>{t('web.ImportPreviewPanel.planPreview')}</h3>
+          <small>{t('web.ImportPreviewPanel.plannedRecordsBySection')}</small>
         </div>
         <ImportPreviewSamples preview={previewJob.preview} />
       </section>
@@ -97,9 +98,9 @@
 
     <div class="action-row">
       <Button.Root onclick={onStart} disabled={!previewReady || busy}>
-        <Button.BusyContent {busy} icon={Play} label="Start background import" busyLabel="Starting import" />
+        <Button.BusyContent {busy} icon={Play} label={t('web.ImportPreviewPanel.startBackgroundImport')} busyLabel={t('web.ImportPreviewPanel.startingImport')} />
       </Button.Root>
-      <Button.Root variant="outline" onclick={onBack} disabled={busy}>Back</Button.Root>
+      <Button.Root variant="outline" onclick={onBack} disabled={busy}>{t('web.ImportPreviewPanel.back')}</Button.Root>
     </div>
   </Card.Content>
 </Card.Root>

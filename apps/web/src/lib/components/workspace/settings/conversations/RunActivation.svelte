@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { createQuery } from '@tanstack/svelte-query';
   import type { ConversationSession } from '$lib/adapters/query/conversationSession';
   import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
@@ -26,28 +27,28 @@
       return value;
     }, value => {
       session.client.setQueryData(key('selection'), { workflowId: value.workflowId, revisionId: value.id });
-      void session.client.invalidateQueries({ queryKey: key('workflows') }); message = 'Workflow activated.';
+      void session.client.invalidateQueries({ queryKey: key('workflows') }); message = t('web.RunActivation.workflowActivated');
     }); } catch (error) { if (session.active) {
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'The active selection changed. Check the current selection before trying again.'
-        : error instanceof ConversationFailure && error.kind === 'precondition' ? 'This run no longer meets the current quality gate. Run the cases again after checking the workflow and provider configuration.'
-        : 'Could not activate this revision. The current selection has not been confirmed changed.';
+      message = conflict ? t('web.RunActivation.theActiveSelectionChangedCheckTheCurrentSelectionBefore')
+        : error instanceof ConversationFailure && error.kind === 'precondition' ? t('web.RunActivation.thisRunNoLongerMeetsTheCurrentQualityGate')
+        : t('web.RunActivation.couldNotActivateThisRevisionTheCurrentSelectionHas');
     } } finally { if (session.active) busy = false; }
   }
   async function refreshSelection() {
     if (busy) return;
-    const result = await selection.refetch(); if (session.active && result.isSuccess) { conflict = false; message = 'Current selection refreshed. Review before activating.'; }
+    const result = await selection.refetch(); if (session.active && result.isSuccess) { conflict = false; message = t('web.RunActivation.currentSelectionRefreshedReviewBeforeActivating'); }
   }
 </script>
-{#if eligible}<section class="run-activation" aria-label="Workflow activation"><h4>Use this tested revision</h4>
-  {#if revision.isPending || selection.isPending}<p role="status">Checking the current workflow selection…</p>
-  {:else if revision.isError || selection.isError}<p role="alert">Could not check the workflow selection. <Button.Root onclick={() => { void revision.refetch(); void selection.refetch(); }}>Retry activation check</Button.Root></p>
-  {:else if revision.data}<p>{revision.data.definition.name} · Revision {revision.data.number}</p>
-    {#if active}<p role="status">This revision is active.</p>{:else}<p>{selection.data ? 'This will replace the current custom workflow.' : 'This will replace the default conversation workflow.'} The server checks current cases, providers and limits before activation.</p>
-      <Button.Root disabled={busy || conflict || selection.isFetching} onclick={activate}>{busy ? 'Activating…' : 'Activate tested revision'}</Button.Root>
+{#if eligible}<section class="run-activation" aria-label={t('web.RunActivation.workflowActivation')}><h4>{t('web.RunActivation.useThisTestedRevision')}</h4>
+  {#if revision.isPending || selection.isPending}<p role="status">{t('web.RunActivation.checkingTheCurrentWorkflowSelection')}</p>
+  {:else if revision.isError || selection.isError}<p role="alert">{t('web.RunActivation.couldNotCheckTheWorkflowSelection')} <Button.Root onclick={() => { void revision.refetch(); void selection.refetch(); }}>{t('web.RunActivation.retryActivationCheck')}</Button.Root></p>
+  {:else if revision.data}<p>{t('web.RunActivation.revisionFull', { name: revision.data.definition.name, number: revision.data.number })}</p>
+    {#if active}<p role="status">{t('web.RunActivation.thisRevisionIsActive')}</p>{:else}<p>{t('web.RunActivation.theServerChecksCurrentCasesProvidersAndLimitsFull', { value: selection.data ? 'This will replace the current custom workflow.' : 'This will replace the default conversation workflow.' })}</p>
+      <Button.Root disabled={busy || conflict || selection.isFetching} onclick={activate}>{busy ? t('web.RunActivation.activating') : t('web.RunActivation.activateTestedRevision')}</Button.Root>
     {/if}
   {/if}
-  {#if conflict}<Button.Root variant="outline" disabled={busy || selection.isFetching} onclick={refreshSelection}>Check current selection</Button.Root>{/if}
+  {#if conflict}<Button.Root variant="outline" disabled={busy || selection.isFetching} onclick={refreshSelection}>{t('web.RunActivation.checkCurrentSelection')}</Button.Root>{/if}
   <p role="status">{message}</p>
-</section>{:else if run.state !== 'queued' && run.state !== 'running'}<p>Every selected case must pass in a completed run before this revision can be activated.</p>{/if}
+</section>{:else if run.state !== 'queued' && run.state !== 'running'}<p>{t('web.RunActivation.everySelectedCaseMustPassInACompletedRun')}</p>{/if}
 <style>.run-activation { display: grid; gap: .75rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; } h4 { font-weight: 600; }</style>

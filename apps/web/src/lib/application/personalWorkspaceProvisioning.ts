@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Principal } from '$lib/domain/inventory';
 import type { WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
@@ -9,8 +10,8 @@ interface ProvisioningLock {
 export function personalWorkspaceNames(principal: Principal): { tenantName: string; inventoryName: string } {
   const displayName = principal.displayName?.trim();
   return {
-    tenantName: displayName ? `${displayName}\u2019s household` : 'My household',
-    inventoryName: 'Home'
+    tenantName: displayName ? t('onboarding.namedHousehold', { name: displayName }) : t('web.personalWorkspaceProvisioning.myHousehold'),
+    inventoryName: t('web.personalWorkspaceProvisioning.home')
   };
 }
 

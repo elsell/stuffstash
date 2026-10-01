@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
@@ -58,7 +59,7 @@ export function VoiceSetupScreen({
   const { styles } = useSettingsListStyles();
   const providers = useProviderSettings(query);
   const settings = useSettingsModel(settingsQuery);
-  if (providers.state.status !== 'ready') return <ProviderStateView taskLabel="voice setup" state={providers.state} onRetry={providers.retry} />;
+  if (providers.state.status !== 'ready') return <ProviderStateView taskLabel={t('mobile.VoiceSettingsScreens.voiceSetup')} state={providers.state} onRetry={providers.retry} />;
   if (settings.state.status !== 'ready') return <SettingsStateBridge state={settings.state} onRetry={settings.load} />;
   const { configuration } = providers.state.viewModel;
   const tenant = settings.state.settings.selectedTenant;
@@ -67,18 +68,18 @@ export function VoiceSetupScreen({
       <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <View style={styles.detailHeader}>
         <Text accessibilityRole="header" style={styles.detailTitle}>
-          {configuration.readiness === 'ready' ? 'Voice is ready' : 'Voice needs attention'}
+          {configuration.readiness === 'ready' ? t('mobile.VoiceSettingsScreens.voiceIsReady') : t('mobile.VoiceSettingsScreens.voiceNeedsAttention')}
         </Text>
-        <Text style={styles.detailSubtitle}>Applies to everyone in {tenant.name}. Configure how Stuff Stash listens, understands requests, and speaks.</Text>
+        <Text style={styles.detailSubtitle}>{t('mobile.VoiceSettingsScreens.appliesToEveryoneIn')}{tenant.name}{t('mobile.VoiceSettingsScreens.configureHowStuffStashListensUnderstandsRequestsAndSpeaks')}</Text>
       </View>
-      <SettingsSection title="Voice Pipeline">
+      <SettingsSection title={t('mobile.VoiceSettingsScreens.voicePipeline')}>
         {configuration.slots.map((slot, index) => {
           const presentation = stagePresentation(slot.capability);
           return (
             <View key={slot.capability}>
               {index > 0 ? <SettingsSeparator /> : null}
               <SettingsNavigationRow
-                accessibilityLabel={`Open ${presentation.title} voice stage for ${tenant.name}. ${formatVoiceProviderReadinessLabel(slot.readiness)}`}
+                accessibilityLabel={t('mobile.VoiceSettingsScreens.openVoiceStageFor', { title: String(presentation.title), name: String(tenant.name), value: String(formatVoiceProviderReadinessLabel(slot.readiness)) })}
                 context={`${presentation.description} · ${selectedProfileLabel(slot)}`}
                 label={presentation.title}
                 onPress={() => onOpenCapability(slot.capability)}
@@ -88,10 +89,10 @@ export function VoiceSetupScreen({
           );
         })}
       </SettingsSection>
-      <SettingsSection footer="Provider profiles are advanced tenant-wide service configurations." title="Advanced">
+      <SettingsSection footer={t('mobile.VoiceSettingsScreens.providerProfilesAreAdvancedTenantWideServiceConfigurations')} title={t('mobile.VoiceSettingsScreens.advanced')}>
         <SettingsNavigationRow
-          accessibilityLabel={`Open advanced provider profiles for ${tenant.name}`}
-          label="Provider Profiles"
+          accessibilityLabel={t('mobile.VoiceSettingsScreens.openAdvancedProviderProfilesFor', { name: String(tenant.name) })}
+          label={t('mobile.VoiceSettingsScreens.providerProfiles')}
           onPress={onOpenProfiles}
           value={`${providers.state.viewModel.profiles.length}`}
         />
@@ -125,10 +126,10 @@ export function VoiceCapabilityScreen({
   const workingRef = useRef(false);
   const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${capability}`);
   const stage = stagePresentation(capability);
-  const taskLabel = `${stage.title.toLowerCase()} settings`;
+  const taskLabel = t('mobile.VoiceSettingsScreens.settings', { value: String(stage.title.toLowerCase()) });
   if (providers.state.status !== 'ready') return <ProviderStateView taskLabel={taskLabel} state={providers.state} onRetry={providers.retry} />;
   const slot = providers.state.viewModel.configuration.slots.find((item) => item.capability === capability);
-  if (!slot) return <ProviderStateView taskLabel={taskLabel} state={{ status: 'error', message: 'This voice stage is not available.' }} onRetry={providers.retry} />;
+  if (!slot) return <ProviderStateView taskLabel={taskLabel} state={{ status: 'error', message: t('mobile.VoiceSettingsScreens.thisVoiceStageIsNotAvailable') }} onRetry={providers.retry} />;
   const selectedProfile = slot.selectedProfile;
   const recommendedAction = slot.recommendedAction;
   const availableProfiles = providers.state.viewModel.profiles.filter(profile =>
@@ -137,7 +138,7 @@ export function VoiceCapabilityScreen({
   if (selectedProfile && !serviceOptions.some(option => option.value === selectedProfile.id)) {
     serviceOptions.unshift({ value: selectedProfile.id, label: selectedProfile.displayName });
   }
-  if (!slot.selectedProfileId) serviceOptions.unshift({ value: '', label: 'Not selected' });
+  if (!slot.selectedProfileId) serviceOptions.unshift({ value: '', label: t('mobile.VoiceSettingsScreens.notSelected') });
 
   async function act(kind: 'select' | 'test' | 'enable', action: () => Promise<void>, success: string): Promise<void> {
     const canPresent = capturePresentation();
@@ -147,11 +148,11 @@ export function VoiceCapabilityScreen({
     try {
       await action();
       if (!canPresent()) return;
-      feedback.showNotice({ tone: 'success', title: success, message: `${stage.title} setup was updated.` });
+      feedback.showNotice({ tone: 'success', title: success, message: t('mobile.VoiceSettingsScreens.setupWasUpdated', { title: String(stage.title) }) });
       void providers.load().catch(() => undefined);
     } catch (error) {
       if (!canPresent()) return;
-      feedback.showNotice({ tone: 'error', title: 'Could not update voice', message: readableError(error) });
+      feedback.showNotice({ tone: 'error', title: t('mobile.VoiceSettingsScreens.couldNotUpdateVoice'), message: readableError(error) });
     } finally {
       workingRef.current = false;
       setOperation(undefined);
@@ -168,32 +169,32 @@ export function VoiceCapabilityScreen({
     switch (recommendedAction) {
       case 'add_profile':
         return {
-          accessibilityLabel: `Add provider profile for ${stage.title}`,
-          label: 'Add Profile',
+          accessibilityLabel: t('mobile.VoiceSettingsScreens.addProviderProfileFor', { title: String(stage.title) }),
+          label: t('mobile.VoiceSettingsScreens.addProfile'),
           run: onAddProfile
         };
       case 'replace_credential':
         return selectedProfile
           ? {
-              accessibilityLabel: `Add credential for ${selectedProfile.displayName} in ${stage.title}`,
-              label: 'Add Credential',
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.addCredentialForIn', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
+              label: t('mobile.VoiceSettingsScreens.addCredential'),
               run: () => onEditCredential(selectedProfile.id)
             }
           : undefined;
       case 'enable_profile':
         return selectedProfile
           ? {
-              accessibilityLabel: `Enable ${selectedProfile.displayName} for ${stage.title}`,
-              label: operation === 'enable' ? 'Enabling…' : 'Enable Service',
-              run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), 'Service enabled')
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.enableFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
+              label: operation === 'enable' ? t('mobile.VoiceSettingsScreens.enabling') : t('mobile.VoiceSettingsScreens.enableService'),
+              run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), t('mobile.VoiceSettingsScreens.serviceEnabled'))
             }
           : undefined;
       case 'test_profile':
         return selectedProfile
           ? {
-              accessibilityLabel: `Test ${selectedProfile.displayName} for ${stage.title}`,
-              label: operation === 'test' ? 'Testing…' : 'Test Connection',
-              run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), 'Connection tested')
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.testFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
+              label: operation === 'test' ? t('mobile.VoiceSettingsScreens.testing') : t('mobile.VoiceSettingsScreens.testConnection'),
+              run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), t('mobile.VoiceSettingsScreens.connectionTested'))
             }
           : undefined;
       default:
@@ -210,24 +211,24 @@ export function VoiceCapabilityScreen({
         <Text accessibilityRole="header" style={styles.detailTitle}>{stage.title}</Text>
         <Text style={styles.detailSubtitle}>{stage.longDescription}</Text>
       </View>
-      <SettingsSection title="Selected Service">
+      <SettingsSection title={t('mobile.VoiceSettingsScreens.selectedService')}>
         {slot.selectedProfile ? (
           <SettingsNavigationRow
-            accessibilityLabel={`Open provider profile ${slot.selectedProfile.displayName}`}
-            context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || 'Default model'}`}
+            accessibilityLabel={t('mobile.VoiceSettingsScreens.openProviderProfile', { displayName: String(slot.selectedProfile.displayName) })}
+            context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || t('mobile.VoiceSettingsScreens.defaultModel')}`}
             label={slot.selectedProfile.displayName}
             disabled={working}
             onPress={() => { if (!workingRef.current) onEditProfile(slot.selectedProfile!.id); }}
             value={formatVoiceProviderReadinessLabel(slot.readiness)}
           />
-        ) : <SettingsValueRow label="Service" value="Not selected" />}
+        ) : <SettingsValueRow label={t('mobile.VoiceSettingsScreens.service')} value={t('mobile.VoiceSettingsScreens.notSelected')} />}
       </SettingsSection>
       <SettingsSection
         footer={issueLabels.length > 0 ? issueLabels.join(' ') : undefined}
-        title="Setup Status"
+        title={t('mobile.VoiceSettingsScreens.setupStatus')}
       >
-        <SettingsValueRow label="Selection" value={formatVoiceProviderSelectionSourceLabel(slot.selectionSource)} />
-        {slot.duplicateProfiles.length > 0 ? <><SettingsSeparator /><SettingsValueRow label="Ready choices" value={`${slot.duplicateProfiles.length}`} /></> : null}
+        <SettingsValueRow label={t('mobile.VoiceSettingsScreens.selection')} value={formatVoiceProviderSelectionSourceLabel(slot.selectionSource)} />
+        {slot.duplicateProfiles.length > 0 ? <><SettingsSeparator /><SettingsValueRow label={t('mobile.VoiceSettingsScreens.readyChoices')} value={`${slot.duplicateProfiles.length}`} /></> : null}
       </SettingsSection>
       {directAction ? (
         <SettingsSection>
@@ -239,14 +240,14 @@ export function VoiceCapabilityScreen({
           />
         </SettingsSection>
       ) : null}
-      {availableProfiles.length > 0 ? <SettingsSection footer="Changing the selection affects voice for everyone in this tenant.">
-        <SettingsPickerRow label="Service" accessibilityLabel="Choose voice service" value={slot.selectedProfileId ?? ''}
+      {availableProfiles.length > 0 ? <SettingsSection footer={t('mobile.VoiceSettingsScreens.changingTheSelectionAffectsVoiceForEveryoneInThis')}>
+        <SettingsPickerRow label={t('mobile.VoiceSettingsScreens.service')} accessibilityLabel={t('mobile.VoiceSettingsScreens.chooseVoiceService')} value={slot.selectedProfileId ?? ''}
           options={serviceOptions} disabled={working} onChange={id => {
             if (workingRef.current || id === slot.selectedProfileId) return;
             const profile = availableProfiles.find(candidate => candidate.id === id);
-            if (profile) void act('select', () => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), 'Voice service selected');
+            if (profile) void act('select', () => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), t('mobile.VoiceSettingsScreens.voiceServiceSelected'));
           }} />
-        {operation === 'select' ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>Selecting service…</Text> : null}
+        {operation === 'select' ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>{t('mobile.VoiceSettingsScreens.selectingService')}</Text> : null}
       </SettingsSection> : null}
     </ScrollView>
   );
@@ -254,12 +255,12 @@ export function VoiceCapabilityScreen({
 
 function SettingsStateBridge({ state, onRetry }: { readonly state: ReturnType<typeof useSettingsModel>['state']; readonly onRetry: () => Promise<void> }) {
   const { styles } = useSettingsListStyles();
-  if (state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label="Loading household context" /></View>;
-  if (state.status === 'error') return <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}><Text style={styles.errorTitle}>Could not load tenant context</Text><Text style={styles.errorMessage}>{state.message}</Text><NativeCommandButton label="Retry" onPress={() => void onRetry()} /></ScrollView>;
+  if (state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={t('mobile.VoiceSettingsScreens.loadingHouseholdContext')} /></View>;
+  if (state.status === 'error') return <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}><Text style={styles.errorTitle}>{t('mobile.VoiceSettingsScreens.couldNotLoadTenantContext')}</Text><Text style={styles.errorMessage}>{state.message}</Text><NativeCommandButton label={t('mobile.VoiceSettingsScreens.retry')} onPress={() => void onRetry()} /></ScrollView>;
   return null;
 }
 
-function selectedProfileLabel(slot: VoiceProviderSlot): string { return slot.selectedProfile?.displayName ?? 'No service selected'; }
+function selectedProfileLabel(slot: VoiceProviderSlot): string { return slot.selectedProfile?.displayName ?? t('mobile.VoiceSettingsScreens.noServiceSelected'); }
 
 async function selectProfile(manageCommand: ManageProviderProfileCommand, configuration: VoiceProviderConfiguration | undefined, slot: VoiceProviderSlot, profile: ProviderProfileSummary): Promise<void> {
   if (!configuration) return;

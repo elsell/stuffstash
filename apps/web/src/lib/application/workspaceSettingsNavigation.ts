@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AuditScope, Inventory, InvitationStatusFilter, Tenant } from '$lib/domain/inventory';
 import { workspaceRouteHref, type SettingsSection } from './workspaceRoute';
 
@@ -48,10 +49,10 @@ export interface SettingsAdministrationPresentation {
 const invitationStatusFilters: InvitationStatusFilter[] = ['all', 'pending', 'accepted', 'revoked', 'cancelled', 'expired'];
 
 const settingsSections: Array<Omit<SettingsSectionNavigationOption, 'href' | 'current'>> = [
-  { value: 'overview', label: 'Overview', description: 'Inventory context and access summary', icon: 'boxes' },
-  { value: 'access', label: 'Access', description: 'Sharing, grants, and invitations', icon: 'users' },
-  { value: 'fields', label: 'Fields', description: 'Custom asset types and fields', icon: 'sliders' },
-  { value: 'activity', label: 'Activity', description: 'Audit history for this workspace', icon: 'activity' }
+  { value: 'overview', label: t('web.workspaceSettingsNavigation.overview'), description: t('web.workspaceSettingsNavigation.inventoryContextAndAccessSummary'), icon: 'boxes' },
+  { value: 'access', label: t('web.workspaceSettingsNavigation.access'), description: t('web.workspaceSettingsNavigation.sharingGrantsAndInvitations'), icon: 'users' },
+  { value: 'fields', label: t('web.workspaceSettingsNavigation.fields'), description: t('web.workspaceSettingsNavigation.customAssetTypesAndFields'), icon: 'sliders' },
+  { value: 'activity', label: t('web.workspaceSettingsNavigation.activity'), description: t('web.workspaceSettingsNavigation.auditHistoryForThisWorkspace'), icon: 'activity' }
 ];
 
 export function settingsSectionHref(
@@ -125,13 +126,13 @@ export function settingsAuditScopeOptions(input: {
   return [
     {
       value: 'inventory',
-      label: 'Inventory',
+      label: t('web.workspaceSettingsNavigation.inventory'),
       href: routeBacked ? settingsAuditScopeHref(input.tenantId, input.inventoryId, 'inventory') : undefined,
       disabled: !input.hasInventory
     },
     {
       value: 'tenant',
-      label: 'Tenant',
+      label: t('web.workspaceSettingsNavigation.tenant'),
       href: routeBacked ? settingsAuditScopeHref(input.tenantId, input.inventoryId, 'tenant') : undefined,
       disabled: !input.hasTenant
     }
@@ -145,21 +146,21 @@ export function settingsShellPresentation(input: {
 }): SettingsShellPresentation {
   if (!input.inventory) {
     return {
-      title: 'Settings',
-      contextLabel: 'No inventory selected',
+      title: t('web.workspaceSettingsNavigation.settings'),
+      contextLabel: t('web.workspaceSettingsNavigation.noInventorySelected'),
       liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
-      overviewContextLabel: 'Not available',
+      overviewContextLabel: t('web.workspaceSettingsNavigation.notAvailable'),
       emptyState: {
-        title: 'No inventory selected',
-        message: 'Select or create an inventory before managing settings.'
+        title: t('web.workspaceSettingsNavigation.noInventorySelected'),
+        message: t('web.workspaceSettingsNavigation.selectOrCreateAnInventoryBeforeManagingSettings')
       }
     };
   }
   return {
-    title: 'Settings',
+    title: t('web.workspaceSettingsNavigation.settings'),
     contextLabel: `${input.inventory.name} / ${input.activeSection.label}`,
     liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
-    overviewContextLabel: `${input.tenant?.name ?? 'No tenant'} / ${input.inventory.name}`,
+    overviewContextLabel: `${input.tenant?.name ?? t('web.workspaceSettingsNavigation.noTenant')} / ${input.inventory.name}`,
     emptyState: null
   };
 }
@@ -172,26 +173,26 @@ export function settingsOverviewPresentation(input: {
   contextLabel: string;
 }): SettingsOverviewPresentation {
   return {
-    title: 'Overview',
+    title: t('web.workspaceSettingsNavigation.overview'),
     contextLabel: input.contextLabel,
     rows: [
-      { label: 'Tenant', value: input.tenantName ?? 'Not available' },
-      { label: 'Inventories', value: String(input.inventoryCount) },
-      { label: 'Access', value: input.accessRelationship },
-      { label: 'Asset edits', value: input.canEditAssets ? 'Allowed' : 'View only' }
+      { label: t('web.workspaceSettingsNavigation.tenant'), value: input.tenantName ?? t('web.workspaceSettingsNavigation.notAvailable') },
+      { label: t('web.workspaceSettingsNavigation.inventories'), value: String(input.inventoryCount) },
+      { label: t('web.workspaceSettingsNavigation.access'), value: input.accessRelationship },
+      { label: t('web.workspaceSettingsNavigation.assetEdits'), value: input.canEditAssets ? t('web.workspaceSettingsNavigation.allowed') : t('web.workspaceSettingsNavigation.viewOnly') }
     ]
   };
 }
 
 export function settingsAdministrationPresentation(input: { canConfigureTenant: boolean }): SettingsAdministrationPresentation {
   return {
-    title: 'Administration',
+    title: t('web.workspaceSettingsNavigation.administration'),
     description: input.canConfigureTenant
-      ? 'There are no administration actions available in the web app yet.'
-      : 'This account does not have access to tenant administration.'
+      ? t('web.workspaceSettingsNavigation.thereAreNoAdministrationActionsAvailableInTheWeb')
+      : t('web.workspaceSettingsNavigation.thisAccountDoesNotHaveAccessToTenantAdministration')
   };
 }
 
 function invitationStatusLabel(status: InvitationStatusFilter): string {
-  return status[0]?.toUpperCase() + status.slice(1);
+  return t(`access.status.${status}`);
 }

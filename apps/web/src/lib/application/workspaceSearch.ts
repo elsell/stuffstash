@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type {
   Asset, AssetTag, BrowseScope, BrowseSort, BrowseSurface, SearchCheckoutFilter,
   SearchLifecycleFilter, SearchMode, SearchResult
@@ -62,16 +63,16 @@ export type BrowseEmptyPresentation = {
 
 export const browseFilterOptions = {
   scopes: [
-    { value: 'all', label: 'All' }, { value: 'places', label: 'Places' },
-    { value: 'containers', label: 'Containers' }, { value: 'items', label: 'Items' }
+    { value: 'all', label: t('web.workspaceSearch.all') }, { value: 'places', label: t('web.workspaceSearch.places') },
+    { value: 'containers', label: t('web.workspaceSearch.containers') }, { value: 'items', label: t('web.workspaceSearch.items') }
   ] satisfies Array<{ value: BrowseScope; label: string }>,
   lifecycle: [
-    { value: 'active', label: 'Active' }, { value: 'archived', label: 'Archived' },
-    { value: 'all', label: 'All' }
+    { value: 'active', label: t('web.workspaceSearch.active') }, { value: 'archived', label: t('web.workspaceSearch.archived') },
+    { value: 'all', label: t('web.workspaceSearch.all') }
   ] satisfies Array<{ value: SearchLifecycleFilter; label: string }>,
   availability: [
-    { value: 'any', label: 'Any' }, { value: 'available', label: 'Available' },
-    { value: 'checked_out', label: 'Checked out' }
+    { value: 'any', label: t('web.workspaceSearch.any') }, { value: 'available', label: t('web.workspaceSearch.available') },
+    { value: 'checked_out', label: t('web.workspaceSearch.checkedOut') }
   ] satisfies Array<{ value: SearchCheckoutFilter; label: string }>
 } as const;
 
@@ -211,14 +212,14 @@ export function browseEmptyPresentation(
     checkoutState === 'any' && normalizeBrowseTagIds(selectedTagIds).length === 0;
   if (defaultEmptyInventory) {
     return {
-      kind: 'inventory', title: 'No stuff here yet',
-      description: canCreateAsset ? 'Add an item or location to start this inventory.' : 'This inventory is empty.',
+      kind: 'inventory', title: t('web.workspaceSearch.noStuffHereYet'),
+      description: canCreateAsset ? t('web.workspaceSearch.addAnItemOrLocationToStartThisInventory') : t('web.workspaceSearch.thisInventoryIsEmpty'),
       showCreateActions: canCreateAsset, showClearSearch: false
     };
   }
   return normalizedQuery
-    ? { kind: 'query', title: `No results for “${normalizedQuery}”`, description: 'Try another search term or clear a filter.', showCreateActions: false, showClearSearch: true }
-    : { kind: 'filters', title: 'Nothing matches these filters', description: 'Try another scope or clear a filter.', showCreateActions: false, showClearSearch: false };
+    ? { kind: 'query', title: t('web.workspaceSearch.noResultsFor', { normalizedQuery: String(normalizedQuery) }), description: t('web.workspaceSearch.tryAnotherSearchTermOrClearAFilter'), showCreateActions: false, showClearSearch: true }
+    : { kind: 'filters', title: t('web.workspaceSearch.nothingMatchesTheseFilters'), description: t('web.workspaceSearch.tryAnotherScopeOrClearAFilter'), showCreateActions: false, showClearSearch: false };
 }
 
 export function buildAppliedBrowseFilters(
@@ -236,10 +237,10 @@ export function buildAppliedBrowseFilters(
     .sort((left, right) => compareNaturalText(left.displayName, right.displayName));
   const unavailableTagIds = normalizedTagIds.filter((id) => !tagsById.has(id)).sort(compareNaturalText);
   return [
-    ...(lifecycleState === 'active' ? [] : [{ key: 'lifecycle', label: `Status: ${lifecycleLabel}` }]),
-    ...(checkoutState === 'any' ? [] : [{ key: 'availability', label: `Availability: ${availabilityLabel}` }]),
-    ...selectedTags.map((tag) => ({ key: `tag:${tag.id}`, label: `Tag: ${tag.displayName}` })),
-    ...unavailableTagIds.map((id) => ({ key: `tag:${id}`, label: `Unavailable tag: ${id}` }))
+    ...(lifecycleState === 'active' ? [] : [{ key: 'lifecycle', label: t('web.workspaceSearch.status', { lifecycleLabel: String(lifecycleLabel) }) }]),
+    ...(checkoutState === 'any' ? [] : [{ key: 'availability', label: t('web.workspaceSearch.availability', { availabilityLabel: String(availabilityLabel) }) }]),
+    ...selectedTags.map((tag) => ({ key: `tag:${tag.id}`, label: t('web.workspaceSearch.tag', { displayName: String(tag.displayName) }) })),
+    ...unavailableTagIds.map((id) => ({ key: `tag:${id}`, label: t('web.workspaceSearch.unavailableTag', { id: String(id) }) }))
   ];
 }
 

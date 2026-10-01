@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { SettingsPickerRow } from '../components/SettingsPickerRow';
 import { useMemo, useState } from 'react';
 import { Text } from 'react-native';
@@ -15,34 +16,34 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
  const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
- const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
- const headerOptions = useMemo(() => ({ title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
+ const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? t('mobile.ExpirationFiltersScreen.selected') : t('mobile.ExpirationFiltersScreen.any'));
+ const headerOptions = useMemo(() => ({ title: page === 'overview' ? t('mobile.ExpirationFiltersScreen.filters') : page === 'dates' ? t('mobile.ExpirationFiltersScreen.dateRange') : page[0].toUpperCase() + page.slice(1),
   }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
-  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: `Search ${page}`, onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
-   primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
-   secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,
+  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: t('mobile.ExpirationFiltersScreen.search', { page: String(page) }), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
+   primaryLabel: t('mobile.ExpirationFiltersScreen.applyFilters'), primaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.applyExpirationFilters'), secondaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.cancelOrReturnToFilters'),
+   secondaryLabel: page === 'overview' ? t('mobile.ExpirationFiltersScreen.cancel') : t('mobile.ExpirationFiltersScreen.back'), disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)
   }}>
    {page === 'overview' ? <>
     <SettingsSection>
-     <SettingsPickerRow label="Kind" accessibilityLabel="Choose item kind" value={draft.kind ?? ''} options={[{value:'',label:'Any kind'},{value:'item',label:'Items'},{value:'container',label:'Containers'},{value:'location',label:'Places'}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
-     <SettingsPickerRow label="Availability" accessibilityLabel="Choose availability" value={draft.checkoutState ?? ''} options={[{value:'',label:'Any availability'},{value:'available',label:'Available'},{value:'checked_out',label:'Checked out'}] as const} onChange={value => setDraft({...draft,checkoutState:value || undefined})} />
-     <SettingsNavigationRow accessibilityLabel="Choose type" label="Type" value={label(choices.types, draft.typeId)} onPress={() => open('types')} />
-     <SettingsNavigationRow accessibilityLabel="Choose tags" label="Tags" value={draft.tagIds?.length ? `${draft.tagIds.length} selected` : 'Any'} onPress={() => open('tags')} />
-     <SettingsNavigationRow accessibilityLabel="Choose location" label="Location" value={label(choices.locations, draft.locationId)} onPress={() => open('locations')} />
-     <SettingsNavigationRow accessibilityLabel="Choose date range" label="Date range" value={draft.fromDate || draft.throughDate ? 'Custom' : 'Any date'} onPress={() => open('dates')} />
+     <SettingsPickerRow label={t('mobile.ExpirationFiltersScreen.kind')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseItemKind')} value={draft.kind ?? ''} options={[{value:'',label:t('mobile.ExpirationFiltersScreen.anyKind')},{value:'item',label:t('mobile.ExpirationFiltersScreen.items')},{value:'container',label:t('mobile.ExpirationFiltersScreen.containers')},{value:'location',label:t('mobile.ExpirationFiltersScreen.places')}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
+     <SettingsPickerRow label={t('mobile.ExpirationFiltersScreen.availability')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseAvailability')} value={draft.checkoutState ?? ''} options={[{value:'',label:t('mobile.ExpirationFiltersScreen.anyAvailability')},{value:'available',label:t('mobile.ExpirationFiltersScreen.available')},{value:'checked_out',label:t('mobile.ExpirationFiltersScreen.checkedOut')}] as const} onChange={value => setDraft({...draft,checkoutState:value || undefined})} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseType')} label={t('mobile.ExpirationFiltersScreen.type')} value={label(choices.types, draft.typeId)} onPress={() => open('types')} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseTags')} label={t('mobile.ExpirationFiltersScreen.tags')} value={draft.tagIds?.length ? t('expiration.selectedTags', { count: draft.tagIds.length }) : t('mobile.ExpirationFiltersScreen.any')} onPress={() => open('tags')} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseLocation')} label={t('mobile.ExpirationFiltersScreen.location')} value={label(choices.locations, draft.locationId)} onPress={() => open('locations')} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseDateRange')} label={t('mobile.ExpirationFiltersScreen.dateRange')} value={draft.fromDate || draft.throughDate ? t('mobile.ExpirationFiltersScreen.custom') : t('mobile.ExpirationFiltersScreen.anyDate')} onPress={() => open('dates')} />
     </SettingsSection>
-    <SettingsSection><SettingsActionRow label="Clear filters" accessibilityLabel="Clear expiration filters" onPress={() => setDraft({ mode: draft.mode })} /></SettingsSection>
+    <SettingsSection><SettingsActionRow label={t('mobile.ExpirationFiltersScreen.clearFilters')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.clearExpirationFilters')} onPress={() => setDraft({ mode: draft.mode })} /></SettingsSection>
    </> : page === 'dates' ? <ExpirationDateRange fromDate={draft.fromDate} throughDate={draft.throughDate} onChange={range => setDraft({ ...draft, ...range })} /> : <>
     <SettingsSection>
-     {page !== 'tags' ? <SettingsChoiceRow label="Any" selected={page === 'types' ? !draft.typeId : !draft.locationId} onPress={() => { setDraft({ ...draft, ...(page === 'types' ? { typeId: undefined } : { locationId: undefined }) }); open('overview'); }} /> : null}
+     {page !== 'tags' ? <SettingsChoiceRow label={t('mobile.ExpirationFiltersScreen.any')} selected={page === 'types' ? !draft.typeId : !draft.locationId} onPress={() => { setDraft({ ...draft, ...(page === 'types' ? { typeId: undefined } : { locationId: undefined }) }); open('overview'); }} /> : null}
      {choices[page].filter(item => item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(item => page === 'tags' ? <SettingsChoiceRow multiple key={item.id} label={item.label} selected={draft.tagIds?.includes(item.id) ?? false} onPress={() => setDraft({ ...draft, tagIds: !draft.tagIds?.includes(item.id) ? [...(draft.tagIds ?? []), item.id] : draft.tagIds?.filter(id => id !== item.id) })} /> : <SettingsChoiceRow key={item.id} label={item.label} selected={page === 'types' ? draft.typeId === item.id : draft.locationId === item.id} onPress={() => { setDraft({ ...draft, ...(page === 'types' ? { typeId: item.id } : { locationId: item.id }) }); open('overview'); }} />)}
     </SettingsSection>
-    {!choices[page].some(item => item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())) ? <Text style={{ color: palette.textMuted }}>No matches</Text> : null}
+    {!choices[page].some(item => item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())) ? <Text style={{ color: palette.textMuted }}>{t('mobile.ExpirationFiltersScreen.noMatches')}</Text> : null}
    </>}
-   {rangeError ? <Text accessibilityRole="alert" style={{ color: palette.text }}>The end date must be on or after the start date.</Text> : null}
+   {rangeError ? <Text accessibilityRole="alert" style={{ color: palette.text }}>{t('mobile.ExpirationFiltersScreen.theEndDateMustBeOnOrAfterThe')}</Text> : null}
   </NativeFilterSheet>
  </>;
 }

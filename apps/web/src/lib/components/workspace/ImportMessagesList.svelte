@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import X from '@lucide/svelte/icons/x';
@@ -6,6 +7,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
+  import { importIssuePresentation } from './importMessagePresentation';
   import { uniqueImportMessages } from './importWorkspacePresentation';
 
   const COLLAPSED_GROUP_LIMIT = 5;
@@ -25,7 +27,7 @@
     messages,
     emptyText,
     truncated = false,
-    truncatedText = 'Showing a partial list of import messages.',
+    truncatedText = t('web.ImportMessagesList.showingAPartialListOfImportMessages'),
     reportedWarnings,
     reportedErrors
   }: Props = $props();
@@ -58,8 +60,8 @@
   function groupMessages(items: ImportMessage[]): MessageGroup[] {
     const grouped = new Map<string, MessageGroup>();
     for (const message of items) {
-      const cause = friendlyCause(message);
-      const key = `${message.severity}:${message.summary}:${cause}`;
+      const { cause, identity } = importIssuePresentation(message);
+      const key = JSON.stringify([message.severity, message.summary, identity]);
       const group = grouped.get(key);
       if (group) {
         group.messages.push(message);
@@ -77,45 +79,22 @@
   }
 
   function severityLabel(severity: ImportMessage['severity']): string {
-    return severity === 'error' ? 'Blocking' : 'Warning';
+    return severity === 'error' ? t('import.issue.blocking') : t('import.issue.warning');
   }
 
   function groupCountLabel(count: number): string {
-    return count === 1 ? '1 item' : `${count} items`;
-  }
-
-  function friendlyCause(message: ImportMessage): string {
-    const detail = message.detail || '';
-    if (message.code === 'duplicate-asset' || detail.toLowerCase().includes('homebox-source-id')) {
-      return 'Already linked to an earlier import';
-    }
-    if (message.code === 'source-link-duplicate') {
-      return 'Already imported from this source';
-    }
-    if (message.code === 'attachment-unavailable') {
-      return 'Could not download from the source';
-    }
-    if (message.code === 'attachment-session-unavailable') {
-      return detail || 'Could not establish a source session for image downloads';
-    }
-    if (message.code === 'attachment-storage-unavailable') {
-      return detail || 'Could not save the image to configured media storage';
-    }
-    if (detail.toLowerCase().includes('import validation failed')) {
-      return 'File did not pass attachment validation';
-    }
-    return detail;
+    return t('import.items', { count });
   }
 
   function messageRowLabel(message: ImportMessage, group: MessageGroup): string {
     if (message.sourceName) return message.sourceName;
-    if (message.sourceId) return 'Homebox record';
+    if (message.sourceId) return t('import.issue.record');
     return message.detail || group.summary;
   }
 
   function messageDiagnostic(message: ImportMessage, group: MessageGroup): string {
-    if (message.sourceName && message.detail && friendlyCause(message) !== group.cause) return friendlyCause(message);
-    if (message.sourceId) return `Source ID ${message.sourceId}`;
+    if (message.sourceName && message.detail && importIssuePresentation(message).cause !== group.cause) return importIssuePresentation(message).cause;
+    if (message.sourceId) return t('import.issue.source', { id: message.sourceId });
     return '';
   }
 
@@ -141,47 +120,46 @@
 
   function issueGuidance(group: MessageGroup): { meaning: string; impact: string; nextAction: string } {
     const message = group.messages[0];
-    const code = message?.code ?? '';
-    const cause = group.cause.toLowerCase();
-    if (code === 'duplicate-asset' || code === 'source-link-duplicate' || cause.includes('already')) {
+    const guidance = importIssuePresentation(message).guidance;
+    if (guidance === 'duplicate') {
       return {
-        meaning: 'Stuff Stash found records that look connected to an earlier import.',
-        impact: 'Those records were skipped so the import would not create duplicates.',
-        nextAction: 'Open the matching item in Stuff Stash or review the original Homebox record before importing it again.'
+        meaning: t('web.ImportMessagesList.stuffStashFoundRecordsThatLookConnectedToAn'),
+        impact: t('web.ImportMessagesList.thoseRecordsWereSkippedSoTheImportWouldNot'),
+        nextAction: t('web.ImportMessagesList.openTheMatchingItemInStuffStashOrReview')
       };
     }
-    if (code === 'partial-date' || group.summary.toLowerCase().includes('partial date')) {
+    if (guidance === 'partialDate') {
       return {
-        meaning: 'Homebox has a date that is incomplete or cannot be represented as a full Stuff Stash date.',
-        impact: 'The value was kept as text instead of being saved as a structured date.',
-        nextAction: 'Edit the date in Homebox or update the imported field in Stuff Stash after the import.'
+        meaning: t('web.ImportMessagesList.homeboxHasADateThatIsIncompleteOrCannot'),
+        impact: t('web.ImportMessagesList.theValueWasKeptAsTextInsteadOfBeing'),
+        nextAction: t('web.ImportMessagesList.editTheDateInHomeboxOrUpdateTheImported')
       };
     }
-    if (code === 'attachment-unavailable' || cause.includes('download')) {
+    if (guidance === 'download') {
       return {
-        meaning: 'Stuff Stash could not download one or more files from the source.',
-        impact: 'The related asset can still import, but the listed photos or files were skipped.',
-        nextAction: 'Check that the file exists in Homebox and that the Homebox URL is reachable, then run a new preview if you still need the file.'
+        meaning: t('web.ImportMessagesList.stuffStashCouldNotDownloadOneOrMoreFiles'),
+        impact: t('web.ImportMessagesList.theRelatedAssetCanStillImportButTheListed'),
+        nextAction: t('web.ImportMessagesList.checkThatTheFileExistsInHomeboxAndThat')
       };
     }
-    if (cause.includes('attachment validation') || cause.includes('unsupported file type')) {
+    if (guidance === 'validation') {
       return {
-        meaning: 'A file was reachable, but it did not meet Stuff Stash attachment rules.',
-        impact: 'The file was skipped and was not attached to the imported asset.',
-        nextAction: 'Convert or replace the file with a supported format in Homebox, then preview the import again.'
+        meaning: t('web.ImportMessagesList.aFileWasReachableButItDidNotMeet'),
+        impact: t('web.ImportMessagesList.theFileWasSkippedAndWasNotAttachedTo'),
+        nextAction: t('web.ImportMessagesList.convertOrReplaceTheFileWithASupportedFormat')
       };
     }
     if (group.severity === 'error') {
       return {
-        meaning: 'This issue blocked part of the import from completing safely.',
-        impact: 'Stuff Stash stopped or skipped the affected work to avoid saving misleading data.',
-        nextAction: 'Review the affected records, correct the source data if needed, then preview and run the import again.'
+        meaning: t('web.ImportMessagesList.thisIssueBlockedPartOfTheImportFromCompleting'),
+        impact: t('web.ImportMessagesList.stuffStashStoppedOrSkippedTheAffectedWorkTo'),
+        nextAction: t('web.ImportMessagesList.reviewTheAffectedRecordsCorrectTheSourceDataIf')
       };
     }
     return {
-      meaning: 'Stuff Stash imported what it could and preserved this warning for review.',
-      impact: 'The affected records may need follow-up, but the warning did not block the whole import.',
-      nextAction: 'Review the affected records below and update the source or imported records if the result is not what you want.'
+      meaning: t('web.ImportMessagesList.stuffStashImportedWhatItCouldAndPreservedThis'),
+      impact: t('web.ImportMessagesList.theAffectedRecordsMayNeedFollowUpButThe'),
+      nextAction: t('web.ImportMessagesList.reviewTheAffectedRecordsBelowAndUpdateTheSource')
     };
   }
 </script>
@@ -190,33 +168,33 @@
   {#if groups.length > 0}
     <div class="message-list-summary">
       <div class="issue-stat">
-        <span>Groups</span>
+        <span>{t('web.ImportMessagesList.groups')}</span>
         <strong>{groups.length}</strong>
       </div>
       <div class="issue-stat">
-        <span>Affected</span>
+        <span>{t('web.ImportMessagesList.affected')}</span>
         <strong>{visibleMessages.length}</strong>
       </div>
       {#if errorCount > 0}
         <div class="issue-stat blocking">
-          <span>Blocking</span>
+          <span>{t('web.ImportMessagesList.blocking')}</span>
           <strong>{errorCount}</strong>
         </div>
       {/if}
       {#if warningCount > 0}
         <div class="issue-stat warning">
-          <span>Warnings</span>
+          <span>{t('web.ImportMessagesList.warnings')}</span>
           <strong>{warningCount}</strong>
         </div>
       {/if}
-      <span class="sr-only">{visibleMessages.length === 1 ? '1 affected record' : `${visibleMessages.length} affected records`}</span>
+      <span class="sr-only">{t('import.affectedRecords', { count: visibleMessages.length })}</span>
     </div>
   {/if}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
   <div
     class:bounded-message-groups={shouldBoundGroups}
     role={shouldBoundGroups ? 'region' : undefined}
-    aria-label={shouldBoundGroups ? 'Grouped import issues' : undefined}
+    aria-label={shouldBoundGroups ? t('import.issue.grouped') : undefined}
     tabindex={shouldBoundGroups ? 0 : undefined}
   >
     {#each visibleGroups as group (group.key)}
@@ -232,17 +210,15 @@
           </Badge>
           <div>
             <strong>{group.summary}</strong>
-            <span>{group.cause ? `${group.cause} · ${groupCountLabel(group.messages.length)}` : groupCountLabel(group.messages.length)}</span>
+            <span>{group.cause ? t('import.issue.causeCount', { cause: group.cause, countLabel: groupCountLabel(group.messages.length) }) : groupCountLabel(group.messages.length)}</span>
           </div>
           <Button.Root
             variant="ghost"
             size="sm"
             class="message-detail-button"
-            aria-label={`Explain ${group.summary}`}
+            aria-label={t('import.issue.explain', { summary: group.summary })}
             onclick={() => explainGroup(group)}
-          >
-            Explain
-          </Button.Root>
+          > {t('web.ImportMessagesList.explain')} </Button.Root>
         </div>
         <div class="message-group-items">
           {#each visibleMessages as message}
@@ -255,13 +231,9 @@
             </div>
           {/each}
           {#if group.messages.length > visibleMessages.length}
-            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
-              Show {group.messages.length - visibleMessages.length} more in this group
-            </Button.Root>
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}> {t('web.ImportMessagesList.showMoreInThisGroupFull', { length: group.messages.length - visibleMessages.length })} </Button.Root>
           {:else if isGroupExpanded && group.messages.length > COLLAPSED_RECORD_LIMIT}
-            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
-              Show fewer in this group
-            </Button.Root>
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}> {t('web.ImportMessagesList.showFewerInThisGroup')} </Button.Root>
           {/if}
         </div>
       </div>
@@ -269,17 +241,17 @@
   </div>
   {#if hiddenGroupCount > 0}
     <div class="message-overflow-action">
-      <span>{hiddenGroupCount} more issue {hiddenGroupCount === 1 ? 'group' : 'groups'} hidden.</span>
+      <span>{t('import.hiddenIssueGroups', { count: hiddenGroupCount })}</span>
       {#if expanded}
-        <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>Show fewer</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>{t('web.ImportMessagesList.showFewer')}</Button.Root>
       {:else}
-        <Button.Root variant="outline" size="sm" onclick={() => (expanded = true)}>Show more issues</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={() => (expanded = true)}>{t('web.ImportMessagesList.showMoreIssues')}</Button.Root>
       {/if}
     </div>
   {:else if expanded && groups.length > COLLAPSED_GROUP_LIMIT}
     <div class="message-overflow-action">
-      <span>All issue groups are shown.</span>
-      <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>Show fewer</Button.Root>
+      <span>{t('web.ImportMessagesList.allIssueGroupsAreShown')}</span>
+      <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>{t('web.ImportMessagesList.showFewer')}</Button.Root>
     </div>
   {/if}
   {#if visibleMessages.length === 0}
@@ -307,7 +279,7 @@
           </div>
           <Dialog.Close>
             {#snippet child({ props })}
-              <Button.Root {...props} variant="ghost" size="icon" class="size-11" aria-label="Close issue details">
+              <Button.Root {...props} variant="ghost" size="icon" class="size-11" aria-label={t('web.ImportMessagesList.closeIssueDetails')}>
                 <X size={16} aria-hidden="true" />
               </Button.Root>
             {/snippet}
@@ -315,20 +287,20 @@
         </Dialog.Header>
         <div class="issue-detail-grid">
           <div>
-            <span>Meaning</span>
+            <span>{t('web.ImportMessagesList.meaning')}</span>
             <p>{guidance.meaning}</p>
           </div>
           <div>
-            <span>Impact</span>
+            <span>{t('web.ImportMessagesList.impact')}</span>
             <p>{guidance.impact}</p>
           </div>
           <div>
-            <span>Next action</span>
+            <span>{t('web.ImportMessagesList.nextAction')}</span>
             <p>{guidance.nextAction}</p>
           </div>
         </div>
         <div class="issue-detail-records">
-          <h4>Affected records</h4>
+          <h4>{t('web.ImportMessagesList.affectedRecords')}</h4>
           <div>
             {#each selectedGroup.messages.slice(0, 8) as message}
               {@const diagnostic = messageDiagnostic(message, selectedGroup)}
@@ -341,7 +313,7 @@
             {/each}
           </div>
           {#if selectedGroup.messages.length > 8}
-            <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
+            <small>{t('import.hiddenAffectedRecords', { count: selectedGroup.messages.length - 8 })}</small>
           {/if}
         </div>
       </Dialog.Content>

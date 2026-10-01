@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ProviderProfileCapability } from '../../application/providerProfiles/ProviderProfileRepository';
 
 export type VoiceStagePresentation = {
@@ -12,27 +13,27 @@ export function stagePresentation(
   switch (capability) {
     case 'speech_to_text':
       return {
-        title: 'Listen',
-        description: 'Speech to text',
-        longDescription: 'Choose the service that turns your spoken words into text.'
+        title: t('mobile.VoiceStagePresentation.listen'),
+        description: t('mobile.VoiceStagePresentation.speechToText'),
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatTurnsYourSpokenWordsInto')
       };
     case 'language_inference':
       return {
-        title: 'Understand',
-        description: 'Language model',
-        longDescription: 'Choose the service that interprets inventory requests and plans actions.'
+        title: t('mobile.VoiceStagePresentation.understand'),
+        description: t('mobile.VoiceStagePresentation.languageModel'),
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatInterpretsInventoryRequestsAndPlans')
       };
     case 'text_to_speech':
       return {
-        title: 'Speak',
-        description: 'Spoken responses',
-        longDescription: 'Choose the service that reads Stuff Stash responses aloud.'
+        title: t('mobile.VoiceStagePresentation.speak'),
+        description: t('mobile.VoiceStagePresentation.spokenResponses'),
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatReadsStuffStashResponsesAloud')
       };
     default:
       return {
-        title: 'Voice Service',
-        description: 'Unknown capability',
-        longDescription: 'Review this voice service.'
+        title: t('mobile.VoiceStagePresentation.voiceService'),
+        description: t('mobile.VoiceStagePresentation.unknownCapability'),
+        longDescription: t('mobile.VoiceStagePresentation.reviewThisVoiceService')
       };
   }
 }

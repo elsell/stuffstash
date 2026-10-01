@@ -1,7 +1,7 @@
 import type { VoiceActionPlanCommandEdit } from '../../application/voice/RealtimeVoiceSession';
 
 export type VoicePlanParentDraft =
-  | { readonly kind: 'root'; readonly label: 'Inventory root' }
+  | { readonly kind: 'root'; readonly label: string }
   | { readonly kind: 'asset' | 'command'; readonly id: string; readonly label: string };
 
 export type VoicePlanCommandDraft = {

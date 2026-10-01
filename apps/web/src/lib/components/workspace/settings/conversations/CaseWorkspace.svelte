@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
@@ -33,7 +34,7 @@
         queryFn: ({ signal }) => cases.get(session.scope.tenantId, caseId, undefined, signal) });
       if (!session.active) return;
       if (compare) comparison = revision; else editor = { key: revision.id, revision, definition: revision.definition };
-    } catch { if (session.active) message = 'Could not load the test case. Try again.'; }
+    } catch { if (session.active) message = t('web.CaseWorkspace.couldNotLoadTheTestCaseTryAgain'); }
     finally { if (session.active) busy = false; }
   }
   async function save(definition: CaseDefinition) {
@@ -43,23 +44,23 @@
         session.client.setQueryData(key('case', saved.caseId, 'latest'), saved);
         session.client.setQueryData(key('case', saved.caseId, saved.id), saved);
         void session.client.invalidateQueries({ queryKey: key('cases') });
-        editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null; message = `Test case revision ${saved.number} saved.`;
+        editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null; message = t("conversation.caseRevisionSaved", { revision: saved.number });
       }); } finally { if (session.active) busy = false; }
   }
 </script>
-{#if denied}<section role="alert"><h2>Test cases unavailable</h2><p>You no longer have access to configure this tenant.</p></section>
-{:else}<section class="case-workspace" aria-labelledby="saved-cases-title"><header><h2 id="saved-cases-title">Test cases</h2><p>Check realistic requests against a controlled test inventory.</p></header>
+{#if denied}<section role="alert"><h2>{t('web.CaseWorkspace.testCasesUnavailable')}</h2><p>{t('web.CaseWorkspace.youNoLongerHaveAccessToConfigureThisTenant')}</p></section>
+{:else}<section class="case-workspace" aria-labelledby="saved-cases-title"><header><h2 id="saved-cases-title">{t('web.CaseWorkspace.testCases')}</h2><p>{t('web.CaseWorkspace.checkRealisticRequestsAgainstAControlledTestInventory')}</p></header>
   {#if editor}
-    <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>Close editor and discard unsaved edits</Button.Root>
+    <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>{t('web.CaseWorkspace.closeEditorAndDiscardUnsavedEdits')}</Button.Root>
     {#key editor.key}<CaseEditor disabled={busy} initial={editor.definition} onSave={save} onReload={editor.revision ? () => { void load(editor!.revision!.caseId, true); } : undefined} />{/key}
-    {#if comparison}<aside aria-label="Latest saved case"><h3>Latest saved revision {comparison.number}</h3><CaseSummary value={comparison.definition} />
-      <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>Replace my edits with this revision</Button.Root></aside>{/if}
-  {:else}<Button.Root disabled={busy} onclick={startNew}>New test case</Button.Root>
-    {#if heads.isPending}<p role="status">Loading test cases…</p>{:else if heads.isError}<p role="alert">Could not load test cases. <Button.Root onclick={() => heads.refetch()}>Retry cases</Button.Root></p>
-    {:else}<ul>{#each heads.data?.items ?? [] as head (head.id)}<li><Button.Root variant="outline" disabled={busy} onclick={() => load(head.id)}>{head.title} · Revision {head.latestRevision}</Button.Root></li>{/each}</ul>
-      {#if !heads.data?.items.length}<p>No saved test cases yet.</p>{/if}
-      {#if heads.data?.pagination.hasMore}<Button.Root variant="outline" onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>Next cases</Button.Root>{/if}
-      {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>Back to first cases</Button.Root>{/if}
+    {#if comparison}<aside aria-label={t('web.CaseWorkspace.latestSavedCase')}><h3>{t('web.CaseWorkspace.latestSavedRevisionFull', { number: comparison.number })}</h3><CaseSummary value={comparison.definition} />
+      <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>{t('web.CaseWorkspace.replaceMyEditsWithThisRevision')}</Button.Root></aside>{/if}
+  {:else}<Button.Root disabled={busy} onclick={startNew}>{t('web.CaseWorkspace.newTestCase')}</Button.Root>
+    {#if heads.isPending}<p role="status">{t('web.CaseWorkspace.loadingTestCases')}</p>{:else if heads.isError}<p role="alert">{t('web.CaseWorkspace.couldNotLoadTestCases')} <Button.Root onclick={() => heads.refetch()}>{t('web.CaseWorkspace.retryCases')}</Button.Root></p>
+    {:else}<ul>{#each heads.data?.items ?? [] as head (head.id)}<li><Button.Root variant="outline" disabled={busy} onclick={() => load(head.id)}>{t('web.CaseWorkspace.revisionFull', { title: head.title, latestRevision: head.latestRevision })}</Button.Root></li>{/each}</ul>
+      {#if !heads.data?.items.length}<p>{t('web.CaseWorkspace.noSavedTestCasesYet')}</p>{/if}
+      {#if heads.data?.pagination.hasMore}<Button.Root variant="outline" onclick={() => { cursor = heads.data?.pagination.nextCursor ?? undefined; }}>{t('web.CaseWorkspace.nextCases')}</Button.Root>{/if}
+      {#if cursor}<Button.Root variant="ghost" onclick={() => { cursor = undefined; }}>{t('web.CaseWorkspace.backToFirstCases')}</Button.Root>{/if}
     {/if}
   {/if}<p role="status" aria-live="polite">{message}</p>
 </section>{/if}

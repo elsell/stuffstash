@@ -1,3 +1,4 @@
+import { localization, t } from '../../presentation/localization';
 import type { LocationSummary } from '../../domain/locations/LocationSummary';
 import type { ReadRequest } from '../shared/ReadRequest';
 
@@ -9,6 +10,7 @@ export type LocationBrowserItemViewModel = {
   readonly containedAssetCountLabel: string;
   readonly recentAssetLabel: string;
   readonly photoLabel: string;
+  readonly hasPhoto: boolean;
   readonly photo?: {
     readonly uri: string;
     readonly headers?: Readonly<Record<string, string>>;
@@ -52,17 +54,16 @@ function toLocationViewModel(location: LocationSummary): LocationBrowserItemView
   return {
     id: location.id,
     title: location.title,
-    pathLabel: [...(location.parentLocationTrail ?? []).map(parent => parent.title), location.title].join(' / ') + (location.parentLocationTrailIncomplete ? ' (partial location path)' : ''),
+    pathLabel: location.parentLocationTrailIncomplete ? t('locations.partialPath', { path: [...(location.parentLocationTrail ?? []).map(parent => parent.title), location.title].join(' / ') }) : [...(location.parentLocationTrail ?? []).map(parent => parent.title), location.title].join(' / '),
     description: location.description,
     containedAssetCountLabel:
-      location.containedAssetCount === 1
-        ? '1 asset'
-        : `${location.containedAssetCount.toString()} assets`,
+      t('locations.assetCount', { count: location.containedAssetCount }),
     recentAssetLabel:
       location.recentAssetTitles.length > 0
-        ? location.recentAssetTitles.join(', ')
-        : 'No recent assets',
-    photoLabel: location.hasPhoto ? 'Photo ready' : 'Needs photo',
+        ? localization.list(location.recentAssetTitles)
+        : t('locations.noRecentAssets'),
+    photoLabel: location.hasPhoto ? t('mobile.AssetViewModels.photoReady') : t('mobile.AssetViewModels.needsPhoto'),
+    hasPhoto: location.hasPhoto,
     photo: location.photo
   };
 }

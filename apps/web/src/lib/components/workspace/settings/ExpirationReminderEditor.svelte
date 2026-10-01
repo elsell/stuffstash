@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import SegmentedControl from '../SegmentedControl.svelte';
   import { untrack } from 'svelte';
   import type { ExpirationReminderPolicy } from '$lib/domain/notification';
@@ -43,36 +44,36 @@
       await onSave(inherit ? null : { ...draft, advanceDays: Number(days) });
       draft = { ...draft, advanceDays: Number(days) }; dirty = false; saved = true;
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Reminders could not be saved. Your changes are still here. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.ExpirationReminderEditor.remindersCouldNotBeSavedYourChangesAreStill'));
     } finally { saving = false; }
   }
 </script>
 
-<form onsubmit={save} aria-label="Expiration reminders">
+<form onsubmit={save} aria-label={t('web.ExpirationReminderEditor.expirationReminders')}>
   {#if inheritedPolicy}
-    <SegmentedControl label="Reminder policy" value={mode} options={[{value:'defaults',label:'Use defaults',disabled:saving},{value:'custom',label:'Custom',disabled:saving},{value:'off',label:'Off',disabled:saving}]} onSelect={value => { inherit = value === 'defaults'; draft.enabled = value === 'custom'; changed(); void save(); }} />
+    <SegmentedControl label={t('web.ExpirationReminderEditor.reminderPolicy')} value={mode} options={[{value:'defaults',label:'Use defaults',disabled:saving},{value:'custom',label:'Custom',disabled:saving},{value:'off',label:'Off',disabled:saving}]} onSelect={value => { inherit = value === 'defaults'; draft.enabled = value === 'custom'; changed(); void save(); }} />
   {:else}
-    <Label class="setting"><Checkbox checked={draft.enabled} disabled={saving} onchange={event => { draft.enabled = event.currentTarget.checked; changed(); void save(); }} />Default reminders</Label>
-    <p>Types with custom reminders can override these defaults.</p>
+    <Label class="setting"><Checkbox checked={draft.enabled} disabled={saving} onchange={event => { draft.enabled = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.defaultReminders')}</Label>
+    <p>{t('web.ExpirationReminderEditor.typesWithCustomRemindersCanOverrideTheseDefaults')}</p>
   {/if}
   {#if !inherit}
   {#if draft.enabled}
-  <Button.Root variant="ghost" type="button" aria-expanded={editingDays} onclick={() => { editingDays = !editingDays; }}>Before expiration <span>{draft.upcoming ? `${draft.advanceDays} days` : 'Off'}</span></Button.Root>
+  <Button.Root variant="ghost" type="button" aria-expanded={editingDays} onclick={() => { editingDays = !editingDays; }}>{t('web.ExpirationReminderEditor.beforeExpiration')} <span>{draft.upcoming ? t('web.ExpirationReminderEditor.days', { advanceDays: String(draft.advanceDays) }) : t('web.ExpirationReminderEditor.off')}</span></Button.Root>
   {#if editingDays}
-  <Label class="setting"><Checkbox checked={displayed.upcoming} disabled={controlsDisabled} onchange={(event) => { draft.upcoming = event.currentTarget.checked; changed(); void save(); }} />Notify before expiration</Label>
+  <Label class="setting"><Checkbox checked={displayed.upcoming} disabled={controlsDisabled} onchange={(event) => { draft.upcoming = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.notifyBeforeExpiration')}</Label>
   {#if draft.upcoming}<div class="days">
-    <Label for={`${id}-days`}>Days before expiration</Label>
+    <Label for={`${id}-days`}>{t('web.ExpirationReminderEditor.daysBeforeExpiration')}</Label>
     <Input id={`${id}-days`} type="number" min={0} max={3650} step={1} value={inherit ? displayed.advanceDays : days} disabled={controlsDisabled}
       aria-invalid={!inherit && !validDays} aria-describedby={`${id}-help`}
       oninput={(event) => { days = event.currentTarget.value; changed(); }} />
-    <p id={`${id}-help`}>{!inherit && !validDays ? 'Enter a whole number from 0 to 3650.' : 'Calendar days before the expiration date ends.'}</p>
+    <p id={`${id}-help`}>{!inherit && !validDays ? t('web.ExpirationReminderEditor.enterAWholeNumberFrom0To3650') : t('web.ExpirationReminderEditor.calendarDaysBeforeTheExpirationDateEnds')}</p>
   </div>{/if}{/if}
-  <Label class="setting"><Checkbox checked={displayed.expired} disabled={controlsDisabled} onchange={(event) => { draft.expired = event.currentTarget.checked; changed(); void save(); }} />When expired</Label>{/if}
-  {:else}<p>{displayed.enabled ? `${displayed.upcoming ? `${displayed.advanceDays} days before expiration` : ''}${displayed.expired ? ' and when expired' : ''}` : 'Default reminders are off'}</p>{/if}
+  <Label class="setting"><Checkbox checked={displayed.expired} disabled={controlsDisabled} onchange={(event) => { draft.expired = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.whenExpired')}</Label>{/if}
+  {:else}<p>{displayed.enabled && displayed.upcoming ? t(displayed.expired ? 'reminders.beforeAndExpired' : 'reminders.before', { count: displayed.advanceDays }) : displayed.enabled && displayed.expired ? t('reminders.whenExpired') : t('reminders.none')}</p>{/if}
   {#if error}<p role="alert">{error}</p>{/if}
-  {#if saved}<p role="status">Reminders saved.</p>{/if}
-  {#if dirty && !saving}<Button.Root type="button" variant="ghost" onclick={() => { const policy = initialPolicy ?? inheritedPolicy!; draft = {...policy}; days = String(policy.advanceDays); inherit = initialPolicy === null; dirty = false; error = ''; editingDays = false; }}>Discard changes</Button.Root>{/if}
-  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? 'Saving…' : 'Save reminders'}</Button.Root>{/if}
+  {#if saved}<p role="status">{t('web.ExpirationReminderEditor.remindersSaved')}</p>{/if}
+  {#if dirty && !saving}<Button.Root type="button" variant="ghost" onclick={() => { const policy = initialPolicy ?? inheritedPolicy!; draft = {...policy}; days = String(policy.advanceDays); inherit = initialPolicy === null; dirty = false; error = ''; editingDays = false; }}>{t('web.ExpirationReminderEditor.discardChanges')}</Button.Root>{/if}
+  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? t('web.ExpirationReminderEditor.saving') : t('web.ExpirationReminderEditor.saveReminders')}</Button.Root>{/if}
 </form>
 
 <style>
