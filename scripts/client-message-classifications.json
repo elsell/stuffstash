@@ -70,7 +70,7 @@
     "classification": "technical-diagnostic",
     "reason": "VoiceConversationExchange replaces query errors with its cataloged assetUnavailable message; raw exceptions are not rendered.",
     "evidence": [
-      "apps/mobile/src/ui/components/VoiceConversationExchange.tsx: asset query error branch"
+      "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx: asset query error branch"
     ]
   }
 ]

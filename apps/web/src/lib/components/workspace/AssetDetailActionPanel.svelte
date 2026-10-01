@@ -134,7 +134,7 @@
     {#if !asset.customAssetTypeId && customAssetTypes.some((type) => type.lifecycleState === 'active')}
       <fieldset>
         <legend>{t('web.AssetDetailActionPanel.customType')}</legend>
-        <ChoiceGrid label={t('web.AssetDetailActionPanel.customAssetType')} options={[{ value: '', label: 'Base asset' }, ...customAssetTypes.filter((type) => type.lifecycleState === 'active').map((type) => ({ value: type.id, label: type.displayName }))]} selectedValues={[customAssetTypeId ?? '']} onSelect={onCustomTypeSelect} />
+        <ChoiceGrid label={t('web.AssetDetailActionPanel.customAssetType')} options={[{ value: '', label: t("web.options.AssetDetailActionPanel.baseAsset") }, ...customAssetTypes.filter((type) => type.lifecycleState === 'active').map((type) => ({ value: type.id, label: type.displayName }))]} selectedValues={[customAssetTypeId ?? '']} onSelect={onCustomTypeSelect} />
       </fieldset>
     {/if}
     {#if expirationEnabled}

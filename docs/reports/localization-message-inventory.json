@@ -72,7 +72,7 @@
       "classification": "technical-diagnostic",
       "reason": "VoiceConversationExchange replaces query errors with its cataloged assetUnavailable message; raw exceptions are not rendered.",
       "evidence": [
-        "apps/mobile/src/ui/components/VoiceConversationExchange.tsx: asset query error branch"
+        "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx: asset query error branch"
       ]
     }
   ],
@@ -83,11 +83,15 @@
     },
     {
       "file": "apps/web/src/lib/adapters/memory/seededInventoryRepository.ts",
-      "candidates": 31
+      "candidates": 29
     },
     {
       "file": "apps/mobile/src/adapters/inventories/testing/InventoryApiClient.ts",
       "candidates": 25
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
+      "candidates": 19
     },
     {
       "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
@@ -138,6 +142,10 @@
       "candidates": 6
     },
     {
+      "file": "apps/web/src/lib/components/workspace/AssetTagSelector.svelte",
+      "candidates": 6
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/BrowsePanel.svelte",
       "candidates": 6
     },
@@ -158,6 +166,10 @@
       "candidates": 5
     },
     {
+      "file": "apps/web/src/lib/components/workspace/AssetTagChips.svelte",
+      "candidates": 5
+    },
+    {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetDetailReads.ts",
       "candidates": 4
     },
@@ -171,6 +183,10 @@
     },
     {
       "file": "apps/web/src/lib/auth.ts",
+      "candidates": 4
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/tabs/tabs-trigger.svelte",
       "candidates": 4
     },
     {
@@ -223,6 +239,10 @@
     },
     {
       "file": "apps/web/src/lib/components/ui/tabs/tabs-list.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
       "candidates": 3
     },
     {
@@ -306,11 +326,27 @@
       "candidates": 2
     },
     {
+      "file": "apps/web/src/lib/components/ui/input/input.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-content.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/table/table.svelte",
+      "candidates": 2
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/action-surface/WorkspaceConfirmationDialog.svelte",
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
+      "file": "apps/web/src/lib/components/workspace/ImportJobDetailPanel.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ImportPreviewSamples.svelte",
       "candidates": 2
     },
     {
@@ -442,6 +478,238 @@
       "candidates": 1
     },
     {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-description.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-footer.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-header.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-media.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-overlay.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert-dialog/alert-dialog-title.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert/alert-action.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert/alert-description.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/alert/alert-title.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-action.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-description.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-footer.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-header.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card-title.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/card/card.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/checkbox/checkbox.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-description.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-footer.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-header.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-overlay.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dialog/dialog-title.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-checkbox-item.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-group-heading.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-item.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-label.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-radio-item.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-separator.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-shortcut.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-sub-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/dropdown-menu/dropdown-menu-sub-trigger.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/label/label.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/popover/popover-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/popover/popover-header.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-group-heading.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-group.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-item.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-label.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-scroll-down-button.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-scroll-up-button.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-separator.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/select/select-trigger.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/separator/separator.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-description.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-footer.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-header.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-overlay.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/sheet/sheet-title.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/step-progress/step-progress.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/table/table-cell.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/table/table-head.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/tabs/tabs-content.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/tabs/tabs.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/ui/textarea/textarea.svelte",
+      "candidates": 1
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/action-surface/WorkspaceTaskSheet.svelte",
       "candidates": 1
     },
@@ -455,6 +723,18 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/HomeWorkspace.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ImportPreviewPanel.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/InventoryConversationPanel.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceRouteContent.svelte",
       "candidates": 1
     },
     {
@@ -475,10 +755,6 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
-      "candidates": 1
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
       "candidates": 1
     }
   ]

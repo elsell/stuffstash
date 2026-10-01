@@ -29,3 +29,26 @@ test('checks CSS-rendered table labels without treating data identities as copy'
   const source = `<td data-cell-label="Source" data-state="Ready">{value}</td>`;
   assert.deepEqual(embeddedDisplayMessages(source, 'Example.svelte').map(x => x.text), ['Source']);
 });
+
+test('checks nested option labels without treating protocol and style values as copy', () => {
+  for (const filename of ['Example.tsx', 'Example.svelte']) {
+    const source = `<Control label={t('policy')} options={[{value:'defaults',label:'Use defaults'},{value:'off',label:t('off')}]} class={busy ? 'Busy' : 'Idle'} />`;
+    assert.deepEqual(embeddedDisplayMessages(source, filename).map(x => x.text), ['Use defaults']);
+  }
+});
+
+test('checks script-defined display properties in Svelte and TypeScript', () => {
+  const definition = `const options = [{value:'archived',label:'Archived items'}];`;
+  for (const filename of ['Example.tsx', 'Example.svelte']) {
+    const source = filename.endsWith('.svelte') ? `<script>${definition}</script><Control options={options} />` : definition;
+    assert.deepEqual(embeddedDisplayMessages(source, filename).map(x => x.text), ['Archived items']);
+  }
+});
+
+test('checks direct Svelte option objects and preserves literal source offsets', () => {
+  const source = `<Control config={{label:'Use defaults',value:'defaults',classes:{title:'toast-title'}}} />`;
+  const issues = embeddedDisplayMessages(source, 'Example.svelte');
+  assert.deepEqual(issues.map(issue => issue.text), ['Use defaults']);
+  const [issue] = issues;
+  assert.equal(source.slice(issue.offset, issue.offset + 14), "'Use defaults'");
+});

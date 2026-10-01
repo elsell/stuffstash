@@ -11,7 +11,8 @@ const displayAttribute = name => ['title', 'label', 'message', 'description', 'p
 export function embeddedDisplayMessages(source, filename) {
   const found = [];
   const add = (text, offset) => { if (human(text.replace(/\{[^}]+\}/g, '').trim())) found.push({ text: text.trim(), offset }); };
-  function script(text, offset = 0, expression = false) {
+  function script(text, offset = 0, expression = false, rendered = true) {
+    if (expression) { text = `(${text})`; offset -= 1; }
     const ast = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, filename.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     function output(node) {
       if (!node) return;
@@ -24,6 +25,14 @@ export function embeddedDisplayMessages(source, filename) {
       }
       else if (ts.isTemplateExpression(node)) add(node.head.text + node.templateSpans.map(span => `{value}${span.literal.text}`).join(''), offset + node.getStart(ast));
     }
+    function properties(node) {
+      if (ts.isPropertyAssignment(node)) {
+        const name = node.name.getText(ast).replace(/^['"]|['"]$/g, '');
+        if (['classes', 'classNames', 'style', 'styles'].includes(name)) return;
+        if (displayAttribute(name)) output(node.initializer);
+      }
+      ts.forEachChild(node, properties);
+    }
     function visit(node) {
       if (ts.isJsxText(node)) add(node.getText(ast), offset + node.getStart(ast));
       else if (ts.isJsxAttribute(node)) {
@@ -32,14 +41,25 @@ export function embeddedDisplayMessages(source, filename) {
       } else if (ts.isJsxExpression(node)) output(node.expression);
       ts.forEachChild(node, visit);
     }
-    if (expression) { const statement = ast.statements[0]; if (statement && ts.isExpressionStatement(statement)) output(statement.expression); }
+    properties(ast);
+    if (expression) { const statement = ast.statements[0]; if (rendered && statement && ts.isExpressionStatement(statement)) output(statement.expression); }
     else visit(ast);
   }
   if (!filename.endsWith('.svelte')) { script(source); return found; }
   const ast = parse(source, { modern: true });
+  for (const section of [ast.instance, ast.module].filter(Boolean)) {
+    script(source.slice(section.content.start, section.content.end), section.content.start);
+  }
   function visit(node) {
     if (!node || typeof node !== 'object') return;
-    if (node.type === 'Attribute') { if (displayAttribute(node.name)) { if (Array.isArray(node.value)) node.value.forEach(visit); else visit(node.value); } return; }
+    if (node.type === 'Attribute') {
+      for (const value of Array.isArray(node.value) ? node.value : [node.value]) {
+        if (value?.type === 'ExpressionTag') {
+          script(source.slice(value.expression.start, value.expression.end), value.expression.start, true, displayAttribute(node.name));
+        } else if (displayAttribute(node.name)) visit(value);
+      }
+      return;
+    }
     if (node.type === 'Text') { add(node.data, node.start); return; }
     if (node.type === 'ExpressionTag') { script(source.slice(node.expression.start, node.expression.end), node.expression.start, true); return; }
     if (node.type === 'Comment') return;
@@ -58,9 +78,9 @@ async function check(root) {
   async function visit(directory) {
     for (const entry of await readdir(directory, { withFileTypes: true })) {
       const filename = path.join(directory, entry.name);
-      if (/test-support|fixtures|generated|\/src\/test\//.test(filename)) continue;
+      if (/test-support|fixtures|generated|\/src\/test\/|\/testing\//.test(filename)) continue;
       if (entry.isDirectory()) { await visit(filename); continue; }
-      if (!/\.(tsx?|svelte)$/.test(filename) || /\.(test[-.]|spec\.|d\.ts)/.test(filename)) continue;
+      if (!/\.(tsx?|svelte)$/.test(filename) || /\.(test[-.]|spec\.|bench\.|d\.ts)/.test(filename)) continue;
       const source = await readFile(filename, 'utf8');
       for (const issue of embeddedDisplayMessages(source, filename)) {
         process.stderr.write(`${path.relative(root, filename)}:${source.slice(0, issue.offset).split('\n').length}: catalog required for ${JSON.stringify(issue.text)}\n`);

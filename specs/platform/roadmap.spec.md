@@ -56,27 +56,34 @@ measurements beyond image callback samples. Remaining G8 orchestration and G6
 presentation candidates continue after this batch. Do not gate this batch on those
 unrelated remaining requirements or claim they are complete.
 
-## Current frozen batch — D2, G6, V1
+## Current delivery and next frozen batch
 
-PR #225 merged667a9196 after CI36916778478 passed. PR #227 mergedc5c89fe7
-after CI36918384453 passed, including real OIDC edit/reload/export and isolation.
-Their release evidence is still pending. GitHub replaced #225's pending release
-when #227 merged: #227 run36919621718 was cancelled and #225 run36917837759
-restarted at its original source. The release waiter restarts #227 only after
-#225 succeeds. Catch-up release36915932407 precedes both. Do not merge another
-batch until this delivery queue is complete; inspect exact terminal evidence.
+PR #224 shipped as v0.27.0 (release36915932407). PR #225 merged667a9196
+and #227 mergedc5c89fe7 after their full CI passed. Their separate publication
+attempts did not complete: GitHub replaced a pending run, and rerun36917837759
+failed tag creation because its token lacked workflows permission.
 
-Prepared follow-up:
-- D2: enforce the one-release-per-batch contract by suppressing product release
-  triggers for image-pin-only pushes and serializing future product merges.
-- G6: catalog shared customization-key guidance and surfaced Home query
-  messages while keeping domain validation independent of localization.
-- V1: run the existing native Add/recovery workflow in en-XA on iPhone and iPad.
-  This provides expansion evidence alongside prior ar-XB evidence; it does not
-  establish native search/approval or physical-device acceptance.
+At the user's request, all remaining open PR work was consolidated into #228:
+localization guidance, remaining identity/expiration/voice application ownership,
+and v0.27.0 image pins. Combined CI36921590281 passed; merged58bb40a8.
+PRs #226 and #229 were closed as incorporated. Catch-up release36922285320 is
+pending. Future batches wait for the preceding release to finish before merge.
+Native expansion run36920101432 remains separate pending acceptance evidence.
 
-Remaining localization candidates and broader native/physical acceptance remain
-open. Raw inventory candidates include technical strings and are not defect counts.
+Next frozen batch has three named gaps:
+- G6 option copy: migrate previously missed nested option labels and displayed
+  fixture-selection fallback labels into the catalog, preserving wire values.
+- G6 enforcement: check display properties inside option objects and Svelte
+  scripts, with regressions protecting protocol values and styles.
+- D2 inventory fidelity: include expressions in component option attributes in
+  residual-copy triage and correct the AssetDetail error-classification source path.
+
+G8 source review found no further concrete root-policy ownership violation after
+#228; construction, cross-domain composition and compatibility facades remain
+intentional. Remaining localization candidates and broader native/physical
+acceptance stay open. Inventory candidates include technical strings and are not
+product-defect counts. Native expansion does not establish search/approval,
+physical export recipient saving, or assistive-technology acceptance.
 
 ## Delivery and acceptance rules
 

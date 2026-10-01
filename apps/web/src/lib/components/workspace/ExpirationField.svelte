@@ -50,7 +50,7 @@
 <div class="expiration-field">
   <Label for={id}>{t('web.ExpirationField.expirationOptional')}</Label>
   <SegmentedControl label={t('web.ExpirationField.expirationPrecision')} value={precision}
-    options={[{ value: 'day', label: 'Exact date' }, { value: 'month', label: 'Month and year' }]}
+    options={[{ value: 'day', label: t("web.options.ExpirationField.exactDate") }, { value: 'month', label: t("web.options.ExpirationField.monthAndYear") }]}
     onSelect={select} />
   <Input {id} type={precision === 'day' ? 'date' : 'month'} {value}
     oninput={input} aria-invalid={invalid || awaitingDay} aria-describedby={`${id}-help`} />

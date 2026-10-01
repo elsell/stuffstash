@@ -224,3 +224,12 @@ Customization key rules remain pure domain predicates. Their explanatory copy
 belongs to the catalog and is shared by inline editor validation and command
 rejections. Home query guidance rendered to users is also
 catalog-backed. Preserve existing English wording and validation semantics.
+
+### Option-object copy enforcement
+
+Copy enforcement must inspect display properties such as label/title in nested
+component option objects and script-defined option arrays in both JSX and Svelte.
+Stable value/id/state properties, CSS strings, user content and catalog calls
+remain exempt. Include an adversarial regression where translated direct props
+coexist with untranslated nested choices; direct-attribute coverage alone is
+insufficient.

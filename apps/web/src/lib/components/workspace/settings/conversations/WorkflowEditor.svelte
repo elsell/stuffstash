@@ -59,8 +59,8 @@
   <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.workflowName')}<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
   <WorkflowSelect id="provider-model" label={t('web.WorkflowEditor.modelProfile')} value={draft.providerProfileId ?? ''}
     disabled={saving || disabled}
-    options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
-      ...(draft.providerProfileId && !providers.some(provider => provider.id === draft.providerProfileId) ? [{ value: draft.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
+    options={[{ value: '', label: t("web.options.WorkflowEditor.tenantDefaultModel") }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
+      ...(draft.providerProfileId && !providers.some(provider => provider.id === draft.providerProfileId) ? [{ value: draft.providerProfileId, label: t("web.options.WorkflowEditor.savedProfileCurrentlyUnavailable") }] : [])]}
     onChange={value => { draft.providerProfileId = value || null; }} />
   <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.additionalInstructions')}<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
   <details><summary>{t('web.WorkflowEditor.conversationLimits')}</summary>
