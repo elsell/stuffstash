@@ -249,6 +249,8 @@ PODS:
     - RNScreens
   - ExpoSecureStore (55.0.15):
     - ExpoModulesCore
+  - ExpoSharing (55.0.24):
+    - ExpoModulesCore
   - ExpoSymbols (55.0.9):
     - ExpoModulesCore
   - ExpoUI (55.0.17):
@@ -2478,6 +2480,7 @@ DEPENDENCIES:
   - "ExpoNotifications (from `../../../node_modules/.pnpm/expo-notifications@55.0.23_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+r_8c9437a852921738cc1fa3cbad81a3b3/node_modules/expo-notifications/ios`)"
   - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@55.0.16_4c97106ec1db9c48fbbdd545641745ce/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios`)"
+  - "ExpoSharing (from `../../../node_modules/.pnpm/expo-sharing@55.0.24_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/expo-sharing/ios`)"
   - "ExpoSymbols (from `../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._5099956c01165c3b712d9b89728d05b9/node_modules/expo-symbols/ios`)"
   - "ExpoUI (from `../../../node_modules/.pnpm/@expo+ui@55.0.17_patch_hash=72ed4c392322df3dd5a755e323dfcccc3b8bced9b5e5116ea8bc8bbad3d_c9551f1d541702fed7e5f20eaaa9702e/node_modules/@expo/ui/ios`)"
   - "ExpoWebBrowser (from `../../../node_modules/.pnpm/expo-web-browser@55.0.17_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0_/node_modules/expo-web-browser/ios`)"
@@ -2633,6 +2636,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-router@55.0.16_4c97106ec1db9c48fbbdd545641745ce/node_modules/expo-router/ios"
   ExpoSecureStore:
     :path: "../../../node_modules/.pnpm/expo-secure-store@55.0.15_expo@55.0.26/node_modules/expo-secure-store/ios"
+  ExpoSharing:
+    :path: "../../../node_modules/.pnpm/expo-sharing@55.0.24_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.7_@types+react@19.2.17_react@19.2.0__react@19.2.0/node_modules/expo-sharing/ios"
   ExpoSymbols:
     :path: "../../../node_modules/.pnpm/expo-symbols@55.0.9_expo-font@55.0.8_expo@55.0.26_react-native@0.83.6_@babel+core@7.29._5099956c01165c3b712d9b89728d05b9/node_modules/expo-symbols/ios"
   ExpoUI:
@@ -2836,6 +2841,7 @@ SPEC CHECKSUMS:
   ExpoNotifications: 61c46aa5df088ff0ad41de0504a86a92333aec55
   ExpoRouter: e0e2aa4b03843e7abfa3e63e0cdd6c642d74780f
   ExpoSecureStore: f495a3e0ab65683be8427a96f694726a88048f46
+  ExpoSharing: f628ba7d9d0bf72cf624ebb60d2e69de07fbc241
   ExpoSymbols: 896159288ad708e1a32dc12c92fe5f90bff01126
   ExpoUI: 3d10642147c44f94a4557f1defe2efd3244349af
   ExpoWebBrowser: 3f57d6eec40cd76608ee9e660915bc474b7cfa6a
