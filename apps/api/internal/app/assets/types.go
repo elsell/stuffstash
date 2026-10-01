@@ -12,21 +12,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type CreateAssetInput struct {
-	Expiration        *ExpirationInput
-	Principal         identity.Principal
-	Source            audit.Source
-	RequestID         string
-	TenantID          tenant.ID
-	InventoryID       inventory.InventoryID
-	Kind              string
-	Title             string
-	Description       string
-	ParentAssetID     string
-	CustomAssetTypeID string
-	CustomFields      map[string]any
-	TagIDs            []string
-}
+type CreateAssetInput = ports.CreateAssetInput
 
 type ListAssetsInput struct {
 	Parent         ports.AssetParentFilter
@@ -50,62 +36,20 @@ type GetAssetInput struct {
 	AssetID     asset.ID
 }
 
-type AssetParentUpdate struct {
-	Present bool
-	Null    bool
-	Value   string
-}
+type AssetParentUpdate = ports.AssetParentUpdate
 
-type UpdateAssetInput struct {
-	CustomAssetTypeID *string
-	Expiration        ExpirationUpdate
-	Principal         identity.Principal
-	Source            audit.Source
-	RequestID         string
-	TenantID          tenant.ID
-	InventoryID       inventory.InventoryID
-	AssetID           asset.ID
-	Title             *string
-	Description       *string
-	ParentAssetID     AssetParentUpdate
-	CustomFields      map[string]any
-	CustomFieldPatch  map[string]any
-	TagIDs            *[]string
-}
+type UpdateAssetInput = ports.UpdateAssetInput
 
 type AssetMutationResult struct {
 	Asset               asset.Asset
 	UndoableOperationID string
 }
 
-type UpdateAssetLifecycleInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	AssetID     asset.ID
-}
+type UpdateAssetLifecycleInput = ports.UpdateAssetLifecycleInput
 
-type CheckoutAssetInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	AssetID     asset.ID
-	Details     string
-}
+type CheckoutAssetInput = ports.CheckoutAssetInput
 
-type ReturnAssetInput struct {
-	Principal   identity.Principal
-	Source      audit.Source
-	RequestID   string
-	TenantID    tenant.ID
-	InventoryID inventory.InventoryID
-	AssetID     asset.ID
-	Details     string
-}
+type ReturnAssetInput = ports.ReturnAssetInput
 
 type UpdateReturnedCheckoutDetailsInput struct {
 	Principal   identity.Principal
@@ -165,12 +109,7 @@ type CheckedOutAssetsResult struct {
 	HasMore       bool
 }
 
-type PreparedCheckoutOperation struct {
-	Checkout          asset.Checkout
-	ExpectedCurrent   *asset.Checkout
-	AuditRecord       audit.Record
-	UndoableOperation ports.UndoableOperation
-}
+type PreparedCheckoutOperation = ports.PreparedCheckoutOperation
 
 type CheckoutOperationResult struct {
 	Checkout            asset.Checkout

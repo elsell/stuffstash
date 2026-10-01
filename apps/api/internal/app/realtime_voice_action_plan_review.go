@@ -37,11 +37,11 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		if err != nil {
 			return RealtimeVoiceActionPlanCommand{}, err
 		}
-		proposal.Changes = prepared.changes
-		if prepared.assetType != nil {
-			proposal.Title = prepared.assetType.Item.DisplayName.String()
+		proposal.Changes = prepared.Changes
+		if prepared.AssetType != nil {
+			proposal.Title = prepared.AssetType.Item.DisplayName.String()
 		} else {
-			proposal.Title = prepared.definition.Item.DisplayName.String()
+			proposal.Title = prepared.Definition.Item.DisplayName.String()
 		}
 		return proposal, nil
 	}

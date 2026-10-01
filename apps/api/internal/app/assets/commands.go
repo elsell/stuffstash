@@ -37,13 +37,7 @@ func (s Service) CreateAssetWithOperation(ctx context.Context, input CreateAsset
 	return AssetMutationResult{Asset: prepared.Asset, UndoableOperationID: prepared.UndoableOperation.ID}, nil
 }
 
-type PreparedCreateAsset struct {
-	Asset                 asset.Asset
-	AuditRecord           audit.Record
-	PromotedParent        *asset.Asset
-	ParentPromotionRecord *audit.Record
-	UndoableOperation     ports.UndoableOperation
-}
+type PreparedCreateAsset = ports.PreparedCreateAsset
 
 func (s Service) PrepareCreateAsset(ctx context.Context, input CreateAssetInput) (PreparedCreateAsset, error) {
 	return s.prepareCreateAsset(ctx, input, nil)
@@ -293,14 +287,7 @@ func (s Service) UpdateAssetWithOperation(ctx context.Context, input UpdateAsset
 	return result, nil
 }
 
-type PreparedUpdateAsset struct {
-	PreviousAsset     asset.Asset
-	Asset             asset.Asset
-	AuditRecords      []audit.Record
-	UndoableOperation *ports.UndoableOperation
-	ReplaceTags       bool
-	TagIDs            []assettag.ID
-}
+type PreparedUpdateAsset = ports.PreparedUpdateAsset
 
 func (s Service) PrepareUpdateAsset(ctx context.Context, input UpdateAssetInput) (PreparedUpdateAsset, error) {
 	return s.prepareUpdateAsset(ctx, input, nil)
@@ -654,14 +641,7 @@ func (s Service) DeleteAsset(ctx context.Context, input UpdateAssetLifecycleInpu
 	return nil
 }
 
-type PreparedUpdateAssetLifecycle struct {
-	PreviousAsset     asset.Asset
-	Asset             asset.Asset
-	AuditRecord       audit.Record
-	UndoableOperation ports.UndoableOperation
-	EventName         ports.EventName
-	EventMessage      string
-}
+type PreparedUpdateAssetLifecycle = ports.PreparedUpdateAssetLifecycle
 
 func (s Service) PrepareArchiveAsset(ctx context.Context, input UpdateAssetLifecycleInput) (PreparedUpdateAssetLifecycle, error) {
 	return s.prepareUpdateAssetLifecycle(ctx, input, asset.LifecycleStateActive, asset.LifecycleStateArchived, audit.ActionAssetArchived, ports.EventAssetArchived, "asset archived")

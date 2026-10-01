@@ -136,3 +136,16 @@ that internal scope to composition without adding it to transport responses.
 Shared lifecycle filter parsing belongs in application support, with existing
 asset callers retaining compatibility. Existing scoped search and adversarial
 HTTP tests remain the behavior contract for this extraction.
+
+Action-plan creation, bounded command parsing, approval edits, permission
+revalidation, atomic execution and photo metadata validation belong to a focused
+`ActionPlanService` in `internal/app/agentmodel`. Preparation of asset and
+customization mutations crosses typed preparation ports, not sibling application
+imports. These ports expose scoped command inputs and prepared domain/audit/undo
+records; existing asset/customization services implement them, retaining input
+aliases for compatibility. The action-plan repository still commits prepared
+mutations and plan transitions atomically. No model output bypasses preparation,
+approval, authorization, ownership or replay protection. Root APIs and review
+helper forwarding remain compatible while realtime-session orchestration is
+migrated separately. Existing adversarial approval/execution/rollback tests remain
+required; this move changes ownership, not executable commands or disclosures.

@@ -15,19 +15,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type CreateCustomFieldDefinitionInput struct {
-	Principal          identity.Principal
-	Source             audit.Source
-	RequestID          string
-	TenantID           tenant.ID
-	InventoryID        inventory.InventoryID
-	Key                string
-	DisplayName        string
-	Type               string
-	EnumOptions        []string
-	Applicability      string
-	CustomAssetTypeIDs []string
-}
+type CreateCustomFieldDefinitionInput = ports.CreateCustomFieldDefinitionInput
 
 type ListCustomFieldDefinitionsInput struct {
 	Principal      identity.Principal

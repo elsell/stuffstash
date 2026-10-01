@@ -2,23 +2,19 @@ package assets
 
 import (
 	"context"
+	"strings"
+
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/domainvalue/expirationdate"
-	"strings"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type ExpirationInput struct {
-	Date      string
-	Precision string
-}
-type ExpirationUpdate struct {
-	Present bool
-	Value   *ExpirationInput
-}
+type ExpirationInput = ports.ExpirationInput
+type ExpirationUpdate = ports.ExpirationUpdate
 
 func (s Service) validateExpiration(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, typeID asset.CustomAssetTypeID, input *ExpirationInput) (expirationdate.Date, error) {
 	if input == nil {
