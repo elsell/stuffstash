@@ -185,3 +185,13 @@ Step-progress navigation accessibility labels use complete catalog sentences for
 current, completed and upcoming steps, with step names/descriptions interpolated.
 Do not concatenate English instructions with translated state labels or lowercase
 translated labels to build a sentence. Keep navigation reachability unchanged.
+
+Native system surfaces are part of client copy coverage: invitation share text
+and title, export share-sheet title, and Android notification-channel display
+name use the catalog. Preserve invitation URLs and inventory names verbatim,
+copy-to-clipboard behavior, MIME/UTI values and stable notification channel IDs.
+
+Mobile repository presentation labels also use catalog messages: fallback location
+and update labels, known search-match field names, and complete dated-update
+messages. Preserve server titles, descriptions, unknown field identifiers and
+existing date formatting; translating a display label must not change API values.

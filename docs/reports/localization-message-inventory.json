@@ -64,10 +64,6 @@
       "candidates": 14
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/InventoryAssetMapping.ts",
-      "candidates": 12
-    },
-    {
       "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
       "candidates": 12
     },
@@ -112,10 +108,6 @@
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
-      "candidates": 5
-    },
-    {
       "file": "apps/mobile/src/application/assets/AssetCheckoutCommand.ts",
       "candidates": 5
     },
@@ -126,10 +118,6 @@
     {
       "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
       "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/adapters/expiration/ApiExpirationRepository.ts",
-      "candidates": 4
     },
     {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetDetailReads.ts",
@@ -152,15 +140,15 @@
       "candidates": 4
     },
     {
+      "file": "apps/mobile/src/adapters/expiration/ApiExpirationRepository.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
+      "candidates": 3
+    },
+    {
       "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
-      "candidates": 3
-    },
-    {
-      "file": "apps/mobile/src/adapters/sharing/ExpoInvitationLinkActions.ts",
-      "candidates": 3
-    },
-    {
-      "file": "apps/mobile/src/adapters/sharing/NativeInvitationLinkActions.ts",
       "candidates": 3
     },
     {
@@ -320,10 +308,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/adapters/exports/ExpoExportFileShare.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetCommands.ts",
       "candidates": 1
     },
@@ -333,10 +317,6 @@
     },
     {
       "file": "apps/mobile/src/adapters/network/TimeoutFetch.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/notifications/ExpoPushDevice.ts",
       "candidates": 1
     },
     {

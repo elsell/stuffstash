@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { PushDevicePort } from '../../application/notifications/PushDevicePort';
 import { NotificationFailure } from '../../application/notifications/NotificationFailure';
 
@@ -27,7 +28,7 @@ export class ExpoPushDevice implements PushDevicePort {
       this.assertSupported();
       if (this.platform === 'android') {
         await this.notifications.setNotificationChannelAsync('expiration', {
-          name: 'Expiration reminders', importance: this.channelImportance
+          name: t('notifications.channel.expiration'), importance: this.channelImportance
         });
       }
       const existing = await this.notifications.getPermissionsAsync();

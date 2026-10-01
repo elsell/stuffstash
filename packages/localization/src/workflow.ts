@@ -150,5 +150,19 @@ export const workflowMessages = {
   "progress.navigation.current": "{step}, current step",
   "progress.navigation.complete": "Go to {step}, completed step",
   "progress.navigation.upcoming": "Go to {step}, not started step",
-  "progress.navigation.described": "{label}. {description}"
+  "progress.navigation.described": "{label}. {description}",
+  "sharing.invitation.message": "You’re invited to {inventory} in Stuff Stash.\n\n{link}",
+  "sharing.invitation.title": "Share Stuff Stash invitation",
+  "sharing.export.title": "Export inventory",
+  "notifications.channel.expiration": "Expiration reminders",
+  "inventory.loaded": "Loaded from API",
+  "inventory.locationAsset": "Location asset",
+  "inventory.root": "Inventory root",
+  "search.match.tag": "Tag",
+  "search.match.title": "Title",
+  "search.match.description": "Description",
+  "search.match.location": "Location",
+  "search.match.customField": "Custom field",
+  "search.match.generic": "Match",
+  "inventory.updated": "Updated {date}"
 } as const;
