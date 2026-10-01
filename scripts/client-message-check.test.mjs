@@ -24,3 +24,8 @@ test('checks Svelte expression-valued display attributes', () => {
   const source = `<span aria-label={ready ? 'Ready to save' : 'Still loading'}></span>`;
   assert.deepEqual(embeddedDisplayMessages(source, 'Example.svelte').map(x => x.text), ['Ready to save', 'Still loading']);
 });
+
+test('checks CSS-rendered table labels without treating data identities as copy', () => {
+  const source = `<td data-cell-label="Source" data-state="Ready">{value}</td>`;
+  assert.deepEqual(embeddedDisplayMessages(source, 'Example.svelte').map(x => x.text), ['Source']);
+});

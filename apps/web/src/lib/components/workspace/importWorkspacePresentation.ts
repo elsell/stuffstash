@@ -1,5 +1,5 @@
 import type { ImportCountMetric } from './importCountMetrics';
-import { t } from '$lib/presentation/localization';
+import { localization, t } from '$lib/presentation/localization';
 import type { ImportJob, ImportMessage, Principal } from '$lib/domain/inventory';
 
 export type CountCell = {
@@ -400,13 +400,13 @@ export function jobTimeLabel(label: string, value?: string): string {
 export function shortDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('en-US', {
+  return localization.date(date, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit'
-  }).format(date);
+  });
 }
 
 export function statusVariant(job: ImportJob): 'default' | 'secondary' | 'destructive' {
@@ -432,20 +432,31 @@ export function sourceSnapshotDescription(job: ImportJob): string {
 }
 
 export function previewLocationContext(item: { parentSourceId?: string; archived: boolean }): string {
-  return `${item.parentSourceId ? 'inside another imported record' : 'top level'}${item.archived ? ' · archived source skipped' : ''}`;
+  return t(`import.preview.location.${item.parentSourceId ? 'nested' : 'root'}.${item.archived ? 'archived' : 'active'}`);
 }
 
 export function previewAssetContext(item: { kind: string; parentSourceId?: string; archived: boolean }): string {
-  return `${item.kind}${item.parentSourceId ? ' · inside another imported record' : ''}${item.archived ? ' · archived source skipped' : ''}`;
+  const kind = item.kind === 'item' || item.kind === 'container' || item.kind === 'location' ? item.kind : 'unknown';
+  return t(`import.preview.asset.${kind}.${item.parentSourceId ? 'nested' : 'root'}.${item.archived ? 'archived' : 'active'}`, { kind: item.kind });
 }
 
 export function fileSizeLabel(bytes: number): string {
   if (bytes <= 0) return t('web.importWorkspacePresentation.sizeUnknown');
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return t('web.importWorkspacePresentation.kB', { value: String(Math.round(bytes / 1024)) });
-  return t('web.importWorkspacePresentation.mB', { value: String((bytes / (1024 * 1024)).toFixed(1)) });
+  if (bytes < 1024) return `${localization.number(bytes)} B`;
+  if (bytes < 1024 * 1024) return t('web.importWorkspacePresentation.kB', { value: localization.number(Math.round(bytes / 1024)) });
+  return t('web.importWorkspacePresentation.mB', { value: localization.number(bytes / (1024 * 1024), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
 }
 
 function countCell(value: number, metric: ImportCountMetric, muted = false): CountCell {
   return { value, metric, label: t(`import.label.${metric}`, { count: value }), muted };
 }
+
+export function ledgerChangeSummary(job: ImportJob): string {
+  if (!isTerminal(job) || job.status === 'cancelled_discarded') return historyCountSummary(job);
+  const skipped = job.counts.assetsSkipped + job.counts.attachmentsSkipped;
+  const saved = changedRecordSummary(job);
+  if (skipped === 0) return saved;
+  const skippedLabel = t('import.history.skipped', { count: skipped });
+  if (job.counts.locationsCreated + job.counts.assetsCreated + job.counts.attachmentsCreated === 0) return skippedLabel;
+  return `${saved} · ${skippedLabel}`;
+  }

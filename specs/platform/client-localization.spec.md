@@ -81,7 +81,8 @@ the display language changes.
 The required-checks and pre-commit `client-message-check` gate installs the pinned
 workspace dependencies before loading its compiler parsers, then rejects embedded
 copy directly rendered as JSX/Svelte text, display attributes, conditional labels
-or fallback/template messages. It preserves protocol strings and variable-derived
+or fallback/template messages, including responsive table labels rendered through
+CSS data-cell-label attributes. It preserves protocol strings and variable-derived
 user content. It does not prove the provenance of every variable or application
 error; the remaining-file inventory and source review cover those boundaries.
 
@@ -102,3 +103,12 @@ Settings and conversation-case validation use complete catalog messages, includi
 required/optional character and UTF-8 byte limits. Invitation action labels,
 confirmations and accessible names localize independently of action IDs, status,
 URLs and permission decisions; email addresses remain verbatim parameters.
+
+Import and sharing notices, recovery instructions and confirmation copy must use
+catalog messages. Source diagnostics remain verbatim; known relationship/status
+values get presentation labels without changing authorization values. Import dates
+and file sizes follow the client formatting locale, not a fixed US locale.
+
+Import history decides whether records changed from numeric counts, never from the
+localized “no records changed” label. A skipped-only run must not gain an empty
+change summary when the display language changes.

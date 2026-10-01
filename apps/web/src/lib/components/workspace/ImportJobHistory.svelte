@@ -24,14 +24,14 @@
     importIssueTone,
     issueCountSummary,
     isTerminal,
-    jobTimeLabel,
+    shortDateTime,
     phaseLabel,
     progressBarLabel,
     progressBarStyle,
     progressKnown,
     progressPercent,
     progressSummary,
-    changedRecordSummary,
+    ledgerChangeSummary,
     sourceDescription,
     statusLabel,
     statusSentence,
@@ -150,14 +150,13 @@
     historySortDirection = key === 'finished' || key === 'changed' ? 'desc' : 'asc';
   }
 
-  function sortButtonLabel(key: Exclude<HistorySortKey, 'priority'>, label: string): string {
-    if (historySortKey !== key) return `Sort by ${label}`;
-    return `Sort by ${label}, ${historySortDirection === 'asc' ? 'ascending' : 'descending'}`;
+  function sortButtonLabel(key: Exclude<HistorySortKey, 'priority'>): string {
+    return t(`web.ImportJobHistory.sort.${key}.${historySortKey === key ? historySortDirection : 'none'}`);
   }
 
   function sortIndicator(key: Exclude<HistorySortKey, 'priority'>): string {
     if (historySortKey !== key) return '';
-    return historySortDirection === 'asc' ? 'Ascending' : 'Descending';
+    return historySortDirection === 'asc' ? t('web.ImportJobHistory.ascending') : t('web.ImportJobHistory.descending');
   }
 
   function severityRank(job: ImportJob): number {
@@ -171,18 +170,18 @@
     return value ? Date.parse(value) || 0 : 0;
   }
 
-  function jobActionLabel(action: string, job: ImportJob): string {
-    const status = statusLabel(job);
+  function jobActionLabel(action: 'view' | 'review' | 'continue' | 'cancel' | 'remove', job: ImportJob): string {
     const time = job.completedAt ?? job.startedAt ?? job.createdAt;
-    const timeLabel = time ? `, ${new Date(time).toLocaleString()}` : '';
-    return `${action} ${job.source.name} import, ${status}${timeLabel}`;
+    return t(`web.ImportJobHistory.action.${action}.${time ? 'timed' : 'plain'}`, {
+      name: job.source.name, status: statusLabel(job), time: time ? shortDateTime(time) : ''
+    });
   }
 
   function ledgerDescription(): string {
-    if (historyFilter === 'attention') return 'Imports that need action.';
-    if (historyFilter === 'warnings') return 'Warning-only imports.';
-    if (historyFilter === 'completed') return 'Completed imports.';
-    return 'Needs-action and recent runs first.';
+    if (historyFilter === 'attention') return t('web.ImportJobHistory.importsThatNeedAction');
+    if (historyFilter === 'warnings') return t('web.ImportJobHistory.warningOnlyImports');
+    if (historyFilter === 'completed') return t('web.ImportJobHistory.completedImports');
+    return t('web.ImportJobHistory.needsActionAndRecentRunsFirst');
   }
 
   function allRunCount(): number {
@@ -201,17 +200,8 @@
     if (jobRequiresAction(job)) return `${statusLabel(job)} · ${attentionSummary(job)}`;
     if (job.status === 'cancelled_kept' || job.status === 'cancelled_discarded') return statusSentence(job);
     if (jobHasReviewWarnings(job)) return statusLabel(job);
-    if (job.status === 'succeeded') return 'No action needed';
+    if (job.status === 'succeeded') return t('web.ImportJobHistory.noActionNeeded');
     return statusSentence(job);
-  }
-
-  function ledgerChangeSummary(job: ImportJob): string {
-    if (!isTerminal(job) || job.status === 'cancelled_discarded') return historyCountSummary(job);
-    const skipped = job.counts.assetsSkipped + job.counts.attachmentsSkipped;
-    const saved = changedRecordSummary(job);
-    if (skipped === 0) return saved;
-    if (saved === 'No records changed') return `${skipped} skipped`;
-    return `${saved} · ${skipped} skipped`;
   }
 
   function openHistoryRow(event: MouseEvent, job: ImportJob): void {
@@ -344,7 +334,7 @@
             class="import-job-card current-work-row clickable-row"
             role="button"
             tabindex={0}
-            aria-label={jobActionLabel('View details for', job)}
+            aria-label={jobActionLabel('view', job)}
             onclick={(event) => openHistoryRow(event, job)}
             onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
           >
@@ -374,7 +364,7 @@
               </div>
             </div>
             <div class="action-row">
-              <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} disabled={busy} aria-label={jobActionLabel('View details for', job)}>
+              <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} disabled={busy} aria-label={jobActionLabel('view', job)}>
                 <Eye size={16} aria-hidden="true" /> {t('web.ImportJobHistory.details')} </Button.Root>
               {#if canRequestCancellation(job)}
                 <Button.Root
@@ -382,7 +372,7 @@
                   size="sm"
                   onclick={() => onRequestCancellation(job)}
                   disabled={busy || !canCreateImports}
-                  aria-label={jobActionLabel('Cancel', job)}
+                  aria-label={jobActionLabel('cancel', job)}
                 > {t('web.ImportJobHistory.cancel')} </Button.Root>
               {/if}
             </div>
@@ -396,7 +386,7 @@
           class="history-row draft-row clickable-row"
           role="button"
           tabindex={0}
-          aria-label={jobActionLabel('View details for', job)}
+          aria-label={jobActionLabel('view', job)}
           onclick={(event) => openHistoryRow(event, job)}
           onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
         >
@@ -410,11 +400,11 @@
               <span>{statusSentence(job)}</span>
               <span>{historyCountSummary(job)}</span>
               {#if actorSummary(job, currentPrincipal)}<span>{actorSummary(job, currentPrincipal)}</span>{/if}
-              <span>{jobTimeLabel('Previewed', job.createdAt)}</span>
+              <span>{t('import.history.previewed', { time: shortDateTime(job.createdAt) })}</span>
             </div>
           </div>
-          <Button.Root variant="outline" size="sm" onclick={() => onResumePreviewedJob(job)} aria-label={jobActionLabel('Continue', job)}>{t('web.ImportJobHistory.continue')}</Button.Root>
-          <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('View details for', job)}>{t('web.ImportJobHistory.details')}</Button.Root>
+          <Button.Root variant="outline" size="sm" onclick={() => onResumePreviewedJob(job)} aria-label={jobActionLabel('continue', job)}>{t('web.ImportJobHistory.continue')}</Button.Root>
+          <Button.Root variant="ghost" size="sm" onclick={() => onOpenJob(job)} aria-label={jobActionLabel('view', job)}>{t('web.ImportJobHistory.details')}</Button.Root>
         </div>
       {/each}
       {/if}
@@ -447,22 +437,22 @@
         <Table.Header class="history-ledger-head">
           <Table.Row>
             <Table.Head scope="col" aria-sort={historySortKey === 'source' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('source')} aria-label={sortButtonLabel('source', 'source')}> {t('web.ImportJobHistory.source')} <ArrowUpDown size={12} aria-hidden="true" />
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('source')} aria-label={sortButtonLabel('source')}> {t('web.ImportJobHistory.source')} <ArrowUpDown size={12} aria-hidden="true" />
                 {#if sortIndicator('source')}<small>{sortIndicator('source')}</small>{/if}
               </Button.Root>
             </Table.Head>
             <Table.Head scope="col" aria-sort={historySortKey === 'status' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('status')} aria-label={sortButtonLabel('status', 'status')}> {t('web.ImportJobHistory.status')} <ArrowUpDown size={12} aria-hidden="true" />
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('status')} aria-label={sortButtonLabel('status')}> {t('web.ImportJobHistory.status')} <ArrowUpDown size={12} aria-hidden="true" />
                 {#if sortIndicator('status')}<small>{sortIndicator('status')}</small>{/if}
               </Button.Root>
             </Table.Head>
             <Table.Head scope="col" aria-sort={historySortKey === 'changed' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('changed')} aria-label={sortButtonLabel('changed', 'changed records')}> {t('web.ImportJobHistory.changed')} <ArrowUpDown size={12} aria-hidden="true" />
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('changed')} aria-label={sortButtonLabel('changed')}> {t('web.ImportJobHistory.changed')} <ArrowUpDown size={12} aria-hidden="true" />
                 {#if sortIndicator('changed')}<small>{sortIndicator('changed')}</small>{/if}
               </Button.Root>
             </Table.Head>
             <Table.Head scope="col" aria-sort={historySortKey === 'finished' ? (historySortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
-              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('finished')} aria-label={sortButtonLabel('finished', 'finished time')}> {t('web.ImportJobHistory.finished')} <ArrowUpDown size={12} aria-hidden="true" />
+              <Button.Root variant="ghost" size="xs" class="ledger-sort-button" onclick={() => setHistorySort('finished')} aria-label={sortButtonLabel('finished')}> {t('web.ImportJobHistory.finished')} <ArrowUpDown size={12} aria-hidden="true" />
                 {#if sortIndicator('finished')}<small>{sortIndicator('finished')}</small>{/if}
               </Button.Root>
             </Table.Head>
@@ -474,11 +464,11 @@
           <Table.Row
             class={jobRequiresAction(job) ? 'history-row attention-row clickable-row' : jobHasReviewWarnings(job) ? 'history-row warning-row clickable-row' : 'history-row clickable-row'}
             tabindex={0}
-            aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details for' : 'View details for', job)}
+            aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'review' : 'view', job)}
             onclick={(event) => openHistoryRow(event, job)}
             onkeydown={(event) => openHistoryRowFromKeyboard(event, job)}
           >
-            <Table.Cell class="status-cell" data-cell-label="Source">
+            <Table.Cell class="status-cell" data-cell-label={t('web.ImportJobHistory.source')}>
               <span class="status-icon">
                 {#if jobRequiresAction(job)}
                   <XCircle size={18} aria-hidden="true" />
@@ -495,7 +485,7 @@
                 <span>{sourceDescription(job)}</span>
               </div>
             </Table.Cell>
-            <Table.Cell class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} data-cell-label="Status">
+            <Table.Cell class={jobRequiresAction(job) ? 'issue-cell action' : jobHasReviewWarnings(job) ? 'issue-cell warning' : 'issue-cell'} data-cell-label={t('web.ImportJobHistory.status')}>
               {#if jobRequiresAction(job)}
                 <Badge variant="destructive">{t('web.ImportJobHistory.actionRequired')}</Badge>
               {:else if jobHasReviewWarnings(job)}
@@ -505,34 +495,34 @@
               {/if}
               <span>{statusDetail(job)}</span>
             </Table.Cell>
-            <Table.Cell class="result-cell" data-cell-label="Changed">
+            <Table.Cell class="result-cell" data-cell-label={t('web.ImportJobHistory.changed')}>
               <span>
                 {ledgerChangeSummary(job)}
                 {#if job.cancellationMode === 'keep_partial_progress'} {t('web.ImportJobHistory.partialProgressKept')}{/if}
                 {#if job.cancellationMode === 'discard_partial_progress'} {t('web.ImportJobHistory.partialProgressDiscarded')}{/if}
               </span>
             </Table.Cell>
-            <Table.Cell class="time-cell" data-cell-label="Finished">
+            <Table.Cell class="time-cell" data-cell-label={t('web.ImportJobHistory.finished')}>
               {#if job.completedAt}
-                <span>{jobTimeLabel('', job.completedAt).trim()}</span>
+                <span>{shortDateTime(job.completedAt)}</span>
               {:else if job.startedAt}
-                <span>{jobTimeLabel('', job.startedAt).trim()}</span>
+                <span>{shortDateTime(job.startedAt)}</span>
               {:else}
-                <span>{jobTimeLabel('', job.createdAt).trim()}</span>
+                <span>{shortDateTime(job.createdAt)}</span>
               {/if}
             </Table.Cell>
-            <Table.Cell class="row-actions" data-cell-label="Actions">
+            <Table.Cell class="row-actions" data-cell-label={t('web.ImportJobHistory.actions')}>
               <Button.Root
                 variant={jobRequiresAction(job) ? 'outline' : 'ghost'}
                 size="sm"
                 onclick={() => onOpenJob(job)}
-                aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details for' : 'View details for', job)}
+                aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'review' : 'view', job)}
               >
                 <Eye size={16} aria-hidden="true" />
                 {jobRequiresAction(job) || jobHasReviewWarnings(job) ? t('web.ImportJobHistory.reviewDetails') : t('web.ImportJobHistory.details')}
               </Button.Root>
               {#if canRemoveJobFromHistory(job)}
-                <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
+                <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('remove', job)}>
                   <Trash2 size={16} aria-hidden="true" />
                 </Button.Root>
               {/if}

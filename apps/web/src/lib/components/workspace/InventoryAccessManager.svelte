@@ -166,7 +166,7 @@
       loaded = true;
     } catch (caught) {
       if (sameContext(current, expectedContext)) {
-        error = safeWorkspaceErrorMessage(caught, 'Sharing could not be loaded. Try again.');
+        error = safeWorkspaceErrorMessage(caught, t('web.InventoryAccessManager.sharingCouldNotBeLoadedTryAgain'));
       }
     } finally {
       if (sameContext(current, expectedContext)) {
@@ -232,7 +232,7 @@
       loaded = true;
     } catch (caught) {
       if (sameContext(current, expectedContext)) {
-        error = safeWorkspaceErrorMessage(caught, 'Invitations could not be loaded. Try again.');
+        error = safeWorkspaceErrorMessage(caught, t('web.InventoryAccessManager.invitationsCouldNotBeLoadedTryAgain'));
       }
     } finally {
       if (sameContext(current, expectedContext)) {
@@ -255,7 +255,7 @@
       }
       grants = [grant, ...grants.filter((candidate) => !sameGrant(candidate, grant))];
       principalId = '';
-      message = `Granted ${grant.relationship} access.`;
+      message = t(`access.granted.${grant.relationship}`);
     });
   }
 
@@ -272,7 +272,7 @@
         return;
       }
       grants = grants.filter((candidate) => !sameGrant(candidate, grant));
-      message = `Revoked ${grant.relationship} access.`;
+      message = t(`access.revoked.${grant.relationship}`);
       revokeTarget = null;
     });
     if (revokeTarget && error) {
@@ -297,7 +297,7 @@
       invitations = [created.invitation, ...invitations.filter((candidate) => candidate.id !== created.invitation.id)];
       invitationEmail = '';
       inviteLink = created.inviteUrl;
-      message = 'Invitation created. Copy or share the link now.';
+      message = t('web.InventoryAccessManager.invitationCreatedCopyOrShareTheLinkNow');
     });
   }
 
@@ -305,16 +305,16 @@
     const writeText = typeof navigator !== 'undefined' ? navigator.clipboard?.writeText : undefined;
     if (!inviteLink || !writeText) {
       message = '';
-      error = 'Invitation link not copied. Select the link and copy it manually.';
+      error = t('web.InventoryAccessManager.invitationLinkNotCopiedSelectTheLinkAndCopy');
       return;
     }
     try {
       await writeText.call(navigator.clipboard, inviteLink);
-      message = 'Invitation link copied.';
+      message = t('web.InventoryAccessManager.invitationLinkCopied');
       error = '';
     } catch {
       message = '';
-      error = 'Invitation link not copied. Select the link and copy it manually.';
+      error = t('web.InventoryAccessManager.invitationLinkNotCopiedSelectTheLinkAndCopy');
     }
   }
 
@@ -324,14 +324,14 @@
     }
     try {
       await navigator.share({ title: t('web.InventoryAccessManager.stuffStashInvitation'), text: t('web.InventoryAccessManager.youVeBeenInvitedToAStuffStashInventory'), url: inviteLink });
-      message = 'Invitation shared.';
+      message = t('web.InventoryAccessManager.invitationShared');
       error = '';
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') {
         return;
       }
       message = '';
-      error = 'Invitation not shared. Copy the link instead.';
+      error = t('web.InventoryAccessManager.invitationNotSharedCopyTheLinkInstead');
     }
   }
 
@@ -352,7 +352,7 @@
         return;
       }
       invitations = reconcileInvitationForCurrentFilter(updated);
-      message = 'Invitation expiration updated.';
+      message = t('web.InventoryAccessManager.invitationExpirationUpdated');
       succeeded = true;
     });
     return succeeded;
@@ -370,7 +370,7 @@
         return;
       }
       invitations = reconcileInvitationForCurrentFilter({ ...invitation, status: 'cancelled' });
-      message = 'Invitation cancelled.';
+      message = t('web.InventoryAccessManager.invitationCancelled');
       succeeded = true;
     });
     return succeeded;
@@ -388,7 +388,7 @@
         return;
       }
       invitations = invitations.filter((candidate) => candidate.id !== invitation.id);
-      message = 'Invitation deleted.';
+      message = t('web.InventoryAccessManager.invitationDeleted');
       succeeded = true;
     });
     return succeeded;
@@ -402,7 +402,7 @@
       await action();
     } catch (caught) {
       if (contextKey === expectedContext) {
-        error = safeWorkspaceErrorMessage(caught, 'Sharing change could not be saved. Try again.');
+        error = safeWorkspaceErrorMessage(caught, t('web.InventoryAccessManager.sharingChangeCouldNotBeSavedTryAgain'));
       }
     } finally {
       if (contextKey === expectedContext) {
@@ -602,7 +602,7 @@
             <div class="access-row">
               <span class="access-row-main">
                 <strong>{grant.principalId}</strong>
-                <small>{grant.relationship}</small>
+                <small>{t(`access.metadata.${grant.relationship}`)}</small>
               </span>
               <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { revokeError = ''; revokeTarget = grant; }}>{t('web.InventoryAccessManager.revoke')}</Button.Root>
             </div>
@@ -632,11 +632,11 @@
             <div class="access-row invitation-row">
               <span class="access-row-main">
                 <strong>{invitation.email}</strong>
-                <small class="access-row-meta">{invitation.relationship} / {invitation.status}{invitation.isExpired ? t('web.InventoryAccessManager.expired') : ''}</small>
+                <small class="access-row-meta">{t(`access.metadata.${invitation.relationship}`)} / {t(`access.metadata.${invitation.status}`)}{invitation.isExpired ? t('web.InventoryAccessManager.expired') : ''}</small>
               </span>
               <span class="access-row-status">
                 <Badge variant={invitation.status === 'pending' && !invitation.isExpired ? 'secondary' : 'outline'}>
-                  {invitation.status}
+                  {t(`access.metadata.${invitation.status}`)}
                 </Badge>
               </span>
               <div class="access-actions">
@@ -666,7 +666,7 @@
       </div>
     </div>
     {#if revokeTarget}
-      <WorkspaceConfirmationDialog open title={t('web.InventoryAccessManager.revokeAccess')} description={t('web.InventoryAccessManager.removeAccessFor', { relationship: String(revokeTarget.relationship), principalId: String(revokeTarget.principalId) })} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
+      <WorkspaceConfirmationDialog open title={t('web.InventoryAccessManager.revokeAccess')} description={t(`access.revoke.${revokeTarget.relationship}`, { principalId: revokeTarget.principalId })} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
         {#if revokeError}<p class="denied-note" role="alert">{revokeError}</p>{/if}
         {#snippet cancel()}<Button.Root variant="outline" autofocus disabled={busy} onclick={() => { revokeTarget = null; revokeError = ''; }}>{t('web.InventoryAccessManager.cancel')}</Button.Root>{/snippet}
         {#snippet action()}<Button.Root variant="destructive" disabled={busy} onclick={() => { if (revokeTarget) void revokeGrant(revokeTarget); }}>{t('web.InventoryAccessManager.revokeAccess')}</Button.Root>{/snippet}

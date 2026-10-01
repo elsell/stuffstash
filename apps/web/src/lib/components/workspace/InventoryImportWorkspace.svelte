@@ -251,7 +251,7 @@
     } catch (loadError) {
       if (options.quiet) pollFailureCount = Math.min(pollFailureCount + 1, 4);
       if (!options.quiet && isCurrentJobLoad(sequence, scope)) {
-        error = errorMessage(loadError, 'Import history could not be loaded.');
+        error = errorMessage(loadError, t('web.InventoryImportWorkspace.importHistoryCouldNotBeLoaded'));
       }
     } finally {
       if (!options.quiet && visibleJobLoadSequence === sequence && isCurrentScope(scope)) {
@@ -376,7 +376,7 @@
     includeImages = job.source.imageImport !== 'disabled';
     onImportSourceChange(importSourceRouteForChoice(sourceChoice));
     error = '';
-    notice = 'Confirm the source again to continue this import. Credentials and CSV contents are not kept in the browser.';
+    notice = t('web.InventoryImportWorkspace.confirmTheSourceAgainToContinueThisImportCredentials');
     step = 'setup';
   }
 
@@ -434,7 +434,7 @@
       jobs = jobs.map((candidate) => (candidate.id === detail.id ? mergeImportJobDetailSnapshot(mergedDetail, candidate) : candidate));
     } catch {
       if (sequence !== detailLoadSequence || !isCurrentScope(scope) || selectedJob?.id !== job.id) return;
-      notice = 'Import details could not be refreshed.';
+      notice = t('web.InventoryImportWorkspace.importDetailsCouldNotBeRefreshed');
     } finally {
       if (sequence === detailLoadSequence) {
         detailLoading = false;
@@ -457,7 +457,7 @@
       step = 'preview';
     } catch (previewError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(previewError, sourceChoice === 'homebox_live' ? 'Homebox connection could not be confirmed.' : 'CSV preview could not be prepared.');
+      error = errorMessage(previewError, sourceChoice === 'homebox_live' ? t('web.InventoryImportWorkspace.homeboxConnectionCouldNotBeConfirmed') : t('web.InventoryImportWorkspace.cSVPreviewCouldNotBePrepared'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -485,7 +485,7 @@
       notice = '';
     } catch (startError) {
       if (!isCurrentAction(action)) return;
-      error = errorMessage(startError, 'Import could not be started. Preview again if the source changed.');
+      error = errorMessage(startError, t('web.InventoryImportWorkspace.importCouldNotBeStartedPreviewAgainIfThe'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -510,7 +510,7 @@
       cancelIntent = null;
     } catch (cancelError) {
       if (!isCurrentAction(action)) return;
-      confirmationError = errorMessage(cancelError, 'Cancellation could not be requested.');
+      confirmationError = errorMessage(cancelError, t('web.InventoryImportWorkspace.cancellationCouldNotBeRequested'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -538,7 +538,7 @@
       }
     } catch (removeError) {
       if (!isCurrentAction(action)) return;
-      confirmationError = errorMessage(removeError, 'Import run could not be removed. Try again.');
+      confirmationError = errorMessage(removeError, t('web.InventoryImportWorkspace.importRunCouldNotBeRemovedTryAgain'));
     } finally {
       if (isCurrentAction(action)) {
         busy = false;
@@ -557,7 +557,7 @@
       fileName = '';
       contentBase64 = '';
       csvSelection = null;
-      error = 'CSV is too large. Choose a Homebox CSV export under 10 MiB.';
+      error = t('web.InventoryImportWorkspace.cSVIsTooLargeChooseAHomeboxCSVExport');
       return;
     }
     fileName = file.name;
@@ -572,7 +572,7 @@
       fileName = '';
       contentBase64 = '';
       csvSelection = null;
-      error = 'CSV could not be read. Choose the Homebox export again.';
+      error = t('web.InventoryImportWorkspace.cSVCouldNotBeReadChooseTheHomeboxExport');
     }
   }
 
@@ -640,7 +640,7 @@
     const routedJob = jobs.find((job) => job.id === importJobId) ?? (selectedJob?.id === importJobId ? selectedJob : null);
     if (!routedJob) {
       if (!loading && jobs.length > 0) {
-        error = 'That import run is not available in this inventory.';
+        error = t('web.InventoryImportWorkspace.thatImportRunIsNotAvailableInThisInventory');
         step = 'history';
       }
       return;
@@ -679,10 +679,10 @@
     try {
       await onImportJobInventoryChanged(scope);
       if (!isCurrentScope(scope)) return;
-      notice = 'Import finished. Workspace data has been refreshed.';
+      notice = t('web.InventoryImportWorkspace.importFinishedWorkspaceDataHasBeenRefreshed');
     } catch (refreshError) {
       if (!isCurrentScope(scope)) return;
-      notice = errorMessage(refreshError, 'Import finished, but workspace data could not be refreshed.');
+      notice = errorMessage(refreshError, t('web.InventoryImportWorkspace.importFinishedButWorkspaceDataCouldNotBeRefreshed'));
     }
   }
 

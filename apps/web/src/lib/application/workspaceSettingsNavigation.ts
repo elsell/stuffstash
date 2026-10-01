@@ -194,5 +194,5 @@ export function settingsAdministrationPresentation(input: { canConfigureTenant: 
 }
 
 function invitationStatusLabel(status: InvitationStatusFilter): string {
-  return status[0]?.toUpperCase() + status.slice(1);
+  return t(`access.status.${status}`);
 }

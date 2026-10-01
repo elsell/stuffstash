@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const human = text => /[A-Za-z]{2}/.test(text);
-const displayAttribute = name => ['title', 'label', 'message', 'description', 'placeholder', 'accessibilityLabel', 'accessibilityHint', 'aria-label', 'alt', 'footer', 'hint', 'subtitle', 'caption', 'text'].includes(name) || /(?:Label|Title|Placeholder|Description|Legend|Hint)$/.test(name);
+const displayAttribute = name => ['title', 'label', 'message', 'description', 'placeholder', 'accessibilityLabel', 'accessibilityHint', 'aria-label', 'data-cell-label', 'alt', 'footer', 'hint', 'subtitle', 'caption', 'text'].includes(name) || /(?:Label|Title|Placeholder|Description|Legend|Hint)$/.test(name);
 
 /** Only directly rendered copy. State, protocol and variable provenance need source review. */
 export function embeddedDisplayMessages(source, filename) {

@@ -14,18 +14,6 @@
       "candidates": 25
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryImportWorkspace.svelte",
-      "candidates": 24
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
-      "candidates": 16
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/InventoryAccessManager.svelte",
-      "candidates": 16
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
       "candidates": 16
     },
@@ -50,10 +38,6 @@
       "candidates": 14
     },
     {
-      "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
-      "candidates": 13
-    },
-    {
       "file": "apps/mobile/src/adapters/inventories/InventoryAssetMapping.ts",
       "candidates": 12
     },
@@ -75,6 +59,10 @@
     },
     {
       "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "candidates": 11
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/InventoryImportWorkspace.svelte",
       "candidates": 11
     },
     {
@@ -130,10 +118,6 @@
       "candidates": 8
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAccessPresentation.ts",
-      "candidates": 8
-    },
-    {
       "file": "apps/web/src/lib/application/workspaceCustomizationPresentation.ts",
       "candidates": 8
     },
@@ -147,6 +131,10 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/ImportJobDetailPanel.svelte",
+      "candidates": 8
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
       "candidates": 8
     },
     {
@@ -699,6 +687,10 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/formatBytes.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
       "candidates": 2
     },
     {
