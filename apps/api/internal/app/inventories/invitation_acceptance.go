@@ -80,17 +80,17 @@ func isValidInventoryInvitationToken(token string) bool {
 
 func (a Service) AcceptInventoryAccessInvitation(ctx context.Context, input AcceptInventoryAccessInvitationInput) (ports.InventoryAccessInvitation, ports.InventoryAccessGrant, error) {
 	if input.Principal.Email.String() == "" {
-		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, apperrors.ErrUnauthorized
 	}
 	if input.Token == "" {
-		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, apperrors.ErrUnauthorized
 	}
 	item, found, err := a.inventories.InventoryByID(ctx, input.TenantID, input.InventoryID)
 	if err != nil {
 		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, err
 	}
 	if !found || !item.IsActive() {
-		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+		return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, apperrors.ErrUnauthorized
 	}
 
 	auditRecord, err := appsupport.NewAuditRecord(a.ids, a.clock, appsupport.AuditRecordInput{
@@ -113,7 +113,7 @@ func (a Service) AcceptInventoryAccessInvitation(ctx context.Context, input Acce
 	invitation, grant, err := a.inventoryAccessUnitOfWork.AcceptInventoryAccessInvitationAndEnqueue(ctx, input.TenantID, input.InventoryID, input.InvitationID, HashInventoryInvitationToken(input.Token), input.Principal, a.ids.NewID(), a.clock.Now().UTC(), auditRecord)
 	if err != nil {
 		if errors.Is(err, ports.ErrForbidden) {
-			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, ErrUnauthorized
+			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, apperrors.ErrUnauthorized
 		}
 		if errors.Is(err, ports.ErrConflict) {
 			return ports.InventoryAccessInvitation{}, ports.InventoryAccessGrant{}, apperrors.ErrInvalidInput
