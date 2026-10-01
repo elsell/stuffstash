@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import type { PhotoSelectionProvider } from '../../application/add/PhotoSelectionQuery';
 import { useVoiceReferenceNavigation } from './useVoiceReferenceNavigation';
@@ -274,11 +275,11 @@ function VoiceSessionSheet({
             keyboardShouldPersistTaps="handled"
           >
             {history.map((exchange, index) => <VoiceConversationExchange key={index} exchange={exchange} railKey={`history-${index}`} onOpen={onOpenResponseArtifact} />)}
-            {!history.length && !session.transcript && !actionPlan ? <Text style={styles.progressHint}>Find something, add an item, or organize your belongings. Speak or type below.</Text> : null}
-            {state.realtime?.startsNewContext && history.length ? <Text style={styles.progressHint}>New conversation context · earlier exchanges are shown for your reference.</Text> : null}
+            {!history.length && !session.transcript && !actionPlan ? <Text style={styles.progressHint}>{t('mobile.VoiceSessionSheetScreen.findSomethingAddAnItemOrOrganizeYourBelongings')}</Text> : null}
+            {state.realtime?.startsNewContext && history.length ? <Text style={styles.progressHint}>{t('mobile.VoiceSessionSheetScreen.newConversationContextEarlierExchangesAreShownForYour')}</Text> : null}
             {session.transcript ? (
               <View style={styles.sessionSection}>
-                <Text style={styles.sectionLabel}>You</Text>
+                <Text style={styles.sectionLabel}>{t('mobile.VoiceSessionSheetScreen.you')}</Text>
                 <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} showFallbackReferences={false} references={references} text={session.transcript} />
               </View>
             ) : null}
@@ -354,17 +355,17 @@ function VoiceSessionSheet({
                 ) : null}
                 <VoicePlanProgress state={state.realtime} drafts={commandDrafts} />
                 {actionPlan.status === 'cancelled' ? (
-                  <Text style={styles.actionPlanStatus}>Cancelled. No change was made.</Text>
+                  <Text style={styles.actionPlanStatus}>{t('mobile.VoiceSessionSheetScreen.cancelledNoChangeWasMade')}</Text>
                 ) : null}
                 {actionPlan.status === 'executed' ? (
                   <View style={styles.actionPlanStatusGroup}>
                     {state.realtime?.photoAttachmentStatus?.canRetry ? (
-                      <NativeCommandButton label="Retry photos" onPress={() => onRetryPhotos(actionPlan.planId)} />
+                      <NativeCommandButton label={t('mobile.VoiceSessionSheetScreen.retryPhotos')} onPress={() => onRetryPhotos(actionPlan.planId)} />
                     ) : null}
                   </View>
                 ) : null}
                 {actionPlan.status === 'failed' ? (
-                  <Text style={styles.actionPlanStatus}>Could not apply this change.</Text>
+                  <Text style={styles.actionPlanStatus}>{t('mobile.VoiceSessionSheetScreen.couldNotApplyThisChange')}</Text>
                 ) : null}
               </View>
             ) : null}
@@ -407,7 +408,7 @@ function VoiceSessionSheet({
                   onPress={onToggleDiagnostics}
                   style={styles.diagnosticsHeader}
                 >
-                  <Text style={styles.sectionLabel}>Diagnostics</Text>
+                  <Text style={styles.sectionLabel}>{t('mobile.VoiceSessionSheetScreen.diagnostics')}</Text>
                   {diagnosticsExpanded ? (
                     <ChevronUp color={palette.textMuted} size={18} strokeWidth={2.3} />
                   ) : (
@@ -432,7 +433,7 @@ function VoiceSessionSheet({
             ]}>
               {bottomAction.kind === 'review_decision' ? (
                 <>
-                {titleEditor && !titleEditor.value.trim() ? <Text accessibilityLiveRegion="polite" style={styles.progressHint}>Enter a name before approving.</Text> : null}
+                {titleEditor && !titleEditor.value.trim() ? <Text accessibilityLiveRegion="polite" style={styles.progressHint}>{t('mobile.VoiceSessionSheetScreen.enterANameBeforeApproving')}</Text> : null}
                 <VoiceReviewActions planId={bottomAction.planId} />
                 </>
               ) : <VoiceConversationComposer onMic={onSessionMic} />}
@@ -478,7 +479,7 @@ function EditablePlanCommandFields({
   return (
     <View style={styles.editablePlanFields}>
       <Pressable
-        accessibilityHint="Edits the name inline"
+        accessibilityHint={t('mobile.VoiceSessionSheetScreen.editsTheNameInline')}
         accessibilityLabel={`Edit proposed name ${title}`}
         accessibilityRole="button"
         onPress={() => {
@@ -491,7 +492,7 @@ function EditablePlanCommandFields({
         <Pencil color={palette.textMuted} size={16} strokeWidth={2.3} />
       </Pressable>
       <Pressable
-        accessibilityHint="Opens the containing location selector"
+        accessibilityHint={t('mobile.VoiceSessionSheetScreen.opensTheContainingLocationSelector')}
         accessibilityLabel={`Change containing location, currently ${placement}`}
         accessibilityRole="button"
         onPress={onOpenParent}
@@ -511,7 +512,7 @@ function SessionLoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.centerStateText}>Loading voice</Text>
+      <Text style={styles.centerStateText}>{t('mobile.VoiceSessionSheetScreen.loadingVoice')}</Text>
     </View>
   );
 }

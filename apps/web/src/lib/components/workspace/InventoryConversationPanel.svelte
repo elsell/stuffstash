@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { formatAssetExpiration } from '$lib/application/expirationPresentation';
   import { onDestroy } from 'svelte';
   import MessageCircle from '@lucide/svelte/icons/message-circle';
@@ -23,36 +24,36 @@
   function submit() { if (view.busy || view.plan || view.uncertain || !draft.trim()) return; const text = draft; draft = ''; void conversation.send(text); }
   function showAsset(id: string) { setOpen(false); onOpenAsset(id); }
 </script>
-<Button.Root bind:ref={opener} variant="ghost" size="icon" class="size-11" aria-label="Ask Stuff Stash" onclick={() => { open = true; }}><MessageCircle aria-hidden="true" /></Button.Root>
-<WorkspaceTaskSheet {open} title="Ask Stuff Stash" description={inventoryName} onOpenChange={setOpen} initialFocusSelector="textarea" onCloseAutoFocus={(event) => { event.preventDefault(); opener?.focus(); }}>
-  <div class="conversation-transcript" aria-label="Conversation">
-    {#if view.messages.length === 0}<p class="text-muted-foreground">Find something, ask what’s stored here, or describe a change.</p>{/if}
+<Button.Root bind:ref={opener} variant="ghost" size="icon" class="size-11" aria-label={t('web.InventoryConversationPanel.askStuffStash')} onclick={() => { open = true; }}><MessageCircle aria-hidden="true" /></Button.Root>
+<WorkspaceTaskSheet {open} title={t('web.InventoryConversationPanel.askStuffStash')} description={inventoryName} onOpenChange={setOpen} initialFocusSelector="textarea" onCloseAutoFocus={(event) => { event.preventDefault(); opener?.focus(); }}>
+  <div class="conversation-transcript" aria-label={t('web.InventoryConversationPanel.conversation')}>
+    {#if view.messages.length === 0}<p class="text-muted-foreground">{t('web.InventoryConversationPanel.findSomethingAskWhatSStoredHereOrDescribe')}</p>{/if}
     {#each view.messages as message, index (index)}
       <article aria-label={message.role === 'user' ? 'You' : 'Stuff Stash'} class:user-message={message.role === 'user'}>
         <p class="speaker">{message.role === 'user' ? 'You' : 'Stuff Stash'}</p>
-        <p class="message-text">{message.text}</p>
+        <p class="message-text" dir="auto">{message.text}</p>
         {#if message.assets.length}<ul>{#each message.assets as asset (asset.id)}<li><Button.Root variant="outline" href={workspaceRouteHref({ mode: 'asset', tenantId, inventoryId, assetId: asset.id }, tenantId, inventoryId)} onclick={(event) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); showAsset(asset.id); } }}>{asset.title}</Button.Root></li>{/each}</ul>{/if}
       </article>
     {/each}
   </div>
   <p class="sr-only" aria-live="polite" aria-atomic="true">{view.messages.at(-1)?.role === 'assistant' ? view.messages.at(-1)?.text : ''}</p>
   {#if view.plan}
-    <section class="review" aria-label="Review changes">
-      <h3 class="font-semibold">Review changes</h3><p>{view.plan.summary}</p>
-      <ul>{#each view.plan.commands as command, index (index)}<li><p>{command.summary}</p>{#each command.changes ?? [] as change}<p class="whitespace-pre-wrap break-words">{change}</p>{/each}{#if command.expiration}<p>Expires {formatAssetExpiration(command.expiration)}</p>{:else if command.expirationCleared}<p>Remove expiration date</p>{/if}{#if command.destination}<p class="text-sm text-muted-foreground">Destination: {command.destination}</p>{/if}</li>{/each}</ul>
+    <section class="review" aria-label={t('web.InventoryConversationPanel.reviewChanges')}>
+      <h3 class="font-semibold">{t('web.InventoryConversationPanel.reviewChanges')}</h3><p dir="auto">{view.plan.summary}</p>
+      <ul>{#each view.plan.commands as command, index (index)}<li><p dir="auto">{command.summary}</p>{#each command.changes ?? [] as change}<p class="whitespace-pre-wrap break-words" dir="auto">{change}</p>{/each}{#if command.expiration}<p>{t('web.InventoryConversationPanel.expiresFull', { value: formatAssetExpiration(command.expiration) })}</p>{:else if command.expirationCleared}<p>{t('web.InventoryConversationPanel.removeExpirationDate')}</p>{/if}{#if command.destination}<p class="text-sm text-muted-foreground">{t('web.InventoryConversationPanel.destinationFull', { destination: command.destination })}</p>{/if}</li>{/each}</ul>
       {#each view.plan.risks as risk}<p class="text-sm">{risk}</p>{/each}
-      <div class="flex flex-wrap gap-2"><Button.Root disabled={view.busy} onclick={() => conversation.decide(true)}>Approve changes</Button.Root><Button.Root variant="outline" disabled={view.busy} onclick={() => conversation.decide(false)}>Cancel changes</Button.Root></div>
+      <div class="flex flex-wrap gap-2"><Button.Root disabled={view.busy} onclick={() => conversation.decide(true)}>{t('web.InventoryConversationPanel.approveChanges')}</Button.Root><Button.Root variant="outline" disabled={view.busy} onclick={() => conversation.decide(false)}>{t('web.InventoryConversationPanel.cancelChanges')}</Button.Root></div>
     </section>
   {/if}
   {#if view.error}<p role="alert">{view.error}</p>{/if}
-  {#if view.uncertain}<Button.Root variant="outline" disabled={view.busy} onclick={() => { void conversation.recover(); }}>Refresh inventory</Button.Root>{/if}
+  {#if view.uncertain}<Button.Root variant="outline" disabled={view.busy} onclick={() => { void conversation.recover(); }}>{t('web.InventoryConversationPanel.refreshInventory')}</Button.Root>{/if}
   {#if view.busy}<p role="status">{view.plan ? 'Applying your decision…' : 'Working…'}</p>{/if}
   {#snippet footer()}
     <form class="composer" onsubmit={(event) => { event.preventDefault(); submit(); }}>
-      <Label for="inventory-conversation-message" class="sr-only">Message Stuff Stash</Label>
-      <Textarea class="max-h-40 resize-y" id="inventory-conversation-message" bind:value={draft} rows={2} maxlength={8000} placeholder="Message Stuff Stash" disabled={view.busy || !!view.plan || view.uncertain}
+      <Label for="inventory-conversation-message" class="sr-only">{t('web.InventoryConversationPanel.messageStuffStash')}</Label>
+      <Textarea class="max-h-40 resize-y" id="inventory-conversation-message" bind:value={draft} rows={2} maxlength={8000} placeholder={t('web.InventoryConversationPanel.messageStuffStash')} disabled={view.busy || !!view.plan || view.uncertain}
         onkeydown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); submit(); } }} />
-      <div class="flex justify-end gap-2">{#if view.busy}<Button.Root type="button" variant="outline" onclick={() => conversation.stop()}>Stop</Button.Root>{/if}<Button.Root type="submit" disabled={view.busy || !!view.plan || view.uncertain || !draft.trim()}>Send</Button.Root></div>
+      <div class="flex justify-end gap-2">{#if view.busy}<Button.Root type="button" variant="outline" onclick={() => conversation.stop()}>{t('web.InventoryConversationPanel.stop')}</Button.Root>{/if}<Button.Root type="submit" disabled={view.busy || !!view.plan || view.uncertain || !draft.trim()}>{t('web.InventoryConversationPanel.send')}</Button.Root></div>
     </form>
   {/snippet}
 </WorkspaceTaskSheet>

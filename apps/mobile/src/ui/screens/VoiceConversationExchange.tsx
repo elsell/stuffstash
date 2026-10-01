@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { VoicePlanHistorySummary } from './VoicePlanHistorySummary';
 import { VoicePlanProgress } from './VoicePlanProgress';
@@ -20,16 +21,16 @@ export function VoiceConversationExchange({ exchange, railKey, onOpen }: { reado
   const { retryRealtimeActionPlanPhotos } = useVoiceInteractionState();
   const colors = useAppearancePalette();
   return <View style={[styles.exchange, { borderBottomColor: colors.border }]}>
-    {exchange.startsNewContext ? <Text style={{ color: colors.textMuted }}>New conversation context</Text> : null}
+    {exchange.startsNewContext ? <Text style={{ color: colors.textMuted }}>{t('mobile.VoiceConversationExchange.newConversationContext')}</Text> : null}
     {exchange.transcript ? <View style={[styles.user, { backgroundColor: colors.surfaceMuted }]}>
-      <Text style={{ color: colors.textMuted }}>You</Text>
+      <Text style={{ color: colors.textMuted }}>{t('mobile.VoiceConversationExchange.you')}</Text>
       <VoiceResponseEntityText enabled onOpen={onOpen} showFallbackReferences={false} references={voiceConversationReferences(exchange)} text={exchange.transcript} />
     </View> : null}
     {exchange.spokenResponse ? <VoiceResponseEntityText markdown enabled onOpen={onOpen} references={voiceConversationReferences(exchange)} text={exchange.spokenResponse} /> : null}
     {exchange.errorMessage ? <Text selectable style={{ color: colors.warning }}>{exchange.errorMessage}</Text> : null}
     {exchange.actionPlan ? <VoicePlanHistorySummary plan={exchange.actionPlan} /> : null}
     {exchange.photoAttachmentStatus ? <VoicePlanProgress state={exchange} /> : null}
-    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <NativeCommandButton label="Retry photos" onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} /> : null}
+    {exchange.photoAttachmentStatus?.canRetry && exchange.actionPlan ? <NativeCommandButton label={t('mobile.VoiceConversationExchange.retryPhotos')} onPress={() => { void retryRealtimeActionPlanPhotos(exchange.actionPlan!.planId); }} /> : null}
     <VoiceResultRail references={voiceConversationReferences(exchange)} railKey={railKey} onOpen={onOpen} />
   </View>;
 }

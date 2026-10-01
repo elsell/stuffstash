@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Activity from '@lucide/svelte/icons/activity';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -229,13 +230,13 @@
             <span style={progressBarStyle(job)}></span>
           </div>
         {/if}
-        <div class="detail-summary-strip" aria-label="Import run summary">
+        <div class="detail-summary-strip" aria-label={t('web.ImportJobDetailPanel.importRunSummary')}>
           <div class="summary-tile">
-            <span>Changed</span>
+            <span>{t('web.ImportJobDetailPanel.changed')}</span>
             <strong>{changedRecordSummary(job)}</strong>
           </div>
           <div class={`summary-tile ${issueTone}`}>
-            <span>Issues</span>
+            <span>{t('web.ImportJobDetailPanel.issues')}</span>
             <strong>{issueCount === 0 ? 'No issues' : issueTone === 'action' ? 'Action required' : issueCountSummary(job)}</strong>
           </div>
         </div>
@@ -244,35 +245,33 @@
             <AlertCircle class="issue-callout-icon" size={18} aria-hidden="true" />
             <div>
               <strong>{issueCountSummary(job)}</strong>
-              <span>Review the blocking items before relying on this run.</span>
+              <span>{t('web.ImportJobDetailPanel.reviewTheBlockingItemsBeforeRelyingOnThisRun')}</span>
             </div>
-            <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>Review issues</Button.Root>
+            <Button.Root variant="outline" size="sm" onclick={() => (selectedTab = 'issues')}>{t('web.ImportJobDetailPanel.reviewIssues')}</Button.Root>
           </div>
         {/if}
       </div>
 
       {#if detailLoading}
         <div class="quiet-row">
-          <RefreshCw size={16} aria-hidden="true" />
-          Refreshing import details.
-        </div>
+          <RefreshCw size={16} aria-hidden="true" /> {t('web.ImportJobDetailPanel.refreshingImportDetails')} </div>
       {/if}
 
       <div class="detail-grid">
         <div class="detail-main">
           <Tabs.Root bind:value={selectedTab} class="detail-tabs">
-            <Tabs.List variant="line" aria-label="Import detail sections" class="detail-tab-list">
-              <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
-              <Tabs.Trigger value="issues">Issues{issueCount > 0 ? ` (${issueCount})` : ''}</Tabs.Trigger>
-              <Tabs.Trigger value="plan">Plan</Tabs.Trigger>
-              <Tabs.Trigger value="records">Records</Tabs.Trigger>
-              <Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
+            <Tabs.List variant="line" aria-label={t('web.ImportJobDetailPanel.importDetailSections')} class="detail-tab-list">
+              <Tabs.Trigger value="overview">{t('web.ImportJobDetailPanel.overview')}</Tabs.Trigger>
+              <Tabs.Trigger value="issues">{t('web.ImportJobDetailPanel.issuesFull', { value: issueCount > 0 ? ` (${issueCount})` : '' })}</Tabs.Trigger>
+              <Tabs.Trigger value="plan">{t('web.ImportJobDetailPanel.plan')}</Tabs.Trigger>
+              <Tabs.Trigger value="records">{t('web.ImportJobDetailPanel.records')}</Tabs.Trigger>
+              <Tabs.Trigger value="timeline">{t('web.ImportJobDetailPanel.timeline')}</Tabs.Trigger>
             </Tabs.List>
 
             <Tabs.Content value="overview">
-              <section class="detail-panel" aria-label="Import result overview">
+              <section class="detail-panel" aria-label={t('web.ImportJobDetailPanel.importResultOverview')}>
                 <div class="section-heading">
-                  <h3>Result</h3>
+                  <h3>{t('web.ImportJobDetailPanel.result')}</h3>
                   <small>{overviewCaption(job)}</small>
                 </div>
                 <ImportCountGrid cells={overviewCells} actionForCell={handleOverviewCellAction} />
@@ -280,9 +279,9 @@
             </Tabs.Content>
 
             <Tabs.Content value="issues">
-              <section class="detail-panel" aria-label="Import issues">
+              <section class="detail-panel" aria-label={t('web.ImportJobDetailPanel.importIssues')}>
                 <div class="section-heading">
-                  <h3>Issues</h3>
+                  <h3>{t('web.ImportJobDetailPanel.issues')}</h3>
                   <small>{issueCount === 0 ? 'No issues' : 'Grouped by cause'}</small>
                 </div>
                 <ImportMessagesList
@@ -297,48 +296,44 @@
 
             <Tabs.Content value="plan">
               {#if hasPreviewPlan(job)}
-                <section class="detail-panel" aria-label="Import preview plan">
+                <section class="detail-panel" aria-label={t('web.ImportJobDetailPanel.importPreviewPlan')}>
                   <div class="section-heading">
-                    <h3>Preview plan</h3>
+                    <h3>{t('web.ImportJobDetailPanel.previewPlan')}</h3>
                     <small>{job.status === 'previewed' ? 'Before import' : 'Original plan'}</small>
                   </div>
                   <ImportPreviewSamples preview={job.preview} />
                 </section>
               {:else}
                 <div class="quiet-row">
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  No preview plan is available for this run.
-                </div>
+                  <CheckCircle2 size={16} aria-hidden="true" /> {t('web.ImportJobDetailPanel.noPreviewPlanIsAvailableForThisRun')} </div>
               {/if}
             </Tabs.Content>
 
             <Tabs.Content value="records">
               {#if job.status === 'cancelled_discarded' && job.resources.length > 0}
                 <div class="quiet-row">
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  Records created by this job were discarded. Audit history remains.
-                </div>
+                  <CheckCircle2 size={16} aria-hidden="true" /> {t('web.ImportJobDetailPanel.recordsCreatedByThisJobWereDiscardedAuditHistory')} </div>
               {:else if job.resources.length > 0}
                 <section class="detail-panel">
                   <div class="section-heading">
-                    <h3>Imported records</h3>
+                    <h3>{t('web.ImportJobDetailPanel.importedRecords')}</h3>
                     {#if job.resources.length > RESOURCE_PAGE_SIZE}
-                      <small>{visibleResourceStart + 1}-{visibleResourceEnd} of {job.resources.length}</small>
+                      <small>{t('web.ImportJobDetailPanel.ofFull', { value: visibleResourceStart + 1, visibleResourceEnd: visibleResourceEnd, length: job.resources.length })}</small>
                     {/if}
                   </div>
-                  <Table.Root aria-label="Imported records">
+                  <Table.Root aria-label={t('web.ImportJobDetailPanel.importedRecords')}>
                     <Table.Header>
                       <Table.Row>
-                        <Table.Head scope="col" class="md:min-w-48">Record</Table.Head>
-                        <Table.Head scope="col">Source</Table.Head>
-                        <Table.Head scope="col" class="w-px whitespace-nowrap">Open</Table.Head>
+                        <Table.Head scope="col" class="md:min-w-48">{t('web.ImportJobDetailPanel.record')}</Table.Head>
+                        <Table.Head scope="col">{t('web.ImportJobDetailPanel.source')}</Table.Head>
+                        <Table.Head scope="col" class="w-px whitespace-nowrap">{t('web.ImportJobDetailPanel.open')}</Table.Head>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
                       {#each visibleResources as resource}
                         <Table.Row>
                           <Table.Cell class="font-semibold text-foreground md:min-w-48">{resourceLabel(resource)}</Table.Cell>
-                          <Table.Cell>{resourceDiagnosticLabel(resource)} · Imported {new Date(resource.createdAt).toLocaleString()}</Table.Cell>
+                          <Table.Cell>{t('web.ImportJobDetailPanel.importedFull', { value: resourceDiagnosticLabel(resource), value2: new Date(resource.createdAt).toLocaleString() })}</Table.Cell>
                           <Table.Cell class="w-px whitespace-nowrap">
                             {#if resourceCanOpen(job, resource)}
                               <a
@@ -346,9 +341,7 @@
                                 href={resourceHref(resource)}
                                 aria-label={`Open ${resourceLabel(resource)}`}
                                 onclick={(event) => onOpenResource(event, resource)}
-                              >
-                                Open
-                              </a>
+                              > {t('web.ImportJobDetailPanel.open')} </a>
                             {:else}
                               <span class="resource-empty-action">-</span>
                             {/if}
@@ -359,39 +352,33 @@
                   </Table.Root>
                   {#if job.resources.length > RESOURCE_PAGE_SIZE}
                     <div class="resource-overflow-action">
-                      <span>Page {resourcePage + 1} of {resourcePageCount}</span>
+                      <span>{t('web.ImportJobDetailPanel.pageOfFull', { value: resourcePage + 1, resourcePageCount: resourcePageCount })}</span>
                       <Button.Root
                         variant="outline"
                         size="sm"
                         disabled={resourcePage === 0}
                         onclick={() => (resourcePage = Math.max(0, resourcePage - 1))}
-                      >
-                        Previous
-                      </Button.Root>
+                      > {t('web.ImportJobDetailPanel.previous')} </Button.Root>
                       <Button.Root
                         variant="outline"
                         size="sm"
                         disabled={resourcePage >= resourcePageCount - 1}
                         onclick={() => (resourcePage = Math.min(resourcePageCount - 1, resourcePage + 1))}
-                      >
-                        Next
-                      </Button.Root>
+                      > {t('web.ImportJobDetailPanel.next')} </Button.Root>
                     </div>
                   {/if}
                 </section>
               {:else}
                 <div class="quiet-row">
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  No imported record summaries are available for this run.
-                </div>
+                  <CheckCircle2 size={16} aria-hidden="true" /> {t('web.ImportJobDetailPanel.noImportedRecordSummariesAreAvailableForThisRun')} </div>
               {/if}
             </Tabs.Content>
 
             <Tabs.Content value="timeline">
               <section class="detail-panel">
                 <div class="section-heading">
-                  <h3>Progress timeline</h3>
-                  <small>{progressTimeline(job).length} phases</small>
+                  <h3>{t('web.ImportJobDetailPanel.progressTimeline')}</h3>
+                  <small>{t('web.ImportJobDetailPanel.phasesFull', { length: progressTimeline(job).length })}</small>
                 </div>
                 <div class="timeline-list">
                   {#each progressTimeline(job) as progress}
@@ -413,17 +400,17 @@
           </Tabs.Root>
         </div>
 
-        <div class="detail-side" aria-label="Import controls and source">
-          <section class="source-options-section" aria-label="Import run details">
+        <div class="detail-side" aria-label={t('web.ImportJobDetailPanel.importControlsAndSource')}>
+          <section class="source-options-section" aria-label={t('web.ImportJobDetailPanel.importRunDetails')}>
             <div class="section-heading">
-              <h3>Method</h3>
-              <small>How Stuff Stash read the source</small>
+              <h3>{t('web.ImportJobDetailPanel.method')}</h3>
+              <small>{t('web.ImportJobDetailPanel.howStuffStashReadTheSource')}</small>
             </div>
             {#if actor}
               <p class="source-note">{actor}</p>
             {/if}
             {#if visibleSourceOptions.length > 0}
-              <ul class="source-option-list" aria-label="Selected source options">
+              <ul class="source-option-list" aria-label={t('web.ImportJobDetailPanel.selectedSourceOptions')}>
                 {#each visibleSourceOptions as option}
                   <li>{option}</li>
                 {/each}
@@ -436,31 +423,29 @@
               {cancellationSummary(job)}
             </div>
           {/if}
-          <section class="detail-actions" aria-label="Import actions">
+          <section class="detail-actions" aria-label={t('web.ImportJobDetailPanel.importActions')}>
             {#if canCreateImports && canRequestCancellation}
               <Button.Root variant="outline" onclick={onCancel} disabled={busy}>
-                <Button.BusyContent {busy} label="Cancel" busyLabel="Cancelling" />
+                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.cancel')} busyLabel="Cancelling" />
               </Button.Root>
             {/if}
             {#if canCreateImports && job.status === 'previewed'}
               <Button.Root onclick={onContinue} disabled={busy}>
-                <Button.BusyContent {busy} label="Continue import" busyLabel="Opening preview" />
+                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.continueImport')} busyLabel="Opening preview" />
               </Button.Root>
             {/if}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>
                 {#snippet child({ props })}
                   <Button.Root {...props} variant="outline" size="sm" class="min-h-11">
-                    <MoreHorizontal size={16} aria-hidden="true" />
-                    More
-                  </Button.Root>
+                    <MoreHorizontal size={16} aria-hidden="true" /> {t('web.ImportJobDetailPanel.more')} </Button.Root>
                 {/snippet}
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
                 id="import-detail-secondary-actions"
                 class="import-detail-action-menu"
                 align="start"
-                aria-label="More import actions"
+                aria-label={t('web.ImportJobDetailPanel.moreImportActions')}
               >
                 <DropdownMenu.Item>
                   {#snippet child({ props })}
@@ -472,8 +457,8 @@
                     >
                       <Activity size={16} aria-hidden="true" />
                       <span>
-                        <strong>Open inventory activity</strong>
-                        <small>Shows the full inventory activity log.</small>
+                        <strong>{t('web.ImportJobDetailPanel.openInventoryActivity')}</strong>
+                        <small>{t('web.ImportJobDetailPanel.showsTheFullInventoryActivityLog')}</small>
                       </span>
                     </a>
                   {/snippet}
@@ -487,8 +472,8 @@
                   >
                     <Trash2 size={16} aria-hidden="true" />
                     <span>
-                      <strong>Remove from history</strong>
-                      <small>Imported records and audit history remain.</small>
+                      <strong>{t('web.ImportJobDetailPanel.removeFromHistory')}</strong>
+                      <small>{t('web.ImportJobDetailPanel.importedRecordsAndAuditHistoryRemain')}</small>
                     </span>
                   </DropdownMenu.Item>
                 {/if}

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 
 export type AssetLifecycleActionKind = 'archive' | 'restore' | 'delete';
@@ -29,15 +30,15 @@ export type AssetDetailLoadErrorPresentation = {
 export function assetDetailLoadErrorPresentation(error: unknown): AssetDetailLoadErrorPresentation {
   if (isUnavailableAssetError(error)) {
     return {
-      title: 'Asset unavailable',
-      message: 'This asset is not available in your current inventory.',
+      title: t('mobile.AssetLifecyclePresentation.assetUnavailable'),
+      message: t('mobile.AssetLifecyclePresentation.thisAssetIsNotAvailableInYourCurrentInventory'),
       canRetry: false
     };
   }
 
   return {
-    title: 'Could not load asset',
-    message: 'Check your connection and try again.',
+    title: t('mobile.AssetLifecyclePresentation.couldNotLoadAsset'),
+    message: t('mobile.AssetLifecyclePresentation.checkYourConnectionAndTryAgain'),
     canRetry: true
   };
 }
@@ -70,17 +71,17 @@ export function assetLifecycleActionRows(
   return [
     asset.canArchive ? {
       kind: 'archive' as const,
-      label: 'Archive',
+      label: t('mobile.AssetLifecyclePresentation.archive'),
       isDestructive: false
     } : undefined,
     asset.canRestore ? {
       kind: 'restore' as const,
-      label: 'Restore',
+      label: t('mobile.AssetLifecyclePresentation.restore'),
       isDestructive: false
     } : undefined,
     asset.canDeletePermanently ? {
       kind: 'delete' as const,
-      label: 'Delete permanently',
+      label: t('mobile.AssetLifecyclePresentation.deletePermanently'),
       isDestructive: true
     } : undefined
   ].filter((action): action is AssetLifecycleActionRow => action !== undefined);
@@ -95,14 +96,14 @@ export function assetLifecycleConfirmation(
       return {
         title: `Archive ${asset.title}?`,
         message: `${asset.title} will be hidden from normal inventory work. You can restore it later from archived asset views.`,
-        confirmLabel: 'Archive',
+        confirmLabel: t('mobile.AssetLifecyclePresentation.archive'),
         isDestructive: false
       };
     case 'delete':
       return {
         title: `Delete ${asset.title} permanently?`,
         message: permanentDeleteMessage(asset),
-        confirmLabel: 'Delete permanently',
+        confirmLabel: t('mobile.AssetLifecyclePresentation.deletePermanently'),
         isDestructive: true
       };
   }
@@ -114,14 +115,14 @@ export function assetOverflowMenuActions(
   return [
     {
       id: 'checkout-history',
-      label: 'Checkout history',
+      label: t('mobile.AssetLifecyclePresentation.checkoutHistory'),
       section: 'history',
       systemImage: 'clock.arrow.circlepath',
       isDestructive: false
     },
     {
       id: 'history',
-      label: 'History',
+      label: t('mobile.AssetLifecyclePresentation.history'),
       section: 'history',
       systemImage: 'clock',
       isDestructive: false
@@ -220,11 +221,11 @@ function permanentDeleteMessage(
   asset: Pick<AssetDetailViewModel, 'title' | 'photos' | 'containedAssetsLabel' | 'canContainAssets'>
 ): string {
   const photoCopy = asset.photos.length === 0
-    ? 'No photos are attached.'
-    : `${asset.photos.length.toString()} ${asset.photos.length === 1 ? 'photo' : 'photos'} will be removed with it.`;
+    ? t('photos.noneAttached')
+    : t('photos.deleteCount', { count: asset.photos.length });
   const contentsCopy = asset.canContainAssets
-    ? ` Current contents: ${asset.containedAssetsLabel}. Deletion will not continue while active things are inside it.`
+    ? t('assets.deleteContents', { contents: asset.containedAssetsLabel })
     : '';
 
-  return `This permanently removes ${asset.title}. ${photoCopy}${contentsCopy} Audit history remains, but the asset itself cannot be restored.`;
+  return t('assets.deleteWarning', { title: asset.title, photos: photoCopy, contents: contentsCopy });
 }

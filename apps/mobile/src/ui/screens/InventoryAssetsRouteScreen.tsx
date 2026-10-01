@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { useMemo } from 'react';
@@ -69,7 +70,7 @@ export function InventoryAssetList({
   const styles = createStyles(palette);
   return (
     <>
-      <Stack.Screen options={{ title: 'Assets' }} />
+      <Stack.Screen options={{ title: t('mobile.InventoryAssetsRouteScreen.assets') }} />
       <FlatList
         contentInsetAdjustmentBehavior="automatic"
         data={inventoryAssets.assets}
@@ -81,7 +82,7 @@ export function InventoryAssetList({
         onRefresh={onRefresh}
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>Recently changed</Text>
+            <Text style={styles.title}>{t('mobile.InventoryAssetsRouteScreen.recentlyChanged')}</Text>
             <IdentityLabel
               iconSize="xs"
               kind="inventory"
@@ -91,7 +92,7 @@ export function InventoryAssetList({
             />
           </View>
         }
-        ListEmptyComponent={<Text style={styles.emptyText}>No assets yet.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>{t('mobile.InventoryAssetsRouteScreen.noAssetsYet')}</Text>}
         renderItem={({ item }) => (
           <AssetCard
             asset={item}
@@ -112,7 +113,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading assets</Text>
+      <Text style={styles.stateText}>{t('mobile.InventoryAssetsRouteScreen.loadingAssets')}</Text>
     </View>
   );
 }
@@ -122,9 +123,9 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.InventoryAssetsRouteScreen.couldNotLoad')}</Text>
       <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
-      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.InventoryAssetsRouteScreen.retry')} disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

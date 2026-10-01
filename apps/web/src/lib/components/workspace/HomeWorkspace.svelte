@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -196,7 +197,7 @@
     </div>
     <div class="heading-actions">
       <SegmentedControl
-        label="Asset lifecycle"
+        label={t('web.HomeWorkspace.assetLifecycle')}
         value={lifecycleState}
         options={lifecycleOptions}
         onSelect={(value) => onSelectLifecycle(value as AssetLifecycleFilter)}
@@ -208,7 +209,7 @@
           disabled={!canCreateAsset}
           aria-describedby={!canCreateAsset ? addDenied.id : undefined}
           onclick={(event) => openAdd(event, 'location')}
-        >Add location</Button.Root>
+        >{t('web.HomeWorkspace.addLocation')}</Button.Root>
         {#if !canCreateAsset && locations.length > 0}
           <p id={addDenied.id} class="denied-note" role="note">{addDenied.message}</p>
         {/if}
@@ -220,20 +221,20 @@
     {@render expirationSection?.()}
     <section class="recent-section" aria-labelledby="recent-title">
       <div class="section-heading compact recent-heading">
-        <h2 id="recent-title">Recently changed</h2>
+        <h2 id="recent-title">{t('web.HomeWorkspace.recentlyChanged')}</h2>
         {#if hasRecentOverflow}
-          <div class="recent-rail-controls" aria-label="Recently changed navigation">
+          <div class="recent-rail-controls" aria-label={t('web.HomeWorkspace.recentlyChangedNavigation')}>
             <Button.Root
               variant="outline"
               size="icon"
-              aria-label="Previous recently changed assets"
+              aria-label={t('web.HomeWorkspace.previousRecentlyChangedAssets')}
               disabled={!canScrollRecentBackward}
               onclick={() => scrollRecent(-1)}
             ><ChevronLeft aria-hidden="true" /></Button.Root>
             <Button.Root
               variant="outline"
               size="icon"
-              aria-label="Next recently changed assets"
+              aria-label={t('web.HomeWorkspace.nextRecentlyChangedAssets')}
               disabled={!canScrollRecentForward}
               onclick={() => scrollRecent(1)}
             ><ChevronRight aria-hidden="true" /></Button.Root>
@@ -245,7 +246,7 @@
           <p>{recentEmpty.message}</p>
         </div>
       {:else}
-        <div bind:this={recentRail} class="recent-rail" aria-label="Recently changed assets" onscroll={updateRecentRailControls}>
+        <div bind:this={recentRail} class="recent-rail" aria-label={t('web.HomeWorkspace.recentlyChangedAssets')} onscroll={updateRecentRailControls}>
           {#each recentAssets as asset}
             <article class="recent-card" data-recent-card={asset.id}>
               <Button.Root href={recentAssetHref(asset)} variant="ghost" class="recent-card-open" data-recent-card-link onclick={(event) => openRecentAsset(event, asset)}>
@@ -271,7 +272,7 @@
     {#if checkedOutAssets.length > 0}
       <section class="recent-section" aria-labelledby="checked-out-title">
         <div class="section-heading compact">
-          <h2 id="checked-out-title">Checked out</h2>
+          <h2 id="checked-out-title">{t('web.HomeWorkspace.checkedOut')}</h2>
         </div>
         <div class="asset-list compact-list">
           {#each checkedOutAssets as asset}
@@ -289,7 +290,7 @@
               <div class="asset-row-actions">
                 <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
                 {#if asset.lifecycleState === 'archived'}
-                  <Badge variant="outline">Archived</Badge>
+                  <Badge variant="outline">{t('web.HomeWorkspace.archived')}</Badge>
                 {/if}
                 {#if canEditAsset}
                   <Button.Root
@@ -329,7 +330,7 @@
             </Button.Root>
             <div class="asset-row-actions">
               <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} onTagSelect={onTagSearch} />
-              <Badge variant="outline">Archived</Badge>
+              <Badge variant="outline">{t('web.HomeWorkspace.archived')}</Badge>
             </div>
           </div>
         {/each}
@@ -358,11 +359,9 @@
     </div>
   {:else}
     <div class="section-heading compact locations-heading">
-      <h2>Places</h2>
+      <h2>{t('web.HomeWorkspace.places')}</h2>
       {#if locations.length > displayedLocations.length}
-        <Button.Root href={homeLocationsHref(routeTenantId, routeInventoryId)} variant="ghost" onclick={openLocations}>
-          View all places
-        </Button.Root>
+        <Button.Root href={homeLocationsHref(routeTenantId, routeInventoryId)} variant="ghost" onclick={openLocations}> {t('web.HomeWorkspace.viewAllPlaces')} </Button.Root>
       {/if}
     </div>
     <div class="location-grid">

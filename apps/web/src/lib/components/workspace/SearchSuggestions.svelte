@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Asset } from '$lib/domain/inventory';
   import { assetKindLabel } from '$lib/domain/inventory';
@@ -68,7 +69,7 @@
             <strong>{suggestion.title}</strong><AssetExpirationLabel expiration={suggestion.expiration} context={suggestion.expirationContext} />
             <small>{suggestion.customAssetTypeLabel ?? assetKindLabel(suggestion.kind)}</small>
             {#if suggestion.photoUnavailable}
-              <small id={photoUnavailableId(index)} class="visually-hidden">Photo unavailable</small>
+              <small id={photoUnavailableId(index)} class="visually-hidden">{t('web.SearchSuggestions.photoUnavailable')}</small>
             {/if}
           </span>
         </Button.Root>

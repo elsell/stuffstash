@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset, AssetLifecycleFilter, LocationAsset } from '$lib/domain/inventory';
 import { workspaceRouteHref } from './workspaceRoute';
 
@@ -88,7 +89,7 @@ export function locationRowHref(asset: Asset): string {
 }
 
 export function visibleAssetCountLabel(count: number): string {
-  return `${count} visible ${count === 1 ? 'asset' : 'assets'}`;
+  return t('assets.visibleCount', { count });
 }
 
 export function homeHeadingPresentation(lifecycleState: AssetLifecycleFilter): HomeHeadingPresentation {

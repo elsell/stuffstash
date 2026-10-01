@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onMount, untrack } from 'svelte';
   import type { InventoryCustomizationRepository } from '$lib/ports/inventoryCustomizationRepository';
   import { collectSettingsPages } from '$lib/application/settingsManagement';
@@ -65,36 +66,36 @@
 </script>
 
 <section aria-labelledby={`${timezoneId}-title`}>
-  <header><h1 id={`${timezoneId}-title`}>Expiration reminders</h1><p>Your reminders for this inventory. Other members have their own settings.</p></header>
+  <header><h1 id={`${timezoneId}-title`}>{t('web.NotificationSettings.expirationReminders')}</h1><p>{t('web.NotificationSettings.yourRemindersForThisInventoryOtherMembersHaveTheir')}</p></header>
   {#if error}<p role="alert">{error}</p>{/if}
   {#if !preferences}
-    {#if busy}<p role="status">Loading reminders…</p>{:else}<Button.Root onclick={load}>Retry loading reminders</Button.Root>{/if}
+    {#if busy}<p role="status">{t('web.NotificationSettings.loadingReminders')}</p>{:else}<Button.Root onclick={load}>{t('web.NotificationSettings.retryLoadingReminders')}</Button.Root>{/if}
   {:else}
-    <Button.Root variant="ghost" disabled={busy} onclick={load}>Refresh saved settings</Button.Root>
+    <Button.Root variant="ghost" disabled={busy} onclick={load}>{t('web.NotificationSettings.refreshSavedSettings')}</Button.Root>
     <fieldset disabled={busy}>
-      <legend class="sr-only">Personal notification settings</legend>
-      <section aria-label="Inventory defaults"><h2>Inventory defaults</h2>
+      <legend class="sr-only">{t('web.NotificationSettings.personalNotificationSettings')}</legend>
+      <section aria-label={t('web.NotificationSettings.inventoryDefaults')}><h2>{t('web.NotificationSettings.inventoryDefaults')}</h2>
         <ExpirationReminderEditor initialPolicy={preferences.defaults} onSave={async (policy) => { if (policy) await save(() => session.saveDefaults(policy)); }} />
       </section>
-      <details><summary>Time zone · {preferences.timezone.replaceAll('_', ' ').split('/').reverse().join(' · ')}</summary>
+      <details><summary>{t('web.NotificationSettings.timeZoneFull', { value: preferences.timezone.replaceAll('_', ' ').split('/').reverse().join(' · ') })}</summary>
         <form onsubmit={saveTimezone}>
-          <Label for={timezoneId}>Timezone</Label>
-          <Input id={timezoneId} list={`${timezoneId}-choices`} placeholder="Search city or time zone" value={timezone} oninput={(event) => { timezone = event.currentTarget.value; timezoneSaved = false; timezoneDirty = true; }} aria-invalid={!validTimezone} aria-describedby={`${timezoneId}-help`} />
+          <Label for={timezoneId}>{t('web.NotificationSettings.timezone')}</Label>
+          <Input id={timezoneId} list={`${timezoneId}-choices`} placeholder={t('web.NotificationSettings.searchCityOrTimeZone')} value={timezone} oninput={(event) => { timezone = event.currentTarget.value; timezoneSaved = false; timezoneDirty = true; }} aria-invalid={!validTimezone} aria-describedby={`${timezoneId}-help`} />
           <datalist id={`${timezoneId}-choices`}>{#each availableZones as zone}<option value={zone}>{zone.replaceAll('_', ' ').split('/').reverse().join(' · ')}</option>{/each}</datalist>
           <p id={`${timezoneId}-help`}>{validTimezone ? `Saved timezone: ${preferences.timezone}. Dates end at midnight in this timezone.` : 'Enter a timezone such as America/New_York or Europe/London.'}</p>
-          <Button.Root type="submit" disabled={!validTimezone}>Save timezone</Button.Root>
-          {#if timezoneSaved}<p role="status">Timezone saved.</p>{/if}
+          <Button.Root type="submit" disabled={!validTimezone}>{t('web.NotificationSettings.saveTimezone')}</Button.Root>
+          {#if timezoneSaved}<p role="status">{t('web.NotificationSettings.timezoneSaved')}</p>{/if}
         </form>
       </details>
-      <section aria-label="Asset type reminders"><h2>Asset type reminders</h2>
+      <section aria-label={t('web.NotificationSettings.assetTypeReminders')}><h2>{t('web.NotificationSettings.assetTypeReminders')}</h2>
         {#each types as type (type.id)}
           <details><summary>{type.displayName} · {preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings.enabled === false ? 'Off' : preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? 'Custom' : 'Uses defaults'}</summary>
             <ExpirationReminderEditor initialPolicy={preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings ?? null} inheritedPolicy={preferences.defaults} onSave={(policy) => save(() => session.saveTypeOverride(type.id, policy))} />
           </details>
-        {:else}<p>Enable expiration tracking on an asset type to customize its reminders here.</p>{/each}
+        {:else}<p>{t('web.NotificationSettings.enableExpirationTrackingOnAnAssetTypeToCustomize')}</p>{/each}
       </section>
     </fieldset>
-    <p>Set up push notifications in the mobile app. Your inbox is available on web and mobile.</p>
+    <p>{t('web.NotificationSettings.setUpPushNotificationsInTheMobileAppYour')}</p>
   {/if}
 </section>
 

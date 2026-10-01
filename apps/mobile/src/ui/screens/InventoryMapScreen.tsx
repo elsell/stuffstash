@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useReducedMotionPreference } from '../accessibility/useReducedMotionPreference';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -126,7 +127,7 @@ export function InventoryMapScreen({
   const state: InventoryMapState = mapQuery.data
     ? { status: 'ready', map: mapQuery.data }
     : mapQuery.isError || retrying
-      ? { status: 'error', message: 'Inventory map could not load.' }
+      ? { status: 'error', message: t('mobile.InventoryMapScreen.inventoryMapCouldNotLoad') }
       : { status: 'loading' };
   const [openPath, setOpenPath] = useState<readonly string[]>([]);
   const [localQuery, setLocalQuery] = useState('');
@@ -167,7 +168,7 @@ export function InventoryMapScreen({
 
   useEffect(() => {
     if (mapQuery.isError && mapQuery.data) {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh Map', message: 'Your last loaded map is still available. Pull to refresh.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.InventoryMapScreen.couldNotRefreshMap'), message: t('mobile.InventoryMapScreen.yourLastLoadedMapIsStillAvailablePullTo') });
     }
   }, [mapQuery.isError, mapQuery.error, feedback]);
 
@@ -461,7 +462,7 @@ export function InventoryMapScreen({
 
     const match = findInventoryMapSearchMatch(map, text);
     if (!match) {
-      setSearchOutcome({ query: text.trim(), map, message: 'No matching items. Try another name, kind or location.' });
+      setSearchOutcome({ query: text.trim(), map, message: t('mobile.InventoryMapScreen.noMatchingItemsTryAnotherNameKindOrLocation') });
       setHighlightedAssetId(undefined);
       return;
     }
@@ -556,7 +557,7 @@ export function InventoryMapScreen({
           </View>
 
         </View>
-        <NativeNavigationSearch query={query} placeholder="Find and expand path" onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
+        <NativeNavigationSearch query={query} placeholder={t('mobile.InventoryMapScreen.findAndExpandPath')} onChange={setQuery} onSubmit={text => { setQuery(text); mapSearch.submit(text); }} onClear={clearSearch} />
         {state.status === 'ready' && searchOutcome && searchOutcome.map === map && searchOutcome.query === query.trim() ? (
           <Text accessibilityLiveRegion="polite" style={styles.searchStatus}>{searchOutcome.message}</Text>
         ) : null}
@@ -592,14 +593,14 @@ export function InventoryMapScreen({
       {state.status === 'loading' ? (
         <View style={styles.centerState}>
           <ActivityIndicator color={colors.accent} />
-          <Text style={styles.centerText}>Loading map</Text>
+          <Text style={styles.centerText}>{t('mobile.InventoryMapScreen.loadingMap')}</Text>
         </View>
       ) : null}
       {state.status === 'error' ? (
         <View style={styles.centerState}>
-          <Text style={styles.errorTitle}>Map unavailable</Text>
+          <Text style={styles.errorTitle}>{t('mobile.InventoryMapScreen.mapUnavailable')}</Text>
           <Text style={styles.centerText}>{state.message}</Text>
-          <NativeCommandButton label="Retry map" disabled={retrying} onPress={() => { void retryMap(); }} />
+          <NativeCommandButton label={t('mobile.InventoryMapScreen.retryMap')} disabled={retrying} onPress={() => { void retryMap(); }} />
         </View>
       ) : null}
       {state.status === 'ready' ? (

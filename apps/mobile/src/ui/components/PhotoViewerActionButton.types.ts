@@ -1,8 +1,9 @@
+import { t } from '../../presentation/localization';
 export const photoViewerActions = {
-  close: { label: 'Close photo viewer', symbol: 'xmark' },
-  previous: { label: 'Previous photo', symbol: 'chevron.left' },
-  next: { label: 'Next photo', symbol: 'chevron.right' },
-  remove: { label: 'Remove photo', symbol: 'trash' }
+  close: { label: t('mobile.PhotoViewerActionButtontypes.closePhotoViewer'), symbol: 'xmark' },
+  previous: { label: t('mobile.PhotoViewerActionButtontypes.previousPhoto'), symbol: 'chevron.left' },
+  next: { label: t('mobile.PhotoViewerActionButtontypes.nextPhoto'), symbol: 'chevron.right' },
+  remove: { label: t('mobile.PhotoViewerActionButtontypes.removePhoto'), symbol: 'trash' }
 } as const;
 
 export type PhotoViewerActionButtonProps = {

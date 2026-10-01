@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { CheckCircle2, MailCheck } from 'lucide-react-native';
@@ -79,8 +80,8 @@ export function InventoryInvitationScreen({
     if (invalidLink || !reference) {
       setState({
         status: 'error',
-        title: 'Invitation not available',
-        message: 'This invitation link is incomplete or invalid. Ask the sender for a new link.',
+        title: t('mobile.InventoryInvitationScreen.invitationNotAvailable'),
+        message: t('mobile.InventoryInvitationScreen.thisInvitationLinkIsIncompleteOrInvalidAskThe'),
         retryable: false
       });
       return;
@@ -110,43 +111,43 @@ export function InventoryInvitationScreen({
       <BrandMark />
       <View accessibilityLiveRegion="polite" style={styles.card}>
         {state.status === 'loading' ? (
-          <StateMessage icon={<ActivityIndicator color={colors.action} />} title="Checking invitation"
-            message="Confirming that this invitation is still available…" styles={styles} />
+          <StateMessage icon={<ActivityIndicator color={colors.action} />} title={t('mobile.InventoryInvitationScreen.checkingInvitation')}
+            message={t('mobile.InventoryInvitationScreen.confirmingThatThisInvitationIsStillAvailable')} styles={styles} />
         ) : state.status === 'ready' || state.status === 'accepting' ? (
           <>
             <MailCheck color={colors.action} size={34} />
-            <Text accessibilityRole="header" style={styles.title}>You’re invited</Text>
+            <Text accessibilityRole="header" style={styles.title}>{t('mobile.InventoryInvitationScreen.youReInvited')}</Text>
             <Text style={styles.message}>{state.preview.inventoryName}</Text>
             <View style={styles.details}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Access</Text>
+                <Text style={styles.detailLabel}>{t('mobile.InventoryInvitationScreen.access')}</Text>
                 <Text style={styles.detailValue}>{relationshipLabel(state.preview.relationship)}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Expires</Text>
+                <Text style={styles.detailLabel}>{t('mobile.InventoryInvitationScreen.expires')}</Text>
                 <Text style={styles.detailValue}>{expirationLabel(state.preview.expiresAt)}</Text>
               </View>
             </View>
             <View style={styles.commands}>
-              <NativeCommandButton label="Join inventory" prominence="primary"
+              <NativeCommandButton label={t('mobile.InventoryInvitationScreen.joinInventory')} prominence="primary"
                 disabled={state.status === 'accepting' || startingOver} onPress={() => void accept()} />
-              {state.status === 'accepting' ? <InvitationProgress label="Joining…" /> : null}
-              {onStartOver ? <NativeCommandButton label="Sign out and start over"
+              {state.status === 'accepting' ? <InvitationProgress label={t('mobile.InventoryInvitationScreen.joining')} /> : null}
+              {onStartOver ? <NativeCommandButton label={t('mobile.InventoryInvitationScreen.signOutAndStartOver')}
                 disabled={startingOver || state.status === 'accepting'} onPress={() => void startOver()} /> : null}
-              {startingOver ? <InvitationProgress label="Starting over…" /> : null}
-              <NativeCommandButton label="Not now" disabled={startingOver} onPress={onDismiss} />
+              {startingOver ? <InvitationProgress label={t('mobile.InventoryInvitationScreen.startingOver')} /> : null}
+              <NativeCommandButton label={t('mobile.InventoryInvitationScreen.notNow')} disabled={startingOver} onPress={onDismiss} />
             </View>
           </>
         ) : state.status === 'accepted' || state.status === 'opening' || state.status === 'open_error' ? (
           <>
             <CheckCircle2 color={colors.success} size={36} />
-            <Text accessibilityRole="header" style={styles.title}>You’re in</Text>
-            <Text style={styles.message}>You now have access to {state.inventoryName}.</Text>
-            {state.status === 'open_error' ? <Text style={styles.message}>The inventory could not be opened. Your access was still added.</Text> : null}
+            <Text accessibilityRole="header" style={styles.title}>{t('mobile.InventoryInvitationScreen.youReIn')}</Text>
+            <Text style={styles.message}>{t('mobile.InventoryInvitationScreen.youNowHaveAccessTo')}{state.inventoryName}.</Text>
+            {state.status === 'open_error' ? <Text style={styles.message}>{t('mobile.InventoryInvitationScreen.theInventoryCouldNotBeOpenedYourAccessWas')}</Text> : null}
             <View style={styles.commands}>
-              <NativeCommandButton label="Open inventory" prominence="primary" disabled={state.status === 'opening'}
+              <NativeCommandButton label={t('mobile.InventoryInvitationScreen.openInventory')} prominence="primary" disabled={state.status === 'opening'}
                 onPress={() => void openAcceptedInventory(state.inventoryId, state.inventoryName)} />
-              {state.status === 'opening' ? <InvitationProgress label="Opening…" /> : null}
+              {state.status === 'opening' ? <InvitationProgress label={t('mobile.InventoryInvitationScreen.opening')} /> : null}
             </View>
           </>
         ) : (
@@ -154,11 +155,11 @@ export function InventoryInvitationScreen({
             <Text accessibilityRole="header" style={styles.title}>{state.title}</Text>
             <Text style={styles.message}>{state.message}</Text>
             <View style={styles.commands}>
-              {state.retryable ? <NativeCommandButton label="Try again" prominence="primary" disabled={startingOver}
+              {state.retryable ? <NativeCommandButton label={t('mobile.InventoryInvitationScreen.tryAgain')} prominence="primary" disabled={startingOver}
                 onPress={() => void (state.retryStartOver ? startOver() : load())} /> : null}
-              {startingOver ? <InvitationProgress label="Starting over…" /> : null}
-              {state.canSwitchAccount ? <NativeCommandButton label="Switch account" prominence="primary" onPress={onSwitchAccount} /> : null}
-              <NativeCommandButton label="Done" onPress={onDismiss} />
+              {startingOver ? <InvitationProgress label={t('mobile.InventoryInvitationScreen.startingOver')} /> : null}
+              {state.canSwitchAccount ? <NativeCommandButton label={t('mobile.InventoryInvitationScreen.switchAccount')} prominence="primary" onPress={onSwitchAccount} /> : null}
+              <NativeCommandButton label={t('mobile.InventoryInvitationScreen.done')} onPress={onDismiss} />
             </View>
           </>
         )}
@@ -171,7 +172,7 @@ export function InventoryInvitationScreen({
     const generation = ++requestGeneration.current;
     setStartingOver(true);
     try { await onStartOver(); }
-    catch { if (generation === requestGeneration.current) setState({ status: 'error', title: 'Could not start over', message: 'Try again to sign out.', retryable: true, retryStartOver: true }); }
+    catch { if (generation === requestGeneration.current) setState({ status: 'error', title: t('mobile.InventoryInvitationScreen.couldNotStartOver'), message: t('mobile.InventoryInvitationScreen.tryAgainToSignOut'), retryable: true, retryStartOver: true }); }
     finally { if (generation === requestGeneration.current) setStartingOver(false); }
   }
 
@@ -213,26 +214,26 @@ function expirationLabel(value: string): string {
 
 function terminalState(preview: InventoryInvitationPreview): ScreenState {
   if (preview.isExpired || preview.status === 'expired') {
-    return { status: 'error', title: 'Invitation expired', message: 'Ask the sender for a new invitation.', retryable: false };
+    return { status: 'error', title: t('mobile.InventoryInvitationScreen.invitationExpired'), message: t('mobile.InventoryInvitationScreen.askTheSenderForANewInvitation'), retryable: false };
   }
   const label = preview.status === 'revoked' ? 'revoked' : 'cancelled';
-  return { status: 'error', title: `Invitation ${label}`, message: 'This invitation can no longer be accepted.', retryable: false };
+  return { status: 'error', title: `Invitation ${label}`, message: t('mobile.InventoryInvitationScreen.thisInvitationCanNoLongerBeAccepted'), retryable: false };
 }
 
 function errorState(error: unknown): ScreenState {
   if (error instanceof InventoryInvitationEmailMismatchError) {
-    return { status: 'error', title: 'Different account needed', message: error.message, retryable: false, canSwitchAccount: true };
+    return { status: 'error', title: t('mobile.InventoryInvitationScreen.differentAccountNeeded'), message: error.message, retryable: false, canSwitchAccount: true };
   }
   if (error instanceof InventoryInvitationAuthenticationRequiredError) {
-    return { status: 'error', title: 'Sign in required', message: error.message, retryable: true };
+    return { status: 'error', title: t('mobile.InventoryInvitationScreen.signInRequired'), message: error.message, retryable: true };
   }
   if (error instanceof InventoryInvitationInvalidResponseError) {
-    return { status: 'error', title: 'Could not verify invitation', message: 'The server returned an invalid response.', retryable: false };
+    return { status: 'error', title: t('mobile.InventoryInvitationScreen.couldNotVerifyInvitation'), message: t('mobile.InventoryInvitationScreen.theServerReturnedAnInvalidResponse'), retryable: false };
   }
   if (error instanceof InventoryInvitationInvalidError) {
-    return { status: 'error', title: 'Invitation not available', message: error.message, retryable: false };
+    return { status: 'error', title: t('mobile.InventoryInvitationScreen.invitationNotAvailable'), message: error.message, retryable: false };
   }
-  return { status: 'error', title: 'Could not check invitation', message: 'Check your connection and try again.', retryable: true };
+  return { status: 'error', title: t('mobile.InventoryInvitationScreen.couldNotCheckInvitation'), message: t('mobile.InventoryInvitationScreen.checkYourConnectionAndTryAgain'), retryable: true };
 }
 
 function createStyles(colors: MobileColorPalette, accessibilityLayout = false) {

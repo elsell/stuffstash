@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
@@ -48,11 +49,11 @@ export function ProviderProfileListScreen({
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <SettingsSection footer="Profiles are shared tenant-wide and supply one stage of the voice pipeline.">
-        <SettingsNavigationRow accessibilityLabel="Add a provider profile" label="Add Profile" onPress={onAdd} />
+        <SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.addAProviderProfile')} label={t('mobile.ProviderProfileScreens.addProfile')} onPress={onAdd} />
       </SettingsSection>
-      <SettingsSection title="Profiles">
+      <SettingsSection title={t('mobile.ProviderProfileScreens.profiles')}>
         {providers.state.viewModel.profiles.length === 0 ? (
-          <SettingsValueRow label="No profiles" value="Add one to begin" />
+          <SettingsValueRow label={t('mobile.ProviderProfileScreens.noProfiles')} value="Add one to begin" />
         ) : providers.state.viewModel.profiles.map((profile, index) => (
           <View key={profile.id}>
             {index > 0 ? <SettingsSeparator /> : null}
@@ -95,15 +96,15 @@ export function AddProviderProfileScreen({
       if (!canPresent()) return;
       feedback.showNotice({
         tone: 'success',
-        title: 'Draft profile created',
-        message: 'Add credentials, test it, then enable it for voice.'
+        title: t('mobile.ProviderProfileScreens.draftProfileCreated'),
+        message: t('mobile.ProviderProfileScreens.addCredentialsTestItThenEnableItForVoice')
       });
       onCreated(profile.id);
     } catch (error) {
       if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Could not create profile',
+        title: t('mobile.ProviderProfileScreens.couldNotCreateProfile'),
         message: readableError(error)
       });
     } finally {
@@ -115,10 +116,10 @@ export function AddProviderProfileScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <View style={styles.detailHeader}>
-        <Text accessibilityRole="header" style={styles.detailTitle}>Choose a Service</Text>
-        <Text style={styles.detailSubtitle}>Stuff Stash creates a disabled draft first. You’ll add credentials, test the connection, and enable it next.</Text>
+        <Text accessibilityRole="header" style={styles.detailTitle}>{t('mobile.ProviderProfileScreens.chooseAService')}</Text>
+        <Text style={styles.detailSubtitle}>{t('mobile.ProviderProfileScreens.stuffStashCreatesADisabledDraftFirstYouLl')}</Text>
       </View>
-      <SettingsSection title="Recommended">
+      <SettingsSection title={t('mobile.ProviderProfileScreens.recommended')}>
         {recommendedProviderProfiles.map((template, index) => (
           <View key={template.key}>
             {index > 0 ? <SettingsSeparator /> : null}
@@ -168,7 +169,7 @@ export function ProviderProfileDetailScreen({
     return (
       <ProviderStateView
         taskLabel="provider profile"
-        state={{ status: 'error', message: 'This provider profile is no longer available.' }}
+        state={{ status: 'error', message: t('mobile.ProviderProfileScreens.thisProviderProfileIsNoLongerAvailable') }}
         onRetry={providers.retry}
       />
     );
@@ -193,7 +194,7 @@ export function ProviderProfileDetailScreen({
       if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Profile action failed',
+        title: t('mobile.ProviderProfileScreens.profileActionFailed'),
         message: readableError(error)
       });
     } finally {
@@ -210,18 +211,18 @@ export function ProviderProfileDetailScreen({
         <Text accessibilityRole="header" style={styles.detailTitle}>{profile.displayName}</Text>
         <Text style={styles.detailSubtitle}>{stagePresentation(profile.capability).title} · {profile.providerKind}</Text>
       </View>
-      <SettingsSection title="Configuration">
-        <SettingsValueRow label="Model" value={profile.modelName || 'Default'} />
+      <SettingsSection title={t('mobile.ProviderProfileScreens.configuration')}>
+        <SettingsValueRow label={t('mobile.ProviderProfileScreens.model')} value={profile.modelName || 'Default'} />
         <SettingsSeparator />
-        <SettingsValueRow label="Status" value={formatProviderProfileLifecycleLabel(profile.lifecycleState)} />
+        <SettingsValueRow label={t('mobile.ProviderProfileScreens.status')} value={formatProviderProfileLifecycleLabel(profile.lifecycleState)} />
         <SettingsSeparator />
-        <SettingsValueRow label="Credential" value={formatProviderProfileCredentialStatusLabel(profile.credentialStatus)} />
+        <SettingsValueRow label={t('mobile.ProviderProfileScreens.credential')} value={formatProviderProfileCredentialStatusLabel(profile.credentialStatus)} />
         <SettingsSeparator />
-        <SettingsValueRow label="Last tested" value={formatProviderProfileTestStatusLabel(profile.lastTestedAt)} />
+        <SettingsValueRow label={t('mobile.ProviderProfileScreens.lastTested')} value={formatProviderProfileTestStatusLabel(profile.lastTestedAt)} />
       </SettingsSection>
-      <SettingsSection title="Actions">
-        {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label="Replace Credential" disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
-        {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label="Prompt Guidance" disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
+      <SettingsSection title={t('mobile.ProviderProfileScreens.actions')}>
+        {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label={t('mobile.ProviderProfileScreens.replaceCredential')} disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
+        {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label={t('mobile.ProviderProfileScreens.promptGuidance')} disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
         <NativeCommandButton disabled={working} label={operation === 'test' ? 'Testing…' : 'Test Connection'} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
         {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
       </SettingsSection>

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useMemo } from 'react';
@@ -39,7 +40,7 @@ export function SettingsScreen({
     return (
       <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}>
         <ActivityIndicator color={palette.action} />
-        <Text style={styles.errorMessage}>Loading settings</Text>
+        <Text style={styles.errorMessage}>{t('mobile.SettingsScreen.loadingSettings')}</Text>
         <SettingsRecoveryLinks onNavigate={onNavigate} />
       </ScrollView>
     );
@@ -47,9 +48,9 @@ export function SettingsScreen({
   if (state.status === 'error') {
     return (
       <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
-        <Text accessibilityRole="header" style={styles.errorTitle}>Could not load Settings</Text>
+        <Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.SettingsScreen.couldNotLoadSettings')}</Text>
         <Text style={styles.errorMessage}>{state.message}</Text>
-        <NativeCommandButton label="Retry" onPress={() => void load()} />
+        <NativeCommandButton label={t('mobile.SettingsScreen.retry')} onPress={() => void load()} />
         <SettingsRecoveryLinks onNavigate={onNavigate} />
       </ScrollView>
     );
@@ -94,8 +95,8 @@ function iconForRow(id: string, color: string) {
 
 function SettingsRecoveryLinks({ onNavigate }: { readonly onNavigate: (destination: SettingsDestination) => void }) {
   return <View style={{ alignSelf: 'stretch' }}><SettingsSection>
-    <SettingsNavigationRow accessibilityLabel="Open Account settings" label="Account" onPress={() => onNavigate('account')} />
+    <SettingsNavigationRow accessibilityLabel={t('mobile.SettingsScreen.openAccountSettings')} label={t('mobile.SettingsScreen.account')} onPress={() => onNavigate('account')} />
     <SettingsSeparator />
-    <SettingsNavigationRow accessibilityLabel="Open Stuff Stash server settings" label="Stuff Stash server" onPress={() => onNavigate('connection')} />
+    <SettingsNavigationRow accessibilityLabel={t('mobile.SettingsScreen.openStuffStashServerSettings')} label={t('mobile.SettingsScreen.stuffStashServer')} onPress={() => onNavigate('connection')} />
   </SettingsSection></View>;
 }

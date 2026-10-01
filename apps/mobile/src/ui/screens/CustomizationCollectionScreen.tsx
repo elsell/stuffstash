@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,7 +69,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       setCollection((current) => ({ ...current, rows: [], pendingLifecycle: undefined }));
       setStatus('denied');
     } else if (reads.resource.isRefetchError) {
-      feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: 'Previously loaded settings are still shown. Refresh to retry.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.CustomizationCollectionScreen.couldNotRefreshSettings'), message: t('mobile.CustomizationCollectionScreen.previouslyLoadedSettingsAreStillShownRefreshToRetry') });
     }
   }, [reads.contextError, reads.resource.error, reads.context?.tenantPermissions.join(','), reads.context?.inventoryPermissions.join(',')]);
 
@@ -89,7 +90,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
           : await query.assetTypes(nextContext, scope, targetLifecycle);
       if (request !== requestRef.current) return;
       setContext(nextContext); setCollection((current) => commitLifecycleTransition(current, targetLifecycle, result.items)); setIncomplete(!result.complete); setStatus('ready');
-      if (!result.complete) feedback.showNotice({ tone: 'warning', title: 'Some settings could not be loaded', message: 'Refresh to try loading the complete list.' });
+      if (!result.complete) feedback.showNotice({ tone: 'warning', title: t('mobile.CustomizationCollectionScreen.someSettingsCouldNotBeLoaded'), message: t('mobile.CustomizationCollectionScreen.refreshToTryLoadingTheCompleteList') });
     } catch (error) {
       if (request !== requestRef.current) return;
       if (error instanceof CustomizationFailure && error.kind === 'permission-denied') {
@@ -103,7 +104,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
         setStatus('denied');
         return;
       }
-      if (rows.length) { feedback.showNotice({ tone: 'error', title: 'Could not refresh settings', message: safeCustomizationMessage(error, 'Try again.') }); setCollection(rollbackLifecycleTransition); setStatus('ready'); }
+      if (rows.length) { feedback.showNotice({ tone: 'error', title: t('mobile.CustomizationCollectionScreen.couldNotRefreshSettings'), message: safeCustomizationMessage(error, 'Try again.') }); setCollection(rollbackLifecycleTransition); setStatus('ready'); }
       else setStatus('error');
     }
   }, [accessPolicy, contextQuery, feedback, kind, lifecycle, query, rows.length, scope]);
@@ -141,18 +142,18 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       : scroll);
   };
 
-  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
-  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label="Loading settings…" />);
+  if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
+  if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loadingSettings')} />);
   if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View>);
-  if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>Could not load {plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>Your settings were not changed.</Text><NativeCommandButton label="Retry" onPress={() => void load()} /></>);
-  if (status === 'denied') return withHeader(<DeniedSettingsState message="You don’t have permission to view these settings." />);
+  if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>{t('mobile.CustomizationCollectionScreen.couldNotLoad')}{plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>{t('mobile.CustomizationCollectionScreen.yourSettingsWereNotChanged')}</Text><NativeCommandButton label={t('mobile.CustomizationCollectionScreen.retry')} onPress={() => void load()} /></>);
+  if (status === 'denied') return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
   if (!context) return withHeader(null);
 
   return withScrollContent(<>
-    {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: 'Active', value: 'active' }, { label: 'Archived', value: 'archived' }]} value={lifecycle} /></View> : null}
+    {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: t('mobile.CustomizationCollectionScreen.active'), value: 'active' }, { label: t('mobile.CustomizationCollectionScreen.archived'), value: 'archived' }]} value={lifecycle} /></View> : null}
     {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${pendingLifecycle} settings…`} /></View> : null}
-    {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>Some settings may be missing</Text><Text style={styles.incompleteText}>Pull to refresh and try loading the complete list.</Text></View> : null}
-    {search && filtered.length === 0 ? <Empty title="No matches" message={`No ${plural(kind).toLocaleLowerCase()} match “${search}”.`} />
+    {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>{t('mobile.CustomizationCollectionScreen.someSettingsMayBeMissing')}</Text><Text style={styles.incompleteText}>{t('mobile.CustomizationCollectionScreen.pullToRefreshAndTryLoadingTheCompleteList')}</Text></View> : null}
+    {search && filtered.length === 0 ? <Empty title={t('mobile.CustomizationCollectionScreen.noMatches')} message={`No ${plural(kind).toLocaleLowerCase()} match “${search}”.`} />
       : filtered.length === 0 ? <Empty title={`No ${lifecycle} ${plural(kind).toLocaleLowerCase()}`} message={canEdit && lifecycle === 'active' ? `Add the first ${singular(kind).toLocaleLowerCase()} here.` : 'There is nothing to show.'} />
       : <>
         {inherited.length ? <ResourceSection name={`From ${context.tenantName}`} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}

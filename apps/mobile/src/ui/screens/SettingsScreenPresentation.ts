@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AppearancePreference } from '../../application/settings/AppearancePreference';
 import { spacing } from '../theme/tokens';
 
@@ -68,7 +69,7 @@ export function buildSettingsRootSections(
     },
     {
       id: 'preferences',
-      title: 'Preferences',
+      title: t('mobile.SettingsScreenPresentation.preferences'),
       rows: [row('appearance', 'Appearance', appearanceLabel(input.appearance), 'appearance',
         `Open Appearance settings. Current selection ${appearanceLabel(input.appearance)}`)]
     }
@@ -76,7 +77,7 @@ export function buildSettingsRootSections(
 
   sections.push({
     id: 'scope',
-    title: 'Household and Inventory',
+    title: t('mobile.SettingsScreenPresentation.householdAndInventory'),
     rows: [
       row('tenant-settings', input.selectedTenant.name, 'Household settings', 'tenant-settings',
         `Open household settings for ${input.selectedTenant.name}`),
@@ -88,13 +89,13 @@ export function buildSettingsRootSections(
   sections.push(
     {
       id: 'connection',
-      title: 'Connection',
+      title: t('mobile.SettingsScreenPresentation.connection'),
       rows: [row('server', 'Stuff Stash server', serverHostname(input.serverUrl), 'connection',
         `Open Stuff Stash server settings for ${serverHostname(input.serverUrl)}`)]
     },
     {
       id: 'about',
-      title: 'About',
+      title: t('mobile.SettingsScreenPresentation.about'),
       rows: [
         row('about', 'About Stuff Stash', `Version ${input.appVersion}`, 'about',
           `Open About Stuff Stash. Version ${input.appVersion}`),

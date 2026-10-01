@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
   import type { CaseDefinition } from '$lib/domain/conversationCase';
@@ -48,25 +49,25 @@
           ? 'You no longer have access to save this case.'
           : 'Could not save the case. Your edits are still here.';
       if (error instanceof ConversationFailure && error.kind === 'invalid') {
-        issues = [{ field: 'case-title', message: 'The server rejected this case. Check its fixture and expectation limits.' }];
+        issues = [{ field: 'case-title', message: t('web.CaseEditor.theServerRejectedThisCaseCheckItsFixtureAnd') }];
         await showIssues();
       }
     } finally { if (alive) saving = false; }
   }
 </script>
 <form bind:this={form} class="case-editor" onsubmit={save} novalidate>
-  <header><h2>Test case</h2><p>Describe a realistic request, a test inventory and what a good response should do. This case evaluates text interactions.</p></header>
-  {#if issues.length}<div bind:this={summary} role="alert" tabindex="-1" class="validation-summary"><h3>Check these details</h3><ul>
+  <header><h2>{t('web.CaseEditor.testCase')}</h2><p>{t('web.CaseEditor.describeARealisticRequestATestInventoryAndWhat')}</p></header>
+  {#if issues.length}<div bind:this={summary} role="alert" tabindex="-1" class="validation-summary"><h3>{t('web.CaseEditor.checkTheseDetails')}</h3><ul>
     {#each issues as issue}<li><a href={`#${encodeURIComponent(issue.field)}`} onclick={event => focusField(event, issue.field)}>{fieldLabel(issue.field)}: {issue.message}</a></li>{/each}
   </ul></div>{/if}
-  <Label.Root class="grid gap-2">Case title<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving || disabled} required {...validationAttributes(errors['case-title'], 'case-title')} /></Label.Root>
+  <Label.Root class="grid gap-2">{t('web.CaseEditor.caseTitle')}<Input.Root id="case-title" name="case-title" bind:value={draft.title} disabled={saving || disabled} required {...validationAttributes(errors['case-title'], 'case-title')} /></Label.Root>
   <ValidationMessage field="case-title" message={errors['case-title']} />
-  <Label.Root class="grid gap-2">What the user says<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving || disabled} required rows={3} {...validationAttributes(errors['case-utterance'], 'case-utterance')} /></Label.Root>
+  <Label.Root class="grid gap-2">{t('web.CaseEditor.whatTheUserSays')}<Textarea.Root id="case-utterance" name="case-utterance" bind:value={draft.utterance} disabled={saving || disabled} required rows={3} {...validationAttributes(errors['case-utterance'], 'case-utterance')} /></Label.Root>
   <ValidationMessage field="case-utterance" message={errors['case-utterance']} />
   <CaseFixtures value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
   <CaseExpectations value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
   <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save test case'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.CaseEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p role="status" aria-live="polite">{message}</p>
 </form>

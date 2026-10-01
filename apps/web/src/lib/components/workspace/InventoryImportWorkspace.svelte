@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
   import { onMount, tick, untrack } from 'svelte';
@@ -834,16 +835,16 @@
     </div>
     {#if step === 'history'}
       <Button.Root variant="outline" size="sm" onclick={() => { void loadJobs(); }} disabled={loading || !canViewImports}>
-        <Button.BusyContent busy={loading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
+        <Button.BusyContent busy={loading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel="Refreshing" />
       </Button.Root>
     {:else}
       <div class="toolbar-actions">
         {#if step === 'detail' || step === 'run'}
           <Button.Root variant="outline" size="sm" onclick={() => { void refreshVisibleImportView(); }} disabled={loading || detailLoading || manualRefreshLoading || !canViewImports}>
-            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label="Refresh" busyLabel="Refreshing" />
+            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel="Refreshing" />
           </Button.Root>
         {/if}
-        <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>Back to history</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>{t('web.InventoryImportWorkspace.backToHistory')}</Button.Root>
       </div>
     {/if}
   </div>
@@ -860,8 +861,8 @@
       <Card.Content class="empty-state">
         <AlertCircle size={28} aria-hidden="true" />
         <div>
-          <h2>Import access needed</h2>
-          <p>You can view this inventory, but importing records requires import job access.</p>
+          <h2>{t('web.InventoryImportWorkspace.importAccessNeeded')}</h2>
+          <p>{t('web.InventoryImportWorkspace.youCanViewThisInventoryButImportingRecordsRequires')}</p>
         </div>
       </Card.Content>
     </Card.Root>

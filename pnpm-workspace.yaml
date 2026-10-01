@@ -2,6 +2,7 @@ packages:
   - apps/web
   - apps/mobile
   - packages/api-client
+  - packages/localization
 ignoreScripts: true
 overrides:
   '@0no-co/graphql.web': '1.2.0'

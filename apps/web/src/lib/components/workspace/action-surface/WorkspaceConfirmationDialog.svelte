@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { Snippet } from 'svelte';
   import { tick } from 'svelte';
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
@@ -80,9 +81,7 @@
         aria-live="polite"
         tabindex="-1"
       >
-        <LoaderCircle class="size-4 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
-        Working…
-      </p>
+        <LoaderCircle class="size-4 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" /> {t('web.WorkspaceConfirmationDialog.working')} </p>
     {/if}
     <AlertDialog.Footer>
       <fieldset

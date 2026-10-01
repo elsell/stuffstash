@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import React, { useMemo } from 'react';
 import { Stack, router } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
@@ -17,9 +18,9 @@ export function HomeNavigationHeader({ dashboard, notificationAction }: {
   const styles = useMemo(() => createHomeScreenStyles(colors), [colors]);
   const { width, fontScale } = useWindowDimensions();
   const actions: NativeHeaderAction[] = [
-    ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: 'Add an asset', onPress: () => router.push('/add') }] : []),
+    ...(dashboard?.canAdd ? [{ kind: 'add' as const, label: t('mobile.HomeNavigationHeader.addAnAsset'), onPress: () => router.push('/add') }] : []),
     ...(notificationAction ? [notificationAction] : []),
-    { kind: 'account', label: 'Open account and settings', onPress: () => router.push('/settings') }
+    { kind: 'account', label: t('mobile.HomeNavigationHeader.openAccountAndSettings'), onPress: () => router.push('/settings') }
   ];
   const actionOptions = useNativeHeaderActionOptions(actions);
   const inventoryName = dashboard?.inventoryName;

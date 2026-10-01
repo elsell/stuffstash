@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { RefObject } from 'react';
 import type { TextInput } from 'react-native';
 import type {
@@ -205,10 +206,10 @@ export function browseLoadingFlagsForRefresh() {
 
 export function buildBrowseScopeOptions(): readonly BrowseScopeOption[] {
   return [
-    { label: 'All', value: 'all' },
-    { label: 'Places', value: 'places' },
-    { label: 'Containers', value: 'containers' },
-    { label: 'Items', value: 'items' }
+    { label: t('mobile.SearchScreenPresentation.all'), value: 'all' },
+    { label: t('mobile.SearchScreenPresentation.places'), value: 'places' },
+    { label: t('mobile.SearchScreenPresentation.containers'), value: 'containers' },
+    { label: t('mobile.SearchScreenPresentation.items'), value: 'items' }
   ];
 }
 

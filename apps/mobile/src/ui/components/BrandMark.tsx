@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { radius, spacing, typography, type MobileColorPalette } from '../theme/tokens';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -15,7 +16,7 @@ export function BrandMark({ size = 'md', showWordmark = false }: BrandMarkProps)
   return (
     <View style={styles.row}>
       <Image accessibilityIgnoresInvertColors source={glyph} style={imageStyle} />
-      {showWordmark ? <Text style={styles.wordmark}>Stuff Stash</Text> : null}
+      {showWordmark ? <Text style={styles.wordmark}>{t('mobile.BrandMark.stuffStash')}</Text> : null}
     </View>
   );
 }

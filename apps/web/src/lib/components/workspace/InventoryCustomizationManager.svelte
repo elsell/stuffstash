@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Shapes from '@lucide/svelte/icons/shapes';
@@ -300,8 +301,8 @@
   <div class="settings-panel-heading">
     <Shapes aria-hidden="true" />
     <div>
-      <h2 id="settings-customization" bind:this={customizationHeading} tabindex="-1">Custom fields</h2>
-      <p>Types and fields available to this inventory.</p>
+      <h2 id="settings-customization" bind:this={customizationHeading} tabindex="-1">{t('web.InventoryCustomizationManager.customFields')}</h2>
+      <p>{t('web.InventoryCustomizationManager.typesAndFieldsAvailableToThisInventory')}</p>
     </div>
   </div>
 
@@ -327,32 +328,32 @@
     <div class="customization-grid">
       <section class="customization-column customization-surface" aria-labelledby="custom-asset-types-title">
         <div class="customization-surface-heading">
-          <h3 id="custom-asset-types-title">Asset types</h3>
+          <h3 id="custom-asset-types-title">{t('web.InventoryCustomizationManager.assetTypes')}</h3>
           <span aria-label={`${activeAssetTypes.length} custom asset types`}>{activeAssetTypes.length}</span>
         </div>
         <SegmentedControl
-          label="Custom type scope"
+          label={t('web.InventoryCustomizationManager.customTypeScope')}
           value={typeScope}
           options={scopeOptions}
           onSelect={(value) => { typeScope = value as CustomDefinitionScope; }}
         />
         <div class="field-stack">
-          <Label for="custom-type-key">Key</Label>
-          <Input id="custom-type-key" bind:value={typeKey} placeholder="medicine" />
+          <Label for="custom-type-key">{t('web.InventoryCustomizationManager.key')}</Label>
+          <Input id="custom-type-key" bind:value={typeKey} placeholder={t('web.InventoryCustomizationManager.medicine')} />
         </div>
         <div class="field-stack">
-          <Label for="custom-type-name">Display name</Label>
-          <Input id="custom-type-name" bind:value={typeName} placeholder="Medicine" />
+          <Label for="custom-type-name">{t('web.InventoryCustomizationManager.displayName')}</Label>
+          <Input id="custom-type-name" bind:value={typeName} placeholder={t('web.InventoryCustomizationManager.medicine2')} />
         </div>
         <div class="field-stack">
-          <Label for="custom-type-description">Description</Label>
-          <Textarea id="custom-type-description" bind:value={typeDescription} placeholder="Optional" />
+          <Label for="custom-type-description">{t('web.InventoryCustomizationManager.description')}</Label>
+          <Textarea id="custom-type-description" bind:value={typeDescription} placeholder={t('web.InventoryCustomizationManager.optional')} />
         </div>
-        <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim() || !canScope(typeScope)} onclick={() => { void createAssetType(); }}>Create type</Button.Root>
+        <Button.Root disabled={busy || !typeKey.trim() || !typeName.trim() || !canScope(typeScope)} onclick={() => { void createAssetType(); }}>{t('web.InventoryCustomizationManager.createType')}</Button.Root>
 
-        <div class="schema-list" aria-label="Custom asset types">
+        <div class="schema-list" aria-label={t('web.InventoryCustomizationManager.customAssetTypes')}>
           {#if activeAssetTypes.length === 0}
-            <p class="schema-empty">No custom asset types yet.</p>
+            <p class="schema-empty">{t('web.InventoryCustomizationManager.noCustomAssetTypesYet')}</p>
           {:else}
           {#each activeAssetTypes as assetType}
             <article class="schema-row">
@@ -381,63 +382,63 @@
 
       <section class="customization-column customization-surface" aria-labelledby="custom-field-definitions-title">
         <div class="customization-surface-heading">
-          <h3 id="custom-field-definitions-title">Field definitions</h3>
+          <h3 id="custom-field-definitions-title">{t('web.InventoryCustomizationManager.fieldDefinitions')}</h3>
           <span aria-label={`${activeFieldDefinitions.length} custom fields`}>{activeFieldDefinitions.length}</span>
         </div>
         <SegmentedControl
-          label="Custom field scope"
+          label={t('web.InventoryCustomizationManager.customFieldScope')}
           value={fieldScope}
           options={scopeOptions}
           onSelect={(value) => selectFieldScope(value as CustomDefinitionScope)}
         />
         <div class="field-stack">
-          <Label for="custom-field-key">Key</Label>
-          <Input id="custom-field-key" bind:value={fieldKey} placeholder="expiration-date" />
+          <Label for="custom-field-key">{t('web.InventoryCustomizationManager.key')}</Label>
+          <Input id="custom-field-key" bind:value={fieldKey} placeholder={t('web.InventoryCustomizationManager.expirationDate')} />
         </div>
         <div class="field-stack">
-          <Label for="custom-field-name">Display name</Label>
-          <Input id="custom-field-name" bind:value={fieldName} placeholder="Expiration date" />
+          <Label for="custom-field-name">{t('web.InventoryCustomizationManager.displayName')}</Label>
+          <Input id="custom-field-name" bind:value={fieldName} placeholder={t('web.InventoryCustomizationManager.expirationDate2')} />
         </div>
         <SegmentedControl
-          label="Custom field type"
+          label={t('web.InventoryCustomizationManager.customFieldType')}
           value={fieldType}
           options={fieldTypeOptions}
           onSelect={(value) => { fieldType = value as CustomFieldType; }}
         />
         {#if fieldType === 'enum'}
           <div class="field-stack">
-            <Label for="custom-field-options">Options</Label>
-            <Input id="custom-field-options" bind:value={enumOptions} placeholder="new, open, closed" />
+            <Label for="custom-field-options">{t('web.InventoryCustomizationManager.options')}</Label>
+            <Input id="custom-field-options" bind:value={enumOptions} placeholder={t('web.InventoryCustomizationManager.newOpenClosed')} />
           </div>
         {/if}
         <SegmentedControl
-          label="Field applicability"
+          label={t('web.InventoryCustomizationManager.fieldApplicability')}
           value={fieldApplicability}
           options={applicabilityOptions}
           onSelect={(value) => { fieldApplicability = value as CustomFieldApplicability; }}
         />
         {#if fieldApplicability === 'custom_asset_types'}
           <fieldset class="selection-field">
-            <legend>Field custom type targets</legend>
+            <legend>{t('web.InventoryCustomizationManager.fieldCustomTypeTargets')}</legend>
             <p class="selection-summary">
               {selectedTargetCount === 0
                 ? 'No custom types selected'
                 : `${selectedTargetCount} custom ${selectedTargetCount === 1 ? 'type' : 'types'} selected`}
             </p>
             <ChoiceGrid
-              label="Field custom type targets"
+              label={t('web.InventoryCustomizationManager.fieldCustomTypeTargets')}
               options={targetableAssetTypeOptions}
               selectedValues={fieldTargets}
-              emptyMessage="No eligible custom asset types for this scope."
+              emptyMessage={t('web.InventoryCustomizationManager.noEligibleCustomAssetTypesForThisScope')}
               onSelect={toggleTarget}
             />
           </fieldset>
         {/if}
-        <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim() || !canScope(fieldScope)} onclick={() => { void createFieldDefinition(); }}>Create field</Button.Root>
+        <Button.Root disabled={busy || !fieldKey.trim() || !fieldName.trim() || !canScope(fieldScope)} onclick={() => { void createFieldDefinition(); }}>{t('web.InventoryCustomizationManager.createField')}</Button.Root>
 
-        <div class="schema-list" aria-label="Custom field definitions">
+        <div class="schema-list" aria-label={t('web.InventoryCustomizationManager.customFieldDefinitions')}>
           {#if activeFieldDefinitions.length === 0}
-            <p class="schema-empty">No custom fields yet.</p>
+            <p class="schema-empty">{t('web.InventoryCustomizationManager.noCustomFieldsYet')}</p>
           {:else}
           {#each activeFieldDefinitions as definition}
             <article class="schema-row">

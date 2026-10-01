@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { ExpirationMode } from '../../application/expiration/ExpirationRepository';
@@ -19,15 +20,15 @@ export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetr
  if (data?.counts.all === 0 && !error) return null;
  return <View style={styles.attentionSection}>
   <View style={styles.sectionHeader}>
-   <Text accessibilityRole="header" style={styles.sectionTitle}>Expiration</Text>
-   <Pressable accessibilityRole="button" accessibilityLabel="View all expiration dates" disabled={!canOpen} accessibilityState={{ disabled: !canOpen }} style={styles.sectionActionButton} onPress={() => { if (canOpen) onOpen('all'); }}><Text style={styles.sectionAction}>See all</Text></Pressable>
+   <Text accessibilityRole="header" style={styles.sectionTitle}>{t('mobile.ExpirationHomeSection.expiration')}</Text>
+   <Pressable accessibilityRole="button" accessibilityLabel={t('mobile.ExpirationHomeSection.viewAllExpirationDates')} disabled={!canOpen} accessibilityState={{ disabled: !canOpen }} style={styles.sectionActionButton} onPress={() => { if (canOpen) onOpen('all'); }}><Text style={styles.sectionAction}>{t('mobile.ExpirationHomeSection.seeAll')}</Text></Pressable>
   </View>
-  {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><NativeCommandButton label="Retry expiration" onPress={onRetry} /></View> : null}
-  {!data && !error ? <ActivityIndicator accessibilityLabel="Loading expiration" color={colors.action} /> : null}
+  {error ? <View><Text accessibilityRole="alert" style={styles.stateText}>{error}</Text><NativeCommandButton label={t('mobile.ExpirationHomeSection.retryExpiration')} onPress={onRetry} /></View> : null}
+  {!data && !error ? <ActivityIndicator accessibilityLabel={t('mobile.ExpirationHomeSection.loadingExpiration')} color={colors.action} /> : null}
   {data ? <>
-   {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>None expiring soon</Text> : <View>
-    <SelectionRow label="Expired" value={String(data.counts.expired)} accessibilityLabel={`View ${data.counts.expired} expired items`} onPress={() => onOpen('expired')} />
-    <SelectionRow label="Expiring soon" value={String(data.counts.soon)} accessibilityLabel={`View ${data.counts.soon} items expiring soon`} onPress={() => onOpen('soon')} />
+   {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>{t('mobile.ExpirationHomeSection.noneExpiringSoon')}</Text> : <View>
+    <SelectionRow label={t('mobile.ExpirationHomeSection.expired')} value={String(data.counts.expired)} accessibilityLabel={`View ${data.counts.expired} expired items`} onPress={() => onOpen('expired')} />
+    <SelectionRow label={t('mobile.ExpirationHomeSection.expiringSoon')} value={String(data.counts.soon)} accessibilityLabel={`View ${data.counts.soon} items expiring soon`} onPress={() => onOpen('soon')} />
    </View>}
    {data.items.map(item => <AssetCard key={item.id} asset={item} density="row" palette={colors} showTags={false} onPress={() => onOpenAsset(item.id)} onParentLocationPress={parent => onOpenAsset(parent.id)} />)}
   </> : null}

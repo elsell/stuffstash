@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { AssetTag } from '$lib/domain/inventory';
 
@@ -33,7 +34,7 @@
     class="tag-chip-list"
     data-compact={compact ? 'true' : undefined}
     data-overflow={overflowLimit !== undefined ? 'true' : undefined}
-    aria-label="Asset tags"
+    aria-label={t('web.AssetTagChips.assetTags')}
   >
     {#each visibleTags as tag}
       {@const selected = selectedTagIdSet.has(tag.id)}

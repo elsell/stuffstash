@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import Compass from '@lucide/svelte/icons/compass';
@@ -73,11 +74,11 @@
   }
 </script>
 
-<aside class="side-nav" aria-label="Workspace navigation">
+<aside class="side-nav" aria-label={t('web.SideNav.workspaceNavigation')}>
   <div class="brand-lockup compact-lockup">
     <div class="brand-mark" aria-hidden="true"><span></span></div>
     <div>
-      <strong>Stuff Stash</strong>
+      <strong>{t('web.SideNav.stuffStash')}</strong>
       <p>{selectedTenant?.name ?? 'Home'}</p>
     </div>
   </div>
@@ -93,7 +94,7 @@
     {onCreateInventory}
   />
 
-  <nav class="side-nav-groups" aria-label="Inventory destinations">
+  <nav class="side-nav-groups" aria-label={t('web.SideNav.inventoryDestinations')}>
     {#each navigationGroups as group}
       <div class="nav-section" aria-labelledby={`${group.id}-nav-label`}>
       <p id={`${group.id}-nav-label`} class="nav-eyebrow">{group.label}</p>

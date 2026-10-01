@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import Eye from '@lucide/svelte/icons/eye';
   import type { ImportJob } from '$lib/domain/inventory';
@@ -34,9 +35,7 @@
       </div>
     </div>
     <Button.Root onclick={onViewHistory}>
-      <Eye size={16} aria-hidden="true" />
-      View in history
-    </Button.Root>
+      <Eye size={16} aria-hidden="true" /> {t('web.ImportJobRunHandoff.viewInHistory')} </Button.Root>
   </Card.Content>
 </Card.Root>
 

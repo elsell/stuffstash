@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeActionMenu } from './NativeActionMenu';
 import type { ReactElement } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -58,7 +59,7 @@ export function containedWorkspaceItems(
   if (spaces.length + items.length === 0) {
     return [{ key: 'contents-empty', kind: 'empty', canClearSearch: isFiltering,
       emptyState: isFiltering
-        ? { title: 'No matching contents', message: 'Try another name or path.' }
+        ? { title: t('mobile.AssetContainedWorkspace.noMatchingContents'), message: t('mobile.AssetContainedWorkspace.tryAnotherNameOrPath') }
         : containedAssetsEmptyState(asset) }];
   }
   const spacesHeading = containedSpacesSectionHeading(asset, isFiltering ? {
@@ -125,8 +126,8 @@ export function ContainedSpatialActions({
 }) {
   const actions = containedAssetActions(asset);
   if (actions.length === 0) return null;
-  return <NativeActionMenu accessibilityLabel="Add to contents" disabled={isActionPending}
-    trigger={{ kind: 'label', label: 'Add' }} groups={[{ id: 'contents', items: actions.map(action => {
+  return <NativeActionMenu accessibilityLabel={t('mobile.AssetContainedWorkspace.addToContents')} disabled={isActionPending}
+    trigger={{ kind: 'label', label: t('mobile.AssetContainedWorkspace.add') }} groups={[{ id: 'contents', items: actions.map(action => {
       const onPress = action.kind === 'add_here' ? onAddHere : onMoveThingsHere;
       return { id: action.kind, label: action.label, disabled: !canUseContainedAssetAction({ isActionPending, onPress }), onPress: () => { if (!isActionPending) onPress?.(); } };
     }) }]} />;
@@ -185,7 +186,7 @@ function ContainedAssetsEmptyState({
       <Text style={styles.emptyContainerTitle}>{emptyState.title}</Text>
       <Text style={styles.emptyContainerText}>{emptyState.message}</Text>
       {onClearSearch ? (
-        <NativeCommandButton label="Clear search" onPress={onClearSearch} />
+        <NativeCommandButton label={t('mobile.AssetContainedWorkspace.clearSearch')} onPress={onClearSearch} />
       ) : null}
     </View>
   );

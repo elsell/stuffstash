@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { AssetLifecycleActionKind } from './AssetLifecyclePresentation';
 
@@ -12,19 +13,19 @@ export type AssetWorkspaceStatus = {
 export function assetWorkspaceWorkingStatus(action: Exclude<AssetWorkspacePendingAction, 'photos'>): AssetWorkspaceStatus {
   switch (action) {
     case 'archive':
-      return { kind: 'working', message: 'Archiving asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.archivingAsset') };
     case 'delete':
-      return { kind: 'working', message: 'Deleting asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.deletingAsset') };
     case 'edit':
-      return { kind: 'working', message: 'Saving changes...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.savingChanges') };
     case 'move':
-      return { kind: 'working', message: 'Moving asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.movingAsset') };
     case 'checkout':
-      return { kind: 'working', message: 'Checking out asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.checkingOutAsset') };
     case 'return':
-      return { kind: 'working', message: 'Returning asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.returningAsset') };
     case 'restore':
-      return { kind: 'working', message: 'Restoring asset...' };
+      return { kind: 'working', message: t('mobile.AssetWorkspaceStatusPresentation.restoringAsset') };
   }
 }
 

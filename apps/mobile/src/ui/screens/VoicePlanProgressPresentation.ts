@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { VoicePlanCommandDrafts } from './VoicePlanEdits';
 import type { VoiceRealtimeState } from '../../application/voice/RealtimeVoiceSession';
 export type VoicePlanProgressModel = { readonly title: string; readonly detail: string; readonly busy: boolean; readonly needsAttention?: boolean; readonly percent?: number };
@@ -5,13 +6,13 @@ export function voicePlanProgress(state: VoiceRealtimeState | null, drafts: Voic
   const plan = state?.actionPlan;
   if (!state || !plan) return null;
   if (plan.status === 'approved' || (plan.status === 'proposed' && state.reviewDecisionPending)) {
-    if (state.progressLabel === 'Cancelling change') return { title: 'Cancelling change…', detail: 'Waiting for confirmation', busy: true };
+    if (state.progressLabel === 'Cancelling change') return { title: t('mobile.VoicePlanProgressPresentation.cancellingChange'), detail: 'Waiting for confirmation', busy: true };
     const titles = plan.commands.map(command => (command.id && drafts[command.id]?.title) || command.title).filter(Boolean);
     return { title: titles.length === 1 ? `Saving ${titles[0]}…` : 'Saving changes…', detail: 'Waiting for confirmation', busy: true };
   }
   if (plan.status !== 'executed') return null;
   const photos = state.photoAttachmentStatus;
-  if (!photos) return { title: 'Saved', detail: 'Your inventory is up to date', busy: false };
+  if (!photos) return { title: t('mobile.VoicePlanProgressPresentation.saved'), detail: 'Your inventory is up to date', busy: false };
   const busy = photos.status === 'uploading';
   const complete = photos.status === 'attached';
   const needsAttention = photos.status === 'failed' || photos.status === 'partial_failed';

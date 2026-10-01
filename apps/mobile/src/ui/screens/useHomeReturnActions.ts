@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import type { HomeCheckedOutAssetViewModel } from '../../application/home/HomeDashboardQuery';
@@ -58,7 +59,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       completedReturns.current.set(asset.id, result.id);
       if (mounted.current && session.active) {
         updateEditor({ sessionId: ++editorSequence.current, asset, checkoutId: result.id, undoableOperationId: result.undoableOperationId, details: '', isSaving: false });
-        if (!result.undoableOperationId) feedback.showNotice({ tone: 'warning', title: 'Return completed without undo', message: 'The asset was returned, but this return cannot be canceled.' });
+        if (!result.undoableOperationId) feedback.showNotice({ tone: 'warning', title: t('mobile.useHomeReturnActions.returnCompletedWithoutUndo'), message: t('mobile.useHomeReturnActions.theAssetWasReturnedButThisReturnCannotBe') });
       }
       void reconcile(() => mounted.current && session.active);
     } catch (error) {

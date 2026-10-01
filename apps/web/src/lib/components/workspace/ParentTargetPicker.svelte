@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { tick } from 'svelte';
   import X from '@lucide/svelte/icons/x';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -106,7 +107,7 @@
   </div>
   <div class="parent-current-shell" role="group" aria-label={`${groupLabel} current destination`}>
     <div>
-      <p class="selection-summary">Current destination</p>
+      <p class="selection-summary">{t('web.ParentTargetPicker.currentDestination')}</p>
       <div
         class="parent-current-card"
         data-selected={selectedTarget ? 'target' : 'root'}
@@ -130,11 +131,10 @@
         type="button"
         variant="outline"
         size="sm"
-        aria-label="Clear parent selection"
+        aria-label={t('web.ParentTargetPicker.clearParentSelection')}
         onclick={clearSelection}
       >
-        <X /> Clear parent
-      </Button.Root>
+        <X /> {t('web.ParentTargetPicker.clearParent')} </Button.Root>
     {/if}
   </div>
   {#if selectedTarget}
@@ -153,16 +153,16 @@
   {#if hasSearch}
     <div id={`${searchId}-results`} class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
       {#if locationResults.length > 0}
-        <div class="parent-result-group" role="group" aria-label="Locations" aria-labelledby={`${searchId}-location-results-label`}>
-          <p id={`${searchId}-location-results-label`} class="parent-result-heading">Locations</p>
+        <div class="parent-result-group" role="group" aria-label={t('web.ParentTargetPicker.locations')} aria-labelledby={`${searchId}-location-results-label`}>
+          <p id={`${searchId}-location-results-label`} class="parent-result-heading">{t('web.ParentTargetPicker.locations')}</p>
           {#each locationResults as target}
             <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
           {/each}
         </div>
       {/if}
       {#if containerResults.length > 0}
-        <div class="parent-result-group" role="group" aria-label="Containers" aria-labelledby={`${searchId}-container-results-label`}>
-          <p id={`${searchId}-container-results-label`} class="parent-result-heading">Containers</p>
+        <div class="parent-result-group" role="group" aria-label={t('web.ParentTargetPicker.containers')} aria-labelledby={`${searchId}-container-results-label`}>
+          <p id={`${searchId}-container-results-label`} class="parent-result-heading">{t('web.ParentTargetPicker.containers')}</p>
           {#each containerResults as target}
             <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
           {/each}
@@ -179,14 +179,12 @@
           class="parent-show-more"
           aria-label={`Show all ${matchingTargets.length} matching parent destinations`}
           onclick={expandSearchResults}
-        >
-          Show all {matchingTargets.length} matches
-        </Button.Root>
+        > {t('web.ParentTargetPicker.showAllMatchesFull', { length: matchingTargets.length })} </Button.Root>
       {/if}
     {/if}
   {:else if targets.length > 0}
     <div class="parent-suggestion-header">
-      <p class="selection-summary">Suggested destinations</p>
+      <p class="selection-summary">{t('web.ParentTargetPicker.suggestedDestinations')}</p>
       <p class="muted-note">{presentation.destinationCountLabel}. {presentation.suggestedCountLabel}</p>
     </div>
     <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} suggested destinations`}>

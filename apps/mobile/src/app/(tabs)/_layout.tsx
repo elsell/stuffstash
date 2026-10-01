@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { VoiceBottomAccessory } from '../../ui/navigation/VoiceBottomAccessory';
 
@@ -8,11 +9,11 @@ export default function TabLayout() {
         <VoiceBottomAccessory />
       </NativeTabs.BottomAccessory>
       <NativeTabs.Trigger name="(home)">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('mobile.layout.home')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon md="home" sf={{ default: 'house', selected: 'house.fill' }} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(search)">
-        <NativeTabs.Trigger.Label>Browse</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('mobile.layout.browse')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon md="grid_view" sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>

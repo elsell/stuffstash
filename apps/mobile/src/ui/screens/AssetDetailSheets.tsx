@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeSegmentedControl } from '../components/NativeSegmentedControl';
 import { Stack } from 'expo-router';
 import { SettingsSection, useSettingsListStyles } from './SettingsList';
@@ -96,9 +97,9 @@ export function EditAssetSheet({
     primaryLabel: 'Save', secondaryLabel: 'Cancel', disabled: !canSave,
     secondaryDisabled: isSaving, onApply: onSave, onBack: onClose
   });
-  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AssetDetailSheets.cancel'),
     disabled: isSaving, onPress: actions.onBack }], 'left');
-  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save',
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.AssetDetailSheets.save'),
     disabled: !canSave, onPress: actions.onApply }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
     ...cancelOptions, ...saveOptions }), [cancelOptions, saveOptions]);
@@ -109,22 +110,22 @@ export function EditAssetSheet({
       <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {readOnly ? <ActionEligibilityNotice /> : null}
         {metadataRecovery}
-        {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Saving changes…</Text> : null}
+        {isSaving ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>{t('mobile.AssetDetailSheets.savingChanges')}</Text> : null}
         <Text style={styles.sheetSubtitle}>
           {editContext.customTypeLabel ? `${editContext.kindLabel} · ${editContext.customTypeLabel}` : editContext.kindLabel}
         </Text>
-        <Text style={styles.inputLabel}>Name</Text>
+        <Text style={styles.inputLabel}>{t('mobile.AssetDetailSheets.name')}</Text>
         <AppTextInput
-          accessibilityLabel="Asset name"
+          accessibilityLabel={t('mobile.AssetDetailSheets.assetName')}
           autoCapitalize="sentences"
           editable={!disabled}
           onChangeText={(title) => onChange({ ...draft, title, description: draft?.description ?? '', tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
           style={styles.input}
           value={draft?.title ?? ''}
         />
-        <Text style={styles.inputLabel}>Description</Text>
+        <Text style={styles.inputLabel}>{t('mobile.AssetDetailSheets.description')}</Text>
         <AppTextInput
-          accessibilityLabel="Description"
+          accessibilityLabel={t('mobile.AssetDetailSheets.description')}
           editable={!disabled}
           multiline
           onChangeText={(description) => onChange({ ...draft, title: draft?.title ?? '', description, tagIds: draft?.tagIds ?? [], newTags: draft?.newTags ?? [] })}
@@ -236,16 +237,16 @@ export function MoveAssetSheet({
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close',
     label: creationExpanded ? 'Cancel new destination' : 'Cancel',
     disabled: isSaving, onPress: creationExpanded ? creationActions.onBack : actions.onBack }], 'left');
-  const moveOptions = useNativeHeaderActionOptions(creationExpanded ? [{ kind: 'save', label: 'Create destination',
+  const moveOptions = useNativeHeaderActionOptions(creationExpanded ? [{ kind: 'save', label: t('mobile.AssetDetailSheets.createDestination'),
     emphasis: 'primary', disabled: creationActions.disabled, onPress: creationActions.onApply }] : [
-    { kind: 'add', label: 'New destination', disabled: disabled || !candidatesAvailable, onPress: onBeginCreation },
-    { kind: 'save', label: 'Move', emphasis: 'primary', disabled: !canSaveMove, onPress: actions.onApply }
+    { kind: 'add', label: t('mobile.AssetDetailSheets.newDestination'), disabled: disabled || !candidatesAvailable, onPress: onBeginCreation },
+    { kind: 'save', label: t('mobile.AssetDetailSheets.move'), emphasis: 'primary', disabled: !canSaveMove, onPress: actions.onApply }
   ]);
   const headerOptions = useMemo(() => ({ title: creationExpanded ? 'New destination' : 'Move',
     headerShown: true, headerBackVisible: false, ...cancelOptions, ...moveOptions }),
     [creationExpanded, cancelOptions, moveOptions]);
   const searchEnabled = !disabled && !creationExpanded;
-  const search = { query: draft?.query ?? '', placeholder: 'Search places, boxes, shelves',
+  const search = { query: draft?.query ?? '', placeholder: t('mobile.AssetDetailSheets.searchPlacesBoxesShelves'),
     onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
   function toRow(match: ParentLookupResult): MoveSelectionRowModel {
     return { id: match.id, label: match.title,
@@ -263,35 +264,35 @@ export function MoveAssetSheet({
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
       {!creationExpanded ? <MoveSelectionList subjectLabel="Moving" subject={asset.title}
-        context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title="Destinations"
+        context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title={t('mobile.AssetDetailSheets.destinations')}
         destinationLabel={draft?.selectedParent === null ? 'Inventory root' : draft?.selectedParent?.pathLabel || draft?.selectedParent?.title || 'Choose a destination'}
         statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
-        rows={[{ id: 'inventory-root', label: 'Inventory root', context: 'Top level', kind: 'root',
-          selected: draft?.selectedParent === null, disabled, accessibilityLabel: 'Choose inventory root', onPress: onSelectRoot },
+        rows={[{ id: 'inventory-root', label: t('mobile.AssetDetailSheets.inventoryRoot'), context: 'Top level', kind: 'root',
+          selected: draft?.selectedParent === null, disabled, accessibilityLabel: t('mobile.AssetDetailSheets.chooseInventoryRoot'), onPress: onSelectRoot },
           ...(draft?.matches ?? []).map(toRow)]}
         retainedSelection={draft?.selectedParent && !draft.matches.some(match => match.id === draft.selectedParent?.id)
           ? toRow(draft.selectedParent) : undefined} /> :
       <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets contentContainerStyle={styles.formScrollContent} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         {creationExpanded ? (
           <>
-            <SettingsSection title="Name">
+            <SettingsSection title={t('mobile.AssetDetailSheets.name')}>
               <View style={settingsStyles.navigationRow}>
-                <DraftTextField accessibilityLabel="New destination name" value={draft?.creationName ?? ''}
-                  editable={!disabled} placeholder="Place or container name"
+                <DraftTextField accessibilityLabel={t('mobile.AssetDetailSheets.newDestinationName')} value={draft?.creationName ?? ''}
+                  editable={!disabled} placeholder={t('mobile.AssetDetailSheets.placeOrContainerName')}
                   style={[settingsStyles.rowLabel, { minHeight: 48, flex: 1 }]}
                   onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
               </View>
             </SettingsSection>
-            <SettingsSection title="Kind" footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
+            <SettingsSection title={t('mobile.AssetDetailSheets.kind')} footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
               <View style={settingsStyles.navigationRow}>
                 <NativeSegmentedControl colors={palette} style={{ flex: 1, height: 48 }}
-                  value={createKind} segments={[{ value: 'location', label: 'Location' }, { value: 'container', label: 'Container' }]}
+                  value={createKind} segments={[{ value: 'location', label: t('mobile.AssetDetailSheets.location') }, { value: 'container', label: t('mobile.AssetDetailSheets.container') }]}
                   disabled={disabled}
                   onChange={value => { if (!disabled && (value === 'location' || value === 'container')) onChangeCreateKind(value); }} />
               </View>
             </SettingsSection>
             {creationStatus}
-            {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>Creating destination…</Text> : null}
+            {isCreatingDestination ? <Text accessibilityLiveRegion="polite" style={styles.sheetSubtitle}>{t('mobile.AssetDetailSheets.creatingDestination')}</Text> : null}
           </>
         ) : null}
       </ScrollView>}
@@ -327,13 +328,13 @@ export function MoveThingsHereSheet({
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
   const actions = useFocusedSheetActions({ primaryLabel: 'Move here', secondaryLabel: 'Cancel',
     disabled: !canSave, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
-  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Cancel',
+  const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AssetDetailSheets.cancel'),
     disabled: isSaving, onPress: actions.onBack }], 'left');
-  const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Move here',
+  const moveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.AssetDetailSheets.moveHere'),
     emphasis: 'primary', disabled: !canSave, onPress: actions.onApply }]);
   const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false,
     ...cancelOptions, ...moveOptions }), [cancelOptions, moveOptions]);
-  const search = { query: draft?.query ?? '', placeholder: 'Search your inventory',
+  const search = { query: draft?.query ?? '', placeholder: t('mobile.AssetDetailSheets.searchYourInventory'),
     onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
   function toRow(match: ParentLookupResult): MoveSelectionRowModel {
     const row = moveIntoCandidateRow(match);
@@ -348,7 +349,7 @@ export function MoveThingsHereSheet({
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!disabled} />
         : !disabled ? <NativeFilterSearch {...search} /> : null}
       <MoveSelectionList subjectLabel="Destination" subject={draft?.target.title ?? 'This place'}
-        context="Choose an item to move here." title="Items"
+        context="Choose an item to move here." title={t('mobile.AssetDetailSheets.items')}
         statuses={[...moveSelectionStatuses(readOnly, isSaving, candidateStatus),
           ...(candidatesAvailable && draft?.matches.length === 0 ? [{ title: emptyState.title, message: emptyState.message }] : [])]}
         rows={(draft?.matches ?? []).map(toRow)}
@@ -361,9 +362,7 @@ export function MoveThingsHereSheet({
 
 function ActionEligibilityNotice() {
   const styles = useStyles();
-  return <Text accessibilityRole="alert" style={styles.sheetSubtitle}>
-    This item cannot be changed here. Your draft is kept while this screen is open.
-  </Text>;
+  return <Text accessibilityRole="alert" style={styles.sheetSubtitle}>{t('mobile.AssetDetailSheets.thisItemCannotBeChangedHereYourDraftIs')}</Text>;
 }
 
 
@@ -419,8 +418,8 @@ function createStyles(colors: MobileColorPalette) {
 
 function moveSelectionStatuses(readOnly: boolean, isSaving: boolean, candidate?: MoveSelectionStatus): readonly MoveSelectionStatus[] {
   return [
-    ...(readOnly ? [{ message: 'This item cannot be changed here. Your draft is kept while this screen is open.' }] : []),
+    ...(readOnly ? [{ message: t('mobile.AssetDetailSheets.thisItemCannotBeChangedHereYourDraftIs') }] : []),
     ...(candidate ? [{ ...candidate, retry: candidate.retry ? { ...candidate.retry, disabled: readOnly || isSaving } : undefined }] : []),
-    ...(isSaving ? [{ message: 'Moving…' }] : [])
+    ...(isSaving ? [{ message: t('mobile.AssetDetailSheets.moving') }] : [])
   ];
 }

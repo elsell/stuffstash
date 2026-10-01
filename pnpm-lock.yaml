@@ -67,6 +67,9 @@ importers:
       '@stuff-stash/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@stuff-stash/localization':
+        specifier: workspace:*
+        version: link:../../packages/localization
       '@tanstack/react-query':
         specifier: 5.101.4
         version: 5.101.4(react@19.2.0)
@@ -185,6 +188,9 @@ importers:
       '@stuff-stash/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@stuff-stash/localization':
+        specifier: workspace:*
+        version: link:../../packages/localization
       '@sveltejs/adapter-static':
         specifier: 3.0.10
         version: 3.0.10(@sveltejs/kit@2.63.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.2)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)))(svelte@5.56.2)(typescript@5.9.3)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)))
@@ -271,6 +277,8 @@ importers:
       vitest:
         specifier: 4.1.8
         version: 4.1.8(@types/node@24.13.1)(jsdom@29.1.1)(vite@8.0.16(@types/node@24.13.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+
+  packages/localization: {}
 
 packages:
 

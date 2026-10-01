@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   export type AssetFilesError =
     | { operation: 'upload'; message: string }
     | { operation: 'archive'; attachmentId: string; message: string };
@@ -45,7 +46,7 @@
 
 <section class="attachment-section" aria-labelledby={titleId}>
   <div class="section-heading compact">
-    <h2 id={titleId}>Files</h2>
+    <h2 id={titleId}>{t('web.AssetFilesSection.files')}</h2>
     <div class="attachment-upload">
       <Button.Root
         variant="outline"
@@ -53,13 +54,12 @@
         aria-describedby={error?.operation === 'upload' ? errorId : undefined}
         onclick={onChooseFile}
       >
-        <Upload /> Upload file
-      </Button.Root>
+        <Upload /> {t('web.AssetFilesSection.uploadFile')} </Button.Root>
     </div>
   </div>
   {#if error}<p id={errorId} class="denied-note" role="alert">{error.message}</p>{/if}
   {#if loading}
-    <p role="status">Loading files…</p>
+    <p role="status">{t('web.AssetFilesSection.loadingFiles')}</p>
   {:else if status}
     <div class="empty-state">
       <p>{status.message}</p>
@@ -79,15 +79,14 @@
               disabled={!canEdit || saving}
               aria-describedby={error?.operation === 'archive' && error.attachmentId === attachment.id ? errorId : undefined}
               onclick={() => onArchiveAttachment(attachment)}
-            >Archive</Button.Root>
+            >{t('web.AssetFilesSection.archive')}</Button.Root>
             <Button.Root
               href={attachmentDeleteHref(attachment)}
               variant="destructive"
               disabled={!canEdit || saving}
               onclick={(event) => onOpenAttachmentDelete(event, attachment)}
             >
-              <Trash2 /> Delete
-            </Button.Root>
+              <Trash2 /> {t('web.AssetFilesSection.delete')} </Button.Root>
           </div>
         </div>
       {/each}

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { OnboardingPartialSetupError } from '../../application/onboarding/HouseholdSetup';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -126,17 +127,14 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
         <View style={styles.form}>
           <View style={styles.brand}><BrandMark showWordmark /></View>
           <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
-          {invitationPending ? <View style={styles.notice}><Text style={styles.body}>Your invitation is waiting. Sign in to review it.</Text></View> : null}
+          {invitationPending ? <View style={styles.notice}><Text style={styles.body}>{t('mobile.OnboardingScreen.yourInvitationIsWaitingSignInToReviewIt')}</Text></View> : null}
           {connection ? <>
             {input('Server address', apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
-            <Pressable accessibilityRole="button" accessibilityLabel="Need help connecting?"
+            <Pressable accessibilityRole="button" accessibilityLabel={t('mobile.OnboardingScreen.needHelpConnecting')}
               accessibilityState={{ expanded: helpVisible }} onPress={() => setHelpVisible(value => !value)} style={styles.helpAction}>
-              <Text style={styles.helpLink}>Need help connecting?</Text>
+              <Text style={styles.helpLink}>{t('mobile.OnboardingScreen.needHelpConnecting')}</Text>
             </Pressable>
-            {helpVisible ? <View style={styles.help}><Text style={styles.body}>
-              Enter your Stuff Stash server’s full address, including a port or path if needed.
-              {'\n\n'}You’ll need a running Stuff Stash server to connect. If you’re joining someone else’s inventory, ask them for its server address.
-            </Text></View> : null}
+            {helpVisible ? <View style={styles.help}><Text style={styles.body}>{t('mobile.OnboardingScreen.enterYourStuffStashServerSFullAddressIncluding')}{'\n\n'}{t('mobile.OnboardingScreen.youLlNeedARunningStuffStashServerTo')}</Text></View> : null}
           </> : <>
             {household ? input('Household name', householdName, setHouseholdName, 'e.g. Maple Street household') : null}
             {input(household ? 'First inventory' : 'Inventory name', inventoryName, setInventoryName, 'e.g. Home Inventory')}
@@ -144,10 +142,10 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
           {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
           <View style={styles.footer}>
             {requiredMessage ? <Text style={styles.note}>{requiredMessage}</Text> : null}
-            {connection ? <Text style={styles.note}>Your browser will open for sign-in, then bring you back here.</Text> : null}
-            {submitting ? <ActivityIndicator accessibilityLabel="Setup in progress" color={colors.action} /> : null}
+            {connection ? <Text style={styles.note}>{t('mobile.OnboardingScreen.yourBrowserWillOpenForSignInThenBring')}</Text> : null}
+            {submitting ? <ActivityIndicator accessibilityLabel={t('mobile.OnboardingScreen.setupInProgress')} color={colors.action} /> : null}
             <NativeCommandButton label={actionLabel} prominence="primary" disabled={actionDisabled} onPress={() => void proceed()} />
-            {!connection ? <NativeCommandButton label="Sign out and start over" disabled={submitting} onPress={() => void startOver()} /> : null}
+            {!connection ? <NativeCommandButton label={t('mobile.OnboardingScreen.signOutAndStartOver')} disabled={submitting} onPress={() => void startOver()} /> : null}
           </View>
         </View>
       </ScrollView>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Activity from '@lucide/svelte/icons/activity';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -161,13 +162,13 @@
   <div class="settings-panel-heading">
     <Activity aria-hidden="true" />
     <div>
-      <h2 id="settings-activity">Activity</h2>
-      <p>Audit history for authorized tenant and inventory activity.</p>
+      <h2 id="settings-activity">{t('web.InventoryAuditPanel.activity')}</h2>
+      <p>{t('web.InventoryAuditPanel.auditHistoryForAuthorizedTenantAndInventoryActivity')}</p>
     </div>
   </div>
 
   <SegmentedControl
-    label="Audit scope"
+    label={t('web.InventoryAuditPanel.auditScope')}
     value={scope}
     options={scopeOptions}
     onSelect={(value) => selectScope(value as AuditScope)}
@@ -176,7 +177,7 @@
   {#if auditStatus.kind !== 'none'}
     <p class={auditStatus.role === 'alert' ? 'denied-note' : 'muted-note'} role={auditStatus.role}>{auditStatus.message}</p>
   {:else}
-    <div class="audit-list" aria-label="Audit records">
+    <div class="audit-list" aria-label={t('web.InventoryAuditPanel.auditRecords')}>
       {#each auditDayGroups as group}
         <section class="audit-day-group" aria-labelledby={`audit-day-${group.key}`}>
           <h3 class="audit-day-heading" id={`audit-day-${group.key}`}>{group.label}</h3>
@@ -194,7 +195,7 @@
                   <small>{presented.actorLabel}</small>
                   {#if presented.technicalDetails.length > 0}
                     <details class="audit-technical">
-                      <summary>Technical details</summary>
+                      <summary>{t('web.InventoryAuditPanel.technicalDetails')}</summary>
                       <dl>
                         {#each presented.technicalDetails as detail}
                           <div>
@@ -213,13 +214,9 @@
       {/each}
     </div>
     {#if hasBufferedRecords}
-      <Button.Root variant="outline" disabled={busy} onclick={showMoreBufferedRecords}>
-        Show more activity
-      </Button.Root>
+      <Button.Root variant="outline" disabled={busy} onclick={showMoreBufferedRecords}> {t('web.InventoryAuditPanel.showMoreActivity')} </Button.Root>
     {:else if nextCursor}
-      <Button.Root variant="outline" size="sm" disabled={busy} onclick={loadNextPage}>
-        Load older activity
-      </Button.Root>
+      <Button.Root variant="outline" size="sm" disabled={busy} onclick={loadNextPage}> {t('web.InventoryAuditPanel.loadOlderActivity')} </Button.Root>
     {/if}
   {/if}
 </section>

@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type {
 	    Asset,
 	    AssetAttachment,
@@ -230,8 +231,8 @@
   <section class="workspace-main" aria-busy="true">
     <div class="empty-state spacious" role="status" aria-live="polite">
       <LoaderCircle class="size-6 motion-safe:animate-spin motion-reduce:animate-none" aria-hidden="true" />
-      <h1>Loading asset details</h1>
-      <p>Getting the latest details and files.</p>
+      <h1>{t('web.InventoryWorkspaceRouteContent.loadingAssetDetails')}</h1>
+      <p>{t('web.InventoryWorkspaceRouteContent.gettingTheLatestDetailsAndFiles')}</p>
     </div>
   </section>
 {:else if route.mode === 'location' && workspace.selectedLocation}
@@ -333,7 +334,7 @@
   />
 {:else if route.mode === 'import'}
   {#await import('./InventoryImportWorkspace.svelte')}
-    <section class="workspace-main" aria-busy="true"><p role="status">Loading imports…</p></section>
+    <section class="workspace-main" aria-busy="true"><p role="status">{t('web.InventoryWorkspaceRouteContent.loadingImports')}</p></section>
   {:then imported}
   {@const InventoryImportWorkspace = imported.default}
   <InventoryImportWorkspace
@@ -354,7 +355,7 @@
   {/await}
 {:else if route.mode === 'settings'}
   {#await import('./settings/SettingsWorkspace.svelte')}
-    <section class="workspace-main" aria-busy="true"><p role="status">Loading settings…</p></section>
+    <section class="workspace-main" aria-busy="true"><p role="status">{t('web.InventoryWorkspaceRouteContent.loadingSettings')}</p></section>
   {:then imported}
   {@const SettingsWorkspace = imported.default}
   <SettingsWorkspace

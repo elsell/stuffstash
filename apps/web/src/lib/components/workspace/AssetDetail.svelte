@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import {formatAssetExpiration, expirationStatusLabel} from '$lib/application/expirationPresentation';
   import { tick } from 'svelte';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
@@ -650,10 +651,10 @@
 </script>
 
 <section class="workspace-main detail-view" aria-labelledby="asset-title">
-  <Button.Root href={backHref} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> Back</Button.Root>
+  <Button.Root href={backHref} variant="ghost" class="back-button" onclick={openBack}><ArrowLeft /> {t('web.AssetDetail.back')}</Button.Root>
   <Input
     bind:ref={photoInput}
-    aria-label="Choose photo"
+    aria-label={t('web.AssetDetail.choosePhoto')}
     class="visually-hidden"
     type="file"
     accept={imageContentTypes.join(',')}
@@ -662,7 +663,7 @@
   />
   <Input
     bind:ref={fileInput}
-    aria-label="Choose file"
+    aria-label={t('web.AssetDetail.chooseFile')}
     class="visually-hidden"
     type="file"
     accept={mediaPolicy.supportedContentTypes.join(',')}
@@ -699,36 +700,36 @@
 	          </span>
         </div>
         <dl class="detail-list">
-	          {#if asset.expiration}<div><dt>Expiration</dt><dd>{formatAssetExpiration(asset.expiration)}{#if expirationStatusLabel(asset.expirationContext)}<span class="block">{expirationStatusLabel(asset.expirationContext)}</span>{/if}</dd></div>{/if}
-	          <div><dt>Kind</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
-	          <div><dt>Type</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
+	          {#if asset.expiration}<div><dt>{t('web.AssetDetail.expiration')}</dt><dd>{formatAssetExpiration(asset.expiration)}{#if expirationStatusLabel(asset.expirationContext)}<span class="block">{expirationStatusLabel(asset.expirationContext)}</span>{/if}</dd></div>{/if}
+	          <div><dt>{t('web.AssetDetail.kind')}</dt><dd>{assetKindLabel(asset.kind)}</dd></div>
+	          <div><dt>{t('web.AssetDetail.type')}</dt><dd>{asset.customAssetTypeLabel ?? 'Base asset'}</dd></div>
 	          {#if asset.currentCheckout}
-	            <div><dt>Checkout</dt><dd>{new Date(asset.currentCheckout.checkedOutAt).toLocaleString()}</dd></div>
+	            <div><dt>{t('web.AssetDetail.checkout')}</dt><dd>{new Date(asset.currentCheckout.checkedOutAt).toLocaleString()}</dd></div>
 	          {/if}
-	          <div><dt>Updated</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
+	          <div><dt>{t('web.AssetDetail.updated')}</dt><dd>{asset.updatedAt ? new Date(asset.updatedAt).toLocaleString() : 'Not available'}</dd></div>
         </dl>
         <div class="detail-actions">
-          <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> Edit</Button.Root>
+          <Button.Root href={actionHref('edit')} disabled={!actionIsAvailable('edit')} onclick={(event) => openAction(event, 'edit')}><Pencil /> {t('web.AssetDetail.edit')}</Button.Root>
 	          <Button.Root
 	            href={actionHref('move')}
 	            variant="outline"
 	            disabled={!actionIsAvailable('move')}
 	            onclick={(event) => openAction(event, 'move')}
-	          ><MoveRight /> Move</Button.Root>
+	          ><MoveRight /> {t('web.AssetDetail.move')}</Button.Root>
 	          {#if asset.currentCheckout}
 	            <Button.Root
 	              href={actionHref('return')}
 	              variant="outline"
 	              disabled={!actionIsAvailable('return')}
 	              onclick={(event) => openAction(event, 'return')}
-	            ><Undo2 /> Return</Button.Root>
+	            ><Undo2 /> {t('web.AssetDetail.return')}</Button.Root>
 	          {:else}
 	            <Button.Root
 	              href={actionHref('checkout')}
 	              variant="outline"
 	              disabled={!actionIsAvailable('checkout')}
 	              onclick={(event) => openAction(event, 'checkout')}
-	            ><LogOut /> Check out</Button.Root>
+	            ><LogOut /> {t('web.AssetDetail.checkOut')}</Button.Root>
 	          {/if}
           {#if asset.lifecycleState === 'active'}
             <Button.Root
@@ -736,14 +737,14 @@
               variant="outline"
               disabled={!actionIsAvailable('archive')}
               onclick={(event) => openAction(event, 'archive')}
-            ><Archive /> Archive</Button.Root>
+            ><Archive /> {t('web.AssetDetail.archive')}</Button.Root>
           {:else}
             <Button.Root
               href={actionHref('restore')}
               variant="outline"
               disabled={!actionIsAvailable('restore')}
               onclick={(event) => openAction(event, 'restore')}
-            ><RotateCcw /> Restore</Button.Root>
+            ><RotateCcw /> {t('web.AssetDetail.restore')}</Button.Root>
           {/if}
         </div>
         {#if editUnavailableStatus}
@@ -808,10 +809,10 @@
         onNewTagsChange={setNewTags}
       />
     <section class="detail-section" aria-labelledby="asset-description-title">
-      <h2 id="asset-description-title">Details</h2>
+      <h2 id="asset-description-title">{t('web.AssetDetail.details')}</h2>
       <p>{descriptionText}</p>
       {#if detailFieldGroups.populated.length > 0}
-        <dl class="detail-list custom-detail-list" aria-label="Custom field values">
+        <dl class="detail-list custom-detail-list" aria-label={t('web.AssetDetail.customFieldValues')}>
           {#each detailFieldGroups.populated as field}
             <div>
               <dt>{field.displayName}</dt>
@@ -822,10 +823,10 @@
       {/if}
       {#if detailFieldGroups.unset.length > 0}
         <details class="unset-field-disclosure">
-          <summary>Show {detailFieldGroups.unset.length} unset {detailFieldGroups.unset.length === 1 ? 'field' : 'fields'}</summary>
-          <dl class="detail-list custom-detail-list" aria-label="Unset custom fields">
+          <summary>{t('fields.showUnset', { count: detailFieldGroups.unset.length })}</summary>
+          <dl class="detail-list custom-detail-list" aria-label={t('web.AssetDetail.unsetCustomFields')}>
             {#each detailFieldGroups.unset as field}
-              <div><dt>{field.displayName}</dt><dd>Not set</dd></div>
+              <div><dt>{field.displayName}</dt><dd>{t('web.AssetDetail.notSet')}</dd></div>
             {/each}
           </dl>
         </details>
@@ -844,23 +845,23 @@
       {attachmentDeleteHref}
     />
     <section class="detail-section" aria-labelledby="asset-checkout-history-title">
-      <h2 id="asset-checkout-history-title">Checkout history</h2>
+      <h2 id="asset-checkout-history-title">{t('web.AssetDetail.checkoutHistory')}</h2>
       {#if historyLoading}
-        <p role="status">Loading checkout history…</p>
+        <p role="status">{t('web.AssetDetail.loadingCheckoutHistory')}</p>
       {:else if checkoutHistory.length === 0}
-        <p>No checkout history.</p>
+        <p>{t('web.AssetDetail.noCheckoutHistory')}</p>
       {:else}
-        <div class="asset-list compact-list" aria-label="Checkout history">
+        <div class="asset-list compact-list" aria-label={t('web.AssetDetail.checkoutHistory')}>
           {#each checkoutHistory as checkout}
             <div class="history-row">
               <div>
                 <strong>{checkout.state === 'returned' ? 'Returned' : checkout.state === 'undone' ? 'Undone' : 'Checked out'}</strong>
-                <small>{new Date(checkout.checkedOutAt).toLocaleString()} by {checkout.checkedOutByPrincipalId}</small>
+                <small>{t('web.AssetDetail.byFull', { value: new Date(checkout.checkedOutAt).toLocaleString(), checkedOutByPrincipalId: checkout.checkedOutByPrincipalId })}</small>
                 {#if checkout.checkoutDetails}
                   <small>{checkout.checkoutDetails}</small>
                 {/if}
                 {#if checkout.returnedAt}
-                  <small>Returned {new Date(checkout.returnedAt).toLocaleString()} by {checkout.returnedByPrincipalId}</small>
+                  <small>{t('web.AssetDetail.returnedByFull', { value: new Date(checkout.returnedAt).toLocaleString(), returnedByPrincipalId: checkout.returnedByPrincipalId ?? '' })}</small>
                 {/if}
                 {#if checkout.returnDetails}
                   <small>{checkout.returnDetails}</small>
@@ -871,17 +872,17 @@
         </div>
       {/if}
     </section>
-      <div class="danger-zone" aria-label="Danger area">
+      <div class="danger-zone" aria-label={t('web.AssetDetail.dangerArea')}>
         <div>
-          <strong>Permanent deletion</strong>
-          <p>Remove this asset from the inventory permanently.</p>
+          <strong>{t('web.AssetDetail.permanentDeletion')}</strong>
+          <p>{t('web.AssetDetail.removeThisAssetFromTheInventoryPermanently')}</p>
         </div>
         <Button.Root
           href={actionHref('delete')}
           variant="destructive"
           disabled={!actionIsAvailable('delete')}
           onclick={(event) => openAction(event, 'delete')}
-        ><Trash2 /> Delete</Button.Root>
+        ><Trash2 /> {t('web.AssetDetail.delete')}</Button.Root>
       </div>
   </div>
 </section>

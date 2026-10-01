@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
@@ -30,11 +31,11 @@ export function InventoryExportAction({ command, scope }: { readonly command: Ex
     } finally { if (active.current === request) { active.current = undefined; setPending(false); } }
   };
   return <SettingsSection footer="Includes archived items and attachment details. Photo and file contents are not included.">
-    <NativeActionMenu accessibilityLabel="Export inventory" disabled={pending || !focused} trigger={{ kind: 'row', label: 'Export inventory' }} groups={[{ id: 'formats', items: [
-      { id: 'json', label: 'JSON — complete inventory data', systemImage: 'doc', onPress: () => void run('json') },
-      { id: 'csv', label: 'CSV — spreadsheet rows', systemImage: 'tablecells', onPress: () => void run('csv') }
+    <NativeActionMenu accessibilityLabel={t('mobile.InventoryExportAction.exportInventory')} disabled={pending || !focused} trigger={{ kind: 'row', label: t('mobile.InventoryExportAction.exportInventory') }} groups={[{ id: 'formats', items: [
+      { id: 'json', label: t('mobile.InventoryExportAction.jSONCompleteInventoryData'), systemImage: 'doc', onPress: () => void run('json') },
+      { id: 'csv', label: t('mobile.InventoryExportAction.cSVSpreadsheetRows'), systemImage: 'tablecells', onPress: () => void run('csv') }
     ] }]} />
-    {pending ? <><SettingsSeparator /><SettingsLoadingRow label="Preparing export…" /><SettingsActionRow label="Cancel export" onPress={cancel} /></> : null}
-    {error ? <><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorMessage}>{error}</Text><SettingsActionRow label="Retry export" onPress={() => void run(lastFormat.current)} /></> : null}
+    {pending ? <><SettingsSeparator /><SettingsLoadingRow label={t('mobile.InventoryExportAction.preparingExport')} /><SettingsActionRow label={t('mobile.InventoryExportAction.cancelExport')} onPress={cancel} /></> : null}
+    {error ? <><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorMessage}>{error}</Text><SettingsActionRow label={t('mobile.InventoryExportAction.retryExport')} onPress={() => void run(lastFormat.current)} /></> : null}
   </SettingsSection>;
 }

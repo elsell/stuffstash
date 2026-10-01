@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {
   AssetDetailViewModel,
   AssetParentLocationCrumbViewModel
@@ -26,12 +27,12 @@ export type AssetDetailPlacementPresentation = {
 
 export type AssetDetailAvailabilityAction = {
   readonly id: 'check_out' | 'return';
-  readonly label: 'Check out' | 'Return';
+  readonly label: string;
 };
 
 export type AssetDetailMaintenanceAction = {
   readonly id: 'edit' | 'move' | 'add_photos';
-  readonly label: 'Edit' | 'Move' | 'Add photos';
+  readonly label: string;
 };
 
 export type AssetDetailUpdatedMetadata = {
@@ -103,13 +104,13 @@ export function assetDetailPlacement(
   if (crumbs.length === 0) {
     if (asset.isPlacementLoading) {
       return {
-        accessibilityLabel: 'Location loading',
+        accessibilityLabel: t('mobile.AssetDetailPresentation.locationLoading'),
         crumbs,
         fallbackLabel: 'Loading location…'
       };
     }
     return {
-      accessibilityLabel: 'Location No location',
+      accessibilityLabel: t('mobile.AssetDetailPresentation.locationNoLocation'),
       crumbs,
       fallbackLabel: 'No location'
     };
@@ -125,10 +126,10 @@ export function assetDetailAvailabilityAction(
   asset: Pick<AssetDetailViewModel, 'canCheckout' | 'canReturn'>
 ): AssetDetailAvailabilityAction | undefined {
   if (asset.canReturn) {
-    return { id: 'return', label: 'Return' };
+    return { id: 'return', label: t('mobile.AssetDetailPresentation.return') };
   }
   if (asset.canCheckout) {
-    return { id: 'check_out', label: 'Check out' };
+    return { id: 'check_out', label: t('mobile.AssetDetailPresentation.checkOut') };
   }
   return undefined;
 }
@@ -137,9 +138,9 @@ export function assetDetailMaintenanceActions(
   asset: Pick<AssetDetailViewModel, 'canEdit' | 'canMove' | 'canAddPhotos'>
 ): readonly AssetDetailMaintenanceAction[] {
   return [
-    ...(asset.canEdit ? [{ id: 'edit', label: 'Edit' } as const] : []),
-    ...(asset.canMove ? [{ id: 'move', label: 'Move' } as const] : []),
-    ...(asset.canAddPhotos ? [{ id: 'add_photos', label: 'Add photos' } as const] : [])
+    ...(asset.canEdit ? [{ id: 'edit', label: t('mobile.AssetDetailPresentation.edit') } as const] : []),
+    ...(asset.canMove ? [{ id: 'move', label: t('mobile.AssetDetailPresentation.move') } as const] : []),
+    ...(asset.canAddPhotos ? [{ id: 'add_photos', label: t('mobile.AssetDetailPresentation.addPhotos') } as const] : [])
   ];
 }
 
@@ -150,7 +151,7 @@ export function assetDetailExceptionMetadataRows(
   >
 ): readonly AssetDetailMetadataRow[] {
   return [
-    ...(!asset.isActive ? [{ label: 'Lifecycle', value: asset.lifecycleLabel }] : []),
+    ...(!asset.isActive ? [{ label: t('mobile.AssetDetailPresentation.lifecycle'), value: asset.lifecycleLabel }] : []),
 
   ];
 }
@@ -177,13 +178,13 @@ export function assetDetailLocationContext(
   if ('parentLocationTrail' in asset) {
     const placement = assetDetailPlacement(asset);
     return {
-      label: 'Location',
+      label: t('mobile.AssetDetailPresentation.location'),
       value: placement.fallbackLabel ?? placement.crumbs.map((crumb) => crumb.title).join(' / ')
     };
   }
 
   return {
-    label: 'Location',
+    label: t('mobile.AssetDetailPresentation.location'),
     value: asset.locationTrailLabel
   };
 }

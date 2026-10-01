@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useAppFeedback } from '../feedback/AppFeedback';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { usePullRefresh } from './usePullRefresh';
@@ -16,7 +17,7 @@ export function usePullRefreshFeedback({ refresh, resourceKey, failureTitle }: {
     catch {
       if (isCurrent()) feedback.showNotice({
         tone: 'error', title: failureTitle,
-        message: 'Please try refreshing again.'
+        message: t('mobile.usePullRefreshFeedback.pleaseTryRefreshingAgain')
       });
     }
   });

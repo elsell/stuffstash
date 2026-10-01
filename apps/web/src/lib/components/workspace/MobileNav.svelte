@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import Home from '@lucide/svelte/icons/house';
   import Plus from '@lucide/svelte/icons/plus';
@@ -70,7 +71,7 @@
   }
 </script>
 
-<nav class="mobile-nav" aria-label="Mobile navigation">
+<nav class="mobile-nav" aria-label={t('web.MobileNav.mobileNavigation')}>
   {#each navigationItems.slice(0, 2) as destination}
     {@const Icon = destinationIcons[destination.icon]}
     <Button.Root
@@ -86,7 +87,7 @@
     class="mobile-add"
     data-workspace-add-trigger="mobile"
     disabled={!addAvailability.canOpen}
-    aria-label="Add asset"
+    aria-label={t('web.MobileNav.addAsset')}
     aria-describedby={addAvailability.disabledReason ? addDeniedNoteId : undefined}
     onclick={openAdd}
   ><Plus /></Button.Root>

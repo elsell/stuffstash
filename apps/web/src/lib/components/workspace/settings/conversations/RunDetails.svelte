@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { onMount } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import type { ConversationSession } from '$lib/adapters/query/conversationSession';
@@ -39,17 +40,17 @@
     } finally { if (session.active) cancelling = false; }
   }
 </script>
-{#if run.isPending}<p role="status">Loading run…</p>
-{:else if !run.data}<p role="alert">Could not load this run. <Button.Root onclick={() => run.refetch()}>Retry run</Button.Root></p>
-{:else}<section class="run-details" aria-label="Evaluation run">
+{#if run.isPending}<p role="status">{t('web.RunDetails.loadingRun')}</p>
+{:else if !run.data}<p role="alert">{t('web.RunDetails.couldNotLoadThisRun')} <Button.Root onclick={() => run.refetch()}>{t('web.RunDetails.retryRun')}</Button.Root></p>
+{:else}<section class="run-details" aria-label={t('web.RunDetails.evaluationRun')}>
   <h3 aria-live="polite">{names[run.data.state]}</h3>
-  <p>Text-only evaluation. This does not test recording, transcription or spoken playback.</p>
-  <p>{run.data.completedCases} of {run.data.totalCases} cases completed · {run.data.passedCases} passed</p>
-  {#if run.isError}<p role="alert">Status could not be refreshed. Showing the last received result.</p>{/if}
+  <p>{t('web.RunDetails.textOnlyEvaluationThisDoesNotTestRecordingTranscription')}</p>
+  <p>{t('web.RunDetails.ofCasesCompletedPassedFull', { completedCases: run.data.completedCases, totalCases: run.data.totalCases, passedCases: run.data.passedCases })}</p>
+  {#if run.isError}<p role="alert">{t('web.RunDetails.statusCouldNotBeRefreshedShowingTheLastReceived')}</p>{/if}
   {#if pending}<Button.Root variant="outline" disabled={cancelling} onclick={cancel}>{cancelling ? 'Cancelling…' : 'Cancel run'}</Button.Root>{/if}
-  {#if run.data.failureCode}<p role="alert">The run could not finish. Check the configured provider and try again. <span class="failure-code">Reference: {run.data.failureCode}</span></p>{/if}
+  {#if run.data.failureCode}<p role="alert">{t('web.RunDetails.theRunCouldNotFinishCheckTheConfiguredProvider')} <span class="failure-code">{t('web.RunDetails.referenceFull', { failureCode: run.data.failureCode })}</span></p>{/if}
   <ul>{#each run.data.cases as pin (pin.revisionId)}{@const result = run.data.results.find(value => value.caseRevisionId === pin.revisionId)}
-    <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{pending ? 'Not run yet' : 'Not completed'} — no passing result recorded.</p>{/if}</li>
+    <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{t('web.RunDetails.noPassingResultRecordedFull', { value: pending ? 'Not run yet' : 'Not completed' })}</p>{/if}</li>
   {/each}</ul>
   {#if conversationRunHasCompleteResults(run.data)}<RunComparison {session} {runs} current={run.data} />{/if}
   {#if workflows}<RunActivation {session} {workflows} run={run.data} />{/if}

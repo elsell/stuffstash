@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActionOptions';
 import { usePullRefresh } from '../serverState/usePullRefresh';
@@ -106,17 +107,17 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
   }
   const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
-      { kind: 'mark-read', label: 'Mark all read', disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
-      { kind: 'settings', label: 'Reminder settings', onPress: () => { if (mounted.current && focusSession.current) onSettings(); } }
+      { kind: 'mark-read', label: t('mobile.NotificationInboxScreen.markAllRead'), disabled: busy || (!cursor && !rows.some(row => !row.readAt && !locallyRead.has(row.id))), onPress: () => void markAll() },
+      { kind: 'settings', label: t('mobile.NotificationInboxScreen.reminderSettings'), onPress: () => { if (mounted.current && focusSession.current) onSettings(); } }
     ]);
-  const headerOptions = useMemo(() => ({ title: 'Notifications', ...actionOptions }), [actionOptions]);
+  const headerOptions = useMemo(() => ({ title: t('mobile.NotificationInboxScreen.notifications'), ...actionOptions }), [actionOptions]);
   return <>
     <Stack.Screen options={headerOptions} />
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />}>
-    <NativeSegmentedControl colors={colors} value={filter} disabled={busy} segments={[{ label: 'All', value: 'all' }, { label: 'Unread', value: 'unread' }]} onChange={(value) => void load(value)} />
+    <NativeSegmentedControl colors={colors} value={filter} disabled={busy} segments={[{ label: t('mobile.NotificationInboxScreen.all'), value: 'all' }, { label: t('mobile.NotificationInboxScreen.unread'), value: 'unread' }]} onChange={(value) => void load(value)} />
 
     {error ? <View><Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>{button('Retry notifications', () => void load(filter))}</View> : null}
-    {busy && !loaded ? <ActivityIndicator accessibilityLabel="Updating notifications" color={colors.action} /> : null}
+    {busy && !loaded ? <ActivityIndicator accessibilityLabel={t('mobile.NotificationInboxScreen.updatingNotifications')} color={colors.action} /> : null}
     {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.border }]}><Pressable accessibilityRole="button" accessibilityLabel={`Open ${row.title}`} accessibilityValue={{text:`${row.milestone === 'expired' ? 'Expired' : 'Expires'} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}`}} disabled={busy} onPress={() => void open(row)}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {!row.readAt && !locallyRead.has(row.id) ? <View accessibilityElementsHidden style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.action }} /> : null}

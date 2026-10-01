@@ -1,12 +1,11 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { CurrentCheckout } from '$lib/domain/inventory';
 
   let { checkout, compact = false }: { checkout: CurrentCheckout; compact?: boolean } = $props();
 </script>
 
-<span class:compact class="checkout-badge" title={`Checked out ${new Date(checkout.checkedOutAt).toLocaleString()}`}>
-  Checked out
-</span>
+<span class:compact class="checkout-badge" title={`Checked out ${new Date(checkout.checkedOutAt).toLocaleString()}`}> {t('web.CheckoutBadge.checkedOut')} </span>
 
 <style>
   .checkout-badge {

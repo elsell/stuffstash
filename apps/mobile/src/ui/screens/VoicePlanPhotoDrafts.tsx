@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   Alert,
@@ -54,7 +55,7 @@ export function VoicePlanPhotoDraftStrip({
   const styles = createStyles(palette);
   return (
     <View style={styles.planPhotoStrip}>
-      {!readOnly ? <NativeCommandButton label="Add photos" onPress={() => onAddPhotos(commandKey)} /> : null}
+      {!readOnly ? <NativeCommandButton label={t('mobile.VoicePlanPhotoDrafts.addPhotos')} onPress={() => onAddPhotos(commandKey)} /> : null}
       {photos.length > 0 ? (
         <ScrollView
           testID="voice-plan-photo-previews"

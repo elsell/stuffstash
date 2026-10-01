@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -43,7 +44,7 @@ function LoadingHistory() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.action} />
-      <Text style={styles.stateText}>Loading checkout history</Text>
+      <Text style={styles.stateText}>{t('mobile.AssetCheckoutHistorySheet.loadingCheckoutHistory')}</Text>
     </View>
   );
 }
@@ -52,7 +53,7 @@ function ErrorHistory({ message }: { readonly message: string }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load checkout history</Text>
+      <Text style={styles.errorTitle}>{t('mobile.AssetCheckoutHistorySheet.couldNotLoadCheckoutHistory')}</Text>
       <Text style={styles.stateText}>{message}</Text>
     </View>
   );
@@ -89,13 +90,13 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
             {record.returnedLabel ? <Text style={styles.recordFinePrint}>{record.returnedLabel}</Text> : null}
             {record.checkoutDetails ? (
               <View style={styles.detailBlock}>
-                <Text style={styles.detailLabel}>Checkout details</Text>
+                <Text style={styles.detailLabel}>{t('mobile.AssetCheckoutHistorySheet.checkoutDetails')}</Text>
                 <Text style={styles.detailValue}>{record.checkoutDetails}</Text>
               </View>
             ) : null}
             {record.returnDetails ? (
               <View style={styles.detailBlock}>
-                <Text style={styles.detailLabel}>Return details</Text>
+                <Text style={styles.detailLabel}>{t('mobile.AssetCheckoutHistorySheet.returnDetails')}</Text>
                 <Text style={styles.detailValue}>{record.returnDetails}</Text>
               </View>
             ) : null}

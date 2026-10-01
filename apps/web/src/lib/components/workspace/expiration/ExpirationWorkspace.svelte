@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
  import { getContext, onDestroy, untrack, tick } from 'svelte';
  import type { Asset } from '$lib/domain/inventory';
  import { expirationWorkspaceContext, type ExpirationWorkspace, type ExpirationFilter, type ExpirationChoices } from '$lib/ports/expirationRepository';
@@ -35,14 +36,14 @@
  let filtered = $derived(!!(filter.kind || filter.checkoutState || filter.query || filter.typeId || filter.locationId || filter.tagIds?.length || filter.fromDate || filter.throughDate));
  let options = $derived(([['soon','Expiring soon'],['expired','Expired'],['all','All dates']] as const).map(([value,label]) => ({value,label,description:listState.page ? String(listState.page.counts[value]) : undefined,href:workspaceRouteHref(route({...filter,mode:value}),tenantId,inventoryId)})));
 </script>
-<section class="workspace-main expiration-workspace" aria-label="Expiration">
- <header><div><h1>Expiration</h1><p>Review dates for active items across your inventory.</p></div><Button.Root variant="outline" onclick={() => { void refresh(); }} disabled={listState.loading}>Refresh</Button.Root></header>
+<section class="workspace-main expiration-workspace" aria-label={t('web.ExpirationWorkspace.expiration')}>
+ <header><div><h1>{t('web.ExpirationWorkspace.expiration')}</h1><p>{t('web.ExpirationWorkspace.reviewDatesForActiveItemsAcrossYourInventory')}</p></div><Button.Root variant="outline" onclick={() => { void refresh(); }} disabled={listState.loading}>{t('web.ExpirationWorkspace.refresh')}</Button.Root></header>
  {#if workspace}
- <SegmentedControl label="Expiration status" value={filter.mode} {options} onSelect={mode => navigate({...filter,mode:mode as ExpirationFilter['mode']})} />
- <form class="search" onsubmit={event => { event.preventDefault();navigate({...filter,query:query.trim()}); }}><Input aria-label="Search item names and descriptions" placeholder="Search names and descriptions" bind:value={query} /><Button.Root type="submit" variant="outline">Search</Button.Root><Button.Root variant="outline" onclick={() => {filtersOpen=true;if(!choices)void loadChoices();}}>Filters{filtered?' · Active':''}</Button.Root></form>
- {#if filtered}<div class="filter-summary"><span>Filters applied{filter.fromDate ? ` · From ${filter.fromDate}` : ''}{filter.throughDate ? ` · Through ${filter.throughDate}` : ''}</span><Button.Root variant="ghost" onclick={() => navigate({mode:filter.mode})}>Clear filters</Button.Root></div>{/if}
- {#if listState.error}<div role="alert"><p>{listState.error}</p><Button.Root variant="outline" onclick={() => {void refresh();}}>Retry</Button.Root></div>{/if}
- {#if listState.loading && !listState.page}<p role="status" class="empty">Loading expiration dates…</p>{/if}
+ <SegmentedControl label={t('web.ExpirationWorkspace.expirationStatus')} value={filter.mode} {options} onSelect={mode => navigate({...filter,mode:mode as ExpirationFilter['mode']})} />
+ <form class="search" onsubmit={event => { event.preventDefault();navigate({...filter,query:query.trim()}); }}><Input aria-label={t('web.ExpirationWorkspace.searchItemNamesAndDescriptions')} placeholder={t('web.ExpirationWorkspace.searchNamesAndDescriptions')} bind:value={query} /><Button.Root type="submit" variant="outline">{t('web.ExpirationWorkspace.search')}</Button.Root><Button.Root variant="outline" onclick={() => {filtersOpen=true;if(!choices)void loadChoices();}}>{t('web.ExpirationWorkspace.filtersFull', { value: filtered?' · Active':'' })}</Button.Root></form>
+ {#if filtered}<div class="filter-summary"><span>{t('web.ExpirationWorkspace.filtersAppliedFull', { value: filter.fromDate ? ` · From ${filter.fromDate}` : '', value2: filter.throughDate ? ` · Through ${filter.throughDate}` : '' })}</span><Button.Root variant="ghost" onclick={() => navigate({mode:filter.mode})}>{t('web.ExpirationWorkspace.clearFilters')}</Button.Root></div>{/if}
+ {#if listState.error}<div role="alert"><p>{listState.error}</p><Button.Root variant="outline" onclick={() => {void refresh();}}>{t('web.ExpirationWorkspace.retry')}</Button.Root></div>{/if}
+ {#if listState.loading && !listState.page}<p role="status" class="empty">{t('web.ExpirationWorkspace.loadingExpirationDates')}</p>{/if}
  {#if listState.page}
   <ExpirationRefresh assets={listState.page.items} timezone={listState.page.timezone} scope={`${tenantId}/${inventoryId}`} onRefresh={refresh} />
   <ExpirationRows items={listState.page.items} onOpenAsset={openAsset} />
@@ -50,7 +51,7 @@
   {#if listState.page.hasMore}<div class="more"><Button.Root variant="outline" disabled={listState.appending || listState.loading} onclick={() => {void list?.load(tenantId,inventoryId,filter,true);}}>{listState.appending?'Loading…':'Load more'}</Button.Root></div>{/if}
  {/if}
  <ExpirationFilters bind:open={filtersOpen} {filter} {choices} loading={choicesLoading} error={choicesError} onApply={navigate} onRetry={() => {void loadChoices();}} />
- {:else}<p role="alert">Expiration is unavailable in this session.</p>{/if}
+ {:else}<p role="alert">{t('web.ExpirationWorkspace.expirationIsUnavailableInThisSession')}</p>{/if}
 </section>
 <style>
  .expiration-workspace{max-width:64rem;margin:0 auto;min-height:65vh;padding:clamp(1rem,3vw,2.5rem);}header{display:flex;align-items:start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;}h1{font-size:var(--text-title-size);font-weight:600;}header p,.empty p,.filter-summary{color:var(--muted-foreground);} .search{display:flex;gap:.5rem;margin:1.25rem 0 .5rem;flex-wrap:wrap;}.search :global(input){flex:1;min-width:12rem;}.filter-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}.empty{text-align:center;padding:4rem 1rem;} .empty h2{font-weight:600;margin-bottom:.5rem;}.more{display:flex;justify-content:center;padding:2rem;}[role=alert]{padding:1rem 0;}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { createQuery } from '@tanstack/svelte-query';
   import type { ConversationSession } from '$lib/adapters/query/conversationSession';
   import { conversationKey } from '$lib/adapters/query/conversationQueryClient';
@@ -36,40 +37,40 @@
     finally { if (session.active) busy = false; }
   }
 </script>
-<section class="run-setup" aria-label="Set up evaluation">
-  <h3>Set up a test run</h3><p>Test your configured models using saved cases. Household inventory is not changed.</p>
-  <section aria-label="Choose workflow"><h4>Workflow</h4>
-    {#if workflows.isPending}<p role="status">Loading workflows…</p>{:else if workflows.isError}<p role="alert">Could not load workflows. <Button.Root onclick={() => workflows.refetch()}>Retry workflows</Button.Root></p>
-    {:else}<ul>{#each workflows.data.items as value (value.id)}<li><Button.Root variant="outline" disabled={busy} aria-pressed={selectedWorkflow?.id === value.id} onclick={() => chooseWorkflow(value)}>{value.name} · Revision {value.latestRevision}</Button.Root></li>{/each}</ul>
-      {#if !workflows.data.items.length}<p>Save a workflow before running cases.</p>{/if}
-      {#if workflows.data.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { workflowCursor = workflows.data?.pagination.nextCursor ?? undefined; }}>Next workflows</Button.Root>{/if}
-      {#if workflowCursor}<Button.Root disabled={busy} onclick={() => { workflowCursor = undefined; }}>First workflows</Button.Root>{/if}
+<section class="run-setup" aria-label={t('web.RunSetup.setUpEvaluation')}>
+  <h3>{t('web.RunSetup.setUpATestRun')}</h3><p>{t('web.RunSetup.testYourConfiguredModelsUsingSavedCasesHouseholdInventory')}</p>
+  <section aria-label={t('web.RunSetup.chooseWorkflow')}><h4>{t('web.RunSetup.workflow')}</h4>
+    {#if workflows.isPending}<p role="status">{t('web.RunSetup.loadingWorkflows')}</p>{:else if workflows.isError}<p role="alert">{t('web.RunSetup.couldNotLoadWorkflows')} <Button.Root onclick={() => workflows.refetch()}>{t('web.RunSetup.retryWorkflows')}</Button.Root></p>
+    {:else}<ul>{#each workflows.data.items as value (value.id)}<li><Button.Root variant="outline" disabled={busy} aria-pressed={selectedWorkflow?.id === value.id} onclick={() => chooseWorkflow(value)}>{t('web.RunSetup.revisionFull', { name: value.name, latestRevision: value.latestRevision })}</Button.Root></li>{/each}</ul>
+      {#if !workflows.data.items.length}<p>{t('web.RunSetup.saveAWorkflowBeforeRunningCases')}</p>{/if}
+      {#if workflows.data.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { workflowCursor = workflows.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunSetup.nextWorkflows')}</Button.Root>{/if}
+      {#if workflowCursor}<Button.Root disabled={busy} onclick={() => { workflowCursor = undefined; }}>{t('web.RunSetup.firstWorkflows')}</Button.Root>{/if}
     {/if}
-    {#if selectedWorkflow}<p>Selected: {selectedWorkflow.name}</p>
-      <details><summary>Choose a saved revision</summary>
-        {#if history.isPending}<p role="status">Loading revisions…</p>{:else if history.isError}<p role="alert">Could not load revisions. <Button.Root onclick={() => history.refetch()}>Retry revisions</Button.Root></p>
-        {:else}<ul>{#each history.data?.items ?? [] as value (value.id)}<li><Button.Root variant="outline" disabled={busy} aria-pressed={revisionId === value.id} onclick={() => { revisionId = value.id; }}>Revision {value.number} · {value.definition.name}</Button.Root></li>{/each}</ul>
-          {#if history.data?.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { historyCursor = history.data?.pagination.nextCursor ?? undefined; }}>Next revisions</Button.Root>{/if}
-          {#if historyCursor}<Button.Root disabled={busy} onclick={() => { historyCursor = undefined; }}>First revisions</Button.Root>{/if}
+    {#if selectedWorkflow}<p>{t('web.RunSetup.selectedFull', { name: selectedWorkflow.name })}</p>
+      <details><summary>{t('web.RunSetup.chooseASavedRevision')}</summary>
+        {#if history.isPending}<p role="status">{t('web.RunSetup.loadingRevisions')}</p>{:else if history.isError}<p role="alert">{t('web.RunSetup.couldNotLoadRevisions')} <Button.Root onclick={() => history.refetch()}>{t('web.RunSetup.retryRevisions')}</Button.Root></p>
+        {:else}<ul>{#each history.data?.items ?? [] as value (value.id)}<li><Button.Root variant="outline" disabled={busy} aria-pressed={revisionId === value.id} onclick={() => { revisionId = value.id; }}>{t('web.RunSetup.revisionFull2', { number: value.number, name: value.definition.name })}</Button.Root></li>{/each}</ul>
+          {#if history.data?.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { historyCursor = history.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunSetup.nextRevisions')}</Button.Root>{/if}
+          {#if historyCursor}<Button.Root disabled={busy} onclick={() => { historyCursor = undefined; }}>{t('web.RunSetup.firstRevisions')}</Button.Root>{/if}
         {/if}
       </details>
     {/if}
   </section>
-  <section aria-label="Choose test cases"><h4>Test cases</h4>
-    {#if cases.isPending}<p role="status">Loading cases…</p>{:else if cases.isError}<p role="alert">Could not load cases. <Button.Root onclick={() => cases.refetch()}>Retry cases</Button.Root></p>
-    {:else}<ul>{#each cases.data.items as value (value.id)}{@const selected = selectedCases.some(item => item.id === value.id)}<li><Button.Root variant="outline" disabled={busy || (!selected && selectedCases.length >= 100)} aria-pressed={selected} onclick={() => toggleCase(value)}>{value.title} · Revision {value.latestRevision}</Button.Root></li>{/each}</ul>
-      {#if !cases.data.items.length}<p>Save a test case before starting a run.</p>{/if}
-      {#if cases.data.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { caseCursor = cases.data?.pagination.nextCursor ?? undefined; }}>Next cases</Button.Root>{/if}
-      {#if caseCursor}<Button.Root disabled={busy} onclick={() => { caseCursor = undefined; }}>First cases</Button.Root>{/if}
+  <section aria-label={t('web.RunSetup.chooseTestCases')}><h4>{t('web.RunSetup.testCases')}</h4>
+    {#if cases.isPending}<p role="status">{t('web.RunSetup.loadingCases')}</p>{:else if cases.isError}<p role="alert">{t('web.RunSetup.couldNotLoadCases')} <Button.Root onclick={() => cases.refetch()}>{t('web.RunSetup.retryCases')}</Button.Root></p>
+    {:else}<ul>{#each cases.data.items as value (value.id)}{@const selected = selectedCases.some(item => item.id === value.id)}<li><Button.Root variant="outline" disabled={busy || (!selected && selectedCases.length >= 100)} aria-pressed={selected} onclick={() => toggleCase(value)}>{t('web.RunSetup.revisionFull3', { title: value.title, latestRevision: value.latestRevision })}</Button.Root></li>{/each}</ul>
+      {#if !cases.data.items.length}<p>{t('web.RunSetup.saveATestCaseBeforeStartingARun')}</p>{/if}
+      {#if cases.data.pagination.hasMore}<Button.Root disabled={busy} onclick={() => { caseCursor = cases.data?.pagination.nextCursor ?? undefined; }}>{t('web.RunSetup.nextCases')}</Button.Root>{/if}
+      {#if caseCursor}<Button.Root disabled={busy} onclick={() => { caseCursor = undefined; }}>{t('web.RunSetup.firstCases')}</Button.Root>{/if}
     {/if}
-    <h4>{selectedCases.length} selected (up to 100)</h4><ul>{#each selectedCases as value (value.id)}<li>{value.title} · Revision {value.latestRevision} <Button.Root variant="ghost" disabled={busy} onclick={() => toggleCase(value)}>Remove {value.title}</Button.Root></li>{/each}</ul>
+    <h4>{t('web.RunSetup.selectedUpTo100Full', { length: selectedCases.length })}</h4><ul>{#each selectedCases as value (value.id)}<li>{t('web.RunSetup.revisionFull3', { title: value.title, latestRevision: value.latestRevision })} <Button.Root variant="ghost" disabled={busy} onclick={() => toggleCase(value)}>{t('web.RunSetup.removeFull', { title: value.title })}</Button.Root></li>{/each}</ul>
   </section>
-  {#if selectedWorkflow && revision.isPending}<p role="status">Loading selected workflow…</p>{:else if revision.isError}<p role="alert">Could not load the selected revision. <Button.Root onclick={() => revision.refetch()}>Retry selected revision</Button.Root></p>
-  {:else if revision.data}<section aria-label="Run usage"><h4>{revision.data.definition.name} · Revision {revision.data.number}</h4>
-    <p>Per attempt, up to {revision.data.definition.budget.modelCalls * selectedCases.length} model calls across {selectedCases.length} cases; each case has a {revision.data.definition.budget.elapsedSeconds}-second budget. Recovering an interrupted run may add model calls.</p>
-    {#if profiles.isPending}<p role="status">Loading model choices…</p>{:else if profiles.isError}<p role="alert">Could not load configured models. <Button.Root onclick={() => profiles.refetch()}>Retry models</Button.Root></p>
-    {:else}<p>Model: {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? 'Selected profile unavailable' : 'Tenant default model'}</p>{/if}
-    <p>Text-only coverage. Speech input and playback need separate testing.</p>
+  {#if selectedWorkflow && revision.isPending}<p role="status">{t('web.RunSetup.loadingSelectedWorkflow')}</p>{:else if revision.isError}<p role="alert">{t('web.RunSetup.couldNotLoadTheSelectedRevision')} <Button.Root onclick={() => revision.refetch()}>{t('web.RunSetup.retrySelectedRevision')}</Button.Root></p>
+  {:else if revision.data}<section aria-label={t('web.RunSetup.runUsage')}><h4>{t('web.RunSetup.revisionFull4', { name: revision.data.definition.name, number: revision.data.number })}</h4>
+    <p>{t('web.RunSetup.perAttemptUpToModelCallsAcrossCasesFull', { length: revision.data.definition.budget.modelCalls * selectedCases.length, length2: selectedCases.length, elapsedSeconds: revision.data.definition.budget.elapsedSeconds })}</p>
+    {#if profiles.isPending}<p role="status">{t('web.RunSetup.loadingModelChoices')}</p>{:else if profiles.isError}<p role="alert">{t('web.RunSetup.couldNotLoadConfiguredModels')} <Button.Root onclick={() => profiles.refetch()}>{t('web.RunSetup.retryModels')}</Button.Root></p>
+    {:else}<p>{t('web.RunSetup.model')} {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? 'Selected profile unavailable' : 'Tenant default model'}</p>{/if}
+    <p>{t('web.RunSetup.textOnlyCoverageSpeechInputAndPlaybackNeedSeparate')}</p>
   </section>{/if}
   <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? 'Queueing…' : 'Run selected cases'}</Button.Root><p role="status">{message}</p>
 </section>

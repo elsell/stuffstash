@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { Snippet } from 'svelte';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import Search from '@lucide/svelte/icons/search';
@@ -297,8 +298,8 @@
 
 <section class="workspace-main browse-workspace" aria-labelledby="browse-title">
   <header class="browse-heading">
-    <div><h1 id="browse-title">Browse</h1><p>{inventoryName}</p></div>
-    <div class="browse-surface-tabs" role="tablist" aria-label="Browse surface">
+    <div><h1 id="browse-title">{t('web.BrowsePanel.browse')}</h1><p>{inventoryName}</p></div>
+    <div class="browse-surface-tabs" role="tablist" aria-label={t('web.BrowsePanel.browseSurface')}>
       {#each [{ value: 'list', label: 'List' }, { value: 'map', label: 'Map' }] as option}
         <Button.Root href={browseHref({ surface: option.value as BrowseSurface })} id={`browse-surface-${option.value}-tab`} role="tab" tabindex={surface === option.value ? 0 : -1} aria-controls={`browse-${option.value}-panel`} aria-selected={surface === option.value} variant={surface === option.value ? 'secondary' : 'ghost'} onkeydown={(event) => tabKeydown(event, ['list', 'map'], surface, (value) => onStateChange({ surface: value }))} onclick={(event) => changeBrowseState(event, { surface: option.value as BrowseSurface })}>{option.label}</Button.Root>
       {/each}
@@ -310,13 +311,13 @@
     <div class="browse-search-wrap" onfocusout={closeSearchOnBlur}>
       <form class="browse-search" onsubmit={(event) => { event.preventDefault(); searchFocused = false; onSearch(); }}>
         <Search aria-hidden="true" />
-        <Input bind:value={query} aria-label="Search Browse" role="combobox" aria-autocomplete="list" aria-expanded={visibleSuggestions.length > 0} aria-controls={visibleSuggestions.length > 0 ? 'browse-suggestions' : undefined} aria-activedescendant={activeSuggestionIndex >= 0 ? `browse-suggestion-${activeSuggestionIndex}` : undefined} placeholder="Search this inventory" onfocus={() => { searchFocused = true; }} oninput={() => { activeSuggestionIndex = -1; }} onkeydown={searchKeydown} />
-        <Button.Root type="submit" disabled={busy || query.trim().length === 0}>Search</Button.Root>
+        <Input bind:value={query} aria-label={t('web.BrowsePanel.searchBrowse')} role="combobox" aria-autocomplete="list" aria-expanded={visibleSuggestions.length > 0} aria-controls={visibleSuggestions.length > 0 ? 'browse-suggestions' : undefined} aria-activedescendant={activeSuggestionIndex >= 0 ? `browse-suggestion-${activeSuggestionIndex}` : undefined} placeholder={t('web.BrowsePanel.searchThisInventory')} onfocus={() => { searchFocused = true; }} oninput={() => { activeSuggestionIndex = -1; }} onkeydown={searchKeydown} />
+        <Button.Root type="submit" disabled={busy || query.trim().length === 0}>{t('web.BrowsePanel.search')}</Button.Root>
       </form>
       <SearchSuggestions id="browse-suggestions" idPrefix="browse-suggestion" suggestions={visibleSuggestions} activeIndex={activeSuggestionIndex} {query} showEmpty={searchFocused && query.trim().length > 0 && visibleSuggestions.length === 0} assetHref={searchAssetHref} onFocusIndex={(index) => { activeSuggestionIndex = index; }} onSuggestionKeydown={() => {}} onOpen={(event, asset) => { searchFocused = false; open(event, asset); }} />
     </div>
 
-    <div class="browse-scope-tabs" role="tablist" aria-label="Browse scope">
+    <div class="browse-scope-tabs" role="tablist" aria-label={t('web.BrowsePanel.browseScope')}>
       {#each scopes as option}
         <Button.Root href={browseHref({ scope: option.value })} id={`browse-scope-${option.value}-tab`} role="tab" tabindex={scope === option.value ? 0 : -1} aria-controls="browse-results" aria-selected={scope === option.value} variant={scope === option.value ? 'secondary' : 'ghost'} onkeydown={(event) => tabKeydown(event, scopes.map((item) => item.value), scope, (value) => onStateChange({ scope: value }))} onclick={(event) => changeBrowseState(event, { scope: option.value })}>{option.label}</Button.Root>
       {/each}
@@ -324,28 +325,28 @@
 
     {@render expirationRefinement?.()}
     <div class="browse-tools">
-      <Button.Root variant="outline" class="browse-filter-trigger" onclick={() => setFiltersOpen(true)}><SlidersHorizontal aria-hidden="true" /> Filters{filterCount ? ` (${filterCount})` : ''}</Button.Root>
+      <Button.Root variant="outline" class="browse-filter-trigger" onclick={() => setFiltersOpen(true)}><SlidersHorizontal aria-hidden="true" /> {t('web.BrowsePanel.filtersFull', { value: filterCount ? ` (${filterCount})` : '' })}</Button.Root>
       {#if filterOpen}
-        <WorkspaceTaskSheet open title="Filters" description="Limit the assets shown in Browse." dismissible={!filterDirty} onOpenChange={(open) => { if (!open) closeFilters(); }}>
+        <WorkspaceTaskSheet open title={t('web.BrowsePanel.filters')} description={t('web.BrowsePanel.limitTheAssetsShownInBrowse')} dismissible={!filterDirty} onOpenChange={(open) => { if (!open) closeFilters(); }}>
           <div class="browse-filter-popover">
-          <fieldset><legend>Status</legend>{#each lifecycleOptions as option}<Button.Root autofocus={option.value === lifecycleState} variant={draftLifecycleState === option.value ? 'secondary' : 'ghost'} aria-pressed={draftLifecycleState === option.value} onclick={() => { draftLifecycleState = option.value; }}>{option.label}</Button.Root>{/each}</fieldset>
-          <fieldset><legend>Availability</legend>{#each availabilityOptions as option}<Button.Root variant={draftCheckoutState === option.value ? 'secondary' : 'ghost'} aria-pressed={draftCheckoutState === option.value} onclick={() => { draftCheckoutState = option.value; }}>{option.label}</Button.Root>{/each}</fieldset>
-          {#if assetTags.length}<fieldset class="browse-filter-tags"><legend>Tags</legend>{#each [...assetTags].sort((a,b) => compareNaturalText(a.displayName,b.displayName)) as tag}<Button.Root class="browse-filter-chip" variant={draftTagIds.includes(tag.id) ? 'secondary' : 'outline'} aria-pressed={draftTagIds.includes(tag.id)} onclick={() => toggleDraftTag(tag.id)}>{tag.displayName}</Button.Root>{/each}</fieldset>{/if}
+          <fieldset><legend>{t('web.BrowsePanel.status')}</legend>{#each lifecycleOptions as option}<Button.Root autofocus={option.value === lifecycleState} variant={draftLifecycleState === option.value ? 'secondary' : 'ghost'} aria-pressed={draftLifecycleState === option.value} onclick={() => { draftLifecycleState = option.value; }}>{option.label}</Button.Root>{/each}</fieldset>
+          <fieldset><legend>{t('web.BrowsePanel.availability')}</legend>{#each availabilityOptions as option}<Button.Root variant={draftCheckoutState === option.value ? 'secondary' : 'ghost'} aria-pressed={draftCheckoutState === option.value} onclick={() => { draftCheckoutState = option.value; }}>{option.label}</Button.Root>{/each}</fieldset>
+          {#if assetTags.length}<fieldset class="browse-filter-tags"><legend>{t('web.BrowsePanel.tags')}</legend>{#each [...assetTags].sort((a,b) => compareNaturalText(a.displayName,b.displayName)) as tag}<Button.Root class="browse-filter-chip" variant={draftTagIds.includes(tag.id) ? 'secondary' : 'outline'} aria-pressed={draftTagIds.includes(tag.id)} onclick={() => toggleDraftTag(tag.id)}>{tag.displayName}</Button.Root>{/each}</fieldset>{/if}
           </div>
-          {#snippet footer()}<Button.Root variant="ghost" onclick={() => { draftLifecycleState = 'active'; draftCheckoutState = 'any'; draftTagIds = []; }}>Reset</Button.Root><Button.Root variant="outline" onclick={closeFilters}>Cancel</Button.Root><Button.Root onclick={applyFilters}>Apply filters</Button.Root>{/snippet}
+          {#snippet footer()}<Button.Root variant="ghost" onclick={() => { draftLifecycleState = 'active'; draftCheckoutState = 'any'; draftTagIds = []; }}>{t('web.BrowsePanel.reset')}</Button.Root><Button.Root variant="outline" onclick={closeFilters}>{t('web.BrowsePanel.cancel')}</Button.Root><Button.Root onclick={applyFilters}>{t('web.BrowsePanel.applyFilters')}</Button.Root>{/snippet}
         </WorkspaceTaskSheet>
       {/if}
-      <div class="browse-sort" role="group" aria-label="Sort Browse"><ArrowUpDown aria-hidden="true" /> <span>Sort</span><Button.Root href={query.trim() ? undefined : browseHref({ sort: 'updated_desc' })} variant={sort === 'updated_desc' ? 'secondary' : 'ghost'} aria-pressed={sort === 'updated_desc'} disabled={query.trim().length > 0} onclick={(event) => changeBrowseState(event, { sort: 'updated_desc' })}>Recently changed</Button.Root><Button.Root href={query.trim() ? undefined : browseHref({ sort: 'id_asc' })} variant={sort === 'id_asc' ? 'secondary' : 'ghost'} aria-pressed={sort === 'id_asc'} disabled={query.trim().length > 0} onclick={(event) => changeBrowseState(event, { sort: 'id_asc' })}>Default order</Button.Root></div>
-      {#if query.trim()}<small id="browse-sort-note" class="browse-sort-note">Results are ordered by search relevance.</small>{/if}
-      <span class="browse-shown-count">{filteredAssets.length} shown</span>
-      {#if busy && filteredAssets.length > 0}<small class="browse-updating" role="status">Updating…</small>{/if}
+      <div class="browse-sort" role="group" aria-label={t('web.BrowsePanel.sortBrowse')}><ArrowUpDown aria-hidden="true" /> <span>{t('web.BrowsePanel.sort')}</span><Button.Root href={query.trim() ? undefined : browseHref({ sort: 'updated_desc' })} variant={sort === 'updated_desc' ? 'secondary' : 'ghost'} aria-pressed={sort === 'updated_desc'} disabled={query.trim().length > 0} onclick={(event) => changeBrowseState(event, { sort: 'updated_desc' })}>{t('web.BrowsePanel.recentlyChanged')}</Button.Root><Button.Root href={query.trim() ? undefined : browseHref({ sort: 'id_asc' })} variant={sort === 'id_asc' ? 'secondary' : 'ghost'} aria-pressed={sort === 'id_asc'} disabled={query.trim().length > 0} onclick={(event) => changeBrowseState(event, { sort: 'id_asc' })}>{t('web.BrowsePanel.defaultOrder')}</Button.Root></div>
+      {#if query.trim()}<small id="browse-sort-note" class="browse-sort-note">{t('web.BrowsePanel.resultsAreOrderedBySearchRelevance')}</small>{/if}
+      <span class="browse-shown-count">{t('web.BrowsePanel.shownFull', { length: filteredAssets.length })}</span>
+      {#if busy && filteredAssets.length > 0}<small class="browse-updating" role="status">{t('web.BrowsePanel.updating')}</small>{/if}
     </div>
 
     {#if appliedFilters.length}
-      <div class="browse-applied-filters" aria-label="Applied filters">{#each appliedFilters as filter}<Button.Root variant="secondary" aria-label={`Remove ${filter.label}`} onclick={() => removeFilter(filter.key)}>{filter.label}<span aria-hidden="true">×</span></Button.Root>{/each}{#if filterCount > 1}<Button.Root variant="ghost" onclick={() => onStateChange({ lifecycleState: 'active', checkoutState: 'any', selectedTagIds: [] })}>Clear all</Button.Root>{/if}</div>
+      <div class="browse-applied-filters" aria-label={t('web.BrowsePanel.appliedFilters')}>{#each appliedFilters as filter}<Button.Root variant="secondary" aria-label={`Remove ${filter.label}`} onclick={() => removeFilter(filter.key)}>{filter.label}<span aria-hidden="true">×</span></Button.Root>{/each}{#if filterCount > 1}<Button.Root variant="ghost" onclick={() => onStateChange({ lifecycleState: 'active', checkoutState: 'any', selectedTagIds: [] })}>{t('web.BrowsePanel.clearAll')}</Button.Root>{/if}</div>
     {/if}
-    {#if error && filteredAssets.length === 0}<div class="empty-state spacious" role="alert"><h2>Browse failed</h2><p>{error}</p><Button.Root onclick={onRetry}>Try again</Button.Root></div>
-    {:else if busy && filteredAssets.length === 0}<div class="empty-state spacious" role="status"><h2>Loading inventory…</h2></div>
+    {#if error && filteredAssets.length === 0}<div class="empty-state spacious" role="alert"><h2>{t('web.BrowsePanel.browseFailed')}</h2><p>{error}</p><Button.Root onclick={onRetry}>{t('web.BrowsePanel.tryAgain')}</Button.Root></div>
+    {:else if busy && filteredAssets.length === 0}<div class="empty-state spacious" role="status"><h2>{t('web.BrowsePanel.loadingInventory')}</h2></div>
     {:else if filteredAssets.length === 0}
       <div class="empty-state spacious">
         <h2>{emptyPresentation.title}</h2>
@@ -353,12 +354,12 @@
         {#if emptyPresentation.kind === 'inventory'}
           {#if emptyPresentation.showCreateActions}
             <div class="empty-state-actions">
-              <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId)} onclick={(event) => openAdd(event, 'item')}>Add item</Button.Root>
-              <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'location' }, tenantId, inventoryId)} variant="outline" onclick={(event) => openAdd(event, 'location')}>Add location</Button.Root>
+              <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'item' }, tenantId, inventoryId)} onclick={(event) => openAdd(event, 'item')}>{t('web.BrowsePanel.addItem')}</Button.Root>
+              <Button.Root href={workspaceRouteHref({ action: 'add', addKind: 'location' }, tenantId, inventoryId)} variant="outline" onclick={(event) => openAdd(event, 'location')}>{t('web.BrowsePanel.addLocation')}</Button.Root>
             </div>
           {/if}
         {:else if emptyPresentation.showClearSearch}
-          <Button.Root variant="outline" onclick={clearSearch}>Clear search</Button.Root>
+          <Button.Root variant="outline" onclick={clearSearch}>{t('web.BrowsePanel.clearSearch')}</Button.Root>
         {/if}
       </div>
     {:else}
@@ -374,22 +375,22 @@
         {/each}
       </div>
       {#if hasMore}<div class="browse-load-more"><Button.Root disabled={loadingMore} onclick={onLoadMore}>{loadingMore ? 'Loading…' : 'Load more'}</Button.Root></div>{/if}
-      {#if error && filteredAssets.length > 0}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>Try again</Button.Root></div>{/if}
+      {#if error && filteredAssets.length > 0}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>{t('web.BrowsePanel.tryAgain')}</Button.Root></div>{/if}
     {/if}
     </div>
   {:else}
     <div id="browse-map-panel" role="tabpanel" aria-labelledby="browse-surface-map-tab" class="containment-map">
       {#if busy && mapAssets.length === 0}
-        <div class="empty-state spacious" role="status"><h2>Loading map…</h2></div>
+        <div class="empty-state spacious" role="status"><h2>{t('web.BrowsePanel.loadingMap')}</h2></div>
       {:else}
-      {#if busy}<small class="browse-updating" role="status">Updating map…</small>{/if}
-      {#if error}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>Try map again</Button.Root></div>{/if}
+      {#if busy}<small class="browse-updating" role="status">{t('web.BrowsePanel.updatingMap')}</small>{/if}
+      {#if error}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>{t('web.BrowsePanel.tryMapAgain')}</Button.Root></div>{/if}
       <div class="containment-map-toolbar">
-        <nav class="containment-breadcrumb" aria-label="Containment path"><Button.Root variant="ghost" onclick={() => { mapPathIds = []; }}>Inventory root</Button.Root>{#each mapPathIds as assetId, index}<span>/</span><Button.Root variant="ghost" onclick={() => { mapPathIds = mapPathIds.slice(0, index + 1); }}>{mapAssets.find((asset) => asset.id === assetId)?.title}</Button.Root>{/each}</nav>
-        <div class="containment-jump"><Search aria-hidden="true" /><Input bind:value={mapQuery} aria-label="Jump to a place or container" role="combobox" aria-autocomplete="list" aria-expanded={mapMatches.length > 0} aria-controls={mapMatches.length > 0 ? 'map-jump-results' : undefined} aria-activedescendant={mapActiveIndex >= 0 ? `map-jump-option-${mapActiveIndex}` : undefined} placeholder="Jump to…" onkeydown={mapSearchKeydown} />{#if mapMatches.length}<div id="map-jump-results" class="containment-jump-results" role="listbox" aria-label="Map jump results">{#each mapMatches as asset, index}<Button.Root id={`map-jump-option-${index}`} role="option" aria-selected={mapActiveIndex === index} variant="ghost" onfocus={() => { mapActiveIndex = index; }} onkeydown={(event) => mapMatchKeydown(event, index)} onclick={() => revealMapMatch(asset)}>{asset.title}<small>{assetKindLabel(asset.kind)}</small></Button.Root>{/each}</div>{/if}</div>
+        <nav class="containment-breadcrumb" aria-label={t('web.BrowsePanel.containmentPath')}><Button.Root variant="ghost" onclick={() => { mapPathIds = []; }}>{t('web.BrowsePanel.inventoryRoot')}</Button.Root>{#each mapPathIds as assetId, index}<span>/</span><Button.Root variant="ghost" onclick={() => { mapPathIds = mapPathIds.slice(0, index + 1); }}>{mapAssets.find((asset) => asset.id === assetId)?.title}</Button.Root>{/each}</nav>
+        <div class="containment-jump"><Search aria-hidden="true" /><Input bind:value={mapQuery} aria-label={t('web.BrowsePanel.jumpToAPlaceOrContainer')} role="combobox" aria-autocomplete="list" aria-expanded={mapMatches.length > 0} aria-controls={mapMatches.length > 0 ? 'map-jump-results' : undefined} aria-activedescendant={mapActiveIndex >= 0 ? `map-jump-option-${mapActiveIndex}` : undefined} placeholder={t('web.BrowsePanel.jumpTo')} onkeydown={mapSearchKeydown} />{#if mapMatches.length}<div id="map-jump-results" class="containment-jump-results" role="listbox" aria-label={t('web.BrowsePanel.mapJumpResults')}>{#each mapMatches as asset, index}<Button.Root id={`map-jump-option-${index}`} role="option" aria-selected={mapActiveIndex === index} variant="ghost" onfocus={() => { mapActiveIndex = index; }} onkeydown={(event) => mapMatchKeydown(event, index)} onclick={() => revealMapMatch(asset)}>{asset.title}<small>{assetKindLabel(asset.kind)}</small></Button.Root>{/each}</div>{/if}</div>
       </div>
-      {#if selectedMapAsset}<aside class="containment-inspector" aria-label="Selected map asset"><AssetThumb asset={selectedMapAsset} size="md" /><div><strong>{selectedMapAsset.title}</strong><small>{assetKindLabel(selectedMapAsset.kind)} · {selectedMapAsset.lifecycleState}</small></div><Button.Root href={searchAssetHref(selectedMapAsset)} onclick={(event) => open(event, selectedMapAsset)}>Open</Button.Root></aside>{/if}
-      <div class:root-only={mapColumns.length === 1} class="containment-columns">{#each mapColumns as column, columnIndex}<section aria-label={column.title}><h2>{column.title}</h2>{#each column.assets.slice(0, mapColumnLimit(column.parentId)) as asset}<Button.Root variant={mapPathIds[columnIndex] === asset.id ? 'secondary' : 'ghost'} class="containment-node" onclick={() => openMapNode(asset, columnIndex)}><span class="containment-node-kind" aria-hidden="true"><KindIcon kind={asset.kind} /></span><span><strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} /><small>{assetKindLabel(asset.kind)}</small></span></Button.Root>{/each}{#if column.assets.length === 0}<p class="muted">Nothing is contained here.</p>{:else if column.assets.length > mapColumnLimit(column.parentId)}<Button.Root variant="outline" class="containment-show-more" onclick={() => showMoreMapNodes(column.parentId)}>Show next {Math.min(100, column.assets.length - mapColumnLimit(column.parentId))}</Button.Root><p class="muted" role="status">{mapColumnLimit(column.parentId)} of {column.assets.length} shown</p>{/if}</section>{/each}</div>
+      {#if selectedMapAsset}<aside class="containment-inspector" aria-label={t('web.BrowsePanel.selectedMapAsset')}><AssetThumb asset={selectedMapAsset} size="md" /><div><strong>{selectedMapAsset.title}</strong><small>{assetKindLabel(selectedMapAsset.kind)} · {selectedMapAsset.lifecycleState}</small></div><Button.Root href={searchAssetHref(selectedMapAsset)} onclick={(event) => open(event, selectedMapAsset)}>{t('web.BrowsePanel.open')}</Button.Root></aside>{/if}
+      <div class:root-only={mapColumns.length === 1} class="containment-columns">{#each mapColumns as column, columnIndex}<section aria-label={column.title}><h2>{column.title}</h2>{#each column.assets.slice(0, mapColumnLimit(column.parentId)) as asset}<Button.Root variant={mapPathIds[columnIndex] === asset.id ? 'secondary' : 'ghost'} class="containment-node" onclick={() => openMapNode(asset, columnIndex)}><span class="containment-node-kind" aria-hidden="true"><KindIcon kind={asset.kind} /></span><span><strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} /><small>{assetKindLabel(asset.kind)}</small></span></Button.Root>{/each}{#if column.assets.length === 0}<p class="muted">{t('web.BrowsePanel.nothingIsContainedHere')}</p>{:else if column.assets.length > mapColumnLimit(column.parentId)}<Button.Root variant="outline" class="containment-show-more" onclick={() => showMoreMapNodes(column.parentId)}>{t('web.BrowsePanel.showNextFull', { value: Math.min(100, column.assets.length - mapColumnLimit(column.parentId)) })}</Button.Root><p class="muted" role="status">{t('web.BrowsePanel.ofShownFull', { value: mapColumnLimit(column.parentId), length: column.assets.length })}</p>{/if}</section>{/each}</div>
       {/if}
     </div>
   {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import FileText from '@lucide/svelte/icons/file-text';
   import Image from '@lucide/svelte/icons/image';
@@ -56,29 +57,29 @@
   <Card.Header>
     <ImportFlowStepper current="connect" {availableSteps} {onNavigateStep} />
     <Card.Title>{sourceChoice === 'homebox_live' ? 'Connect to Homebox' : 'Upload Homebox CSV'}</Card.Title>
-    <Card.Description>Stuff Stash will verify the source and build a preview.</Card.Description>
+    <Card.Description>{t('web.ImportSourceSetup.stuffStashWillVerifyTheSourceAndBuildA')}</Card.Description>
   </Card.Header>
   <Card.Content class="import-source-setup-content">
     {#if sourceChoice === 'homebox_live'}
       <div class="setup-grid">
         <div class="setup-fields">
           <div class="field-stack">
-            <Label.Root for="homebox-url">Homebox URL</Label.Root>
+            <Label.Root for="homebox-url">{t('web.ImportSourceSetup.homeboxURL')}</Label.Root>
             <Input.Root
               id="homebox-url"
               bind:value={baseUrl}
-              placeholder="homebox.example.com or http://homebox.local:3100"
+              placeholder={t('web.ImportSourceSetup.homeboxExampleComOrHttpHomeboxLocal3100')}
               autocomplete="url"
               autocapitalize="none"
               autocorrect="off"
               inputmode="url"
               spellcheck={false}
             />
-            <small class="field-note">Explicit http:// and https:// URLs are preserved. Schemeless hosts try https:// first.</small>
+            <small class="field-note">{t('web.ImportSourceSetup.explicitHttpAndHttpsURLsArePreservedSchemelessHosts')}</small>
           </div>
           <div class="field-grid">
             <div class="field-stack">
-              <Label.Root for="homebox-user">Email</Label.Root>
+              <Label.Root for="homebox-user">{t('web.ImportSourceSetup.email')}</Label.Root>
               <Input.Root
                 id="homebox-user"
                 type="email"
@@ -91,7 +92,7 @@
               />
             </div>
             <div class="field-stack">
-              <Label.Root for="homebox-password">Password</Label.Root>
+              <Label.Root for="homebox-password">{t('web.ImportSourceSetup.password')}</Label.Root>
               <Input.Root
                 id="homebox-password"
                 type="password"
@@ -105,32 +106,32 @@
           </div>
           <Label.Root class="import-check-row">
             <Checkbox.Root bind:checked={includeImages} />
-            <span>Import photos when Homebox provides them</span>
+            <span>{t('web.ImportSourceSetup.importPhotosWhenHomeboxProvidesThem')}</span>
           </Label.Root>
           <details class="advanced-options">
-            <summary>Connection options</summary>
+            <summary>{t('web.ImportSourceSetup.connectionOptions')}</summary>
             <div class="advanced-option-list">
               <Label.Root class="import-check-row">
                 <Checkbox.Root bind:checked={allowPrivateNetwork} />
-                <span>Allow private-network Homebox URL</span>
+                <span>{t('web.ImportSourceSetup.allowPrivateNetworkHomeboxURL')}</span>
               </Label.Root>
               <Label.Root class="import-check-row">
                 <Checkbox.Root bind:checked={allowInsecureTLS} />
-                <span>Allow self-signed TLS certificate</span>
+                <span>{t('web.ImportSourceSetup.allowSelfSignedTLSCertificate')}</span>
               </Label.Root>
             </div>
           </details>
         </div>
-        <div class="connection-summary" aria-label="Connection summary">
-          <span><Server size={16} aria-hidden="true" />Live Homebox API</span>
-          <span><LockKeyhole size={16} aria-hidden="true" />Credentials are encrypted for preview and import</span>
+        <div class="connection-summary" aria-label={t('web.ImportSourceSetup.connectionSummary')}>
+          <span><Server size={16} aria-hidden="true" />{t('web.ImportSourceSetup.liveHomeboxAPI')}</span>
+          <span><LockKeyhole size={16} aria-hidden="true" />{t('web.ImportSourceSetup.credentialsAreEncryptedForPreviewAndImport')}</span>
           <span><Image size={16} aria-hidden="true" />{includeImages ? 'Photos will be imported' : 'Photos will be skipped'}</span>
         </div>
       </div>
     {:else}
       <div class="setup-grid">
         <div class="field-stack">
-          <Label.Root for="homebox-csv">Homebox CSV export</Label.Root>
+          <Label.Root for="homebox-csv">{t('web.ImportSourceSetup.homeboxCSVExport')}</Label.Root>
           <Input.Root
             id="homebox-csv"
             type="file"
@@ -141,14 +142,14 @@
             onchange={onFileSelected}
           />
           {#if csvSelection}
-            <small class="field-note">{csvSelection.name} · {Math.max(1, Math.round(csvSelection.size / 1024))} KB · photos are not included in CSV exports</small>
+            <small class="field-note">{t('web.ImportSourceSetup.kBPhotosAreNotIncludedInCSVExportsFull', { name: csvSelection.name, value: Math.max(1, Math.round(csvSelection.size / 1024)) })}</small>
           {:else}
-            <small class="field-note">CSV files must be 10 MiB or smaller. Homebox CSV exports do not include photos.</small>
+            <small class="field-note">{t('web.ImportSourceSetup.cSVFilesMustBe10MiBOrSmallerHomebox')}</small>
           {/if}
         </div>
-        <div class="connection-summary" aria-label="CSV import summary">
-          <span><FileText size={16} aria-hidden="true" />CSV snapshot</span>
-          <span><Image size={16} aria-hidden="true" />Photos unavailable</span>
+        <div class="connection-summary" aria-label={t('web.ImportSourceSetup.cSVImportSummary')}>
+          <span><FileText size={16} aria-hidden="true" />{t('web.ImportSourceSetup.cSVSnapshot')}</span>
+          <span><Image size={16} aria-hidden="true" />{t('web.ImportSourceSetup.photosUnavailable')}</span>
         </div>
       </div>
     {/if}
@@ -162,7 +163,7 @@
           busyLabel={sourceChoice === 'homebox_live' ? 'Confirming connection' : 'Preparing preview'}
         />
       </Button.Root>
-      <Button.Root variant="outline" onclick={onBack} disabled={busy}>Back</Button.Root>
+      <Button.Root variant="outline" onclick={onBack} disabled={busy}>{t('web.ImportSourceSetup.back')}</Button.Root>
     </div>
   </Card.Content>
 </Card.Root>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { completeSignIn } from '$lib/auth';
@@ -40,9 +41,7 @@
       <Button.Root href="/" class="callback-action" style="min-height: 48px" size="lg">{failure.actionLabel}</Button.Root>
     {:else}
       <p class="callback-progress" role="status" aria-live="polite">
-        <LoaderCircle class="callback-spinner" aria-hidden="true" />
-        Confirming session
-      </p>
+        <LoaderCircle class="callback-spinner" aria-hidden="true" /> {t('web.page.confirmingSession')} </p>
     {/if}
   </div>
 </AuthSurface>

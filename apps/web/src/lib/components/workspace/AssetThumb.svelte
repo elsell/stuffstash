@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import ImageOff from '@lucide/svelte/icons/image-off';
   import { getContext, hasContext } from 'svelte';
   import type { Asset } from '$lib/domain/inventory';
@@ -20,10 +21,10 @@
 {#snippet fallback(unavailable: boolean)}
   <KindIcon kind={asset.kind} />
   {#if unavailable}
-    <span class="photo-unavailable-mark" aria-hidden="true" title="Photo unavailable">
+    <span class="photo-unavailable-mark" aria-hidden="true" title={t('web.AssetThumb.photoUnavailable')}>
       <ImageOff aria-hidden="true" />
     </span>
-    <span class="visually-hidden">Photo unavailable</span>
+    <span class="visually-hidden">{t('web.AssetThumb.photoUnavailable')}</span>
   {/if}
 {/snippet}
 

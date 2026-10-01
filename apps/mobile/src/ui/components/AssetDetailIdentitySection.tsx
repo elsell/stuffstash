@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from './NativeCommandButton';
 import { AssetExpirationStatus } from './AssetExpirationStatus';
 import { StyleSheet, Text, View } from 'react-native';
@@ -45,7 +46,7 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
 
       {showPlacement ? <View style={styles.contextRow}>
         <View style={styles.contextText}>
-        <Text style={styles.placementLabel}>Location</Text>
+        <Text style={styles.placementLabel}>{t('mobile.AssetDetailIdentitySection.location')}</Text>
         {placement.crumbs.length > 0 && onParentLocationPress ? (
           <AssetBreadcrumbTrail
             palette={palette}
@@ -63,7 +64,7 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
       </View> : null}
 
       <View style={styles.contextRow}><AssetDetailAvailabilityStatus asset={asset} />
-        {asset.kind !== 'location' && asset.canReturn && onReturn ? <NativeCommandButton label="Return" disabled={isActionPending} onPress={onReturn} /> : null}
+        {asset.kind !== 'location' && asset.canReturn && onReturn ? <NativeCommandButton label={t('mobile.AssetDetailIdentitySection.return')} disabled={isActionPending} onPress={onReturn} /> : null}
       </View>
 
       {exceptionRows.length > 0 ? (
@@ -87,8 +88,8 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
 function AssetDetailAvailabilityStatus({ asset }: { readonly asset: AssetDetailViewModel }) {
   const styles = createStyles(useAppearanceAwarePalette());
   if (asset.kind === 'location') return null;
-  return <View accessibilityLabel="Availability" style={styles.contextText}>
-    <Text style={styles.placementLabel}>Availability</Text>
+  return <View accessibilityLabel={t('mobile.AssetDetailIdentitySection.availability')} style={styles.contextText}>
+    <Text style={styles.placementLabel}>{t('mobile.AssetDetailIdentitySection.availability')}</Text>
     <Text style={styles.placementFallback}>{asset.checkoutLabel}</Text>
     {asset.checkoutActorLabel ? <Text style={styles.classification}>{asset.checkoutActorLabel}</Text> : null}
   </View>;

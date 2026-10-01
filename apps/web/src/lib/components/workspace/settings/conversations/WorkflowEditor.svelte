@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Label from '$lib/components/ui/label/index.js';
   import { onDestroy, tick } from 'svelte';
   import { ConversationFailure } from '$lib/domain/conversation';
@@ -28,8 +29,8 @@
   let alive = true;
   onDestroy(() => { alive = false; });
   const budgets = [
-    { key: 'toolCalls', label: 'Tool calls per turn' }, { key: 'modelCalls', label: 'Model calls per turn' },
-    { key: 'elapsedSeconds', label: 'Processing time per turn (seconds)' }, { key: 'followUpTurns', label: 'Follow-up turns' }
+    { key: 'toolCalls', label: t('web.WorkflowEditor.toolCallsPerTurn') }, { key: 'modelCalls', label: t('web.WorkflowEditor.modelCallsPerTurn') },
+    { key: 'elapsedSeconds', label: t('web.WorkflowEditor.processingTimePerTurnSeconds') }, { key: 'followUpTurns', label: t('web.WorkflowEditor.followUpTurns') }
   ] as const;
   async function save(event: SubmitEvent) {
     event.preventDefault();
@@ -54,20 +55,20 @@
 </script>
 
 <form class="conversation-editor" onsubmit={save}>
-  <header><h2>Workflow settings</h2><p>Choose a model and give it guidance for your inventory. Saving creates a draft.</p></header>
-  <Label.Root class="grid gap-2 text-sm">Workflow name<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
-  <WorkflowSelect id="provider-model" label="Model profile" value={draft.providerProfileId ?? ''}
+  <header><h2>{t('web.WorkflowEditor.workflowSettings')}</h2><p>{t('web.WorkflowEditor.chooseAModelAndGiveItGuidanceForYour')}</p></header>
+  <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.workflowName')}<Input.Root name="name" bind:value={draft.name} required disabled={saving || disabled} /></Label.Root>
+  <WorkflowSelect id="provider-model" label={t('web.WorkflowEditor.modelProfile')} value={draft.providerProfileId ?? ''}
     disabled={saving || disabled}
     options={[{ value: '', label: 'Tenant default model' }, ...providers.map(provider => ({ value: provider.id, label: provider.name })),
       ...(draft.providerProfileId && !providers.some(provider => provider.id === draft.providerProfileId) ? [{ value: draft.providerProfileId, label: 'Saved profile (currently unavailable)' }] : [])]}
     onChange={value => { draft.providerProfileId = value || null; }} />
-  <Label.Root class="grid gap-2 text-sm">Additional instructions<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
-  <details><summary>Conversation limits</summary>
+  <Label.Root class="grid gap-2 text-sm">{t('web.WorkflowEditor.additionalInstructions')}<Textarea.Root name="instructions" bind:value={draft.instructions} disabled={saving || disabled} rows={3} /></Label.Root>
+  <details><summary>{t('web.WorkflowEditor.conversationLimits')}</summary>
     <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving || disabled} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
-    <p class="help">Call and processing limits apply to each turn. Time spent waiting for you does not count. Follow-up turns limit the conversation. Values must fit your server’s configured maximums.</p>
+    <p class="help">{t('web.WorkflowEditor.callAndProcessingLimitsApplyToEachTurnTime')}</p>
   </details>
   <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save draft'}</Button.Root>
-    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>Load latest to compare</Button.Root>{/if}
+    {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.WorkflowEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p bind:this={errorSummary} tabindex="-1" role={invalid ? "alert" : "status"} aria-live="polite">{message}</p>
 </form>

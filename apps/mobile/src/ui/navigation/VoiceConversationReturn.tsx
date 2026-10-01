@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { router, usePathname } from 'expo-router';
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { useVoiceInteractionState } from './VoiceInteractionStateContext';
@@ -13,7 +14,7 @@ export function VoiceConversationReturn() {
   const review = state.stage === 'review';
   return <Pressable accessibilityRole="button" accessibilityLabel={review ? 'Review ready. Return to conversation' : 'Return to conversation'}
     onPress={() => router.navigate('/voice')} style={[styles.accessory, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-    <Text style={{ color: colors.action, fontWeight: '600' }}>{review ? 'Review ready · ' : ''}Return to conversation</Text>
+    <Text style={{ color: colors.action, fontWeight: '600' }}>{review ? 'Review ready · ' : ''}{t('mobile.VoiceConversationReturn.returnToConversation')}</Text>
   </Pressable>;
 }
 const styles = StyleSheet.create({ accessory: { minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' } });

@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { CustomAssetType, AssetExpiration, AssetAttachment, AssetTag, AssetTagDraft, AssetViewModel, CustomFieldDefinition, ParentTargetViewModel } from '$lib/domain/inventory';
 
   export type AssetDetailPanel = 'none' | 'edit' | 'move' | 'archive' | 'restore' | 'delete' | 'checkout' | 'return' | 'attachment-delete';
@@ -121,19 +122,19 @@
 </script>
 
 {#if panel === 'edit'}
-  <WorkspaceTaskSheet open title="Edit asset" description="Update the name, details, fields, and tags." busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close edit" initialFocusSelector="#edit-asset-title" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.editAsset')} description={t('web.AssetDetailActionPanel.updateTheNameDetailsFieldsAndTags')} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close edit" initialFocusSelector="#edit-asset-title" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
-      <Label for="edit-asset-title">Name</Label>
+      <Label for="edit-asset-title">{t('web.AssetDetailActionPanel.name')}</Label>
       <Input id="edit-asset-title" bind:value={title} />
     </div>
     <div class="field-stack">
-      <Label for="edit-asset-description">Description</Label>
+      <Label for="edit-asset-description">{t('web.AssetDetailActionPanel.description')}</Label>
       <Textarea id="edit-asset-description" bind:value={description} />
     </div>
     {#if !asset.customAssetTypeId && customAssetTypes.some((type) => type.lifecycleState === 'active')}
       <fieldset>
-        <legend>Custom type</legend>
-        <ChoiceGrid label="Custom asset type" options={[{ value: '', label: 'Base asset' }, ...customAssetTypes.filter((type) => type.lifecycleState === 'active').map((type) => ({ value: type.id, label: type.displayName }))]} selectedValues={[customAssetTypeId ?? '']} onSelect={onCustomTypeSelect} />
+        <legend>{t('web.AssetDetailActionPanel.customType')}</legend>
+        <ChoiceGrid label={t('web.AssetDetailActionPanel.customAssetType')} options={[{ value: '', label: 'Base asset' }, ...customAssetTypes.filter((type) => type.lifecycleState === 'active').map((type) => ({ value: type.id, label: type.displayName }))]} selectedValues={[customAssetTypeId ?? '']} onSelect={onCustomTypeSelect} />
       </fieldset>
     {/if}
     {#if expirationEnabled}
@@ -141,26 +142,26 @@
         <ExpirationField id="edit-asset-expiration" initialValue={asset.expiration} onChange={onExpirationChange} />
       {/key}
     {:else if asset.expiration}
-      <p>Expiration: {asset.expiration.date}. Tracking is disabled for this type.</p>
-      {#if expiration}<Button.Root type="button" variant="ghost" onclick={() => onExpirationChange(undefined, true)}>Clear expiration</Button.Root>{/if}
+      <p>{t('web.AssetDetailActionPanel.expirationTrackingIsDisabledForThisTypeFull', { date: asset.expiration.date })}</p>
+      {#if expiration}<Button.Root type="button" variant="ghost" onclick={() => onExpirationChange(undefined, true)}>{t('web.AssetDetailActionPanel.clearExpiration')}</Button.Root>{/if}
     {/if}
     {#if populatedFields.length > 0}
       <CustomFieldControls
         fields={populatedFields}
         values={customFieldValues}
         idPrefix="edit-custom-field"
-        label="Details"
+        label={t('web.AssetDetailActionPanel.details')}
         onValueChange={onCustomFieldValueChange}
       />
     {/if}
     {#if emptyFields.length > 0}
       <details class="edit-empty-fields">
-        <summary>Show {emptyFields.length} empty {emptyFields.length === 1 ? 'field' : 'fields'}</summary>
+        <summary>{t('fields.showEmpty', { count: emptyFields.length })}</summary>
         <CustomFieldControls
           fields={emptyFields}
           values={customFieldValues}
           idPrefix="edit-custom-field"
-          label="Empty details"
+          label={t('web.AssetDetailActionPanel.emptyDetails')}
           onValueChange={onCustomFieldValueChange}
         />
       </details>
@@ -176,8 +177,8 @@
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
     {#snippet footer()}
-      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !taskDirty} onclick={() => { void onSave(); }}>Save</Button.Root>
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>
+      <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !taskDirty} onclick={() => { void onSave(); }}>{t('web.AssetDetailActionPanel.save')}</Button.Root>
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'move'}
@@ -195,69 +196,69 @@
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
     {#snippet footer()}
-      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving || !taskDirty} onclick={() => { void onSave(); }}>Move</Button.Root>
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>
+      <Button.Root disabled={saving || !taskDirty} onclick={() => { void onSave(); }}>{t('web.AssetDetailActionPanel.move')}</Button.Root>
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'archive'}
-  <WorkspaceConfirmationDialog open title="Archive asset" description={`Move ${asset.title} out of active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.archiveAsset')} description={`Move ${asset.title} out of active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
-    {#snippet action()}<Button.Root variant="outline" disabled={saving} onclick={() => { void onArchive(); }}>Archive</Button.Root>{/snippet}
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="outline" disabled={saving} onclick={() => { void onArchive(); }}>{t('web.AssetDetailActionPanel.archive')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'restore'}
-  <WorkspaceConfirmationDialog open title="Restore asset" description={`Return ${asset.title} to active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.restoreAsset')} description={`Return ${asset.title} to active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
-    {#snippet action()}<Button.Root disabled={saving} onclick={() => { void onRestore(); }}>Restore</Button.Root>{/snippet}
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root disabled={saving} onclick={() => { void onRestore(); }}>{t('web.AssetDetailActionPanel.restore')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'delete'}
-  <WorkspaceConfirmationDialog open title="Delete asset" description={`Delete ${asset.title} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAsset')} description={`Delete ${asset.title} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
-    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>Delete</Button.Root>{/snippet}
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>{t('web.AssetDetailActionPanel.delete')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'checkout'}
-  <WorkspaceTaskSheet open title="Check out asset" description={`${asset.title} will stay in its home location and be marked as checked out.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close check out" initialFocusSelector="#checkout-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.checkOutAsset')} description={`${asset.title} will stay in its home location and be marked as checked out.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close check out" initialFocusSelector="#checkout-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
-      <Label for="checkout-asset-details">Details</Label>
-      <Textarea id="checkout-asset-details" bind:value={checkoutDetails} placeholder="Optional: using at desk, loaned to Sam" />
+      <Label for="checkout-asset-details">{t('web.AssetDetailActionPanel.details')}</Label>
+      <Textarea id="checkout-asset-details" bind:value={checkoutDetails} placeholder={t('web.AssetDetailActionPanel.optionalUsingAtDeskLoanedToSam')} />
     </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
     {#snippet footer()}
-      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>Check out</Button.Root>
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onCheckout(); }}>{t('web.AssetDetailActionPanel.checkOut')}</Button.Root>
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'return'}
-  <WorkspaceTaskSheet open title="Return asset" description={`Mark ${asset.title} as returned.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close return" initialFocusSelector="#return-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.returnAsset')} description={`Mark ${asset.title} as returned.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close return" initialFocusSelector="#return-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
-      <Label for="return-asset-details">Details</Label>
-      <Textarea id="return-asset-details" bind:value={checkoutDetails} placeholder="Optional: back in bin, returned by Alex" />
+      <Label for="return-asset-details">{t('web.AssetDetailActionPanel.details')}</Label>
+      <Textarea id="return-asset-details" bind:value={checkoutDetails} placeholder={t('web.AssetDetailActionPanel.optionalBackInBinReturnedByAlex')} />
     </div>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
     {#snippet footer()}
-      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>
-      <Button.Root disabled={saving} onclick={() => { void onReturn(); }}>Return</Button.Root>
+      <Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>
+      <Button.Root disabled={saving} onclick={() => { void onReturn(); }}>{t('web.AssetDetailActionPanel.return')}</Button.Root>
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'attachment-delete' && selectedAttachment}
-  <WorkspaceConfirmationDialog open title="Delete attachment" description={`Delete ${selectedAttachment.fileName} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAttachment')} description={`Delete ${selectedAttachment.fileName} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
-    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>Cancel</Button.Root>{/snippet}
-    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDeleteAttachment(); }}>Delete</Button.Root>{/snippet}
+    {#snippet cancel()}<Button.Root href={detailHref} variant="outline" disabled={saving} onclick={onClose}>{t('web.AssetDetailActionPanel.cancel')}</Button.Root>{/snippet}
+    {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDeleteAttachment(); }}>{t('web.AssetDetailActionPanel.delete')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {/if}
 

@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { Asset, AssetTag, AssetViewModel } from '$lib/domain/inventory';
 
   export type ContainedAssetWorkspaceProps = {
@@ -135,13 +136,13 @@
   aria-label={`${target.title} contents`}
 >
   {#if canAddHere || canMoveHere}
-    <div class="contained-spatial-actions" aria-label="Spatial actions">
+    <div class="contained-spatial-actions" aria-label={t('web.ContainedAssetWorkspace.spatialActions')}>
       {#if canAddHere}
         <Button.Root
           href={addItemHereHref(target)}
           data-workspace-add-return-focus={target.kind === 'location' ? 'location-item' : `container-item-${target.id}`}
           onclick={openAdd}
-        ><Plus /> Add item here</Button.Root>
+        ><Plus /> {t('web.ContainedAssetWorkspace.addItemHere')}</Button.Root>
       {/if}
       {#if canMoveHere}
         <Button.Root
@@ -150,26 +151,26 @@
           data-workspace-move-here-trigger
           variant="outline"
           onclick={openMove}
-        ><MoveRight /> Move items here</Button.Root>
+        ><MoveRight /> {t('web.ContainedAssetWorkspace.moveItemsHere')}</Button.Root>
       {/if}
     </div>
   {/if}
   {#if target.lifecycleState === 'active' && !canAddHere && !saving}
-    <p class="denied-note" role="note">Adding items is unavailable for this inventory.{canEdit ? '' : ' Moving items is also unavailable.'}</p>
+    <p class="denied-note" role="note">{t('web.ContainedAssetWorkspace.addingItemsIsUnavailableForThisInventoryFull', { value: canEdit ? '' : ' Moving items is also unavailable.' })}</p>
   {/if}
 
   {#if moveHereOpen}
-    <WorkspaceTaskSheet open title="Move items here" description={`Choose one item, container, or place to move into ${target.title}.`} busy={saving} dismissible={!selectedCandidate} closeHref={assetDetailHref(target)} closeLabel="Close move items here" initialFocusSelector="#move-here-search" onCloseLink={closeMove} onOpenChange={(open) => { if (!open) onCloseMoveHere(); }} onCloseAutoFocus={(event) => { if (moveTrigger?.isConnected) { event.preventDefault(); moveTrigger.focus(); } }}>
+    <WorkspaceTaskSheet open title={t('web.ContainedAssetWorkspace.moveItemsHere')} description={`Choose one item, container, or place to move into ${target.title}.`} busy={saving} dismissible={!selectedCandidate} closeHref={assetDetailHref(target)} closeLabel="Close move items here" initialFocusSelector="#move-here-search" onCloseLink={closeMove} onOpenChange={(open) => { if (!open) onCloseMoveHere(); }} onCloseAutoFocus={(event) => { if (moveTrigger?.isConnected) { event.preventDefault(); moveTrigger.focus(); } }}>
       <div class="field-stack">
-        <Label for="move-here-search">Find an asset</Label>
+        <Label for="move-here-search">{t('web.ContainedAssetWorkspace.findAnAsset')}</Label>
         <div class="relative">
           <Search class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input class="pl-9" id="move-here-search" bind:value={moveQuery} placeholder="Search by name or current place" />
+          <Input class="pl-9" id="move-here-search" bind:value={moveQuery} placeholder={t('web.ContainedAssetWorkspace.searchByNameOrCurrentPlace')} />
         </div>
       </div>
-      <p class="visually-hidden" aria-live="polite">{candidatePage.totalCount} eligible {candidatePage.totalCount === 1 ? 'asset' : 'assets'}</p>
+      <p class="visually-hidden" aria-live="polite">{t('web.ContainedAssetWorkspace.eligibleFull', { totalCount: candidatePage.totalCount, value: candidatePage.totalCount === 1 ? 'asset' : 'assets' })}</p>
       {#if candidatePage.candidates.length > 0}
-        <div class="grid gap-2" data-move-here-candidates role="group" aria-label="Eligible assets">
+        <div class="grid gap-2" data-move-here-candidates role="group" aria-label={t('web.ContainedAssetWorkspace.eligibleAssets')}>
           {#each candidatePage.candidates as candidate (candidate.id)}
             <Button.Root
               variant={candidate.id === selectedCandidateId ? 'secondary' : 'ghost'}
@@ -189,23 +190,23 @@
           {/each}
         </div>
         {#if candidatePage.hasMore}
-          <Button.Root variant="ghost" onclick={() => { showAllCandidates = true; }}>Show all {candidatePage.totalCount}</Button.Root>
+          <Button.Root variant="ghost" onclick={() => { showAllCandidates = true; }}>{t('web.ContainedAssetWorkspace.showAllFull', { totalCount: candidatePage.totalCount })}</Button.Root>
         {/if}
       {:else}
         <div class="empty-state compact">
           <h3>{moveQuery.trim() ? 'No matching movable assets' : 'Everything eligible is already here'}</h3>
           <p>{moveQuery.trim() ? 'Try another name or current place.' : 'Search after adding or moving something elsewhere.'}</p>
           {#if moveQuery.trim()}
-            <Button.Root variant="outline" onclick={() => { moveQuery = ''; }}>Clear search</Button.Root>
+            <Button.Root variant="outline" onclick={() => { moveQuery = ''; }}>{t('web.ContainedAssetWorkspace.clearSearch')}</Button.Root>
           {/if}
         </div>
       {/if}
       {#if selectedCandidate}
-        <p class="move-here-preview">Move <strong>{selectedCandidate.title}</strong> into <strong>{target.title}</strong>.</p>
+        <p class="move-here-preview">{t('web.ContainedAssetWorkspace.move')} <strong>{selectedCandidate.title}</strong> {t('web.ContainedAssetWorkspace.into')} <strong>{target.title}</strong>.</p>
       {/if}
       {#if saveError}<p class="denied-note" role="alert">{saveError}</p>{/if}
       {#snippet footer()}
-        <Button.Root href={assetDetailHref(target)} variant="outline" disabled={saving} onclick={closeMove}>Cancel</Button.Root>
+        <Button.Root href={assetDetailHref(target)} variant="outline" disabled={saving} onclick={closeMove}>{t('web.ContainedAssetWorkspace.cancel')}</Button.Root>
         <Button.Root disabled={!selectedCandidate || saving} onclick={() => { void confirmMove(); }}>
           {selectedCandidate ? `Move ${selectedCandidate.title} here` : 'Choose an asset'}
         </Button.Root>
@@ -215,8 +216,8 @@
 
   {#if showContentsSearch}
     <div class="field-stack contained-contents-search">
-      <Label for={`contents-search-${target.id}`}>Search contents</Label>
-      <Input id={`contents-search-${target.id}`} bind:value={contentsQuery} placeholder="Search this place" />
+      <Label for={`contents-search-${target.id}`}>{t('web.ContainedAssetWorkspace.searchContents')}</Label>
+      <Input id={`contents-search-${target.id}`} bind:value={contentsQuery} placeholder={t('web.ContainedAssetWorkspace.searchThisPlace')} />
     </div>
   {/if}
 
@@ -224,7 +225,7 @@
     <section class="contained-section" aria-labelledby={`contained-${target.id}-${section.key}`}>
       <div class="contained-section-heading">
         <h2 id={`contained-${target.id}-${section.key}`}>{section.heading}</h2>
-        <span>{section.assets.length} {section.countNoun}{section.assets.length === 1 ? '' : 's'}</span>
+        <span>{t(section.countNoun === 'asset' ? 'assets.count' : section.countNoun === 'space' ? 'spaces.count' : 'items.count', { count: section.assets.length })}</span>
       </div>
       {#if section.assets.length > 0}
         <div class="contained-asset-list">
@@ -256,7 +257,7 @@
         <div class="empty-state compact">
           <h3>{contentsQuery.trim() ? `No matching ${section.key}` : section.emptyTitle}</h3>
           <p>{contentsQuery.trim() ? 'Try another name or path.' : section.emptyMessage}</p>
-          {#if contentsQuery.trim()}<Button.Root variant="outline" onclick={() => { contentsQuery = ''; }}>Clear search</Button.Root>{/if}
+          {#if contentsQuery.trim()}<Button.Root variant="outline" onclick={() => { contentsQuery = ''; }}>{t('web.ContainedAssetWorkspace.clearSearch')}</Button.Root>{/if}
         </div>
       {/if}
     </section>

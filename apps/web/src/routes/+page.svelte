@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { BrowserConversationTransport } from '$lib/adapters/realtime/browserConversationTransport';
   import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
   import { InventoryExportClient } from '@stuff-stash/api-client';
@@ -175,14 +176,14 @@
 </script>
 
 <svelte:head>
-  <title>Stuff Stash</title>
+  <title>{t('web.page.stuffStash')}</title>
 </svelte:head>
 
 {#if loading}
   <main class="loading-shell">
     <Card.Root>
       <Card.Content>
-        <p class="muted">Loading Stuff Stash...</p>
+        <p class="muted">{t('web.page.loadingStuffStash')}</p>
       </Card.Content>
     </Card.Root>
   </main>

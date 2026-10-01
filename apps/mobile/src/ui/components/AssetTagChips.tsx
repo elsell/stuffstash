@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { AssetTagViewModel } from '../../application/assets/AssetViewModels';
@@ -24,7 +25,7 @@ export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress
   }
 
   return (
-    <View accessibilityLabel="Asset tags" style={[styles.tagRow, layout.compactRow ? styles.compactTagRow : null]}>
+    <View accessibilityLabel={t('mobile.AssetTagChips.assetTags')} style={[styles.tagRow, layout.compactRow ? styles.compactTagRow : null]}>
       {presentation.visibleTags.map((tag) => {
         const colorStyle = assetTagChipStylePresentation(tag);
         return (

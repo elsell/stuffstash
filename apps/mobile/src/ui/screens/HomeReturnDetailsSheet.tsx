@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View, type TextInputProps } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -24,14 +25,12 @@ export function HomeReturnDetailsSheet({ pendingReturn, canReturn, onCancel, onC
         scrollToOverflowEnabled={Platform.OS === 'ios'}
         keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
         <Text style={[styles.asset, { color: colors.textMuted }]}>{pendingReturn.asset.title}</Text>
-        {!canReturn ? <Text accessibilityRole="alert" style={{ color: colors.textMuted }}>
-          Your access changed. The item is already returned. You can close this sheet, but cannot save details or cancel the return.
-        </Text> : null}
+        {!canReturn ? <Text accessibilityRole="alert" style={{ color: colors.textMuted }}>{t('mobile.HomeReturnDetailsSheet.yourAccessChangedTheItemIsAlreadyReturnedYou')}</Text> : null}
         {pendingReturn.error ? <ReturnDetailsError error={pendingReturn.error} color={colors.danger}
           onReveal={() => scroll.current?.scrollTo({ y: Platform.OS === 'ios' ? -headerHeight : 0, animated: false })} /> : null}
-        {!pendingReturn.undoableOperationId ? <Text style={{ color: colors.textMuted }}>This return cannot be canceled.</Text> : null}
-        <Text style={{ color: colors.text }}>Optional return details</Text>
-        <ReturnNoteInput key={pendingReturn.sessionId} accessibilityLabel="Optional return details" multiline editable={canReturn && !busy}
+        {!pendingReturn.undoableOperationId ? <Text style={{ color: colors.textMuted }}>{t('mobile.HomeReturnDetailsSheet.thisReturnCannotBeCanceled')}</Text> : null}
+        <Text style={{ color: colors.text }}>{t('mobile.HomeReturnDetailsSheet.optionalReturnDetails')}</Text>
+        <ReturnNoteInput key={pendingReturn.sessionId} accessibilityLabel={t('mobile.HomeReturnDetailsSheet.optionalReturnDetails')} multiline editable={canReturn && !busy}
           initialValue={pendingReturn.details} onChangeText={onChangeDetails} textAlignVertical="top"
           style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.controlBorder }]} />
         <View style={styles.actions}>
@@ -63,7 +62,7 @@ function ReturnDetailsError({ error, color, onReveal }: {
     if (revealed.current) return;
     revealed.current = true;
     onReveal();
-  }}><Text accessibilityLabel="Return details error" accessibilityRole="alert" style={{ color }}>
+  }}><Text accessibilityLabel={t('mobile.HomeReturnDetailsSheet.returnDetailsError')} accessibilityRole="alert" style={{ color }}>
     <Text>{error.title}</Text>{'\n'}{error.message}
   </Text></View>;
 }

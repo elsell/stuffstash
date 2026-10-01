@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import './settings-management.css';
   import { inventoryExportContext } from '$lib/ports/inventoryExport';
   import type { ExportInventory } from '$lib/application/exportInventory';
@@ -53,21 +54,21 @@
 
 {#if route.settingsLevel === 'overview'}
   <section class="workspace-main settings-management" aria-labelledby="settings-management-title">
-    <header class="settings-management-heading"><h1 id="settings-management-title">Settings</h1><p>Choose what you want to configure.</p></header>
-    <SettingsDestinationList label="Settings levels" destinations={settingsOverviewDestinations({ tenant, inventory })} {onNavigate} />
+    <header class="settings-management-heading"><h1 id="settings-management-title">{t('web.SettingsWorkspace.settings')}</h1><p>{t('web.SettingsWorkspace.chooseWhatYouWantToConfigure')}</p></header>
+    <SettingsDestinationList label={t('web.SettingsWorkspace.settingsLevels')} destinations={settingsOverviewDestinations({ tenant, inventory })} {onNavigate} />
   </section>
 {:else if route.settingsLevel === 'account'}
   <section class="workspace-main settings-management" aria-labelledby="account-settings-title">
-    <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> Settings</Button.Root>
-    <header class="settings-management-heading"><p class="settings-eyebrow">Account and app</p><h1 id="account-settings-title">Account</h1><p>{principal.email ?? 'Signed-in account'}</p></header>
-    <dl class="settings-readonly-details"><div><dt>Profile editing</dt><dd>Not available</dd></div><div><dt>App</dt><dd>Stuff Stash web</dd></div></dl>
+    <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> {t('web.SettingsWorkspace.settings')}</Button.Root>
+    <header class="settings-management-heading"><p class="settings-eyebrow">{t('web.SettingsWorkspace.accountAndApp')}</p><h1 id="account-settings-title">{t('web.SettingsWorkspace.account')}</h1><p>{principal.email ?? 'Signed-in account'}</p></header>
+    <dl class="settings-readonly-details"><div><dt>{t('web.SettingsWorkspace.profileEditing')}</dt><dd>{t('web.SettingsWorkspace.notAvailable')}</dd></div><div><dt>{t('web.SettingsWorkspace.app')}</dt><dd>{t('web.SettingsWorkspace.stuffStashWeb')}</dd></div></dl>
   </section>
 {:else if !tenant || (route.settingsLevel === 'inventory' && !inventory)}
-  <section class="workspace-main settings-management"><div class="settings-collection-state" role="alert"><h1>Settings unavailable</h1><p>The selected settings context is not available to this account.</p><Button.Root href="/settings" onclick={(event) => navigate(event, '/settings')}>Back to Settings</Button.Root></div></section>
+  <section class="workspace-main settings-management"><div class="settings-collection-state" role="alert"><h1>{t('web.SettingsWorkspace.settingsUnavailable')}</h1><p>{t('web.SettingsWorkspace.theSelectedSettingsContextIsNotAvailableToThis')}</p><Button.Root href="/settings" onclick={(event) => navigate(event, '/settings')}>{t('web.SettingsWorkspace.backToSettings')}</Button.Root></div></section>
 {:else if !route.settingsCollection}
   <section class="workspace-main settings-management" aria-labelledby="settings-level-title">
-    <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> Settings</Button.Root>
-    <header class="settings-management-heading"><p class="settings-eyebrow">{levelLabel}</p><h1 id="settings-level-title">{levelTitle}</h1>{#if inventory}<p>{inventory.name} belongs to {tenant.name}.</p>{:else}<p>Settings shared with this tenant’s inventories.</p>{/if}</header>
+    <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> {t('web.SettingsWorkspace.settings')}</Button.Root>
+    <header class="settings-management-heading"><p class="settings-eyebrow">{levelLabel}</p><h1 id="settings-level-title">{levelTitle}</h1>{#if inventory}<p>{t('web.SettingsWorkspace.belongsToFull', { name: inventory.name, name2: tenant.name })}</p>{:else}<p>{t('web.SettingsWorkspace.settingsSharedWithThisTenantSInventories')}</p>{/if}</header>
     <SettingsDestinationList label={`${levelTitle} settings`} destinations={route.settingsLevel === 'tenant' ? tenantSettingsDestinations(tenant) : inventorySettingsDestinations(inventory!)} {onNavigate} />
     {#if route.settingsLevel === 'inventory' && inventory && exportCommand}
       {#key JSON.stringify([principal.id, tenant.id, inventory.id])}
@@ -97,7 +98,7 @@
     {:else if route.settingsCollection === 'activity' && inventory}
       <InventoryAuditPanel {tenant} {inventory} {repository} scope={route.auditScope} onScopeChange={(scope) => onNavigate(activityHref(scope))} />
     {:else}
-      <div class="settings-collection-state" role="alert"><h1>Section unavailable</h1><p>This settings section is not available in the selected context.</p></div>
+      <div class="settings-collection-state" role="alert"><h1>{t('web.SettingsWorkspace.sectionUnavailable')}</h1><p>{t('web.SettingsWorkspace.thisSettingsSectionIsNotAvailableInTheSelected')}</p></div>
     {/if}
   </div>
 {/if}

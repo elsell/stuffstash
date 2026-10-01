@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { DetailPhoto } from '$lib/application/workspaceAssetMedia';
 
   export const PHOTO_UPLOAD_DISABLED_REASON_ID = 'asset-photo-upload-disabled';
@@ -50,7 +51,7 @@
 </script>
 
 <div class="asset-detail-hero">
-  <div class="asset-photo-panel" aria-label="Asset photos">
+  <div class="asset-photo-panel" aria-label={t('web.AssetDetailHero.assetPhotos')}>
     <div class="asset-hero-photo">
       {#if heroPhoto}
         <img src={heroPhoto.url} alt={heroPhoto.alt} />
@@ -67,8 +68,7 @@
         aria-describedby={uploadDescribedBy || undefined}
         onclick={onChoosePhoto}
       >
-        <Image /> Add photo
-      </Button.Root>
+        <Image /> {t('web.AssetDetailHero.addPhoto')} </Button.Root>
       {#if heroPhoto && removePhotoHref}
         <Button.Root
           href={removePhotoHref}
@@ -76,18 +76,18 @@
           aria-label={`Remove photo ${heroPhoto.fileName}`}
           title={`Remove ${heroPhoto.fileName}`}
           onclick={onRemovePhoto}
-        ><Trash2 /> Remove photo</Button.Root>
+        ><Trash2 /> {t('web.AssetDetailHero.removePhoto')}</Button.Root>
       {/if}
     </div>
   </div>
   {@render children?.()}
   {#if photos.length > 0 || uploadDisabledReason || uploadError || uploadBusy || retryPhotoName}
-  <div class="photo-gallery-section" aria-label="Asset photo gallery">
+  <div class="photo-gallery-section" aria-label={t('web.AssetDetailHero.assetPhotoGallery')}>
     {#if uploadDisabledReason}
       <p id={PHOTO_UPLOAD_DISABLED_REASON_ID} class="denied-note" role="note">{uploadDisabledReason}</p>
     {/if}
     {#if photos.length > 0}
-      <div class="photo-rail" aria-label="Photos">
+      <div class="photo-rail" aria-label={t('web.AssetDetailHero.photos')}>
         {#each photos as photo}
           <Button.Root
             variant="ghost"
@@ -98,7 +98,7 @@
           >
             <img src={photo.url} alt="" />
             {#if photo.isPrimary}
-              <span>Primary</span>
+              <span>{t('web.AssetDetailHero.primary')}</span>
             {/if}
           </Button.Root>
         {/each}
@@ -108,9 +108,9 @@
       <p id={PHOTO_UPLOAD_ERROR_ID} class="denied-note" role="alert">{uploadError}</p>
     {/if}
     {#if uploadBusy}
-      <p class="photo-upload-status" role="status">Uploading photo…</p>
+      <p class="photo-upload-status" role="status">{t('web.AssetDetailHero.uploadingPhoto')}</p>
     {:else if retryPhotoName}
-      <Button.Root variant="outline" aria-label={`Retry ${retryPhotoName}`} onclick={onRetryPhoto}>Retry {retryPhotoName}</Button.Root>
+      <Button.Root variant="outline" aria-label={`Retry ${retryPhotoName}`} onclick={onRetryPhoto}>{t('web.AssetDetailHero.retryFull', { retryPhotoName: retryPhotoName })}</Button.Root>
     {/if}
   </div>
   {/if}

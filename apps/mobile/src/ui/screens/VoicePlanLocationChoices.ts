@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { VoiceActionPlanCommand } from '../../application/voice/RealtimeVoiceSession';
 import type { VoicePlanCommandDrafts, VoicePlanParentDraft } from './VoicePlanEdits';
 
@@ -14,7 +15,7 @@ export function voicePlanLocationChoices(commands: readonly VoiceActionPlanComma
     ? { kind: 'asset', id: command.parentAssetId, label: command.parentTitle ?? 'Existing location' }
     : command?.parentCommandId
       ? { kind: 'command', id: command.parentCommandId, label: originalParent ? title(originalParent) : 'Proposed location' }
-      : { kind: 'root', label: 'Inventory root' });
+      : { kind: 'root', label: t('mobile.VoicePlanLocationChoices.inventoryRoot') });
   const search = query.trim().toLocaleLowerCase();
   const proposed = commands.slice(0, Math.max(0, index))
     .filter(item => canEdit(item) && title(item).toLocaleLowerCase().includes(search))

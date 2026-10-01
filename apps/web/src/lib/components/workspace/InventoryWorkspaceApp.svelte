@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import InventoryConversationPanel from './InventoryConversationPanel.svelte';
   import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
   import { inventoryExportContext } from '$lib/ports/inventoryExport';
@@ -327,7 +328,7 @@
       selectedAssetCheckoutHistory = [];
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
       setSuccessNotification(`Created ${inventoryName}.`, {
-        label: 'Open inventory',
+        label: t('web.InventoryWorkspaceApp.openInventory'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
           data.context.selectedTenantId,
@@ -608,7 +609,7 @@
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
       setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
-        label: 'View archived',
+        label: t('web.InventoryWorkspaceApp.viewArchived'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
           asset.tenantId,
@@ -797,7 +798,7 @@
       title,
       duration: 10_000,
       action: {
-        label: 'Undo',
+        label: t('web.InventoryWorkspaceApp.undo'),
         onClick: () => applyUndoableAssetOperation(result.tenantId, result.inventoryId, operationId, 'undo')
       }
     };
@@ -881,7 +882,7 @@
   function viewAssetAction(asset: Asset): WorkspaceNotificationAction {
     return asset.kind === 'location'
       ? {
-          label: 'View location',
+          label: t('web.InventoryWorkspaceApp.viewLocation'),
           href: workspaceRouteHref(
             { mode: 'location', tenantId: asset.tenantId, inventoryId: asset.inventoryId, locationId: asset.id },
             asset.tenantId,
@@ -893,22 +894,22 @@
 
   function viewAssetByIdAction(tenantId: string, inventoryId: string, assetId: string): WorkspaceNotificationAction {
     return {
-      label: 'View asset',
+      label: t('web.InventoryWorkspaceApp.viewAsset'),
       href: workspaceRouteHref({ mode: 'asset', tenantId, inventoryId, assetId }, tenantId, inventoryId)
     };
   }
 
   function parentDestinationAction(parentAssetId: string | null): WorkspaceNotificationAction {
     if (!parentAssetId) {
-      return { label: 'View home', href: homeHref() };
+      return { label: t('web.InventoryWorkspaceApp.viewHome'), href: homeHref() };
     }
     const target = parentTargets(assets).find((candidate) => candidate.id === parentAssetId);
     if (!target) {
-      return { label: 'View asset', href: workspaceRouteHref({ mode: 'asset', assetId: parentAssetId }, data.context.selectedTenantId, data.context.selectedInventoryId) };
+      return { label: t('web.InventoryWorkspaceApp.viewAsset'), href: workspaceRouteHref({ mode: 'asset', assetId: parentAssetId }, data.context.selectedTenantId, data.context.selectedInventoryId) };
     }
     if (target.kind === 'location') {
       return {
-        label: 'View location',
+        label: t('web.InventoryWorkspaceApp.viewLocation'),
         href: workspaceRouteHref(
           { mode: 'location', tenantId: target.tenantId, inventoryId: target.inventoryId, locationId: target.id },
           target.tenantId,
@@ -917,7 +918,7 @@
       };
     }
     return {
-      label: 'View parent',
+      label: t('web.InventoryWorkspaceApp.viewParent'),
       href: workspaceRouteHref(
         { mode: 'asset', tenantId: target.tenantId, inventoryId: target.inventoryId, assetId: target.id },
         target.tenantId,
@@ -1876,7 +1877,7 @@
     <div class="brand-lockup setup-lockup">
       <div class="brand-mark" aria-hidden="true"><span></span></div>
       <div>
-        <strong>Stuff Stash</strong>
+        <strong>{t('web.InventoryWorkspaceApp.stuffStash')}</strong>
         <p>{userLabel}</p>
       </div>
     </div>

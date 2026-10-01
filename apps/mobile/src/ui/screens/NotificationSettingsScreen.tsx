@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { usePullRefresh } from '../serverState/usePullRefresh';
 import { useCallback, useRef, useState } from 'react';
 import { Stack, useFocusEffect } from 'expo-router';
@@ -125,22 +126,22 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
     refreshControl={page.kind === 'overview' ? <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} /> : undefined}>
     {error ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:colors.danger}}>{error}</Text></View> : null}
     {settingsError ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:colors.danger}}>{settingsError}</Text></View> : null}
-    {busy && !preferences ? <SettingsSection><SettingsLoadingRow label="Loading reminders" /></SettingsSection> : null}
-    {!preferences && !busy ? <SettingsSection><SettingsActionRow accessibilityLabel="Retry loading reminders" label="Retry" onPress={() => void load()} /></SettingsSection> : null}
-    {preferences && unavailable ? <SettingsSection footer="This asset type is no longer available for expiration reminders."><SettingsActionRow label="Back" onPress={onBack} /></SettingsSection> : null}
+    {busy && !preferences ? <SettingsSection><SettingsLoadingRow label={t('mobile.NotificationSettingsScreen.loadingReminders')} /></SettingsSection> : null}
+    {!preferences && !busy ? <SettingsSection><SettingsActionRow accessibilityLabel={t('mobile.NotificationSettingsScreen.retryLoadingReminders')} label={t('mobile.NotificationSettingsScreen.retry')} onPress={() => void load()} /></SettingsSection> : null}
+    {preferences && unavailable ? <SettingsSection footer="This asset type is no longer available for expiration reminders."><SettingsActionRow label={t('mobile.NotificationSettingsScreen.back')} onPress={onBack} /></SettingsSection> : null}
     {preferences && !unavailable ? page.kind === 'timezone' ? <TimeZonePicker value={preferences.timezone} disabled={busy} onChange={async zone => { await save(signal => session.saveTimezone(zone,{signal})); onBack(); }} />
       : page.kind === 'timing' && policy ? <ReminderTimingEditor policy={policy} disabled={busy} onDone={onBack} onSave={async value => { await save(signal => typeId ? session.saveTypeOverride(typeId,value,{signal}) : session.saveDefaults(value,{signal})); }} />
       : page.kind === 'type' ? <ExpirationReminderEditor initialPolicy={override ?? null} inheritedPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing',typeId:page.typeId})} onSave={value => save(signal => session.saveTypeOverride(page.typeId,value,{signal}))} />
       : <>
-        <View style={styles.detailHeader}><Text style={styles.secondaryText}>Your reminders for this inventory.</Text></View>
-        {pushSession ? <SettingsSection title="Notifications" footer={pushMessage || 'Push alerts also need server delivery support. In-app reminders are independent.'}>
-          <SettingsSwitchRow label="Push notifications" value={preferences.pushEnabled} disabled={busy} onValueChange={enabled => void changePush(enabled)} />
+        <View style={styles.detailHeader}><Text style={styles.secondaryText}>{t('mobile.NotificationSettingsScreen.yourRemindersForThisInventory')}</Text></View>
+        {pushSession ? <SettingsSection title={t('mobile.NotificationSettingsScreen.notifications')} footer={pushMessage || 'Push alerts also need server delivery support. In-app reminders are independent.'}>
+          <SettingsSwitchRow label={t('mobile.NotificationSettingsScreen.pushNotifications')} value={preferences.pushEnabled} disabled={busy} onValueChange={enabled => void changePush(enabled)} />
           {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={pushOutcome === 'enabled' ? 'Open device settings' : 'Set up alerts on this device'} label={pushOutcome === 'enabled' ? 'Open device settings' : 'Enable on this device'} disabled={busy || openingSettings} onPress={() => { if (pushOutcome === 'enabled') void openDeviceSettings(); else void changePush(true); }} /></> : null}
-          {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel="Open notification system settings" label="Open Settings" disabled={openingSettings} onPress={() => void openDeviceSettings()} /></> : null}
+          {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={t('mobile.NotificationSettingsScreen.openNotificationSystemSettings')} label={t('mobile.NotificationSettingsScreen.openSettings')} disabled={openingSettings} onPress={() => void openDeviceSettings()} /></> : null}
         </SettingsSection> : null}
         <ExpirationReminderEditor initialPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing'})} onSave={async value => { if (value) await save(signal => session.saveDefaults(value,{signal})); }} />
-        <SettingsSection footer="Expiration dates use this time zone, even when you travel."><SettingsNavigationRow label="Time zone" accessibilityLabel="Time zone" value={readableTimeZone(preferences.timezone)} disabled={busy} onPress={() => onNavigate({kind:'timezone'})} /></SettingsSection>
-        <SettingsSection title="Asset type reminders" footer={!types.length ? 'Enable expiration tracking on a type to customize its reminders.' : 'Each type uses your inventory defaults unless you choose Custom or Off.'}>
+        <SettingsSection footer="Expiration dates use this time zone, even when you travel."><SettingsNavigationRow label={t('mobile.NotificationSettingsScreen.timeZone')} accessibilityLabel={t('mobile.NotificationSettingsScreen.timeZone')} value={readableTimeZone(preferences.timezone)} disabled={busy} onPress={() => onNavigate({kind:'timezone'})} /></SettingsSection>
+        <SettingsSection title={t('mobile.NotificationSettingsScreen.assetTypeReminders')} footer={!types.length ? 'Enable expiration tracking on a type to customize its reminders.' : 'Each type uses your inventory defaults unless you choose Custom or Off.'}>
           {types.map((entry,index) => {
             const rule=preferences.overrides.find(value => value.customAssetTypeId === entry.id)?.settings;
             return <View key={entry.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow label={entry.displayName} accessibilityLabel={`${entry.displayName} reminders`} value={rule ? rule.enabled ? 'Custom' : 'Off' : 'Uses defaults'} disabled={busy} onPress={() => onNavigate({kind:'type',typeId:entry.id})} /></View>;

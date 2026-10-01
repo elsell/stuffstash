@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
  import * as Button from '$lib/components/ui/button/index.js';
  import type {ExpirationNotification} from '$lib/domain/notification';
  let {segments=[],incomplete=false,disabled=false,onOpen}:{segments?:ExpirationNotification['parentTrail'];incomplete?:boolean;disabled?:boolean;onOpen:(id:string)=>void}=$props();
@@ -10,7 +11,7 @@
  }
 </script>
 {#if segments.length || incomplete}
- <nav aria-label="Item location" use:revealParent={segments}>
+ <nav aria-label={t('web.AssetLocationTrail.itemLocation')} use:revealParent={segments}>
   {#if incomplete}<span aria-label={segments.length?'Partial location path':'Location unavailable'}>{segments.length?'…':'Location unavailable'}</span>{/if}
   {#each segments as segment,index (segment.assetId)}
    {#if index>0}<span aria-hidden="true">/</span>{/if}

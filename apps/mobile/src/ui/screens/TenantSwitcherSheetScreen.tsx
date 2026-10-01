@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeActionRow } from '../components/NativeActionRow';
 import type { CreateWorkspace, CreatedHousehold, CreatedInventory } from '../../application/inventories/CreateWorkspace';
 import { WorkspaceCreationForm, type WorkspaceCreationTask } from './WorkspaceCreationForm';
@@ -169,10 +170,10 @@ function TenantSwitcher({
 
       {mode === 'inventories' ? (
         <>
-          <Text style={styles.sectionLabel}>Inventories</Text>
-          {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label="New inventory" disabled={selecting}
+          <Text style={styles.sectionLabel}>{t('mobile.TenantSwitcherSheetScreen.inventories')}</Text>
+          {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label={t('mobile.TenantSwitcherSheetScreen.newInventory')} disabled={selecting}
             onPress={() => onCreate({ kind: 'inventory', household: selectedTenant })} /> : null}
-          {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>No inventories are available in this household.</Text> : null}
+          {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.noInventoriesAreAvailableInThisHousehold')}</Text> : null}
 
           {selectedTenantInventories.map((inventory, index) => {
             const isSelected = inventory.id === dashboard.inventoryId;
@@ -203,8 +204,8 @@ function TenantSwitcher({
         </>
       ) : (
         <>
-          <Text style={styles.sectionLabel}>Households</Text>
-          {onCreate ? <NativeActionRow label="New household" disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
+          <Text style={styles.sectionLabel}>{t('mobile.TenantSwitcherSheetScreen.households')}</Text>
+          {onCreate ? <NativeActionRow label={t('mobile.TenantSwitcherSheetScreen.newHousehold')} disabled={selecting} onPress={() => onCreate({ kind: 'household' })} /> : null}
 
           {dashboard.tenants.map((tenant, index) => {
             const isSelected = tenant.id === selectedTenant?.id;
@@ -247,7 +248,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading inventories</Text>
+      <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.loadingInventories')}</Text>
     </View>
   );
 }
@@ -256,9 +257,9 @@ function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
-      <Text style={styles.stateText}>Inventories could not be loaded. Try again.</Text>
-      <NativeCommandButton label="Retry inventories" onPress={onRetry} />
+      <Text style={styles.errorTitle}>{t('mobile.TenantSwitcherSheetScreen.couldNotLoad')}</Text>
+      <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.inventoriesCouldNotBeLoadedTryAgain')}</Text>
+      <NativeCommandButton label={t('mobile.TenantSwitcherSheetScreen.retryInventories')} onPress={onRetry} />
     </View>
   );
 }

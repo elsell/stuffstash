@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type ExpoViewConfigLookup = (moduleName: string, viewName: string) => unknown;
 
 export function expoUIColorPickerAvailable(platform: string, lookup: ExpoViewConfigLookup = nativeExpoViewConfig): boolean {
@@ -30,15 +31,15 @@ export const spectrumGestureOwnership = {
 export function androidSpectrumAccessibility(value: SpectrumValue, disabled: boolean) {
   return {
     spectrum: {
-      accessibilityActions: [{ name: 'increment', label: 'Increase saturation' }, { name: 'decrement', label: 'Decrease saturation' }, { name: 'increaseBrightness', label: 'Increase brightness' }, { name: 'decreaseBrightness', label: 'Decrease brightness' }],
-      accessibilityLabel: 'Saturation and brightness',
+      accessibilityActions: [{ name: 'increment', label: t('mobile.FullSpectrumTagColorPickerPresentation.increaseSaturation') }, { name: 'decrement', label: t('mobile.FullSpectrumTagColorPickerPresentation.decreaseSaturation') }, { name: 'increaseBrightness', label: t('mobile.FullSpectrumTagColorPickerPresentation.increaseBrightness') }, { name: 'decreaseBrightness', label: t('mobile.FullSpectrumTagColorPickerPresentation.decreaseBrightness') }],
+      accessibilityLabel: t('mobile.FullSpectrumTagColorPickerPresentation.saturationAndBrightness'),
       accessibilityRole: 'adjustable' as const,
       accessibilityState: { disabled },
       accessibilityValue: { text: `${Math.round(value.saturation * 100)} percent saturation, ${Math.round(value.brightness * 100)} percent brightness` }
     },
     hue: {
-      accessibilityActions: [{ name: 'increment', label: 'Increase hue' }, { name: 'decrement', label: 'Decrease hue' }],
-      accessibilityLabel: 'Hue',
+      accessibilityActions: [{ name: 'increment', label: t('mobile.FullSpectrumTagColorPickerPresentation.increaseHue') }, { name: 'decrement', label: t('mobile.FullSpectrumTagColorPickerPresentation.decreaseHue') }],
+      accessibilityLabel: t('mobile.FullSpectrumTagColorPickerPresentation.hue'),
       accessibilityRole: 'adjustable' as const,
       accessibilityState: { disabled },
       accessibilityValue: { min: 0, max: 360, now: Math.round(value.hue), text: `${Math.round(value.hue)} degrees` }

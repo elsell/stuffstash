@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Settings from '@lucide/svelte/icons/settings';
   import CheckCheck from '@lucide/svelte/icons/check-check';
   import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -97,23 +98,23 @@
   }
 </script>
 
-<section aria-label="Notification inbox">
+<section aria-label={t('web.NotificationInbox.notificationInbox')}>
   <div class="toolbar">
-    <SegmentedControl label="Notification filter" value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
-    <Button.Root variant="ghost" size="icon" aria-label="Mark all read" title="Mark all read" disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
-    <Button.Root variant="ghost" size="icon" aria-label="Refresh" title="Refresh" disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
-    {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label="Notification settings" title="Notification settings" onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}
+    <SegmentedControl label={t('web.NotificationInbox.notificationFilter')} value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
+    <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.markAllRead')} title={t('web.NotificationInbox.markAllRead')} disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
+    <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.refresh')} title={t('web.NotificationInbox.refresh')} disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
+    {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.notificationSettings')} title={t('web.NotificationInbox.notificationSettings')} onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}
   </div>
   {#if openError}<p role="alert">{openError}</p>{/if}
-  {#if loading && items.length === 0}<p role="status">Loading notifications…</p>
+  {#if loading && items.length === 0}<p role="status">{t('web.NotificationInbox.loadingNotifications')}</p>
   {:else}
-    {#if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>Retry notifications</Button.Root>{/if}
+    {#if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>{t('web.NotificationInbox.retryNotifications')}</Button.Root>{/if}
     {#if items.length === 0 && !hasMore && !error}<p>{filter === 'unread' ? 'No unread notifications.' : 'No expiration notifications yet.'}</p>{/if}
     <ul>
       {#each items as item (item.id)}
         <li class:unread={!item.readAt && !readIds.has(item.id)}><Button.Root variant="ghost" class="notification-row" disabled={!!opening || marking} onclick={() => open(item)}>
           <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
-          {#if opening === item.id}<span>Opening…</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">Unread</span>{/if}
+          {#if opening === item.id}<span>{t('web.NotificationInbox.opening')}</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">{t('web.NotificationInbox.unread')}</span>{/if}
         </Button.Root>
           <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={`Mark ${item.title} ${item.readAt || readIds.has(item.id) ? 'unread' : 'read'}`} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
           <AssetLocationTrail segments={item.parentTrail} incomplete={item.parentTrailIncomplete} disabled={!!opening || marking} onOpen={onOpenAsset} />

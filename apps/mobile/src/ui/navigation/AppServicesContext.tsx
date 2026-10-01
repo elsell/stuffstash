@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { PushRegistrationLifecycle } from './PushRegistrationLifecycle';
 import { useRouter } from 'expo-router';
 import { createContext, ReactNode, useContext, useMemo } from 'react';
@@ -126,7 +127,7 @@ function LoadingAppState() {
   return (
     <View style={styles.loading}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.loadingText}>Loading Stuff Stash</Text>
+      <Text style={styles.loadingText}>{t('mobile.AppServicesContext.loadingStuffStash')}</Text>
     </View>
   );
 }

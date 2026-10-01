@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import { NativeActionMenu, type NativeActionMenuGroup } from '../components/NativeActionMenu';
 import {
@@ -49,9 +50,9 @@ export function assetOverflowMenuGroups({
   const callbacks = { onCheckoutHistory, onHistory, onLifecycleAction };
   const actions = assetOverflowMenuActions(asset);
   const commands: NativeActionMenuGroup = { id: 'commands', items: [
-    ...(onAddPhotos ? [{ id: 'add_photos', label: 'Add photos', systemImage: 'photo.badge.plus', disabled: photosDisabled, onPress: () => { if (!photosDisabled) onAddPhotos(); } }] : []),
-    ...(onMove ? [{ id: 'move', label: 'Move', systemImage: 'folder', onPress: onMove }] : []),
-    ...(onCheckout ? [{ id: 'checkout', label: 'Check out', systemImage: 'arrow.up.right', onPress: onCheckout }] : [])
+    ...(onAddPhotos ? [{ id: 'add_photos', label: t('mobile.AssetOverflowMenu.addPhotos'), systemImage: 'photo.badge.plus', disabled: photosDisabled, onPress: () => { if (!photosDisabled) onAddPhotos(); } }] : []),
+    ...(onMove ? [{ id: 'move', label: t('mobile.AssetOverflowMenu.move'), systemImage: 'folder', onPress: onMove }] : []),
+    ...(onCheckout ? [{ id: 'checkout', label: t('mobile.AssetOverflowMenu.checkOut'), systemImage: 'arrow.up.right', onPress: onCheckout }] : [])
   ] };
   return [commands, ...(['history', 'lifecycle', 'destructive'] as const)
     .map((section): NativeActionMenuGroup => ({

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { StyleSheet, Text, View } from 'react-native';
 import {
@@ -53,9 +54,9 @@ export function BrowseLoadError({
 
   return (
     <View accessibilityLiveRegion="polite" style={styles.statePanel}>
-      <Text style={styles.title}>Could not load this inventory</Text>
+      <Text style={styles.title}>{t('mobile.BrowseResultStates.couldNotLoadThisInventory')}</Text>
       <Text style={styles.message}>{message}</Text>
-      <NativeCommandButton label="Retry" onPress={onRetry} prominence="primary" />
+      <NativeCommandButton label={t('mobile.BrowseResultStates.retry')} onPress={onRetry} prominence="primary" />
     </View>
   );
 }
@@ -74,7 +75,7 @@ export function BrowsePaginationRetry({
   return (
     <View accessibilityLiveRegion="polite" style={styles.paginationFooter}>
       <Text style={styles.paginationMessage}>{message}</Text>
-      <NativeCommandButton label="Try again" onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.BrowseResultStates.tryAgain')} onPress={onRetry} />
     </View>
   );
 }
@@ -98,14 +99,14 @@ function emptyStatePresentation(props: BrowseEmptyStateProps): {
     case 'search':
       return {
         title: `No results for “${props.query.trim()}”`,
-        message: 'Try another search or clear it to browse everything.',
+        message: t('mobile.BrowseResultStates.tryAnotherSearchOrClearItToBrowseEverything'),
         actionLabel: 'Clear search',
         onAction: props.onClearSearch
       };
     case 'filters':
       return {
-        title: 'No items match these filters',
-        message: 'Remove a filter to see more of your inventory.',
+        title: t('mobile.BrowseResultStates.noItemsMatchTheseFilters'),
+        message: t('mobile.BrowseResultStates.removeAFilterToSeeMoreOfYourInventory'),
         actionLabel: 'Clear filters',
         onAction: props.onClearFilters
       };

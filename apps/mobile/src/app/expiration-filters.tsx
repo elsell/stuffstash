@@ -1,3 +1,4 @@
+import { t } from '../presentation/localization';
 import { expirationReturnPath } from '../ui/expiration/ExpirationTabReturn';
 import { FilterLoadingScreen } from '../ui/components/FilterLoadingScreen';
 import { returnToPreviousOrHome } from '../ui/navigation/returnToPreviousOrHome';
@@ -25,6 +26,6 @@ export default function ExpirationFiltersRoute() {
   return { types: types.map(type => ({ id: type.id, label: type.displayName })), tags, locations: locations.locations.map(location => ({ id: location.id, label: location.pathLabel ?? location.title })) };
  } });
  if (state.isPending) return <FilterLoadingScreen onCancel={cancel} />;
- if (state.isError) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>Filters could not be loaded.</Text><NativeCommandButton label="Retry" onPress={() => { void state.refetch(); }} /><NativeCommandButton label="Cancel" onPress={cancel} /></ScrollView>;
+ if (state.isError) return <ScrollView style={styles.shell} contentContainerStyle={{ flexGrow: 1 }} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="alert" style={styles.errorMessage}>{t('mobile.expirationfilters.filtersCouldNotBeLoaded')}</Text><NativeCommandButton label={t('mobile.expirationfilters.retry')} onPress={() => { void state.refetch(); }} /><NativeCommandButton label={t('mobile.expirationfilters.cancel')} onPress={cancel} /></ScrollView>;
  return <ExpirationFiltersScreen key={JSON.stringify([scope.scopeId, tenantId, inventoryId])} initial={filter} choices={state.data} onCancel={cancel} onApply={draft => router.dismissTo({ pathname: expirationReturnPath(params.originTab), params: expirationRouteParams(tenantId, inventoryId, draft) })} />;
 }

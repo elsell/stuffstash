@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
@@ -17,14 +18,14 @@ export function AssetDetailRouteErrorState({
   const styles = createStyles(useAppearanceAwarePalette());
   return (
     <ScrollView
-      accessibilityLabel="Asset error"
+      accessibilityLabel={t('mobile.AssetDetailRouteErrorState.assetError')}
       contentContainerStyle={styles.content}
       style={styles.scroller}
     >
       <Text accessibilityRole="header" style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {canRetry ? (
-        <NativeCommandButton label="Retry asset" onPress={onRetry} />
+        <NativeCommandButton label={t('mobile.AssetDetailRouteErrorState.retryAsset')} onPress={onRetry} />
       ) : null}
     </ScrollView>
   );

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { formatExpirationChange } from '../presentation/ExpirationPresentation';
 import { canCancelConversation } from './VoiceConversationHistory';
 import type {
@@ -36,37 +37,37 @@ export function buildVoiceAccessoryPresentation({
 
   if (status === 'loading') {
     return {
-      accessibilityLabel: 'Open voice status',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceStatus'),
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Voice loading',
+      title: t('mobile.VoiceSessionPresentation.voiceLoading'),
       tone: 'attention'
     };
   }
 
   if (status === 'error') {
     return {
-      accessibilityLabel: 'Open voice error',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceError'),
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Voice unavailable',
+      title: t('mobile.VoiceSessionPresentation.voiceUnavailable'),
       tone: 'failed'
     };
   }
 
   if (stage === 'listening') {
     return {
-      accessibilityLabel: 'Send voice request',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.sendVoiceRequest'),
       primaryAction: 'stop',
       subtitle: context,
-      title: 'Listening',
+      title: t('mobile.VoiceSessionPresentation.listening'),
       tone: 'active'
     };
   }
 
   if (stage === 'processing') {
     return {
-      accessibilityLabel: 'Open voice session',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceSession'),
       primaryAction: 'expand',
       subtitle: context,
       title: accessoryProgressTitle(realtime),
@@ -76,10 +77,10 @@ export function buildVoiceAccessoryPresentation({
 
   if (stage === 'speaking') {
     return {
-      accessibilityLabel: 'Open voice response',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceResponse'),
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Speaking',
+      title: t('mobile.VoiceSessionPresentation.speaking'),
       tone: 'attention'
     };
   }
@@ -87,7 +88,7 @@ export function buildVoiceAccessoryPresentation({
   if (stage === 'completed') {
     if (hasAvailableVoiceFollowUp(realtime)) {
       return {
-        accessibilityLabel: 'Open voice follow-up',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceFollowUp'),
         primaryAction: 'expand',
         subtitle: safeAccessorySubtitle(realtime?.spokenResponse) ?? context,
         title: realtime?.responseKind === 'clarification' ? 'Needs detail' : 'Answer ready',
@@ -106,17 +107,17 @@ export function buildVoiceAccessoryPresentation({
 
   if (stage === 'cancelled') {
     return {
-      accessibilityLabel: 'Open cancelled voice session',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openCancelledVoiceSession'),
       primaryAction: 'expand',
       subtitle: context,
-      title: 'Voice cancelled',
+      title: t('mobile.VoiceSessionPresentation.voiceCancelled'),
       tone: 'attention'
     };
   }
 
   if (stage === 'failed') {
     return {
-      accessibilityLabel: 'Open voice error',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceError'),
       primaryAction: 'expand',
       subtitle: safeFailureAccessorySubtitle(realtime, diagnosticsEnabled) ?? context,
       title: safeFailureAccessoryTitle(realtime),
@@ -126,7 +127,7 @@ export function buildVoiceAccessoryPresentation({
 
   if (stage === 'review') {
     return {
-      accessibilityLabel: 'Review voice plan',
+      accessibilityLabel: t('mobile.VoiceSessionPresentation.reviewVoicePlan'),
       primaryAction: 'expand',
       subtitle: context,
       title: accessoryProgressTitle(realtime),
@@ -135,10 +136,10 @@ export function buildVoiceAccessoryPresentation({
   }
 
   return {
-    accessibilityLabel: 'Start voice interaction',
+    accessibilityLabel: t('mobile.VoiceSessionPresentation.startVoiceInteraction'),
     primaryAction: 'start',
     subtitle: context,
-    title: 'Ask Stuff Stash',
+    title: t('mobile.VoiceSessionPresentation.askStuffStash'),
     tone: 'ready'
   };
 }
@@ -330,7 +331,7 @@ export function buildVoiceSessionPresentation({
     progressSteps,
     progressTrace: progressTraceForState(stage, progressSteps, realtime),
     recoveryAction: isProviderRecoveryFailure(realtime?.failureCode)
-      ? { label: 'Voice providers', target: 'provider_profiles' }
+      ? { label: t('mobile.VoiceSessionPresentation.voiceProviders'), target: 'provider_profiles' }
       : undefined,
     response: realtime?.spokenResponse,
     responseArtifacts: realtime?.responseArtifacts ?? [],
@@ -345,7 +346,7 @@ function activityForState(
   recordingLevel: number | undefined
 ): VoiceSessionActivityPresentation {
   if (stage === 'listening') {
-    return { kind: 'listening', label: 'Listening', level: boundedLevel(recordingLevel) };
+    return { kind: 'listening', label: t('mobile.VoiceSessionPresentation.listening'), level: boundedLevel(recordingLevel) };
   }
   if (stage === 'processing' || stage === 'speaking') {
     return { kind: 'busy', label: progressLabel };
@@ -617,39 +618,39 @@ function completedVoicePresentation(realtime: VoiceRealtimeState | null | undefi
   switch (realtime?.actionPlan?.status) {
     case 'executed':
       return {
-        accessibilityLabel: 'Open applied voice change',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openAppliedVoiceChange'),
         bottomHint: 'The reviewed change was applied.',
-        title: 'Change applied',
+        title: t('mobile.VoiceSessionPresentation.changeApplied'),
         tone: 'ready'
       };
     case 'cancelled':
       return {
-        accessibilityLabel: 'Open cancelled voice change',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openCancelledVoiceChange'),
         bottomHint: 'No change was made.',
-        title: 'Change cancelled',
+        title: t('mobile.VoiceSessionPresentation.changeCancelled'),
         tone: 'attention'
       };
   }
   switch (realtime?.responseKind) {
     case 'unsupported_action':
       return {
-        accessibilityLabel: 'Open unsupported voice result',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openUnsupportedVoiceResult'),
         bottomHint: 'Try another way to make this change.',
-        title: 'Voice action unavailable',
+        title: t('mobile.VoiceSessionPresentation.voiceActionUnavailable'),
         tone: 'attention'
       };
     case 'safe_failure':
       return {
-        accessibilityLabel: 'Open safe voice result',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openSafeVoiceResult'),
         bottomHint: 'Start a fresh request or close this.',
-        title: 'Could not finish safely',
+        title: t('mobile.VoiceSessionPresentation.couldNotFinishSafely'),
         tone: 'attention'
       };
     default:
       return {
-        accessibilityLabel: 'Open voice answer',
+        accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceAnswer'),
         bottomHint: 'You can ask another question or close this.',
-        title: 'Answer ready',
+        title: t('mobile.VoiceSessionPresentation.answerReady'),
         tone: 'ready'
       };
   }

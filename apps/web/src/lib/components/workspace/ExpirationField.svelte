@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { untrack } from 'svelte';
   import { validExpirationInput } from '$lib/domain/expiration';
   import type { AssetExpiration } from '$lib/domain/inventory';
@@ -47,18 +48,16 @@
 </script>
 
 <div class="expiration-field">
-  <Label for={id}>Expiration (optional)</Label>
-  <SegmentedControl label="Expiration precision" value={precision}
+  <Label for={id}>{t('web.ExpirationField.expirationOptional')}</Label>
+  <SegmentedControl label={t('web.ExpirationField.expirationPrecision')} value={precision}
     options={[{ value: 'day', label: 'Exact date' }, { value: 'month', label: 'Month and year' }]}
     onSelect={select} />
   <Input {id} type={precision === 'day' ? 'date' : 'month'} {value}
     oninput={input} aria-invalid={invalid || awaitingDay} aria-describedby={`${id}-help`} />
   <p id={`${id}-help`}>
-    {#if invalid || awaitingDay}Enter a complete, valid expiration date.
-    {:else if precision === 'month'}Tracked through the end of this month.
-    {:else}Tracked through the end of this day.{/if}
+    {#if invalid || awaitingDay}{t('web.ExpirationField.enterACompleteValidExpirationDate')} {:else if precision === 'month'}{t('web.ExpirationField.trackedThroughTheEndOfThisMonth')} {:else}{t('web.ExpirationField.trackedThroughTheEndOfThisDay')}{/if}
   </p>
-  {#if value || invalid || awaitingDay}<Button.Root type="button" variant="ghost" onclick={clear}>Clear expiration</Button.Root>{/if}
+  {#if value || invalid || awaitingDay}<Button.Root type="button" variant="ghost" onclick={clear}>{t('web.ExpirationField.clearExpiration')}</Button.Root>{/if}
 </div>
 
 <style>

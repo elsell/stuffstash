@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useCallback, useRef } from 'react';
 import { router, Stack, useFocusEffect, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
@@ -22,4 +23,4 @@ export default function HomeReturnDetailsRoute() {
   return <><Stack.Screen options={returnDetailsOptions} />{task?.content}</>;
 }
 
-const returnDetailsOptions = { title: 'Return details', headerShown: true, gestureEnabled: false, headerBackVisible: false } as const;
+const returnDetailsOptions = { title: t('mobile.HomeReturnDetailsRouteScreen.returnDetails'), headerShown: true, gestureEnabled: false, headerBackVisible: false } as const;

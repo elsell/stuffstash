@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createTranslator, en } from '@stuff-stash/localization';
 import { installAuthenticatedWorkspace, resetWorkspaceApiState } from './workspace-fixture';
+
+const localization = createTranslator(en, { locale: process.env.VITE_STUFF_STASH_UI_LOCALE || 'en-US' });
+const t = localization.message;
 
 async function installConversationServer(page: Page, propose: boolean, detailEdit = false) {
   const decisions: string[] = [];
@@ -25,8 +29,9 @@ test.beforeEach(async ({ page }) => { resetWorkspaceApiState(page); await instal
 test('typed conversation keeps composer reachable and restores focus', async ({ page }, testInfo) => {
   await installConversationServer(page, false);
   await page.goto('/tenants/tenant-home/inventories/inventory-household');
-  const opener = page.getByRole('button', { name: 'Ask Stuff Stash', exact: true }); await opener.click();
-  const dialog = page.getByRole('dialog'); const composer = page.getByRole('textbox', { name: 'Message Stuff Stash' });
+  const opener = page.getByRole('button', { name: t('web.InventoryConversationPanel.askStuffStash'), exact: true }); await opener.click();
+  const dialog = page.getByRole('dialog'); const composer = page.getByRole('textbox', { name: t('web.InventoryConversationPanel.messageStuffStash') });
+  await expect(page.locator('html')).toHaveAttribute('dir', localization.direction);
   await expect(composer).toBeFocused(); await composer.fill('Where is the tent?'); await composer.press('Enter');
   await expect(dialog.getByText('The camping tent is in Garage.', { exact: true }).first()).toBeVisible();
   await expect(composer).toBeEnabled();
@@ -38,12 +43,12 @@ for (const approve of [false, true]) {
   test(`conversation ${approve ? 'approves' : 'cancels'} only after explicit review`, async ({ page }, testInfo) => {
     const decisions = await installConversationServer(page, true, approve);
     await page.goto('/tenants/tenant-home/inventories/inventory-household');
-    await page.getByRole('button', { name: 'Ask Stuff Stash', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Message Stuff Stash' }).fill(approve ? 'Rename tent to Camping tent, set serial to ST-2028 and expiration to February 2028' : 'Move the tent into Garage'); await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Review changes', exact: true })).toBeVisible(); expect(decisions).toEqual([]);
-    if (approve) { await expect(page.getByText('Name: Camping tent', { exact: true })).toBeVisible(); await expect(page.getByText('Serial number: ST-2028', { exact: true })).toBeVisible(); await expect(page.getByText('Expires February 2028', { exact: true })).toBeVisible(); await page.screenshot({ path: testInfo.outputPath('conversation-detail-review.png'), fullPage: true }); }
-    await page.getByRole('button', { name: approve ? 'Approve changes' : 'Cancel changes', exact: true }).click();
+    await page.getByRole('button', { name: t('web.InventoryConversationPanel.askStuffStash'), exact: true }).click();
+    await page.getByRole('textbox', { name: t('web.InventoryConversationPanel.messageStuffStash') }).fill(approve ? 'Rename tent to Camping tent, set serial to ST-2028 and expiration to February 2028' : 'Move the tent into Garage'); await page.getByRole('button', { name: t('web.InventoryConversationPanel.send'), exact: true }).click();
+    await expect(page.getByRole('heading', { name: t('web.InventoryConversationPanel.reviewChanges'), exact: true })).toBeVisible(); expect(decisions).toEqual([]);
+    if (approve) { await expect(page.getByText('Name: Camping tent', { exact: true })).toBeVisible(); await expect(page.getByText('Serial number: ST-2028', { exact: true })).toBeVisible(); await expect(page.getByText(t('web.InventoryConversationPanel.expiresFull', { value: 'February 2028' }), { exact: true })).toBeVisible(); await page.screenshot({ path: testInfo.outputPath('conversation-detail-review.png'), fullPage: true }); }
+    await page.getByRole('button', { name: approve ? t('web.InventoryConversationPanel.approveChanges') : t('web.InventoryConversationPanel.cancelChanges'), exact: true }).click();
     await expect.poll(() => decisions).toEqual([approve ? 'action.plan.approve' : 'action.plan.cancel']);
-    await expect(page.getByRole('heading', { name: 'Review changes', exact: true })).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: t('web.InventoryConversationPanel.reviewChanges'), exact: true })).not.toBeVisible();
   });
 }

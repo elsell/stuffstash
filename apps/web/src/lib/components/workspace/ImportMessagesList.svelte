@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import X from '@lucide/svelte/icons/x';
@@ -81,7 +82,7 @@
   }
 
   function groupCountLabel(count: number): string {
-    return count === 1 ? '1 item' : `${count} items`;
+    return t('import.items', { count });
   }
 
   function friendlyCause(message: ImportMessage): string {
@@ -190,26 +191,26 @@
   {#if groups.length > 0}
     <div class="message-list-summary">
       <div class="issue-stat">
-        <span>Groups</span>
+        <span>{t('web.ImportMessagesList.groups')}</span>
         <strong>{groups.length}</strong>
       </div>
       <div class="issue-stat">
-        <span>Affected</span>
+        <span>{t('web.ImportMessagesList.affected')}</span>
         <strong>{visibleMessages.length}</strong>
       </div>
       {#if errorCount > 0}
         <div class="issue-stat blocking">
-          <span>Blocking</span>
+          <span>{t('web.ImportMessagesList.blocking')}</span>
           <strong>{errorCount}</strong>
         </div>
       {/if}
       {#if warningCount > 0}
         <div class="issue-stat warning">
-          <span>Warnings</span>
+          <span>{t('web.ImportMessagesList.warnings')}</span>
           <strong>{warningCount}</strong>
         </div>
       {/if}
-      <span class="sr-only">{visibleMessages.length === 1 ? '1 affected record' : `${visibleMessages.length} affected records`}</span>
+      <span class="sr-only">{t('import.affectedRecords', { count: visibleMessages.length })}</span>
     </div>
   {/if}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (bounded overflow regions need a keyboard focus target) -->
@@ -240,9 +241,7 @@
             class="message-detail-button"
             aria-label={`Explain ${group.summary}`}
             onclick={() => explainGroup(group)}
-          >
-            Explain
-          </Button.Root>
+          > {t('web.ImportMessagesList.explain')} </Button.Root>
         </div>
         <div class="message-group-items">
           {#each visibleMessages as message}
@@ -255,13 +254,9 @@
             </div>
           {/each}
           {#if group.messages.length > visibleMessages.length}
-            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
-              Show {group.messages.length - visibleMessages.length} more in this group
-            </Button.Root>
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}> {t('web.ImportMessagesList.showMoreInThisGroupFull', { length: group.messages.length - visibleMessages.length })} </Button.Root>
           {:else if isGroupExpanded && group.messages.length > COLLAPSED_RECORD_LIMIT}
-            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}>
-              Show fewer in this group
-            </Button.Root>
+            <Button.Root variant="ghost" size="sm" class="message-group-toggle" onclick={() => toggleGroup(group)}> {t('web.ImportMessagesList.showFewerInThisGroup')} </Button.Root>
           {/if}
         </div>
       </div>
@@ -269,17 +264,17 @@
   </div>
   {#if hiddenGroupCount > 0}
     <div class="message-overflow-action">
-      <span>{hiddenGroupCount} more issue {hiddenGroupCount === 1 ? 'group' : 'groups'} hidden.</span>
+      <span>{t('web.ImportMessagesList.moreIssueHiddenFull', { hiddenGroupCount: hiddenGroupCount, value: hiddenGroupCount === 1 ? 'group' : 'groups' })}</span>
       {#if expanded}
-        <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>Show fewer</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>{t('web.ImportMessagesList.showFewer')}</Button.Root>
       {:else}
-        <Button.Root variant="outline" size="sm" onclick={() => (expanded = true)}>Show more issues</Button.Root>
+        <Button.Root variant="outline" size="sm" onclick={() => (expanded = true)}>{t('web.ImportMessagesList.showMoreIssues')}</Button.Root>
       {/if}
     </div>
   {:else if expanded && groups.length > COLLAPSED_GROUP_LIMIT}
     <div class="message-overflow-action">
-      <span>All issue groups are shown.</span>
-      <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>Show fewer</Button.Root>
+      <span>{t('web.ImportMessagesList.allIssueGroupsAreShown')}</span>
+      <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>{t('web.ImportMessagesList.showFewer')}</Button.Root>
     </div>
   {/if}
   {#if visibleMessages.length === 0}
@@ -307,7 +302,7 @@
           </div>
           <Dialog.Close>
             {#snippet child({ props })}
-              <Button.Root {...props} variant="ghost" size="icon" class="size-11" aria-label="Close issue details">
+              <Button.Root {...props} variant="ghost" size="icon" class="size-11" aria-label={t('web.ImportMessagesList.closeIssueDetails')}>
                 <X size={16} aria-hidden="true" />
               </Button.Root>
             {/snippet}
@@ -315,20 +310,20 @@
         </Dialog.Header>
         <div class="issue-detail-grid">
           <div>
-            <span>Meaning</span>
+            <span>{t('web.ImportMessagesList.meaning')}</span>
             <p>{guidance.meaning}</p>
           </div>
           <div>
-            <span>Impact</span>
+            <span>{t('web.ImportMessagesList.impact')}</span>
             <p>{guidance.impact}</p>
           </div>
           <div>
-            <span>Next action</span>
+            <span>{t('web.ImportMessagesList.nextAction')}</span>
             <p>{guidance.nextAction}</p>
           </div>
         </div>
         <div class="issue-detail-records">
-          <h4>Affected records</h4>
+          <h4>{t('web.ImportMessagesList.affectedRecords')}</h4>
           <div>
             {#each selectedGroup.messages.slice(0, 8) as message}
               {@const diagnostic = messageDiagnostic(message, selectedGroup)}
@@ -341,7 +336,7 @@
             {/each}
           </div>
           {#if selectedGroup.messages.length > 8}
-            <small>{selectedGroup.messages.length - 8} more affected {selectedGroup.messages.length - 8 === 1 ? 'record' : 'records'} in this group.</small>
+            <small>{t('web.ImportMessagesList.moreAffectedInThisGroupFull', { value: selectedGroup.messages.length - 8, value2: selectedGroup.messages.length - 8 === 1 ? 'record' : 'records' })}</small>
           {/if}
         </div>
       </Dialog.Content>

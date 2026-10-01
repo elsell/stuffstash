@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { mobileQueryKeys } from '../../adapters/serverState/MobileQueryClient';
 import { useMobileServerQuery } from '../serverState/useMobileServerQuery';
@@ -44,7 +45,7 @@ export function AccountSettingsScreen({
     } catch (error) {
       if (canPresent()) feedback.showNotice({
         tone: 'error',
-        title: 'Could not sign out',
+        title: t('mobile.SettingsDetailScreens.couldNotSignOut'),
         message: readableError(error)
       });
       workingRef.current = false;
@@ -56,7 +57,7 @@ export function AccountSettingsScreen({
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : 'Could not load account details. You can retry or sign out.'} onRetry={async () => { await principal.refetch(); }} />
           <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
-            <SettingsValueRow label="Signed in as" value={principalLabel} />
+            <SettingsValueRow label={t('mobile.SettingsDetailScreens.signedInAs')} value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
             <SettingsActionRow
@@ -101,7 +102,7 @@ export function ConnectionSettingsScreen({
     } catch (error) {
       if (canPresent()) feedback.showNotice({
         tone: 'error',
-        title: 'Could not change server',
+        title: t('mobile.SettingsDetailScreens.couldNotChangeServer'),
         message: readableError(error)
       });
       workingRef.current = false;
@@ -113,11 +114,11 @@ export function ConnectionSettingsScreen({
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsSection
         footer="This server determines where the app signs in and stores your Stuff Stash data."
-        title="Current Server"
+        title={t('mobile.SettingsDetailScreens.currentServer')}
       >
-        <SettingsValueRow label="Server" value={serverHostname(diagnostics.apiBaseUrl)} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.server')} value={serverHostname(diagnostics.apiBaseUrl)} />
         <SettingsSeparator />
-        <SettingsValueRow label="Address" value={diagnostics.apiBaseUrl} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.address')} value={diagnostics.apiBaseUrl} />
       </SettingsSection>
       <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
         <SettingsActionRow
@@ -137,23 +138,23 @@ export function DiagnosticsSettingsScreen({ settingsQuery }: { readonly settings
   const scope = useMobileInventoryServerQuery({ key: mobileQueryKeys.settingsScope, query: signal => settingsQuery.getSelectedScope({ signal }) });
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsSection title="Connection">
-        <SettingsValueRow label="API URL" value={diagnostics.apiBaseUrl} />
+      <SettingsSection title={t('mobile.SettingsDetailScreens.connection')}>
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.aPIURL')} value={diagnostics.apiBaseUrl} />
         <SettingsSeparator />
-        <SettingsValueRow label="Authentication" value={authenticationLabel(diagnostics.authenticationMode)} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.authentication')} value={authenticationLabel(diagnostics.authenticationMode)} />
       </SettingsSection>
-      <SettingsSection title="Identity">
-        <DiagnosticIdentity label="Principal ID" task="account identity"
+      <SettingsSection title={t('mobile.SettingsDetailScreens.identity')}>
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.principalID')} task="account identity"
           value={isAccessFailure(principal.error) ? undefined : principal.data?.id}
           pending={principal.isPending} failed={principal.isError} retrying={principal.isFetching}
           onRetry={async () => { await principal.refetch({ cancelRefetch: false }); }} />
         <SettingsSeparator />
-        <DiagnosticIdentity label="Tenant ID" task="household identity" value={scope.data?.tenant.id}
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.tenantID')} task="household identity" value={scope.data?.tenant.id}
           pending={scope.isPending} failed={scope.isError} retrying={scope.isFetching}
           onRetry={async () => { await scope.refetch({ cancelRefetch: false }); }} />
       </SettingsSection>
-      <SettingsSection title="Application">
-        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+      <SettingsSection title={t('mobile.SettingsDetailScreens.application')}>
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.version')} value={diagnostics.appVersion} />
       </SettingsSection>
     </ScrollView>
   );
@@ -165,11 +166,11 @@ export function AboutSettingsScreen({ settingsQuery }: { readonly settingsQuery:
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <View style={styles.detailHeader}>
-        <Text accessibilityRole="header" style={styles.detailTitle}>Stuff Stash</Text>
-        <Text style={styles.detailSubtitle}>A calm, flexible home inventory for knowing what you have and where it lives.</Text>
+        <Text accessibilityRole="header" style={styles.detailTitle}>{t('mobile.SettingsDetailScreens.stuffStash')}</Text>
+        <Text style={styles.detailSubtitle}>{t('mobile.SettingsDetailScreens.aCalmFlexibleHomeInventoryForKnowingWhatYou')}</Text>
       </View>
       <SettingsSection>
-        <SettingsValueRow label="Version" value={diagnostics.appVersion} />
+        <SettingsValueRow label={t('mobile.SettingsDetailScreens.version')} value={diagnostics.appVersion} />
       </SettingsSection>
     </ScrollView>
   );

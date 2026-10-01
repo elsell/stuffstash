@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
@@ -53,7 +54,7 @@
     <form class="setup-form" onsubmit={(event) => { event.preventDefault(); void submit(); }}>
       {#if showTenantField}
         <div class="field-stack">
-          <Label for="workspace-tenant-name">Tenant name</Label>
+          <Label for="workspace-tenant-name">{t('web.WorkspaceSetupPanel.tenantName')}</Label>
           <Input
             id="workspace-tenant-name"
             bind:value={tenantDraft}
@@ -66,7 +67,7 @@
       {/if}
 
       <div class="field-stack">
-        <Label for="workspace-inventory-name">Inventory name</Label>
+        <Label for="workspace-inventory-name">{t('web.WorkspaceSetupPanel.inventoryName')}</Label>
         <Input
           id="workspace-inventory-name"
           bind:value={inventoryDraft}

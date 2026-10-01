@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 
@@ -120,13 +121,13 @@ export function isSelectableMoveIntoCandidate(
 export function moveIntoEmptyState(query: string): MoveIntoEmptyState {
   if (query.trim().length === 0) {
     return {
-      title: 'Search for something to move here',
-      message: 'Start typing to find an item, box, or place from this inventory.'
+      title: t('mobile.AssetDetailMovePresentation.searchForSomethingToMoveHere'),
+      message: t('mobile.AssetDetailMovePresentation.startTypingToFindAnItemBoxOrPlace')
     };
   }
   return {
-    title: 'No movable matches',
-    message: 'Search for something that is not already inside this place.'
+    title: t('mobile.AssetDetailMovePresentation.noMovableMatches'),
+    message: t('mobile.AssetDetailMovePresentation.searchForSomethingThatIsNotAlreadyInsideThis')
   };
 }
 

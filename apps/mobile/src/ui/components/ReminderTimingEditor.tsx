@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { useNativeHeaderActionOptions } from './useNativeHeaderActionOptions';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -40,23 +41,23 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
       }
     }
   }
-  const actionOptions = useNativeHeaderActionOptions(custom ? [{ kind: 'save', label: 'Save reminder days', disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []);
-  const headerOptions = useMemo(() => ({ title: 'Before expiration', gestureEnabled: !saving, headerBackVisible: !saving, ...actionOptions }), [saving, actionOptions]);
+  const actionOptions = useNativeHeaderActionOptions(custom ? [{ kind: 'save', label: t('mobile.ReminderTimingEditor.saveReminderDays'), disabled: locked || !valid, onPress: () => void save(true, Number(days)) }] : []);
+  const headerOptions = useMemo(() => ({ title: t('mobile.ReminderTimingEditor.beforeExpiration'), gestureEnabled: !saving, headerBackVisible: !saving, ...actionOptions }), [saving, actionOptions]);
   return <>
     <Stack.Screen options={headerOptions} />
     <SettingsSection footer="Choose when to remind you before the expiration date. Expired reminders are set separately.">
-      <SettingsChoiceRow label="Off" selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
+      <SettingsChoiceRow label={t('mobile.ReminderTimingEditor.off')} selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
       {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? 'On the expiration date' : `${reminderDaysLabel(value)} before`} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}
-      <SettingsSeparator /><SettingsChoiceRow label="Custom…" accessibilityLabel="Custom days" selected={custom} disabled={locked} onPress={() => { setCustom(true); setDirty(true); }} />
+      <SettingsSeparator /><SettingsChoiceRow label={t('mobile.ReminderTimingEditor.custom')} accessibilityLabel={t('mobile.ReminderTimingEditor.customDays')} selected={custom} disabled={locked} onPress={() => { setCustom(true); setDirty(true); }} />
     </SettingsSection>
     {custom ? <SettingsSection footer="Enter 0–3650 days. Save your changes, or go back to cancel.">
       <View style={styles.navigationRow}><View style={styles.navigationRowContent}>
-        <Text style={[styles.rowLabel, styles.rowText]}>Days before</Text>
-        <AppTextInput accessibilityLabel="Days before expiration" keyboardType="number-pad" editable={!locked} value={days} selectTextOnFocus onChangeText={value => { setDays(value); setDirty(true); }} style={{ color: palette.text, fontSize: 17, minHeight: 44, minWidth: 88, textAlign: 'right' }} />
+        <Text style={[styles.rowLabel, styles.rowText]}>{t('mobile.ReminderTimingEditor.daysBefore')}</Text>
+        <AppTextInput accessibilityLabel={t('mobile.ReminderTimingEditor.daysBeforeExpiration')} keyboardType="number-pad" editable={!locked} value={days} selectTextOnFocus onChangeText={value => { setDays(value); setDirty(true); }} style={{ color: palette.text, fontSize: 17, minHeight: 44, minWidth: 88, textAlign: 'right' }} />
       </View></View>
-      {!valid ? <Text accessibilityRole="alert" style={[styles.sectionFooter, { color: palette.danger }]}>Enter a whole number from 0 to 3650.</Text> : null}
+      {!valid ? <Text accessibilityRole="alert" style={[styles.sectionFooter, { color: palette.danger }]}>{t('mobile.ReminderTimingEditor.enterAWholeNumberFrom0To3650')}</Text> : null}
     </SettingsSection> : null}
-    {saving ? <SettingsSection><SettingsLoadingRow label="Saving timing…" /></SettingsSection> : null}
+    {saving ? <SettingsSection><SettingsLoadingRow label={t('mobile.ReminderTimingEditor.savingTiming')} /></SettingsSection> : null}
     {error ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{ color: palette.danger }}>{error}</Text></View> : null}
   </>;
 }

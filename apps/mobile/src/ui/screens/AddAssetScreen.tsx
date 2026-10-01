@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { SelectionRow } from '../components/SelectionRow';
 import { useAddDestinationPresentation } from '../navigation/AddDestinationTask';
 import { AddDestinationSelectionScreen } from './AddDestinationSelectionScreen';
@@ -329,10 +330,10 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'saved', message: result.message });
       feedback.showNotice({
         tone: 'success',
-        title: 'Asset saved',
+        title: t('mobile.AddAssetScreen.assetSaved'),
         message: result.message,
         action: {
-          label: 'View',
+          label: t('mobile.AddAssetScreen.view'),
           onPress: () => router.push(assetDetailHref(result.id))
         }
       });
@@ -533,11 +534,11 @@ function ScopedAddAssetScreen({
       }} />
   } : undefined);
 
-  const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: 'Close Add', disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
-  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: 'Save item',
+  const closeOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AddAssetScreen.closeAdd'), disabled: draftBusy, onPress: () => editDraft(() => onDismiss?.()) }], 'left');
+  const saveOptions = useNativeHeaderActionOptions([{ kind: 'save', label: t('mobile.AddAssetScreen.saveItem'),
     disabled: draftBusy || hasUnstagedTag || !title.trim() || !expirationValid || loadState.status !== 'ready' || !loadState.context.canAdd,
     onPress: () => void saveAsset() }]);
-  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: 'Add item',
+  const headerOptions = useMemo(() => ({ headerShown: true, headerBackVisible: false, gestureEnabled: !draftBusy, title: t('mobile.AddAssetScreen.addItem'),
     ...closeOptions, ...saveOptions }), [draftBusy, closeOptions, saveOptions]);
 
   return (
@@ -556,7 +557,7 @@ function ScopedAddAssetScreen({
         keyboardDismissMode={appKeyboardDismissMode()}
         keyboardShouldPersistTaps="handled"
       >
-        {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel="Saving item" color={colors.action} /> : null}
+        {saveState.status === 'saving' ? <ActivityIndicator accessibilityLabel={t('mobile.AddAssetScreen.savingItem')} color={colors.action} /> : null}
         {saveState.status === 'error' ? <View accessibilityLiveRegion="assertive" onLayout={() => formScrollRef.current?.scrollTo({ y: Platform.OS === 'ios' ? -navigationHeaderHeight : 0, animated: false })}>
           <Text accessibilityRole="header" style={styles.errorText}>{saveState.title}</Text>
           <Text style={styles.errorText}>{saveState.message}</Text>
@@ -564,14 +565,14 @@ function ScopedAddAssetScreen({
         {loadState.status === 'loading' ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} />
-            <Text style={styles.stateText}>Loading inventory</Text>
+            <Text style={styles.stateText}>{t('mobile.AddAssetScreen.loadingInventory')}</Text>
           </View>
         ) : null}
         {loadState.status === 'error' ? (
           <View style={styles.centerState}>
-            <Text style={styles.errorTitle}>Could not load</Text>
+            <Text style={styles.errorTitle}>{t('mobile.AddAssetScreen.couldNotLoad')}</Text>
             <Text style={styles.stateText}>{loadState.message}</Text>
-            <NativeCommandButton label="Retry Add context" onPress={onRetry} />
+            <NativeCommandButton label={t('mobile.AddAssetScreen.retryAddContext')} onPress={onRetry} />
           </View>
         ) : null}
         {loadState.status === 'ready' ? (
@@ -593,10 +594,8 @@ function ScopedAddAssetScreen({
 
             {!loadState.context.canAdd ? (
               <View style={styles.unavailablePanel}>
-                <Text style={styles.unavailableTitle}>Add is unavailable</Text>
-                <Text style={styles.unavailableText}>
-                  This inventory does not allow you to create assets.
-                </Text>
+                <Text style={styles.unavailableTitle}>{t('mobile.AddAssetScreen.addIsUnavailable')}</Text>
+                <Text style={styles.unavailableText}>{t('mobile.AddAssetScreen.thisInventoryDoesNotAllowYouToCreateAssets')}</Text>
               </View>
             ) : (
               <View>
@@ -611,22 +610,22 @@ function ScopedAddAssetScreen({
                   photos={selectedPhotos}
                 />
 
-                <Text style={styles.fieldLabel}>Name</Text>
+                <Text style={styles.fieldLabel}>{t('mobile.AddAssetScreen.name')}</Text>
                 <AddDraftNameField key={Platform.OS === 'ios' ? `name-${nameRevision}` : 'name'}
-                  accessibilityLabel="Asset name"
+                  accessibilityLabel={t('mobile.AddAssetScreen.assetName')}
                   editable={!draftBusy}
                   onChangeText={value => editDraft(() => setTitle(value))}
-                  placeholder="Furnace filter, passport, camping bin"
+                  placeholder={t('mobile.AddAssetScreen.furnaceFilterPassportCampingBin')}
                   placeholderTextColor={colors.textMuted}
                   style={styles.input}
                   value={title}
                 />
 
                 <View style={styles.parentPicker}>
-                  <SelectionRow label="Put in" accessibilityLabel="Choose destination" value={selectedParent?.title ?? (parentQuery.trim() || 'Top level')}
+                  <SelectionRow label={t('mobile.AddAssetScreen.putIn')} accessibilityLabel={t('mobile.AddAssetScreen.chooseDestination')} value={selectedParent?.title ?? (parentQuery.trim() || 'Top level')}
                     disabled={destinationActions.disabled} onPress={destinationActions.onApply} />
                   {selectedParent && (selectedParent.pathLabel || selectedParent.subtitle) !== selectedParent.title ? <Text style={styles.parentMeta}>{selectedParent.pathLabel || selectedParent.subtitle}</Text> : null}
-                  {selectedParent?.willPromoteToContainer ? <Text style={styles.parentPromotionText}>Stuff Stash will turn {selectedParent.title} into a container for this item.</Text> : null}
+                  {selectedParent?.willPromoteToContainer ? <Text style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.stuffStashWillTurn')}{selectedParent.title}{t('mobile.AddAssetScreen.intoAContainerForThisItem')}</Text> : null}
                 </View>
 
                 <Pressable
@@ -636,7 +635,7 @@ function ScopedAddAssetScreen({
                   onPress={() => editDraft(() => setShowDetails((current) => !current))}
                   style={styles.moreDetailsButton}
                 >
-                  <Text style={styles.moreDetailsText}>More details</Text>
+                  <Text style={styles.moreDetailsText}>{t('mobile.AddAssetScreen.moreDetails')}</Text>
                   {showDetails ? (
                     <ChevronUp color={colors.textMuted} size={18} strokeWidth={2.2} />
                   ) : (
@@ -644,19 +643,19 @@ function ScopedAddAssetScreen({
                   )}
                 </Pressable>
 
-                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>Asset types could not be loaded.</Text><NativeCommandButton label="Retry asset types" disabled={draftBusy} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
+                {types.isError ? <View><Text accessibilityRole="alert" style={{ color: colors.text }}>{t('mobile.AddAssetScreen.assetTypesCouldNotBeLoaded')}</Text><NativeCommandButton label={t('mobile.AddAssetScreen.retryAssetTypes')} disabled={draftBusy} onPress={() => { if (!draftOperation.current) void types.refetch(); }} /></View> : null}
                 {types.data || !types.isError ? <AssetExpirationEditor key={expirationRevision} asset={{ id: 'new-item', title, description }} types={types.data} disabled={draftBusy}
                   draft={{ title, description, expiration, customAssetTypeId, expirationValid }}
                   onChange={(draft) => { if (draftOperation.current) return; setCustomAssetTypeId(draft.customAssetTypeId); if (draft.expirationValid !== false) setExpiration(draft.expiration ?? undefined); setExpirationValid(draft.expirationValid !== false); }} /> : null}
-                {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>Open More details to add or clear the unfinished tag before saving.</Text> : null}
+                {hasUnstagedTag && !showDetails ? <Text style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.openMoreDetailsToAddOrClearTheUnfinished')}</Text> : null}
                 {showDetails ? (
                   <View>
                     <AppTextInput
-                      accessibilityLabel="Asset description"
+                      accessibilityLabel={t('mobile.AddAssetScreen.assetDescription')}
                       multiline
                       editable={!draftBusy}
                       onChangeText={value => editDraft(() => setDescription(value))}
-                      placeholder="Description"
+                      placeholder={t('mobile.AddAssetScreen.description')}
                       placeholderTextColor={colors.textMuted}
                       style={[styles.input, styles.textArea]}
                       value={description}
@@ -668,7 +667,7 @@ function ScopedAddAssetScreen({
                       entry={inlineTag}
                       onChange={(ids, tags, entry) => editDraft(() => { setSelectedTagIds(ids); setNewTags(tags); setInlineTag(entry); })}
                     />
-                    <NativeCommandButton label="Clear draft" role="destructive"
+                    <NativeCommandButton label={t('mobile.AddAssetScreen.clearDraft')} role="destructive"
                       disabled={draftBusy} onPress={clearDraft} />
                   </View>
                 ) : null}
@@ -716,7 +715,7 @@ function PhotoCapture({
   const styles = createStyles(colors);
   return (
     <View style={styles.photoPanel}>
-      <Text style={styles.photoSectionTitle}>Photos</Text>
+      <Text style={styles.photoSectionTitle}>{t('mobile.AddAssetScreen.photos')}</Text>
       <ScrollView
         horizontal
         scrollEnabled={draggingPhotoId === undefined}
@@ -724,8 +723,8 @@ function PhotoCapture({
         style={styles.photoStrip}
       >
         <Pressable
-          accessibilityLabel="Add photos"
-          accessibilityHint="Choose camera or photo library"
+          accessibilityLabel={t('mobile.AddAssetScreen.addPhotos')}
+          accessibilityHint={t('mobile.AddAssetScreen.chooseCameraOrPhotoLibrary')}
           accessibilityRole="button"
           disabled={disabled}
           onPress={onAddPhotos}
@@ -821,12 +820,12 @@ function PhotoPreviewItem({
         disabled={disabled}
         accessibilityState={{ disabled }}
         accessibilityActions={[
-          { name: 'activate', label: 'Preview photo' },
-          { name: 'decrement', label: 'Move earlier' },
-          { name: 'increment', label: 'Move later' },
-          { name: 'delete', label: 'Remove photo' }
+          { name: 'activate', label: t('mobile.AddAssetScreen.previewPhoto') },
+          { name: 'decrement', label: t('mobile.AddAssetScreen.moveEarlier') },
+          { name: 'increment', label: t('mobile.AddAssetScreen.moveLater') },
+          { name: 'delete', label: t('mobile.AddAssetScreen.removePhoto') }
         ]}
-        accessibilityHint="Tap to preview. Hold and drag to reorder."
+        accessibilityHint={t('mobile.AddAssetScreen.tapToPreviewHoldAndDragToReorder')}
         accessibilityRole="adjustable"
         accessibilityValue={{ text: `${(index + 1).toString()} of ${photoCount.toString()}` }}
         delayLongPress={220}
@@ -947,7 +946,7 @@ function AssetTagPicker({
 
   return (
     <View style={styles.tagPicker}>
-      <Text style={styles.tagPickerTitle}>Tags</Text>
+      <Text style={styles.tagPickerTitle}>{t('mobile.AddAssetScreen.tags')}</Text>
       <AssetTagSelectionField scope={scope} disabled={disabled} tags={tags.map(tag => ({ id: tag.id, label: tag.displayName }))} selectedIds={selectedTagIds}
         onChange={ids => onChange(ids, newTags, entry)} />
       <View style={styles.tagOptions}>
@@ -978,20 +977,20 @@ function AssetTagPicker({
       {creationVisible ? <>
       <View style={styles.newTagRow}>
         <AddDraftNameField key={Platform.OS === 'ios' ? tagNameRevision : 'tag-name'} editable={!disabled}
-          accessibilityLabel="New tag name"
+          accessibilityLabel={t('mobile.AddAssetScreen.newTagName')}
           onChangeText={setNewTagName}
-          placeholder="New tag"
+          placeholder={t('mobile.AddAssetScreen.newTag')}
           placeholderTextColor={colors.textMuted}
           style={[styles.input, styles.newTagNameInput]}
           value={newTagName}
         />
       </View>
-      {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.parentPromotionText}>Use a shorter tag name.</Text> : null}
+      {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.useAShorterTagName')}</Text> : null}
       <TagColorPicker disabled={disabled} palette={colors} value={newTagColor} onChange={setNewTagColor} />
-      <NativeCommandButton label="Add tag" disabled={disabled || !canAddNewTag} onPress={addNewTag} />
-      {newTagName.trim() || newTagColor.trim() ? <Text style={styles.parentPromotionText}>Add this tag or clear its name and color before saving.</Text> : null}
-      <NativeCommandButton label="Cancel new tag" disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
-      </> : <NativeCommandButton label="New tag" disabled={creationActions.disabled} onPress={creationActions.onApply} />}
+      <NativeCommandButton label={t('mobile.AddAssetScreen.addTag')} disabled={disabled || !canAddNewTag} onPress={addNewTag} />
+      {newTagName.trim() || newTagColor.trim() ? <Text style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.addThisTagOrClearItsNameAndColor')}</Text> : null}
+      <NativeCommandButton label={t('mobile.AddAssetScreen.cancelNewTag')} disabled={creationActions.secondaryDisabled} onPress={creationActions.onBack} />
+      </> : <NativeCommandButton label={t('mobile.AddAssetScreen.newTag')} disabled={creationActions.disabled} onPress={creationActions.onApply} />}
     </View>
   );
 }

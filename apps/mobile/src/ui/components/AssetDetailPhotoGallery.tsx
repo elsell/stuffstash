@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from './NativeCommandButton';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -39,9 +40,9 @@ export function assetDetailPhotoPages(
   photos: readonly AssetPhotoViewModel[]
 ): readonly AssetDetailPhotoPagePresentation[] {
   return photos.map((_, index) => {
-    const positionLabel = `${(index + 1).toString()} of ${photos.length.toString()}`;
+    const positionLabel = t('photos.position', { position: index + 1, total: photos.length });
     return {
-      accessibilityLabel: `Open photo ${positionLabel}`,
+      accessibilityLabel: t('photos.openPosition', { position: index + 1, total: photos.length }),
       positionLabel
     };
   });
@@ -74,11 +75,11 @@ export function AssetDetailPhotoGallery({
     <View style={styles.emptyMedia}>
       <Camera accessible={false} color={palette.textMuted} size={20} />
       <Text style={[styles.emptySupporting, { color: palette.textMuted }]}>
-        {photos.length === 0 ? 'No photos' : `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`}
+        {photos.length === 0 ? t('photos.none') : t('photos.count', { count: photos.length })}
       </Text>
     </View>
     {canUseAddPhotos ? <View style={styles.captionCommand}>
-      <NativeCommandButton label="Add photos" onPress={onAddPhotos} />
+      <NativeCommandButton label={t('mobile.AssetDetailPhotoGallery.addPhotos')} onPress={onAddPhotos} />
     </View> : null}
   </View>;
 
@@ -136,8 +137,8 @@ function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
     onPress={() => { if (photo.id && onPhotoPress) onPhotoPress(photo.id); }}
     style={[styles.mediaFrame, styles.photoMediaFrame, { backgroundColor: palette.surfaceMuted, width }]}>
     {failed ? <View style={styles.previewFailure}>
-      <Text style={[styles.emptySupporting, { color: palette.text }]}>Preview unavailable</Text>
-      {canOpen ? <Text style={[styles.emptySupporting, { color: palette.text }]}>Open photo</Text> : null}
+      <Text style={[styles.emptySupporting, { color: palette.text }]}>{t('mobile.AssetDetailPhotoGallery.previewUnavailable')}</Text>
+      {canOpen ? <Text style={[styles.emptySupporting, { color: palette.text }]}>{t('mobile.AssetDetailPhotoGallery.openPhoto')}</Text> : null}
     </View> : <Image accessibilityIgnoresInvertColors accessible={false} resizeMode="cover"
     source={source} style={styles.photo}
     onError={() => { if (currentSource.current === source) setFailedSource(source); }} />}

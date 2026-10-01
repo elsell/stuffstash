@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import {
   ActivityIndicator,
@@ -74,7 +75,7 @@ export function SearchHeader({
   return (
     <View style={baseStyles.header}>
       <View style={styles.resultToolsRow}>
-        {isLoading ? <ActivityIndicator accessibilityLabel="Searching inventory" color={palette.accent} size="small" /> : null}
+        {isLoading ? <ActivityIndicator accessibilityLabel={t('mobile.BrowseHeader.searchingInventory')} color={palette.accent} size="small" /> : null}
         <Text accessibilityLiveRegion="polite" numberOfLines={1} style={styles.resultSummary}>
           {summaryLabel}
         </Text>
@@ -83,7 +84,7 @@ export function SearchHeader({
 
       {activeTokens.length > 0 ? (
         <ScrollView
-          accessibilityLabel="Applied filters"
+          accessibilityLabel={t('mobile.BrowseHeader.appliedFilters')}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.activeFilterRow}
@@ -108,7 +109,7 @@ export function SearchHeader({
               onPress={onClearFilters}
               style={({ pressed }) => [styles.clearAllButton, pressed ? styles.controlPressed : null]}
             >
-              <Text style={styles.clearAllText}>Clear all</Text>
+              <Text style={styles.clearAllText}>{t('mobile.BrowseHeader.clearAll')}</Text>
             </Pressable>
           ) : null}
         </ScrollView>
@@ -118,7 +119,7 @@ export function SearchHeader({
         <View accessibilityLiveRegion="polite" style={styles.inlineError}>
           <Text style={styles.errorText}>{statusMessage}</Text>
           {onRetryResults ? (
-            <NativeCommandButton label="Retry" onPress={onRetryResults} />
+            <NativeCommandButton label={t('mobile.BrowseHeader.retry')} onPress={onRetryResults} />
           ) : null}
         </View>
       ) : null}

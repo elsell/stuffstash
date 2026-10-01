@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { InvitationEmailInput } from './InvitationEmailInput';
 import { InventoryInvitationLinkUnavailableError } from '../../application/sharing/InventorySharing';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -132,8 +133,8 @@ export function InventorySharingScreen({
       setEmailRevision(value => value + 1);
     } catch (error) {
       if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
-        ? { title: 'Invitation created, link unavailable', message: 'If the invitation is still pending below, cancel it before retrying. If you already cancelled it, try again.' }
-        : { title: 'Could not create invitation', message: readableError(error) });
+        ? { title: t('mobile.InventorySharingScreen.invitationCreatedLinkUnavailable'), message: t('mobile.InventorySharingScreen.ifTheInvitationIsStillPendingBelowCancelIt') }
+        : { title: t('mobile.InventorySharingScreen.couldNotCreateInvitation'), message: readableError(error) });
     } finally {
       workingRef.current = false;
       setWorking(false);
@@ -151,7 +152,7 @@ export function InventorySharingScreen({
     try {
       if (action === 'copy') {
         await linkActions.copy(visibleCreated.inviteUrl);
-        if (ownsLinkFeedback()) setLinkFeedback({ title: 'Invitation link copied' });
+        if (ownsLinkFeedback()) setLinkFeedback({ title: t('mobile.InventorySharingScreen.invitationLinkCopied') });
       } else {
         await linkActions.share({ link: visibleCreated.inviteUrl, inventoryName: scope.inventoryName });
       }
@@ -225,18 +226,18 @@ export function InventorySharingScreen({
       style={settingsStyles.shell}
     >
       <View style={settingsStyles.detailHeader}>
-        <Text accessibilityRole="header" style={settingsStyles.detailTitle}>Share {scope.inventoryName}</Text>
-        <Text style={settingsStyles.detailSubtitle}>Invite someone by email as a viewer or editor.</Text>
+        <Text accessibilityRole="header" style={settingsStyles.detailTitle}>{t('mobile.InventorySharingScreen.share')}{scope.inventoryName}</Text>
+        <Text style={settingsStyles.detailSubtitle}>{t('mobile.InventorySharingScreen.inviteSomeoneByEmailAsAViewerOrEditor')}</Text>
       </View>
 
       <SettingsRefreshNotice visible={list.isRefetchError || list.isFetchNextPageError} onRetry={async () => { await (list.isFetchNextPageError ? list.fetchNextPage({ cancelRefetch: false }) : list.refetch({ cancelRefetch: false })); }} />
-      <SettingsSection title="New Invitation">
+      <SettingsSection title={t('mobile.InventorySharingScreen.newInvitation')}>
         <View testID="invitation-creation-form" style={styles.form}>
           {creationError ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
             <Text style={styles.successTitle}>{creationError.title}</Text>
             <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{creationError.message}</Text>
           </View> : null}
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t('mobile.InventorySharingScreen.email')}</Text>
           <InvitationEmailInput
             key={Platform.OS === 'ios' ? `${scopeKey}:${emailRevision}` : scopeKey}
             editable={!working}
@@ -245,8 +246,8 @@ export function InventorySharingScreen({
             style={styles.input}
             email={emailScope.current === scopeKey ? email : ''}
           />
-          <SettingsPickerRow label="Access" accessibilityLabel="Choose invitation access" value={relationship}
-            options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }] as const}
+          <SettingsPickerRow label={t('mobile.InventorySharingScreen.access')} accessibilityLabel={t('mobile.InventorySharingScreen.chooseInvitationAccess')} value={relationship}
+            options={[{ value: 'viewer', label: t('mobile.InventorySharingScreen.viewer') }, { value: 'editor', label: t('mobile.InventorySharingScreen.editor') }] as const}
             disabled={working} onChange={value => { if (!workingRef.current) setRelationship(value); }} />
           <NativeCommandButton prominence="primary" label={working ? 'Creating…' : 'Create Invitation'}
             disabled={working || email.trim().length === 0} onPress={() => void create()} />
@@ -256,14 +257,14 @@ export function InventorySharingScreen({
       {visibleCreated ? (
         <SettingsSection
           footer="Copy or share this link before leaving this screen or creating another invitation. It cannot be recovered later."
-          title="Invitation Link"
+          title={t('mobile.InventorySharingScreen.invitationLink')}
         >
           <View style={styles.oneTimeLink}>
-            <Text style={styles.successTitle}>Invitation ready</Text>
+            <Text style={styles.successTitle}>{t('mobile.InventorySharingScreen.invitationReady')}</Text>
             <Text style={styles.linkContext}>
-              {visibleCreated.email} · {titleCase(visibleCreated.relationship)} · Expires {formatDate(visibleCreated.expiresAt)}
+              {visibleCreated.email} · {titleCase(visibleCreated.relationship)}{t('mobile.InventorySharingScreen.expires')}{formatDate(visibleCreated.expiresAt)}
             </Text>
-            <Text accessibilityLabel="Complete invitation link" selectable style={styles.linkText}>
+            <Text accessibilityLabel={t('mobile.InventorySharingScreen.completeInvitationLink')} selectable style={styles.linkText}>
               {visibleCreated.inviteUrl}
             </Text>
             <View style={styles.linkActions}>
@@ -282,9 +283,9 @@ export function InventorySharingScreen({
         </SettingsSection>
       ) : null}
 
-      <SettingsSection footer="Invitation links are shown only when created. Existing invitations never reveal their links again." title="Invitations">
+      <SettingsSection footer="Invitation links are shown only when created. Existing invitations never reveal their links again." title={t('mobile.InventorySharingScreen.invitations')}>
         {visibleInvitations.length === 0 ? (
-          <View style={styles.empty}><Text style={styles.emptyText}>No invitations yet.</Text></View>
+          <View style={styles.empty}><Text style={styles.emptyText}>{t('mobile.InventorySharingScreen.noInvitationsYet')}</Text></View>
         ) : visibleInvitations.map((invitation, index) => (
           <View key={invitation.id}>
             {index > 0 ? <View style={styles.separator} /> : null}
@@ -292,15 +293,15 @@ export function InventorySharingScreen({
               <View style={styles.invitationText}>
                 <Text style={styles.invitationEmail}>{invitation.email}</Text>
                 <Text style={styles.invitationMetadata}>
-                  {titleCase(invitation.relationship)} · {statusLabel(invitation)} · Expires {formatDate(invitation.expiresAt)}
+                  {titleCase(invitation.relationship)} · {statusLabel(invitation)}{t('mobile.InventorySharingScreen.expires')}{formatDate(invitation.expiresAt)}
                 </Text>
-                {cancellingKeys.has(cancellationKey(invitation.id)) ? <Text accessibilityLiveRegion="polite" style={styles.invitationMetadata}>Cancelling…</Text> : null}
+                {cancellingKeys.has(cancellationKey(invitation.id)) ? <Text accessibilityLiveRegion="polite" style={styles.invitationMetadata}>{t('mobile.InventorySharingScreen.cancelling')}</Text> : null}
                 {cancellationErrors[invitation.id] ? <View accessibilityRole="alert" accessibilityLiveRegion="polite">
-                  <Text style={styles.successTitle}>Could not cancel invitation</Text>
+                  <Text style={styles.successTitle}>{t('mobile.InventorySharingScreen.couldNotCancelInvitation')}</Text>
                   <Text style={[settingsStyles.errorMessage, styles.inlineFeedback]}>{cancellationErrors[invitation.id]}</Text>
                 </View> : null}
                 {invitation.status === 'pending' && !invitation.isExpired ? (
-                  <NativeCommandButton label="Cancel invitation" role="destructive"
+                  <NativeCommandButton label={t('mobile.InventorySharingScreen.cancelInvitation')} role="destructive"
                     disabled={cancellingKeys.has(cancellationKey(invitation.id))}
                     onPress={() => requestCancellation(invitation)} />
                 ) : null}
@@ -310,8 +311,8 @@ export function InventorySharingScreen({
         ))}
       </SettingsSection>
       {list.hasNextPage ? <View>
-        {list.isFetchingNextPage ? <Text accessibilityLiveRegion="polite" style={settingsStyles.errorMessage}>Loading older invitations…</Text> : null}
-        <NativeCommandButton label="Load older invitations" disabled={list.isFetching} onPress={() => void list.fetchNextPage({ cancelRefetch: false })} />
+        {list.isFetchingNextPage ? <Text accessibilityLiveRegion="polite" style={settingsStyles.errorMessage}>{t('mobile.InventorySharingScreen.loadingOlderInvitations')}</Text> : null}
+        <NativeCommandButton label={t('mobile.InventorySharingScreen.loadOlderInvitations')} disabled={list.isFetching} onPress={() => void list.fetchNextPage({ cancelRefetch: false })} />
       </View> : null}
     </ScrollView>
   );

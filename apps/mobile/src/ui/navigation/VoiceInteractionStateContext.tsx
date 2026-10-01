@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { retainFailedConversation } from './VoiceConversationFailure';
 import { appendConversationExchange, canCancelConversation, canSubmitConversation } from './VoiceConversationHistory';
 import type { VoicePlanPhotoDrafts } from '../screens/VoicePlanPhotoDraftState';
@@ -375,7 +376,7 @@ export function markReviewDecisionPending(state: VoiceRealtimeState | null, prog
 }
 
 export function markPhotoRetryInProgress(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
-  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos', ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: 'Adding photos…', canRetry: false } } : {}) } : state;
+  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos', ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: t('mobile.VoiceInteractionStateContext.addingPhotos'), canRetry: false } } : {}) } : state;
 }
 
 export function markPhotoRetryResult(
@@ -396,7 +397,7 @@ export function markPhotoRetryFailure(state: VoiceRealtimeState | null, planId: 
     progressLabel: 'Photo upload failed',
     photoAttachmentStatus: {
       status: 'failed',
-      message: 'Photos could not be attached. Try again.',
+      message: t('mobile.VoiceInteractionStateContext.photosCouldNotBeAttachedTryAgain'),
       canRetry: true
     }
   } : state;

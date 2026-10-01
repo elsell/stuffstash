@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeNavigationSearch } from '../components/NativeNavigationSearch';
 import { shouldShowContainedContentsSearch } from '../components/AssetContainedWorkspace';
@@ -169,10 +170,10 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'success',
         title: `Saved "${asset.title}"`,
-        message: 'The change is now in History.',
+        message: t('mobile.AssetDetailRouteScreen.theChangeIsNowInHistory'),
         ...(completion.undoableOperationId ? {
           action: {
-            label: 'Undo',
+            label: t('mobile.AssetDetailRouteScreen.undo'),
             onPress: () => void undoSavedEdit({
               operationId: completion.undoableOperationId!,
               tenantId: asset.tenantId ?? '',
@@ -191,15 +192,15 @@ export function AssetDetailRouteScreen({
     try {
       await undoAssetEditCommand.execute(input);
       await coreAsset.reconcile();
-      feedback.showNotice({ tone: 'success', title: 'Edit undone', message: 'The previous values were reapplied.' });
+      feedback.showNotice({ tone: 'success', title: t('mobile.AssetDetailRouteScreen.editUndone'), message: t('mobile.AssetDetailRouteScreen.thePreviousValuesWereReapplied') });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: 'Could not undo edit', message: readableError(error, 'Undo failed.') });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: readableError(error, 'Undo failed.') });
     }
   }
 
   function openHistory(asset: AssetDetailViewModel): void {
     if (!asset.tenantId || !asset.inventoryId) {
-      feedback.showNotice({ tone: 'error', title: 'Could not open History', message: 'The item scope is unavailable. Refresh and try again.' });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotOpenHistory'), message: t('mobile.AssetDetailRouteScreen.theItemScopeIsUnavailableRefreshAndTryAgain') });
       return;
     }
     router.push({
@@ -218,7 +219,7 @@ export function AssetDetailRouteScreen({
       if (!canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: 'Could not refresh asset',
+        title: t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset'),
         message: readableError(error, 'Could not refresh asset.')
       });
     }
@@ -322,9 +323,9 @@ export function AssetDetailRouteScreen({
       if (!scope.active) return;
       if (!canPresent()) return;
       feedback.showDialog({
-        title: 'Could not remove photo',
+        title: t('mobile.AssetDetailRouteScreen.couldNotRemovePhoto'),
         message: readableError(error, 'Photo removal failed.'),
-        primaryAction: { label: 'OK' }
+        primaryAction: { label: t('mobile.AssetDetailRouteScreen.oK') }
       });
     } finally {
       scope.pending = false;
@@ -398,7 +399,7 @@ export function AssetDetailRouteScreen({
         feedback.showNotice({
           tone: 'error',
           title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
-          message: 'The latest asset state could not be refreshed yet. Pull to refresh.'
+          message: t('mobile.AssetDetailRouteScreen.theLatestAssetStateCouldNotBeRefreshedYet')
         });
       }
     } catch (error) {
@@ -438,7 +439,7 @@ export function AssetDetailRouteScreen({
         feedback.showNotice({
           tone: 'error',
           title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
-          message: 'The latest availability could not be refreshed yet. Pull to refresh.'
+          message: t('mobile.AssetDetailRouteScreen.theLatestAvailabilityCouldNotBeRefreshedYetPull')
         });
       }
     } catch (error) {
@@ -471,7 +472,7 @@ export function AssetDetailRouteScreen({
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       <NativeNavigationSearch key={`${assetId}:${contentsSearchEnabled}`} enabled={contentsSearchEnabled} query={contentsQuery}
-        placeholder="Search this place" onChange={changeContentsQuery} onSubmit={changeContentsQuery}
+        placeholder={t('mobile.AssetDetailRouteScreen.searchThisPlace')} onChange={changeContentsQuery} onSubmit={changeContentsQuery}
         onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
         title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
@@ -559,7 +560,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading asset</Text>
+      <Text style={styles.stateText}>{t('mobile.AssetDetailRouteScreen.loadingAsset')}</Text>
     </View>
   );
 }

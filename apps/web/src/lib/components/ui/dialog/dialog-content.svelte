@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
 	import { Dialog as DialogPrimitive } from "bits-ui";
 	import DialogPortal from "./dialog-portal.svelte";
 	import DialogOverlay from "./dialog-overlay.svelte";
@@ -39,7 +40,7 @@
 				{#snippet child({ props })}
 					<Button variant="ghost" class="absolute top-4 right-4 size-11" size="icon-sm" {...props}>
 						<XIcon  />
-						<span class="sr-only">Close</span>
+						<span class="sr-only">{t('web.dialogcontent.close')}</span>
 					</Button>
 				{/snippet}
 			</DialogPrimitive.Close>

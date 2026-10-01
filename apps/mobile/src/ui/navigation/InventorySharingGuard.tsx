@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
@@ -22,7 +23,7 @@ export function InventorySharingGuard({
     return (
       <View style={[styles.shell, styles.errorContainer]}>
         <ActivityIndicator color={palette.action} />
-        <Text style={styles.errorMessage}>Checking Sharing access</Text>
+        <Text style={styles.errorMessage}>{t('mobile.InventorySharingGuard.checkingSharingAccess')}</Text>
       </View>
     );
   }

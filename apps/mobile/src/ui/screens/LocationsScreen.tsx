@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { router } from 'expo-router';
@@ -59,7 +60,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={colors.accent} />
-      <Text style={styles.stateText}>Loading locations</Text>
+      <Text style={styles.stateText}>{t('mobile.LocationsScreen.loadingLocations')}</Text>
     </View>
   );
 }
@@ -68,9 +69,9 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   const styles = createStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.LocationsScreen.couldNotLoad')}</Text>
       <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
-      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.LocationsScreen.retry')} disabled={retrying} onPress={onRetry} />
     </View>
   );
 }
@@ -100,7 +101,7 @@ function LocationsList({
       )}
       ListHeaderComponent={
         <View>
-          <Text style={styles.title}>Locations</Text>
+          <Text style={styles.title}>{t('mobile.LocationsScreen.locations')}</Text>
           <View style={styles.contextLine}>
             <IdentityLabel
               iconSize="xs"
@@ -117,7 +118,7 @@ function LocationsList({
           </View>
         </View>
       }
-      ListEmptyComponent={<Text style={styles.emptyText}>No locations yet.</Text>}
+      ListEmptyComponent={<Text style={styles.emptyText}>{t('mobile.LocationsScreen.noLocationsYet')}</Text>}
       renderItem={({ item }) => <LocationRow location={item} />}
     />
   );
@@ -139,7 +140,7 @@ function LocationRow({ location }: { readonly location: LocationBrowserItemViewM
             style={styles.locationImage}
           />
         ) : (
-          <Text style={styles.locationImageLabel}>Place</Text>
+          <Text style={styles.locationImageLabel}>{t('mobile.LocationsScreen.place')}</Text>
         )}
       </View>
       <View style={styles.locationBody}>

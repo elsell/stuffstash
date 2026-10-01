@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { AssetDetailActions } from './AssetDetailActions';
 import { NativeCommandButton } from './NativeCommandButton';
 import { type ReactElement } from 'react';
@@ -155,7 +156,7 @@ export function AssetDetailView({
             <View style={styles.topActions}>
               {onBack ? (
                 <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-                  <Text style={styles.backButtonText}>Back</Text>
+                  <Text style={styles.backButtonText}>{t('mobile.AssetDetailView.back')}</Text>
                 </Pressable>
               ) : <View />}
               {overflowMenu ?? null}
@@ -169,9 +170,9 @@ export function AssetDetailView({
             onMove={onMove} onCheckout={onCheckout} onReturn={onReturn} />
 
           {photosRecovery}
-          {isPhotosLoading ? <WorkspaceLoadingState label="Loading photos" /> : null}
+          {isPhotosLoading ? <WorkspaceLoadingState label={t('mobile.AssetDetailView.loadingPhotos')} /> : null}
 
-          {isContentsLoading ? <WorkspaceLoadingState label="Loading location and contents" /> : null}
+          {isContentsLoading ? <WorkspaceLoadingState label={t('mobile.AssetDetailView.loadingLocationAndContents')} /> : null}
           {contentsRecovery}
 
           <StatusAndProgressSection
@@ -256,7 +257,7 @@ function StatusAndProgressSection({
         <View style={styles.statusPanel}>
           <Text style={styles.statusText}>{photoStatusMessage}</Text>
           {canRetryPhotos && onRetryPhotos ? (
-            <NativeCommandButton label="Retry" onPress={onRetryPhotos} />
+            <NativeCommandButton label={t('mobile.AssetDetailView.retry')} onPress={onRetryPhotos} />
           ) : null}
         </View>
       ) : null}
@@ -269,7 +270,7 @@ function PhotoUploadProgressList({ uploads }: { readonly uploads: readonly Asset
   const styles = createStyles(useAppearanceAwarePalette());
   return (
     <View style={styles.uploadPanel}>
-      <Text style={styles.uploadPanelTitle}>Photo uploads</Text>
+      <Text style={styles.uploadPanelTitle}>{t('mobile.AssetDetailView.photoUploads')}</Text>
       {uploads.map((upload) => (
         <View key={`${upload.index.toString()}-${upload.fileName}`} style={styles.uploadRow}>
           <View style={styles.uploadText}>

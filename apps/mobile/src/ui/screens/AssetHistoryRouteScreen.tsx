@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { isAccessFailure } from '../serverState/isAccessFailure';
@@ -86,22 +87,22 @@ export function AssetHistoryRouteScreen({
 
   return (
     <View style={styles.screen}>
-      <Stack.Screen options={{ title: 'History' }} />
+      <Stack.Screen options={{ title: t('mobile.AssetHistoryRouteScreen.history') }} />
       <View style={styles.heading}>
         <Text accessibilityRole="header" style={styles.assetTitle}>{assetTitle}</Text>
         <HistoryFilter value={view} onChange={setView} styles={styles} />
       </View>
-      {state.status === 'loading' ? <CenteredState label="Loading history" palette={palette} styles={styles} /> : null}
+      {state.status === 'loading' ? <CenteredState label={t('mobile.AssetHistoryRouteScreen.loadingHistory')} palette={palette} styles={styles} /> : null}
       {state.status === 'error' ? (
         <View style={styles.centerState}>
           <Text accessibilityRole="header" style={styles.stateTitle}>{state.title}</Text>
           <Text style={styles.stateMessage}>{state.message}</Text>
-          {state.canRetry ? <NativeCommandButton label="Try again" disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} /> : null}
+          {state.canRetry ? <NativeCommandButton label={t('mobile.AssetHistoryRouteScreen.tryAgain')} disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} /> : null}
         </View>
       ) : null}
       {state.status === 'ready' && history.isRefetchError ? <View style={styles.heading}>
-        <Text accessibilityRole="alert" style={styles.pageError}>History could not be refreshed. Previously loaded activity is shown.</Text>
-        <NativeCommandButton label="Try refreshing again" disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} />
+        <Text accessibilityRole="alert" style={styles.pageError}>{t('mobile.AssetHistoryRouteScreen.historyCouldNotBeRefreshedPreviouslyLoadedActivityIs')}</Text>
+        <NativeCommandButton label={t('mobile.AssetHistoryRouteScreen.tryRefreshingAgain')} disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.refetch({ cancelRefetch: false }); }} />
       </View> : null}
       {state.status === 'ready' ? (
         <SectionList
@@ -136,10 +137,10 @@ export function AssetHistoryRouteScreen({
 function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActivityView; readonly onChange: (view: AssetActivityView) => void; readonly styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.filterButton}>
-      <NativeChoicePicker label="Show"
+      <NativeChoicePicker label={t('mobile.AssetHistoryRouteScreen.show')}
         accessibilityLabel={`Show History, ${value === 'changes' ? 'Changes' : 'All events'}`}
         value={value} includeEmptyOption={false}
-        options={[{ value: 'changes', label: 'Changes' }, { value: 'all', label: 'All events' }]}
+        options={[{ value: 'changes', label: t('mobile.AssetHistoryRouteScreen.changes') }, { value: 'all', label: t('mobile.AssetHistoryRouteScreen.allEvents') }]}
         onChange={next => { if (next === 'changes' || next === 'all') onChange(next); }} />
     </View>
   );
@@ -148,7 +149,7 @@ function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActiv
 function HistoryRow({ record, onPress, styles }: { readonly record: AssetActivityRecordViewModel; readonly onPress: () => void; readonly styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.row}>
-      <Pressable accessibilityHint="Shows exact time and technical details" accessibilityRole="button" onPress={onPress} style={styles.rowMain}>
+      <Pressable accessibilityHint={t('mobile.AssetHistoryRouteScreen.showsExactTimeAndTechnicalDetails')} accessibilityRole="button" onPress={onPress} style={styles.rowMain}>
         <Text style={styles.rowTitle}>{record.title}</Text>
         <Text numberOfLines={2} style={styles.rowSummary}>{record.summary}</Text>
         <Text style={styles.rowMeta}>{record.occurredAtLabel} · {record.actorLabel} · {record.sourceLabel}</Text>

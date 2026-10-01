@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
  import { getContext, untrack, onDestroy } from 'svelte';
  import { ExpirationHomeQuery, type ExpirationHomeState } from '$lib/application/expirationHome';
  import type { Asset } from '$lib/domain/inventory';
@@ -20,12 +21,12 @@
  function open(event:MouseEvent,mode:ExpirationMode){if(onNavigate&&shouldHandleWorkspaceLinkClick(event)){event.preventDefault();onNavigate(route(mode));}}
 </script>
 {#if workspace && (error || !page || page.counts.all>0)}
- <section class="expiration-home" aria-label="Expiration"><header><h2>Expiration</h2><Button.Root variant="ghost" href={workspaceRouteHref(route('all'),tenantId,inventoryId)} onclick={event=>open(event,'all')}>See all</Button.Root></header>
- {#if error}<p role="alert">{error}</p><Button.Root variant="outline" onclick={()=>{void refresh();}}>Retry expiration</Button.Root>{/if}
- {#if !page&&!error}<p role="status">Loading expiration…</p>{/if}
+ <section class="expiration-home" aria-label={t('web.ExpirationHome.expiration')}><header><h2>{t('web.ExpirationHome.expiration')}</h2><Button.Root variant="ghost" href={workspaceRouteHref(route('all'),tenantId,inventoryId)} onclick={event=>open(event,'all')}>{t('web.ExpirationHome.seeAll')}</Button.Root></header>
+ {#if error}<p role="alert">{error}</p><Button.Root variant="outline" onclick={()=>{void refresh();}}>{t('web.ExpirationHome.retryExpiration')}</Button.Root>{/if}
+ {#if !page&&!error}<p role="status">{t('web.ExpirationHome.loadingExpiration')}</p>{/if}
  {#if page}
  <ExpirationRefresh assets={page.items} timezone={page.timezone} scope={`${tenantId}/${inventoryId}`} onRefresh={refresh} />
- {#if page.counts.expired+page.counts.soon>0}<div class="counts"><Button.Root variant="ghost" href={workspaceRouteHref(route('expired'),tenantId,inventoryId)} onclick={event=>open(event,'expired')}>Expired · {page.counts.expired}</Button.Root><Button.Root variant="ghost" href={workspaceRouteHref(route('soon'),tenantId,inventoryId)} onclick={event=>open(event,'soon')}>Expiring soon · {page.counts.soon}</Button.Root></div><ExpirationRows items={page.items} grouped={false} {onOpenAsset} />{:else}<p class="quiet">None expiring soon</p>{/if}
+ {#if page.counts.expired+page.counts.soon>0}<div class="counts"><Button.Root variant="ghost" href={workspaceRouteHref(route('expired'),tenantId,inventoryId)} onclick={event=>open(event,'expired')}>{t('web.ExpirationHome.expiredFull', { expired: page.counts.expired })}</Button.Root><Button.Root variant="ghost" href={workspaceRouteHref(route('soon'),tenantId,inventoryId)} onclick={event=>open(event,'soon')}>{t('web.ExpirationHome.expiringSoonFull', { soon: page.counts.soon })}</Button.Root></div><ExpirationRows items={page.items} grouped={false} {onOpenAsset} />{:else}<p class="quiet">{t('web.ExpirationHome.noneExpiringSoon')}</p>{/if}
  {/if}</section>
 {/if}
 <style>.expiration-home{margin-bottom:2rem;}header{display:flex;align-items:center;justify-content:space-between;gap:1rem;}h2{font-size:var(--text-section-size);font-weight:600;}.counts{display:flex;gap:.75rem;flex-wrap:wrap;}.quiet{color:var(--muted-foreground);padding:.5rem 0;}</style>

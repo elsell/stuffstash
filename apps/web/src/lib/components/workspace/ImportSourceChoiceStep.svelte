@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import Database from '@lucide/svelte/icons/database';
   import FileText from '@lucide/svelte/icons/file-text';
   import * as Button from '$lib/components/ui/button/index.js';
@@ -20,26 +21,26 @@
 <Card.Root>
   <Card.Header>
     <ImportFlowStepper current="source" {availableSteps} {onNavigateStep} />
-    <Card.Title>Choose import method</Card.Title>
-    <Card.Description>Pick the path that matches the data you have right now.</Card.Description>
+    <Card.Title>{t('web.ImportSourceChoiceStep.chooseImportMethod')}</Card.Title>
+    <Card.Description>{t('web.ImportSourceChoiceStep.pickThePathThatMatchesTheDataYouHave')}</Card.Description>
   </Card.Header>
   <Card.Content>
     <div class="import-source-choice-content">
-      <div class="source-choice-grid" role="group" aria-label="Homebox import method">
+      <div class="source-choice-grid" role="group" aria-label={t('web.ImportSourceChoiceStep.homeboxImportMethod')}>
         <Button.Root variant="outline" class="source-card" href={liveHref} onclick={(event) => onChoose(event, 'homebox_live')}>
           <span class="source-choice-icon"><Database size={24} aria-hidden="true" /></span>
           <span class="source-choice-copy">
-            <strong>Connect to Homebox</strong>
-            <small>Use your Homebox URL and credentials. Best when the instance is reachable and you want photos from the live API.</small>
-            <em>Can include photos · checks the source before running</em>
+            <strong>{t('web.ImportSourceChoiceStep.connectToHomebox')}</strong>
+            <small>{t('web.ImportSourceChoiceStep.useYourHomeboxURLAndCredentialsBestWhenThe')}</small>
+            <em>{t('web.ImportSourceChoiceStep.canIncludePhotosChecksTheSourceBeforeRunning')}</em>
           </span>
         </Button.Root>
         <Button.Root variant="outline" class="source-card" href={csvHref} onclick={(event) => onChoose(event, 'homebox_csv')}>
           <span class="source-choice-icon"><FileText size={24} aria-hidden="true" /></span>
           <span class="source-choice-copy">
-            <strong>Upload Homebox CSV</strong>
-            <small>Use an exported CSV file. Best for offline imports, migrations from an older instance, or when the Homebox API is not reachable.</small>
-            <em>No photos in CSV · works without a live server</em>
+            <strong>{t('web.ImportSourceChoiceStep.uploadHomeboxCSV')}</strong>
+            <small>{t('web.ImportSourceChoiceStep.useAnExportedCSVFileBestForOfflineImports')}</small>
+            <em>{t('web.ImportSourceChoiceStep.noPhotosInCSVWorksWithoutALiveServer')}</em>
           </span>
         </Button.Root>
       </div>

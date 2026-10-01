@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { SettingsPickerRow } from './SettingsPickerRow';
 import { useEffect, useRef, useState } from 'react';
@@ -56,20 +57,20 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
   }
   return <>
     {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? `Inventory defaults: ${reminderSummary(displayed)}.` : undefined}>
-      <SettingsPickerRow label="Reminders" accessibilityLabel="Choose reminder mode" value={mode}
-        options={[{value:'defaults',label:'Use defaults'},{value:'custom',label:'Custom'},{value:'off',label:'Off'}] as const}
+      <SettingsPickerRow label={t('mobile.ExpirationReminderEditor.reminders')} accessibilityLabel={t('mobile.ExpirationReminderEditor.chooseReminderMode')} value={mode}
+        options={[{value:'defaults',label:t('mobile.ExpirationReminderEditor.useDefaults')},{value:'custom',label:t('mobile.ExpirationReminderEditor.custom')},{value:'off',label:t('mobile.ExpirationReminderEditor.off')}] as const}
         disabled={locked || error} onChange={nextMode => { if (nextMode !== mode) void commit(displayed, nextMode); }} />
-    </SettingsSection> : <SettingsSection title="Inventory defaults" footer="Types use these rules unless you customize them below.">
-      <SettingsSwitchRow label="Default reminders" value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
+    </SettingsSection> : <SettingsSection title={t('mobile.ExpirationReminderEditor.inventoryDefaults')} footer="Types use these rules unless you customize them below.">
+      <SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.defaultReminders')} value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
     </SettingsSection>}
     {mode === 'custom' ? <SettingsSection>
-      <SettingsNavigationRow label="Before expiration" accessibilityLabel="Before expiration" value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : 'Off'} disabled={locked || error} onPress={onEditDays} />
-      <SettingsSeparator /><SettingsSwitchRow label="When expired" value={draft.expired} disabled={locked || error} onValueChange={expired => void commit({ ...draft, expired })} />
+      <SettingsNavigationRow label={t('mobile.ExpirationReminderEditor.beforeExpiration')} accessibilityLabel={t('mobile.ExpirationReminderEditor.beforeExpiration')} value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : 'Off'} disabled={locked || error} onPress={onEditDays} />
+      <SettingsSeparator /><SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.whenExpired')} value={draft.expired} disabled={locked || error} onValueChange={expired => void commit({ ...draft, expired })} />
     </SettingsSection> : null}
-    {saving ? <SettingsSection><SettingsLoadingRow label="Saving reminders…" /></SettingsSection> : null}
+    {saving ? <SettingsSection><SettingsLoadingRow label={t('mobile.ExpirationReminderEditor.savingReminders')} /></SettingsSection> : null}
     {error ? <SettingsSection footer="Could not save. Your change is kept here until you retry or discard it.">
-      <SettingsActionRow accessibilityLabel="Retry saving reminders" label="Retry" disabled={locked} onPress={() => void commit(draft)} />
-      <SettingsSeparator /><SettingsActionRow accessibilityLabel="Discard reminder changes" label="Discard change" disabled={locked} onPress={() => setError(false)} />
+      <SettingsActionRow accessibilityLabel={t('mobile.ExpirationReminderEditor.retrySavingReminders')} label={t('mobile.ExpirationReminderEditor.retry')} disabled={locked} onPress={() => void commit(draft)} />
+      <SettingsSeparator /><SettingsActionRow accessibilityLabel={t('mobile.ExpirationReminderEditor.discardReminderChanges')} label={t('mobile.ExpirationReminderEditor.discardChange')} disabled={locked} onPress={() => setError(false)} />
     </SettingsSection> : null}
   </>;
 }

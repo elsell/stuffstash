@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { usePullRefreshFeedback } from '../serverState/usePullRefreshFeedback';
 import { useMemo } from 'react';
@@ -93,7 +94,7 @@ export function LocationAssetList({
             />
           </View>
         }
-        ListEmptyComponent={<Text style={styles.emptyText}>No assets in this location.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>{t('mobile.LocationAssetsRouteScreen.noAssetsInThisLocation')}</Text>}
         renderItem={({ item }) => (
           <AssetCard
             asset={item}
@@ -114,7 +115,7 @@ function LoadingState() {
   return (
     <View style={styles.centerState}>
       <ActivityIndicator color={palette.accent} />
-      <Text style={styles.stateText}>Loading location</Text>
+      <Text style={styles.stateText}>{t('mobile.LocationAssetsRouteScreen.loadingLocation')}</Text>
     </View>
   );
 }
@@ -124,9 +125,9 @@ function ErrorState({ message, retrying, onRetry }: { readonly message: string; 
   const styles = useMemo(() => createStyles(palette), [palette]);
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.LocationAssetsRouteScreen.couldNotLoad')}</Text>
       <Text accessibilityRole="alert" style={styles.stateText}>{message}</Text>
-      <NativeCommandButton label="Retry" disabled={retrying} onPress={onRetry} />
+      <NativeCommandButton label={t('mobile.LocationAssetsRouteScreen.retry')} disabled={retrying} onPress={onRetry} />
     </View>
   );
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { CreateWorkspace, CreatedHousehold, CreatedInventory } from '../../application/inventories/CreateWorkspace';
@@ -41,7 +42,7 @@ export function WorkspaceCreationForm({ task, command, onCancel, onCreated, onBu
       <View style={styles.navigationRow}><DraftTextField style={[styles.rowLabel, { flex: 1, minHeight: 48 }]} placeholderTextColor={palette.textMuted} accessibilityLabel={label} placeholder={label}
         value={name} onChangeText={setName} editable={!saving} /></View>
     </SettingsSection>
-    {saving ? <Text accessibilityLiveRegion="polite" style={styles.sectionFooter}>Creating…</Text> : null}
+    {saving ? <Text accessibilityLiveRegion="polite" style={styles.sectionFooter}>{t('mobile.WorkspaceCreationForm.creating')}</Text> : null}
     {error ? <Text accessibilityRole="alert" style={styles.sectionFooter}>{error}</Text> : null}
   </NativeFilterSheet>;
 }

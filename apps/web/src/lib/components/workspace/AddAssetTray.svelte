@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { addReturnFocusTarget } from '$lib/application/workspaceAddFocus';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { onDestroy, tick } from 'svelte';
@@ -327,7 +328,7 @@
   >
     <Sheet.Header class="section-heading compact shrink-0 border-b px-5 py-4 pr-16 text-left sm:px-6">
       <Sheet.Title id="add-title">{kindCopy.heading}</Sheet.Title>
-      <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label="Close add tray" onclick={closeFromLink}><X /></Button.Root>
+      <Button.Root href={closeHref} variant="ghost" size="icon-sm" aria-label={t('web.AddAssetTray.closeAddTray')} onclick={closeFromLink}><X /></Button.Root>
     </Sheet.Header>
 
     <div class="add-tray-body">
@@ -458,7 +459,7 @@
     </div>
 
     <Sheet.Footer class="tray-actions shrink-0 border-t px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
-      <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>Cancel</Button.Root>
+      <Button.Root href={closeHref} variant="outline" onclick={closeFromLink}>{t('web.AddAssetTray.cancel')}</Button.Root>
       <Button.Root disabled={saving || !expirationValid || title.trim().length === 0 || !!photoError || quickParentMissingName} onclick={() => { void save(); }}>{kindCopy.saveLabel}</Button.Root>
     </Sheet.Footer>
   </Sheet.Content>

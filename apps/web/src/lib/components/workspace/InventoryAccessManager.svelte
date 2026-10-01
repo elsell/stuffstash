@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import Link2 from '@lucide/svelte/icons/link-2';
@@ -322,7 +323,7 @@
       return;
     }
     try {
-      await navigator.share({ title: 'Stuff Stash invitation', text: 'You’ve been invited to a Stuff Stash inventory.', url: inviteLink });
+      await navigator.share({ title: t('web.InventoryAccessManager.stuffStashInvitation'), text: 'You’ve been invited to a Stuff Stash inventory.', url: inviteLink });
       message = 'Invitation shared.';
       error = '';
     } catch (caught) {
@@ -512,7 +513,7 @@
   <div class="settings-panel-heading">
     <UserPlus aria-hidden="true" />
     <div>
-      <h2 id="settings-access" bind:this={sharingHeading} tabindex="-1">Sharing</h2>
+      <h2 id="settings-access" bind:this={sharingHeading} tabindex="-1">{t('web.InventoryAccessManager.sharing')}</h2>
       <p>{canShare ? 'Manage direct grants and invite links for this inventory.' : 'Sharing requires inventory share access.'}</p>
     </div>
   </div>
@@ -527,16 +528,16 @@
       <p class="success-note" role="status">{message}</p>
     {/if}
     {#if inviteLink}
-      <div class="one-time-token" aria-label="One-time invitation link">
+      <div class="one-time-token" aria-label={t('web.InventoryAccessManager.oneTimeInvitationLink')}>
         <div>
-          <strong>Invitation link</strong>
+          <strong>{t('web.InventoryAccessManager.invitationLink')}</strong>
           <p class="token-line"><Link2 aria-hidden="true" /> <code>{inviteLink}</code></p>
-          <small>This link cannot be shown again after you leave this page.</small>
+          <small>{t('web.InventoryAccessManager.thisLinkCannotBeShownAgainAfterYouLeave')}</small>
         </div>
         <div class="invitation-link-actions">
-          <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void copyInviteLink(); }}>Copy link</Button.Root>
+          <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void copyInviteLink(); }}>{t('web.InventoryAccessManager.copyLink')}</Button.Root>
           {#if typeof navigator !== 'undefined' && typeof navigator.share === 'function'}
-            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void shareInviteLink(); }}>Share invitation</Button.Root>
+            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void shareInviteLink(); }}>{t('web.InventoryAccessManager.shareInvitation')}</Button.Root>
           {/if}
         </div>
       </div>
@@ -558,42 +559,42 @@
 
     <form class="access-form invitation-form" onsubmit={(event) => { event.preventDefault(); void invite(); }}>
       <div class="field-stack">
-        <Label for="invite-email">Email address</Label>
-        <Input id="invite-email" type="email" bind:value={invitationEmail} placeholder="person@example.com" />
+        <Label for="invite-email">{t('web.InventoryAccessManager.emailAddress')}</Label>
+        <Input id="invite-email" type="email" bind:value={invitationEmail} placeholder={t('web.InventoryAccessManager.personExampleCom')} />
       </div>
       <div class="field-stack">
-        <span class="field-label">Access level</span>
+        <span class="field-label">{t('web.InventoryAccessManager.accessLevel')}</span>
         <SegmentedControl
-          label="Invitation access level"
+          label={t('web.InventoryAccessManager.invitationAccessLevel')}
           value={invitationRelationship}
           options={relationshipOptions}
           onSelect={(value) => { invitationRelationship = value as InventoryAccessRelationship; }}
         />
       </div>
-      <Button.Root type="submit" disabled={busy || invitationEmail.trim().length === 0}>Create invite</Button.Root>
+      <Button.Root type="submit" disabled={busy || invitationEmail.trim().length === 0}>{t('web.InventoryAccessManager.createInvite')}</Button.Root>
     </form>
 
     <details class="advanced-access">
-      <summary>Advanced account grants</summary>
-      <p>Use the account ID supplied by your identity provider or administrator.</p>
+      <summary>{t('web.InventoryAccessManager.advancedAccountGrants')}</summary>
+      <p>{t('web.InventoryAccessManager.useTheAccountIDSuppliedByYourIdentityProvider')}</p>
       <form class="access-form" onsubmit={(event) => { event.preventDefault(); void addGrant(); }}>
         <div class="field-stack">
-          <Label for="grant-principal">Account ID</Label>
-          <Input id="grant-principal" bind:value={principalId} placeholder="account-id" />
+          <Label for="grant-principal">{t('web.InventoryAccessManager.accountID')}</Label>
+          <Input id="grant-principal" bind:value={principalId} placeholder={t('web.InventoryAccessManager.accountId')} />
         </div>
         <div class="field-stack">
-          <span class="field-label">Access level</span>
+          <span class="field-label">{t('web.InventoryAccessManager.accessLevel')}</span>
           <SegmentedControl
-            label="Direct grant access level"
+            label={t('web.InventoryAccessManager.directGrantAccessLevel')}
             value={grantRelationship}
             options={relationshipOptions}
             onSelect={(value) => { grantRelationship = value as InventoryAccessRelationship; }}
           />
         </div>
-        <Button.Root type="submit" disabled={busy || principalId.trim().length === 0}>Grant access</Button.Root>
+        <Button.Root type="submit" disabled={busy || principalId.trim().length === 0}>{t('web.InventoryAccessManager.grantAccess')}</Button.Root>
       </form>
-      <div class="access-list" aria-label="Direct grants">
-        <h3>Direct grants</h3>
+      <div class="access-list" aria-label={t('web.InventoryAccessManager.directGrants')}>
+        <h3>{t('web.InventoryAccessManager.directGrants')}</h3>
         {#if grantListStatus.kind !== 'none'}
           <p class="muted-note" role={grantListStatus.role}>{grantListStatus.message}</p>
         {:else}
@@ -603,22 +604,22 @@
                 <strong>{grant.principalId}</strong>
                 <small>{grant.relationship}</small>
               </span>
-              <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { revokeError = ''; revokeTarget = grant; }}>Revoke</Button.Root>
+              <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { revokeError = ''; revokeTarget = grant; }}>{t('web.InventoryAccessManager.revoke')}</Button.Root>
             </div>
           {/each}
           {#if grantNextCursor}
-            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void loadMoreGrants(); }}>Load more grants</Button.Root>
+            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void loadMoreGrants(); }}>{t('web.InventoryAccessManager.loadMoreGrants')}</Button.Root>
           {/if}
         {/if}
       </div>
     </details>
 
     <div class="access-columns">
-      <div class="access-list" aria-label="Invitations">
+      <div class="access-list" aria-label={t('web.InventoryAccessManager.invitations')}>
         <div class="access-list-header">
-          <h3>Invitations</h3>
+          <h3>{t('web.InventoryAccessManager.invitations')}</h3>
           <SegmentedControl
-            label="Invitation status"
+            label={t('web.InventoryAccessManager.invitationStatus')}
             value={invitationStatus}
             options={invitationStatusOptions}
             onSelect={(value) => updateInvitationStatus(value as InvitationStatusFilter)}
@@ -659,16 +660,16 @@
             </div>
           {/each}
           {#if invitationNextCursor}
-            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void loadMoreInvitations(); }}>Load more invitations</Button.Root>
+            <Button.Root variant="outline" size="sm" disabled={busy} onclick={() => { void loadMoreInvitations(); }}>{t('web.InventoryAccessManager.loadMoreInvitations')}</Button.Root>
           {/if}
         {/if}
       </div>
     </div>
     {#if revokeTarget}
-      <WorkspaceConfirmationDialog open title="Revoke access" description={`Remove ${revokeTarget.relationship} access for ${revokeTarget.principalId}?`} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
+      <WorkspaceConfirmationDialog open title={t('web.InventoryAccessManager.revokeAccess')} description={`Remove ${revokeTarget.relationship} access for ${revokeTarget.principalId}?`} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
         {#if revokeError}<p class="denied-note" role="alert">{revokeError}</p>{/if}
-        {#snippet cancel()}<Button.Root variant="outline" autofocus disabled={busy} onclick={() => { revokeTarget = null; revokeError = ''; }}>Cancel</Button.Root>{/snippet}
-        {#snippet action()}<Button.Root variant="destructive" disabled={busy} onclick={() => { if (revokeTarget) void revokeGrant(revokeTarget); }}>Revoke access</Button.Root>{/snippet}
+        {#snippet cancel()}<Button.Root variant="outline" autofocus disabled={busy} onclick={() => { revokeTarget = null; revokeError = ''; }}>{t('web.InventoryAccessManager.cancel')}</Button.Root>{/snippet}
+        {#snippet action()}<Button.Root variant="destructive" disabled={busy} onclick={() => { if (revokeTarget) void revokeGrant(revokeTarget); }}>{t('web.InventoryAccessManager.revokeAccess')}</Button.Root>{/snippet}
       </WorkspaceConfirmationDialog>
     {/if}
   {/if}

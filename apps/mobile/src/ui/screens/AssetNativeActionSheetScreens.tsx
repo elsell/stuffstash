@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { MoveSelectionStatus } from '../components/MoveSelectionList.types';
 import { useTaskPresentation } from '../navigation/useTaskPresentation';
 import { NativeCommandButton } from '../components/NativeCommandButton';
@@ -72,7 +73,7 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
   const asset = placement.data && assetPlacementQuery ? { ...core.data.view, parentLocationTrail: placement.data.parentLocationTrail, parentLocationTrailLabel: placement.data.parentLocationTrailLabel, locationTrailLabel: placement.data.locationTrailLabel, isPlacementLoading: false } : core.data.view;
   return <Fragment key={`${asset.tenantId}:${asset.inventoryId}:${asset.id}`}>
     {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? 'Current placement could not be loaded.' : 'Loading current placement…'}</Text> : null}
-    {assetPlacementQuery && placement.isError ? <NativeCommandButton label="Retry placement" onPress={() => void placement.refetch()} /> : null}
+    {assetPlacementQuery && placement.isError ? <NativeCommandButton label={t('mobile.AssetNativeActionSheetScreens.retryPlacement')} onPress={() => void placement.refetch()} /> : null}
     {children(asset)}
   </Fragment>;
 }
@@ -80,8 +81,8 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
 function AssetLoadState({ failed, onRetry }: { readonly failed: boolean; readonly onRetry: () => void }) {
   const styles = useStyles();
   return <SafeAreaView style={styles.frame} edges={['left', 'right', 'bottom']}>
-    {failed ? <ErrorState message="Could not load asset." onRetry={onRetry} /> : <LoadingState label="Loading asset" />}
-    <NativeCommandButton label="Close" onPress={returnFromAssetAction} />
+    {failed ? <ErrorState message={t('mobile.AssetNativeActionSheetScreens.couldNotLoadAsset')} onRetry={onRetry} /> : <LoadingState label={t('mobile.AssetNativeActionSheetScreens.loadingAsset')} />}
+    <NativeCommandButton label={t('mobile.AssetNativeActionSheetScreens.close')} onPress={returnFromAssetAction} />
   </SafeAreaView>;
 }
 
@@ -176,12 +177,12 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
   }
 
   return (
-    <NativeSheetFrame title="Edit asset" busy={isSaving} dismissible={false}>
+    <NativeSheetFrame title={t('mobile.AssetNativeActionSheetScreens.editAsset')} busy={isSaving} dismissible={false}>
       <EditAssetSheet
         readOnly={!asset.canEdit}
         metadataRecovery={<>
-          {types.isError ? <InlineQueryError message="Asset types could not be loaded." retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
-          {tags.isError ? <InlineQueryError message="Tags could not be loaded." retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
+          {types.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.assetTypesCouldNotBeLoaded')} retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
+          {tags.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.tagsCouldNotBeLoaded')} retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
         </>}
         asset={asset}
         assetTypes={types.data}
@@ -336,7 +337,7 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
   }
 
   return (
-    <NativeSheetFrame title="Move something here" busy={isSaving}>
+    <NativeSheetFrame title={t('mobile.AssetNativeActionSheetScreens.moveSomethingHere')} busy={isSaving}>
       {(
         <MoveThingsHereSheet
           readOnly={!asset.canMove || !asset.canContainAssets}
@@ -391,9 +392,9 @@ function ErrorState({ message, onRetry }: { readonly message: string; readonly o
   const styles = useStyles();
   return (
     <View style={styles.centerState}>
-      <Text style={styles.errorTitle}>Could not load</Text>
+      <Text style={styles.errorTitle}>{t('mobile.AssetNativeActionSheetScreens.couldNotLoad')}</Text>
       <Text style={styles.stateText}>{message}</Text>
-      {onRetry ? <NativeCommandButton label="Retry asset" onPress={onRetry} /> : null}
+      {onRetry ? <NativeCommandButton label={t('mobile.AssetNativeActionSheetScreens.retryAsset')} onPress={onRetry} /> : null}
     </View>
   );
 }
@@ -409,15 +410,15 @@ function InlineQueryError({ message, retryLabel, onRetry }: {
 }
 
 function candidateSelectionStatus(candidates: ReturnType<typeof useParentCandidates>): MoveSelectionStatus | undefined {
-  if (candidates.isError) return { message: 'Suggestions could not be loaded.',
-    retry: { label: 'Retry suggestions', onPress: () => { void candidates.refetch(); } } };
-  if (!candidates.data) return { message: 'Loading suggestions…' };
+  if (candidates.isError) return { message: t('mobile.AssetNativeActionSheetScreens.suggestionsCouldNotBeLoaded'),
+    retry: { label: t('mobile.AssetNativeActionSheetScreens.retrySuggestions'), onPress: () => { void candidates.refetch(); } } };
+  if (!candidates.data) return { message: t('mobile.AssetNativeActionSheetScreens.loadingSuggestions') };
   return undefined;
 }
 
 function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {
-  if (candidates.isError) return <InlineQueryError message="Suggestions could not be loaded." retryLabel="Retry suggestions" onRetry={() => void candidates.refetch()} />;
-  if (!candidates.data) return <Text accessibilityLiveRegion="polite">Loading suggestions…</Text>;
+  if (candidates.isError) return <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.suggestionsCouldNotBeLoaded')} retryLabel="Retry suggestions" onRetry={() => void candidates.refetch()} />;
+  if (!candidates.data) return <Text accessibilityLiveRegion="polite">{t('mobile.AssetNativeActionSheetScreens.loadingSuggestions')}</Text>;
   return null;
 }
 

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react-native';
 import { Keyboard, PlatformColor, Pressable, StyleSheet, View } from 'react-native';
@@ -34,8 +35,8 @@ export function AppKeyboardAccessory({ enabled = true }: { readonly enabled?: bo
           ]}
         >
           <Pressable
-            accessibilityHint="Hides the keyboard without submitting"
-            accessibilityLabel="Dismiss keyboard"
+            accessibilityHint={t('mobile.AppKeyboardAccessoryios.hidesTheKeyboardWithoutSubmitting')}
+            accessibilityLabel={t('mobile.AppKeyboardAccessoryios.dismissKeyboard')}
             accessibilityRole="button"
             hitSlop={4}
             onPress={() => { void KeyboardController.dismiss(); }}

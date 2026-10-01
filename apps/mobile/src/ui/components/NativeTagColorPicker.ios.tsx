@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ColorPicker, Host, HStack, Spacer, Text } from '@expo/ui/swift-ui';
 import { controlSize, disabled as disabledModifier, fixedSize, frame, labelsHidden } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
@@ -5,12 +6,12 @@ import { nativeTagColorInteraction, nativeTagColorSelection } from './NativeTagC
 
 export function NativeTagColorPicker({ disabled, onChange, value }: { readonly disabled: boolean; readonly onChange: (value: string) => void; readonly value: string }) {
   const interaction = nativeTagColorInteraction(disabled, onChange);
-  return <View accessibilityLabel="Full color picker" accessibilityState={{ disabled }} pointerEvents={interaction.pointerEvents} style={[styles.host, disabled && styles.disabled]}>
+  return <View accessibilityLabel={t('mobile.NativeTagColorPickerios.fullColorPicker')} accessibilityState={{ disabled }} pointerEvents={interaction.pointerEvents} style={[styles.host, disabled && styles.disabled]}>
     <Host matchContents style={styles.host}>
       <HStack>
-        <Text modifiers={[fixedSize({ horizontal: false, vertical: true })]}>Choose any color</Text>
+        <Text modifiers={[fixedSize({ horizontal: false, vertical: true })]}>{t('mobile.NativeTagColorPickerios.chooseAnyColor')}</Text>
         <Spacer />
-        <ColorPicker label="Choose any color" selection={nativeTagColorSelection(value)} supportsOpacity={false}
+        <ColorPicker label={t('mobile.NativeTagColorPickerios.chooseAnyColor')} selection={nativeTagColorSelection(value)} supportsOpacity={false}
           onSelectionChange={interaction.onSelectionChange}
           modifiers={[disabledModifier(disabled), labelsHidden(), controlSize('large'), frame({ minWidth: 44, minHeight: 44 })]} />
       </HStack>
