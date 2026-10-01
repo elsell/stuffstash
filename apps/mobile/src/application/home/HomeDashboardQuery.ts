@@ -46,13 +46,13 @@ export class HomeDashboardQuery {
       workspace.inventories[0];
 
     if (!inventory) {
-      throw new Error('Inventory workspace must include at least one inventory.');
+      throw new Error(t('inventory.workspaceEmpty'));
     }
 
     const tenant = workspace.tenants.find((item) => item.id === inventory.tenantId);
 
     if (!tenant) {
-      throw new Error('Selected inventory must belong to a tenant.');
+      throw new Error(t('inventory.tenantMissing'));
     }
 
     const overview = createInventoryOverview(tenant, inventory, workspace.inventories);

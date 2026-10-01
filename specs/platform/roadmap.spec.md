@@ -56,23 +56,27 @@ measurements beyond image callback samples. Remaining G8 orchestration and G6
 presentation candidates continue after this batch. Do not gate this batch on those
 unrelated remaining requirements or claim they are complete.
 
-## Current frozen batch — G8, G6, V1
+## Current frozen batch — D2, G6, V1
 
-PR #225 merged at 667a9196 after all CI36916778478 checks passed at23636e10.
-It delivered conversation/proposal ownership, surfaced validation localization,
-and bounded browser observer overhead samples. Release36917837759 is queued
-behind catch-up release36915932407; verify terminal evidence before claiming delivery.
+PR #225 merged667a9196 after CI36916778478 passed. PR #227 mergedc5c89fe7
+after CI36918384453 passed, including real OIDC edit/reload/export and isolation.
+Their release evidence is still pending. GitHub replaced #225's pending release
+when #227 merged: #227 run36919621718 was cancelled and #225 run36917837759
+restarted at its original source. The release waiter restarts #227 only after
+#225 succeeds. Catch-up release36915932407 precedes both. Do not merge another
+batch until this delivery queue is complete; inspect exact terminal evidence.
 
-The next batch finishes these specific follow-ups:
-- G8: move realtime query deadlines, input validation, transcription and failure/
-  cancellation outcome handling into agentmodel. Root retains compatibility wiring.
-- G6: replace raw voice-preview directory/transport errors with cataloged recovery
-  copy, preserving typed inventory-unavailable guidance.
-- V1: extend real OIDC acceptance through edit, save, reload and export of the
-  edited title, with unauthorized/other-principal asset-read rejection.
+Prepared follow-up:
+- D2: enforce the one-release-per-batch contract by suppressing product release
+  triggers for image-pin-only pushes and serializing future product merges.
+- G6: catalog shared customization-key guidance and surfaced Home query
+  messages while keeping domain validation independent of localization.
+- V1: run the existing native Add/recovery workflow in en-XA on iPhone and iPad.
+  This provides expansion evidence alongside prior ar-XB evidence; it does not
+  establish native search/approval or physical-device acceptance.
 
-Remaining physical/native acceptance and broader localization coverage stay open.
-The prior catch-up PR #224 merged at e8e39201; image-pin CI now dispatches explicitly.
+Remaining localization candidates and broader native/physical acceptance remain
+open. Raw inventory candidates include technical strings and are not defect counts.
 
 ## Delivery and acceptance rules
 

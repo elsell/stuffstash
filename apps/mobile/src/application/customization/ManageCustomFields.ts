@@ -1,6 +1,6 @@
 import { t } from '../../presentation/localization';
 import type { CustomFieldDefinition, CustomizationScope } from '../../domain/customization/Customization';
-import { customizationKeyIsValid, customizationKeyValidationMessage, suggestedCustomizationKey } from '../../domain/customization/Customization';
+import { customizationKeyIsValid, suggestedCustomizationKey } from '../../domain/customization/Customization';
 import type { CreateCustomFieldInput, CustomizationContext, CustomizationRepository, DefinitionAddress, UpdateCustomFieldInput } from './CustomizationRepository';
 import { CustomizationValidationError } from './CustomizationErrors';
 import type { CustomizationObservability } from './CustomizationObservability';
@@ -48,5 +48,5 @@ function validateField(input: CreateCustomFieldInput): void {
 }
 
 function validateKey(key: string): void {
-  if (!customizationKeyIsValid(key)) throw new CustomizationValidationError(customizationKeyValidationMessage);
+  if (!customizationKeyIsValid(key)) throw new CustomizationValidationError(t('customization.keyGuidance'));
 }

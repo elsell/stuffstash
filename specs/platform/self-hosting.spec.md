@@ -107,3 +107,12 @@ development loops.
 - Browser-level self-host audits must verify Dex sign-in, first inventory
   creation, item creation, Garage-backed image upload, reload, and restart
   durability.
+
+### Release serialization
+
+Only merge a new product batch after the preceding release has completed
+successfully. GitHub workflow concurrency preserves at most one pending run;
+cancel-in-progress false does not provide a durable multi-batch queue.
+A push changing only .env.example must not start the product release workflow.
+Image-pin maintenance still runs CI and branch protection, but must not replace
+a pending product release merely to discover that no release is needed.

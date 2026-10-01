@@ -217,3 +217,10 @@ The voice preview must render cataloged recovery copy for directory/transport
 failures instead of displaying arbitrary exception messages. Preserve the typed
 selected-inventory-unavailable guidance, which is already cataloged. Internal
 cursor/page-limit and server messages remain diagnostics, not untranslated UI.
+
+### Customization keys and inventory query guidance
+
+Customization key rules remain pure domain predicates. Their explanatory copy
+belongs to the catalog and is shared by inline editor validation and command
+rejections. Home query guidance rendered to users is also
+catalog-backed. Preserve existing English wording and validation semantics.

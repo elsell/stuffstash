@@ -1,5 +1,8 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "customization.keyGuidance": "Key must start with a letter and use lowercase letters, numbers, or hyphens.",
+  "inventory.workspaceEmpty": "Inventory workspace must include at least one inventory.",
+  "inventory.tenantMissing": "Selected inventory must belong to a tenant.",
   "providerTest.chooseProfile": "Choose a provider profile to test.",
   "providerTest.failed": "Connection test failed. Check the profile configuration and credential, then try again.",
   "sharing.emailRequired": "Enter a valid email address.",

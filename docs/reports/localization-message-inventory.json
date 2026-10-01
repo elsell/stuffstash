@@ -66,6 +66,14 @@
       "evidence": [
         "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx: feedback message mapping"
       ]
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetDetailQuery.ts",
+      "classification": "technical-diagnostic",
+      "reason": "VoiceConversationExchange replaces query errors with its cataloged assetUnavailable message; raw exceptions are not rendered.",
+      "evidence": [
+        "apps/mobile/src/ui/components/VoiceConversationExchange.tsx: asset query error branch"
+      ]
     }
   ],
   "files": [
@@ -242,10 +250,6 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/application/home/HomeDashboardQuery.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/mobile/src/application/inventories/CreateWorkspace.ts",
       "candidates": 2
     },
@@ -375,10 +379,6 @@
     },
     {
       "file": "apps/mobile/src/domain/assets/AssetSummary.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/domain/customization/Customization.ts",
       "candidates": 1
     },
     {

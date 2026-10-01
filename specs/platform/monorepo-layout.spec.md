@@ -268,3 +268,17 @@ inputs and connects the conversation continuation. Preserve dependency checks,
 authorization before transcription, silent typed replies and detached bounded
 cleanup after cancellation. Existing entrypoint and HTTP adversarial tests remain
 the acceptance boundary; moving these policies must not alter their ordering.
+
+### Remaining root application policies
+
+Identity application ownership includes authentication, authenticated-user
+persistence and deduplicated display-name resolution, with the same injectable
+authenticator, user repository and observer. Expiration application ownership
+includes description eligibility and per-inventory grouping for already-authorized
+assets; an injected preference query preserves existing principal/source auditing
+without coupling expiration to notification application implementation.
+Agent-model ownership includes workflow follow-up limits and safe failure
+diagnostic projection. Root facades may compose these services and map values;
+they must not retain these policies. Preserve existing error, nil dependency,
+authorization, observer and ordering behavior through the established entrypoint
+and adversarial transport tests.

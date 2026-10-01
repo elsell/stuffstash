@@ -64,5 +64,13 @@
     "evidence": [
       "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx: feedback message mapping"
     ]
+  },
+  {
+    "file": "apps/mobile/src/application/assets/AssetDetailQuery.ts",
+    "classification": "technical-diagnostic",
+    "reason": "VoiceConversationExchange replaces query errors with its cataloged assetUnavailable message; raw exceptions are not rendered.",
+    "evidence": [
+      "apps/mobile/src/ui/components/VoiceConversationExchange.tsx: asset query error branch"
+    ]
   }
 ]

@@ -54,7 +54,6 @@ export function suggestedCustomizationKey(value: string): string {
     .slice(0, 80);
 }
 
-export const customizationKeyValidationMessage = 'Key must start with a letter and use lowercase letters, numbers, or hyphens.';
 
 export function customizationKeyIsValid(value: string): boolean {
   return /^[a-z][a-z0-9-]{0,79}$/.test(value.trim());

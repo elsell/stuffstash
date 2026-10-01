@@ -1,10 +1,11 @@
+import { t } from '../../presentation/localization';
 import type {
   CustomFieldApplicability,
   CustomFieldType,
   CustomizationKind,
   CustomizationScope
 } from '../../domain/customization/Customization';
-import { customizationKeyIsValid, customizationKeyValidationMessage, normalizeTagColor, suggestedCustomizationKey } from '../../domain/customization/Customization';
+import { customizationKeyIsValid, normalizeTagColor, suggestedCustomizationKey } from '../../domain/customization/Customization';
 
 export type CustomizationEditorDraft = {
   readonly expirationEnabled?: boolean;
@@ -45,7 +46,7 @@ export function customizationEditorValidation(draft: CustomizationEditorDraft, k
     colorValid,
     nameValid: draft.name.trim().length > 0,
     keyValid: mode === 'edit' || customizationKeyIsValid(draft.key || suggestedCustomizationKey(draft.name)),
-    keyMessage: customizationKeyValidationMessage,
+    keyMessage: t('customization.keyGuidance'),
     optionsValid: kind !== 'field' || draft.fieldType !== 'enum' || (draft.enumOptions.length > 0 && !draft.pendingEnumOption?.trim()),
     targetsValid: kind !== 'field' || draft.applicability !== 'custom_asset_types' || draft.targetIds.length > 0
   } as const;

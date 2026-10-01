@@ -1,19 +1,10 @@
 package app
 
-import "math"
+import agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 
-// RealtimeVoiceSessionTurnLimit counts the initial request plus permitted follow-ups.
 func RealtimeVoiceSessionTurnLimit(session RealtimeVoiceSession) int {
-	if session.workflow == nil {
-		return 3
-	}
-	followUps := session.workflow.Revision().Snapshot().Definition.Settings().Budget.FollowUpTurns
-	if followUps == math.MaxInt {
-		return math.MaxInt
-	}
-	return followUps + 1
+	return agentmodelapp.RealtimeVoiceSessionTurnLimit(session.workflow)
 }
-
 func RealtimeVoiceCanContinue(session RealtimeVoiceSession) bool {
 	return session.conversationModel != nil
 }
