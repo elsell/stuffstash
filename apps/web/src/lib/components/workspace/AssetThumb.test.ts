@@ -151,3 +151,35 @@ function asset(id: string, primaryPhotoId: string, title: string): Asset {
     primaryPhotoId
   };
 }
+
+it('connects the rendered thumbnail lifecycle to its session observer', async () => {
+ const records: {context: unknown; outcome?: string}[] = [];
+ component = mount(AssetThumbHarness, {target: document.body, props: {
+  asset: asset('asset-one', 'photo-one', 'Socket set'),
+  loader: {async loadAssetThumbnail(candidate) {return {id: 'photo-one', assetId: candidate.id, url: 'blob:private-photo', alt: candidate.title, variant: 'small'};}},
+  observer: {start(context) {const record: {context: unknown; outcome?: string} = {context}; records.push(record); return outcome => {record.outcome = outcome;};}}
+ }});
+ await tick(); await tick();
+ const image = document.body.querySelector('img')!;
+ image.dispatchEvent(new Event('load'));
+ expect(records).toEqual([{context: {operation: 'image', surface: 'list', variant: 'small'}, outcome: 'success'}]);
+});
+
+it('cancels an in-flight source when Svelte replaces the source on a reused image node', async () => {
+ const outcomes: string[][] = [];
+ const first = {...asset('asset-one', 'photo-one', 'Socket set'), photo: {id: 'photo-one', assetId: 'asset-one', url: 'blob:first', alt: 'Socket set', variant: 'small' as const}};
+ component = mount(AssetThumbHarness, {target: document.body, props: {
+  asset: first,
+  loader: {async loadAssetThumbnail() {return null;}},
+  observer: {start() {const values: string[] = []; outcomes.push(values); return outcome => values.push(outcome);}}
+ }});
+ await tick();
+ const image = document.body.querySelector('img')!;
+ (component as unknown as {replaceAsset(next: Asset): void}).replaceAsset({...first, photo: {...first.photo, url: 'blob:second'}});
+ await tick();
+ expect(document.body.querySelector('img')).toBe(image);
+ expect(image.src).toBe('blob:second');
+ image.dispatchEvent(new Event('load'));
+ await unmount(component); component = null;
+ expect(outcomes).toEqual([['cancelled'], ['success']]);
+});

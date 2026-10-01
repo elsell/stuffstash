@@ -1,4 +1,8 @@
 <script lang="ts">
+  import {visibleImage} from '$lib/presentation/observability/visibleImage';
+  import {imageObserverContext} from '$lib/presentation/observability/imageObserverContext';
+  const imageObserver = imageObserverContext();
+
   import { t } from '$lib/presentation/localization';
   import ImageOff from '@lucide/svelte/icons/image-off';
   import { getContext, hasContext } from 'svelte';
@@ -6,7 +10,7 @@
   import { assetThumbnailLoaderContext, type AssetThumbnailLoader } from '$lib/ports/assetThumbnailLoader';
   import KindIcon from './KindIcon.svelte';
 
-  let { asset, size = 'md' }: { asset: Asset; size?: 'sm' | 'md' | 'lg' } = $props();
+  let { asset, size = 'md', surface = 'list' }: { asset: Asset; size?: 'sm' | 'md' | 'lg'; surface?: 'home' | 'list' | 'detail' } = $props();
   const thumbnailLoader = hasContext(assetThumbnailLoaderContext)
     ? getContext<AssetThumbnailLoader>(assetThumbnailLoaderContext)
     : null;
@@ -30,13 +34,13 @@
 
 <div class="asset-thumb asset-thumb-{size}">
   {#if ownPhoto}
-    <img src={ownPhoto.url} alt={ownPhoto.alt} />
+    <img use:visibleImage={{source: ownPhoto.url, observer: imageObserver, surface, variant: ownPhoto.variant ?? 'none'}} src={ownPhoto.url} alt={ownPhoto.alt} />
   {:else if thumbnailRequest}
     {#await thumbnailRequest}
       {@render fallback(false)}
     {:then loadedPhoto}
       {#if loadedPhoto?.assetId === asset.id}
-        <img src={loadedPhoto.url} alt={loadedPhoto.alt} />
+        <img use:visibleImage={{source: loadedPhoto.url, observer: imageObserver, surface, variant: loadedPhoto.variant ?? 'none'}} src={loadedPhoto.url} alt={loadedPhoto.alt} />
       {:else}
         {@render fallback(true)}
       {/if}

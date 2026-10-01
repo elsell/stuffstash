@@ -14,6 +14,10 @@
 </script>
 
 <script lang="ts">
+  import {visibleImage} from '$lib/presentation/observability/visibleImage';
+  import {imageObserverContext} from '$lib/presentation/observability/imageObserverContext';
+  const imageObserver = imageObserverContext();
+
   import Camera from '@lucide/svelte/icons/camera';
   import Upload from '@lucide/svelte/icons/upload';
   import X from '@lucide/svelte/icons/x';
@@ -113,7 +117,7 @@
   <div class="photo-preview-list" role="list" aria-label={addPhotoPickerPresentation.selectedListLabel}>
     {#each photos as photo}
       <div class="photo-preview" role="listitem">
-        <img src={photo.previewUrl} alt={photo.name} />
+        <img use:visibleImage={{source: photo.previewUrl, observer: imageObserver, surface: 'upload', variant: 'original'}} src={photo.previewUrl} alt={photo.name} />
         <span>{photo.name}</span>
         <Button.Root variant="ghost" size="icon-xs" class="size-11" aria-label={addPhotoRemoveLabel(photo)} onclick={() => onRemove(photo.id)}><X /></Button.Root>
       </div>

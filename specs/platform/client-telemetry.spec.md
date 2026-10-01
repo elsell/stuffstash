@@ -122,3 +122,22 @@ Shared delivery must support React Native's pinned AbortController implementatio
 which provides `aborted` and abort events but does not require newer methods such
 as `throwIfAborted` or custom abort reasons. Native transport tests use that real
 pinned implementation.
+
+## Image rendering integration
+
+Web image elements acquire the current session observer through Svelte context.
+Start one measurement when a rendered source is installed; finish once on load,
+error, source replacement or teardown (the last two are cancelled). Cached complete
+images settle from naturalWidth after listeners are installed. Repeated events
+and stale callbacks cannot complete another source's measurement. Observer failures
+are isolated from image rendering. No source URL or resource identity crosses the
+observer port. Measure DOM image loading/decoding separately from earlier blob
+fetches, which already have request telemetry; do not label these as complete
+network-to-screen latency. Native image consumers follow the same lifecycle using
+load-start/load/error callbacks and cancellation on replacement or unmount.
+
+Carry the requested thumbnail variant from the media adapter through the view
+model instead of inferring it from a URL or rendered pixel size. Unknown fixture
+or external variants use none. Home thumbnails identify home; other list/chooser
+rows identify list; detail hero, gallery rail, fullscreen and local upload previews
+identify their own surfaces. Static brand artwork and system icons are excluded.

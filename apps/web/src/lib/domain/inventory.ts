@@ -48,6 +48,7 @@ export interface Inventory {
 }
 
 export interface AssetPhoto {
+  variant?: 'small' | 'medium' | 'large' | 'original';
   id: string;
   assetId: string;
   url: string;
@@ -116,6 +117,7 @@ export interface AssetAttachment {
   contentType: AttachmentContentType;
   sizeBytes: number;
   lifecycleState: AssetLifecycleState;
+  thumbnailVariant?: 'small' | 'medium' | 'large' | 'original';
   thumbnailUrl?: string;
   thumbnailHeaders?: Record<string, string>;
 }

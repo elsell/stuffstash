@@ -2,6 +2,7 @@ import { t } from '$lib/presentation/localization';
 import type { AssetAttachment, AssetLifecycleState, AssetViewModel, SelectedAttachment } from '$lib/domain/inventory';
 
 export type DetailPhoto = {
+  variant?: 'small' | 'medium' | 'large' | 'original';
   id: string;
   url: string;
   alt: string;
@@ -28,6 +29,7 @@ export function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments
     .filter((attachment) => attachment.thumbnailUrl)
     .map((attachment) => ({
       id: attachment.id,
+      variant: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.variant : attachment.thumbnailVariant,
       url: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.url : (attachment.thumbnailUrl ?? ''),
       alt: attachment.id === ownAssetPhoto?.id ? ownAssetPhoto.alt : attachment.fileName,
       fileName: attachment.fileName,
@@ -38,6 +40,7 @@ export function buildDetailPhotos(currentAsset: AssetViewModel, imageAttachments
   if (ownAssetPhoto && !photos.some((photo) => photo.id === ownAssetPhoto.id)) {
     photos.unshift({
       id: ownAssetPhoto.id,
+      variant: ownAssetPhoto.variant,
       url: ownAssetPhoto.url,
       alt: ownAssetPhoto.alt,
       fileName: ownAssetPhoto.alt,
