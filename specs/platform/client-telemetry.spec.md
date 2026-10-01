@@ -149,3 +149,13 @@ exporting secrets. Native event handlers belong to one committed source generati
 late events after replacement/unmount are ignored. A repeated load-start cancels
 the prior attempt and starts a new one. Cached load/error without load-start may
 record a zero-duration completion. User-supplied image event handlers still run.
+
+Fullscreen native measurement follows the viewer's actual image loading state:
+start when the active page begins waiting for dimensions/decode, succeed only
+when valid dimensions and the image load event are both present, and fail on
+lookup/decode failure. Inactive prefetched pages do not report visible latency.
+Leaving an unfinished page, replacing its source, retrying or dismissing the
+viewer cancels that attempt. Returning to a cached loaded page may settle
+immediately. Each attempt finishes once, and observer exceptions cannot affect
+paging, retry or dismissal. Extend the pinned viewer patch through an optional
+load-attempt callback; do not estimate readiness from selection changes.

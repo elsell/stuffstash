@@ -87,6 +87,7 @@ function assetPhotoToFullScreenPhoto(photo: AssetPhotoViewModel): FullScreenPhot
     label: photo.fileName ?? photo.label,
     metadataLabel: assetPhotoMetadataLabel(photo),
     uri: photo.viewerUri ?? photo.heroUri ?? photo.uri,
+    variant: photo.viewerUri ? photo.viewerVariant : photo.heroUri ? photo.heroVariant : photo.variant,
     headers: photo.viewerHeaders ?? photo.heroHeaders ?? photo.headers
   };
 }

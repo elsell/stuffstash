@@ -25,6 +25,7 @@ export function DraftPhotoPreviewModal({
     id: photo.id,
     label: photo.fileName,
     metadataLabel: photoMetadataLabel(photo),
+    variant: 'original' as const,
     uri: photo.uri
   })), [photos]);
   const capturePresentation = useTaskPresentation(undefined, JSON.stringify([

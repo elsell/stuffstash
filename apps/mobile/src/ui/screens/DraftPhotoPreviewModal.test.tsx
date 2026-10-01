@@ -1,4 +1,6 @@
 import React from 'react';
+import { ImagePerformanceProvider } from '../components/ImagePerformanceContext';
+import type { PerformanceContext } from '../../application/observability/PerformanceObserver';
 import { expect, it } from 'vitest';
 import { MobileRenderHarness } from '../../test-support/render';
 import { latestAlert } from '../../test-support/react-native';
@@ -26,4 +28,18 @@ it.each(['pending', 'selection', 'collection', 'close', 'visit', 'unmount', 'cur
     expect(indices).toEqual(change === 'current' ? [0] : []);
     expect(closed).toBe(change === 'only-photo' ? 1 : 0);
   } finally { await h.unmount(); setScreenFocused(true); }
+});
+
+
+it('reports a draft preview as a fullscreen original without exporting photo data', async () => {
+  const h = new MobileRenderHarness();
+  const contexts: PerformanceContext[] = [];
+  const observer = {start(context: PerformanceContext) {contexts.push(context); return () => {};}};
+  try {
+    await h.render(<ImagePerformanceProvider value={observer}><DraftPhotoPreviewModal disabled={false} currentIndex={0}
+      photos={[{id: 'private-id', uri: 'file:///private.jpg', fileName: 'Private.jpg', contentType: 'image/jpeg', sizeBytes: 10}]}
+      onClose={() => {}} onRemovePhoto={() => {}} onSetIndex={() => {}} /></ImagePerformanceProvider>);
+    h.byType('ImageViewing')!.props.onImageLoadStart(0)('success');
+    expect(contexts).toEqual([{operation: 'image', surface: 'fullscreen', variant: 'original'}]);
+  } finally {await h.unmount();}
 });

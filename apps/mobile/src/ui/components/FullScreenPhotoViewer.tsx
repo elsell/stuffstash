@@ -1,3 +1,4 @@
+import { useImagePerformanceObserver } from './ImagePerformanceContext';
 import { t } from '../../presentation/localization';
 import { PhotoViewerSystemBars } from './PhotoViewerSystemBars';
 import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
@@ -40,6 +41,7 @@ export function FullScreenPhotoViewer({
   readonly photos: readonly FullScreenPhotoViewerPhoto[];
 }) {
   const insets = useSafeAreaInsets();
+  const imageObserver = useImagePerformanceObserver();
   const visible = currentIndex !== undefined && photos[currentIndex] !== undefined;
   const selectedIndex = Math.max(0, currentIndex ?? 0);
   const images = useMemo(() => photos.map(photo => ({ uri: photo.uri, headers: photo.headers })), [photos]);
@@ -69,6 +71,7 @@ export function FullScreenPhotoViewer({
       imageIndex={selectedIndex}
       images={images}
       keyExtractor={(_image, index) => photos[index]?.id ?? index.toString()}
+      onImageLoadStart={index => imageObserver.start({operation: 'image', surface: 'fullscreen', variant: photos[index]?.variant ?? 'none'})}
       onImageIndexChange={select}
       onRequestClose={close}
       presentationStyle="overFullScreen"
