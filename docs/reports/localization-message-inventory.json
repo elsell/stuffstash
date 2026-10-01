@@ -234,15 +234,7 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/application/assets/AssetDetailQuery.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/application/home/HomeDashboardQuery.ts",
       "candidates": 2
     },
     {
@@ -375,10 +367,6 @@
     },
     {
       "file": "apps/mobile/src/domain/assets/AssetSummary.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/domain/customization/Customization.ts",
       "candidates": 1
     },
     {

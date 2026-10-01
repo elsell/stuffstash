@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { AssetSummary } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
@@ -46,7 +47,7 @@ export class AssetDetailQuery {
       if (mapSource) {
         return this.buildDetailView(mapSource, options.signal);
       }
-      throw new Error('Asset is not available in the selected inventory.');
+      throw new Error(t('inventory.assetUnavailable'));
     }
 
     const summaryAsset = inventory.assets.find((candidate) => candidate.id === selectedAssetId);
@@ -71,7 +72,7 @@ export class AssetDetailQuery {
       return this.buildDetailView(mapSource, options.signal);
     }
 
-    throw new Error('Asset is not available in the selected inventory.');
+    throw new Error(t('inventory.assetUnavailable'));
   }
 
   private async mapDetailSource(

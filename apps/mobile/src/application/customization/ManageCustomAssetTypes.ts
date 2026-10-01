@@ -1,5 +1,5 @@
 import { t } from '../../presentation/localization';
-import { customizationKeyIsValid, customizationKeyValidationMessage, suggestedCustomizationKey, type CustomizationScope } from '../../domain/customization/Customization';
+import { customizationKeyIsValid, suggestedCustomizationKey, type CustomizationScope } from '../../domain/customization/Customization';
 import type { CreateCustomAssetTypeInput, CustomizationContext, CustomizationRepository, DefinitionAddress, UpdateCustomAssetTypeInput } from './CustomizationRepository';
 import { CustomizationValidationError } from './CustomizationErrors';
 import type { CustomizationObservability } from './CustomizationObservability';
@@ -10,7 +10,7 @@ export class ManageCustomAssetTypes {
 
   async create(context: CustomizationContext, scope: CustomizationScope, input: CreateCustomAssetTypeInput) {
     const key = input.key.trim() || suggestedCustomizationKey(input.displayName);
-    if (!customizationKeyIsValid(key)) throw new CustomizationValidationError(customizationKeyValidationMessage);
+    if (!customizationKeyIsValid(key)) throw new CustomizationValidationError(t('customization.keyGuidance'));
     if (!input.displayName.trim()) throw new CustomizationValidationError(t('mobile.ManageCustomAssetTypes.assetTypeNameIsRequired'));
     if (input.description.trim().length > 1000) throw new CustomizationValidationError(t('mobile.ManageCustomAssetTypes.descriptionMustBe1000CharactersOrFewer'));
     return this.singleFlight(scope, 'create', () => this.repository.createAssetType(context, scope, {
