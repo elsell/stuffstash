@@ -57,7 +57,7 @@ func (a App) runRealtimeVoiceConversation(ctx context.Context, session RealtimeV
 	contextErr := session.conversationMemory.Commit(result.Messages)
 	if err != nil {
 		var providerErr realtimeVoiceProviderStageError
-		if errors.As(err, &providerErr) && providerErr.code == realtimeVoiceFailureLanguageInference {
+		if errors.As(err, &providerErr) && providerErr.Code == realtimeVoiceFailureLanguageInference {
 			if diagnosticErr := emitRealtimeVoiceConversationFailureDiagnostic(session, result.ModelCalls, result.ToolCalls, executor.results, err, emit); diagnosticErr != nil {
 				return diagnosticErr
 			}

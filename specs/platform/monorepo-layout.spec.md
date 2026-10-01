@@ -197,3 +197,13 @@ prepared domain state without reselecting providers or recreating scoped memory.
 Tenant denial observability and active-inventory authorization precede provider
 resolution. Persist the started record only after successful preparation. Keep
 existing start/access/outcome tests and all realtime boundary tests unchanged.
+
+Realtime response completion, speech delivery, final-response validation and safe
+error/diagnostic policy belong to `internal/app/agentmodel`. That package owns the
+shared realtime event and action-plan presentation contracts; root aliases preserve
+callers. Pass an explicit response-session value containing only completion inputs,
+and inject ID generation and terminal-outcome persistence. Preserve event order,
+silent replies, clarification/continuity completion rules, playable-chunk filtering,
+provider-stage error attribution and diagnostic redaction. Do not recreate session
+memory or change provider selection. Existing response, billing, diagnostics,
+silent-text and transport security tests remain the acceptance contract.

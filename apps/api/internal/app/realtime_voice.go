@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -115,7 +114,7 @@ func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQuery
 			AudioChunks: input.AudioChunks,
 		})
 		if err != nil {
-			return realtimeVoiceProviderStageError{code: realtimeVoiceFailureSpeechToText, err: err}
+			return realtimeVoiceProviderStageError{Code: realtimeVoiceFailureSpeechToText, Cause: err}
 		}
 		transcript = strings.TrimSpace(transcription.Transcript)
 	}
@@ -133,49 +132,12 @@ func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.P
 	return a.realtimeSessionService().EnsureAccess(ctx, principal, tenantID, inventoryID)
 }
 
-func emitRealtimeVoiceDiagnostic(sessionID string, title string, detail string, emit RealtimeVoiceEventSink) error {
-	message := safeRealtimeVoiceDiagnosticText(title, 120)
-	if message == "" {
-		message = "Agent diagnostic"
-	}
-	return emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventAgentDiagnostic, SessionID: sessionID, Message: message, Detail: safeRealtimeVoiceDiagnosticText(detail, 4000)})
+func emitRealtimeVoiceDiagnostic(sessionID, title, detail string, emit RealtimeVoiceEventSink) error {
+	return agentmodelapp.EmitRealtimeVoiceDiagnostic(sessionID, title, detail, emit)
 }
-
 func safeRealtimeVoiceDiagnosticText(value string, maxLength int) string {
-	trimmed := strings.TrimSpace(redactRealtimeVoiceDiagnosticString(value))
-	if trimmed == "" {
-		return ""
-	}
-	if len(trimmed) <= maxLength {
-		return trimmed
-	}
-	return strings.TrimSpace(trimmed[:maxLength]) + " ..."
+	return agentmodelapp.SafeRealtimeVoiceDiagnosticText(value, maxLength)
 }
-
-func redactRealtimeVoiceDiagnosticString(value string) string {
-	value = realtimeVoiceDiagnosticURLPattern.ReplaceAllString(value, "[redacted-url]")
-	value = realtimeVoiceDiagnosticBearerPattern.ReplaceAllString(value, "[redacted-bearer] [redacted]")
-	value = realtimeVoiceDiagnosticAssignmentPattern.ReplaceAllString(value, "$1[redacted]")
-	value = realtimeVoiceDiagnosticRawResponseAssignmentPattern.ReplaceAllString(value, "[redacted]")
-	value = realtimeVoiceDiagnosticUnsafePhrasePattern.ReplaceAllString(value, "[redacted]")
-	replacer := strings.NewReplacer(
-		"apiKey", "[redacted-key]",
-		"api_key", "[redacted-key]",
-		"authorization", "[redacted-authorization]",
-		"credential", "[redacted-credential]",
-		"password", "[redacted-password]",
-		"providerSessionId", "[redacted-provider-session]",
-		"secret", "[redacted-secret]",
-		"token", "[redacted-token]",
-	)
-	return replacer.Replace(value)
-}
-
-var realtimeVoiceDiagnosticAssignmentPattern = regexp.MustCompile(`(?i)\b(api[-_ ]?key|authorization|credential|password|provider[-_ ]?session[-_ ]?id|secret|token)\s*[:=]\s*["']?[^"',\s}\n]+`)
-var realtimeVoiceDiagnosticBearerPattern = regexp.MustCompile(`(?i)\b(bearer)\s+[a-z0-9._~+/=-]+`)
-var realtimeVoiceDiagnosticRawResponseAssignmentPattern = regexp.MustCompile(`(?i)\b(raw[-_ ]?(model[-_ ]?response|provider[-_ ]?response)|raw\s+(model|provider)\s+response)\s*[:=]\s*[^;\n\r]+`)
-var realtimeVoiceDiagnosticUnsafePhrasePattern = regexp.MustCompile(`(?i)\b(raw[-_ ]?(prompt|query|transcript|model[-_ ]?response|provider[-_ ]?response)|stack[-_ ]?trace|provider[-_ ]+session[-_ ]+id)\b`)
-var realtimeVoiceDiagnosticURLPattern = regexp.MustCompile(`(?i)\b(?:https?|wss?)://[^\s"',\]}]+`)
 
 func (a App) ensureRealtimeVoiceDependencies() error {
 	if a.authorizer == nil || a.tenants == nil || a.inventories == nil || a.assets == nil || a.search == nil || a.realtimeVoiceProviders == nil || a.realtimeSessions == nil {
@@ -207,13 +169,6 @@ func (a App) MarkRealtimeVoiceSessionCancelled(ctx context.Context, session Real
 
 func (a App) markRealtimeVoiceSessionOutcome(ctx context.Context, session RealtimeVoiceSession, state ports.RealtimeSessionState, safeFailureCode string) error {
 	return a.realtimeSessionService().UpdateOutcome(ctx, session.TenantID, session.InventoryID, session.ID, state, safeFailureCode)
-}
-
-func (a App) newRealtimeVoiceID() string {
-	if a.ids == nil {
-		return ""
-	}
-	return a.ids.NewID()
 }
 
 func RealtimeVoiceSafeErrorCode(err error) string {
