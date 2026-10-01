@@ -1,0 +1,64 @@
+name: Play Store release notes
+on:
+  workflow_call:
+    inputs:
+      release_tag: { required: true, type: string }
+      version_code: { required: true, type: string }
+      track: { required: true, type: string }
+      language: { required: false, type: string, default: en-US }
+    secrets:
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { required: true }
+  workflow_dispatch:
+    inputs:
+      release_tag: { description: Published stable GitHub release tag, required: true, type: string }
+      version_code: { description: Exact Android version code already assigned to the track, required: true, type: string }
+      track: { description: Exact existing Play track, required: true, type: string, default: internal }
+      language: { description: Release-note locale, required: true, type: string, default: en-US }
+permissions:
+  contents: read
+concurrency:
+  group: play-store-notes
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with: { ref: main, fetch-depth: 0 }
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          test "$(gh release view "$RELEASE_TAG" --json isDraft,isPrerelease --jq '.isDraft == false and .isPrerelease == false')" = true
+          sha="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")"
+          git merge-base --is-ancestor "$sha" origin/main
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+  publish:
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: play-store
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with: { ref: "${{ needs.source.outputs.sha }}", fetch-depth: 0 }
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with: { node-version: 24.17.0 }
+      - name: Preview shared release highlights
+        run: node scripts/play-store-notes.mjs --preview
+        env:
+          STUFF_STASH_MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
+      - name: Publish and verify exact Play release notes
+        run: node scripts/play-store-notes.mjs
+        env:
+          STUFF_STASH_MOBILE_RELEASE_TAG: ${{ inputs.release_tag }}
+          PLAY_PACKAGE_NAME: ${{ vars.PLAY_PACKAGE_NAME || 'app.stuffstash.mobile' }}
+          PLAY_TRACK: ${{ inputs.track }}
+          PLAY_VERSION_CODE: ${{ inputs.version_code }}
+          PLAY_LANGUAGE: ${{ inputs.language }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
