@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	inventoryapp "github.com/stuffstash/stuff-stash/internal/app/inventories"
 
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 )
@@ -22,8 +23,8 @@ var (
 	ErrAttachmentContentMismatch        = fmt.Errorf("%w: attachment content type mismatch", ErrInvalidInput)
 	ErrAttachmentContentEmpty           = fmt.Errorf("%w: empty attachment content", ErrInvalidInput)
 	ErrAttachmentTooLarge               = fmt.Errorf("%w: attachment too large", ErrInvalidInput)
-	ErrInvitationInvalid                = fmt.Errorf("%w: invalid invitation", ErrNotFound)
-	ErrInvitationEmailMismatch          = fmt.Errorf("%w: invitation email mismatch", ErrUnauthorized)
+	ErrInvitationInvalid                = inventoryapp.ErrInvitationInvalid
+	ErrInvitationEmailMismatch          = inventoryapp.ErrInvitationEmailMismatch
 )
 
 type ImportSourceInvalidInputError struct {

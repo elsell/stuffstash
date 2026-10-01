@@ -102,3 +102,14 @@ adversarial tests remain the critical behavioral contract across this relocation
 The refactor changes ownership only; it does not add an endpoint or permission.
 CI must compile and run those suites before this slice is accepted. Other root
 import/conversation/access behavior remains explicitly pending under G8.
+
+Inventory membership, effective access summaries, current-user tenant discovery,
+and invitation orchestration also belong to this package. Keep discovery, grants,
+invitation creation/link validation, invitation acceptance, invitation queries and
+invitation lifecycle in separate files. OIDC/session authentication remains outside
+this inventory use-case package. Preserve exact role/permission enumeration,
+fail-closed revocation, token comparison, email binding, expiration and invitation
+URL restrictions. Root invitation error symbols alias package-owned errors so
+errors.Is identity survives migration. Existing application and HTTP adversarial
+access/invitation tests cover these unchanged boundaries; do not replace them with
+structural or happy-path-only tests.
