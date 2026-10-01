@@ -31,7 +31,7 @@ live evidence succeeded. Track the specific remaining acceptance task and obtain
 needed user participation only when execution requires it. Three gaps per PR is
 a batching rule, not permission to replace missing implementation with scaffolding.
 
-## Next frozen batch — G8, G6, V1
+## Current batch completion — G8, G6, V1
 
 - G8: move scoped realtime read-tool orchestration into agent-model application
   ownership; retain existing query authorization, wire contracts and adversarial tests.
@@ -40,6 +40,13 @@ a batching rule, not permission to replace missing implementation with scaffoldi
   candidate as migrated or broader directional-layout acceptance.
 - V1: extend the real OIDC browser journey with UI item creation and actual JSON/CSV
   downloads, including unauthenticated and other-principal export rejection.
+
+PR #221 merged at `31f81eff` before its failing connected export check was required
+by GitHub. Its release run36911487216 was cancelled before image/tag publication.
+The connected run36910592292 exposed HTTP500: PostgreSQL rejected the new
+`inventory.exported` audit action. The follow-up adds migration59 and a domain-action
+migration guard. The connected job is now a required main check. Finish this same
+batch's delivery after corrected downloads and persisted audit history pass.
 
 Remaining acceptance includes physical iOS export recipient saving (requested from
 user), broader connected native/adaptation workflows, and bounded performance
@@ -52,6 +59,9 @@ unrelated remaining requirements or claim they are complete.
 - Delivery is authorized: complete checks and review, merge, and publish one release
   per frozen batch. Do not hold passing batches for separate merge permission or
   completion of the full audit. PR #213–#216 shipped together in v0.26.0; subsequent batches ship separately.
+- GitHub main rules require both `Required checks` and `Connected OIDC browser journey`.
+  Verify every frozen batch check before merging; auto-merge is not proof that all
+  CI jobs are mandatory.
 - Freeze each PR's three gaps and critical workflow/regression checks. Unrelated
   existing findings remain tracked and do not gate a verified frozen release.
 - Preserve the user's normal-text priority: structure and stable navigation,
@@ -93,7 +103,8 @@ expands these limits, update its domain/security contract first.
 
 Catch-up release `v0.26.0`, source `f4a8dd48`, run36903326170 succeeded,
 including TestFlight upload and build changelog publication. PR #218 merged
-`a91f9ec0`; its v0.26.1 release run36907915266 is in progress (iOS archive).
+`a91f9ec0`; its v0.26.1 release run36907915266 succeeded, including TestFlight upload
+and build changelog publication.
 These are delivery records, not new physical-device or whole-app acceptance.
 
 PR210 merged8308690e. Release36657966242 succeeded. Its source/native evidence
