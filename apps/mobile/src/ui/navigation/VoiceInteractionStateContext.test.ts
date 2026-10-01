@@ -123,9 +123,10 @@ describe('buildFailedVoiceRealtimeState', () => {
         commands: [{ kind: 'create_asset', summary: 'Create item water bottle' }],
         risks: []
       }
-    }, 'Approving change')).toMatchObject({
+    }, 'approve')).toMatchObject({
       status: 'review',
       progressLabel: 'Approving change',
+      reviewDecision: 'approve',
       reviewDecisionPending: true
     });
 
@@ -143,7 +144,7 @@ describe('buildFailedVoiceRealtimeState', () => {
         risks: []
       }
     };
-    expect(markReviewDecisionPending(executed, 'Approving change')).toBe(executed);
+    expect(markReviewDecisionPending(executed, 'approve')).toBe(executed);
   });
 
   it('marks voice photo retry progress without changing the session outcome', () => {

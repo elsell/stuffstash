@@ -12,9 +12,13 @@ it('separates saved changes from measured photo progress and failures', () => {
  expect(voicePlanProgress({ ...saved, photoAttachmentStatus: { ...saved.photoAttachmentStatus, status: 'partial_failed', canRetry: true } })).toMatchObject({ title: 'Saved · photos need attention', percent: 33, busy: false });
 });
 it('does not label proposal rejection as a save', () => {
- expect(voicePlanProgress({ ...state, progressLabel: 'Cancelling change', reviewDecisionPending: true, actionPlan: { ...state.actionPlan!, status: 'proposed' } })?.title).toBe('Cancelling change…');
+ expect(voicePlanProgress({ ...state, progressLabel: 'Annulation en cours', reviewDecision: 'cancel', reviewDecisionPending: true, actionPlan: { ...state.actionPlan!, status: 'proposed' } })?.title).toBe('Cancelling change…');
 });
 it('uses the name approved in review and preserves upload failure details', () => {
  expect(voicePlanProgress(state, { baby: { title: 'Baby toy' } })?.title).toBe('Saving Baby toy…');
  expect(voicePlanProgress({ ...state, actionPlan: { ...state.actionPlan!, status: 'executed' }, photoAttachmentStatus: { status: 'failed', message: 'Upload permission expired. Retry photos.', attachedCount: 0, totalCount: 1, failedCount: 1 } })?.detail).toContain('Upload permission expired');
+});
+
+it('uses server approval rather than stale client cancellation intent', () => {
+ expect(voicePlanProgress({ ...state, reviewDecision: 'cancel', progressLabel: 'Cancelling change', reviewDecisionPending: true })?.title).toBe('Saving Baby…');
 });

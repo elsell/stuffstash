@@ -339,7 +339,7 @@ function ScopedAddAssetScreen({
       });
     } catch (error) {
       const message = readableError(error, t('mobile.AddAssetScreen.couldNotSaveAsset'));
-      showDraftError('Could not save asset', message);
+      showDraftError(t('add.error.save'), message);
       await refreshDashboardAfterTagCreation(newTags);
     } finally { endDraftOperation(); }
   }
@@ -398,7 +398,7 @@ function ScopedAddAssetScreen({
     } catch (error) {
       if (destinationOwner.current !== owner) return;
       const message = readableError(error, t('mobile.AddAssetScreen.couldNotCreateParent'));
-      showDraftError('Could not create parent', message);
+      showDraftError(t('add.error.parent'), message);
     } finally {
       setIsCreatingParent(false); endDraftOperation();
     }
@@ -417,7 +417,7 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
     } catch (error) {
       const message = readableError(error, t('mobile.AddAssetScreen.couldNotSelectPhotos'));
-      showDraftError('Could not select photos', message);
+      showDraftError(t('add.error.selectPhotos'), message);
     } finally { endDraftOperation(); }
   }
 
@@ -434,7 +434,7 @@ function ScopedAddAssetScreen({
       setSaveState({ status: 'idle' });
     } catch (error) {
       const message = readableError(error, t('mobile.AddAssetScreen.couldNotTakePhoto'));
-      showDraftError('Could not take photo', message);
+      showDraftError(t('add.error.takePhoto'), message);
     } finally { endDraftOperation(); }
   }
 

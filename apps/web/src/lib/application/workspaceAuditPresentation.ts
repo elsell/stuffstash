@@ -112,15 +112,15 @@ export function auditRecordPresentation(record: AuditRecord): AuditRecordPresent
 
 function humanizeAction(value: string): string {
   const knownActions: Record<string, string> = {
-    'asset.created': 'Asset created',
-    'asset.updated': 'Asset updated',
-    'asset.archived': 'Asset archived',
-    'asset.restored': 'Asset restored',
-    'asset.deleted': 'Asset deleted',
-    'attachment.created': 'Attachment added',
-    'attachment.deleted': 'Attachment removed',
-    'inventory.created': 'Inventory created',
-    'tenant.created': 'Tenant created'
+    'asset.created': t('web.workspaceAuditPresentation.assetCreated'),
+    'asset.updated': t('web.workspaceAuditPresentation.assetUpdated'),
+    'asset.archived': t('web.workspaceAuditPresentation.assetArchived'),
+    'asset.restored': t('web.workspaceAuditPresentation.assetRestored'),
+    'asset.deleted': t('web.workspaceAuditPresentation.assetDeleted'),
+    'attachment.created': t('web.workspaceAuditPresentation.attachmentAdded'),
+    'attachment.deleted': t('web.workspaceAuditPresentation.attachmentRemoved'),
+    'inventory.created': t('web.workspaceAuditPresentation.inventoryCreated'),
+    'tenant.created': t('web.workspaceAuditPresentation.tenantCreated')
   };
   return knownActions[value] ?? sentenceCase(value);
 }
@@ -133,7 +133,7 @@ function humanizePrincipal(value: string): string {
     return value;
   }
   if (value === 'api') {
-    return 'API';
+    return t('web.workspaceAuditPresentation.api');
   }
   if (value === 'principal-owner') {
     return t('web.workspaceAuditPresentation.owner');
@@ -152,25 +152,25 @@ function humanizePrincipal(value: string): string {
 
 function humanizeSource(value: string): string {
   const knownSources: Record<string, string> = {
-    api: 'API',
-    web: 'Web',
-    mobile: 'Mobile',
-    system: 'System',
-    import: 'Import',
-    local_demo: 'Local demo'
+    api: t('web.workspaceAuditPresentation.api'),
+    web: t('web.workspaceAuditPresentation.web'),
+    mobile: t('web.workspaceAuditPresentation.mobile'),
+    system: t('web.workspaceAuditPresentation.system'),
+    import: t('web.workspaceAuditPresentation.import'),
+    local_demo: t('web.workspaceAuditPresentation.localDemo')
   };
   return knownSources[value] ?? t('web.workspaceAuditPresentation.recordedSource');
 }
 
 function humanizeTarget(value: string): string {
   const knownTargets: Record<string, string> = {
-    asset: 'Asset',
-    inventory: 'Inventory',
-    tenant: 'Tenant',
-    attachment: 'Attachment',
-    invitation: 'Invitation',
-    custom_field: 'Custom field',
-    custom_asset_type: 'Custom asset type'
+    asset: t('web.workspaceAuditPresentation.asset'),
+    inventory: t('web.workspaceAuditPresentation.inventory'),
+    tenant: t('web.workspaceAuditPresentation.tenant'),
+    attachment: t('web.workspaceAuditPresentation.attachment'),
+    invitation: t('web.workspaceAuditPresentation.invitation'),
+    custom_field: t('web.workspaceAuditPresentation.customField'),
+    custom_asset_type: t('web.workspaceAuditPresentation.customAssetType')
   };
   return knownTargets[value] ?? sentenceCase(value);
 }

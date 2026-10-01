@@ -281,7 +281,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
           setTitleEditor(null);
         }
         const lifetime = interactionLifetime.current;
-        setRealtime((current) => markReviewDecisionPending(current, 'Approving change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'approve'));
         try {
           await realtimeController.approveActionPlan(planId, photoDrafts, reviewedEdits);
         } catch (error) {
@@ -298,7 +298,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
       },
       cancelRealtimeActionPlan: async (planId: string) => {
         const lifetime = interactionLifetime.current;
-        setRealtime((current) => markReviewDecisionPending(current, 'Cancelling change'));
+        setRealtime((current) => markReviewDecisionPending(current, 'cancel'));
         try {
           await realtimeController.cancelActionPlan(planId);
         } catch (error) {
@@ -363,14 +363,15 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
   );
 }
 
-export function markReviewDecisionPending(state: VoiceRealtimeState | null, progressLabel: string): VoiceRealtimeState | null {
+export function markReviewDecisionPending(state: VoiceRealtimeState | null, reviewDecision: 'approve' | 'cancel'): VoiceRealtimeState | null {
   if (!state?.actionPlan || state.actionPlan.status !== 'proposed' || state.reviewDecisionPending) {
     return state;
   }
 
   return {
     ...state,
-    progressLabel,
+    progressLabel: t(reviewDecision === 'cancel' ? 'voice.review.cancelling' : 'voice.review.approving'),
+    reviewDecision,
     reviewDecisionPending: true
   };
 }

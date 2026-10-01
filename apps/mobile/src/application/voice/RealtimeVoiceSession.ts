@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import { isAssetExpiration } from '../../domain/assets/AssetExpiration';
 import type { VoiceInventoryContext, VoiceInventoryContextRepository, VoiceInventoryMutationObserver } from './VoiceInventoryContext';
@@ -224,6 +225,7 @@ export type VoiceRealtimeState = {
   readonly inventoryName: string;
   readonly actionPlan?: VoiceActionPlanProposal;
   readonly reviewDecisionPending?: boolean;
+  readonly reviewDecision?: 'approve' | 'cancel';
   readonly progressSteps?: readonly string[];
   readonly partialTranscript?: string;
   readonly transcript?: string;
@@ -331,7 +333,7 @@ export class RealtimeVoiceSessionController {
       status: 'listening',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      progressLabel: 'Listening',
+      progressLabel: t('mobile.RealtimeVoiceSession.listening'),
       recordingLevel: this.recordingLevel(),
       debugEvents: []
     };
@@ -394,8 +396,8 @@ export class RealtimeVoiceSessionController {
       status: 'processing',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      progressLabel: 'Sending audio',
-      progressSteps: ['Sending audio'],
+      progressLabel: t('mobile.RealtimeVoiceSession.sendingAudio'),
+      progressSteps: [t('mobile.RealtimeVoiceSession.sendingAudio')],
       debugEvents: []
     }];
     onState?.(states[0]);
@@ -456,7 +458,7 @@ export class RealtimeVoiceSessionController {
     this.playbackSuspended = true;
     this.currentContext = context;
     const states: VoiceRealtimeState[] = [{ startsNewContext: !followUp, status: 'processing', tenantName: context.tenantName,
-      inventoryName: context.inventoryName, transcript: trimmed, progressLabel: 'Checking your inventory', debugEvents: [] }];
+      inventoryName: context.inventoryName, transcript: trimmed, progressLabel: t('mobile.RealtimeVoiceSession.checkingYourInventory'), debugEvents: [] }];
     onState?.(states[0]);
     const abortController = new AbortController();
     this.activeRunAbortController = abortController;
@@ -506,7 +508,7 @@ export class RealtimeVoiceSessionController {
       status: 'listening',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      progressLabel: 'Listening',
+      progressLabel: t('mobile.RealtimeVoiceSession.listening'),
       recordingLevel: this.recordingLevel(),
       responseKind: this.lastResponseKind,
       followUpAvailable: true,
@@ -532,8 +534,8 @@ export class RealtimeVoiceSessionController {
       status: 'processing',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      progressLabel: 'Sending audio',
-      progressSteps: ['Sending audio'],
+      progressLabel: t('mobile.RealtimeVoiceSession.sendingAudio'),
+      progressSteps: [t('mobile.RealtimeVoiceSession.sendingAudio')],
       debugEvents: []
     }];
     onState?.(states[0]);
@@ -559,7 +561,7 @@ export class RealtimeVoiceSessionController {
       throw new VoiceRealtimeCancelledError();
     }
     if (states.length === 1) {
-      states.push(withProgressStep(states[0], 'Done', { status: 'completed' }));
+      states.push(withProgressStep(states[0], t('mobile.RealtimeVoiceSession.done'), { status: 'completed' }));
       onState?.(states[1]);
     }
     this.syncFinalFollowUpAvailability(states, onState);
@@ -597,8 +599,8 @@ export class RealtimeVoiceSessionController {
       status: 'cancelled',
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      progressLabel: 'Cancelled',
-      progressSteps: ['Cancelled'],
+      progressLabel: t('mobile.RealtimeVoiceSession.cancelled'),
+      progressSteps: [t('mobile.RealtimeVoiceSession.cancelled')],
       debugEvents: []
     };
   }
@@ -642,12 +644,12 @@ export class RealtimeVoiceSessionController {
     if (!retry) {
       return {
         status: 'failed',
-        message: 'There are no photos ready to retry.'
+        message: t('mobile.RealtimeVoiceSession.thereAreNoPhotosReadyToRetry')
       };
     }
     return await this.uploadPhotoRetry(safePlanId, retry, onProgress) ?? {
       status: 'failed',
-      message: 'There are no photos ready to retry.'
+      message: t('mobile.RealtimeVoiceSession.thereAreNoPhotosReadyToRetry')
     };
   }
 
@@ -662,11 +664,11 @@ export class RealtimeVoiceSessionController {
 
     switch (event.type) {
       case 'session.started':
-        return withProgressStep(state, 'Connected', { status: 'processing' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.connected'), { status: 'processing' });
       case 'transcript.delta':
-        return withProgressStep(state, 'Transcribing', { status: 'processing', partialTranscript: event.text });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.transcribing'), { status: 'processing', partialTranscript: event.text });
       case 'transcript.final':
-        return withProgressStep(state, 'Understanding request', { status: 'processing', partialTranscript: undefined, transcript: event.text, inputAccepted: true, conversationPhase: 'understanding' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.understandingRequest'), { status: 'processing', partialTranscript: undefined, transcript: event.text, inputAccepted: true, conversationPhase: 'understanding' });
       case 'agent.progress':
         return withProgressStep(state, event.message, { status: 'processing', conversationPhase: voiceConversationPhase(event.status) });
       case 'agent.diagnostic':
@@ -689,21 +691,21 @@ export class RealtimeVoiceSessionController {
       case 'action.plan.proposed': {
         const actionPlan = safeActionPlanProposal(event.actionPlan);
         if (!actionPlan) {
-          return withProgressStep(state, 'Review failed', {
+          return withProgressStep(state, t('mobile.RealtimeVoiceSession.reviewFailed'), {
             status: 'failed',
             actionPlan: undefined,
             reviewDecisionPending: false,
-            errorMessage: 'The proposed change could not be reviewed safely.'
+            errorMessage: t('mobile.RealtimeVoiceSession.theProposedChangeCouldNotBeReviewedSafely')
           });
         }
         if (state.actionPlan?.planId !== actionPlan.planId) this.reviewDecisionPlanId = null;
-        return withProgressStep(state, 'Review needed', { status: 'review', actionPlan });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.reviewNeeded'), { status: 'review', actionPlan });
       }
       case 'action.plan.approved':
         if (!actionPlanEventMatchesState(state, event.planId)) {
           return state;
         }
-        return withProgressStep(state, 'Applying change', {
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.applyingChange'), {
           status: 'processing',
           actionPlan: { ...state.actionPlan, status: 'approved' },
           reviewDecisionPending: true
@@ -713,7 +715,7 @@ export class RealtimeVoiceSessionController {
         if (!actionPlanEventMatchesState(state, event.planId)) {
           return state;
         }
-        return withProgressStep(state, 'Change cancelled', {
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.changeCancelled'), {
           status: 'completed',
           actionPlan: { ...state.actionPlan, status: 'cancelled' },
           reviewDecisionPending: false
@@ -734,10 +736,10 @@ export class RealtimeVoiceSessionController {
           ...event,
           type: 'action.plan.executed',
           status: 'executed'
-        }, state.actionPlan, photoAttachmentStatus => onIntermediate?.(withProgressStep(state, 'Adding photos', {
+        }, state.actionPlan, photoAttachmentStatus => onIntermediate?.(withProgressStep(state, t('mobile.RealtimeVoiceSession.addingPhotos'), {
           status: 'processing', actionPlan: { ...state.actionPlan!, status: 'executed' }, reviewDecisionPending: false, photoAttachmentStatus
         })));
-        return withProgressStep(state, 'Change applied', {
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.changeApplied'), {
           status: 'completed',
           actionPlan: { ...state.actionPlan, status: 'executed' },
           reviewDecisionPending: false,
@@ -749,18 +751,18 @@ export class RealtimeVoiceSessionController {
           return state;
         }
         await this.player.stop();
-        return withProgressStep(state, 'Change failed', {
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.changeFailed'), {
           status: 'failed',
           actionPlan: { ...state.actionPlan, status: 'failed' },
           reviewDecisionPending: false,
-          errorMessage: 'The approved change could not be applied safely.'
+          errorMessage: t('mobile.RealtimeVoiceSession.theApprovedChangeCouldNotBeAppliedSafely')
         });
       case 'assistant.response.started':
-        return withProgressStep(state, 'Preparing response', { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.preparingResponse'), { status: state.actionPlan ? 'review' : 'processing', conversationPhase: 'answering' });
       case 'assistant.response.completed':
         this.lastResponseKind = event.response.kind;
         const responseArtifacts = safeVoiceResponseArtifacts(event.response.artifacts ?? []);
-        return withProgressStep(state, event.response.kind === 'clarification' ? 'Needs detail' : 'Preparing speech', {
+        return withProgressStep(state, event.response.kind === 'clarification' ? t('mobile.RealtimeVoiceSession.needsDetail') : t('mobile.RealtimeVoiceSession.preparingSpeech'), {
           status: state.actionPlan ? 'review' : 'processing',
           spokenResponse: safeVisibleAssistantResponseText(event.response.displayResponse, event.response.spokenResponse, 1000),
           responseArtifacts,
@@ -770,19 +772,19 @@ export class RealtimeVoiceSessionController {
       case 'tts.audio.started':
         if (this.playbackSuspended) return state;
         this.ttsMimeType = event.mimeType;
-        return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.speaking'), { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.chunk':
         if (this.playbackSuspended) return state;
         if (!this.playbackSuspended) await this.player.playChunk(event.audioBase64, this.ttsMimeType);
-        return withProgressStep(state, 'Speaking', { status: state.actionPlan ? 'review' : 'speaking' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.speaking'), { status: state.actionPlan ? 'review' : 'speaking' });
       case 'tts.audio.completed':
         if (this.playbackSuspended) return state;
-        return withProgressStep(state, 'Speech complete', { status: state.actionPlan ? 'review' : 'speaking' });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.speechComplete'), { status: state.actionPlan ? 'review' : 'speaking' });
       case 'session.completed':
         await this.player.stop();
         return state.actionPlan
-          ? withProgressStep(state, 'Review needed', { status: 'review' })
-          : withProgressStep(state, state.responseKind === 'clarification' ? 'Needs detail' : 'Done', {
+          ? withProgressStep(state, t('mobile.RealtimeVoiceSession.reviewNeeded'), { status: 'review' })
+          : withProgressStep(state, state.responseKind === 'clarification' ? t('mobile.RealtimeVoiceSession.needsDetail') : t('mobile.RealtimeVoiceSession.done'), {
               status: 'completed',
               followUpAvailable: (state.responseKind === 'clarification' || state.responseKind === 'answer')
                 ? this.transport.canSendFollowUpAudio()
@@ -791,7 +793,7 @@ export class RealtimeVoiceSessionController {
       case 'session.cancelled':
         this.pendingPhotoDraftsByPlanId.clear();
         await this.player.stop();
-        return withProgressStep(state, 'Cancelled', { status: 'cancelled', partialTranscript: undefined });
+        return withProgressStep(state, t('mobile.RealtimeVoiceSession.cancelled'), { status: 'cancelled', partialTranscript: undefined });
       case 'session.failed':
         this.pendingPhotoDraftsByPlanId.clear();
         await this.player.stop();
@@ -864,7 +866,7 @@ export class RealtimeVoiceSessionController {
       const reviewedCommand = reviewedPhotoCommands.get(commandId);
       const commandResult = (event.commandResults ?? []).find((result) => result.commandId === commandId);
       if (!reviewedCommand || !commandResult || !commandResultMatchesReviewedCommand(commandResult, reviewedCommand)) {
-        nonRetryableFailures.push(...photos.map(() => 'The server did not return an upload intent for this photo.'));
+        nonRetryableFailures.push(...photos.map(() => t('voice.photos.noIntent')));
         continue;
       }
       const photosWithIntents: CreateInventoryAssetPhotoInput[] = [];
@@ -882,7 +884,7 @@ export class RealtimeVoiceSessionController {
         retry.photos[commandId] = photosWithIntents;
       }
       if (photosWithoutIntents.length > 0) {
-        nonRetryableFailures.push(...photosWithoutIntents.map(() => 'The server did not return an upload intent for this photo.'));
+        nonRetryableFailures.push(...photosWithoutIntents.map(() => t('voice.photos.noIntent')));
       }
     }
 
@@ -905,7 +907,7 @@ export class RealtimeVoiceSessionController {
     const totalCount = attempted + Object.values(retry.photos).reduce((total, photos) => total + photos.length, 0);
     const publishProgress = () => {
       assertActive();
-      onProgress?.({ status: 'uploading', message: `Change saved. ${attempted - failed} of ${totalCount} photos attached.`,
+      onProgress?.({ status: 'uploading', message: t('voice.photos.progress', { attached: attempted - failed, total: totalCount }),
         attachedCount: attempted - failed, totalCount, failedCount: failed });
     };
     publishProgress();
@@ -917,7 +919,7 @@ export class RealtimeVoiceSessionController {
         attempted += 1;
         if (!targetAssetId) {
           failed += 1;
-          failureMessages.push('The server did not return an upload intent for this photo.');
+          failureMessages.push(t('voice.photos.noIntent'));
           remaining.photos[commandId] = [...(remaining.photos[commandId] ?? []), photo];
           publishProgress();
           continue;
@@ -953,7 +955,7 @@ export class RealtimeVoiceSessionController {
     if (failed === 0) {
       return {
         status: 'attached', attachedCount: attempted, totalCount, failedCount: 0,
-        message: `${attempted.toString()} ${attempted === 1 ? 'photo' : 'photos'} attached.`
+        message: t('voice.photos.attached', { count: attempted })
       };
     }
     if (failed < attempted) {
@@ -1061,7 +1063,7 @@ function withProgressStep(
   label: string,
   updates: Partial<VoiceRealtimeState>
 ): VoiceRealtimeState {
-  const safeLabel = safeVisibleProgressText(label, 100) || 'Working';
+  const safeLabel = safeVisibleProgressText(label, 100) || t('mobile.RealtimeVoiceSession.working');
   const currentSteps = state.progressSteps ?? [];
   const nextSteps = currentSteps.at(-1) === safeLabel
     ? currentSteps
@@ -1076,25 +1078,23 @@ function withProgressStep(
 
 function safePhotoUploadFailureReason(error: unknown): string {
   if (!(error instanceof Error)) {
-    return 'Photo upload failed.';
+    return t('mobile.RealtimeVoiceSession.photoUploadFailed');
   }
   const message = safeVisibleProgressText(error.message, 160);
   switch (message) {
     case 'Attachment content is not available for JSON upload fallback.':
+      return t('voice.photos.noFallbackContent');
     case 'Photo attachments are not available in this build.':
-      return message;
+      return t('voice.photos.unavailable');
     default:
-      return 'Photo upload failed.';
+      return t('mobile.RealtimeVoiceSession.photoUploadFailed');
   }
 }
 
 function photoUploadFailureMessage(reasons: readonly string[], partial = false): string {
-  const summary = partial ? 'Some photos could not be attached' : 'The change was applied, but photos could not be attached';
   const firstReason = reasons.find((reason) => reason.trim().length > 0);
-  if (!firstReason) {
-    return `${summary}.`;
-  }
-  return `${summary}: ${firstReason}`;
+  if (!firstReason) return t(partial ? 'voice.photos.partial' : 'voice.photos.failed');
+  return t(partial ? 'voice.photos.partialReason' : 'voice.photos.failedReason', { reason: firstReason });
 }
 
 function photoApprovalRequests(drafts: VoiceActionPlanPhotoDrafts): readonly VoiceActionPlanPhotoApprovalRequest[] {
@@ -1143,8 +1143,8 @@ function safeDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type:
 
 function safeAgentDiagnosticEvent(event: Extract<VoiceRealtimeEvent, { readonly type: 'agent.diagnostic' }>): VoiceSafeDiagnosticEvent {
   return {
-    label: safeVisibleProgressText(event.message, 120) || 'Agent diagnostic',
-    status: 'Details',
+    label: safeVisibleProgressText(event.message, 120) || t('mobile.RealtimeVoiceSession.agentDiagnostic'),
+    status: t('voice.diagnostics.details'),
     detail: event.detail ? safeBoundedDiagnosticDetail(event.detail, 4000) : undefined
   };
 }
@@ -1153,43 +1153,43 @@ function safeDiagnosticLabel(toolLabel: string): string {
   const normalized = toolLabel.toLowerCase();
 
   if (normalized.includes('search')) {
-    return 'Inventory search';
+    return t('mobile.RealtimeVoiceSession.inventorySearch');
   }
 
   if (normalized.includes('asset') || normalized.includes('detail')) {
-    return 'Asset lookup';
+    return t('mobile.RealtimeVoiceSession.assetLookup');
   }
 
   if (normalized.includes('location')) {
-    return 'Location contents';
+    return t('mobile.RealtimeVoiceSession.locationContents');
   }
 
   if (normalized.includes('list')) {
-    return 'Inventory list';
+    return t('mobile.RealtimeVoiceSession.inventoryList');
   }
 
-  return 'Inventory lookup';
+  return t('mobile.RealtimeVoiceSession.inventoryLookup');
 }
 
 function safeDiagnosticStatus(status: string | undefined): string {
   switch (status) {
     case 'completed':
-      return 'Completed';
+      return t('mobile.RealtimeVoiceSession.completed');
     case 'failed':
     case 'invalid_request':
     case 'unauthorized':
     case 'forbidden':
-      return 'Failed safely';
+      return t('mobile.RealtimeVoiceSession.failedSafely');
     case 'needs_more_context':
-      return 'Needs more context';
+      return t('mobile.RealtimeVoiceSession.needsMoreContext');
     case 'no_visible_match':
-      return 'No visible match';
+      return t('mobile.RealtimeVoiceSession.noVisibleMatch');
     case 'looking_up_item':
     case 'searching':
     case 'checking_location':
-      return 'Looking';
+      return t('mobile.RealtimeVoiceSession.looking');
     default:
-      return 'Updated';
+      return t('mobile.RealtimeVoiceSession.updated');
   }
 }
 
@@ -1382,27 +1382,27 @@ function voiceFailureCode(code: string): VoiceRealtimeFailureCode {
 function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled: boolean): string {
   switch (code) {
     case 'request_timeout':
-      return 'This request took too long to finish. Try a smaller request.';
+      return t('mobile.RealtimeVoiceSession.thisRequestTookTooLongToFinishTryA');
     case 'conversation_budget_exhausted':
-      return 'I couldn’t finish planning this request. Please try again.';
+      return t('mobile.RealtimeVoiceSession.iCouldnTFinishPlanningThisRequestPleaseTry');
     case 'conversation_context_exhausted':
-      return 'This conversation has reached its context limit. Start a new conversation to continue.';
+      return t('mobile.RealtimeVoiceSession.thisConversationHasReachedItsContextLimitStartA');
     case 'invalid_provider_output':
-      return 'The voice provider returned a response I could not use. Please try again.';
+      return t('mobile.RealtimeVoiceSession.theVoiceProviderReturnedAResponseICouldNot');
     case 'voice_session_failed':
-      return 'Could not finish this request. The cause is unknown. Try again or start a new conversation.';
+      return t('mobile.RealtimeVoiceSession.couldNotFinishThisRequestTheCauseIsUnknown');
     case 'provider_billing_disabled':
-      return 'Your Google Cloud voice provider has billing disabled. Ask your provider administrator to restore billing, then try again.';
+      return t('mobile.RealtimeVoiceSession.yourGoogleCloudVoiceProviderHasBillingDisabledAsk');
     case 'speech_to_text_failed':
-      return 'Speech-to-text provider failed. Check Voice providers and try again.';
+      return t('mobile.RealtimeVoiceSession.speechToTextProviderFailedCheckVoiceProvidersAnd');
     case 'language_inference_failed':
       return diagnosticsEnabled
-        ? 'Language model stopped while continuing this request. Check diagnostics or Voice providers and try again.'
-        : 'Language model stopped while continuing this request. Check Voice providers and try again.';
+        ? t('mobile.RealtimeVoiceSession.languageModelStoppedWhileContinuingThisRequestCheckDiagnostics')
+        : t('mobile.RealtimeVoiceSession.languageModelStoppedWhileContinuingThisRequestCheckVoice');
     case 'text_to_speech_failed':
-      return 'Speech output failed after Stuff Stash prepared the answer. Check Voice providers and try again.';
+      return t('mobile.RealtimeVoiceSession.speechOutputFailedAfterStuffStashPreparedTheAnswer');
     case 'clarification_turn_limit':
-      return 'That thread needs a fresh voice request. Start again with the missing detail included.';
+      return t('mobile.RealtimeVoiceSession.thatThreadNeedsAFreshVoiceRequestStartAgain');
     default:
       return safeFailureFallbackMessage(fallback);
   }
@@ -1411,7 +1411,7 @@ function voiceFailureMessage(code: string, fallback: string, diagnosticsEnabled:
 function safeFailureFallbackMessage(fallback: string): string {
   const normalized = redactUnsafeVoiceText(fallback).replace(/\s+/g, ' ').trim();
   if (!normalized) {
-    return 'Voice failed safely.';
+    return t('mobile.RealtimeVoiceSession.voiceFailedSafely');
   }
   return normalized.length <= 180 ? normalized : normalized.slice(0, 180).trim();
 }
@@ -1419,17 +1419,17 @@ function safeFailureFallbackMessage(fallback: string): string {
 function voiceFailureProgressLabel(code: string): string {
   switch (code) {
     case 'provider_billing_disabled':
-      return 'Provider billing is disabled';
+      return t('mobile.RealtimeVoiceSession.providerBillingIsDisabled');
     case 'clarification_turn_limit':
-      return 'Voice needs a fresh start';
+      return t('mobile.RealtimeVoiceSession.voiceNeedsAFreshStart');
     case 'speech_to_text_failed':
-      return 'Speech input failed';
+      return t('mobile.RealtimeVoiceSession.speechInputFailed');
     case 'language_inference_failed':
-      return 'Agent brain failed';
+      return t('mobile.RealtimeVoiceSession.agentBrainFailed');
     case 'text_to_speech_failed':
-      return 'Speech output failed';
+      return t('mobile.RealtimeVoiceSession.speechOutputFailed');
     default:
-      return 'Voice failed';
+      return t('mobile.RealtimeVoiceSession.voiceFailed');
   }
 }
 
@@ -1470,7 +1470,7 @@ function safeVisibleAssistantResponseText(displayResponse: string, spokenRespons
   if (isMeaningfulVisibleResponseText(safeSpoken)) {
     return safeSpoken;
   }
-  return 'I could not show that response safely.';
+  return t('mobile.RealtimeVoiceSession.iCouldNotShowThatResponseSafely');
 }
 
 function safeVisibleResponseText(value: string, maxLength: number): string {

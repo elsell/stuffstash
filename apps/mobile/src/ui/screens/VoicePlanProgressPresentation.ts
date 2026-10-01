@@ -6,7 +6,7 @@ export function voicePlanProgress(state: VoiceRealtimeState | null, drafts: Voic
   const plan = state?.actionPlan;
   if (!state || !plan) return null;
   if (plan.status === 'approved' || (plan.status === 'proposed' && state.reviewDecisionPending)) {
-    if (state.progressLabel === 'Cancelling change') return { title: t('mobile.VoicePlanProgressPresentation.cancellingChange'), detail: t('mobile.voice.waitingConfirmation'), busy: true };
+    if (plan.status === 'proposed' && state.reviewDecision === 'cancel') return { title: t('mobile.VoicePlanProgressPresentation.cancellingChange'), detail: t('mobile.voice.waitingConfirmation'), busy: true };
     const titles = plan.commands.map(command => (command.id && drafts[command.id]?.title) || command.title).filter(Boolean);
     return { title: titles.length === 1 ? t('mobile.VoicePlanProgressPresentation.saving', { value: String(titles[0]) }) : t('mobile.VoicePlanProgressPresentation.savingChanges'), detail: t('mobile.voice.waitingConfirmation'), busy: true };
   }

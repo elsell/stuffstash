@@ -283,6 +283,6 @@ api-client-check-generated:
 	PATH="$(DOCS_PATH)" PNPM="$(PNPM)" scripts/check-api-client-generated.sh
 
 .PHONY: client-message-check
-client-message-check:
+client-message-check: web-install
 	PATH="$(DOCS_PATH)" node --test scripts/client-message-check.test.mjs
 	PATH="$(DOCS_PATH)" node scripts/client-message-check.mjs

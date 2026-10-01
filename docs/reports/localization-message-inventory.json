@@ -2,16 +2,8 @@
   "purpose": "Remaining literal-message candidates for manual classification. Includes technical errors and constants; not a test-cell count or proof of a product defect.",
   "files": [
     {
-      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
-      "candidates": 93
-    },
-    {
       "file": "apps/mobile/src/adapters/voice/WebSocketRealtimeVoiceTransport.ts",
       "candidates": 61
-    },
-    {
-      "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
-      "candidates": 39
     },
     {
       "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
@@ -38,18 +30,6 @@
       "candidates": 21
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAuditPresentation.ts",
-      "candidates": 21
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceSearch.ts",
-      "candidates": 21
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
-      "candidates": 18
-    },
-    {
       "file": "apps/web/src/lib/application/workspaceInvitationActions.ts",
       "candidates": 17
     },
@@ -62,11 +42,15 @@
       "candidates": 16
     },
     {
+      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "candidates": 15
+    },
+    {
       "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
       "candidates": 15
     },
     {
-      "file": "apps/web/src/lib/application/settingsManagement.ts",
+      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
       "candidates": 15
     },
     {
@@ -135,10 +119,6 @@
     },
     {
       "file": "apps/mobile/src/ui/components/AssetDetailView.tsx",
-      "candidates": 10
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
       "candidates": 10
     },
     {
@@ -218,10 +198,6 @@
       "candidates": 7
     },
     {
-      "file": "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx",
-      "candidates": 7
-    },
-    {
       "file": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
       "candidates": 7
     },
@@ -279,6 +255,10 @@
     },
     {
       "file": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
+      "candidates": 6
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
       "candidates": 6
     },
     {
@@ -343,6 +323,10 @@
     },
     {
       "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
+      "candidates": 5
+    },
+    {
+      "file": "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx",
       "candidates": 5
     },
     {
@@ -718,6 +702,10 @@
       "candidates": 2
     },
     {
+      "file": "apps/web/src/lib/application/settingsManagement.ts",
+      "candidates": 2
+    },
+    {
       "file": "apps/web/src/lib/application/workspaceAddAvailability.ts",
       "candidates": 2
     },
@@ -807,6 +795,10 @@
     },
     {
       "file": "apps/mobile/src/adapters/voice/DevelopmentVoiceAudioRecorder.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
       "candidates": 1
     },
     {
@@ -971,10 +963,6 @@
     },
     {
       "file": "apps/mobile/src/ui/screens/VoicePlanLocationScreen.tsx",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/VoicePlanProgressPresentation.ts",
       "candidates": 1
     },
     {

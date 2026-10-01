@@ -35,6 +35,7 @@ on:
           - settings-overview
           - settings-commands
           - inventory-export
+          - localization
           - release-corrections
           - menu-ownership
           - archive-notice
@@ -70,6 +71,16 @@ on:
           - settings-move-release
           - enum-and-settings
 
+      ui_locale:
+        description: 'Use pseudolocales with the localization case; production language remains English'
+        type: choice
+        required: false
+        default: en
+        options:
+          - en
+          - en-XA
+          - ar-XB
+
 permissions:
   contents: read
 
@@ -94,6 +105,7 @@ jobs:
         suite: ${{ github.event_name == 'workflow_dispatch' && inputs.test_case != 'all' && fromJSON('["fixtures"]') || fromJSON('["onboarding", "fixtures"]') }}
     env:
       NODE_ENV: production
+      EXPO_PUBLIC_STUFF_STASH_UI_LOCALE: ${{ inputs.ui_locale || 'en' }}
       AUDIT_SUITE: ${{ matrix.suite }}
       AUDIT_TEST_CASE: ${{ inputs.test_case || 'all' }}
       EX_DEV_CLIENT_NETWORK_INSPECTOR: 'false'
@@ -107,6 +119,12 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Validate locale audit selection
+        run: |
+          if [[ "$EXPO_PUBLIC_STUFF_STASH_UI_LOCALE" != en && "$AUDIT_TEST_CASE" != localization ]]; then
+            echo 'Pseudolocales require the localization case.' >&2
+            exit 1
+          fi
       - name: Install pinned toolchain and dependencies
         run: |
           corepack enable
@@ -118,6 +136,9 @@ jobs:
       - name: Install native dependencies
         working-directory: apps/mobile/ios
         run: pod install --deployment
+      - name: Prepare native locale labels from reviewed catalog
+        if: matrix.suite == 'fixtures'
+        run: node scripts/prepare-native-localization-audit.mjs "$EXPO_PUBLIC_STUFF_STASH_UI_LOCALE"
       - name: Add runner-only XCTest target
         run: ruby scripts/prepare-ios-audit-target.rb
       - name: Install isolated fixture routes
@@ -569,6 +590,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            localization)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testLocalizedAddDraftKeepsNativeActionsAndRecovery'
               )
               ;;
             inventory-export)

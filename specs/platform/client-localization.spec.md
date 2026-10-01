@@ -78,8 +78,22 @@ cause labels. Unknown source diagnostics stay verbatim; recognized causes and
 client explanations are catalog-backed. Group identity remains stable when only
 the display language changes.
 
-The required-checks and pre-commit `client-message-check` gate rejects embedded
+The required-checks and pre-commit `client-message-check` gate installs the pinned
+workspace dependencies before loading its compiler parsers, then rejects embedded
 copy directly rendered as JSX/Svelte text, display attributes, conditional labels
 or fallback/template messages. It preserves protocol strings and variable-derived
 user content. It does not prove the provenance of every variable or application
 error; the remaining-file inventory and source review cover those boundaries.
+
+Conversation review intent uses an explicit approve/cancel value while a decision
+is pending. Progress wording is presentation only; translating it must not change
+whether the user sees saving or cancellation. An approved server plan remains a
+save even if an earlier client cancellation label or intent is present.
+
+Native locale evidence must exercise production controls, not an isolated text
+sample. A runner-only pseudolocale Add workflow verifies native header actions,
+exact user-entered text, rejected-save draft retention, error/header clearance and
+return. Expected accessibility labels come from the same reviewed catalog rather
+than a second translation implementation. Screenshots and element hierarchy are
+retained for visual inspection. RTL pseudotext evidence alone does not certify
+native navigation mirroring or physical assistive behavior.
