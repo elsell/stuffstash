@@ -1,3 +1,4 @@
+import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
 import { t } from '../../presentation/localization';
 import { retainFailedConversation } from './VoiceConversationFailure';
 import { appendConversationExchange, canCancelConversation, canSubmitConversation } from './VoiceConversationHistory';
@@ -80,7 +81,7 @@ type VoiceInteractionStateProviderProps = {
 
 export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
   const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
-  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, t('mobile.VoiceInteractionStateContext.voicePreviewIsNotAvailable')) } : { status: 'loading' };
+  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: voicePreviewFailureMessage(preview.error) } : { status: 'loading' };
   return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState}
     retryPreview={async () => { await preview.refetch({ cancelRefetch: false }); }} />;
 }
@@ -446,8 +447,10 @@ export function refreshVoiceFollowUpAvailability(
   };
 }
 
-function readableError(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+export function voicePreviewFailureMessage(error: unknown): string {
+  return error instanceof SelectedInventoryUnavailableError
+    ? error.message
+    : t('mobile.VoiceInteractionStateContext.voicePreviewIsNotAvailable');
 }
 
 function isVoiceCancelledError(error: unknown): boolean {

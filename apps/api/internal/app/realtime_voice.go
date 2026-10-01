@@ -2,10 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
-	"strings"
-	"time"
-	"unicode/utf8"
 
 	agentmodelapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
@@ -55,77 +51,20 @@ func (a App) StartRealtimeVoiceSession(ctx context.Context, input RealtimeVoiceS
 	}, nil
 }
 
-func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) (err error) {
-	duration := time.Minute
-	if input.Session.workflow != nil {
-		duration = time.Duration(input.Session.workflow.Revision().Snapshot().Definition.Settings().Budget.ElapsedSeconds) * time.Second
+func (a App) RunRealtimeVoiceQuery(ctx context.Context, input RealtimeVoiceQueryInput, emit RealtimeVoiceEventSink) error {
+	service := agentmodelapp.RealtimeQueryService{
+		Sessions: a.realtimeSessionService(), Observer: a.observer,
+		CleanupTimeout: a.realtimeVoiceToolCallTimeout, Configured: a.ensureRealtimeVoiceDependencies() == nil,
 	}
-	ctx, cancel := context.WithTimeout(ctx, duration)
-	defer cancel()
-	if input.Session.conversationModel != nil && !input.Session.conversationMemory.Matches(realtimeConversationScope(input.Session)) {
-		return ports.ErrForbidden
-	}
-	defer func() {
-		if err != nil && strings.TrimSpace(input.Session.ID) != "" {
-			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), a.realtimeVoiceToolCallTimeout)
-			defer cancel()
-			if errors.Is(err, context.Canceled) {
-				_ = a.markRealtimeVoiceSessionOutcome(cleanupCtx, input.Session, ports.RealtimeSessionStateCancelled, "")
-				return
-			}
-			safeCode := realtimeVoiceErrorCode(err)
-			if a.observer != nil {
-				a.observer.Record(ctx, ports.Event{
-					Name:    ports.EventRealtimeVoiceFailed,
-					Message: "realtime voice failed safely",
-					Fields: map[string]string{
-						"tenant_id":         input.Session.TenantID.String(),
-						"inventory_id":      input.Session.InventoryID.String(),
-						"principal_id":      input.Session.Principal.ID.String(),
-						"session_id":        input.Session.ID,
-						"safe_failure_code": safeCode,
-						"error":             safeRealtimeVoiceErrorDetail(err),
-					},
-				})
-			}
-			_ = a.markRealtimeVoiceSessionOutcome(cleanupCtx, input.Session, ports.RealtimeSessionStateFailed, safeCode)
-		}
-	}()
-	if err := a.ensureRealtimeVoiceDependencies(); err != nil {
-		return err
-	}
-	if (len(input.AudioChunks) == 0) == (strings.TrimSpace(input.Text) == "") || utf8.RuneCountInString(input.Text) > MaxRealtimeTextCharacters {
-		return ports.ErrInvalidProviderInput
-	}
-
-	if input.Session.speechToText == nil || input.Session.textToSpeech == nil || input.Session.conversationModel == nil {
-		return apperrors.ErrInvalidInput
-	}
-	if err := a.ensureRealtimeVoiceAccess(ctx, input.Session.Principal, input.Session.TenantID, input.Session.InventoryID); err != nil {
-		return err
-	}
-	transcript := strings.TrimSpace(input.Text)
-	if transcript == "" {
-		transcription, err := input.Session.speechToText.Transcribe(ctx, ports.SpeechToTextInput{
-			TenantID:    input.Session.TenantID,
-			InventoryID: input.Session.InventoryID,
-			Principal:   input.Session.Principal,
-			AudioFormat: input.Session.InputAudio,
-			AudioChunks: input.AudioChunks,
-		})
-		if err != nil {
-			return realtimeVoiceProviderStageError{Code: realtimeVoiceFailureSpeechToText, Cause: err}
-		}
-		transcript = strings.TrimSpace(transcription.Transcript)
-	}
-	if transcript == "" {
-		return ports.ErrInvalidProviderInput
-	}
-	if err := emit(RealtimeVoiceEvent{Type: RealtimeVoiceEventTranscriptFinal, SessionID: input.Session.ID, Text: transcript}); err != nil {
-		return err
-	}
-	input.Session.silentReply = strings.TrimSpace(input.Text) != ""
-	return a.runRealtimeVoiceConversation(ctx, input.Session, transcript, input.ConversationTurns, emit)
+	return service.Run(ctx, agentmodelapp.RealtimeQueryInput{
+		Session: a.realtimeConversationSession(input.Session), Text: input.Text,
+		InputAudio: input.Session.InputAudio, AudioChunks: input.AudioChunks,
+		SpeechToText: input.Session.speechToText, TextToSpeech: input.Session.textToSpeech,
+	}, emit, func(ctx context.Context, transcript string, silentReply bool) error {
+		session := input.Session
+		session.silentReply = silentReply
+		return a.runRealtimeVoiceConversation(ctx, session, transcript, input.ConversationTurns, emit)
+	})
 }
 
 func (a App) ensureRealtimeVoiceAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {

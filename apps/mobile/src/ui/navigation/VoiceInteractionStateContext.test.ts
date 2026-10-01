@@ -1,6 +1,8 @@
+import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
 import { describe, expect, it } from 'vitest';
 import { VoiceProviderReadinessError } from '../../application/providerProfiles/ProviderProfileVoiceReadinessCheck';
 import {
+  voicePreviewFailureMessage,
   applyRecordingLevelToRealtime,
   buildFailedVoiceRealtimeState,
   markReviewDecisionPending,
@@ -230,3 +232,16 @@ function completedVoiceState(planId = 'plan-1') {
     }
   };
 }
+
+
+describe('voice preview failure copy', () => {
+  it('does not expose transport or directory diagnostic text', () => {
+    expect(voicePreviewFailureMessage(new Error('Inventory discovery exceeded the page limit. secret=private')))
+      .toBe('Voice preview is not available.');
+  });
+});
+
+it('preserves the cataloged inventory-selection recovery guidance', () => {
+  const failure = new SelectedInventoryUnavailableError();
+  expect(voicePreviewFailureMessage(failure)).toBe(failure.message);
+});

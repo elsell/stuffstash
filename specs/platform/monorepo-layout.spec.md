@@ -258,3 +258,13 @@ a draft; stale or unobserved references cannot become answers or approved change
 Keep existing production-entrypoint and adversarial tests authoritative. Root
 compatibility helpers may convert scope and delegate, but must not duplicate the
 conversation, validation, or tool-choice policy.
+
+### Realtime query boundary ownership
+
+Agent-model application ownership includes query deadlines, input validation,
+scope/memory binding, transcription, final-transcript emission and failure/cancel
+outcome recording. The root compatibility facade only maps prepared session
+inputs and connects the conversation continuation. Preserve dependency checks,
+authorization before transcription, silent typed replies and detached bounded
+cleanup after cancellation. Existing entrypoint and HTTP adversarial tests remain
+the acceptance boundary; moving these policies must not alter their ordering.

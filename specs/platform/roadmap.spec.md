@@ -56,20 +56,23 @@ measurements beyond image callback samples. Remaining G8 orchestration and G6
 presentation candidates continue after this batch. Do not gate this batch on those
 unrelated remaining requirements or claim they are complete.
 
-## Next frozen batch — G8, G6, V1
+## Current frozen batch — G8, G6, V1
 
-- G8: move realtime conversation coordination and proposal policy to agentmodel,
-  preserving authorization, fresh-read requirements and review before persistence.
-- G6: catalog surfaced invitation-validation and provider-test errors. Caller
-  review excludes internal errors already replaced by localized UI fallbacks.
-- V1: measure bounded cached-image observer overhead using the production browser
-  action and reporter, alternating enabled/disabled measurements. This excludes
-  image decoding, network, scheduling, physical-device and whole-screen latency.
+PR #225 merged at 667a9196 after all CI36916778478 checks passed at23636e10.
+It delivered conversation/proposal ownership, surfaced validation localization,
+and bounded browser observer overhead samples. Release36917837759 is queued
+behind catch-up release36915932407; verify terminal evidence before claiming delivery.
 
-Source review passed for the conversation extraction. CI/native/physical evidence
-must remain distinct; this batch does not close all remaining G6/G8/V1 obligations.
-PR #224 merged the separate catch-up backlog at e8e39201; release36915932407 was
-started. Older image-pin PRs were superseded; CI dispatch now unblocks future pins.
+The next batch finishes these specific follow-ups:
+- G8: move realtime query deadlines, input validation, transcription and failure/
+  cancellation outcome handling into agentmodel. Root retains compatibility wiring.
+- G6: replace raw voice-preview directory/transport errors with cataloged recovery
+  copy, preserving typed inventory-unavailable guidance.
+- V1: extend real OIDC acceptance through edit, save, reload and export of the
+  edited title, with unauthorized/other-principal asset-read rejection.
+
+Remaining physical/native acceptance and broader localization coverage stay open.
+The prior catch-up PR #224 merged at e8e39201; image-pin CI now dispatches explicitly.
 
 ## Delivery and acceptance rules
 

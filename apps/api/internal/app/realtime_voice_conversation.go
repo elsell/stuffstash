@@ -41,7 +41,3 @@ func (q realtimeConversationQueries) EnsureActiveInventoryAccess(ctx context.Con
 }
 
 var _ agentmodelapp.RealtimeConversationQueries = realtimeConversationQueries{}
-
-func realtimeConversationScope(session RealtimeVoiceSession) agentmodelapp.ConversationScope {
-	return agentmodelapp.ConversationScope{SessionID: session.ID, PrincipalID: session.Principal.ID, TenantID: session.TenantID, InventoryID: session.InventoryID}
-}

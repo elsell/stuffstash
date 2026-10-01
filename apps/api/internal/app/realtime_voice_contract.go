@@ -91,7 +91,7 @@ type RealtimeVoiceSession struct {
 	textToSpeech               ports.TextToSpeechProvider
 }
 
-const MaxRealtimeTextCharacters = 8000
+const MaxRealtimeTextCharacters = agentmodelapp.MaxRealtimeTextCharacters
 
 type RealtimeVoiceQueryInput struct {
 	Text                       string
