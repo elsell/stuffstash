@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import {
   type AssetLifecycleFilter,
   canCreateInventory,
@@ -661,7 +662,7 @@ export class SeededInventoryRepository
     job.status = 'running';
     job.startedAt = now;
     job.updatedAt = now;
-    job.progress = { phase: 'reading_source', done: 0, total: job.counts.assets, message: 'Queued locally', updatedAt: now };
+    job.progress = { phase: 'reading_source', done: 0, total: job.counts.assets, message: t("web.options.seededInventoryRepository.queuedLocally"), updatedAt: now };
     job.progressHistory = importJobProgressHistoryWith(job.progressHistory, job.progress);
     return job;
   }
@@ -677,7 +678,7 @@ export class SeededInventoryRepository
     job.status = 'cancel_requested';
     job.cancellationMode = mode;
     job.updatedAt = now;
-    job.progress = { ...job.progress, message: 'Cancellation requested', updatedAt: now };
+    job.progress = { ...job.progress, message: t("web.options.seededInventoryRepository.cancellationRequested"), updatedAt: now };
     job.progressHistory = importJobProgressHistoryWith(job.progressHistory, job.progress);
     return job;
   }

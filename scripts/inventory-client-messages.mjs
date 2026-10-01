@@ -39,7 +39,9 @@ function componentCandidates(source, filename) {
   function visit(node) {
     if (!node || typeof node !== 'object') return;
     if (node.type === 'Attribute') {
-      if (displayAttributes.has(node.name) && Array.isArray(node.value)) node.value.forEach(visit);
+      for (const value of Array.isArray(node.value) ? node.value : [node.value]) {
+        if (value?.type === 'ExpressionTag' || displayAttributes.has(node.name)) visit(value);
+      }
       return;
     }
     if (node.type === 'Text') { if (human(node.data.trim())) count++; return; }

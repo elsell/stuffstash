@@ -51,7 +51,7 @@
 
 <form onsubmit={save} aria-label={t('web.ExpirationReminderEditor.expirationReminders')}>
   {#if inheritedPolicy}
-    <SegmentedControl label={t('web.ExpirationReminderEditor.reminderPolicy')} value={mode} options={[{value:'defaults',label:'Use defaults',disabled:saving},{value:'custom',label:'Custom',disabled:saving},{value:'off',label:'Off',disabled:saving}]} onSelect={value => { inherit = value === 'defaults'; draft.enabled = value === 'custom'; changed(); void save(); }} />
+    <SegmentedControl label={t('web.ExpirationReminderEditor.reminderPolicy')} value={mode} options={[{value:'defaults',label:t("web.options.ExpirationReminderEditor.useDefaults"),disabled:saving},{value:'custom',label:t("web.options.ExpirationReminderEditor.custom"),disabled:saving},{value:'off',label:t("web.options.ExpirationReminderEditor.off"),disabled:saving}]} onSelect={value => { inherit = value === 'defaults'; draft.enabled = value === 'custom'; changed(); void save(); }} />
   {:else}
     <Label class="setting"><Checkbox checked={draft.enabled} disabled={saving} onchange={event => { draft.enabled = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.defaultReminders')}</Label>
     <p>{t('web.ExpirationReminderEditor.typesWithCustomRemindersCanOverrideTheseDefaults')}</p>

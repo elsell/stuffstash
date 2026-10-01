@@ -100,7 +100,7 @@
 
 <section aria-label={t('web.NotificationInbox.notificationInbox')}>
   <div class="toolbar">
-    <SegmentedControl label={t('web.NotificationInbox.notificationFilter')} value={filter} options={[{ value: 'all', label: 'All', disabled: !!opening || marking }, { value: 'unread', label: 'Unread', disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
+    <SegmentedControl label={t('web.NotificationInbox.notificationFilter')} value={filter} options={[{ value: 'all', label: t("web.options.NotificationInbox.all"), disabled: !!opening || marking }, { value: 'unread', label: t("web.options.NotificationInbox.unread"), disabled: !!opening || marking }]} onSelect={(value) => { filter = value; void load(); }} />
     <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.markAllRead')} title={t('web.NotificationInbox.markAllRead')} disabled={loading || !!opening || marking} onclick={markAll}><CheckCheck aria-hidden="true" /></Button.Root>
     <Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.refresh')} title={t('web.NotificationInbox.refresh')} disabled={loading || !!opening || marking} onclick={() => load()}><RefreshCw aria-hidden="true" /></Button.Root>
     {#if onOpenSettings}<Button.Root variant="ghost" size="icon" aria-label={t('web.NotificationInbox.notificationSettings')} title={t('web.NotificationInbox.notificationSettings')} onclick={onOpenSettings}><Settings aria-hidden="true" /></Button.Root>{/if}

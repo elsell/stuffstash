@@ -57,7 +57,7 @@
           <legend>{field.displayName}</legend>
           <ChoiceGrid
             label={field.displayName}
-            options={[{ value: '', label: 'Unset' }, ...field.enumOptions.map((option) => ({ value: option, label: option }))]}
+            options={[{ value: '', label: t("web.options.CustomFieldControls.unset") }, ...field.enumOptions.map((option) => ({ value: option, label: option }))]}
             selectedValues={[values[field.key] ?? '']}
             onSelect={(value) => onValueChange(field.key, value)}
           />
