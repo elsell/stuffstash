@@ -173,3 +173,10 @@ remain in the audit harness; production startup and device preferences are uncha
 A run that fails direction or geometry cannot count as RTL acceptance.
 
 Reference: [React Native I18nManager](https://reactnative.dev/docs/i18nmanager).
+
+Literal-message inventory is a triage aid, not a count of missing translations.
+Retain reviewed classifications alongside generated candidates, identifying exact
+strings when only part of a file was reviewed and caller evidence where errors
+are replaced with localized guidance. Keep protocol diagnostics and test/benchmark
+fixtures separate from product copy. A classification does not suppress the
+rendered-copy gate or establish that unreviewed strings are acceptable.
