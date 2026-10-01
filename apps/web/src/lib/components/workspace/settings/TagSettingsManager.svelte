@@ -73,10 +73,10 @@
       tags = sortSettingsRecords(page.items); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; appendError = '';
       observer.record('workspace.settings_collection_loaded', { resource: 'tag', scope: 'inventory', count: tags.length });
     } catch (caught) {
-      if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, 'Tags could not be loaded. Try again.'); observer.record('workspace.settings_collection_load_failed', { resource: 'tag', scope: 'inventory' }); await handlePermissionDenied(caught, 'load'); }
+      if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.tagsCouldNotBeLoadedTryAgain')); observer.record('workspace.settings_collection_load_failed', { resource: 'tag', scope: 'inventory' }); await handlePermissionDenied(caught, 'load'); }
     } finally { if (epoch === loadEpoch) loading = false; }
   }
-  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = await repository.listManagedAssetTags(inventory.tenantId, inventory.id, nextCursor); if (epoch !== loadEpoch) return; tags = sortSettingsRecords([...tags, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, 'More tags could not be loaded. Try again.'); } finally { if (epoch === loadEpoch) loadingMore = false; } }
+  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = await repository.listManagedAssetTags(inventory.tenantId, inventory.id, nextCursor); if (epoch !== loadEpoch) return; tags = sortSettingsRecords([...tags, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.moreTagsCouldNotBeLoadedTryAgain')); } finally { if (epoch === loadEpoch) loadingMore = false; } }
 
   function route(actionValue: SettingsResourceAction, id?: string): string {
     return settingsResourceHref({ level: 'inventory', tenantId: inventory.tenantId, inventoryId: inventory.id, collection: 'tags', resourceId: id, action: actionValue });
@@ -87,7 +87,7 @@
     const name = displayName.trim();
     const normalizedColor = normalizeTagColor(color);
     if (!name || utf8ByteLength(name) > 80 || normalizedColor === null) {
-      formError = !name ? 'Enter a tag name.' : utf8ByteLength(name) > 80 ? 'Tag name must be 80 UTF-8 bytes or fewer.' : 'Enter a six-digit hex color such as #2F80ED.';
+      formError = !name ? t('web.TagSettingsManager.enterATagName') : utf8ByteLength(name) > 80 ? t('web.TagSettingsManager.tagNameMustBe80UTF8BytesOr') : t('web.TagSettingsManager.enterASixDigitHexColorSuchAs2F80ED');
       await tick(); formErrorElement?.focus(); return;
     }
     saving = true; formError = '';
@@ -101,11 +101,11 @@
       if (!saved) throw new Error('Tag is unavailable.');
       tags = sortSettingsRecords(action === 'new' ? [...tags, saved] : tags.map((tag) => tag.id === saved.id ? saved : tag));
       onTagsChange(tags);
-      notifySuccess(action === 'new' ? 'Tag added' : 'Changes saved', { description: t('web.TagSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) });
+      notifySuccess(action === 'new' ? t('web.TagSettingsManager.added') : t('web.TagSettingsManager.changesSaved'), { description: t('web.TagSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) });
       observer.record('workspace.settings_mutation_succeeded', { resource: 'tag', action: action === 'new' ? 'create' : 'update', scope: 'inventory' });
       onNavigate(collectionHref);
     } catch (caught) {
-      formError = safeWorkspaceErrorMessage(caught, `Tag was not ${action === 'new' ? 'created' : 'saved'}. Try again.`);
+      formError = safeWorkspaceErrorMessage(caught, t(`web.TagSettingsManager.${action === 'new' ? 'create' : 'save'}Failed`));
       observer.record('workspace.settings_mutation_failed', { resource: 'tag', action: action === 'new' ? 'create' : 'update', scope: 'inventory' });
       await handlePermissionDenied(caught, action === 'new' ? 'create' : 'update');
       await tick(); formErrorElement?.focus();
@@ -123,7 +123,7 @@
       observer.record('workspace.settings_mutation_succeeded', { resource: 'tag', action: 'archive', scope: 'inventory' });
       onNavigate(collectionHref);
     } catch (caught) {
-      formError = safeWorkspaceErrorMessage(caught, 'Tag was not archived. Try again.');
+      formError = safeWorkspaceErrorMessage(caught, t('web.TagSettingsManager.tagWasNotArchivedTryAgain'));
       observer.record('workspace.settings_mutation_failed', { resource: 'tag', action: 'archive', scope: 'inventory' });
       await handlePermissionDenied(caught, 'archive');
     } finally { saving = false; }

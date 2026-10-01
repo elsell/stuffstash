@@ -40,14 +40,14 @@
     issues = prepared.issues; message = ''; conflict = false;
     if (issues.length) { await showIssues(); return; }
     saving = true;
-    try { await onSave(prepared.definition); if (alive) message = 'Test case revision saved.'; }
+    try { await onSave(prepared.definition); if (alive) message = t('web.CaseEditor.testCaseRevisionSaved'); }
     catch (error) {
       if (!alive) return;
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'A newer revision exists. Your edits are still here; load the latest revision to compare.'
+      message = conflict ? t('web.CaseEditor.aNewerRevisionExistsYourEditsAreStillHere')
         : error instanceof ConversationFailure && ['forbidden', 'unauthenticated'].includes(error.kind)
-          ? 'You no longer have access to save this case.'
-          : 'Could not save the case. Your edits are still here.';
+          ? t('web.CaseEditor.youNoLongerHaveAccessToSaveThisCase')
+          : t('web.CaseEditor.couldNotSaveTheCaseYourEditsAreStill');
       if (error instanceof ConversationFailure && error.kind === 'invalid') {
         issues = [{ field: 'case-title', message: t('web.CaseEditor.theServerRejectedThisCaseCheckItsFixtureAnd') }];
         await showIssues();

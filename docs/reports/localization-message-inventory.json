@@ -26,10 +26,6 @@
       "candidates": 15
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
-      "candidates": 15
-    },
-    {
       "file": "apps/web/src/lib/components/ui/button/button.svelte",
       "candidates": 14
     },
@@ -43,18 +39,6 @@
     },
     {
       "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/AssetTypeSettingsManager.svelte",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseEditor.svelte",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
       "candidates": 12
     },
     {
@@ -135,6 +119,10 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
+      "candidates": 8
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseEditor.svelte",
       "candidates": 8
     },
     {
@@ -706,6 +694,14 @@
       "candidates": 2
     },
     {
+      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
+      "candidates": 2
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
+      "candidates": 2
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/TopHeader.svelte",
       "candidates": 2
     },
@@ -983,6 +979,10 @@
     },
     {
       "file": "apps/web/src/lib/components/workspace/InventoryAuditPanel.svelte",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/AssetTypeSettingsManager.svelte",
       "candidates": 1
     },
     {

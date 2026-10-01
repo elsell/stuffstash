@@ -36,7 +36,7 @@
   let formOpen = $derived(routeAction === 'new' || routeAction === 'edit');
   let confirmationOpen = $derived(routeAction === 'archive' || routeAction === 'restore' || routeAction === 'delete');
   let detailOpen = $derived(Boolean(resourceId) && routeAction === null);
-  let contextName = $derived(level === 'tenant' ? tenant.name : inventory?.name ?? 'Inventory');
+  let contextName = $derived(level === 'tenant' ? tenant.name : inventory?.name ?? t('web.AssetTypeSettingsManager.inventoryFallback'));
   let collectionHref = $derived(href());
   let dirty = $derived(expirationEnabled !== (ownedSelected?.expirationEnabled ?? false) || displayName !== (ownedSelected?.displayName ?? '') || key !== (ownedSelected?.key ?? '') || description !== (ownedSelected?.description ?? ''));
 
@@ -55,14 +55,14 @@
       if (epoch !== loadEpoch) return;
       items = sortSettingsRecords(page.items); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; appendError = '';
       observer.record('workspace.settings_collection_loaded', { resource: 'asset_type', scope: level, count: items.length });
-    } catch (caught) { if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, 'Asset types could not be loaded. Try again.'); observer.record('workspace.settings_collection_load_failed', { resource: 'asset_type', scope: level }); await handlePermissionDenied(caught, 'load'); } }
+    } catch (caught) { if (epoch === loadEpoch) { error = safeWorkspaceErrorMessage(caught, t('web.AssetTypeSettingsManager.assetTypesCouldNotBeLoadedTryAgain')); observer.record('workspace.settings_collection_load_failed', { resource: 'asset_type', scope: level }); await handlePermissionDenied(caught, 'load'); } }
     finally { if (epoch === loadEpoch) loading = false; }
   }
-  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = level === 'tenant' ? await repository.listTenantCustomAssetTypes(tenant.id, nextCursor, lifecycle) : await repository.listInventoryCustomAssetTypes(tenant.id, inventory!.id, nextCursor, lifecycle); if (epoch !== loadEpoch) return; items = sortSettingsRecords([...items, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, 'More asset types could not be loaded. Try again.'); } finally { if (epoch === loadEpoch) loadingMore = false; } }
+  async function loadMore(): Promise<void> { if (!hasMore || !nextCursor || loadingMore) return; const epoch = loadEpoch; loadingMore = true; appendError = ''; try { const page = level === 'tenant' ? await repository.listTenantCustomAssetTypes(tenant.id, nextCursor, lifecycle) : await repository.listInventoryCustomAssetTypes(tenant.id, inventory!.id, nextCursor, lifecycle); if (epoch !== loadEpoch) return; items = sortSettingsRecords([...items, ...page.items]); hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor; } catch (caught) { if (epoch === loadEpoch) appendError = safeWorkspaceErrorMessage(caught, t('web.AssetTypeSettingsManager.moreAssetTypesCouldNotBeLoadedTryAgain')); } finally { if (epoch === loadEpoch) loadingMore = false; } }
   async function save(): Promise<void> {
     if (!canManage || saving) return;
     const name = displayName.trim(); const stableKey = key.trim();
-    if (!name || (routeAction === 'new' && !/^[a-z][a-z0-9-]{0,79}$/.test(stableKey))) { formError = !name ? 'Enter a display name.' : 'Key must start with a letter and use lowercase letters, numbers, or hyphens.'; await tick(); formErrorElement?.focus(); return; }
+    if (!name || (routeAction === 'new' && !/^[a-z][a-z0-9-]{0,79}$/.test(stableKey))) { formError = !name ? t('web.AssetTypeSettingsManager.enterADisplayName') : t('web.AssetTypeSettingsManager.keyMustStartWithALetterAndUseLowercase'); await tick(); formErrorElement?.focus(); return; }
     saving = true; formError = '';
     observer.record('workspace.settings_mutation_started', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level });
     try {
@@ -72,8 +72,8 @@
       if (!saved) throw new Error('Asset type is unavailable.');
       invalidateSharedSettingsLoads(repository, 'custom-field-supporting-types:');
       items = sortSettingsRecords(routeAction === 'new' ? [...items, saved] : items.map((item) => item.id === saved.id ? saved : item));
-      onSchemaChange(mergeCanonicalSettingsRecord(canonicalItems, saved)); notifySuccess(routeAction === 'new' ? 'Asset type added' : 'Changes saved', { description: t('web.AssetTypeSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) }); observer.record('workspace.settings_mutation_succeeded', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level }); onNavigate(collectionHref);
-    } catch (caught) { formError = safeWorkspaceErrorMessage(caught, `Asset type was not ${routeAction === 'new' ? 'created' : 'saved'}. Try again.`); observer.record('workspace.settings_mutation_failed', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level }); await handlePermissionDenied(caught, routeAction === 'new' ? 'create' : 'update'); await tick(); formErrorElement?.focus(); }
+      onSchemaChange(mergeCanonicalSettingsRecord(canonicalItems, saved)); notifySuccess(routeAction === 'new' ? t('web.AssetTypeSettingsManager.added') : t('web.AssetTypeSettingsManager.changesSaved'), { description: t('web.AssetTypeSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) }); observer.record('workspace.settings_mutation_succeeded', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level }); onNavigate(collectionHref);
+    } catch (caught) { formError = safeWorkspaceErrorMessage(caught, t(`web.AssetTypeSettingsManager.${routeAction === 'new' ? 'create' : 'save'}Failed`)); observer.record('workspace.settings_mutation_failed', { resource: 'asset_type', action: routeAction === 'new' ? 'create' : 'update', scope: level }); await handlePermissionDenied(caught, routeAction === 'new' ? 'create' : 'update'); await tick(); formErrorElement?.focus(); }
     finally { saving = false; }
   }
   async function lifecycleAction(): Promise<void> {
@@ -94,7 +94,7 @@
       observer.record('workspace.settings_mutation_succeeded', { resource: 'asset_type', action, scope: level });
       onNavigate(destination);
       if (nextCanonical) onSchemaChange(nextCanonical);
-    } catch (caught) { formError = safeWorkspaceErrorMessage(caught, `Asset type was not ${action === 'delete' ? 'deleted' : `${action}d`}. It remains ${lifecycle}.`); observer.record('workspace.settings_mutation_failed', { resource: 'asset_type', action, scope: level }); await handlePermissionDenied(caught, action); }
+    } catch (caught) { formError = safeWorkspaceErrorMessage(caught, t(`web.AssetTypeSettingsManager.${action === 'archive' || action === 'restore' || action === 'delete' ? action : 'change'}Failed.${lifecycle}`)); observer.record('workspace.settings_mutation_failed', { resource: 'asset_type', action, scope: level }); await handlePermissionDenied(caught, action); }
     finally { saving = false; }
   }
   function requestClose(): void { if (dirty) { discardOpen = true; return; } onNavigate(collectionHref); }
@@ -133,7 +133,7 @@
   {#snippet action()}<Button.Root variant="destructive" onclick={() => { discardOpen = false; onNavigate(collectionHref); }}>{t('web.AssetTypeSettingsManager.discardChanges2')}</Button.Root>{/snippet}
 </WorkspaceConfirmationDialog>
 
-<WorkspaceTaskSheet open={detailOpen} title={selected?.displayName ?? t('web.AssetTypeSettingsManager.assetType')} description={selected?.scope === 'tenant' && level === 'inventory' ? t('web.AssetTypeSettingsManager.inheritedFrom2', { name: String(tenant.name) }) : t('web.AssetTypeSettingsManager.in', { value: String(selected?.lifecycleState === 'archived' ? 'Archived' : 'Managed'), contextName: String(contextName) })} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); onNavigate(collectionHref); }} onOpenChange={(open) => { if (!open) onNavigate(collectionHref); }}>
+<WorkspaceTaskSheet open={detailOpen} title={selected?.displayName ?? t('web.AssetTypeSettingsManager.assetType')} description={selected?.scope === 'tenant' && level === 'inventory' ? t('web.AssetTypeSettingsManager.inheritedFrom2', { name: String(tenant.name) }) : t(`web.AssetTypeSettingsManager.${selected?.lifecycleState === 'archived' ? 'archivedIn' : 'managedIn'}`, { contextName })} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); onNavigate(collectionHref); }} onOpenChange={(open) => { if (!open) onNavigate(collectionHref); }}>
   {#if !selected}<SettingsCollectionState kind="error" title={t('web.AssetTypeSettingsManager.assetTypeUnavailable')} message={t('web.AssetTypeSettingsManager.thisRecordMayNoLongerExistOrMayNot')} />
   {:else}<dl class="settings-readonly-details"><div><dt>{t('web.AssetTypeSettingsManager.stableKey')}</dt><dd>{selected.key}</dd></div><div><dt>{t('web.AssetTypeSettingsManager.description')}</dt><dd>{selected.description || t('web.AssetTypeSettingsManager.none')}</dd></div><div><dt>{t('web.AssetTypeSettingsManager.expirationTracking')}</dt><dd>{selected.expirationEnabled ? t('web.AssetTypeSettingsManager.on') : t('web.AssetTypeSettingsManager.off')}</dd></div><div><dt>{t('web.AssetTypeSettingsManager.ownership')}</dt><dd>{selected.scope === 'tenant' ? t('web.AssetTypeSettingsManager.inheritedFrom', { name: String(tenant.name) }) : t('web.AssetTypeSettingsManager.onlyIn', { contextName: String(contextName) })}</dd></div></dl>{/if}
   {#snippet footer()}<Button.Root variant="outline" onclick={() => onNavigate(collectionHref)}>{t('web.AssetTypeSettingsManager.done')}</Button.Root>{#if selected?.scope === 'tenant' && level === 'inventory' && canManageTenant}<Button.Root href={manageInheritedHref(selected)} onclick={(event) => { event.preventDefault(); onNavigate(manageInheritedHref(selected)); }}>{t('web.AssetTypeSettingsManager.manageInFull', { name: tenant.name })}</Button.Root>{:else if ownedSelected && ownedSelected.lifecycleState === 'archived' && canManage}<Button.Root href={href({ resourceId: ownedSelected.id, action: 'delete' })} variant="destructive" onclick={(event) => { event.preventDefault(); onNavigate(href({ resourceId: ownedSelected.id, action: 'delete' })); }}>{t('web.AssetTypeSettingsManager.deletePermanently')}</Button.Root><Button.Root href={href({ resourceId: ownedSelected.id, action: 'restore' })} onclick={(event) => { event.preventDefault(); onNavigate(href({ resourceId: ownedSelected.id, action: 'restore' })); }}>{t('web.AssetTypeSettingsManager.restore')}</Button.Root>{/if}{/snippet}
