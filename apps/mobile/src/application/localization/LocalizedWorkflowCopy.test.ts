@@ -4,6 +4,16 @@ it('localizes voice navigation and move notices without changing user titles or 
   const previous = process.env.EXPO_PUBLIC_STUFF_STASH_UI_LOCALE;
   process.env.EXPO_PUBLIC_STUFF_STASH_UI_LOCALE = 'en-XA';
   try {
+    const { createTimeoutFetch } = await import('../../adapters/network/TimeoutFetch');
+    const pendingFetch: typeof fetch = async (_input, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+    });
+    const { shouldRetryMobileQuery } = await import('../../adapters/serverState/MobileQueryClient');
+    const timeout = await createTimeoutFetch(1, pendingFetch)('https://api.example.test').catch(error => error);
+    expect(timeout.message).toMatch(/^\[/);
+    expect(shouldRetryMobileQuery(0, timeout)).toBe(true);
+    expect(shouldRetryMobileQuery(1, timeout)).toBe(false);
+    expect(shouldRetryMobileQuery(0, new DOMException('Aborted', 'AbortError'))).toBe(false);
     const { voiceResponseEntityOpenLabel } = await import('../../ui/screens/VoiceResponseEntityLinks');
     const { MoveAssetCommand } = await import('../assets/MoveAssetCommand');
     const references = [

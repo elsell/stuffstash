@@ -1,3 +1,5 @@
+import { NetworkTimeoutError } from '../../application/shared/NetworkTimeoutError';
+import { t } from '../../presentation/localization';
 export function createTimeoutFetch(timeoutMs: number | ((input: RequestInfo | URL, init?: RequestInit) => number), fetchImpl: typeof fetch = fetch): typeof fetch {
   return async (input, init) => {
     const callerSignal = init?.signal !== undefined ? init.signal : (input instanceof Request ? input.signal : undefined);
@@ -26,7 +28,7 @@ export function createTimeoutFetch(timeoutMs: number | ((input: RequestInfo | UR
       });
     } catch (error) {
       if (abortCause === 'timeout' && error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Network request timed out. Check that the API is reachable from this phone.');
+        throw new NetworkTimeoutError(t('mobile.network.timeout'));
       }
       throw error;
     } finally {

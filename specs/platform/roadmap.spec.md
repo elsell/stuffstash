@@ -68,7 +68,8 @@ localization guidance, remaining identity/expiration/voice application ownership
 and v0.27.0 image pins. Combined CI36921590281 passed; merged58bb40a8.
 PRs #226 and #229 were closed as incorporated. Catch-up release36922285320 is
 pending. Future batches wait for the preceding release to finish before merge.
-Native expansion run36920101432 remains separate pending acceptance evidence.
+Native expansion run36920101432 passed on iPhone/iPad at673fb0b5;
+[inspected Add/recovery evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-localization.md).
 
 Next frozen batch has three named gaps:
 - G6 option copy: migrate previously missed nested option labels and displayed
@@ -77,6 +78,15 @@ Next frozen batch has three named gaps:
   scripts, with regressions protecting protocol values and styles.
 - D2 inventory fidelity: include expressions in component option attributes in
   residual-copy triage and correct the AssetDetail error-classification source path.
+
+Prepared successor (not a release gate for the option-copy batch):
+- G6 adapter recovery: catalog surfaced timeout and onboarding failures while
+  preserving cancellation and tenancy semantics.
+- V1 native expansion: retain inspected en-XA Add/recovery evidence on phone/tablet.
+- D2 acceptance status: distinguish this scoped success from still-missing
+  physical export, assistive, connected native and broader directional evidence.
+  Native search-placement run36923519340 is pending at58bb40a8; it covers
+  representative search/keyboard and proposal location retry/return fixtures.
 
 G8 source review found no further concrete root-policy ownership violation after
 #228; construction, cross-domain composition and compatibility facades remain
