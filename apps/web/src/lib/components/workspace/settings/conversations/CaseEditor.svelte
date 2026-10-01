@@ -66,7 +66,7 @@
   <ValidationMessage field="case-utterance" message={errors['case-utterance']} />
   <CaseFixtures value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
   <CaseExpectations value={draft} {errors} disabled={saving || disabled} onChange={value => { draft = value; }} />
-  <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : 'Save test case'}</Button.Root>
+  <div class="actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : t('web.CaseEditor.saveTestCase')}</Button.Root>
     {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.CaseEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p role="status" aria-live="polite">{message}</p>

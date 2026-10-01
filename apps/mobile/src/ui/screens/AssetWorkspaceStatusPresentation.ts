@@ -49,15 +49,15 @@ export function assetWorkspaceSuccessStatus(
   switch (action) {
     case 'edit':
     case 'move':
-      return { kind: 'success', message: 'message' in source ? source.message : `Updated ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.updated', { title: String(source.title) }) };
     case 'checkout':
-      return { kind: 'success', message: 'message' in source ? source.message : `Checked out ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.checkedOut', { title: String(source.title) }) };
     case 'return':
-      return { kind: 'success', message: 'message' in source ? source.message : `Returned ${source.title}.` };
+      return { kind: 'success', message: 'message' in source ? source.message : t('mobile.AssetWorkspaceStatusPresentation.returned', { title: String(source.title) }) };
     case 'archive':
-      return { kind: 'success', message: `Archived ${title}.` };
+      return { kind: 'success', message: t('mobile.AssetWorkspaceStatusPresentation.archived', { title: String(title) }) };
     case 'restore':
-      return { kind: 'success', message: `Restored ${title}.` };
+      return { kind: 'success', message: t('mobile.AssetWorkspaceStatusPresentation.restored', { title: String(title) }) };
   }
 }
 

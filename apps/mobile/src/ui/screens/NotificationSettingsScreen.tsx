@@ -121,7 +121,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const override = preferences?.overrides.find(entry => entry.customAssetTypeId === typeId)?.settings;
   const policy = override ?? preferences?.defaults;
   const unavailable = !!typeId && !type;
-  const title = page.kind === 'timezone' ? 'Time zone' : page.kind === 'timing' ? 'Before expiration' : page.kind === 'type' ? type?.displayName ?? 'Type reminders' : 'Expiration reminders';
+  const title = page.kind === 'timezone' ? t('mobile.NotificationSettingsScreen.timeZone') : page.kind === 'timing' ? t('mobile.NotificationSettingsScreen.beforeExpiration') : page.kind === 'type' ? type?.displayName ?? t('mobile.NotificationSettingsScreen.typeReminders') : t('mobile.NotificationSettingsScreen.expirationReminders');
   return <><Stack.Screen options={{ title }} /><ScrollView style={styles.shell} contentContainerStyle={[styles.content, {flexGrow:1}]} automaticallyAdjustKeyboardInsets alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" keyboardDismissMode={appKeyboardDismissMode()}
     refreshControl={page.kind === 'overview' ? <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} /> : undefined}>
     {error ? <View style={styles.detailHeader}><Text accessibilityRole="alert" style={{color:colors.danger}}>{error}</Text></View> : null}
@@ -134,17 +134,17 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       : page.kind === 'type' ? <ExpirationReminderEditor initialPolicy={override ?? null} inheritedPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing',typeId:page.typeId})} onSave={value => save(signal => session.saveTypeOverride(page.typeId,value,{signal}))} />
       : <>
         <View style={styles.detailHeader}><Text style={styles.secondaryText}>{t('mobile.NotificationSettingsScreen.yourRemindersForThisInventory')}</Text></View>
-        {pushSession ? <SettingsSection title={t('mobile.NotificationSettingsScreen.notifications')} footer={pushMessage || 'Push alerts also need server delivery support. In-app reminders are independent.'}>
+        {pushSession ? <SettingsSection title={t('mobile.NotificationSettingsScreen.notifications')} footer={pushMessage || t('mobile.NotificationSettingsScreen.pushAlertsAlsoNeedServerDeliverySupportInApp')}>
           <SettingsSwitchRow label={t('mobile.NotificationSettingsScreen.pushNotifications')} value={preferences.pushEnabled} disabled={busy} onValueChange={enabled => void changePush(enabled)} />
-          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={pushOutcome === 'enabled' ? 'Open device settings' : 'Set up alerts on this device'} label={pushOutcome === 'enabled' ? 'Open device settings' : 'Enable on this device'} disabled={busy || openingSettings} onPress={() => { if (pushOutcome === 'enabled') void openDeviceSettings(); else void changePush(true); }} /></> : null}
+          {preferences.pushEnabled ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={pushOutcome === 'enabled' ? t('mobile.NotificationSettingsScreen.openDeviceSettings') : t('mobile.NotificationSettingsScreen.setUpAlertsOnThisDevice')} label={pushOutcome === 'enabled' ? t('mobile.NotificationSettingsScreen.openDeviceSettings') : t('mobile.NotificationSettingsScreen.enableOnThisDevice')} disabled={busy || openingSettings} onPress={() => { if (pushOutcome === 'enabled') void openDeviceSettings(); else void changePush(true); }} /></> : null}
           {pushOutcome === 'denied' ? <><SettingsSeparator /><SettingsActionRow accessibilityLabel={t('mobile.NotificationSettingsScreen.openNotificationSystemSettings')} label={t('mobile.NotificationSettingsScreen.openSettings')} disabled={openingSettings} onPress={() => void openDeviceSettings()} /></> : null}
         </SettingsSection> : null}
         <ExpirationReminderEditor initialPolicy={preferences.defaults} disabled={busy} onEditDays={() => onNavigate({kind:'timing'})} onSave={async value => { if (value) await save(signal => session.saveDefaults(value,{signal})); }} />
         <SettingsSection footer="Expiration dates use this time zone, even when you travel."><SettingsNavigationRow label={t('mobile.NotificationSettingsScreen.timeZone')} accessibilityLabel={t('mobile.NotificationSettingsScreen.timeZone')} value={readableTimeZone(preferences.timezone)} disabled={busy} onPress={() => onNavigate({kind:'timezone'})} /></SettingsSection>
-        <SettingsSection title={t('mobile.NotificationSettingsScreen.assetTypeReminders')} footer={!types.length ? 'Enable expiration tracking on a type to customize its reminders.' : 'Each type uses your inventory defaults unless you choose Custom or Off.'}>
+        <SettingsSection title={t('mobile.NotificationSettingsScreen.assetTypeReminders')} footer={!types.length ? t('mobile.NotificationSettingsScreen.enableExpirationTrackingOnATypeToCustomizeIts') : t('mobile.NotificationSettingsScreen.eachTypeUsesYourInventoryDefaultsUnlessYouChoose')}>
           {types.map((entry,index) => {
             const rule=preferences.overrides.find(value => value.customAssetTypeId === entry.id)?.settings;
-            return <View key={entry.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow label={entry.displayName} accessibilityLabel={`${entry.displayName} reminders`} value={rule ? rule.enabled ? 'Custom' : 'Off' : 'Uses defaults'} disabled={busy} onPress={() => onNavigate({kind:'type',typeId:entry.id})} /></View>;
+            return <View key={entry.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow label={entry.displayName} accessibilityLabel={t('mobile.NotificationSettingsScreen.reminders', { displayName: String(entry.displayName) })} value={rule ? rule.enabled ? 'Custom' : 'Off' : 'Uses defaults'} disabled={busy} onPress={() => onNavigate({kind:'type',typeId:entry.id})} /></View>;
           })}
         </SettingsSection>
       </> : null}

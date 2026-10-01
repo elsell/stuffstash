@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type {
   AddAssetDraft,
   AddAssetSaveResult,
@@ -289,7 +290,7 @@ function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, creat
 }
 
 function photoUploadCountLabel(count: number): string {
-  return `${count} ${count === 1 ? 'photo upload' : 'photo uploads'}`;
+  return t('photos.uploadCount', { count });
 }
 
 function uniqueFailureReasons(reasons: string[]): string[] {

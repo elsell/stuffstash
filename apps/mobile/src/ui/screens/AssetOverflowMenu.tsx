@@ -33,7 +33,7 @@ export function AssetOverflowMenu({
 
   return (
     <NativeActionMenu
-      accessibilityLabel={`More actions for ${asset.title}`}
+      accessibilityLabel={t('mobile.AssetOverflowMenu.moreActionsFor', { title: String(asset.title) })}
       disabled={disabled}
       groups={groups}
       trigger={{ kind: 'ellipsis' }}

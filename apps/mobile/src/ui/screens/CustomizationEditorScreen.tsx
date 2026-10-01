@@ -154,7 +154,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   const valid = customizationEditorIsValid(editorDraft, kind, mode);
   const editorMutable = canMutate && lifecycle === 'active';
   const draftEditable = editorMutable && !saving && !lifecycleBusy;
-  const saveActions = useFocusedSheetActions({ primaryLabel: 'Save', secondaryLabel: '',
+  const saveActions = useFocusedSheetActions({ primaryLabel: t('mobile.CustomizationEditorScreen.save'), secondaryLabel: '',
     disabled: !draftEditable || completed || !valid || (mode === 'edit' && !dirty),
     onApply: () => void save(), onBack: onDone });
 
@@ -177,9 +177,9 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   usePreventRemove(dirty && !saving && !exitAuthorized, ({ data }: { data: { action: unknown } }) => {
     const focus = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
     if (!focus || !resource) return;
-    Alert.alert('Discard changes?', 'Your unsaved changes will be lost.', [
-      { text: 'Keep Editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => {
+    Alert.alert(t('mobile.CustomizationEditorScreen.discardChanges'), t('mobile.CustomizationEditorScreen.yourUnsavedChangesWillBeLost'), [
+      { text: t('mobile.CustomizationEditorScreen.keepEditing'), style: 'cancel' },
+      { text: t('mobile.CustomizationEditorScreen.discard'), style: 'destructive', onPress: () => {
         if (focusOwner.current !== focus || resourceOwner.current !== resource) return;
         if (!workflow.authorizeExit(data.action)) return;
         setExitAuthorized(true);
@@ -210,7 +210,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   }, [dirty, navigation, backOptions]);
 
   if (status === 'ready' && (!reads.context && !isAccessFailure(reads.contextError) || reads.context && (context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId))) return <SettingsLoadingRow label={t('mobile.CustomizationEditorScreen.loadingSetting')} />;
-  if (status === 'loading') return <View style={settings.styles.shell}><View style={styles.loadingGroup}><SettingsLoadingRow label={`Loading ${label(kind).toLocaleLowerCase()}…`} /></View></View>;
+  if (status === 'loading') return <View style={settings.styles.shell}><View style={styles.loadingGroup}><SettingsLoadingRow label={t('mobile.CustomizationEditorScreen.loading', { value: String(label(kind).toLocaleLowerCase()) })} /></View></View>;
   if (status === 'error') return <ScrollView style={settings.styles.shell} contentContainerStyle={[settings.styles.errorContainer, { flexGrow: 1 }]} contentInsetAdjustmentBehavior="automatic"><Text accessibilityRole="header" style={settings.styles.errorTitle}>{t('mobile.CustomizationEditorScreen.settingUnavailable')}</Text><Text style={settings.styles.errorMessage}>{t('mobile.CustomizationEditorScreen.itMayHaveBeenArchivedDeletedOrYouMay')}</Text><NativeCommandButton label={t('mobile.CustomizationEditorScreen.retry')} onPress={() => void load()} /></ScrollView>;
   if (status === 'denied') return <DeniedSettingsState message={deniedMessage} />;
   if (!context) return null;
@@ -230,7 +230,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
       await saveCustomizationEditor({ context, draft: editorDraft, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, mode, record: record?.kind === 'field' ? record : undefined, resourceId, scope });
       if (resourceOwner.current !== resource) return;
       setInitialSnapshot(current); setCompletion('Saved');
-      if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: `${label(kind)} saved` }); onDone(); }
+      if (focusOwner.current === owner) { feedback.showNotice({ tone: 'success', title: t('mobile.CustomizationEditorScreen.saved', { value: String(label(kind)) }) }); onDone(); }
     } catch (cause) { if (resourceOwner.current === resource) await handleFailure(cause, `${label(kind)} was not saved.`); }
     finally { workflow.finishSave(); if (resourceOwner.current === resource) setSaving(false); }
   }
@@ -240,9 +240,9 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     if (completed || !resource || !owner || !context || !resourceId || !workflow.beginLifecycleConfirmation()) return;
     setLifecycleBusy(true);
     const destructive = action !== 'restore';
-    const title = action === 'delete' ? `Delete ${name} permanently?` : `${capitalize(action)} ${name}?`;
+    const title = action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently', { name: String(name) }) : `${capitalize(action)} ${name}?`;
     const message = lifecycleMessage(kind, action);
-    Alert.alert(title, message, [{ text: 'Cancel', style: 'cancel', onPress: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } }, { text: action === 'delete' ? 'Delete Permanently' : capitalize(action), style: destructive ? 'destructive' : 'default', onPress: async () => {
+    Alert.alert(title, message, [{ text: t('mobile.CustomizationEditorScreen.cancel'), style: 'cancel', onPress: () => { if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false); } }, { text: action === 'delete' ? t('mobile.CustomizationEditorScreen.deletePermanently2') : capitalize(action), style: destructive ? 'destructive' : 'default', onPress: async () => {
       if (focusOwner.current !== owner || resourceOwner.current !== resource) {
         if (workflow.cancelLifecycleConfirmation() && resourceOwner.current === resource) setLifecycleBusy(false);
         return;
@@ -263,7 +263,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
 
   return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={settings.styles.shell}><ScrollView automaticallyAdjustKeyboardInsets contentInsetAdjustmentBehavior="automatic" contentContainerStyle={settings.styles.content} keyboardDismissMode={appKeyboardDismissMode()} keyboardShouldPersistTaps="handled">
     {draftDenied ? <View accessibilityLiveRegion="assertive" style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.CustomizationEditorScreen.accessChanged')}</Text><Text style={styles.errorText}>{t('mobile.CustomizationEditorScreen.yourChangeWasNotSavedYourDraftIsShown')}</Text><Text style={styles.errorText}>{t('mobile.CustomizationEditorScreen.askAHouseholdManagerToRestoreYourAccessThen')}</Text><NativeCommandButton label={t('mobile.CustomizationEditorScreen.refreshAccess')} onPress={() => void refreshDraftAccess()} /></View> : error ? <View accessibilityLiveRegion="assertive" ref={errorSummaryRef} style={styles.errorSummary}><Text accessibilityRole="header" style={styles.errorTitle}>{errorTitle}</Text><Text style={styles.errorText}>{error}</Text></View> : null}
-    <SettingsSection title={mode === 'create' ? `New ${label(kind)}` : label(kind)}>
+    <SettingsSection title={mode === 'create' ? t('mobile.CustomizationEditorScreen.new', { value: String(label(kind)) }) : label(kind)}>
       {editorMutable ? <CustomizationNameInput error={nameTouched && !name.trim() ? 'Name is required.' : undefined} onChangeText={(value) => { setNameTouched(true); const next = withEditorName(editorDraft, value, mode); setName(next.name); setKey(next.key); }} value={name} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.name')} value={name} />}
       {kind === 'tag' ? editorMutable ? <View style={styles.formRow}><Text style={styles.label}>{t('mobile.CustomizationEditorScreen.color')}</Text><TagColorPicker disabled={!draftEditable} value={color} onChange={setColor} />{!colorValid ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{t('mobile.CustomizationEditorScreen.enterASixDigitHexColorSuchAs2F80ED')}</Text> : null}</View> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.color')} value={tagColorName(color)} /> : null}
       {kind === 'asset-type' ? editorMutable
@@ -273,10 +273,10 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
       {kind === 'asset-type' ? editorMutable ? <CustomizationLabeledInput label={t('mobile.CustomizationEditorScreen.description')} multiline onChangeText={setDescription} value={description} editable={draftEditable} /> : <CustomizationReadOnlyValue label={t('mobile.CustomizationEditorScreen.description')} value={description || 'No description'} /> : null}
       {kind === 'field' ? <CustomizationFieldControls persistedApplicability={record?.kind === 'field' ? record.applicability : undefined} applicability={applicability} canMutate={editorMutable} busy={saving || lifecycleBusy} eligibleTypes={eligibleTypes} enumOptions={enumOptions} fieldType={fieldType} mode={mode} newOption={newOption} onApplicability={setApplicability} onEnumOptions={setEnumOptions} onFieldType={setFieldType} onNewOption={setNewOption} onTargets={setTargetIds} persistedEnumOptions={record?.kind === 'field' ? record.enumOptions : []} persistedTargetIds={record?.kind === 'field' ? record.customAssetTypeIds : []} targetIds={targetIds} /> : null}
     </SettingsSection>
-    {kind !== 'tag' ? <SettingsSection title={t('mobile.CustomizationEditorScreen.details')}><Pressable accessibilityRole="button" onPress={() => setAdvanced((value) => !value)} style={styles.disclosure}><Text style={styles.disclosureText}>{advanced ? 'Hide technical details' : 'Show technical details'}</Text><ChevronDown color={colors.textMuted} size={18} style={{ transform: [{ rotate: advanced ? '180deg' : '0deg' }] }} /></Pressable>{advanced ? <>{mode === 'create' ? <CustomizationLabeledInput editable={draftEditable} error={!validation.keyValid ? validation.keyMessage : undefined} inputRef={keyInputRef} label={t('mobile.CustomizationEditorScreen.stableKey')} onChangeText={(value) => { const next = withManualEditorKey(editorDraft, value); setKey(next.key); setKeyManuallyEdited(next.keyManuallyEdited); }} value={key} /> : <><SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.key')} value={key} /></>}<SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.scope')} value={scope === 'tenant' || effectiveInherited ? context.tenantName : context.inventoryName} /></> : null}</SettingsSection> : null}
-    {effectiveInherited ? <Text style={styles.readOnly}>{`Inherited from ${context.tenantName}. Manage it from household settings.`}</Text> : null}
-    {effectiveInherited && context.tenantPermissions.includes('configure') && onManageInherited ? <SettingsSection><NativeCommandButton label={`Manage in ${context.tenantName}`} onPress={onManageInherited} /></SettingsSection> : null}
-    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? 'Saving…' : 'Save'} disabled={saveActions.disabled} onPress={saveActions.onApply} /></View> : null}
+    {kind !== 'tag' ? <SettingsSection title={t('mobile.CustomizationEditorScreen.details')}><Pressable accessibilityRole="button" onPress={() => setAdvanced((value) => !value)} style={styles.disclosure}><Text style={styles.disclosureText}>{advanced ? t('mobile.CustomizationEditorScreen.hideTechnicalDetails') : t('mobile.CustomizationEditorScreen.showTechnicalDetails')}</Text><ChevronDown color={colors.textMuted} size={18} style={{ transform: [{ rotate: advanced ? '180deg' : '0deg' }] }} /></Pressable>{advanced ? <>{mode === 'create' ? <CustomizationLabeledInput editable={draftEditable} error={!validation.keyValid ? validation.keyMessage : undefined} inputRef={keyInputRef} label={t('mobile.CustomizationEditorScreen.stableKey')} onChangeText={(value) => { const next = withManualEditorKey(editorDraft, value); setKey(next.key); setKeyManuallyEdited(next.keyManuallyEdited); }} value={key} /> : <><SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.key')} value={key} /></>}<SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.scope')} value={scope === 'tenant' || effectiveInherited ? context.tenantName : context.inventoryName} /></> : null}</SettingsSection> : null}
+    {effectiveInherited ? <Text style={styles.readOnly}>{t('mobile.CustomizationEditorScreen.inheritedFromManageItFromHouseholdSettings', { tenantName: String(context.tenantName) })}</Text> : null}
+    {effectiveInherited && context.tenantPermissions.includes('configure') && onManageInherited ? <SettingsSection><NativeCommandButton label={t('mobile.CustomizationEditorScreen.manageIn', { tenantName: String(context.tenantName) })} onPress={onManageInherited} /></SettingsSection> : null}
+    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? 'Saving…' : t('mobile.CustomizationEditorScreen.save')} disabled={saveActions.disabled} onPress={saveActions.onApply} /></View> : null}
     {mode === 'edit' && canMutate ? <CustomizationLifecycleSection busy={lifecycleBusy || saving} kind={kind} lifecycle={lifecycle} onAction={lifecycleAction} /> : null}
     <SettingsRefreshNotice visible={reads.resource.isRefetchError || reads.types.isRefetchError} onRetry={reads.refreshDefinitions} />
     {dirty ? <Text style={styles.unsaved}>{t('mobile.CustomizationEditorScreen.unsavedChanges')}</Text> : null}

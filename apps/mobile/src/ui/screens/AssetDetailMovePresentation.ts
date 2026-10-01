@@ -45,7 +45,7 @@ export function parentFromCurrentAssetPath(asset: AssetDetailViewModel): ParentL
     id: asset.parentAssetId,
     title: asset.parentLocationTrailLabel,
     kind: 'container',
-    subtitle: 'Current parent',
+    subtitle: t('mobile.AssetDetailMovePresentation.currentParent'),
     pathLabel: asset.parentLocationTrailLabel,
     selectionHint: 'Current parent',
     willPromoteToContainer: false
@@ -180,21 +180,21 @@ export function moveDestinationCreateInput(
 }
 
 export function moveDestinationCreateKindLabel(kind: MoveDestinationCreateKind): string {
-  return kind === 'location' ? 'Location' : 'Container';
+  return kind === 'location' ? t('mobile.AssetDetailMovePresentation.location') : t('mobile.AssetDetailMovePresentation.container');
 }
 
 export function moveDestinationCreateKindHelp(kind: MoveDestinationCreateKind): string {
   return kind === 'location'
-    ? 'Best for rooms, places, and areas.'
-    : 'Best for boxes, shelves, bins, and cabinets.';
+    ? t('mobile.AssetDetailMovePresentation.bestForRoomsPlacesAndAreas')
+    : t('mobile.AssetDetailMovePresentation.bestForBoxesShelvesBinsAndCabinets');
 }
 
 export function moveDestinationCreateButtonLabel(kind: MoveDestinationCreateKind, title: string): string {
-  return `Create ${kind} "${title}"`;
+  return t(kind === 'location' ? 'mobile.move.createLocation' : 'mobile.move.createContainer', { title });
 }
 
 export function moveDestinationCreatePlacementLabel(placement: MoveDestinationCreatePlacement): string {
-  return placement.parentPathLabel ? `Creates inside ${placement.parentPathLabel}` : 'Creates at inventory root';
+  return placement.parentPathLabel ? t('mobile.AssetDetailMovePresentation.createsInside', { parentPathLabel: String(placement.parentPathLabel) }) : t('mobile.AssetDetailMovePresentation.createsAtInventoryRoot');
 }
 
 export function createdMoveDestinationParent({
@@ -214,7 +214,7 @@ export function createdMoveDestinationParent({
     title,
     kind,
     parentAssetId: placement.parentAssetId,
-    subtitle: `New ${kind}`,
+    subtitle: t('mobile.AssetDetailMovePresentation.new', { kind: String(kind) }),
     pathLabel: placement.parentPathLabel ? `${placement.parentPathLabel} / ${title}` : title,
     selectionHint: kindLabel,
     willPromoteToContainer: false
@@ -228,10 +228,10 @@ function normalizeForMoveDestination(value: string): string {
 function moveCandidateKindLabel(kind: ParentLookupResult['kind']): string {
   switch (kind) {
     case 'container':
-      return 'Container';
+      return t('mobile.AssetDetailMovePresentation.container');
     case 'item':
-      return 'Item';
+      return t('mobile.AssetDetailMovePresentation.item');
     case 'location':
-      return 'Location';
+      return t('mobile.AssetDetailMovePresentation.location');
   }
 }

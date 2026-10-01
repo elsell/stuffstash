@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ScrollView, Text, View } from 'react-native';
 import { SettingsChoiceRow, SettingsSection, useSettingsListStyles } from '../screens/SettingsList';
 import { NativeCommandButton } from './NativeCommandButton';
@@ -11,7 +12,7 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
       <View style={styles.navigationRow}>
         <Text style={styles.rowLabel}>{props.subject}</Text>
         <Text style={styles.rowContext}>{props.context}</Text>
-        {props.destinationLabel ? <Text style={styles.rowContext}>{`Move to: ${props.destinationLabel}`}</Text> : null}
+        {props.destinationLabel ? <Text style={styles.rowContext}>{t('mobile.MoveSelectionList.moveTo', { destinationLabel: String(props.destinationLabel) })}</Text> : null}
       </View>
     </SettingsSection>
     <SettingsSection title={props.title}>

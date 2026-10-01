@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import * as Label from '$lib/components/ui/label/index.js';
   import * as Select from '$lib/components/ui/select/index.js';
   import ValidationMessage from './ValidationMessage.svelte';
@@ -11,7 +12,7 @@
 <div class="workflow-select">
   <Label.Root for={id}>{label}</Label.Root>
   <Select.Root type="single" {value} {disabled} onValueChange={onChange}>
-    <Select.Trigger {id} {...validationAttributes(error, id)} class="w-full">{options.find(option => option.value === value)?.label ?? 'Choose an option'}</Select.Trigger>
+    <Select.Trigger {id} {...validationAttributes(error, id)} class="w-full">{options.find(option => option.value === value)?.label ?? t('web.WorkflowSelect.chooseAnOption')}</Select.Trigger>
     <Select.Content>{#each options as option (option.value)}<Select.Item value={option.value} label={option.label}>{option.label}</Select.Item>{/each}</Select.Content>
   </Select.Root>
   <ValidationMessage field={id} message={error} />

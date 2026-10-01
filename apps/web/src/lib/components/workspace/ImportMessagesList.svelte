@@ -7,6 +7,7 @@
   import { Badge } from '$lib/components/ui/badge/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
+  import { importIssuePresentation } from './importMessagePresentation';
   import { uniqueImportMessages } from './importWorkspacePresentation';
 
   const COLLAPSED_GROUP_LIMIT = 5;
@@ -26,7 +27,7 @@
     messages,
     emptyText,
     truncated = false,
-    truncatedText = 'Showing a partial list of import messages.',
+    truncatedText = t('web.ImportMessagesList.showingAPartialListOfImportMessages'),
     reportedWarnings,
     reportedErrors
   }: Props = $props();
@@ -59,8 +60,8 @@
   function groupMessages(items: ImportMessage[]): MessageGroup[] {
     const grouped = new Map<string, MessageGroup>();
     for (const message of items) {
-      const cause = friendlyCause(message);
-      const key = `${message.severity}:${message.summary}:${cause}`;
+      const { cause, identity } = importIssuePresentation(message);
+      const key = JSON.stringify([message.severity, message.summary, identity]);
       const group = grouped.get(key);
       if (group) {
         group.messages.push(message);
@@ -78,45 +79,22 @@
   }
 
   function severityLabel(severity: ImportMessage['severity']): string {
-    return severity === 'error' ? 'Blocking' : 'Warning';
+    return severity === 'error' ? t('import.issue.blocking') : t('import.issue.warning');
   }
 
   function groupCountLabel(count: number): string {
     return t('import.items', { count });
   }
 
-  function friendlyCause(message: ImportMessage): string {
-    const detail = message.detail || '';
-    if (message.code === 'duplicate-asset' || detail.toLowerCase().includes('homebox-source-id')) {
-      return 'Already linked to an earlier import';
-    }
-    if (message.code === 'source-link-duplicate') {
-      return 'Already imported from this source';
-    }
-    if (message.code === 'attachment-unavailable') {
-      return 'Could not download from the source';
-    }
-    if (message.code === 'attachment-session-unavailable') {
-      return detail || 'Could not establish a source session for image downloads';
-    }
-    if (message.code === 'attachment-storage-unavailable') {
-      return detail || 'Could not save the image to configured media storage';
-    }
-    if (detail.toLowerCase().includes('import validation failed')) {
-      return 'File did not pass attachment validation';
-    }
-    return detail;
-  }
-
   function messageRowLabel(message: ImportMessage, group: MessageGroup): string {
     if (message.sourceName) return message.sourceName;
-    if (message.sourceId) return 'Homebox record';
+    if (message.sourceId) return t('import.issue.record');
     return message.detail || group.summary;
   }
 
   function messageDiagnostic(message: ImportMessage, group: MessageGroup): string {
-    if (message.sourceName && message.detail && friendlyCause(message) !== group.cause) return friendlyCause(message);
-    if (message.sourceId) return `Source ID ${message.sourceId}`;
+    if (message.sourceName && message.detail && importIssuePresentation(message).cause !== group.cause) return importIssuePresentation(message).cause;
+    if (message.sourceId) return t('import.issue.source', { id: message.sourceId });
     return '';
   }
 
@@ -142,47 +120,46 @@
 
   function issueGuidance(group: MessageGroup): { meaning: string; impact: string; nextAction: string } {
     const message = group.messages[0];
-    const code = message?.code ?? '';
-    const cause = group.cause.toLowerCase();
-    if (code === 'duplicate-asset' || code === 'source-link-duplicate' || cause.includes('already')) {
+    const guidance = importIssuePresentation(message).guidance;
+    if (guidance === 'duplicate') {
       return {
-        meaning: 'Stuff Stash found records that look connected to an earlier import.',
-        impact: 'Those records were skipped so the import would not create duplicates.',
-        nextAction: 'Open the matching item in Stuff Stash or review the original Homebox record before importing it again.'
+        meaning: t('web.ImportMessagesList.stuffStashFoundRecordsThatLookConnectedToAn'),
+        impact: t('web.ImportMessagesList.thoseRecordsWereSkippedSoTheImportWouldNot'),
+        nextAction: t('web.ImportMessagesList.openTheMatchingItemInStuffStashOrReview')
       };
     }
-    if (code === 'partial-date' || group.summary.toLowerCase().includes('partial date')) {
+    if (guidance === 'partialDate') {
       return {
-        meaning: 'Homebox has a date that is incomplete or cannot be represented as a full Stuff Stash date.',
-        impact: 'The value was kept as text instead of being saved as a structured date.',
-        nextAction: 'Edit the date in Homebox or update the imported field in Stuff Stash after the import.'
+        meaning: t('web.ImportMessagesList.homeboxHasADateThatIsIncompleteOrCannot'),
+        impact: t('web.ImportMessagesList.theValueWasKeptAsTextInsteadOfBeing'),
+        nextAction: t('web.ImportMessagesList.editTheDateInHomeboxOrUpdateTheImported')
       };
     }
-    if (code === 'attachment-unavailable' || cause.includes('download')) {
+    if (guidance === 'download') {
       return {
-        meaning: 'Stuff Stash could not download one or more files from the source.',
-        impact: 'The related asset can still import, but the listed photos or files were skipped.',
-        nextAction: 'Check that the file exists in Homebox and that the Homebox URL is reachable, then run a new preview if you still need the file.'
+        meaning: t('web.ImportMessagesList.stuffStashCouldNotDownloadOneOrMoreFiles'),
+        impact: t('web.ImportMessagesList.theRelatedAssetCanStillImportButTheListed'),
+        nextAction: t('web.ImportMessagesList.checkThatTheFileExistsInHomeboxAndThat')
       };
     }
-    if (cause.includes('attachment validation') || cause.includes('unsupported file type')) {
+    if (guidance === 'validation') {
       return {
-        meaning: 'A file was reachable, but it did not meet Stuff Stash attachment rules.',
-        impact: 'The file was skipped and was not attached to the imported asset.',
-        nextAction: 'Convert or replace the file with a supported format in Homebox, then preview the import again.'
+        meaning: t('web.ImportMessagesList.aFileWasReachableButItDidNotMeet'),
+        impact: t('web.ImportMessagesList.theFileWasSkippedAndWasNotAttachedTo'),
+        nextAction: t('web.ImportMessagesList.convertOrReplaceTheFileWithASupportedFormat')
       };
     }
     if (group.severity === 'error') {
       return {
-        meaning: 'This issue blocked part of the import from completing safely.',
-        impact: 'Stuff Stash stopped or skipped the affected work to avoid saving misleading data.',
-        nextAction: 'Review the affected records, correct the source data if needed, then preview and run the import again.'
+        meaning: t('web.ImportMessagesList.thisIssueBlockedPartOfTheImportFromCompleting'),
+        impact: t('web.ImportMessagesList.stuffStashStoppedOrSkippedTheAffectedWorkTo'),
+        nextAction: t('web.ImportMessagesList.reviewTheAffectedRecordsCorrectTheSourceDataIf')
       };
     }
     return {
-      meaning: 'Stuff Stash imported what it could and preserved this warning for review.',
-      impact: 'The affected records may need follow-up, but the warning did not block the whole import.',
-      nextAction: 'Review the affected records below and update the source or imported records if the result is not what you want.'
+      meaning: t('web.ImportMessagesList.stuffStashImportedWhatItCouldAndPreservedThis'),
+      impact: t('web.ImportMessagesList.theAffectedRecordsMayNeedFollowUpButThe'),
+      nextAction: t('web.ImportMessagesList.reviewTheAffectedRecordsBelowAndUpdateTheSource')
     };
   }
 </script>
@@ -217,7 +194,7 @@
   <div
     class:bounded-message-groups={shouldBoundGroups}
     role={shouldBoundGroups ? 'region' : undefined}
-    aria-label={shouldBoundGroups ? 'Grouped import issues' : undefined}
+    aria-label={shouldBoundGroups ? t('import.issue.grouped') : undefined}
     tabindex={shouldBoundGroups ? 0 : undefined}
   >
     {#each visibleGroups as group (group.key)}
@@ -233,13 +210,13 @@
           </Badge>
           <div>
             <strong>{group.summary}</strong>
-            <span>{group.cause ? `${group.cause} · ${groupCountLabel(group.messages.length)}` : groupCountLabel(group.messages.length)}</span>
+            <span>{group.cause ? t('import.issue.causeCount', { cause: group.cause, countLabel: groupCountLabel(group.messages.length) }) : groupCountLabel(group.messages.length)}</span>
           </div>
           <Button.Root
             variant="ghost"
             size="sm"
             class="message-detail-button"
-            aria-label={`Explain ${group.summary}`}
+            aria-label={t('import.issue.explain', { summary: group.summary })}
             onclick={() => explainGroup(group)}
           > {t('web.ImportMessagesList.explain')} </Button.Root>
         </div>
@@ -264,7 +241,7 @@
   </div>
   {#if hiddenGroupCount > 0}
     <div class="message-overflow-action">
-      <span>{t('web.ImportMessagesList.moreIssueHiddenFull', { hiddenGroupCount: hiddenGroupCount, value: hiddenGroupCount === 1 ? 'group' : 'groups' })}</span>
+      <span>{t('import.hiddenIssueGroups', { count: hiddenGroupCount })}</span>
       {#if expanded}
         <Button.Root variant="outline" size="sm" onclick={() => (expanded = false)}>{t('web.ImportMessagesList.showFewer')}</Button.Root>
       {:else}
@@ -336,7 +313,7 @@
             {/each}
           </div>
           {#if selectedGroup.messages.length > 8}
-            <small>{t('web.ImportMessagesList.moreAffectedInThisGroupFull', { value: selectedGroup.messages.length - 8, value2: selectedGroup.messages.length - 8 === 1 ? 'record' : 'records' })}</small>
+            <small>{t('import.hiddenAffectedRecords', { count: selectedGroup.messages.length - 8 })}</small>
           {/if}
         </div>
       </Dialog.Content>

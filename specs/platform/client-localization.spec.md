@@ -60,3 +60,20 @@ Do not create a separate test for every extracted label.
 - [ECMA-402 internationalization API](https://402.ecma-international.org/)
 - [Expo localization guide](https://docs.expo.dev/guides/localization/): Intl uses
   the device locale when no explicit locale is supplied.
+
+
+## Semantic state and localized copy
+
+Import count tiles carry a stable metric identity. Visibility, icon selection and
+navigation to issues or imported records use that identity, never English words
+inside labels or action descriptions. Zero blocking-issue counts remain visible
+under every locale. The display count and noun may form a metric tile, but full
+summary sentences use catalog plural forms. Move creation labels choose complete
+messages by location/container kind; conversational plan counts use full plural
+messages instead of supplying English nouns as parameters.
+
+Import issue grouping and guidance use stable cause categories derived from source
+codes and unchanged legacy diagnostic fields. They must not inspect translated
+cause labels. Unknown source diagnostics stay verbatim; recognized causes and
+client explanations are catalog-backed. Group identity remains stable when only
+the display language changes.

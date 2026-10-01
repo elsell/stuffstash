@@ -16,7 +16,7 @@
   const comparison = $derived(baseline.data ? compareConversationRuns(baseline.data, current) : null);
   const reasons = { same: 'Choose a different run.', incomplete: 'Both runs must finish every case before comparison.', cases: 'The case revisions differ. Run the same saved cases for a controlled comparison.', providers: 'Provider configuration differs. These runs cannot establish the effect of the workflow change alone.' };
 </script>
-<Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? 'Hide run comparison' : 'Compare with another run'}</Button.Root>
+<Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? t('web.RunComparison.hideRunComparison') : t('web.RunComparison.compareWithAnotherRun')}</Button.Root>
 {#if expanded}<section aria-label={t('web.RunComparison.compareRuns')} class="run-comparison"><h4>{t('web.RunComparison.chooseAnEarlierRun')}</h4>
   {#if heads.isPending}<p role="status">{t('web.RunComparison.loadingRuns')}</p>{:else if heads.isError}<p role="alert">{t('web.RunComparison.couldNotLoadRuns')} <Button.Root onclick={() => heads.refetch()}>{t('web.RunComparison.retryComparisonRuns')}</Button.Root></p>
   {:else}<ul>{#each heads.data.items.filter(value => value.id !== current.id) as head (head.id)}<li><Button.Root variant="outline" aria-pressed={baselineId === head.id} onclick={() => { baselineId = head.id; }}>{t('web.RunComparison.passedFull', { value: new Date(head.createdAt).toLocaleString(), passedCases: head.passedCases, totalCases: head.totalCases })}</Button.Root></li>{/each}</ul>

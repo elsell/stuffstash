@@ -58,7 +58,7 @@
   {/if}
   {#if !inherit}
   {#if draft.enabled}
-  <Button.Root variant="ghost" type="button" aria-expanded={editingDays} onclick={() => { editingDays = !editingDays; }}>{t('web.ExpirationReminderEditor.beforeExpiration')} <span>{draft.upcoming ? `${draft.advanceDays} days` : 'Off'}</span></Button.Root>
+  <Button.Root variant="ghost" type="button" aria-expanded={editingDays} onclick={() => { editingDays = !editingDays; }}>{t('web.ExpirationReminderEditor.beforeExpiration')} <span>{draft.upcoming ? t('web.ExpirationReminderEditor.days', { advanceDays: String(draft.advanceDays) }) : t('web.ExpirationReminderEditor.off')}</span></Button.Root>
   {#if editingDays}
   <Label class="setting"><Checkbox checked={displayed.upcoming} disabled={controlsDisabled} onchange={(event) => { draft.upcoming = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.notifyBeforeExpiration')}</Label>
   {#if draft.upcoming}<div class="days">
@@ -66,14 +66,14 @@
     <Input id={`${id}-days`} type="number" min={0} max={3650} step={1} value={inherit ? displayed.advanceDays : days} disabled={controlsDisabled}
       aria-invalid={!inherit && !validDays} aria-describedby={`${id}-help`}
       oninput={(event) => { days = event.currentTarget.value; changed(); }} />
-    <p id={`${id}-help`}>{!inherit && !validDays ? 'Enter a whole number from 0 to 3650.' : 'Calendar days before the expiration date ends.'}</p>
+    <p id={`${id}-help`}>{!inherit && !validDays ? t('web.ExpirationReminderEditor.enterAWholeNumberFrom0To3650') : t('web.ExpirationReminderEditor.calendarDaysBeforeTheExpirationDateEnds')}</p>
   </div>{/if}{/if}
   <Label class="setting"><Checkbox checked={displayed.expired} disabled={controlsDisabled} onchange={(event) => { draft.expired = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.whenExpired')}</Label>{/if}
-  {:else}<p>{displayed.enabled ? `${displayed.upcoming ? `${displayed.advanceDays} days before expiration` : ''}${displayed.expired ? ' and when expired' : ''}` : 'Default reminders are off'}</p>{/if}
+  {:else}<p>{displayed.enabled ? `${displayed.upcoming ? `${displayed.advanceDays} days before expiration` : ''}${displayed.expired ? ' and when expired' : ''}` : t('web.ExpirationReminderEditor.defaultRemindersAreOff')}</p>{/if}
   {#if error}<p role="alert">{error}</p>{/if}
   {#if saved}<p role="status">{t('web.ExpirationReminderEditor.remindersSaved')}</p>{/if}
   {#if dirty && !saving}<Button.Root type="button" variant="ghost" onclick={() => { const policy = initialPolicy ?? inheritedPolicy!; draft = {...policy}; days = String(policy.advanceDays); inherit = initialPolicy === null; dirty = false; error = ''; editingDays = false; }}>{t('web.ExpirationReminderEditor.discardChanges')}</Button.Root>{/if}
-  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? 'Saving…' : 'Save reminders'}</Button.Root>{/if}
+  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? 'Saving…' : t('web.ExpirationReminderEditor.saveReminders')}</Button.Root>{/if}
 </form>
 
 <style>

@@ -21,9 +21,9 @@
 <Card.Root>
   <Card.Header>
     <ImportFlowStepper current="run" {availableSteps} {onNavigateStep} />
-    <Card.Title>{isTerminal(job) ? 'Import finished' : 'Import is running'}</Card.Title>
+    <Card.Title>{isTerminal(job) ? t('web.ImportJobRunHandoff.importFinished') : t('web.ImportJobRunHandoff.importIsRunning')}</Card.Title>
     <Card.Description>
-      {isTerminal(job) ? statusSentence(job) : 'You can leave this page and return from import history.'}
+      {isTerminal(job) ? statusSentence(job) : t('web.ImportJobRunHandoff.youCanLeaveThisPageAndReturnFromImport')}
     </Card.Description>
   </Card.Header>
   <Card.Content class="run-handoff-content">

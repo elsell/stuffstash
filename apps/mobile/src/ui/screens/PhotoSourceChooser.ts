@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
 export function showPhotoSourceChooser({
@@ -29,9 +30,9 @@ export function showPhotoSourceChooser({
     return;
   }
 
-  Alert.alert('Add photos', undefined, [
-    { text: 'Take Photo', onPress: () => choose(onCamera) },
-    { text: 'Choose from Library', onPress: () => choose(onLibrary) },
-    { text: 'Cancel', style: 'cancel' }
+  Alert.alert(t('mobile.PhotoSourceChooser.addPhotos'), undefined, [
+    { text: t('mobile.PhotoSourceChooser.takePhoto'), onPress: () => choose(onCamera) },
+    { text: t('mobile.PhotoSourceChooser.chooseFromLibrary'), onPress: () => choose(onLibrary) },
+    { text: t('mobile.PhotoSourceChooser.cancel'), style: 'cancel' }
   ]);
 }

@@ -56,7 +56,7 @@ export function AssetDetailIdentitySection({ asset, onParentLocationPress, onTag
           />
         ) : (
           <Text style={styles.placementFallback}>
-            {asset.kind === 'location' && placement.crumbs.length === 0 ? 'Top level'
+            {asset.kind === 'location' && placement.crumbs.length === 0 ? t('mobile.AssetDetailIdentitySection.topLevel')
               : placement.fallbackLabel ?? placement.crumbs.map((crumb) => crumb.title).join(' / ')}
           </Text>
         )}

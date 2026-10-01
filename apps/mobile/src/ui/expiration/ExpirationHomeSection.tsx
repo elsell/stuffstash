@@ -27,8 +27,8 @@ export function ExpirationHomeSection({ data, error, onOpen, onOpenAsset, onRetr
   {!data && !error ? <ActivityIndicator accessibilityLabel={t('mobile.ExpirationHomeSection.loadingExpiration')} color={colors.action} /> : null}
   {data ? <>
    {data.counts.soon + data.counts.expired === 0 ? <Text style={styles.emptyText}>{t('mobile.ExpirationHomeSection.noneExpiringSoon')}</Text> : <View>
-    <SelectionRow label={t('mobile.ExpirationHomeSection.expired')} value={String(data.counts.expired)} accessibilityLabel={`View ${data.counts.expired} expired items`} onPress={() => onOpen('expired')} />
-    <SelectionRow label={t('mobile.ExpirationHomeSection.expiringSoon')} value={String(data.counts.soon)} accessibilityLabel={`View ${data.counts.soon} items expiring soon`} onPress={() => onOpen('soon')} />
+    <SelectionRow label={t('mobile.ExpirationHomeSection.expired')} value={String(data.counts.expired)} accessibilityLabel={t('mobile.ExpirationHomeSection.viewExpiredItems', { expired: String(data.counts.expired) })} onPress={() => onOpen('expired')} />
+    <SelectionRow label={t('mobile.ExpirationHomeSection.expiringSoon')} value={String(data.counts.soon)} accessibilityLabel={t('mobile.ExpirationHomeSection.viewItemsExpiringSoon', { soon: String(data.counts.soon) })} onPress={() => onOpen('soon')} />
    </View>}
    {data.items.map(item => <AssetCard key={item.id} asset={item} density="row" palette={colors} showTags={false} onPress={() => onOpenAsset(item.id)} onParentLocationPress={parent => onOpenAsset(parent.id)} />)}
   </> : null}

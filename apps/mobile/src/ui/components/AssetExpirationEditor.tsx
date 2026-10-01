@@ -38,7 +38,7 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
       onChange({ ...base, customAssetTypeId: id, expiration: null, expirationValid: true });
       setChoosingType(false);
     };
-    if (expiration) Alert.alert('Change item type?', 'Changing type removes the expiration date from this draft.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Change type', onPress: apply }]);
+    if (expiration) Alert.alert(t('mobile.AssetExpirationEditor.changeItemType'), t('mobile.AssetExpirationEditor.changingTypeRemovesTheExpirationDateFromThisDraft'), [{ text: t('mobile.AssetExpirationEditor.cancel'), style: 'cancel' }, { text: t('mobile.AssetExpirationEditor.changeType'), onPress: apply }]);
     else apply();
   }
   if (!types) return <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.loadingExpirationSettings')}</Text>;
@@ -56,7 +56,7 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
     {selectedType?.expirationEnabled ? <ExpirationField key={`${asset.id}:${typeId}`} initialValue={expiration ?? undefined} initialPickerDate={initialPickerDate} disabled={disabled}
       onChange={(value, valid) => onChange({ ...base, expiration: value ?? null, expirationValid: valid })} />
       : asset.expiration || draft?.expiration !== undefined || draft?.expirationValid === false ? <View>
-        <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.expiration')}{expiration?.date ?? 'Cleared'}{t('mobile.AssetExpirationEditor.trackingIsDisabledForThisType')}</Text>
+        <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.expiration')}{expiration?.date ?? t('mobile.AssetExpirationEditor.cleared')}{t('mobile.AssetExpirationEditor.trackingIsDisabledForThisType')}</Text>
         {expiration || draft?.expirationValid === false ? <Pressable accessibilityRole="button" accessibilityLabel={t('mobile.AssetExpirationEditor.clearExpiration')} disabled={disabled} onPress={() => onChange({ ...base, expiration: null, expirationValid: true })} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.action }}>{t('mobile.AssetExpirationEditor.clearExpiration')}</Text></Pressable> : null}
       </View> : null}
   </View>;

@@ -338,7 +338,7 @@ function ScopedAddAssetScreen({
         }
       });
     } catch (error) {
-      const message = readableError(error, 'Could not save asset.');
+      const message = readableError(error, t('mobile.AddAssetScreen.couldNotSaveAsset'));
       showDraftError('Could not save asset', message);
       await refreshDashboardAfterTagCreation(newTags);
     } finally { endDraftOperation(); }
@@ -383,7 +383,7 @@ function ScopedAddAssetScreen({
         id: result.id,
         title: result.title,
         kind: 'location' as const,
-        subtitle: 'New location',
+        subtitle: t('mobile.AddAssetScreen.newLocation'),
         pathLabel: result.title,
         selectionHint: 'Location',
         willPromoteToContainer: false
@@ -397,7 +397,7 @@ function ScopedAddAssetScreen({
 
     } catch (error) {
       if (destinationOwner.current !== owner) return;
-      const message = readableError(error, 'Could not create parent.');
+      const message = readableError(error, t('mobile.AddAssetScreen.couldNotCreateParent'));
       showDraftError('Could not create parent', message);
     } finally {
       setIsCreatingParent(false); endDraftOperation();
@@ -416,7 +416,7 @@ function ScopedAddAssetScreen({
       setSelectedPhotos((current) => [...current, ...photos]);
       setSaveState({ status: 'idle' });
     } catch (error) {
-      const message = readableError(error, 'Could not select photos.');
+      const message = readableError(error, t('mobile.AddAssetScreen.couldNotSelectPhotos'));
       showDraftError('Could not select photos', message);
     } finally { endDraftOperation(); }
   }
@@ -433,7 +433,7 @@ function ScopedAddAssetScreen({
       setSelectedPhotos((current) => [...current, ...photos]);
       setSaveState({ status: 'idle' });
     } catch (error) {
-      const message = readableError(error, 'Could not take photo.');
+      const message = readableError(error, t('mobile.AddAssetScreen.couldNotTakePhoto'));
       showDraftError('Could not take photo', message);
     } finally { endDraftOperation(); }
   }
@@ -512,7 +512,7 @@ function ScopedAddAssetScreen({
 
   const selectedParent = resolveSelectedParent(parentMatches, parentAssetId, parentQuery, lastParent);
   const destinationActions = useFocusedSheetActions({
-    primaryLabel: 'Choose destination', secondaryLabel: 'Cancel', disabled: draftBusy || !canChooseDestination,
+    primaryLabel: t('mobile.AddAssetScreen.chooseDestination'), secondaryLabel: t('mobile.AddAssetScreen.cancel'), disabled: draftBusy || !canChooseDestination,
     onApply: () => editDraft(() => { setParentSearchQuery(''); setIsParentMenuOpen(true); }), onBack: () => {}
   });
   useAddDestinationPresentation(isParentMenuOpen && canChooseDestination ? {
@@ -827,7 +827,7 @@ function PhotoPreviewItem({
         ]}
         accessibilityHint={t('mobile.AddAssetScreen.tapToPreviewHoldAndDragToReorder')}
         accessibilityRole="adjustable"
-        accessibilityValue={{ text: `${(index + 1).toString()} of ${photoCount.toString()}` }}
+        accessibilityValue={{ text: t('mobile.AddAssetScreen.of', { value: String((index + 1).toString()), value2: String(photoCount.toString()) }) }}
         delayLongPress={220}
         onAccessibilityAction={(event) => {
           if (disabled) return;
@@ -876,9 +876,9 @@ function PhotoPreviewItem({
           style={styles.photoPreviewImage}
         />
         <Text style={styles.photoOrdinal}>{(index + 1).toString()}</Text>
-        <Text style={styles.photoDragHint}>{isDragging ? 'Drag' : 'Hold'}</Text>
+        <Text style={styles.photoDragHint}>{isDragging ? t('mobile.AddAssetScreen.drag') : t('mobile.AddAssetScreen.hold')}</Text>
       </Pressable>
-      <NativeCommandButton label={`Remove photo ${index + 1}`}
+      <NativeCommandButton label={t('mobile.AddAssetScreen.removePhoto2', { value: String(index + 1) })}
         disabled={disabled} onPress={() => onRemovePhoto(photo.id)} />
     </View>
   );
@@ -906,7 +906,7 @@ function AssetTagPicker({
   const [creatingTag, setCreatingTag] = useState(false);
   const creationVisible = creatingTag || Boolean(entry.name.trim() || entry.color.trim());
   const creationActions = useFocusedSheetActions({
-    primaryLabel: 'New tag', secondaryLabel: 'Cancel new tag',
+    primaryLabel: t('mobile.AddAssetScreen.newTag'), secondaryLabel: t('mobile.AddAssetScreen.cancelNewTag'),
     disabled: disabled || creationVisible, secondaryDisabled: disabled || !creationVisible,
     onApply: () => setCreatingTag(true),
     onBack: () => {
@@ -956,7 +956,7 @@ function AssetTagPicker({
             <Pressable
               disabled={disabled}
               accessibilityRole="button"
-              accessibilityLabel={`Remove new tag ${tag.displayName}`}
+              accessibilityLabel={t('mobile.AddAssetScreen.removeNewTag', { displayName: String(tag.displayName) })}
               accessibilityState={{ disabled }}
               key={`${tag.displayName}-${index.toString()}`}
               onPress={() => onChange(selectedTagIds, newTags.filter((_, currentIndex) => currentIndex !== index), entry)}

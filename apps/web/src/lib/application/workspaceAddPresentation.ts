@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AssetKind, MediaUploadPolicy, ParentTargetViewModel, SelectedPhoto } from '$lib/domain/inventory';
 import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
 
@@ -70,8 +71,8 @@ export const addFormPresentation: AddFormPresentation = {
 };
 
 export const quickParentKindOptions: AddControlOption<'location' | 'container'>[] = [
-  { value: 'location', label: 'Location' },
-  { value: 'container', label: 'Container' }
+  { value: 'location', label: t('web.workspaceAddPresentation.location') },
+  { value: 'container', label: t('web.workspaceAddPresentation.container') }
 ];
 
 export function assetKindControlOptions(): AddControlOption<AssetKind>[] {
@@ -98,16 +99,16 @@ export function addDestinationSummary(input: {
   selectedParent: ParentTargetViewModel | null;
 }): string {
   if (!input.quickParentEnabled) {
-    return input.selectedParent?.title ?? 'Inventory root';
+    return input.selectedParent?.title ?? t('web.workspaceAddPresentation.inventoryRoot');
   }
 
   const parentKindLabel = assetKindLabel(input.quickParentKind);
   const parentName = input.quickParentTitle.trim() ? `New ${parentKindLabel}: ${input.quickParentTitle.trim()}` : `New ${parentKindLabel}`;
-  return `${parentName} in ${quickParentContainerSummary(input.selectedParent)}`;
+  return t('web.workspaceAddPresentation.in', { parentName: String(parentName), value: String(quickParentContainerSummary(input.selectedParent)) });
 }
 
 export function quickParentContainerLabel(selectedParent: ParentTargetViewModel | null): string {
-  return selectedParent?.title ?? 'Inventory root';
+  return selectedParent?.title ?? t('web.workspaceAddPresentation.inventoryRoot');
 }
 
 export function quickParentContainerTrail(selectedParent: ParentTargetViewModel | null): string {
@@ -115,18 +116,18 @@ export function quickParentContainerTrail(selectedParent: ParentTargetViewModel 
 }
 
 export function quickParentContainerSummary(selectedParent: ParentTargetViewModel | null): string {
-  return selectedParent ? `${selectedParent.title} / ${selectedParent.containmentTrail}` : 'Inventory root';
+  return selectedParent ? `${selectedParent.title} / ${selectedParent.containmentTrail}` : t('web.workspaceAddPresentation.inventoryRoot');
 }
 
 export function quickParentMissingNameMessage(): string {
-  return 'Enter a parent name or turn this option off.';
+  return t('web.workspaceAddPresentation.enterAParentNameOrTurnThisOptionOff');
 }
 
 export function addPhotoCountLabel(photoCount: number): string {
   if (photoCount === 0) {
-    return 'No photos';
+    return t('web.workspaceAddPresentation.noPhotos');
   }
-  return `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}`;
+  return t('photos.count', { count: photoCount });
 }
 
 export function addSupportedImageTypes(mediaPolicy: MediaUploadPolicy): SelectedPhoto['contentType'][] {
@@ -139,34 +140,34 @@ export function addPhotoAcceptTypes(supportedImageTypes: string[]): string {
 
 export function addPhotoSupportedTypeLabel(types: string[]): string {
   if (types.length === 0) {
-    return 'No image formats';
+    return t('web.workspaceAddPresentation.noImageFormats');
   }
   const labels = types.map(formatImageContentType);
   if (labels.length === 1) {
     return labels[0] ?? '';
   }
   if (labels.length === 2) {
-    return `${labels[0]} or ${labels[1]}`;
+    return t('web.workspaceAddPresentation.or', { value: String(labels[0]), value2: String(labels[1]) });
   }
-  return `${labels.slice(0, -1).join(', ')}, or ${labels[labels.length - 1]}`;
+  return t('web.workspaceAddPresentation.or2', { value: String(labels.slice(0, -1).join(', ')), value2: String(labels[labels.length - 1]) });
 }
 
 export function addPhotoHelpText(supportedTypeLabel: string, maxBytesLabel: string): string {
-  return `Optional ${supportedTypeLabel} up to ${maxBytesLabel}.`;
+  return t('web.workspaceAddPresentation.optionalUpTo', { supportedTypeLabel: String(supportedTypeLabel), maxBytesLabel: String(maxBytesLabel) });
 }
 
 export function addPhotoRemoveLabel(photo: Pick<SelectedPhoto, 'name'>): string {
-  return `Remove ${photo.name}`;
+  return t('web.workspaceAddPresentation.remove', { name: String(photo.name) });
 }
 
 function addAssetNamePlaceholder(kind: AssetKind): string {
   if (kind === 'location') {
-    return 'Garage shelf';
+    return t('web.workspaceAddPresentation.garageShelf');
   }
   if (kind === 'container') {
-    return 'Clear storage bin';
+    return t('web.workspaceAddPresentation.clearStorageBin');
   }
-  return 'Tomato fertilizer';
+  return t('web.workspaceAddPresentation.tomatoFertilizer');
 }
 
 function formatImageContentType(type: string): string {

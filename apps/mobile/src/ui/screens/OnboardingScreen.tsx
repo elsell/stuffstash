@@ -41,8 +41,8 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   const heading = useRef<Text>(null);
   const connection = initialState.step === 'instance' || initialState.step === 'signIn';
   const household = initialState.step === 'tenant';
-  const title = connection ? 'Connect to Stuff Stash' : household ? 'Set up your household' : 'Create your first inventory';
-  const actionLabel = connection ? 'Connect and sign in' : household ? 'Create household' : 'Create inventory';
+  const title = connection ? t('mobile.OnboardingScreen.connectToStuffStash') : household ? t('mobile.OnboardingScreen.setUpYourHousehold') : t('mobile.OnboardingScreen.createYourFirstInventory');
+  const actionLabel = connection ? t('mobile.OnboardingScreen.connectAndSignIn') : household ? t('mobile.OnboardingScreen.createHousehold') : t('mobile.OnboardingScreen.createInventory');
   const requiredMessage = connection
     ? (!apiBaseUrl.trim() ? 'Enter a server address to continue.' : undefined)
     : household && !householdName.trim()

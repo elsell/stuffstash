@@ -48,8 +48,8 @@ export function containedAssetsEmptyState(
   return {
     title: t('mobile.ContainedAssetsPresentation.nothingInsideYet'),
     message: asset.canAddContainedAssets
-      ? 'Add an item here or move items into this space.'
-      : 'This space is empty.'
+      ? t('mobile.ContainedAssetsPresentation.addAnItemHereOrMoveItemsIntoThis')
+      : t('mobile.ContainedAssetsPresentation.thisSpaceIsEmpty')
   };
 }
 
@@ -67,7 +67,7 @@ export function containedSpacesSectionHeading(
   counts?: ContainedAssetsFilteredCount
 ): ContainedAssetsSectionHeading {
   return {
-    title: `Spaces in ${asset.title}`,
+    title: t('mobile.ContainedAssetsPresentation.spacesIn', { title: String(asset.title) }),
     summary: filteredCountLabel(asset.containedSpacesLabel, counts)
   };
 }
@@ -77,7 +77,7 @@ export function containedItemsSectionHeading(
   counts?: ContainedAssetsFilteredCount
 ): ContainedAssetsSectionHeading {
   return {
-    title: `Items in ${asset.title}`,
+    title: t('mobile.ContainedAssetsPresentation.itemsIn', { title: String(asset.title) }),
     summary: filteredCountLabel(asset.containedItemsLabel, counts)
   };
 }
@@ -94,7 +94,7 @@ function filteredCountLabel(
   if (!counts || counts.visibleCount === counts.totalCount) {
     return totalLabel;
   }
-  return `${counts.visibleCount.toString()} of ${totalLabel}`;
+  return t('mobile.ContainedAssetsPresentation.of', { value: String(counts.visibleCount.toString()), totalLabel: String(totalLabel) });
 }
 
 export function containedSpacesEmptyState(): ContainedAssetsEmptyState {
@@ -110,8 +110,8 @@ export function containedItemsEmptyState(
   return {
     title: t('mobile.ContainedAssetsPresentation.nothingHereYet'),
     message: asset.canAddContainedAssets
-      ? 'Add an item here or move items into this place.'
-      : 'There are no items in this place.'
+      ? t('mobile.ContainedAssetsPresentation.addAnItemHereOrMoveItemsIntoThis2')
+      : t('mobile.ContainedAssetsPresentation.thereAreNoItemsInThisPlace')
   };
 }
 

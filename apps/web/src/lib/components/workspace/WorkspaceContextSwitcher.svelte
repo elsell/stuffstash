@@ -209,7 +209,7 @@
         </span>
         {#if tenants.length > 0}
           <Button.Root variant="ghost" class={mobile ? 'context-switch-action' : undefined} onclick={() => { showingTenants = !showingTenants; }}>
-            {showingTenants ? 'Back' : 'Switch tenant'}
+            {showingTenants ? t('web.WorkspaceContextSwitcher.back') : t('web.WorkspaceContextSwitcher.switchTenant')}
           </Button.Root>
         {/if}
       </div>
@@ -241,7 +241,7 @@
           {#if createError}<p class="form-error" role="alert">{createError}</p>{/if}
           <div class="context-create-actions">
             <Button.Root type="button" variant="ghost" onclick={cancelCreate}>{t('web.WorkspaceContextSwitcher.cancel')}</Button.Root>
-            <Button.Root type="submit" disabled={creating}>{creating ? 'Creating...' : createMode === 'tenant_and_inventory' ? 'Create workspace' : 'Create inventory'}</Button.Root>
+            <Button.Root type="submit" disabled={creating}>{creating ? 'Creating...' : createMode === 'tenant_and_inventory' ? t('web.WorkspaceContextSwitcher.createWorkspace') : t('web.WorkspaceContextSwitcher.createInventory')}</Button.Root>
           </div>
         </form>
       {:else if showingTenants}

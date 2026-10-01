@@ -1,78 +1,79 @@
+import { t } from '../../presentation/localization';
 export function formatVoiceProviderReadinessLabel(readiness: string): string {
   switch (readiness) {
     case 'ready':
-      return 'Ready';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.ready');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     case 'disabled':
-      return 'Disabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.disabled');
     case 'archived':
-      return 'Archived';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.archived');
     case 'credential_missing':
-      return 'Needs credentials';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsCredentials');
     case 'untested':
-      return 'Needs test';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsTest');
     case 'duplicate_candidates':
-      return 'Choose profile';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.chooseProfile');
     case 'invalid_selection':
-      return 'Fix selection';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.fixSelection');
     default:
-      return 'Needs attention';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.needsAttention');
   }
 }
 
 export function formatVoiceProviderCapabilityLabel(capability: string): string {
   switch (capability) {
     case 'speech_to_text':
-      return 'Speech input';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.speechInput');
     case 'language_inference':
-      return 'Agent brain';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.agentBrain');
     case 'text_to_speech':
-      return 'Spoken output';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.spokenOutput');
     default:
-      return 'Unknown capability';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknownCapability');
   }
 }
 
 export function formatVoiceProviderSelectionSourceLabel(selectionSource: string): string {
   switch (selectionSource) {
     case 'explicit':
-      return 'Selected';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.selected');
     case 'implicit':
-      return 'Auto-selected';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.autoSelected');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     default:
-      return 'Selection unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.selectionUnknown');
   }
 }
 
 export function formatProviderProfileCredentialStatusLabel(credentialStatus: string): string {
   switch (credentialStatus) {
     case 'configured':
-      return 'Configured';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.configured');
     case 'missing':
-      return 'Missing';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.missing');
     default:
-      return 'Unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknown');
   }
 }
 
 export function formatProviderProfileLifecycleLabel(lifecycleState: string): string {
   switch (lifecycleState) {
     case 'enabled':
-      return 'Enabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.enabled');
     case 'disabled':
-      return 'Disabled';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.disabled');
     case 'archived':
-      return 'Archived';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.archived');
     default:
-      return 'Unknown';
+      return t('mobile.ProviderProfilesVoiceSetupPresentation.unknown');
   }
 }
 
 export function formatProviderProfileTestStatusLabel(lastTestedAt?: string): string {
-  return lastTestedAt ? 'Tested' : 'Needs test';
+  return lastTestedAt ? t('mobile.ProviderProfilesVoiceSetupPresentation.tested') : t('mobile.ProviderProfilesVoiceSetupPresentation.needsTest');
 }
 
 export function voiceProviderSetupIssueLabels(readiness: string, recommendedAction: string): readonly string[] {

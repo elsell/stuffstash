@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
  import type { ExpirationItem } from '$lib/ports/expirationRepository';
  import type { Asset } from '$lib/domain/inventory';
  import { workspaceRouteHref } from '$lib/application/workspaceRoute';
@@ -15,7 +16,7 @@
   {#if grouped && (index === 0 || group(items[index - 1]) !== group(item))}<h2 class="month">{group(item)}</h2>{/if}
   <a id={`expiration-${item.id}`} class="expiry-row" href={workspaceRouteHref({mode:'asset',assetId:item.id},item.tenantId,item.inventoryId)} onclick={event => open(event,item)}>
    <AssetThumb asset={item} size="md" />
-   <span class="details"><strong>{item.title}</strong>{#if item.currentCheckout}<CheckoutBadge checkout={item.currentCheckout} />{/if}<AssetExpirationLabel expiration={item.expiration} context={item.expirationContext} /><span class="placement">{item.ancestorPath.map(parent => parent.title).join(' / ') || 'No location'}</span></span>
+   <span class="details"><strong>{item.title}</strong>{#if item.currentCheckout}<CheckoutBadge checkout={item.currentCheckout} />{/if}<AssetExpirationLabel expiration={item.expiration} context={item.expirationContext} /><span class="placement">{item.ancestorPath.map(parent => parent.title).join(' / ') || t('web.ExpirationRows.noLocation')}</span></span>
    <span aria-hidden="true" class="arrow">›</span>
   </a>
  {/each}

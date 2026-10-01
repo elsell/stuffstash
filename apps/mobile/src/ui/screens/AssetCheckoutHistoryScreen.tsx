@@ -60,7 +60,7 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
     <AssetCheckoutHistorySheet state={state} footer={<>
       {!accessDenied && core.isError && !core.data ? <>
         <Text accessibilityRole="alert" style={{ color: palette.danger }}>{t('mobile.AssetCheckoutHistoryScreen.assetNameCouldNotBeLoaded')}</Text>
-        <NativeCommandButton label={core.isFetching ? 'Loading asset name…' : 'Try loading asset name again'}
+        <NativeCommandButton label={core.isFetching ? t('mobile.AssetCheckoutHistoryScreen.loadingAssetName') : t('mobile.AssetCheckoutHistoryScreen.tryLoadingAssetNameAgain')}
           disabled={core.isFetching} onPress={() => { if (!core.isFetching) void core.refetch(); }} />
       </> : null}
       {state.status === 'error' ? <NativeCommandButton label={t('mobile.AssetCheckoutHistoryScreen.tryAgain')} onPress={retry} /> : null}
@@ -70,7 +70,7 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
       </> : null}
       {history.isFetchNextPageError ? <Text accessibilityRole="alert" style={{ color: palette.danger }}>{t('mobile.AssetCheckoutHistoryScreen.olderCheckoutsCouldNotBeLoaded')}</Text> : null}
       {state.status === 'ready' && history.hasNextPage ? <NativeCommandButton disabled={history.isFetching} onPress={() => { if (!history.isFetching) void history.fetchNextPage(); }}
-        label={history.isFetchingNextPage ? 'Loading older checkouts…' : history.isFetchNextPageError ? 'Try older checkouts again' : 'Load older checkouts'} /> : null}
+        label={history.isFetchingNextPage ? t('mobile.AssetCheckoutHistoryScreen.loadingOlderCheckouts') : history.isFetchNextPageError ? t('mobile.AssetCheckoutHistoryScreen.tryOlderCheckoutsAgain') : t('mobile.AssetCheckoutHistoryScreen.loadOlderCheckouts')} /> : null}
     </>} />
   </>;
 }

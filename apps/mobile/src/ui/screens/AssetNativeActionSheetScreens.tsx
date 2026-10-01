@@ -72,7 +72,7 @@ function ActionAsset({ children, assetId, assetCoreQuery, assetPlacementQuery }:
   if (!core.data) return <AssetLoadState failed={core.isError} onRetry={() => void core.refetch()} />;
   const asset = placement.data && assetPlacementQuery ? { ...core.data.view, parentLocationTrail: placement.data.parentLocationTrail, parentLocationTrailLabel: placement.data.parentLocationTrailLabel, locationTrailLabel: placement.data.locationTrailLabel, isPlacementLoading: false } : core.data.view;
   return <Fragment key={`${asset.tenantId}:${asset.inventoryId}:${asset.id}`}>
-    {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? 'Current placement could not be loaded.' : 'Loading current placement…'}</Text> : null}
+    {assetPlacementQuery && !placement.data ? <Text accessibilityLiveRegion="polite">{placement.isError ? t('mobile.AssetNativeActionSheetScreens.currentPlacementCouldNotBeLoaded') : t('mobile.AssetNativeActionSheetScreens.loadingCurrentPlacement')}</Text> : null}
     {assetPlacementQuery && placement.isError ? <NativeCommandButton label={t('mobile.AssetNativeActionSheetScreens.retryPlacement')} onPress={() => void placement.refetch()} /> : null}
     {children(asset)}
   </Fragment>;
@@ -112,9 +112,9 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     const isCurrent = captureDiscard();
     if (!isCurrent()) return;
     let accepted = false;
-    Alert.alert('Discard changes?', 'Your edits have not been saved.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => {
+    Alert.alert(t('mobile.AssetNativeActionSheetScreens.discardChanges'), t('mobile.AssetNativeActionSheetScreens.yourEditsHaveNotBeenSaved'), [
+      { text: t('mobile.AssetNativeActionSheetScreens.keepEditing'), style: 'cancel' },
+      { text: t('mobile.AssetNativeActionSheetScreens.discard'), style: 'destructive', onPress: () => {
         if (!isCurrent() || accepted || operation.locked()) return;
         accepted = true;
         operation.leave(leave);
@@ -152,7 +152,7 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
     } catch (error) {
       if (!operation.canPresent()) return;
       await refreshEditAssetTags(normalizedEditDraft(draft).newTags ?? []);
-      if (operation.canPresent()) Alert.alert('Could not save changes', readableError(error, 'Asset update failed.'));
+      if (operation.canPresent()) Alert.alert(t('mobile.AssetNativeActionSheetScreens.couldNotSaveChanges'), readableError(error, t('mobile.AssetNativeActionSheetScreens.assetUpdateFailed')));
     } finally {
       operation.end();
     }
@@ -246,7 +246,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
         selectedParent: createdParent
       });
     } catch (error) {
-      if (operation.canPresent()) Alert.alert('Could not create destination', readableError(error, 'Destination creation failed.'));
+      if (operation.canPresent()) Alert.alert(t('mobile.AssetNativeActionSheetScreens.couldNotCreateDestination'), readableError(error, t('mobile.AssetNativeActionSheetScreens.destinationCreationFailed')));
     } finally {
       operation.end();
     }
@@ -266,7 +266,7 @@ function MoveAssetForm({ asset, createAssetCommand, moveAssetCommand, parentLook
       recordAssetActionCompletion({ assetId, action: 'move', message: result.message });
       operation.complete(returnFromAssetAction);
     } catch (error) {
-      if (operation.canPresent()) Alert.alert('Could not move asset', readableError(error, 'Move failed.'));
+      if (operation.canPresent()) Alert.alert(t('mobile.AssetNativeActionSheetScreens.couldNotMoveAsset'), readableError(error, t('mobile.AssetNativeActionSheetScreens.moveFailed')));
     } finally {
       operation.end();
     }
@@ -330,7 +330,7 @@ function MoveHereForm({ asset, moveAssetCommand, parentLookupQuery }: MoveHerePr
       recordAssetActionCompletion({ assetId: draft.target.id, action: 'move', message: result.message });
       operation.complete(returnFromAssetAction);
     } catch (error) {
-      if (operation.canPresent()) Alert.alert('Could not move asset here', readableError(error, 'Move failed.'));
+      if (operation.canPresent()) Alert.alert(t('mobile.AssetNativeActionSheetScreens.couldNotMoveAssetHere'), readableError(error, t('mobile.AssetNativeActionSheetScreens.moveFailed')));
     } finally {
       operation.end();
     }

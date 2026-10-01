@@ -1,4 +1,4 @@
-/** Web presentation messages. Keys describe context, never wire values. */
+/** Web presentation messages. */
 export const webMessages = {
   "web.AuthBrand.stuffStash": "Stuff Stash",
   "web.InvitationAcceptSurface.inventoryInvitationStuffStash": "Inventory invitation · Stuff Stash",
@@ -994,5 +994,566 @@ export const webMessages = {
   "web.RunWorkspace.casesFull": "{value} · {completedCases}/{totalCases} cases · {value4}",
   "web.WorkflowWorkspace.latestSavedRevisionFull": "Latest saved revision {number}",
   "web.WorkflowWorkspace.toolCallsModelCallsSecondsFull": "{toolCalls} tool calls · {modelCalls} model calls · {elapsedSeconds} seconds",
-  "web.WorkflowWorkspace.revisionFull": "{name} · Revision {latestRevision}"
+  "web.WorkflowWorkspace.revisionFull": "{name} · Revision {latestRevision}",
+  "web.AuthSignInScreen.signInToStuffStash": "Sign in to Stuff Stash",
+  "web.AuthSignInScreen.continueToYourSecureSignInPageYouLl": "Continue to your secure sign-in page. You’ll return here when you’re done.",
+  "web.AuthSignInScreen.openingSignIn": "Opening sign-in…",
+  "web.AuthSignInScreen.continueToSignIn": "Continue to sign in",
+  "web.InvitationAcceptSurface.openingSignIn": "Opening sign-in…",
+  "web.InvitationAcceptSurface.continueToSignIn": "Continue to sign in",
+  "web.InvitationAcceptSurface.switchAccount": "Switch account",
+  "web.InvitationAcceptSurface.acceptInvitation": "Accept invitation",
+  "web.InvitationAcceptSurface.tryAgain": "Try again",
+  "web.AssetDetail.attachmentMustBeOrSmaller": "Attachment must be {value} or smaller.",
+  "web.AssetDetail.baseAsset": "Base asset",
+  "web.AssetDetail.notAvailable": "Not available",
+  "web.AssetDetail.undone": "Undone",
+  "web.AssetDetail.checkedOut": "Checked out",
+  "web.AssetLocationTrail.locationUnavailable": "Location unavailable",
+  "web.AssetTagSelector.showFewerTags": "Show fewer tags",
+  "web.AssetTagSelector.showAllTags": "Show all {length} tags",
+  "web.BinaryOption.on": "On",
+  "web.BinaryOption.off": "Off",
+  "web.BrowsePanel.contents": "Contents",
+  "web.BrowsePanel.contained": "{value} contained",
+  "web.BrowsePanel.loadMore": "Load more",
+  "web.ChoiceGrid.noChoicesAvailable": "No choices available.",
+  "web.ContainedAssetWorkspace.inventoryRoot": "Inventory root",
+  "web.ContainedAssetWorkspace.noMatchingMovableAssets": "No matching movable assets",
+  "web.ContainedAssetWorkspace.everythingEligibleIsAlreadyHere": "Everything eligible is already here",
+  "web.ContainedAssetWorkspace.tryAnotherNameOrCurrentPlace": "Try another name or current place.",
+  "web.ContainedAssetWorkspace.searchAfterAddingOrMovingSomethingElsewhere": "Search after adding or moving something elsewhere.",
+  "web.ContainedAssetWorkspace.moveHere": "Move {title} here",
+  "web.ContainedAssetWorkspace.chooseAnAsset": "Choose an asset",
+  "web.ContainedAssetWorkspace.noMatching": "No matching {key}",
+  "web.ContainedAssetWorkspace.tryAnotherNameOrPath": "Try another name or path.",
+  "web.HomeWorkspace.return": "Return",
+  "web.ImportJobDetailPanel.openIssuesFor": "Open issues for {value} {label}",
+  "web.ImportJobDetailPanel.openImportedRecordsFor": "Open imported records for {value} {label}",
+  "web.ImportJobDetailPanel.noIssues": "No issues",
+  "web.ImportJobDetailPanel.actionRequired": "Action required",
+  "web.ImportJobDetailPanel.groupedByCause": "Grouped by cause",
+  "web.ImportJobDetailPanel.beforeImport": "Before import",
+  "web.ImportJobDetailPanel.originalPlan": "Original plan",
+  "web.ImportJobHistory.backgroundJob": "Background job",
+  "web.ImportJobHistory.reviewDetails": "Review Details",
+  "web.ImportJobHistory.noOtherImportRunsToShow": "No other import runs to show.",
+  "web.ImportJobHistory.noImportsMatchThisFilter": "No imports match this filter.",
+  "web.ImportJobRunHandoff.importFinished": "Import finished",
+  "web.ImportJobRunHandoff.importIsRunning": "Import is running",
+  "web.ImportJobRunHandoff.youCanLeaveThisPageAndReturnFromImport": "You can leave this page and return from import history.",
+  "web.ImportMessagesList.showingAPartialListOfImportMessages": "Showing a partial list of import messages.",
+  "web.ImportMessagesList.stuffStashFoundRecordsThatLookConnectedToAn": "Stuff Stash found records that look connected to an earlier import.",
+  "web.ImportMessagesList.thoseRecordsWereSkippedSoTheImportWouldNot": "Those records were skipped so the import would not create duplicates.",
+  "web.ImportMessagesList.openTheMatchingItemInStuffStashOrReview": "Open the matching item in Stuff Stash or review the original Homebox record before importing it again.",
+  "web.ImportMessagesList.homeboxHasADateThatIsIncompleteOrCannot": "Homebox has a date that is incomplete or cannot be represented as a full Stuff Stash date.",
+  "web.ImportMessagesList.theValueWasKeptAsTextInsteadOfBeing": "The value was kept as text instead of being saved as a structured date.",
+  "web.ImportMessagesList.editTheDateInHomeboxOrUpdateTheImported": "Edit the date in Homebox or update the imported field in Stuff Stash after the import.",
+  "web.ImportMessagesList.stuffStashCouldNotDownloadOneOrMoreFiles": "Stuff Stash could not download one or more files from the source.",
+  "web.ImportMessagesList.theRelatedAssetCanStillImportButTheListed": "The related asset can still import, but the listed photos or files were skipped.",
+  "web.ImportMessagesList.checkThatTheFileExistsInHomeboxAndThat": "Check that the file exists in Homebox and that the Homebox URL is reachable, then run a new preview if you still need the file.",
+  "web.ImportMessagesList.aFileWasReachableButItDidNotMeet": "A file was reachable, but it did not meet Stuff Stash attachment rules.",
+  "web.ImportMessagesList.theFileWasSkippedAndWasNotAttachedTo": "The file was skipped and was not attached to the imported asset.",
+  "web.ImportMessagesList.convertOrReplaceTheFileWithASupportedFormat": "Convert or replace the file with a supported format in Homebox, then preview the import again.",
+  "web.ImportMessagesList.thisIssueBlockedPartOfTheImportFromCompleting": "This issue blocked part of the import from completing safely.",
+  "web.ImportMessagesList.stuffStashStoppedOrSkippedTheAffectedWorkTo": "Stuff Stash stopped or skipped the affected work to avoid saving misleading data.",
+  "web.ImportMessagesList.reviewTheAffectedRecordsCorrectTheSourceDataIf": "Review the affected records, correct the source data if needed, then preview and run the import again.",
+  "web.ImportMessagesList.stuffStashImportedWhatItCouldAndPreservedThis": "Stuff Stash imported what it could and preserved this warning for review.",
+  "web.ImportMessagesList.theAffectedRecordsMayNeedFollowUpButThe": "The affected records may need follow-up, but the warning did not block the whole import.",
+  "web.ImportMessagesList.reviewTheAffectedRecordsBelowAndUpdateTheSource": "Review the affected records below and update the source or imported records if the result is not what you want.",
+  "web.ImportPreviewPanel.noBlockers": "No blockers",
+  "web.ImportPreviewPanel.groupedByCause": "Grouped by cause",
+  "web.ImportPreviewSamples.noCustomFieldsPlanned": "No custom fields planned.",
+  "web.ImportPreviewSamples.noTagsPlanned": "No tags planned.",
+  "web.ImportPreviewSamples.noLocationsPlanned": "No locations planned.",
+  "web.ImportPreviewSamples.noAssetRecordsPlanned": "No asset records planned.",
+  "web.ImportPreviewSamples.noPhotosOrFilesPlanned": "No photos or files planned.",
+  "web.ImportSourceSetup.connectToHomebox": "Connect to Homebox",
+  "web.ImportSourceSetup.uploadHomeboxCSV": "Upload Homebox CSV",
+  "web.ImportSourceSetup.photosWillBeImported": "Photos will be imported",
+  "web.ImportSourceSetup.photosWillBeSkipped": "Photos will be skipped",
+  "web.InventoryAccessInvitationActionPanel.cancel": "Cancel",
+  "web.InventoryAccessInvitationActionPanel.backToInvitations": "Back to invitations",
+  "web.InventoryAccessManager.manageDirectGrantsAndInviteLinksForThisInventory": "Manage direct grants and invite links for this inventory.",
+  "web.InventoryAccessManager.sharingRequiresInventoryShareAccess": "Sharing requires inventory share access.",
+  "web.InventoryAccessManager.expired": " / expired",
+  "web.InventoryConversationPanel.you": "You",
+  "web.InventoryConversationPanel.stuffStash": "Stuff Stash",
+  "web.InventoryConversationPanel.applyingYourDecision": "Applying your decision…",
+  "web.InventoryCustomizationArchivePanel.cancel": "Cancel",
+  "web.InventoryCustomizationManager.noCustomTypesSelected": "No custom types selected",
+  "web.InventoryCustomizationManager.customSelected": "{selectedTargetCount} custom {value} selected",
+  "web.InventoryWorkspaceApp.undoingChange": "Undoing change…",
+  "web.InventoryWorkspaceApp.redoingChange": "Redoing change…",
+  "web.InventoryWorkspaceApp.changeTo": "{value} change to {title}.",
+  "web.InventoryWorkspaceApp.redo": "Redo",
+  "web.InventoryWorkspaceApp.couldnTUndoChange": "Couldn’t undo change.",
+  "web.InventoryWorkspaceApp.couldnTRedoChange": "Couldn’t redo change.",
+  "web.NotificationInbox.noUnreadNotifications": "No unread notifications.",
+  "web.NotificationInbox.noExpirationNotificationsYet": "No expiration notifications yet.",
+  "web.NotificationInbox.expired": "Expired",
+  "web.NotificationInbox.expires": "Expires",
+  "web.NotificationInbox.loadingMore": "Loading more…",
+  "web.NotificationInbox.retryMoreNotifications": "Retry more notifications",
+  "web.NotificationInbox.loadMore": "Load more",
+  "web.ParentTargetPicker.searchLocationsOrContainers": "Search locations or containers",
+  "web.SearchSuggestions.searchSuggestions": "Search suggestions",
+  "web.SideNav.home": "Home",
+  "web.WorkspaceContextSwitcher.back": "Back",
+  "web.WorkspaceContextSwitcher.switchTenant": "Switch tenant",
+  "web.WorkspaceContextSwitcher.createWorkspace": "Create workspace",
+  "web.WorkspaceContextSwitcher.createInventory": "Create inventory",
+  "web.WorkspaceSetupPanel.createWorkspace": "Create workspace",
+  "web.ExpirationRows.noLocation": "No location",
+  "web.ExpirationWorkspace.noMatchingItems": "No matching items",
+  "web.ExpirationWorkspace.noExpirationDates": "No expiration dates",
+  "web.ExpirationWorkspace.noneExpiringSoon": "None expiring soon",
+  "web.ExpirationWorkspace.noExpiredItems": "No expired items",
+  "web.ExpirationWorkspace.tryChangingOrClearingYourFilters": "Try changing or clearing your filters.",
+  "web.ExpirationWorkspace.addExpirationDatesFromAnItemSDetails": "Add expiration dates from an item’s details.",
+  "web.ExpirationWorkspace.youCanReviewAllRecordedDatesInAllDates": "You can review all recorded dates in All dates.",
+  "web.ExpirationWorkspace.loadMore": "Load more",
+  "web.importWorkspacePresentation.ready": "Ready",
+  "web.importWorkspacePresentation.inProgress": "In progress",
+  "web.importWorkspacePresentation.completed": "Completed",
+  "web.importWorkspacePresentation.failed": "Failed",
+  "web.importWorkspacePresentation.cancelling": "Cancelling",
+  "web.importWorkspacePresentation.kept": "Kept",
+  "web.importWorkspacePresentation.discarded": "Discarded",
+  "web.importWorkspacePresentation.discardFailed": "Discard failed",
+  "web.importWorkspacePresentation.cancellationCleanupNeedsReview": "Cancellation cleanup needs review",
+  "web.importWorkspacePresentation.importFailedBeforeItFinished": "Import failed before it finished",
+  "web.importWorkspacePresentation.noIssues": "No issues",
+  "web.importWorkspacePresentation.readyForYourReview": "Ready for your review.",
+  "web.importWorkspacePresentation.importIsRunningInTheBackground": "Import is running in the background.",
+  "web.importWorkspacePresentation.cancellationIsWaitingForASafeStoppingPoint": "Cancellation is waiting for a safe stopping point.",
+  "web.importWorkspacePresentation.completedWithWarnings": "Completed with warnings.",
+  "web.importWorkspacePresentation.completedSuccessfully": "Completed successfully.",
+  "web.importWorkspacePresentation.imageImportDidNotStartEarlierRecordsWereKept": "Image import did not start. {created} earlier records were kept.",
+  "web.importWorkspacePresentation.imageImportDidNotStart": "Image import did not start.",
+  "web.importWorkspacePresentation.importStoppedRecordsWereKept": "Import stopped. {created} records were kept.",
+  "web.importWorkspacePresentation.importFailedBeforeItCouldFinish": "Import failed before it could finish.",
+  "web.importWorkspacePresentation.cancelledPartialProgressWasKept": "Cancelled. Partial progress was kept.",
+  "web.importWorkspacePresentation.cancelledPartialProgressWasDiscarded": "Cancelled. Partial progress was discarded.",
+  "web.importWorkspacePresentation.cancellationCleanupNeedsAttention": "Cancellation cleanup needs attention.",
+  "web.importWorkspacePresentation.readingSource": "Reading source",
+  "web.importWorkspacePresentation.creatingFields": "Creating fields",
+  "web.importWorkspacePresentation.creatingLocations": "Creating locations",
+  "web.importWorkspacePresentation.creatingAssets": "Creating assets",
+  "web.importWorkspacePresentation.importingPhotosAndFiles": "Importing photos and files",
+  "web.importWorkspacePresentation.totalNotKnownYet": "Total not known yet",
+  "web.importWorkspacePresentation.importProgressPercent": "Import progress {value} percent",
+  "web.importWorkspacePresentation.importProgressForTotalNotKnownYet": "Import progress for {value}; total not known yet",
+  "web.importWorkspacePresentation.width": "width: {value}%",
+  "web.importWorkspacePresentation.preparedBy": "Prepared by {email}",
+  "web.importWorkspacePresentation.preparedBy2": "Prepared by {value}",
+  "web.importWorkspacePresentation.preparedBy3": "Prepared by {actorId}",
+  "web.importWorkspacePresentation.noRecordsChanged": "No records changed",
+  "web.importWorkspacePresentation.previewNeedsToBeRefreshed": "Preview needs to be refreshed",
+  "web.importWorkspacePresentation.fixBlockingIssuesBeforeImporting": "Fix blocking issues before importing",
+  "web.importWorkspacePresentation.readyToStart": "Ready to start",
+  "web.importWorkspacePresentation.theSourceSettingsChangedAfterThisPreviewConfirmThe": "The source settings changed after this preview. Confirm the source again before starting.",
+  "web.importWorkspacePresentation.nothingHasBeenSavedReviewTheBlockingMessagesBelow": "Nothing has been saved. Review the blocking messages below and preview again after fixing the source.",
+  "web.importWorkspacePresentation.nothingHasBeenSavedWarningsAreShownBelowSo": "Nothing has been saved. Warnings are shown below so you can decide whether to continue.",
+  "web.importWorkspacePresentation.nothingHasBeenSavedStartTheImportWhenThis": "Nothing has been saved. Start the import when this plan looks right.",
+  "web.importWorkspacePresentation.rePreviewRequired": "Re-preview required",
+  "web.importWorkspacePresentation.blocking": "{errors} blocking",
+  "web.importWorkspacePresentation.warnings": "{warnings} warnings",
+  "web.importWorkspacePresentation.importedPhotoFile": "Imported photo/file",
+  "web.importWorkspacePresentation.importedLocation": "Imported location",
+  "web.importWorkspacePresentation.importedAsset": "Imported asset",
+  "web.importWorkspacePresentation.source": "Source {sourceEntityType}: {sourceEntityId}",
+  "web.importWorkspacePresentation.cSVSnapshotCheckedForThisPreview": "CSV snapshot checked for this preview.",
+  "web.importWorkspacePresentation.homeboxSourceCheckedForThisPreview": "Homebox source checked for this preview.",
+  "web.importWorkspacePresentation.sizeUnknown": "size unknown",
+  "web.importWorkspacePresentation.kB": "{value} KB",
+  "web.importWorkspacePresentation.mB": "{value} MB",
+  "web.AssetTypeSettingsManager.isUpToDate": "{displayName} is up to date.",
+  "web.AssetTypeSettingsManager.typesSharedWithEveryInventory": "Types shared with every inventory.",
+  "web.AssetTypeSettingsManager.inheritedAndInventoryOnlyClassifications": "Inherited and inventory-only classifications.",
+  "web.AssetTypeSettingsManager.loadMore": "Load more",
+  "web.AssetTypeSettingsManager.none": "None",
+  "web.AssetTypeSettingsManager.on": "On",
+  "web.AssetTypeSettingsManager.off": "Off",
+  "web.AssetTypeSettingsManager.inheritedFrom": "Inherited from {name}",
+  "web.AssetTypeSettingsManager.onlyIn": "Only in {contextName}",
+  "web.ExpirationReminderEditor.days": "{advanceDays} days",
+  "web.ExpirationReminderEditor.off": "Off",
+  "web.ExpirationReminderEditor.enterAWholeNumberFrom0To3650": "Enter a whole number from 0 to 3650.",
+  "web.ExpirationReminderEditor.calendarDaysBeforeTheExpirationDateEnds": "Calendar days before the expiration date ends.",
+  "web.ExpirationReminderEditor.defaultRemindersAreOff": "Default reminders are off",
+  "web.ExpirationReminderEditor.saveReminders": "Save reminders",
+  "web.FieldSettingsManager.isUpToDate": "{displayName} is up to date.",
+  "web.FieldSettingsManager.fieldsSharedWithEveryInventory": "Fields shared with every inventory.",
+  "web.FieldSettingsManager.inheritedAndInventoryOnlyMetadata": "Inherited and inventory-only metadata.",
+  "web.FieldSettingsManager.allAssets": "All assets",
+  "web.FieldSettingsManager.assetTypes2": "{length} asset types",
+  "web.FieldSettingsManager.loadMore": "Load more",
+  "web.FieldSettingsManager.addOptions": "Add options",
+  "web.FieldSettingsManager.options": "Options",
+  "web.FieldSettingsManager.inheritedFrom": "Inherited from {name}",
+  "web.FieldSettingsManager.onlyIn": "Only in {contextName}",
+  "web.InventoryExportAction.preparingExport": "Preparing export…",
+  "web.NotificationSettings.savedTimezoneDatesEndAtMidnightInThisTimezone": "Saved timezone: {timezone}. Dates end at midnight in this timezone.",
+  "web.NotificationSettings.enterATimezoneSuchAsAmericaNewYorkOr": "Enter a timezone such as America/New_York or Europe/London.",
+  "web.NotificationSettings.off": "Off",
+  "web.NotificationSettings.custom": "Custom",
+  "web.NotificationSettings.usesDefaults": "Uses defaults",
+  "web.SettingsWorkspace.signedInAccount": "Signed-in account",
+  "web.TagSettingsManager.isUpToDate": "{displayName} is up to date.",
+  "web.TagSettingsManager.loadMore": "Load more",
+  "web.TagSettingsManager.of80UTF8Bytes": "{nameBytes} of 80 UTF-8 bytes",
+  "web.CaseEditor.saveTestCase": "Save test case",
+  "web.CaseExpectations.unnamedFixture": "Unnamed fixture",
+  "web.CaseSummary.inside": " · inside {value}",
+  "web.CaseSummary.checkOut": "Check out",
+  "web.RunActivation.activateTestedRevision": "Activate tested revision",
+  "web.RunComparison.hideRunComparison": "Hide run comparison",
+  "web.RunComparison.compareWithAnotherRun": "Compare with another run",
+  "web.RunDetails.cancelRun": "Cancel run",
+  "web.RunResult.hideResult": "Hide result",
+  "web.RunResult.compareExpectedAndObserved": "Compare expected and observed",
+  "web.RunResult.none": "None",
+  "web.RunSetup.selectedProfileUnavailable": "Selected profile unavailable",
+  "web.RunSetup.tenantDefaultModel": "Tenant default model",
+  "web.RunSetup.runSelectedCases": "Run selected cases",
+  "web.WorkflowEditor.saveDraft": "Save draft",
+  "web.WorkflowSelect.chooseAnOption": "Choose an option",
+  "web.WorkflowWorkspace.activeWorkflow": "Active workflow: {value}",
+  "web.WorkflowWorkspace.usingTheDefaultConversationWorkflow": "Using the default conversation workflow.",
+  "web.WorkflowWorkspace.savedModelProfile": "Saved model profile",
+  "web.WorkflowWorkspace.tenantDefaultModel": "Tenant default model",
+  "web.WorkflowWorkspace.noAdditionalInstructions": "No additional instructions",
+  "web.workspaceAddPresentation.location": "Location",
+  "web.workspaceAddPresentation.container": "Container",
+  "web.workspaceAddPresentation.inventoryRoot": "Inventory root",
+  "web.workspaceAddPresentation.in": "{parentName} in {value}",
+  "web.workspaceAddPresentation.enterAParentNameOrTurnThisOptionOff": "Enter a parent name or turn this option off.",
+  "web.workspaceAddPresentation.noPhotos": "No photos",
+  "web.workspaceAddPresentation.noImageFormats": "No image formats",
+  "web.workspaceAddPresentation.or": "{value} or {value2}",
+  "web.workspaceAddPresentation.or2": "{value}, or {value2}",
+  "web.workspaceAddPresentation.optionalUpTo": "Optional {supportedTypeLabel} up to {maxBytesLabel}.",
+  "web.workspaceAddPresentation.remove": "Remove {name}",
+  "web.workspaceAddPresentation.garageShelf": "Garage shelf",
+  "web.workspaceAddPresentation.clearStorageBin": "Clear storage bin",
+  "web.workspaceAddPresentation.tomatoFertilizer": "Tomato fertilizer",
+  "web.workspaceAuditPresentation.unknownActor": "Unknown actor",
+  "web.workspaceAuditPresentation.owner": "Owner",
+  "web.workspaceAuditPresentation.signedInUser": "Signed-in user",
+  "web.workspaceAuditPresentation.user": "User",
+  "web.workspaceAuditPresentation.system": "System",
+  "web.workspaceAuditPresentation.recordedSource": "Recorded source",
+  "web.workspaceAuditPresentation.activityRecorded": "Activity recorded",
+  "web.settingsManagementNavigation.accountAndApp": "Account and app",
+  "web.settingsManagementNavigation.accountConnectionAndAppInformation": "Account, connection, and app information",
+  "web.settingsManagementNavigation.fieldsAndAssetTypesSharedWithItsInventories": "Fields and asset types shared with its inventories",
+  "web.settingsManagementNavigation.belongsTo": "Belongs to {value}",
+  "web.workspaceSettingsNavigation.overview": "Overview",
+  "web.workspaceSettingsNavigation.inventoryContextAndAccessSummary": "Inventory context and access summary",
+  "web.workspaceSettingsNavigation.access": "Access",
+  "web.workspaceSettingsNavigation.sharingGrantsAndInvitations": "Sharing, grants, and invitations",
+  "web.workspaceSettingsNavigation.fields": "Fields",
+  "web.workspaceSettingsNavigation.customAssetTypesAndFields": "Custom asset types and fields",
+  "web.workspaceSettingsNavigation.activity": "Activity",
+  "web.workspaceSettingsNavigation.auditHistoryForThisWorkspace": "Audit history for this workspace",
+  "web.workspaceBrowseNavigation.archivedAssets": "Archived assets",
+  "web.workspaceBrowseNavigation.assetsRemovedFromActiveBrowsing": "Assets removed from active browsing.",
+  "web.workspaceBrowseNavigation.home": "Home",
+  "web.workspaceBrowseNavigation.recentlyChangedAndThePlacesWhereYourThingsLive": "Recently changed and the places where your things live.",
+  "web.workspaceBrowseNavigation.active": "Active",
+  "web.workspaceBrowseNavigation.archived": "Archived",
+  "web.workspaceBrowseNavigation.noItemsOrContainersYet": "No items or containers yet.",
+  "web.workspaceBrowseNavigation.noArchivedAssets": "No archived assets",
+  "web.workspaceBrowseNavigation.noLocationsYet": "No locations yet",
+  "web.workspaceBrowseNavigation.locationsMakeBrowsingEasierButYouCanCaptureAn": "Locations make browsing easier, but you can capture an item now.",
+  "web.workspaceBrowseNavigation.addFirstLocation": "Add first location",
+  "web.workspaceBrowseNavigation.addItem": "Add item",
+  "web.workspaceBrowseNavigation.creatingLocationsIsUnavailableForThisInventory": "Creating locations is unavailable for this inventory.",
+  "web.workspaceBrowseNavigation.noStuffHereYet": "No stuff here yet",
+  "web.workspaceBrowseNavigation.addAnItemOrMoveExistingStuffIntoThis": "Add an item or move existing stuff into this location.",
+  "web.workspaceBrowseNavigation.thisLocationIsEmpty": "This location is empty.",
+  "web.workspaceBrowseNavigation.addItemHere": "Add item here",
+  "web.workspaceBrowseNavigation.addingItemsIsUnavailableForThisInventory": "Adding items is unavailable for this inventory.",
+  "web.workspaceAuditPresentation.selectAnInventoryBeforeViewingAuditHistory": "Select an inventory before viewing audit history.",
+  "web.workspaceAuditPresentation.tenantAuditHistoryRequiresTenantConfigurationAccess": "Tenant audit history requires tenant configuration access.",
+  "web.workspaceAuditPresentation.inventoryAuditHistoryRequiresInventoryViewAccess": "Inventory audit history requires inventory view access.",
+  "web.workspaceAuditPresentation.loadingAuditHistory": "Loading audit history...",
+  "web.workspaceAuditPresentation.noAuditRecordsFound": "No audit records found.",
+  "web.workspaceAuditPresentation.actionCode": "Action code",
+  "web.workspaceAuditPresentation.targetID": "Target ID",
+  "web.workspaceAuditPresentation.principalID": "Principal ID",
+  "web.workspaceAuditPresentation.source": "Source",
+  "web.workspaceAuditPresentation.requestID": "Request ID",
+  "web.workspaceAuditPresentation.metadata": "Metadata {value}",
+  "web.settingsManagementNavigation.conversations": "Conversations",
+  "web.settingsManagementNavigation.tuneWorkflowsAndTestRealisticInventoryRequests": "Tune workflows and test realistic inventory requests",
+  "web.settingsManagementNavigation.customFields": "Custom fields",
+  "web.settingsManagementNavigation.fieldsAvailableToEveryInventory": "Fields available to every inventory",
+  "web.settingsManagementNavigation.assetTypes": "Asset types",
+  "web.settingsManagementNavigation.typesAvailableToEveryInventory": "Types available to every inventory",
+  "web.settingsManagementNavigation.notifications": "Notifications",
+  "web.settingsManagementNavigation.expirationRemindersAndAssetTypeOverrides": "Expiration reminders and asset type overrides",
+  "web.settingsManagementNavigation.sharing": "Sharing",
+  "web.settingsManagementNavigation.accessAndInvitations": "Access and invitations",
+  "web.settingsManagementNavigation.tags": "Tags",
+  "web.settingsManagementNavigation.reusableLabelsForThisInventory": "Reusable labels for this inventory",
+  "web.settingsManagementNavigation.inheritedAndInventoryOnlyFields": "Inherited and inventory-only fields",
+  "web.settingsManagementNavigation.inheritedAndInventoryOnlyTypes": "Inherited and inventory-only types",
+  "web.settingsManagementNavigation.activity": "Activity",
+  "web.settingsManagementNavigation.auditHistoryForThisInventory": "Audit history for this inventory",
+  "web.workspaceSettingsNavigation.inventory": "Inventory",
+  "web.workspaceSettingsNavigation.tenant": "Tenant",
+  "web.workspaceSettingsNavigation.settings": "Settings",
+  "web.workspaceSettingsNavigation.noInventorySelected": "No inventory selected",
+  "web.workspaceSettingsNavigation.selectOrCreateAnInventoryBeforeManagingSettings": "Select or create an inventory before managing settings.",
+  "web.workspaceSettingsNavigation.inventories": "Inventories",
+  "web.workspaceSettingsNavigation.assetEdits": "Asset edits",
+  "web.workspaceSettingsNavigation.administration": "Administration",
+  "web.workspaceSettingsNavigation.thereAreNoAdministrationActionsAvailableInTheWeb": "There are no administration actions available in the web app yet.",
+  "web.workspaceSettingsNavigation.thisAccountDoesNotHaveAccessToTenantAdministration": "This account does not have access to tenant administration.",
+  "import.count.asset": {
+    "one": "{count} asset",
+    "other": "{count} assets"
+  },
+  "import.label.asset": {
+    "one": "asset",
+    "other": "assets"
+  },
+  "import.count.assetCreated": {
+    "one": "{count} asset created",
+    "other": "{count} assets created"
+  },
+  "import.label.assetCreated": {
+    "one": "asset created",
+    "other": "assets created"
+  },
+  "import.count.assetSaved": {
+    "one": "{count} asset saved",
+    "other": "{count} assets saved"
+  },
+  "import.label.assetSaved": {
+    "one": "asset saved",
+    "other": "assets saved"
+  },
+  "import.count.assetSkipped": {
+    "one": "{count} asset skipped",
+    "other": "{count} assets skipped"
+  },
+  "import.label.assetSkipped": {
+    "one": "asset skipped",
+    "other": "assets skipped"
+  },
+  "import.count.blockingIssue": {
+    "one": "{count} blocking issue",
+    "other": "{count} blocking issues"
+  },
+  "import.label.blockingIssue": {
+    "one": "blocking issue",
+    "other": "blocking issues"
+  },
+  "import.count.duplicateSkip": {
+    "one": "{count} duplicate/skip",
+    "other": "{count} duplicates/skips"
+  },
+  "import.label.duplicateSkip": {
+    "one": "duplicate/skip",
+    "other": "duplicates/skips"
+  },
+  "import.count.field": {
+    "one": "{count} field",
+    "other": "{count} fields"
+  },
+  "import.label.field": {
+    "one": "field",
+    "other": "fields"
+  },
+  "import.count.fieldCreated": {
+    "one": "{count} field created",
+    "other": "{count} fields created"
+  },
+  "import.label.fieldCreated": {
+    "one": "field created",
+    "other": "fields created"
+  },
+  "import.count.fieldReused": {
+    "one": "{count} field reused",
+    "other": "{count} fields reused"
+  },
+  "import.label.fieldReused": {
+    "one": "field reused",
+    "other": "fields reused"
+  },
+  "import.count.location": {
+    "one": "{count} location",
+    "other": "{count} locations"
+  },
+  "import.label.location": {
+    "one": "location",
+    "other": "locations"
+  },
+  "import.count.locationCreated": {
+    "one": "{count} location created",
+    "other": "{count} locations created"
+  },
+  "import.label.locationCreated": {
+    "one": "location created",
+    "other": "locations created"
+  },
+  "import.count.locationSaved": {
+    "one": "{count} location saved",
+    "other": "{count} locations saved"
+  },
+  "import.label.locationSaved": {
+    "one": "location saved",
+    "other": "locations saved"
+  },
+  "import.count.photoFile": {
+    "one": "{count} photo/file",
+    "other": "{count} photos/files"
+  },
+  "import.label.photoFile": {
+    "one": "photo/file",
+    "other": "photos/files"
+  },
+  "import.count.photoFileImported": {
+    "one": "{count} photo/file imported",
+    "other": "{count} photos/files imported"
+  },
+  "import.label.photoFileImported": {
+    "one": "photo/file imported",
+    "other": "photos/files imported"
+  },
+  "import.count.photoFileSaved": {
+    "one": "{count} photo/file saved",
+    "other": "{count} photos/files saved"
+  },
+  "import.label.photoFileSaved": {
+    "one": "photo/file saved",
+    "other": "photos/files saved"
+  },
+  "import.count.photoFileSkipped": {
+    "one": "{count} photo/file skipped",
+    "other": "{count} photos/files skipped"
+  },
+  "import.label.photoFileSkipped": {
+    "one": "photo/file skipped",
+    "other": "photos/files skipped"
+  },
+  "import.count.plannedAsset": {
+    "one": "{count} planned asset",
+    "other": "{count} planned assets"
+  },
+  "import.label.plannedAsset": {
+    "one": "planned asset",
+    "other": "planned assets"
+  },
+  "import.count.plannedLocation": {
+    "one": "{count} planned location",
+    "other": "{count} planned locations"
+  },
+  "import.label.plannedLocation": {
+    "one": "planned location",
+    "other": "planned locations"
+  },
+  "import.count.plannedPhotoFile": {
+    "one": "{count} planned photo/file",
+    "other": "{count} planned photos/files"
+  },
+  "import.label.plannedPhotoFile": {
+    "one": "planned photo/file",
+    "other": "planned photos/files"
+  },
+  "import.count.recordDiscarded": {
+    "one": "{count} record discarded",
+    "other": "{count} records discarded"
+  },
+  "import.label.recordDiscarded": {
+    "one": "record discarded",
+    "other": "records discarded"
+  },
+  "import.count.skipped": {
+    "one": "{count} skipped",
+    "other": "{count} skipped"
+  },
+  "import.label.skipped": {
+    "one": "skipped",
+    "other": "skipped"
+  },
+  "import.count.sourceLinkRemoved": {
+    "one": "{count} source link removed",
+    "other": "{count} source links removed"
+  },
+  "import.label.sourceLinkRemoved": {
+    "one": "source link removed",
+    "other": "source links removed"
+  },
+  "import.count.warning": {
+    "one": "{count} warning",
+    "other": "{count} warnings"
+  },
+  "import.label.warning": {
+    "one": "warning",
+    "other": "warnings"
+  },
+  "import.hiddenIssueGroups": {
+    "one": "{count} more issue group hidden.",
+    "other": "{count} more issue groups hidden."
+  },
+  "import.hiddenAffectedRecords": {
+    "one": "{count} more affected record in this group.",
+    "other": "{count} more affected records in this group."
+  },
+  "photos.uploadCount": {
+    "one": "{count} photo upload",
+    "other": "{count} photo uploads"
+  },
+  "web.InventoryAccessManager.youVeBeenInvitedToAStuffStashInventory": "You’ve been invited to a Stuff Stash inventory.",
+  "web.FieldSettingsManager.text": "Text",
+  "web.workspaceAuditPresentation.dateUnavailable": "Date unavailable",
+  "import.action.blockingIssue": {
+    "one": "Open issues for {count} blocking issue",
+    "other": "Open issues for {count} blocking issues"
+  },
+  "import.action.warning": {
+    "one": "Open issues for {count} warning",
+    "other": "Open issues for {count} warnings"
+  },
+  "import.action.locationCreated": {
+    "one": "Open imported records for {count} location created",
+    "other": "Open imported records for {count} locations created"
+  },
+  "import.action.assetCreated": {
+    "one": "Open imported records for {count} asset created",
+    "other": "Open imported records for {count} assets created"
+  },
+  "import.action.photoFileImported": {
+    "one": "Open imported records for {count} photo/file imported",
+    "other": "Open imported records for {count} photos/files imported"
+  },
+  "import.action.locationSaved": {
+    "one": "Open imported records for {count} location saved",
+    "other": "Open imported records for {count} locations saved"
+  },
+  "import.action.assetSaved": {
+    "one": "Open imported records for {count} asset saved",
+    "other": "Open imported records for {count} assets saved"
+  },
+  "import.action.photoFileSaved": {
+    "one": "Open imported records for {count} photo/file saved",
+    "other": "Open imported records for {count} photos/files saved"
+  },
+  "import.issue.linked": "Already linked to an earlier import",
+  "import.issue.imported": "Already imported from this source",
+  "import.issue.download": "Could not download from the source",
+  "import.issue.session": "Could not establish a source session for image downloads",
+  "import.issue.storage": "Could not save the image to configured media storage",
+  "import.issue.validation": "File did not pass attachment validation",
+  "import.issue.record": "Homebox record",
+  "import.issue.source": "Source ID {id}",
+  "import.issue.blocking": "Blocking",
+  "import.issue.warning": "Warning",
+  "import.issue.grouped": "Grouped import issues",
+  "import.issue.explain": "Explain {summary}",
+  "import.issue.causeCount": "{cause} · {countLabel}"
 } as const;

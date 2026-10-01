@@ -125,7 +125,7 @@ export function AssetHistoryRouteScreen({
             <View style={styles.footer}>
               {pageError ? <Text accessibilityRole="alert" style={styles.pageError}>{pageError}</Text> : null}
               <NativeCommandButton disabled={history.isFetching} onPress={() => void loadMore()}
-                label={isLoadingMore ? 'Loading older activity…' : pageError ? 'Try older activity again' : 'Load older activity'} />
+                label={isLoadingMore ? t('mobile.AssetHistoryRouteScreen.loadingOlderActivity') : pageError ? t('mobile.AssetHistoryRouteScreen.tryOlderActivityAgain') : t('mobile.AssetHistoryRouteScreen.loadOlderActivity')} />
             </View>
           ) : null}
         />
@@ -138,7 +138,7 @@ function HistoryFilter({ value, onChange, styles }: { readonly value: AssetActiv
   return (
     <View style={styles.filterButton}>
       <NativeChoicePicker label={t('mobile.AssetHistoryRouteScreen.show')}
-        accessibilityLabel={`Show History, ${value === 'changes' ? 'Changes' : 'All events'}`}
+        accessibilityLabel={t('mobile.AssetHistoryRouteScreen.showHistory', { value: String(value === 'changes' ? 'Changes' : 'All events') })}
         value={value} includeEmptyOption={false}
         options={[{ value: 'changes', label: t('mobile.AssetHistoryRouteScreen.changes') }, { value: 'all', label: t('mobile.AssetHistoryRouteScreen.allEvents') }]}
         onChange={next => { if (next === 'changes' || next === 'all') onChange(next); }} />

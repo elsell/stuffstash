@@ -55,14 +55,14 @@ export function AccountSettingsScreen({
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-      <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : 'Could not load account details. You can retry or sign out.'} onRetry={async () => { await principal.refetch(); }} />
+      <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : t('mobile.SettingsDetailScreens.couldNotLoadAccountDetailsYouCanRetryOr')} onRetry={async () => { await principal.refetch(); }} />
           <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
             <SettingsValueRow label={t('mobile.SettingsDetailScreens.signedInAs')} value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
             <SettingsActionRow
               disabled={working}
-              label={working ? 'Signing Out…' : 'Sign Out'}
+              label={working ? t('mobile.SettingsDetailScreens.signingOut') : t('mobile.SettingsDetailScreens.signOut')}
               onPress={() => confirmSignOut(principalLabel, ownConfirmation(capturePresentation(), signOut))}
             />
           </SettingsSection>
@@ -123,7 +123,7 @@ export function ConnectionSettingsScreen({
       <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
         <SettingsActionRow
           disabled={working}
-          label={working ? 'Changing Server…' : 'Change Server'}
+          label={working ? t('mobile.SettingsDetailScreens.changingServer') : t('mobile.SettingsDetailScreens.changeServer')}
           onPress={() => confirmChangeServer(diagnostics.apiBaseUrl, ownConfirmation(capturePresentation(), changeServer))}
         />
       </SettingsSection>
@@ -183,28 +183,28 @@ function DiagnosticIdentity({ label, task, value, pending, failed, retrying, onR
 }) {
   const { styles } = useSettingsListStyles();
   return <View>
-    {pending ? <SettingsLoadingRow label={`Loading ${task}`} /> : <SettingsValueRow label={label} value={value || 'Unavailable'} />}
+    {pending ? <SettingsLoadingRow label={t('mobile.SettingsDetailScreens.loading', { task: String(task) })} /> : <SettingsValueRow label={label} value={value || 'Unavailable'} />}
     {failed ? <>
-      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? `Could not refresh ${task}. Previously loaded value is shown.` : `Could not load ${task}.`}</Text>
-      <NativeCommandButton label={retrying ? `Retrying ${task}…` : `Retry ${task}`} disabled={retrying} onPress={() => void onRetry()} />
+      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? t('mobile.SettingsDetailScreens.couldNotRefreshPreviouslyLoadedValueIsShown', { task: String(task) }) : t('mobile.SettingsDetailScreens.couldNotLoad', { task: String(task) })}</Text>
+      <NativeCommandButton label={retrying ? t('mobile.SettingsDetailScreens.retrying', { task: String(task) }) : t('mobile.SettingsDetailScreens.retry', { task: String(task) })} disabled={retrying} onPress={() => void onRetry()} />
     </> : null}
   </View>;
 }
 
 function confirmSignOut(label: string, onSignOut: () => Promise<void>): void {
-  Alert.alert('Sign out?', `You’ll need to sign in again as ${label}. This Stuff Stash server will stay saved on your device.`, [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Sign Out', onPress: () => void onSignOut() }
+  Alert.alert(t('mobile.SettingsDetailScreens.signOut2'), t('mobile.SettingsDetailScreens.youLlNeedToSignInAgainAsThis', { label: String(label) }), [
+    { text: t('mobile.SettingsDetailScreens.cancel'), style: 'cancel' },
+    { text: t('mobile.SettingsDetailScreens.signOut'), onPress: () => void onSignOut() }
   ]);
 }
 
 function confirmChangeServer(serverUrl: string, onChangeServer: () => Promise<void>): void {
   Alert.alert(
-    'Change Stuff Stash server?',
-    `You’ll be signed out of ${serverHostname(serverUrl)}, and this device will forget its saved server and household selection. Your Stuff Stash data won’t be deleted.`,
+    t('mobile.SettingsDetailScreens.changeStuffStashServer'),
+    t('mobile.SettingsDetailScreens.youLlBeSignedOutOfAndThisDevice', { value: String(serverHostname(serverUrl)) }),
     [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Change Server', onPress: () => void onChangeServer() }
+      { text: t('mobile.SettingsDetailScreens.cancel'), style: 'cancel' },
+      { text: t('mobile.SettingsDetailScreens.changeServer'), onPress: () => void onChangeServer() }
     ]
   );
 }

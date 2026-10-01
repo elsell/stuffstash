@@ -91,11 +91,11 @@ function Adjustment({ disabled, label, onDecrease, onIncrease, value }: { readon
   return <View accessibilityLabel={`${label}, ${value}`} style={styles.adjustment}>
     <Text style={[styles.adjustmentLabel, { color: palette.text }]}>{label}</Text>
     <View style={styles.adjustmentControls}>
-      <Pressable accessibilityLabel={`Decrease ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+      <Pressable accessibilityLabel={t('mobile.FullSpectrumTagColorPicker.decrease', { value: String(label.toLocaleLowerCase()) })} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onDecrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
         <Text style={[styles.adjustButtonText, { color: palette.action }]}>−</Text>
       </Pressable>
       <Text style={[styles.adjustmentValue, { color: palette.textMuted }]}>{value}</Text>
-      <Pressable accessibilityLabel={`Increase ${label.toLocaleLowerCase()}`} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
+      <Pressable accessibilityLabel={t('mobile.FullSpectrumTagColorPicker.increase', { value: String(label.toLocaleLowerCase()) })} accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onIncrease} style={[styles.adjustButton, { borderColor: palette.border }]}>
         <Text style={[styles.adjustButtonText, { color: palette.action }]}>+</Text>
       </Pressable>
     </View>

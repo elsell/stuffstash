@@ -12,7 +12,7 @@
 </script>
 {#if segments.length || incomplete}
  <nav aria-label={t('web.AssetLocationTrail.itemLocation')} use:revealParent={segments}>
-  {#if incomplete}<span aria-label={segments.length?'Partial location path':'Location unavailable'}>{segments.length?'…':'Location unavailable'}</span>{/if}
+  {#if incomplete}<span aria-label={segments.length?'Partial location path':'Location unavailable'}>{segments.length?'…':t('web.AssetLocationTrail.locationUnavailable')}</span>{/if}
   {#each segments as segment,index (segment.assetId)}
    {#if index>0}<span aria-hidden="true">/</span>{/if}
    <Button.Root variant="ghost" {disabled} aria-label={`Open ${segment.title}`} onclick={()=>onOpen(segment.assetId)}>{segment.title}</Button.Root>

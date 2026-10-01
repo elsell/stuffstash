@@ -95,7 +95,7 @@ function CredentialForm({
       setValue('');
       if (!canPresent()) return;
       authorizeExit(canPresent, () => {
-        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.credentialSaved'), message: `${profile.displayName} is ready to test.` });
+        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.credentialSaved'), message: t('mobile.ProviderProfileEditorScreens.isReadyToTest', { displayName: String(profile.displayName) }) });
         onSaved();
       });
     } catch (error) {
@@ -166,7 +166,7 @@ function PromptForm({
       setValue('');
       if (!canPresent()) return;
       authorizeExit(canPresent, () => {
-        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.promptGuidanceSaved'), message: `${profile.displayName} was updated.` });
+        feedback.showNotice({ tone: 'success', title: t('mobile.ProviderProfileEditorScreens.promptGuidanceSaved'), message: t('mobile.ProviderProfileEditorScreens.wasUpdated', { displayName: String(profile.displayName) }) });
         onSaved();
       });
     } catch (error) {

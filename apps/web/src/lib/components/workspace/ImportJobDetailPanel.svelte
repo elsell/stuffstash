@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { importCountAction, importCountActionLabel } from './importCountMetrics';
   import { t } from '$lib/presentation/localization';
   import Activity from '@lucide/svelte/icons/activity';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
@@ -142,26 +143,25 @@
   function detailOverviewCells(job: ImportJob): CountCell[] {
     const cells = job.status === 'previewed' ? visiblePreviewCountCells(job) : visibleCountCells(resultCountCells(job));
     return cells.map((cell) => {
-      const label = cell.label.toLowerCase();
-      if (label.includes('blocking')) {
+      if (cell.metric === 'blockingIssue') {
         return {
           ...cell,
           tone: cell.value > 0 ? 'action' : 'muted',
-          actionLabel: cell.value > 0 ? `Open issues for ${cell.value} ${cell.label}` : undefined
+          actionLabel: cell.value > 0 ? importCountActionLabel(cell.metric, cell.value) : undefined
         };
       }
-      if (label.includes('warning')) {
+      if (cell.metric === 'warning') {
         return {
           ...cell,
           tone: 'warning',
-          actionLabel: cell.value > 0 ? `Open issues for ${cell.value} ${cell.label}` : undefined
+          actionLabel: cell.value > 0 ? importCountActionLabel(cell.metric, cell.value) : undefined
         };
       }
-      if ((label.includes('created') || label.includes('imported') || label.includes('saved')) && !label.includes('field')) {
+      if (importCountAction(cell.metric) === 'records') {
         return {
           ...cell,
           tone: cell.value > 0 ? 'success' : 'muted',
-          actionLabel: job.resources.length > 0 && cell.value > 0 ? `Open imported records for ${cell.value} ${cell.label}` : undefined
+          actionLabel: job.resources.length > 0 && cell.value > 0 ? importCountActionLabel(cell.metric, cell.value) : undefined
         };
       }
       return { ...cell, tone: cell.muted ? 'muted' : 'default' };
@@ -169,14 +169,8 @@
   }
 
   function handleOverviewCellAction(cell: CountCell): void {
-    const label = cell.label.toLowerCase();
-    if (label.includes('warning') || label.includes('blocking')) {
-      selectedTab = 'issues';
-      return;
-    }
-    if (cell.actionLabel?.includes('imported records')) {
-      selectedTab = 'records';
-    }
+    const target = importCountAction(cell.metric);
+    if (target) selectedTab = target;
   }
 
   function overviewCaption(job: ImportJob): string {
@@ -237,7 +231,7 @@
           </div>
           <div class={`summary-tile ${issueTone}`}>
             <span>{t('web.ImportJobDetailPanel.issues')}</span>
-            <strong>{issueCount === 0 ? 'No issues' : issueTone === 'action' ? 'Action required' : issueCountSummary(job)}</strong>
+            <strong>{issueCount === 0 ? t('web.ImportJobDetailPanel.noIssues') : issueTone === 'action' ? t('web.ImportJobDetailPanel.actionRequired') : issueCountSummary(job)}</strong>
           </div>
         </div>
         {#if issueCount > 0 && issueTone === 'action' && selectedTab !== 'issues'}
@@ -282,7 +276,7 @@
               <section class="detail-panel" aria-label={t('web.ImportJobDetailPanel.importIssues')}>
                 <div class="section-heading">
                   <h3>{t('web.ImportJobDetailPanel.issues')}</h3>
-                  <small>{issueCount === 0 ? 'No issues' : 'Grouped by cause'}</small>
+                  <small>{issueCount === 0 ? t('web.ImportJobDetailPanel.noIssues') : t('web.ImportJobDetailPanel.groupedByCause')}</small>
                 </div>
                 <ImportMessagesList
                   messages={detailMessages(job)}
@@ -299,7 +293,7 @@
                 <section class="detail-panel" aria-label={t('web.ImportJobDetailPanel.importPreviewPlan')}>
                   <div class="section-heading">
                     <h3>{t('web.ImportJobDetailPanel.previewPlan')}</h3>
-                    <small>{job.status === 'previewed' ? 'Before import' : 'Original plan'}</small>
+                    <small>{job.status === 'previewed' ? t('web.ImportJobDetailPanel.beforeImport') : t('web.ImportJobDetailPanel.originalPlan')}</small>
                   </div>
                   <ImportPreviewSamples preview={job.preview} />
                 </section>

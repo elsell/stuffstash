@@ -323,7 +323,7 @@
       return;
     }
     try {
-      await navigator.share({ title: t('web.InventoryAccessManager.stuffStashInvitation'), text: 'You’ve been invited to a Stuff Stash inventory.', url: inviteLink });
+      await navigator.share({ title: t('web.InventoryAccessManager.stuffStashInvitation'), text: t('web.InventoryAccessManager.youVeBeenInvitedToAStuffStashInventory'), url: inviteLink });
       message = 'Invitation shared.';
       error = '';
     } catch (caught) {
@@ -514,7 +514,7 @@
     <UserPlus aria-hidden="true" />
     <div>
       <h2 id="settings-access" bind:this={sharingHeading} tabindex="-1">{t('web.InventoryAccessManager.sharing')}</h2>
-      <p>{canShare ? 'Manage direct grants and invite links for this inventory.' : 'Sharing requires inventory share access.'}</p>
+      <p>{canShare ? t('web.InventoryAccessManager.manageDirectGrantsAndInviteLinksForThisInventory') : t('web.InventoryAccessManager.sharingRequiresInventoryShareAccess')}</p>
     </div>
   </div>
 
@@ -632,7 +632,7 @@
             <div class="access-row invitation-row">
               <span class="access-row-main">
                 <strong>{invitation.email}</strong>
-                <small class="access-row-meta">{invitation.relationship} / {invitation.status}{invitation.isExpired ? ' / expired' : ''}</small>
+                <small class="access-row-meta">{invitation.relationship} / {invitation.status}{invitation.isExpired ? t('web.InventoryAccessManager.expired') : ''}</small>
               </span>
               <span class="access-row-status">
                 <Badge variant={invitation.status === 'pending' && !invitation.isExpired ? 'secondary' : 'outline'}>

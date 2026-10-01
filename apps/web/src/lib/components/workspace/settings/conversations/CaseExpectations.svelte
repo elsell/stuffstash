@@ -14,7 +14,7 @@
     { value: 'create', label: t('web.CaseExpectations.create') }, { value: 'move', label: t('web.CaseExpectations.move') }, { value: 'archive', label: t('web.CaseExpectations.archive') },
     { value: 'restore', label: t('web.CaseExpectations.restore') }, { value: 'checkout', label: t('web.CaseExpectations.checkOut') }, { value: 'return', label: t('web.CaseExpectations.return') }
   ];
-  const fixtures = $derived(value.assets.map(asset => ({ value: asset.id, label: asset.title || 'Unnamed fixture' })));
+  const fixtures = $derived(value.assets.map(asset => ({ value: asset.id, label: asset.title || t('web.CaseExpectations.unnamedFixture') })));
   function change(patch: Partial<CaseExpectations>) { if (!disabled) onChange({ ...value, expectations: { ...value.expectations, ...patch } }); }
   function reference(id: string) { const current = value.expectations.referencedAssets; change({ referencedAssets: current.includes(id) ? current.filter(value => value !== id) : [...current, id] }); }
   function forbidden(operation: CaseOperation) { const current = value.expectations.forbiddenOperations; change({ forbiddenOperations: current.includes(operation) ? current.filter(value => value !== operation) : [...current, operation] }); }
@@ -27,7 +27,7 @@
     const byId = new Map(value.assets.map(asset => [asset.id, asset])); const seen = new Set([id]);
     const choices: { value: string; label: string }[] = []; let parent = byId.get(id)?.parentId;
     while (parent && !seen.has(parent)) { seen.add(parent); const asset = byId.get(parent); if (!asset) break;
-      choices.push({ value: asset.id, label: asset.title || 'Unnamed fixture' }); parent = asset.parentId; }
+      choices.push({ value: asset.id, label: asset.title || t('web.CaseExpectations.unnamedFixture') }); parent = asset.parentId; }
     return choices;
   }
 </script>
@@ -37,7 +37,7 @@
     options={[{ value: 'answer', label: 'Answer the question' }, { value: 'clarification', label: 'Ask for clarification' }, { value: 'proposal', label: 'Propose a change' }, { value: 'failure', label: 'Report a failure' }]}
     onChange={kind => { if (kind === 'answer' || kind === 'clarification' || kind === 'proposal' || kind === 'failure') change({ kind }); }} />
   <fieldset {disabled}><legend>{t('web.CaseExpectations.mustReferToTheseFixtures')}</legend><div class="choices">
-    {#each value.assets as asset (asset.id)}<Button.Root type="button" variant="outline" aria-pressed={value.expectations.referencedAssets.includes(asset.id)} onclick={() => reference(asset.id)}>{asset.title || 'Unnamed fixture'}</Button.Root>{/each}
+    {#each value.assets as asset (asset.id)}<Button.Root type="button" variant="outline" aria-pressed={value.expectations.referencedAssets.includes(asset.id)} onclick={() => reference(asset.id)}>{asset.title || t('web.CaseExpectations.unnamedFixture')}</Button.Root>{/each}
   </div>{#if !value.assets.length}<p>{t('web.CaseExpectations.addFixturesToRequireSpecificItemsInTheAnswer')}</p>{/if}</fieldset>
   <fieldset {disabled}><legend>{t('web.CaseExpectations.expectedLocations')}</legend>
     {#each value.expectations.locations as location, index}<div class="expectation-row">

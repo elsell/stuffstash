@@ -2,60 +2,20 @@
   "purpose": "Remaining literal-message candidates for manual classification. Includes technical errors and constants; not a test-cell count or proof of a product defect.",
   "files": [
     {
-      "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
-      "candidates": 128
-    },
-    {
       "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
       "candidates": 93
-    },
-    {
-      "file": "apps/mobile/src/ui/navigation/VoiceSessionPresentation.ts",
-      "candidates": 78
     },
     {
       "file": "apps/mobile/src/adapters/voice/WebSocketRealtimeVoiceTransport.ts",
       "candidates": 61
     },
     {
-      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
-      "candidates": 44
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
-      "candidates": 44
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAddPresentation.ts",
-      "candidates": 43
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAuditPresentation.ts",
-      "candidates": 41
-    },
-    {
       "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
       "candidates": 39
     },
     {
-      "file": "apps/mobile/src/ui/screens/ProviderProfilesVoiceSetupPresentation.ts",
-      "candidates": 38
-    },
-    {
-      "file": "apps/web/src/lib/application/settingsManagementNavigation.ts",
+      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceApp.svelte",
       "candidates": 35
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
-      "candidates": 34
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportMessagesList.svelte",
-      "candidates": 33
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
-      "candidates": 32
     },
     {
       "file": "apps/web/src/lib/components/workspace/InventoryImportWorkspace.svelte",
@@ -66,15 +26,11 @@
       "candidates": 31
     },
     {
-      "file": "apps/web/src/lib/application/workspaceSettingsNavigation.ts",
-      "candidates": 28
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
       "candidates": 26
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
+      "file": "apps/web/src/lib/application/workspaceAddPresentation.ts",
       "candidates": 26
     },
     {
@@ -82,27 +38,11 @@
       "candidates": 25
     },
     {
-      "file": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
-      "candidates": 25
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
-      "candidates": 25
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/ProviderProfileScreens.tsx",
-      "candidates": 25
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/AssetTypeSettingsManager.svelte",
-      "candidates": 24
-    },
-    {
       "file": "apps/web/src/lib/application/caseDraftValidation.ts",
       "candidates": 23
     },
     {
-      "file": "apps/mobile/src/ui/screens/CustomizationCollectionScreen.tsx",
+      "file": "apps/web/src/lib/application/workspaceAuditPresentation.ts",
       "candidates": 21
     },
     {
@@ -110,80 +50,28 @@
       "candidates": 21
     },
     {
-      "file": "apps/web/src/lib/components/workspace/AssetDetail.svelte",
-      "candidates": 21
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
-      "candidates": 21
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/InventorySharingScreen.tsx",
-      "candidates": 20
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/InventoryAccessManager.svelte",
-      "candidates": 20
-    },
-    {
       "file": "apps/mobile/src/application/assets/AssetViewModels.ts",
       "candidates": 19
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
-      "candidates": 19
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
-      "candidates": 19
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/NotificationInboxScreen.tsx",
+      "file": "apps/web/src/lib/components/workspace/settings/FieldSettingsManager.svelte",
       "candidates": 18
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceBrowseNavigation.ts",
-      "candidates": 18
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportJobDetailPanel.svelte",
-      "candidates": 18
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
-      "candidates": 17
     },
     {
       "file": "apps/web/src/lib/application/workspaceInvitationActions.ts",
       "candidates": 17
     },
     {
-      "file": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
-      "candidates": 16
-    },
-    {
-      "file": "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx",
-      "candidates": 16
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetDetailMovePresentation.ts",
-      "candidates": 16
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetHistoryPresentation.ts",
-      "candidates": 16
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetLifecyclePresentation.ts",
-      "candidates": 16
-    },
-    {
       "file": "apps/mobile/src/ui/screens/SettingsScreenPresentation.ts",
       "candidates": 16
     },
     {
-      "file": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
-      "candidates": 15
+      "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
+      "candidates": 16
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/InventoryAccessManager.svelte",
+      "candidates": 16
     },
     {
       "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
@@ -194,27 +82,7 @@
       "candidates": 15
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
-      "candidates": 15
-    },
-    {
-      "file": "apps/mobile/src/ui/components/TagColorPicker.tsx",
-      "candidates": 14
-    },
-    {
-      "file": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
-      "candidates": 14
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AddDestinationSelectionScreen.tsx",
-      "candidates": 14
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
-      "candidates": 14
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/OnboardingPresentation.ts",
+      "file": "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx",
       "candidates": 14
     },
     {
@@ -222,15 +90,23 @@
       "candidates": 14
     },
     {
+      "file": "apps/web/src/lib/components/workspace/AssetDetail.svelte",
+      "candidates": 14
+    },
+    {
       "file": "apps/mobile/src/application/assets/AssetCheckoutHistoryQuery.ts",
       "candidates": 13
     },
     {
-      "file": "apps/mobile/src/ui/screens/SearchScreenPresentation.ts",
+      "file": "apps/mobile/src/ui/screens/AssetHistoryDetailRouteScreen.tsx",
       "candidates": 13
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
+      "file": "apps/mobile/src/ui/screens/NotificationSettingsScreen.tsx",
+      "candidates": 13
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/ProviderProfilesVoiceSetupPresentation.ts",
       "candidates": 13
     },
     {
@@ -238,7 +114,7 @@
       "candidates": 13
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseEditor.svelte",
+      "file": "apps/web/src/lib/components/workspace/importWorkspacePresentation.ts",
       "candidates": 13
     },
     {
@@ -250,39 +126,43 @@
       "candidates": 12
     },
     {
+      "file": "apps/web/src/lib/application/settingsManagementNavigation.ts",
+      "candidates": 12
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/AssetTypeSettingsManager.svelte",
+      "candidates": 12
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseEditor.svelte",
+      "candidates": 12
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
+      "candidates": 12
+    },
+    {
       "file": "apps/mobile/src/ui/components/ExpirationReminderEditor.tsx",
-      "candidates": 12
+      "candidates": 11
     },
     {
-      "file": "apps/mobile/src/ui/presentation/ExpirationPresentation.ts",
-      "candidates": 12
+      "file": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
+      "candidates": 11
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetTagSelectionScreen.tsx",
-      "candidates": 12
+      "file": "apps/mobile/src/ui/screens/AssetDetailSheets.tsx",
+      "candidates": 11
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoicePlanProgressPresentation.ts",
-      "candidates": 12
+      "file": "apps/mobile/src/ui/screens/ProviderProfileScreens.tsx",
+      "candidates": 11
     },
     {
-      "file": "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
-      "candidates": 12
+      "file": "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
+      "candidates": 11
     },
     {
-      "file": "apps/web/src/lib/components/workspace/BrowsePanel.svelte",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ContainedAssetWorkspace.svelte",
-      "candidates": 12
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationWorkspace.svelte",
-      "candidates": 12
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
+      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
       "candidates": 11
     },
     {
@@ -290,27 +170,15 @@
       "candidates": 11
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ImportPreviewSamples.svelte",
-      "candidates": 11
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/NotificationInbox.svelte",
-      "candidates": 11
-    },
-    {
       "file": "apps/mobile/src/ui/components/AssetDetailView.tsx",
       "candidates": 10
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
+      "file": "apps/mobile/src/ui/screens/NotificationInboxScreen.tsx",
       "candidates": 10
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte",
-      "candidates": 10
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
+      "file": "apps/mobile/src/ui/screens/VoiceSettingsScreens.tsx",
       "candidates": 10
     },
     {
@@ -322,11 +190,19 @@
       "candidates": 9
     },
     {
-      "file": "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx",
+      "file": "apps/mobile/src/ui/components/TagColorPicker.tsx",
       "candidates": 9
     },
     {
-      "file": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
+      "file": "apps/mobile/src/ui/screens/BrowseFiltersScreen.tsx",
+      "candidates": 9
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/CustomizationCollectionScreen.tsx",
+      "candidates": 9
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/OnboardingScreen.tsx",
       "candidates": 9
     },
     {
@@ -338,10 +214,6 @@
       "candidates": 9
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/WorkflowWorkspace.svelte",
-      "candidates": 9
-    },
-    {
       "file": "apps/mobile/src/application/notifications/NotificationFailure.ts",
       "candidates": 8
     },
@@ -350,15 +222,15 @@
       "candidates": 8
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetPhotoWorkspacePresentation.ts",
+      "file": "apps/mobile/src/ui/expiration/ExpirationFiltersScreen.tsx",
       "candidates": 8
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetHistoryRouteScreen.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx",
       "candidates": 8
     },
     {
-      "file": "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+      "file": "apps/mobile/src/ui/screens/OnboardingPresentation.ts",
       "candidates": 8
     },
     {
@@ -378,11 +250,11 @@
       "candidates": 8
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryCustomizationManager.svelte",
+      "file": "apps/web/src/lib/components/workspace/BrowsePanel.svelte",
       "candidates": 8
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunDetails.svelte",
+      "file": "apps/web/src/lib/components/workspace/ImportJobDetailPanel.svelte",
       "candidates": 8
     },
     {
@@ -394,23 +266,11 @@
       "candidates": 7
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetExpirationEditor.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetTagSelectionScreen.tsx",
       "candidates": 7
     },
     {
-      "file": "apps/mobile/src/ui/components/ContainedAssetsPresentation.ts",
-      "candidates": 7
-    },
-    {
-      "file": "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx",
-      "candidates": 7
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/BrowseResultStates.tsx",
-      "candidates": 7
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/PhotoSourceChooser.ts",
+      "file": "apps/mobile/src/ui/screens/ProviderProfileEditorScreens.tsx",
       "candidates": 7
     },
     {
@@ -430,11 +290,7 @@
       "candidates": 7
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/InventoryExportAction.svelte",
-      "candidates": 7
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/WorkspaceContextSwitcher.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunDetails.svelte",
       "candidates": 7
     },
     {
@@ -474,15 +330,7 @@
       "candidates": 6
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetCheckoutHistoryScreen.tsx",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/useHomeReturnActions.ts",
+      "file": "apps/mobile/src/ui/screens/AssetLifecyclePresentation.ts",
       "candidates": 6
     },
     {
@@ -498,23 +346,11 @@
       "candidates": 6
     },
     {
-      "file": "apps/web/src/lib/components/invitations/InvitationAcceptSurface.svelte",
+      "file": "apps/web/src/lib/application/workspaceSettingsNavigation.ts",
       "candidates": 6
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ParentTargetPicker.svelte",
-      "candidates": 6
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunActivation.svelte",
-      "candidates": 6
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunComparison.svelte",
-      "candidates": 6
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/WorkflowEditor.svelte",
+      "file": "apps/web/src/lib/components/workspace/ImportPreviewSamples.svelte",
       "candidates": 6
     },
     {
@@ -546,31 +382,7 @@
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/ui/components/FullSpectrumTagColorPicker.tsx",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/expiration/ExpirationRouteScreen.tsx",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/navigation/InventorySharingGuard.tsx",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetWorkspaceStatusPresentation.ts",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/InventoryExportAction.tsx",
-      "candidates": 5
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/VoicePlanPhotoDrafts.tsx",
+      "file": "apps/mobile/src/ui/navigation/VoiceSessionPresentation.ts",
       "candidates": 5
     },
     {
@@ -582,15 +394,27 @@
       "candidates": 5
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryAccessInvitationActionPanel.svelte",
+      "file": "apps/web/src/lib/components/workspace/InventoryCustomizationManager.svelte",
       "candidates": 5
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunSetup.svelte",
+      "file": "apps/web/src/lib/components/workspace/ParentTargetPicker.svelte",
+      "candidates": 5
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunActivation.svelte",
       "candidates": 5
     },
     {
       "file": "apps/web/src/lib/components/workspace/settings/conversations/RunWorkspace.svelte",
+      "candidates": 5
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/WorkflowEditor.svelte",
+      "candidates": 5
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/InventoryExportAction.svelte",
       "candidates": 5
     },
     {
@@ -622,67 +446,15 @@
       "candidates": 4
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetCard.tsx",
+      "file": "apps/mobile/src/ui/components/AssetPhotoWorkspacePresentation.ts",
       "candidates": 4
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetDetailPhotoGallery.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetDetailMovePresentation.ts",
       "candidates": 4
     },
     {
-      "file": "apps/mobile/src/ui/components/MoveSelectionList.ios.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/components/NotificationBell.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/expiration/ExpirationHomeSection.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetPhotoViewerSheet.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/DraftPhotoPreviewModal.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/HomeNavigationHeader.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/HomeReturnDetailsSheet.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/HomeScreen.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/NewAssetTagScreen.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/useNewConversation.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/useProviderEditorExit.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/VoicePlanLocationScreen.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/VoiceResponseEntityText.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/VoiceReviewActions.tsx",
+      "file": "apps/mobile/src/ui/screens/InventorySharingScreen.tsx",
       "candidates": 4
     },
     {
@@ -706,19 +478,27 @@
       "candidates": 4
     },
     {
-      "file": "apps/web/src/lib/components/auth/AuthSignInScreen.svelte",
+      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationWorkspace.svelte",
       "candidates": 4
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ImportSourceSetup.svelte",
+      "file": "apps/web/src/lib/components/workspace/importMessagePresentation.ts",
       "candidates": 4
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunResult.svelte",
+      "file": "apps/web/src/lib/components/workspace/NotificationInbox.svelte",
       "candidates": 4
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/SettingsWorkspace.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunComparison.svelte",
+      "candidates": 4
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte",
+      "candidates": 4
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/NotificationSettings.svelte",
       "candidates": 4
     },
     {
@@ -762,39 +542,31 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetDetailPresentation.ts",
+      "file": "apps/mobile/src/ui/components/CustomizationEditorFields.tsx",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetRegionRecovery.tsx",
+      "file": "apps/mobile/src/ui/components/FullSpectrumTagColorPicker.tsx",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "file": "apps/mobile/src/ui/components/MoveSelectionList.ios.tsx",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/components/FullSpectrumTagColorPickerPresentation.ts",
+      "file": "apps/mobile/src/ui/expiration/ExpirationRouteScreen.tsx",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/navigation/PrimaryTabStack.tsx",
+      "file": "apps/mobile/src/ui/presentation/ExpirationPresentation.ts",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/navigation/VoiceAdminGuard.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetNativeActionSheetScreens.tsx",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/navigation/VoiceConversationReturn.tsx",
-      "candidates": 3
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/InventoryInvitationScreen.tsx",
-      "candidates": 3
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/InventoryMapPresentation.ts",
+      "file": "apps/mobile/src/ui/screens/InventoryMapScreen.tsx",
       "candidates": 3
     },
     {
@@ -802,15 +574,19 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/screens/ProviderSettingsSupport.tsx",
+      "file": "apps/mobile/src/ui/screens/PhotoSourceChooser.ts",
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoiceConversationComposer.tsx",
+      "file": "apps/mobile/src/ui/screens/TenantSwitcherSheetScreen.tsx",
       "candidates": 3
     },
     {
       "file": "apps/mobile/src/ui/screens/VoiceResponseEntityLinks.ts",
+      "candidates": 3
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/VoiceSessionSheetScreen.tsx",
       "candidates": 3
     },
     {
@@ -834,31 +610,23 @@
       "candidates": 3
     },
     {
-      "file": "apps/web/src/lib/components/workspace/AssetTagSelector.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportJobRunHandoff.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/InventoryConversationPanel.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/SearchSuggestions.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseExpectations.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseSummary.svelte",
+      "file": "apps/web/src/lib/components/workspace/InventoryAccessInvitationActionPanel.svelte",
       "candidates": 3
     },
     {
       "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseWorkspace.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/WorkflowWorkspace.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/settings/SettingsWorkspace.svelte",
+      "candidates": 3
+    },
+    {
+      "file": "apps/web/src/lib/components/workspace/WorkspaceContextSwitcher.svelte",
       "candidates": 3
     },
     {
@@ -926,23 +694,11 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetDetailActions.tsx",
+      "file": "apps/mobile/src/ui/components/AssetDetailPresentation.ts",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetTagChips.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/components/CustomizationLifecycleSection.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/components/MoveSelectionList.tsx",
+      "file": "apps/mobile/src/ui/components/AssetExpirationEditor.tsx",
       "candidates": 2
     },
     {
@@ -954,19 +710,11 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/components/TimeZonePicker.tsx",
+      "file": "apps/mobile/src/ui/components/ReminderTimingEditor.tsx",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/expiration/ExpirationFilterHeader.ios.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/expiration/ExpirationFilterHeader.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
+      "file": "apps/mobile/src/ui/expiration/ExpirationWorkspaceScreen.tsx",
       "candidates": 2
     },
     {
@@ -974,15 +722,15 @@
       "candidates": 2
     },
     {
+      "file": "apps/mobile/src/ui/navigation/VoiceAdminGuard.tsx",
+      "candidates": 2
+    },
+    {
       "file": "apps/mobile/src/ui/screens/AddAssetResolution.ts",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetCheckoutHistorySheet.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AssetDetailEditPresentation.ts",
+      "file": "apps/mobile/src/ui/screens/AddDestinationSelectionScreen.tsx",
       "candidates": 2
     },
     {
@@ -990,7 +738,23 @@
       "candidates": 2
     },
     {
+      "file": "apps/mobile/src/ui/screens/AssetHistoryRouteScreen.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/HomeScreen.tsx",
+      "candidates": 2
+    },
+    {
       "file": "apps/mobile/src/ui/screens/InventoryAssetsRouteScreen.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/InventoryInvitationScreen.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/InventoryMapPresentation.ts",
       "candidates": 2
     },
     {
@@ -998,15 +762,27 @@
       "candidates": 2
     },
     {
+      "file": "apps/mobile/src/ui/screens/NewAssetTagScreen.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/ScopedSettingsScreens.tsx",
+      "candidates": 2
+    },
+    {
       "file": "apps/mobile/src/ui/screens/SearchScreen.tsx",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoiceConversationExchange.tsx",
+      "file": "apps/mobile/src/ui/screens/useHomeReturnActions.ts",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoicePlanLocationChoices.ts",
+      "file": "apps/mobile/src/ui/screens/VoiceResponseEntityText.tsx",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/VoiceReviewActions.tsx",
       "candidates": 2
     },
     {
@@ -1070,11 +846,7 @@
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/components/workspace/BinaryOption.svelte",
-      "candidates": 2
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationRows.svelte",
+      "file": "apps/web/src/lib/components/workspace/ContainedAssetWorkspace.svelte",
       "candidates": 2
     },
     {
@@ -1082,11 +854,11 @@
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/components/workspace/HomeWorkspace.svelte",
+      "file": "apps/web/src/lib/components/workspace/SearchSuggestions.svelte",
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ImportPreviewPanel.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunSetup.svelte",
       "candidates": 2
     },
     {
@@ -1210,11 +982,19 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetDetailIdentitySection.tsx",
+      "file": "apps/mobile/src/ui/components/AssetTagSelectionField.tsx",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/components/AssetTagSelectionField.tsx",
+      "file": "apps/mobile/src/ui/components/ExpirationField.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/components/FullScreenPhotoViewer.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/components/MoveSelectionList.tsx",
       "candidates": 1
     },
     {
@@ -1226,15 +1006,19 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/components/NativeFilterSheet.tsx",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/ui/components/PhotoViewerActionButton.tsx",
       "candidates": 1
     },
     {
+      "file": "apps/mobile/src/ui/expiration/ExpirationDateRange.tsx",
+      "candidates": 1
+    },
+    {
       "file": "apps/mobile/src/ui/expiration/ExpirationHomeContent.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/feedback/AppFeedback.tsx",
       "candidates": 1
     },
     {
@@ -1258,11 +1042,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
+      "file": "apps/mobile/src/ui/navigation/PrimaryTabStack.tsx",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/navigation/VoiceAccessoryContent.tsx",
+      "file": "apps/mobile/src/ui/navigation/PushNotificationNavigation.tsx",
       "candidates": 1
     },
     {
@@ -1274,11 +1058,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetHeaderOverflow.ios.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetCheckoutHistoryScreen.tsx",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/AssetOverflowMenu.tsx",
+      "file": "apps/mobile/src/ui/screens/AssetCheckoutHistorySheet.tsx",
       "candidates": 1
     },
     {
@@ -1286,11 +1070,7 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/BrowseHeader.tsx",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/BrowsePlaceRow.tsx",
+      "file": "apps/mobile/src/ui/screens/InventoryExportAction.tsx",
       "candidates": 1
     },
     {
@@ -1302,23 +1082,27 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/SettingsRefreshNotice.tsx",
+      "file": "apps/mobile/src/ui/screens/ProviderSettingsSupport.tsx",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/SettingsScreenState.ts",
+      "file": "apps/mobile/src/ui/screens/SearchScreenPresentation.ts",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/useBrowseFilterNavigation.ts",
+      "file": "apps/mobile/src/ui/screens/VoicePlanLocationScreen.tsx",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/VoicePlanHistorySummary.tsx",
+      "file": "apps/mobile/src/ui/screens/VoicePlanProgressPresentation.ts",
       "candidates": 1
     },
     {
       "file": "apps/mobile/src/ui/screens/VoiceResultRailNavigation.tsx",
+      "candidates": 1
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx",
       "candidates": 1
     },
     {
@@ -1358,11 +1142,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/AssetLocationTrail.svelte",
+      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationRows.svelte",
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/ChoiceGrid.svelte",
+      "file": "apps/web/src/lib/components/workspace/HomeWorkspace.svelte",
       "candidates": 1
     },
     {
@@ -1370,19 +1154,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryCustomizationArchivePanel.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseSummary.svelte",
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/WorkflowSelect.svelte",
-      "candidates": 1
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/SideNav.svelte",
-      "candidates": 1
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/WorkspaceSetupPanel.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/conversations/RunResult.svelte",
       "candidates": 1
     }
   ]

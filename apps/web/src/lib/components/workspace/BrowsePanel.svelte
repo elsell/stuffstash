@@ -100,7 +100,7 @@
   let mapAssets = $derived(assets.filter((asset) => asset.lifecycleState === 'active'));
   let mapColumns = $derived([null, ...mapPathIds].map((parentId) => ({
     parentId,
-    title: parentId ? mapAssets.find((asset) => asset.id === parentId)?.title ?? 'Contents' : 'Inventory root',
+    title: parentId ? mapAssets.find((asset) => asset.id === parentId)?.title ?? t('web.BrowsePanel.contents') : t('web.BrowsePanel.inventoryRoot'),
     assets: mapAssets.filter((asset) => asset.parentAssetId === parentId).sort((a, b) => compareNaturalText(a.title, b.title))
   })));
   let mapMatches = $derived(mapQuery.trim() ? mapAssets.filter((asset) => asset.kind !== 'item' && asset.title.toLocaleLowerCase().includes(mapQuery.trim().toLocaleLowerCase())).slice(0, 8) : []);
@@ -368,13 +368,13 @@
           <article class="browse-card">
             <Button.Root href={searchAssetHref(asset)} variant="ghost" class="browse-card-open" onclick={(event) => open(event, asset)}>
               <AssetThumb {asset} size="lg" />
-              <span class="browse-card-copy"><strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} /><small>{asset.kind === 'location' ? `${placeSummaries.get(asset.id)?.containedCount ?? 0} contained` : assetKindLabel(asset.kind)}</small>{#if asset.kind === 'location' && placeSummaries.get(asset.id)?.recentContainedNames.length}<small>{placeSummaries.get(asset.id)?.recentContainedNames.join(' · ')}</small>{/if}{#if asset.currentCheckout}<CheckoutBadge checkout={asset.currentCheckout} compact />{/if}</span>
+              <span class="browse-card-copy"><strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} /><small>{asset.kind === 'location' ? t('web.BrowsePanel.contained', { value: String(placeSummaries.get(asset.id)?.containedCount ?? 0) }) : assetKindLabel(asset.kind)}</small>{#if asset.kind === 'location' && placeSummaries.get(asset.id)?.recentContainedNames.length}<small>{placeSummaries.get(asset.id)?.recentContainedNames.join(' · ')}</small>{/if}{#if asset.currentCheckout}<CheckoutBadge checkout={asset.currentCheckout} compact />{/if}</span>
             </Button.Root>
             <AssetTagChips tags={asset.tags ?? []} compact overflowLimit={2} />
           </article>
         {/each}
       </div>
-      {#if hasMore}<div class="browse-load-more"><Button.Root disabled={loadingMore} onclick={onLoadMore}>{loadingMore ? 'Loading…' : 'Load more'}</Button.Root></div>{/if}
+      {#if hasMore}<div class="browse-load-more"><Button.Root disabled={loadingMore} onclick={onLoadMore}>{loadingMore ? 'Loading…' : t('web.BrowsePanel.loadMore')}</Button.Root></div>{/if}
       {#if error && filteredAssets.length > 0}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>{t('web.BrowsePanel.tryAgain')}</Button.Root></div>{/if}
     {/if}
     </div>

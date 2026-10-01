@@ -40,7 +40,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
   return <>
     <Stack.Screen options={{ title: titles[page] }} />
     <NativeFilterSheet title={titles[page]} search={page === 'tags' ? { query: search, placeholder: t('mobile.BrowseFiltersScreen.searchTags'), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="browse-filter-footer" actions={{
-      primaryLabel: 'Show results', secondaryLabel: page === 'overview' ? 'Cancel' : 'Back',
+      primaryLabel: t('mobile.BrowseFiltersScreen.showResults'), secondaryLabel: page === 'overview' ? t('mobile.BrowseFiltersScreen.cancel') : t('mobile.BrowseFiltersScreen.back'),
       secondaryAccessibilityLabel: page === 'overview' ? 'Cancel filters' : 'Back to filters', disabled: busy,
       onApply: () => onApply(draft), onBack: () => { if (page === 'overview') onCancel(); else { onCancelPending?.(); open('overview'); } }
     }}>
@@ -64,7 +64,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
           </View>
         </SettingsSection>
         <SettingsSection><SettingsActionRow label={t('mobile.BrowseFiltersScreen.resetAll')} accessibilityLabel={t('mobile.BrowseFiltersScreen.resetAllFilters')} onPress={() => setDraft(defaults)} /></SettingsSection>
-      </> : <SettingsSection footer={visibleTags.length ? undefined : tags.length ? 'No matching tags' : 'No tags available'}>
+      </> : <SettingsSection footer={visibleTags.length ? undefined : tags.length ? t('mobile.BrowseFiltersScreen.noMatchingTags') : t('mobile.BrowseFiltersScreen.noTagsAvailable')}>
         {visibleTags.map(tag =>
           <SettingsChoiceRow key={tag.id} multiple label={tag.label} accessibilityLabel={'Filter by tag ' + tag.label} selected={draft.tagIds.includes(tag.id)}
             onPress={() => setDraft({ ...draft, tagIds: draft.tagIds.includes(tag.id) ? draft.tagIds.filter(id => id !== tag.id) : [...draft.tagIds, tag.id] })} />

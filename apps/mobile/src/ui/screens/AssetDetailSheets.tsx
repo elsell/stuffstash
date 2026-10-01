@@ -94,7 +94,7 @@ export function EditAssetSheet({
   const disabled = isSaving || readOnly;
   const canSave = canSaveEditAsset(asset, draft) && !disabled;
   const actions = useFocusedSheetActions({
-    primaryLabel: 'Save', secondaryLabel: 'Cancel', disabled: !canSave,
+    primaryLabel: t('mobile.AssetDetailSheets.save'), secondaryLabel: t('mobile.AssetDetailSheets.cancel'), disabled: !canSave,
     secondaryDisabled: isSaving, onApply: onSave, onBack: onClose
   });
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AssetDetailSheets.cancel'),
@@ -227,22 +227,22 @@ export function MoveAssetSheet({
       })
     : false;
   const creationActions = useFocusedSheetActions({
-    primaryLabel: 'Create destination', secondaryLabel: 'Cancel new destination',
+    primaryLabel: t('mobile.AssetDetailSheets.createDestination'), secondaryLabel: t('mobile.AssetDetailSheets.cancelNewDestination'),
     disabled: disabled || !creationExpanded || !canCreate,
     secondaryDisabled: disabled || !creationExpanded,
     onApply: onCreateDestination, onBack: onCancelCreation
   });
-  const actions = useFocusedSheetActions({ primaryLabel: 'Move', secondaryLabel: 'Cancel',
+  const actions = useFocusedSheetActions({ primaryLabel: t('mobile.AssetDetailSheets.move'), secondaryLabel: t('mobile.AssetDetailSheets.cancel'),
     disabled: !canSaveMove, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close',
-    label: creationExpanded ? 'Cancel new destination' : 'Cancel',
+    label: creationExpanded ? t('mobile.AssetDetailSheets.cancelNewDestination') : t('mobile.AssetDetailSheets.cancel'),
     disabled: isSaving, onPress: creationExpanded ? creationActions.onBack : actions.onBack }], 'left');
   const moveOptions = useNativeHeaderActionOptions(creationExpanded ? [{ kind: 'save', label: t('mobile.AssetDetailSheets.createDestination'),
     emphasis: 'primary', disabled: creationActions.disabled, onPress: creationActions.onApply }] : [
     { kind: 'add', label: t('mobile.AssetDetailSheets.newDestination'), disabled: disabled || !candidatesAvailable, onPress: onBeginCreation },
     { kind: 'save', label: t('mobile.AssetDetailSheets.move'), emphasis: 'primary', disabled: !canSaveMove, onPress: actions.onApply }
   ]);
-  const headerOptions = useMemo(() => ({ title: creationExpanded ? 'New destination' : 'Move',
+  const headerOptions = useMemo(() => ({ title: creationExpanded ? t('mobile.AssetDetailSheets.newDestination') : t('mobile.AssetDetailSheets.move'),
     headerShown: true, headerBackVisible: false, ...cancelOptions, ...moveOptions }),
     [creationExpanded, cancelOptions, moveOptions]);
   const searchEnabled = !disabled && !creationExpanded;
@@ -253,7 +253,7 @@ export function MoveAssetSheet({
       context: match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`,
       kind: match.kind, selected: draft?.selectedParent?.id === match.id,
       disabled: disabled || match.canSelectAsParent === false,
-      accessibilityLabel: `Choose destination ${match.title}`, onPress: () => onSelectParent(match) };
+      accessibilityLabel: t('mobile.AssetDetailSheets.chooseDestination', { title: String(match.title) }), onPress: () => onSelectParent(match) };
   }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (
@@ -283,7 +283,7 @@ export function MoveAssetSheet({
                   onChangeText={name => { if (!disabled) onChangeCreationName(name); }} />
               </View>
             </SettingsSection>
-            <SettingsSection title={t('mobile.AssetDetailSheets.kind')} footer={`${moveDestinationCreateKindHelp(createKind)} ${moveDestinationCreatePlacementLabel(createPlacement)}. The new destination will be selected for this move.`}>
+            <SettingsSection title={t('mobile.AssetDetailSheets.kind')} footer={t('mobile.AssetDetailSheets.theNewDestinationWillBeSelectedForThisMove', { value: String(moveDestinationCreateKindHelp(createKind)), value2: String(moveDestinationCreatePlacementLabel(createPlacement)) })}>
               <View style={settingsStyles.navigationRow}>
                 <NativeSegmentedControl colors={palette} style={{ flex: 1, height: 48 }}
                   value={createKind} segments={[{ value: 'location', label: t('mobile.AssetDetailSheets.location') }, { value: 'container', label: t('mobile.AssetDetailSheets.container') }]}
@@ -326,7 +326,7 @@ export function MoveThingsHereSheet({
   const disabled = isSaving || readOnly;
   const canSave = draft?.selectedAsset !== undefined && !disabled;
   const emptyState = moveIntoEmptyState(draft?.query ?? '');
-  const actions = useFocusedSheetActions({ primaryLabel: 'Move here', secondaryLabel: 'Cancel',
+  const actions = useFocusedSheetActions({ primaryLabel: t('mobile.AssetDetailSheets.moveHere'), secondaryLabel: t('mobile.AssetDetailSheets.cancel'),
     disabled: !canSave, secondaryDisabled: isSaving, onApply: onSave, onBack: onClose });
   const cancelOptions = useNativeHeaderActionOptions([{ kind: 'close', label: t('mobile.AssetDetailSheets.cancel'),
     disabled: isSaving, onPress: actions.onBack }], 'left');
@@ -340,7 +340,7 @@ export function MoveThingsHereSheet({
     const row = moveIntoCandidateRow(match);
     return { id: match.id, label: row.title, context: `${row.kindLabel} · ${row.pathLabel || row.title}`,
       kind: match.kind, selected: draft?.selectedAsset?.id === match.id, disabled,
-      accessibilityLabel: `Choose item ${row.title}`, onPress: () => onSelectAsset(match) };
+      accessibilityLabel: t('mobile.AssetDetailSheets.chooseItem', { title: String(row.title) }), onPress: () => onSelectAsset(match) };
   }
   const Frame = Platform.OS === 'ios' ? View : AssetActionKeyboardFrame;
   return (

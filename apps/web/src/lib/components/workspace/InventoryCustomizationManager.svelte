@@ -422,8 +422,8 @@
             <legend>{t('web.InventoryCustomizationManager.fieldCustomTypeTargets')}</legend>
             <p class="selection-summary">
               {selectedTargetCount === 0
-                ? 'No custom types selected'
-                : `${selectedTargetCount} custom ${selectedTargetCount === 1 ? 'type' : 'types'} selected`}
+                ? t('web.InventoryCustomizationManager.noCustomTypesSelected')
+                : t('web.InventoryCustomizationManager.customSelected', { selectedTargetCount: String(selectedTargetCount), value: String(selectedTargetCount === 1 ? 'type' : 'types') })}
             </p>
             <ChoiceGrid
               label={t('web.InventoryCustomizationManager.fieldCustomTypeTargets')}

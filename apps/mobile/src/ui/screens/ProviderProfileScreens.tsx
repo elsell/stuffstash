@@ -58,7 +58,7 @@ export function ProviderProfileListScreen({
           <View key={profile.id}>
             {index > 0 ? <SettingsSeparator /> : null}
             <SettingsNavigationRow
-              accessibilityLabel={`Open provider profile ${profile.displayName}. ${formatProviderProfileLifecycleLabel(profile.lifecycleState)}`}
+              accessibilityLabel={t('mobile.ProviderProfileScreens.openProviderProfile', { displayName: String(profile.displayName), value: String(formatProviderProfileLifecycleLabel(profile.lifecycleState)) })}
               context={`${stagePresentation(profile.capability).title} · ${profile.providerKind}`}
               label={profile.displayName}
               onPress={() => onOpenProfile(profile.id)}
@@ -125,7 +125,7 @@ export function AddProviderProfileScreen({
             {index > 0 ? <SettingsSeparator /> : null}
             <NativeCommandButton
               disabled={workingKey !== undefined}
-              label={workingKey === template.key ? `Creating ${template.title}…` : `Create ${template.title}`}
+              label={workingKey === template.key ? t('mobile.ProviderProfileScreens.creating', { title: String(template.title) }) : t('mobile.ProviderProfileScreens.create', { title: String(template.title) })}
               onPress={() => void create(template.key)}
             />
             <Text style={[styles.secondaryText, {
@@ -187,7 +187,7 @@ export function ProviderProfileDetailScreen({
       feedback.showNotice({
         tone: 'success',
         title,
-        message: `${profileDisplayName} was updated.`
+        message: t('mobile.ProviderProfileScreens.wasUpdated', { profileDisplayName: String(profileDisplayName) })
       });
       void providers.load().catch(() => undefined);
     } catch (error) {
@@ -221,14 +221,14 @@ export function ProviderProfileDetailScreen({
         <SettingsValueRow label={t('mobile.ProviderProfileScreens.lastTested')} value={formatProviderProfileTestStatusLabel(profile.lastTestedAt)} />
       </SettingsSection>
       <SettingsSection title={t('mobile.ProviderProfileScreens.actions')}>
-        {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={`Replace credential for ${profile.displayName}`} label={t('mobile.ProviderProfileScreens.replaceCredential')} disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
-        {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={`Edit prompt guidance for ${profile.displayName}`} label={t('mobile.ProviderProfileScreens.promptGuidance')} disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
-        <NativeCommandButton disabled={working} label={operation === 'test' ? 'Testing…' : 'Test Connection'} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
-        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? 'Enable Profile' : 'Disable Profile'} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
+        {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.replaceCredentialFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.replaceCredential')} disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
+        {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.editPromptGuidanceFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.promptGuidance')} disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
+        <NativeCommandButton disabled={working} label={operation === 'test' ? 'Testing…' : t('mobile.ProviderProfileScreens.testConnection')} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
+        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.enableProfile') : t('mobile.ProviderProfileScreens.disableProfile')} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
         <SettingsSection footer="Archived profiles remain in history but can’t be selected for voice.">
-          <NativeCommandButton disabled={working} label={operation === 'archive' ? 'Archiving…' : 'Archive Profile'} onPress={() => {
+          <NativeCommandButton disabled={working} label={operation === 'archive' ? 'Archiving…' : t('mobile.ProviderProfileScreens.archiveProfile')} onPress={() => {
             const canPresent = capturePresentation();
             if (!canPresent() || workingRef.current) return;
             let confirmed = false;
@@ -249,11 +249,11 @@ function confirmArchive(
   archive: () => Promise<void>
 ): void {
   Alert.alert(
-    'Archive provider profile?',
-    `${profile.displayName} will no longer be available for voice.`,
+    t('mobile.ProviderProfileScreens.archiveProviderProfile'),
+    t('mobile.ProviderProfileScreens.willNoLongerBeAvailableForVoice', { displayName: String(profile.displayName) }),
     [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Archive', style: 'destructive', onPress: () => void archive() }
+      { text: t('mobile.ProviderProfileScreens.cancel'), style: 'cancel' },
+      { text: t('mobile.ProviderProfileScreens.archive'), style: 'destructive', onPress: () => void archive() }
     ]
   );
 }

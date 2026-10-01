@@ -68,7 +68,7 @@ export function VoiceSetupScreen({
       <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
       <View style={styles.detailHeader}>
         <Text accessibilityRole="header" style={styles.detailTitle}>
-          {configuration.readiness === 'ready' ? 'Voice is ready' : 'Voice needs attention'}
+          {configuration.readiness === 'ready' ? t('mobile.VoiceSettingsScreens.voiceIsReady') : t('mobile.VoiceSettingsScreens.voiceNeedsAttention')}
         </Text>
         <Text style={styles.detailSubtitle}>{t('mobile.VoiceSettingsScreens.appliesToEveryoneIn')}{tenant.name}{t('mobile.VoiceSettingsScreens.configureHowStuffStashListensUnderstandsRequestsAndSpeaks')}</Text>
       </View>
@@ -79,7 +79,7 @@ export function VoiceSetupScreen({
             <View key={slot.capability}>
               {index > 0 ? <SettingsSeparator /> : null}
               <SettingsNavigationRow
-                accessibilityLabel={`Open ${presentation.title} voice stage for ${tenant.name}. ${formatVoiceProviderReadinessLabel(slot.readiness)}`}
+                accessibilityLabel={t('mobile.VoiceSettingsScreens.openVoiceStageFor', { title: String(presentation.title), name: String(tenant.name), value: String(formatVoiceProviderReadinessLabel(slot.readiness)) })}
                 context={`${presentation.description} · ${selectedProfileLabel(slot)}`}
                 label={presentation.title}
                 onPress={() => onOpenCapability(slot.capability)}
@@ -91,7 +91,7 @@ export function VoiceSetupScreen({
       </SettingsSection>
       <SettingsSection footer="Provider profiles are advanced tenant-wide service configurations." title={t('mobile.VoiceSettingsScreens.advanced')}>
         <SettingsNavigationRow
-          accessibilityLabel={`Open advanced provider profiles for ${tenant.name}`}
+          accessibilityLabel={t('mobile.VoiceSettingsScreens.openAdvancedProviderProfilesFor', { name: String(tenant.name) })}
           label={t('mobile.VoiceSettingsScreens.providerProfiles')}
           onPress={onOpenProfiles}
           value={`${providers.state.viewModel.profiles.length}`}
@@ -148,7 +148,7 @@ export function VoiceCapabilityScreen({
     try {
       await action();
       if (!canPresent()) return;
-      feedback.showNotice({ tone: 'success', title: success, message: `${stage.title} setup was updated.` });
+      feedback.showNotice({ tone: 'success', title: success, message: t('mobile.VoiceSettingsScreens.setupWasUpdated', { title: String(stage.title) }) });
       void providers.load().catch(() => undefined);
     } catch (error) {
       if (!canPresent()) return;
@@ -169,14 +169,14 @@ export function VoiceCapabilityScreen({
     switch (recommendedAction) {
       case 'add_profile':
         return {
-          accessibilityLabel: `Add provider profile for ${stage.title}`,
+          accessibilityLabel: t('mobile.VoiceSettingsScreens.addProviderProfileFor', { title: String(stage.title) }),
           label: t('mobile.VoiceSettingsScreens.addProfile'),
           run: onAddProfile
         };
       case 'replace_credential':
         return selectedProfile
           ? {
-              accessibilityLabel: `Add credential for ${selectedProfile.displayName} in ${stage.title}`,
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.addCredentialForIn', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
               label: t('mobile.VoiceSettingsScreens.addCredential'),
               run: () => onEditCredential(selectedProfile.id)
             }
@@ -184,16 +184,16 @@ export function VoiceCapabilityScreen({
       case 'enable_profile':
         return selectedProfile
           ? {
-              accessibilityLabel: `Enable ${selectedProfile.displayName} for ${stage.title}`,
-              label: operation === 'enable' ? 'Enabling…' : 'Enable Service',
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.enableFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
+              label: operation === 'enable' ? 'Enabling…' : t('mobile.VoiceSettingsScreens.enableService'),
               run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), 'Service enabled')
             }
           : undefined;
       case 'test_profile':
         return selectedProfile
           ? {
-              accessibilityLabel: `Test ${selectedProfile.displayName} for ${stage.title}`,
-              label: operation === 'test' ? 'Testing…' : 'Test Connection',
+              accessibilityLabel: t('mobile.VoiceSettingsScreens.testFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
+              label: operation === 'test' ? 'Testing…' : t('mobile.VoiceSettingsScreens.testConnection'),
               run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), 'Connection tested')
             }
           : undefined;
@@ -214,7 +214,7 @@ export function VoiceCapabilityScreen({
       <SettingsSection title={t('mobile.VoiceSettingsScreens.selectedService')}>
         {slot.selectedProfile ? (
           <SettingsNavigationRow
-            accessibilityLabel={`Open provider profile ${slot.selectedProfile.displayName}`}
+            accessibilityLabel={t('mobile.VoiceSettingsScreens.openProviderProfile', { displayName: String(slot.selectedProfile.displayName) })}
             context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || 'Default model'}`}
             label={slot.selectedProfile.displayName}
             disabled={working}

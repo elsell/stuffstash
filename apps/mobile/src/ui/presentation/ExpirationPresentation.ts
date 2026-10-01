@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {AssetExpirationContext} from '../../domain/assets/AssetSummary';
 import type { AssetExpiration } from '../../domain/assets/AssetSummary';
 import { isAssetExpiration } from '../../domain/assets/AssetExpiration';
@@ -11,26 +12,26 @@ export function formatAssetExpiration(value: AssetExpiration, locale?: string): 
     timeZone: 'UTC', year: 'numeric', month: 'long',
     ...(monthOnly ? { calendar: 'gregory' } : { day: 'numeric' as const })
   }).format(new Date(`${calendarDate}T00:00:00Z`));
-  return monthOnly && hasAlternativeCalendar(locale) ? `${formatted} (Gregorian)` : formatted;
+  return monthOnly && hasAlternativeCalendar(locale) ? t('mobile.ExpirationPresentation.gregorian', { formatted: String(formatted) }) : formatted;
 }
 
 export function formatExpirationChange(value?: AssetExpiration, cleared?: boolean): string | undefined {
-  return cleared ? 'Remove expiration date' : value ? `Expires ${formatAssetExpiration(value)}` : undefined;
+  return cleared ? t('mobile.ExpirationPresentation.removeExpirationDate') : value ? t('mobile.ExpirationPresentation.expires', { value: String(formatAssetExpiration(value)) }) : undefined;
 }
 
 export function expirationStatusLabel(context?: AssetExpirationContext): string | undefined {
  if (!context) return undefined;
- if (!context.trackingEnabled) return 'Expiration tracking disabled';
- if (context.state === 'upcoming') return 'Expiring soon';
- if (context.state === 'expired') return 'Expired';
+ if (!context.trackingEnabled) return t('mobile.ExpirationPresentation.expirationTrackingDisabled');
+ if (context.state === 'upcoming') return t('mobile.ExpirationPresentation.expiringSoon');
+ if (context.state === 'expired') return t('mobile.ExpirationPresentation.expired');
  return undefined;
 }
 
 export function expirationDateLabel(value: AssetExpiration, context?: AssetExpirationContext, now = new Date(), locale?: string): string {
  const formatted = formatAssetExpiration(value, locale);
  const precision = value.precision === 'month' ? `${formatted} (end of month)` : formatted;
- if (!context) return `Expiration: ${precision}`;
- if (!context.trackingEnabled) return `Expiration tracking disabled: ${precision}`;
+ if (!context) return t('mobile.ExpirationPresentation.expiration', { precision: String(precision) });
+ if (!context.trackingEnabled) return t('mobile.ExpirationPresentation.expirationTrackingDisabled2', { precision: String(precision) });
  const parts = new Intl.DateTimeFormat('en-US', { timeZone: context.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
  const part = (name: string) => parts.find(part => part.type === name)?.value ?? '';
  const today = `${part('year')}-${part('month')}-${part('day')}`;
@@ -48,7 +49,7 @@ export function expirationMonthOptions(locale?: string): readonly { value: strin
 }
 
 export function expirationMonthCalendarNotice(locale?: string): string | undefined {
-  return hasAlternativeCalendar(locale) ? 'Month and year use the Gregorian calendar.' : undefined;
+  return hasAlternativeCalendar(locale) ? t('mobile.ExpirationPresentation.monthAndYearUseTheGregorianCalendar') : undefined;
 }
 
 function hasAlternativeCalendar(locale?: string): boolean {

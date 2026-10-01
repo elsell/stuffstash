@@ -24,7 +24,7 @@ export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonl
 
 function ScopeScreen({ model, onNavigate, scope, exportCommand }: { readonly exportCommand?: ExportInventoryCommand; readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
   const { palette, styles } = useSettingsListStyles();
-  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? 'Loading household settings' : 'Loading inventory settings'} /></View>;
+  if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? t('mobile.ScopedSettingsScreens.loadingHouseholdSettings') : t('mobile.ScopedSettingsScreens.loadingInventorySettings')} /></View>;
   if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.ScopedSettingsScreens.couldNotLoadSettings')}</Text><Text style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label={t('mobile.ScopedSettingsScreens.retry')} onPress={() => void model.load()} /></ScrollView>;
   const settings = model.state.settings;
   const name = scope === 'tenant' ? settings.selectedTenant.name : settings.selectedInventory.name;
@@ -45,8 +45,8 @@ function ScopeScreen({ model, onNavigate, scope, exportCommand }: { readonly exp
   if (scope === 'tenant' && !tenantCanConfigure) return <DeniedSettingsState message={t('mobile.ScopedSettingsScreens.youDonTHavePermissionToManageSettingsShared')} />;
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
     <SettingsRefreshNotice visible={model.hasRefreshError} onRetry={model.load} />
-    <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? 'Household settings' : `Inventory in ${settings.selectedTenant.name}`}</Text></View>
-    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
+    <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? t('mobile.ScopedSettingsScreens.householdSettings') : t('mobile.ScopedSettingsScreens.inventoryIn', { name: String(settings.selectedTenant.name) })}</Text></View>
+    <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={t('mobile.ScopedSettingsScreens.openFor', { label: String(row.label), name: String(name) })} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
     {scope === 'inventory' && exportCommand ? <InventoryExportAction key={`${settings.selectedTenant.id}:${settings.selectedInventory.id}`} command={exportCommand} scope={{ tenantId: settings.selectedTenant.id, inventoryId: settings.selectedInventory.id }} /> : null}
   </ScrollView>;
 }

@@ -50,11 +50,11 @@ export function ProviderStateView({
 }) {
   const { styles } = useSettingsListStyles();
   if (state.status === 'loading') {
-    return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={`Loading ${taskLabel}`} /></View>;
+    return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={t('mobile.ProviderSettingsSupport.loading', { taskLabel: String(taskLabel) })} /></View>;
   }
   return (
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
-      <Text accessibilityRole="header" style={styles.errorTitle}>{`Could not load ${taskLabel}`}</Text>
+      <Text accessibilityRole="header" style={styles.errorTitle}>{t('mobile.ProviderSettingsSupport.couldNotLoad', { taskLabel: String(taskLabel) })}</Text>
       <Text style={styles.errorMessage}>{state.message}</Text>
       <NativeCommandButton label={t('mobile.ProviderSettingsSupport.retry')} onPress={() => void onRetry()} />
     </ScrollView>

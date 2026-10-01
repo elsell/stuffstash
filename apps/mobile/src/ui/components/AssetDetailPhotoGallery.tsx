@@ -89,7 +89,7 @@ export function AssetDetailPhotoGallery({
   return (
     <View style={styles.gallery}>
       <ScrollView
-        accessibilityLabel={`Asset photos, ${photos.length.toString()} total`}
+        accessibilityLabel={t('mobile.AssetDetailPhotoGallery.assetPhotosTotal', { value: String(photos.length.toString()) })}
         onLayout={({ nativeEvent }) => {
           if (nativeEvent.layout.width > 0) setGalleryWidth(nativeEvent.layout.width);
         }}
@@ -131,8 +131,8 @@ function GalleryPreview({ photo, palette, presentation, width, onPhotoPress }: {
   }, [source]);
   const failed = failedSource === source;
   return <Pressable accessibilityLabel={presentation.accessibilityLabel}
-    accessibilityValue={failed ? { text: 'Preview unavailable' } : undefined}
-    accessibilityHint={canOpen ? 'Opens the original photo' : undefined}
+    accessibilityValue={failed ? { text: t('mobile.AssetDetailPhotoGallery.previewUnavailable') } : undefined}
+    accessibilityHint={canOpen ? t('mobile.AssetDetailPhotoGallery.opensTheOriginalPhoto') : undefined}
     accessibilityRole="imagebutton" accessibilityState={{ disabled: !canOpen }} disabled={!canOpen}
     onPress={() => { if (photo.id && onPhotoPress) onPhotoPress(photo.id); }}
     style={[styles.mediaFrame, styles.photoMediaFrame, { backgroundColor: palette.surfaceMuted, width }]}>

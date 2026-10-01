@@ -122,10 +122,10 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
     && !isAccessFailure(reads.contextError) && !isAccessFailure(reads.resource.error)
     && Boolean(reads.context && accessPolicy.canRead(reads.context, scope));
   const headerActions = useNativeHeaderActionOptions(headerEnabled && canEdit && lifecycle === 'active'
-    ? [{ kind: 'add', label: `Add ${singular(kind)}`, onPress: onAdd }] : []);
+    ? [{ kind: 'add', label: t('mobile.CustomizationCollectionScreen.add', { value: String(singular(kind)) }), onPress: onAdd }] : []);
   const withHeader = (body: ReactNode) => <>
     <Stack.Screen options={headerActions} />
-    <NativeNavigationSearch enabled={headerEnabled} query={search} placeholder={`Search ${plural(kind).toLocaleLowerCase()}`}
+    <NativeNavigationSearch enabled={headerEnabled} query={search} placeholder={t('mobile.CustomizationCollectionScreen.search', { value: String(plural(kind).toLocaleLowerCase()) })}
       onChange={setSearch} onSubmit={setSearch} onClear={() => setSearch('')} />
     {body}
   </>;
@@ -144,17 +144,17 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
 
   if (isAccessFailure(reads.contextError) || isAccessFailure(reads.resource.error)) return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
   if (status === 'ready' && (!reads.context || context?.tenantId !== reads.context.tenantId || context?.inventoryId !== reads.context.inventoryId)) return withScrollContent(<SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loadingSettings')} />);
-  if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${plural(kind).toLocaleLowerCase()}…`} /></View>);
+  if (status === 'loading') return withScrollContent(<View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loading', { value: String(plural(kind).toLocaleLowerCase()) })} /></View>);
   if (status === 'error') return withScrollContent(<><Text accessibilityRole="header" style={settings.styles.errorTitle}>{t('mobile.CustomizationCollectionScreen.couldNotLoad')}{plural(kind).toLocaleLowerCase()}</Text><Text style={settings.styles.errorMessage}>{t('mobile.CustomizationCollectionScreen.yourSettingsWereNotChanged')}</Text><NativeCommandButton label={t('mobile.CustomizationCollectionScreen.retry')} onPress={() => void load()} /></>);
   if (status === 'denied') return withHeader(<DeniedSettingsState message={t('mobile.CustomizationCollectionScreen.youDonTHavePermissionToViewTheseSettings')} />);
   if (!context) return withHeader(null);
 
   return withScrollContent(<>
     {kind !== 'tag' ? <View style={[styles.lifecycleControl, settings.styles.contentBlock]}><SettingsSegmentedControl disabled={Boolean(pendingLifecycle)} onChange={(value) => { const target = value as CustomizationLifecycle; if (target !== lifecycle && !pendingLifecycle) { setCollection((current) => beginLifecycleTransition(current, target)); void load(false, target); } }} segments={[{ label: t('mobile.CustomizationCollectionScreen.active'), value: 'active' }, { label: t('mobile.CustomizationCollectionScreen.archived'), value: 'archived' }]} value={lifecycle} /></View> : null}
-    {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={`Loading ${pendingLifecycle} settings…`} /></View> : null}
+    {pendingLifecycle ? <View style={[styles.loadingGroup, settings.styles.contentBlock]}><SettingsLoadingRow label={t('mobile.CustomizationCollectionScreen.loadingSettings2', { pendingLifecycle: String(pendingLifecycle) })} /></View> : null}
     {incomplete ? <View accessibilityLiveRegion="polite" style={[styles.incomplete, settings.styles.contentBlock]}><Text style={styles.incompleteTitle}>{t('mobile.CustomizationCollectionScreen.someSettingsMayBeMissing')}</Text><Text style={styles.incompleteText}>{t('mobile.CustomizationCollectionScreen.pullToRefreshAndTryLoadingTheCompleteList')}</Text></View> : null}
-    {search && filtered.length === 0 ? <Empty title={t('mobile.CustomizationCollectionScreen.noMatches')} message={`No ${plural(kind).toLocaleLowerCase()} match “${search}”.`} />
-      : filtered.length === 0 ? <Empty title={`No ${lifecycle} ${plural(kind).toLocaleLowerCase()}`} message={canEdit && lifecycle === 'active' ? `Add the first ${singular(kind).toLocaleLowerCase()} here.` : 'There is nothing to show.'} />
+    {search && filtered.length === 0 ? <Empty title={t('mobile.CustomizationCollectionScreen.noMatches')} message={t('mobile.CustomizationCollectionScreen.noMatch', { value: String(plural(kind).toLocaleLowerCase()), search: String(search) })} />
+      : filtered.length === 0 ? <Empty title={t('mobile.CustomizationCollectionScreen.no', { lifecycle: String(lifecycle), value: String(plural(kind).toLocaleLowerCase()) })} message={canEdit && lifecycle === 'active' ? t('mobile.CustomizationCollectionScreen.addTheFirstHere', { value: String(singular(kind).toLocaleLowerCase()) }) : t('mobile.CustomizationCollectionScreen.thereIsNothingToShow')} />
       : <>
         {inherited.length ? <ResourceSection name={`From ${context.tenantName}`} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
         {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? `Only in ${context.inventoryName}` : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
@@ -164,7 +164,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
 
 function ResourceSection({ inherited = false, name, onOpen, rows }: { readonly inherited?: boolean; readonly name?: string; readonly onOpen: (row: Row) => void; readonly rows: readonly Row[] }) {
   const colors = useAppearancePalette(); const styles = createStyles(colors);
-  return <SettingsSection title={name}>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<Pressable accessibilityLabel={`${row.displayName}${row.kind === 'tag' ? `, ${tagColorName(row.color)}` : ''}${inherited ? ', inherited' : ''}`} accessibilityRole="button" onPress={() => onOpen(row)} style={({ pressed }) => [styles.row, row.kind === 'tag' && styles.compactRow, pressed && styles.pressed]}><View style={styles.rowBody}>{row.kind === 'tag' ? <View accessibilityElementsHidden style={[styles.color, row.color ? { backgroundColor: row.color } : styles.noColor]} /> : null}<View style={styles.rowText}><Text style={styles.rowTitle}>{row.displayName}</Text>{row.kind !== 'tag' ? <Text style={styles.rowMeta}>{row.kind === 'field' ? `${fieldType(row.type)} · ${row.applicability === 'all_assets' ? 'All assets' : 'Selected asset types'}` : row.description || row.key}{inherited ? ' · Inherited' : ''}</Text> : null}</View></View><ChevronRight color={colors.textMuted} size={18} /></Pressable></View>)}</SettingsSection>;
+  return <SettingsSection title={name}>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator /> : null}<Pressable accessibilityLabel={`${row.displayName}${row.kind === 'tag' ? `, ${tagColorName(row.color)}` : ''}${inherited ? ', inherited' : ''}`} accessibilityRole="button" onPress={() => onOpen(row)} style={({ pressed }) => [styles.row, row.kind === 'tag' && styles.compactRow, pressed && styles.pressed]}><View style={styles.rowBody}>{row.kind === 'tag' ? <View accessibilityElementsHidden style={[styles.color, row.color ? { backgroundColor: row.color } : styles.noColor]} /> : null}<View style={styles.rowText}><Text style={styles.rowTitle}>{row.displayName}</Text>{row.kind !== 'tag' ? <Text style={styles.rowMeta}>{row.kind === 'field' ? `${fieldType(row.type)} · ${row.applicability === 'all_assets' ? 'All assets' : 'Selected asset types'}` : row.description || row.key}{inherited ? t('mobile.CustomizationCollectionScreen.inherited') : ''}</Text> : null}</View></View><ChevronRight color={colors.textMuted} size={18} /></Pressable></View>)}</SettingsSection>;
 }
 
 function Empty({ message, title }: { readonly message: string; readonly title: string }) { const styles = useSettingsListStyles().styles; return <View style={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>{title}</Text><Text style={styles.errorMessage}>{message}</Text></View>; }

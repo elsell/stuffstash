@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { Button, Host, HStack, Image, List, Section, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import { accessibilityLabel, accessibilityValue, buttonStyle, contentShape, shapes, disabled, font, foregroundStyle, frame, listStyle } from '@expo/ui/swift-ui/modifiers';
 import { useAppearanceAwarePalette } from '../theme/appearance';
@@ -21,7 +22,7 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
         <VStack alignment="leading" spacing={spacing.sm}>
           <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
           <Text modifiers={[contextColor]}>{props.context}</Text>
-          {props.destinationLabel ? <Text modifiers={[contextColor]}>{`Move to: ${props.destinationLabel}`}</Text> : null}
+          {props.destinationLabel ? <Text modifiers={[contextColor]}>{t('mobile.MoveSelectionListios.moveTo', { destinationLabel: String(props.destinationLabel) })}</Text> : null}
         </VStack>
       </Section>
       <Section title={props.title}>

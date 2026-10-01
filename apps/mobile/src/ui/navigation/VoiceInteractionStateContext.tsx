@@ -505,8 +505,8 @@ function providerReadinessFailure(error: unknown): { readonly message: string } 
 
   return {
     message: missingCapabilities.length > 0
-      ? `Voice provider profiles are not ready: ${missingCapabilities.join(', ')}.`
-      : 'Voice provider profiles are not ready.'
+      ? t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady', { value: String(missingCapabilities.join(', ')) })
+      : t('mobile.VoiceInteractionStateContext.voiceProviderProfilesAreNotReady2')
   };
 }
 

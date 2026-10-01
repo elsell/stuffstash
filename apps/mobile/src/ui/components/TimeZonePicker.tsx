@@ -23,7 +23,7 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
     const canPresent = capturePresentation();
     if(!canPresent() || disabled || pending.current)return;
     pending.current=true;setSaving(true);setError('');
-    try { await onChange(zone); } catch { if(canPresent())setError('Could not save the time zone. Try again.'); }
+    try { await onChange(zone); } catch { if(canPresent())setError(t('mobile.TimeZonePicker.couldNotSaveTheTimeZoneTryAgain')); }
     finally {pending.current=false;if(mounted.current)setSaving(false);}
   }
   let validQuery = false;
@@ -32,7 +32,7 @@ export function TimeZonePicker({ value, disabled, onChange }: { readonly value: 
   return <>
     <NativeNavigationSearch query={query} placeholder={t('mobile.TimeZonePicker.searchCityOrTimeZone')} onChange={setQuery} onSubmit={setQuery} onClear={() => setQuery('')} />
     <View style={styles.detailHeader}><Text style={styles.secondaryText}>{t('mobile.TimeZonePicker.datesEndAtMidnightInThisTimeZoneIt')}</Text></View>
-    <SettingsSection footer={matches.length === 30 ? 'Search to find another city or time zone.' : undefined}>
+    <SettingsSection footer={matches.length === 30 ? t('mobile.TimeZonePicker.searchToFindAnotherCityOrTimeZone') : undefined}>
       {choices.map((zone,index)=><View key={zone}>{index ? <SettingsSeparator /> : null}<SettingsChoiceRow label={readableTimeZone(zone)} selected={value===zone} disabled={disabled || saving} onPress={()=>void select(zone)}/></View>)}
       {!choices.length ? <View style={styles.navigationRow}><Text style={styles.secondaryText}>{t('mobile.TimeZonePicker.noMatchingTimeZones')}</Text></View> : null}
     </SettingsSection>

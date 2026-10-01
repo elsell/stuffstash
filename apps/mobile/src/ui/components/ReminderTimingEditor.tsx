@@ -32,7 +32,7 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
     if (!canPresent() || locked || pending.current) return;
     pending.current = true; setSaving(true); setError(''); setDirty(true); setSelection({upcoming,advanceDays});
     try { await onSave({ ...policy, upcoming, advanceDays }); if (canPresent()) onDone(); }
-    catch { if (canPresent()) setError('Could not save. Your selection is still here. Try again.'); }
+    catch { if (canPresent()) setError(t('mobile.ReminderTimingEditor.couldNotSaveYourSelectionIsStillHereTry')); }
     finally {
       pending.current = false;
       if (mounted.current) {
@@ -47,7 +47,7 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
     <Stack.Screen options={headerOptions} />
     <SettingsSection footer="Choose when to remind you before the expiration date. Expired reminders are set separately.">
       <SettingsChoiceRow label={t('mobile.ReminderTimingEditor.off')} selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
-      {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? 'On the expiration date' : `${reminderDaysLabel(value)} before`} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}
+      {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? t('mobile.ReminderTimingEditor.onTheExpirationDate') : t('mobile.ReminderTimingEditor.before', { value: String(reminderDaysLabel(value)) })} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}
       <SettingsSeparator /><SettingsChoiceRow label={t('mobile.ReminderTimingEditor.custom')} accessibilityLabel={t('mobile.ReminderTimingEditor.customDays')} selected={custom} disabled={locked} onPress={() => { setCustom(true); setDirty(true); }} />
     </SettingsSection>
     {custom ? <SettingsSection footer="Enter 0–3650 days. Save your changes, or go back to cancel.">

@@ -64,13 +64,13 @@
     {#if state === 'signed_out' || state === 'email_mismatch' || state === 'ready' || state === 'unavailable' || state === 'accepted' || state === 'success'}
       <Card.Footer class="invitation-actions">
         {#if state === 'signed_out'}
-          <Button.Root size="lg" disabled={busy} onclick={() => { void onSignIn?.(); }}><LogIn aria-hidden="true" />{busy ? 'Opening sign-in…' : 'Continue to sign in'}</Button.Root>
+          <Button.Root size="lg" disabled={busy} onclick={() => { void onSignIn?.(); }}><LogIn aria-hidden="true" />{busy ? t('web.InvitationAcceptSurface.openingSignIn') : t('web.InvitationAcceptSurface.continueToSignIn')}</Button.Root>
         {:else if state === 'email_mismatch'}
-          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onSwitchAccount?.(); }}><LogIn aria-hidden="true" />{busy ? 'Opening sign-in…' : 'Switch account'}</Button.Root>
+          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onSwitchAccount?.(); }}><LogIn aria-hidden="true" />{busy ? t('web.InvitationAcceptSurface.openingSignIn') : t('web.InvitationAcceptSurface.switchAccount')}</Button.Root>
         {:else if state === 'ready'}
-          <Button.Root size="lg" disabled={busy} onclick={() => { void onAccept?.(); }}>{busy ? 'Accepting…' : 'Accept invitation'}</Button.Root>
+          <Button.Root size="lg" disabled={busy} onclick={() => { void onAccept?.(); }}>{busy ? 'Accepting…' : t('web.InvitationAcceptSurface.acceptInvitation')}</Button.Root>
         {:else if state === 'unavailable'}
-          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onRetry?.(); }}>{busy ? 'Checking…' : 'Try again'}</Button.Root>
+          <Button.Root variant="outline" size="lg" disabled={busy} onclick={() => { void onRetry?.(); }}>{busy ? 'Checking…' : t('web.InvitationAcceptSurface.tryAgain')}</Button.Root>
         {:else}
           <Button.Root href={openInventoryHref} size="lg">{t('web.InvitationAcceptSurface.openInventory')}</Button.Root>
         {/if}

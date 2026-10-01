@@ -237,9 +237,9 @@ function DashboardHeader({
                 asset={asset}
                 density="row"
                 footerAction={dashboard.canReturn ? {
-                  accessibilityLabel: `Return ${asset.title}`,
+                  accessibilityLabel: t('mobile.HomeScreen.return', { title: String(asset.title) }),
                   disabled: isReturnDisabled(asset),
-                  label: returningAssetId === asset.id ? 'Returning...' : 'Return',
+                  label: returningAssetId === asset.id ? 'Returning...' : t('mobile.HomeScreen.return2'),
                   onPress: () => void returnAsset(asset)
                 } : undefined}
                 key={asset.id}

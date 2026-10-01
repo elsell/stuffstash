@@ -69,9 +69,9 @@
   {:else if revision.data}<section aria-label={t('web.RunSetup.runUsage')}><h4>{t('web.RunSetup.revisionFull4', { name: revision.data.definition.name, number: revision.data.number })}</h4>
     <p>{t('web.RunSetup.perAttemptUpToModelCallsAcrossCasesFull', { length: revision.data.definition.budget.modelCalls * selectedCases.length, length2: selectedCases.length, elapsedSeconds: revision.data.definition.budget.elapsedSeconds })}</p>
     {#if profiles.isPending}<p role="status">{t('web.RunSetup.loadingModelChoices')}</p>{:else if profiles.isError}<p role="alert">{t('web.RunSetup.couldNotLoadConfiguredModels')} <Button.Root onclick={() => profiles.refetch()}>{t('web.RunSetup.retryModels')}</Button.Root></p>
-    {:else}<p>{t('web.RunSetup.model')} {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? 'Selected profile unavailable' : 'Tenant default model'}</p>{/if}
+    {:else}<p>{t('web.RunSetup.model')} {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? t('web.RunSetup.selectedProfileUnavailable') : t('web.RunSetup.tenantDefaultModel')}</p>{/if}
     <p>{t('web.RunSetup.textOnlyCoverageSpeechInputAndPlaybackNeedSeparate')}</p>
   </section>{/if}
-  <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? 'Queueing…' : 'Run selected cases'}</Button.Root><p role="status">{message}</p>
+  <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? 'Queueing…' : t('web.RunSetup.runSelectedCases')}</Button.Root><p role="status">{message}</p>
 </section>
 <style>.run-setup { display: grid; gap: 1.25rem; max-width: 56rem; overflow-wrap: anywhere; } ul { display: grid; gap: .5rem; list-style: none; padding: 0; } h3, h4 { font-weight: 600; } section section { display: grid; gap: .75rem; }</style>

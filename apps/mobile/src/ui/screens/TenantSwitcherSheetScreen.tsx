@@ -87,14 +87,14 @@ function TenantSwitcherVisit({
     inventories: [...data.inventories, ...createdInventories.filter(item => !data.inventories.some(inventory => inventory.id === item.id)).map(item => ({ ...item,
       tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: 'Owner', updatedAtLabel: 'Just created' }))]
   } : undefined;
-  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? 'Cancel creation' : 'Close inventory switcher', disabled: creating, onPress: () => {
+  const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? t('mobile.TenantSwitcherSheetScreen.cancelCreation') : t('mobile.TenantSwitcherSheetScreen.closeInventorySwitcher'), disabled: creating, onPress: () => {
     if (creating) return;
     if (creation) { setCreation(undefined); return; }
     if (!visit?.active) return;
     visit.active = false;
     pending.current?.abort(); returnToPreviousOrHome(router);
   } }]);
-  const headerOptions = useMemo(() => ({ title: creation ? creation.kind === 'household' ? 'New household' : 'New inventory' : 'Inventories', ...actionOptions }), [actionOptions, creation]);
+  const headerOptions = useMemo(() => ({ title: creation ? creation.kind === 'household' ? t('mobile.TenantSwitcherSheetScreen.newHousehold') : t('mobile.TenantSwitcherSheetScreen.newInventory') : t('mobile.TenantSwitcherSheetScreen.inventories'), ...actionOptions }), [actionOptions, creation]);
 
   return (
     <SafeAreaView style={styles.sheet} edges={['left', 'right', 'bottom']}>
@@ -164,7 +164,7 @@ function TenantSwitcher({
             textStyle={styles.sheetTitle}
           />
         </View>
-        <View style={styles.switchAction}><NativeCommandButton prominence="standard" label={mode === 'tenants' ? 'Back' : 'Switch household'}
+        <View style={styles.switchAction}><NativeCommandButton prominence="standard" label={mode === 'tenants' ? t('mobile.TenantSwitcherSheetScreen.back') : t('mobile.TenantSwitcherSheetScreen.switchHousehold')}
           disabled={selecting} onPress={() => setMode(mode === 'tenants' ? 'inventories' : 'tenants')} /></View>
       </View>
 
@@ -181,7 +181,7 @@ function TenantSwitcher({
             return (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Switch to inventory ${inventory.name}`}
+                accessibilityLabel={t('mobile.TenantSwitcherSheetScreen.switchToInventory', { name: String(inventory.name) })}
                 accessibilityState={{ selected: isSelected, disabled: selecting, busy: selecting }}
                 disabled={selecting}
                 key={inventory.id}

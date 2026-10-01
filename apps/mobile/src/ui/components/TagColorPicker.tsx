@@ -74,7 +74,7 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
           const selected = normalizedValue === color;
           return (
             <Pressable
-              accessibilityLabel={`Choose ${tagColorName(color)} tag color`}
+              accessibilityLabel={t('mobile.TagColorPicker.chooseTagColor', { value: String(tagColorName(color)) })}
               accessibilityRole="button"
               accessibilityState={{ disabled, selected }}
               disabled={disabled}
@@ -105,10 +105,10 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
         </View>
         <Text style={styles.customLabel}>{t('mobile.TagColorPicker.custom')}</Text>
       </Pressable>}
-      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{nativePicker ? 'Choose a color to correct this value.' : 'Choose Custom… to correct this color.'}</Text> : null}
+      {invalidTypedColor ? <Text accessibilityLiveRegion="polite" style={styles.invalidLabel}>{nativePicker ? t('mobile.TagColorPicker.chooseAColorToCorrectThisValue') : t('mobile.TagColorPicker.chooseCustomToCorrectThisColor')}</Text> : null}
       {customOpen ? (
         <View onLayout={(event) => setCustomPanelHeight(event.nativeEvent.layout.height)} style={styles.customPanel} testID="custom-tag-color-panel">
-          <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>{t('mobile.TagColorPicker.customColor')}</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : 'No color'}</Text></View></View>
+          <View style={styles.modalHeader}><View><Text accessibilityRole="header" style={styles.modalTitle}>{t('mobile.TagColorPicker.customColor')}</Text><Text style={styles.modalSubtitle}>{normalizedDraft ? tagColorName(normalizedDraft) : t('mobile.TagColorPicker.noColor')}</Text></View></View>
           <View style={styles.pickerSurface}>
             <FullSpectrumTagColorPicker disabled={disabled} compact={customPanelLayout.compactSpectrum} value={normalizedDraft ?? ''} onChange={value => { if (!disabled) setCustomDraft(value); }} />
           </View>

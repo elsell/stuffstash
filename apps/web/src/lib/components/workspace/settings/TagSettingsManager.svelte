@@ -101,7 +101,7 @@
       if (!saved) throw new Error('Tag is unavailable.');
       tags = sortSettingsRecords(action === 'new' ? [...tags, saved] : tags.map((tag) => tag.id === saved.id ? saved : tag));
       onTagsChange(tags);
-      notifySuccess(action === 'new' ? 'Tag added' : 'Changes saved', { description: `${saved.displayName} is up to date.` });
+      notifySuccess(action === 'new' ? 'Tag added' : 'Changes saved', { description: t('web.TagSettingsManager.isUpToDate', { displayName: String(saved.displayName) }) });
       observer.record('workspace.settings_mutation_succeeded', { resource: 'tag', action: action === 'new' ? 'create' : 'update', scope: 'inventory' });
       onNavigate(collectionHref);
     } catch (caught) {
@@ -159,7 +159,7 @@
         {/each}
       </div>
     {/if}
-    {#if appendError}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.couldNotLoadMore')} message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? 'Loading…' : 'Load more'}</Button.Root><small>{t('web.TagSettingsManager.moreTagsAreAvailable')}</small></div>{/if}
+    {#if appendError}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.couldNotLoadMore')} message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? 'Loading…' : t('web.TagSettingsManager.loadMore')}</Button.Root><small>{t('web.TagSettingsManager.moreTagsAreAvailable')}</small></div>{/if}
   {/if}
 </section>
 
@@ -168,7 +168,7 @@
   {#if action === 'edit' && !selected}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.tagUnavailable')} message={t('web.TagSettingsManager.thisTagMayHaveBeenArchivedOrIsNo')} />
   {:else}
     {#if formError}<p class="settings-form-error" role="alert" tabindex="-1" bind:this={formErrorElement}>{formError}</p>{/if}
-    <div class="field-stack"><Label for="settings-tag-name">{t('web.TagSettingsManager.displayName')}</Label><Input id="settings-tag-name" bind:value={displayName} maxlength={80} disabled={!canManage} aria-invalid={!displayName.trim() || nameByteError ? 'true' : undefined} aria-describedby="settings-tag-name-help" /><small id="settings-tag-name-help" class:settings-field-error={Boolean(nameByteError)}>{nameByteError || `${nameBytes} of 80 UTF-8 bytes`}</small></div>
+    <div class="field-stack"><Label for="settings-tag-name">{t('web.TagSettingsManager.displayName')}</Label><Input id="settings-tag-name" bind:value={displayName} maxlength={80} disabled={!canManage} aria-invalid={!displayName.trim() || nameByteError ? 'true' : undefined} aria-describedby="settings-tag-name-help" /><small id="settings-tag-name-help" class:settings-field-error={Boolean(nameByteError)}>{nameByteError || t('web.TagSettingsManager.of80UTF8Bytes', { nameBytes: String(nameBytes) })}</small></div>
     <fieldset class="settings-color-picker" disabled={!canManage}><legend>{t('web.TagSettingsManager.color')}</legend>
       <div class="settings-color-swatches">
         {#each ['#2F80ED', '#6B90AA', '#F5AB4B', '#2E7D32', '#7C3AED', ''] as swatch}

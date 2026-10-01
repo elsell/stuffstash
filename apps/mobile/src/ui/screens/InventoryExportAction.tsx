@@ -26,7 +26,7 @@ export function InventoryExportAction({ command, scope }: { readonly command: Ex
     catch (caught) {
       if (!request.signal.aborted) {
         const status = (caught as { status?: number }).status;
-        setError(status === 401 ? 'Sign in again to export this inventory.' : status === 403 ? 'You no longer have access to export this inventory.' : status === 422 ? 'This inventory exceeds the server’s export limit. Ask your administrator to increase it.' : 'Could not export this inventory. Try again.');
+        setError(status === 401 ? t('mobile.InventoryExportAction.signInAgainToExportThisInventory') : status === 403 ? t('mobile.InventoryExportAction.youNoLongerHaveAccessToExportThisInventory') : status === 422 ? t('mobile.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk') : t('mobile.InventoryExportAction.couldNotExportThisInventoryTryAgain'));
       }
     } finally { if (active.current === request) { active.current = undefined; setPending(false); } }
   };

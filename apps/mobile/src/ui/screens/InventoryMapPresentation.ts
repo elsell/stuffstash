@@ -111,7 +111,7 @@ export function buildInventoryMapBreadcrumbs(
     ...safePath.map((assetIdValue, index) => ({
       key: assetIdValue,
       level: index + 1,
-      title: assetsById.get(assetIdValue)?.title ?? 'Unknown',
+      title: assetsById.get(assetIdValue)?.title ?? t('mobile.InventoryMapPresentation.unknown'),
       assetId: assetIdValue
     }))
   ];

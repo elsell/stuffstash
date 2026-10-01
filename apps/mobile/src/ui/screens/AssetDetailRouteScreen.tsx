@@ -169,7 +169,7 @@ export function AssetDetailRouteScreen({
     if (completion.action === 'edit') {
       feedback.showNotice({
         tone: 'success',
-        title: `Saved "${asset.title}"`,
+        title: t('mobile.AssetDetailRouteScreen.saved', { title: String(asset.title) }),
         message: t('mobile.AssetDetailRouteScreen.theChangeIsNowInHistory'),
         ...(completion.undoableOperationId ? {
           action: {
@@ -361,7 +361,7 @@ export function AssetDetailRouteScreen({
     let confirmed = false;
     const confirmation = assetLifecycleConfirmation(action, asset);
     Alert.alert(confirmation.title, confirmation.message, [
-      { text: 'Cancel', style: 'cancel' },
+      { text: t('mobile.AssetDetailRouteScreen.cancel'), style: 'cancel' },
       {
         text: confirmation.confirmLabel,
         style: confirmation.isDestructive ? 'destructive' : 'default',
@@ -398,7 +398,7 @@ export function AssetDetailRouteScreen({
         if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
-          title: `${action === 'archive' ? 'Archive' : 'Restore'} succeeded`,
+          title: t('mobile.AssetDetailRouteScreen.succeeded', { value: String(action === 'archive' ? 'Archive' : 'Restore') }),
           message: t('mobile.AssetDetailRouteScreen.theLatestAssetStateCouldNotBeRefreshedYet')
         });
       }
@@ -407,7 +407,7 @@ export function AssetDetailRouteScreen({
       const failure = assetLifecycleFailurePresentation(
         action,
         asset,
-        readableError(error, 'Lifecycle action failed.')
+        readableError(error, t('mobile.AssetDetailRouteScreen.lifecycleActionFailed'))
       );
       feedback.showNotice({
         tone: 'error',
@@ -438,7 +438,7 @@ export function AssetDetailRouteScreen({
         if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
-          title: action === 'checkout' ? 'Checkout succeeded' : 'Return succeeded',
+          title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.checkoutSucceeded') : t('mobile.AssetDetailRouteScreen.returnSucceeded'),
           message: t('mobile.AssetDetailRouteScreen.theLatestAvailabilityCouldNotBeRefreshedYetPull')
         });
       }
@@ -446,7 +446,7 @@ export function AssetDetailRouteScreen({
       if (!scope.active || !canPresent()) return;
       feedback.showNotice({
         tone: 'error',
-        title: action === 'checkout' ? 'Could not checkout asset' : 'Could not return asset',
+        title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.couldNotCheckoutAsset') : t('mobile.AssetDetailRouteScreen.couldNotReturnAsset'),
         message: readableError(error, 'Checkout action failed.')
       });
     } finally {
@@ -475,7 +475,7 @@ export function AssetDetailRouteScreen({
         placeholder={t('mobile.AssetDetailRouteScreen.searchThisPlace')} onChange={changeContentsQuery} onSubmit={changeContentsQuery}
         onClear={() => changeContentsQuery('')} />
       <Stack.Screen options={{
-        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : 'Details',
+        title: screenState.status === 'ready' ? assetDetailNavigationTitle(screenState.asset) : t('mobile.AssetDetailRouteScreen.details'),
         ...headerOverflowOptions
       }} />
       {screenState.status === 'loading' ? <LoadingState /> : null}

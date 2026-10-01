@@ -26,7 +26,7 @@ export function NewAssetTagScreen({ tags, selectedIds, newTags, onDone, onCancel
     activeTags: tags.map(tag => ({ id: tag.id, key: tag.key ?? assetTagKeyFromDisplayName(tag.label) })), pendingTags: newTags });
   return <>
     <Stack.Screen options={{ title: t('mobile.NewAssetTagScreen.newTag') }} />
-    <NativeFilterSheet title={t('mobile.NewAssetTagScreen.newTag')} footerTestID="new-asset-tag-actions" actions={{ primaryLabel: 'Add tag', secondaryLabel: 'Cancel',
+    <NativeFilterSheet title={t('mobile.NewAssetTagScreen.newTag')} footerTestID="new-asset-tag-actions" actions={{ primaryLabel: t('mobile.NewAssetTagScreen.addTag'), secondaryLabel: t('mobile.NewAssetTagScreen.cancel'),
       secondaryAccessibilityLabel: 'Cancel new tag', disabled: !available || !canApplyInlineAssetTagResolution(resolution),
       onApply: () => {
         if (!available) return;

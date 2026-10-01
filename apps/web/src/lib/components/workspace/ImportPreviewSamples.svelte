@@ -64,7 +64,7 @@
       {
         id: 'fields',
         title: t('web.ImportPreviewSamples.fields'),
-        emptyText: 'No custom fields planned.',
+        emptyText: t('web.ImportPreviewSamples.noCustomFieldsPlanned'),
         truncated: preview.fieldsTruncated,
         columns: [
           { key: 'name', label: t('web.ImportPreviewSamples.field') },
@@ -83,7 +83,7 @@
       {
         id: 'tags',
         title: t('web.ImportPreviewSamples.tags'),
-        emptyText: 'No tags planned.',
+        emptyText: t('web.ImportPreviewSamples.noTagsPlanned'),
         truncated: Boolean(preview.tagsTruncated),
         columns: [
           { key: 'name', label: t('web.ImportPreviewSamples.tag') },
@@ -103,7 +103,7 @@
       {
         id: 'locations',
         title: t('web.ImportPreviewSamples.locations'),
-        emptyText: 'No locations planned.',
+        emptyText: t('web.ImportPreviewSamples.noLocationsPlanned'),
         truncated: preview.locationsTruncated,
         columns: [
           { key: 'name', label: t('web.ImportPreviewSamples.location') },
@@ -122,7 +122,7 @@
       {
         id: 'assets',
         title: t('web.ImportPreviewSamples.assets'),
-        emptyText: 'No asset records planned.',
+        emptyText: t('web.ImportPreviewSamples.noAssetRecordsPlanned'),
         truncated: preview.assetsTruncated,
         columns: [
           { key: 'name', label: t('web.ImportPreviewSamples.asset') },
@@ -141,7 +141,7 @@
       {
         id: 'attachments',
         title: t('web.ImportPreviewSamples.photosFiles'),
-        emptyText: 'No photos or files planned.',
+        emptyText: t('web.ImportPreviewSamples.noPhotosOrFilesPlanned'),
         truncated: preview.attachmentsTruncated,
         columns: [
           { key: 'name', label: t('web.ImportPreviewSamples.file') },

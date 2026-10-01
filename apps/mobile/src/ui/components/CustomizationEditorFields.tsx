@@ -23,8 +23,8 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
   return <>
     <View style={styles.formRow}>{props.mode === 'edit' ? <Text style={styles.label}>{t('mobile.CustomizationEditorFields.type')}</Text> : null}{props.mode === 'edit' ? <Text style={styles.lockedValue}>{capitalize(props.fieldType)}</Text> : <SingleChoicePicker disabled={disabled} label={t('mobile.CustomizationEditorFields.type')} onChange={props.onFieldType} options={types.map((value) => ({ label: capitalize(value), value }))} value={props.fieldType} />}</View>
     {props.fieldType === 'enum' ? <View style={styles.formRow}><Text style={styles.label}>{t('mobile.CustomizationEditorFields.options')}</Text>{props.enumOptions.map(option => props.persistedEnumOptions.includes(option) || !props.canMutate
-      ? <Text key={option} style={styles.lockedValue}>{props.persistedEnumOptions.includes(option) ? `${option} · Existing` : option}</Text>
-      : <NativeCommandButton key={option} label={`Remove ${option}`} disabled={disabled}
+      ? <Text key={option} style={styles.lockedValue}>{props.persistedEnumOptions.includes(option) ? t('mobile.CustomizationEditorFields.existing', { option: String(option) }) : option}</Text>
+      : <NativeCommandButton key={option} label={t('mobile.CustomizationEditorFields.remove', { option: String(option) })} disabled={disabled}
           onPress={() => { if (!disabled) props.onEnumOptions(props.enumOptions.filter(value => value !== option)); }} />)}{props.enumOptions.length === 0 ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{t('mobile.CustomizationEditorFields.addAtLeastOneOption')}</Text> : null}{props.canMutate ? <View style={styles.enumOptionInput}>
         <DraftTextField key={Platform.OS === 'ios' ? optionRevision : 'enum-option'} editable={!disabled} accessibilityLabel={t('mobile.CustomizationEditorFields.newEnumOption')} accessibilityHint={optionError || undefined} onChangeText={value => { setOptionError(''); props.onNewOption(value); }}
           placeholder={t('mobile.CustomizationEditorFields.addOption')} style={[styles.input, styles.enumDraftInput]} value={props.newOption} />
@@ -43,7 +43,7 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
       </View> : null}</View> : null}
     <View style={styles.formRow}>{canChooseApplicability
       ? <SingleChoicePicker disabled={disabled} label={t('mobile.CustomizationEditorFields.appliesTo')} onChange={props.onApplicability} options={[{ label: t('mobile.CustomizationEditorFields.allAssets'), value: 'all_assets' }, { label: t('mobile.CustomizationEditorFields.selectedAssetTypes'), value: 'custom_asset_types' }]} value={props.applicability} />
-      : <><Text style={styles.label}>{t('mobile.CustomizationEditorFields.appliesTo')}</Text><Text style={styles.lockedValue}>{props.applicability === 'all_assets' ? 'All assets' : 'Selected asset types'}</Text></>}
+      : <><Text style={styles.label}>{t('mobile.CustomizationEditorFields.appliesTo')}</Text><Text style={styles.lockedValue}>{props.applicability === 'all_assets' ? t('mobile.CustomizationEditorFields.allAssets') : t('mobile.CustomizationEditorFields.selectedAssetTypes')}</Text></>}
     </View>
     {props.applicability === 'custom_asset_types' ? <View style={styles.formRow}>
       <Text style={styles.label}>{t('mobile.CustomizationEditorFields.assetTypes')}</Text>
@@ -51,14 +51,14 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
         const persisted = props.persistedTargetIds.includes(type.id);
         const selected = props.targetIds.includes(type.id);
         const label = `${type.displayName}${type.scope === 'tenant' ? ' · Inherited' : ''}`;
-        if (persisted) return <Text key={type.id} style={styles.lockedValue}>{`${label} · Existing`}</Text>;
+        if (persisted) return <Text key={type.id} style={styles.lockedValue}>{t('mobile.CustomizationEditorFields.existing2', { label: String(label) })}</Text>;
         if (!props.canMutate) return selected ? <Text key={type.id} style={styles.lockedValue}>{label}</Text> : null;
         return <SettingsChoiceRow key={type.id} label={label} multiple selected={selected} disabled={disabled}
           onPress={() => {
             if (!disabled) props.onTargets(selected ? props.targetIds.filter(id => id !== type.id) : [...props.targetIds, type.id]);
           }} />;
       })}
-      {unavailableSavedCount > 0 ? <Text style={styles.lockedValue}>{`${unavailableSavedCount} existing asset ${unavailableSavedCount === 1 ? 'type is' : 'types are'} unavailable`}</Text> : null}
+      {unavailableSavedCount > 0 ? <Text style={styles.lockedValue}>{t('mobile.CustomizationEditorFields.existingAssetUnavailable', { unavailableSavedCount: String(unavailableSavedCount), value: String(unavailableSavedCount === 1 ? 'type is' : 'types are') })}</Text> : null}
       {unavailableDraftTargets.length > 0 ? <SettingsChoiceRow label={t('mobile.CustomizationEditorFields.unavailableSelections')} accessibilityLabel={t('mobile.CustomizationEditorFields.includeUnavailableDraftSelections')} multiple selected disabled={disabled}
         onPress={() => { if (!disabled) props.onTargets(props.targetIds.filter(id => !unavailableDraftTargets.includes(id))); }} /> : null}
       {props.targetIds.length === 0 && props.canMutate ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{t('mobile.CustomizationEditorFields.chooseAtLeastOneAssetType')}</Text> : null}
@@ -82,7 +82,7 @@ export function CustomizationNameInput({ editable, error, onChangeText, value }:
 }) {
   const styles = createStyles(useAppearancePalette());
   return <LabeledInputFrame label={t('mobile.CustomizationEditorFields.name')} required error={error}>
-    <DraftTextField accessibilityLabel={t('mobile.CustomizationEditorFields.name')} accessibilityHint={error ?? 'Required'}
+    <DraftTextField accessibilityLabel={t('mobile.CustomizationEditorFields.name')} accessibilityHint={error ?? t('mobile.CustomizationEditorFields.required')}
       editable={editable} onChangeText={onChangeText} value={value} style={[styles.input, !editable && styles.disabled]} />
   </LabeledInputFrame>;
 }
@@ -93,7 +93,7 @@ export function CustomizationLabeledInput({ editable, error, inputRef, label, mu
 }) {
   const styles = createStyles(useAppearancePalette());
   return <LabeledInputFrame label={label} required={required} error={error}>
-    <AppTextInput accessibilityHint={error ?? (required ? 'Required' : undefined)} accessibilityLabel={label}
+    <AppTextInput accessibilityHint={error ?? (required ? t('mobile.CustomizationEditorFields.required') : undefined)} accessibilityLabel={label}
       editable={editable} multiline={multiline} onChangeText={onChangeText} ref={inputRef}
       style={[styles.input, multiline && styles.multiline, !editable && styles.disabled]} value={value} />
   </LabeledInputFrame>;
@@ -102,7 +102,7 @@ export function CustomizationReadOnlyValue({ label, value }: { readonly label: s
 
 function SingleChoicePicker<Value extends string>({ disabled, label, onChange, options, value }: { readonly disabled: boolean; readonly label: string; readonly onChange: (value: Value) => void; readonly options: readonly { readonly label: string; readonly value: Value }[]; readonly value: Value }) {
   const selected = options.find(option => option.value === value)?.label ?? value;
-  return <NativeChoicePicker label={label} accessibilityLabel={`Choose ${label}. Current value ${selected}`}
+  return <NativeChoicePicker label={label} accessibilityLabel={t('mobile.CustomizationEditorFields.chooseCurrentValue', { label: String(label), selected: String(selected) })}
     value={value} options={options} disabled={disabled} includeEmptyOption={false}
     onChange={next => { const option = options.find(item => item.value === next); if (!disabled && option) onChange(option.value); }} />;
 }

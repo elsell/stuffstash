@@ -35,14 +35,14 @@ export function androidSpectrumAccessibility(value: SpectrumValue, disabled: boo
       accessibilityLabel: t('mobile.FullSpectrumTagColorPickerPresentation.saturationAndBrightness'),
       accessibilityRole: 'adjustable' as const,
       accessibilityState: { disabled },
-      accessibilityValue: { text: `${Math.round(value.saturation * 100)} percent saturation, ${Math.round(value.brightness * 100)} percent brightness` }
+      accessibilityValue: { text: t('mobile.FullSpectrumTagColorPickerPresentation.percentSaturationPercentBrightness', { value: String(Math.round(value.saturation * 100)), value2: String(Math.round(value.brightness * 100)) }) }
     },
     hue: {
       accessibilityActions: [{ name: 'increment', label: t('mobile.FullSpectrumTagColorPickerPresentation.increaseHue') }, { name: 'decrement', label: t('mobile.FullSpectrumTagColorPickerPresentation.decreaseHue') }],
       accessibilityLabel: t('mobile.FullSpectrumTagColorPickerPresentation.hue'),
       accessibilityRole: 'adjustable' as const,
       accessibilityState: { disabled },
-      accessibilityValue: { min: 0, max: 360, now: Math.round(value.hue), text: `${Math.round(value.hue)} degrees` }
+      accessibilityValue: { min: 0, max: 360, now: Math.round(value.hue), text: t('mobile.FullSpectrumTagColorPickerPresentation.degrees', { value: String(Math.round(value.hue)) }) }
     }
   };
 }

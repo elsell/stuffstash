@@ -66,7 +66,7 @@ function VoiceResultCard({ reference, onOpen }: { readonly reference: VoiceRespo
   const { assetDetailQuery } = useAppServices();
   const colors = useAppearancePalette();
   const detail = useMobileInventoryServerQuery({ key: (scope, tenant, inventory) => ['voice-card', scope, tenant, inventory, reference.assetId], query: signal => assetDetailQuery.execute(reference.assetId, { signal }) });
-  if (!detail.data) return <View style={[styles.placeholder, { backgroundColor: colors.surfaceMuted }]}><Text style={{ color: colors.textMuted }}>{detail.isError ? 'Asset unavailable' : 'Loading asset…'}</Text></View>;
+  if (!detail.data) return <View style={[styles.placeholder, { backgroundColor: colors.surfaceMuted }]}><Text style={{ color: colors.textMuted }}>{detail.isError ? t('mobile.VoiceConversationExchange.assetUnavailable') : t('mobile.VoiceConversationExchange.loadingAsset')}</Text></View>;
   return <AssetCard asset={detail.data} density="row" style={{ backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: spacing.sm, alignItems: 'flex-start' }} showTags={false} onPress={() => onOpen(reference)} onParentLocationPress={parent => onOpen({ type: 'asset_reference', assetId: parent.id, title: parent.title, assetKind: 'location' })} />;
 }
 const styles = StyleSheet.create({

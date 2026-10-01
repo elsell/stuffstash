@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   import type { AccessInvitationRouteAction } from '$lib/application/workspaceRoute';
   import type { InventoryAccessInvitation } from '$lib/domain/inventory';
 
@@ -96,7 +97,7 @@
   {/snippet}
   {#snippet cancel()}
     <Button.Root href={accessHref} variant="outline" class="min-h-11" disabled={busy} onclick={handleClose} autofocus>
-      {available ? 'Cancel' : 'Back to invitations'}
+      {available ? t('web.InventoryAccessInvitationActionPanel.cancel') : t('web.InventoryAccessInvitationActionPanel.backToInvitations')}
     </Button.Root>
   {/snippet}
   {#snippet action()}

@@ -27,9 +27,9 @@ export function VoicePlanLocationScreen({ current, proposed, matches, query, loa
       </SettingsSection>
       {proposed.length ? <SettingsSection title={t('mobile.VoicePlanLocationScreen.createdByThisPlan')}>{proposed.map(parent =>
         <SettingsChoiceRow key={parent.kind === 'root' ? 'root' : parent.id} label={parent.label}
-          accessibilityLabel={`Select proposed ${parent.label}`} selected={selected(parent)} onPress={() => onSelect(parent)} />
+          accessibilityLabel={t('mobile.VoicePlanLocationScreen.selectProposed', { label: String(parent.label) })} selected={selected(parent)} onPress={() => onSelect(parent)} />
       )}</SettingsSection> : null}
-      <SettingsSection title={t('mobile.VoicePlanLocationScreen.existingLocations')} footer={!loading && !error && !matches.length ? 'No matching locations' : undefined}>
+      <SettingsSection title={t('mobile.VoicePlanLocationScreen.existingLocations')} footer={!loading && !error && !matches.length ? t('mobile.VoicePlanLocationScreen.noMatchingLocations') : undefined}>
         {loading ? <SettingsLoadingRow label={t('mobile.VoicePlanLocationScreen.loadingLocations')} /> : null}
         {error ? <><Text accessibilityRole="alert" style={styles.errorMessage}>{t('mobile.VoicePlanLocationScreen.couldNotLoadLocations')}</Text>
           <NativeCommandButton label={t('mobile.VoicePlanLocationScreen.retryLocations')} onPress={onRetry} /></> : null}
@@ -37,7 +37,7 @@ export function VoicePlanLocationScreen({ current, proposed, matches, query, loa
           const parent: VoicePlanParentDraft = { kind: 'asset', id: match.id, label: match.pathLabel };
           const detail = match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel);
           return <SettingsChoiceRow key={match.id} label={match.title} context={detail}
-            accessibilityLabel={`Select ${match.title}, ${detail}`} selected={selected(parent)}
+            accessibilityLabel={t('mobile.VoicePlanLocationScreen.select', { title: String(match.title), detail: String(detail) })} selected={selected(parent)}
             disabled={match.canSelectAsParent === false} onPress={() => { if (match.canSelectAsParent !== false) onSelect(parent); }} />;
         })}
       </SettingsSection>

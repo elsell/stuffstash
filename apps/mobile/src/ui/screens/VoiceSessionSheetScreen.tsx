@@ -288,7 +288,7 @@ function VoiceSessionSheet({
               <View style={styles.actionPlanSection}>
                 <View style={styles.actionPlanHeader}>
                   <View style={styles.actionPlanHeaderText}>
-                    <Text style={styles.sectionLabel}>{actionPlan.status === 'executed' ? 'Saved' : actionPlan.status === 'approved' ? 'Saving changes' : 'Review change'}</Text>
+                    <Text style={styles.sectionLabel}>{actionPlan.status === 'executed' ? t('mobile.VoiceSessionSheetScreen.saved') : actionPlan.status === 'approved' ? t('mobile.VoiceSessionSheetScreen.savingChanges') : t('mobile.VoiceSessionSheetScreen.reviewChange')}</Text>
                     <VoiceResponseEntityText enabled onOpen={onOpenResponseArtifact} references={references} text={actionPlan.confirmationSummary} />
                   </View>
                   <View style={styles.actionPlanCountPill}>
@@ -402,7 +402,7 @@ function VoiceSessionSheet({
             {diagnosticsEnabled && state.realtime?.debugEvents.length ? (
               <View style={styles.diagnosticsSection}>
                 <Pressable
-                  accessibilityLabel={diagnosticsExpanded ? 'Hide voice diagnostics' : 'Show voice diagnostics'}
+                  accessibilityLabel={diagnosticsExpanded ? t('mobile.VoiceSessionSheetScreen.hideVoiceDiagnostics') : t('mobile.VoiceSessionSheetScreen.showVoiceDiagnostics')}
                   accessibilityRole="button"
                   accessibilityState={{ expanded: diagnosticsExpanded }}
                   onPress={onToggleDiagnostics}
@@ -480,7 +480,7 @@ function EditablePlanCommandFields({
     <View style={styles.editablePlanFields}>
       <Pressable
         accessibilityHint={t('mobile.VoiceSessionSheetScreen.editsTheNameInline')}
-        accessibilityLabel={`Edit proposed name ${title}`}
+        accessibilityLabel={t('mobile.VoiceSessionSheetScreen.editProposedName', { title: String(title) })}
         accessibilityRole="button"
         onPress={() => {
           setValue(title);
@@ -493,7 +493,7 @@ function EditablePlanCommandFields({
       </Pressable>
       <Pressable
         accessibilityHint={t('mobile.VoiceSessionSheetScreen.opensTheContainingLocationSelector')}
-        accessibilityLabel={`Change containing location, currently ${placement}`}
+        accessibilityLabel={t('mobile.VoiceSessionSheetScreen.changeContainingLocationCurrently', { placement: String(placement) })}
         accessibilityRole="button"
         onPress={onOpenParent}
         style={styles.editablePlacementButton}

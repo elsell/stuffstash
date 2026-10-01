@@ -355,7 +355,7 @@
                   <strong>{job.source.name}</strong>
                   <Badge variant={statusVariant(job)}>{statusLabel(job)}</Badge>
                 </div>
-                <span>{job.status === 'cancel_requested' ? statusSentence(job) : actorSummary(job, currentPrincipal) || 'Background job'}</span>
+                <span>{job.status === 'cancel_requested' ? statusSentence(job) : actorSummary(job, currentPrincipal) || t('web.ImportJobHistory.backgroundJob')}</span>
                 <div class="progress-header">
                   <span>{phaseLabel(job)}</span>
                   <strong>{progressSummary(job)}</strong>
@@ -529,7 +529,7 @@
                 aria-label={jobActionLabel(jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details for' : 'View details for', job)}
               >
                 <Eye size={16} aria-hidden="true" />
-                {jobRequiresAction(job) || jobHasReviewWarnings(job) ? 'Review Details' : 'Details'}
+                {jobRequiresAction(job) || jobHasReviewWarnings(job) ? t('web.ImportJobHistory.reviewDetails') : t('web.ImportJobHistory.details')}
               </Button.Root>
               {#if canRemoveJobFromHistory(job)}
                 <Button.Root variant="ghost" size="icon" onclick={() => onRequestRemove(job)} aria-label={jobActionLabel('Remove from history', job)}>
@@ -544,7 +544,7 @@
       {#if filteredTerminalJobs.length === 0}
         <div class="quiet-row">
           <CheckCircle2 size={16} aria-hidden="true" />
-          {historyFilter === 'all' && attentionJobs.length > 0 ? 'No other import runs to show.' : 'No imports match this filter.'}
+          {historyFilter === 'all' && attentionJobs.length > 0 ? t('web.ImportJobHistory.noOtherImportRunsToShow') : t('web.ImportJobHistory.noImportsMatchThisFilter')}
         </div>
       {/if}
     </div>

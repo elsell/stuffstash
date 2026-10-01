@@ -21,7 +21,7 @@ export function BrowsePlaceRow({ location, palette, onPress }: BrowsePlaceRowPro
 
   return (
     <Pressable
-      accessibilityLabel={`Open place ${location.title}, ${location.containedAssetCountLabel}`}
+      accessibilityLabel={t('mobile.BrowsePlaceRow.openPlace', { title: String(location.title), containedAssetCountLabel: String(location.containedAssetCountLabel) })}
       accessibilityHint={accessibilityHint || undefined}
       accessibilityRole="button"
       onPress={onPress}

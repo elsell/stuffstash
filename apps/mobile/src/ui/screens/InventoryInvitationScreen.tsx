@@ -217,7 +217,7 @@ function terminalState(preview: InventoryInvitationPreview): ScreenState {
     return { status: 'error', title: t('mobile.InventoryInvitationScreen.invitationExpired'), message: t('mobile.InventoryInvitationScreen.askTheSenderForANewInvitation'), retryable: false };
   }
   const label = preview.status === 'revoked' ? 'revoked' : 'cancelled';
-  return { status: 'error', title: `Invitation ${label}`, message: t('mobile.InventoryInvitationScreen.thisInvitationCanNoLongerBeAccepted'), retryable: false };
+  return { status: 'error', title: t('mobile.InventoryInvitationScreen.invitation', { label: String(label) }), message: t('mobile.InventoryInvitationScreen.thisInvitationCanNoLongerBeAccepted'), retryable: false };
 }
 
 function errorState(error: unknown): ScreenState {

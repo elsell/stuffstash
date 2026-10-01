@@ -42,7 +42,7 @@ export function voiceAdminGuardPresentation(
   if (decision.status === 'unavailable') {
     return {
       title: t('mobile.VoiceAdminGuard.voiceSettingsUnavailable'),
-      message: `Only tenant administrators can configure Voice for ${decision.tenantName}.`,
+      message: t('mobile.VoiceAdminGuard.onlyTenantAdministratorsCanConfigureVoiceFor', { tenantName: String(decision.tenantName) }),
       retryLabel: 'Check Again'
     };
   }

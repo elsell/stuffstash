@@ -94,14 +94,14 @@ export function assetLifecycleConfirmation(
   switch (action) {
     case 'archive':
       return {
-        title: `Archive ${asset.title}?`,
-        message: `${asset.title} will be hidden from normal inventory work. You can restore it later from archived asset views.`,
+        title: t('mobile.AssetLifecyclePresentation.archive2', { title: String(asset.title) }),
+        message: t('mobile.AssetLifecyclePresentation.willBeHiddenFromNormalInventoryWorkYouCan', { title: String(asset.title) }),
         confirmLabel: t('mobile.AssetLifecyclePresentation.archive'),
         isDestructive: false
       };
     case 'delete':
       return {
-        title: `Delete ${asset.title} permanently?`,
+        title: t('mobile.AssetLifecyclePresentation.deletePermanently2', { title: String(asset.title) }),
         message: permanentDeleteMessage(asset),
         confirmLabel: t('mobile.AssetLifecyclePresentation.deletePermanently'),
         isDestructive: true
@@ -165,23 +165,23 @@ export function assetLifecycleFailurePresentation(
   switch (action) {
     case 'archive':
       return {
-        title: `Could not archive ${asset.title}`,
+        title: t('mobile.AssetLifecyclePresentation.couldNotArchive', { title: String(asset.title) }),
         message: validationKind === 'active_children' && asset.canContainAssets
-          ? `${cause} Move or archive active things inside this asset, then try again.`
+          ? t('mobile.AssetLifecyclePresentation.moveOrArchiveActiveThingsInsideThisAssetThen', { cause: String(cause) })
           : cause
       };
     case 'restore':
       return {
-        title: `Could not restore ${asset.title}`,
+        title: t('mobile.AssetLifecyclePresentation.couldNotRestore', { title: String(asset.title) }),
         message: validationKind === 'archived_parent'
-          ? `${cause} Check that its parent is active, then try again.`
+          ? t('mobile.AssetLifecyclePresentation.checkThatItsParentIsActiveThenTryAgain', { cause: String(cause) })
           : cause
       };
     case 'delete':
       return {
-        title: `Could not permanently delete ${asset.title}`,
+        title: t('mobile.AssetLifecyclePresentation.couldNotPermanentlyDelete', { title: String(asset.title) }),
         message: validationKind === 'active_children' && asset.canContainAssets
-          ? `${cause} Permanent delete will not continue while active things are inside it.`
+          ? t('mobile.AssetLifecyclePresentation.permanentDeleteWillNotContinueWhileActiveThingsAre', { cause: String(cause) })
           : cause
       };
   }

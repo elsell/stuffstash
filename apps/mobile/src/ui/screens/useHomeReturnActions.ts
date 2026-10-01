@@ -85,7 +85,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       updateEditor(undefined);
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      updateEditor({ ...draft, isSaving: false, error: { title: undo ? 'Could not cancel return' : 'Could not save return details', message: error instanceof Error ? error.message : undo ? 'The asset is still returned.' : 'Return details were not saved.' } });
+      updateEditor({ ...draft, isSaving: false, error: { title: undo ? t('mobile.useHomeReturnActions.couldNotCancelReturn') : t('mobile.useHomeReturnActions.couldNotSaveReturnDetails'), message: error instanceof Error ? error.message : undo ? t('mobile.useHomeReturnActions.theAssetIsStillReturned') : t('mobile.useHomeReturnActions.returnDetailsWereNotSaved') } });
     } finally { operationPending.current = false; }
   }
   return {

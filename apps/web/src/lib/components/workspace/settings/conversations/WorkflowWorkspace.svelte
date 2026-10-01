@@ -71,7 +71,7 @@
     <header><h1 id="conversation-workflows-title">{t('web.WorkflowWorkspace.conversations')}</h1><p>{t('web.WorkflowWorkspace.tuneHowYourConfiguredModelsWorkWithYourInventory')}</p></header>
     {#if selection.isError}<p role="alert">{t('web.WorkflowWorkspace.couldNotLoadTheActiveWorkflow')} <Button.Root variant="outline" onclick={() => selection.refetch()}>{t('web.WorkflowWorkspace.retryActiveWorkflow')}</Button.Root></p>
     {:else if selection.isPending}<p role="status">{t('web.WorkflowWorkspace.loadingActiveWorkflow')}</p>
-    {:else}<p>{selection.data ? `Active workflow: ${heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow'}` : 'Using the default conversation workflow.'}</p>{/if}
+    {:else}<p>{selection.data ? t('web.WorkflowWorkspace.activeWorkflow', { value: String(heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow') }) : t('web.WorkflowWorkspace.usingTheDefaultConversationWorkflow')}</p>{/if}
     {#if editor}
       {#if editor.revision?.settingsMigration}<p role="status">{t('web.WorkflowWorkspace.thisRevisionWasConvertedFromThePreviousWorkflowFormat')}</p>{/if}
       <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>{t('web.WorkflowWorkspace.closeEditorAndDiscardUnsavedEdits')}</Button.Root>
@@ -83,10 +83,10 @@
       {/if}
       {#if comparison}
         <aside aria-label={t('web.WorkflowWorkspace.latestRevisionComparison')}><h3>{t('web.WorkflowWorkspace.latestSavedRevisionFull', { number: comparison.number })}</h3><p>{comparison.definition.name}</p>
-          <dl><dt>{t('web.WorkflowWorkspace.model')}</dt><dd>{models.data?.find(model => model.id === comparison?.definition.providerProfileId)?.name ?? (comparison.definition.providerProfileId ? 'Saved model profile' : 'Tenant default model')}</dd>
+          <dl><dt>{t('web.WorkflowWorkspace.model')}</dt><dd>{models.data?.find(model => model.id === comparison?.definition.providerProfileId)?.name ?? (comparison.definition.providerProfileId ? t('web.WorkflowWorkspace.savedModelProfile') : t('web.WorkflowWorkspace.tenantDefaultModel'))}</dd>
             <dt>{t('web.WorkflowWorkspace.perTurnLimits')}</dt><dd>{t('web.WorkflowWorkspace.toolCallsModelCallsSecondsFull', { toolCalls: comparison.definition.budget.toolCalls, modelCalls: comparison.definition.budget.modelCalls, elapsedSeconds: comparison.definition.budget.elapsedSeconds })}</dd>
             <dt>{t('web.WorkflowWorkspace.followUps')}</dt><dd>{comparison.definition.budget.followUpTurns}</dd></dl>
-          <p class="instructions">{comparison.definition.instructions || 'No additional instructions'}</p>
+          <p class="instructions">{comparison.definition.instructions || t('web.WorkflowWorkspace.noAdditionalInstructions')}</p>
           <Button.Root variant="outline" disabled={busy} onclick={() => { if (!busy && comparison) { editor = { key: comparison.id, revision: comparison, definition: comparison.definition }; comparison = null; } }}>{t('web.WorkflowWorkspace.replaceMyEditsWithThisRevision')}</Button.Root>
         </aside>
       {/if}

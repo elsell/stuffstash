@@ -109,7 +109,7 @@ export function AssetHistoryDetailRouteScreen({
     requestHistoryRevertConfirmation(
       entry,
       (confirmation, confirm) => Alert.alert(confirmation.title, confirmation.message, [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('mobile.AssetHistoryDetailRouteScreen.cancel'), style: 'cancel' },
         { text: confirmation.confirmLabel, onPress: confirm }
       ]),
       () => { if (ownsSnapshot()) void revertChange(session); }
@@ -125,7 +125,7 @@ export function AssetHistoryDetailRouteScreen({
       { tenantId, inventoryId, operationId: entry.undo.operationId },
       {
         invalidateActivity: () => { void queryClient.invalidateQueries({ queryKey, exact: true, refetchType: 'none' }); },
-        showSuccess: () => { if (operationScope.active && session.active) feedback.showNotice({ tone: 'success', title: t('mobile.AssetHistoryDetailRouteScreen.changeReverted'), message: `“${assetTitle}” was updated. The reversal is now in History.` }); },
+        showSuccess: () => { if (operationScope.active && session.active) feedback.showNotice({ tone: 'success', title: t('mobile.AssetHistoryDetailRouteScreen.changeReverted'), message: t('mobile.AssetHistoryDetailRouteScreen.wasUpdatedTheReversalIsNowInHistory', { assetTitle: String(assetTitle) }) }); },
         navigateBack: () => { if (operationScope.active && session.active) router.back(); }
       }
     );
@@ -152,7 +152,7 @@ export function AssetHistoryDetailRouteScreen({
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.title}>{detailTitle(entry.action)}</Text>
         <Text style={styles.timestamp}>{formatHistoryTimestamp(entry.occurredAt, 'exact')}</Text>
-        <Text style={styles.muted}>{entry.principal?.email?.trim() || 'Someone with access'} · {sourceLabel(entry.source)}</Text>
+        <Text style={styles.muted}>{entry.principal?.email?.trim() || t('mobile.AssetHistoryDetailRouteScreen.someoneWithAccess')} · {sourceLabel(entry.source)}</Text>
       </View>
 
       {entry.changes.length > 0 ? (
@@ -163,9 +163,9 @@ export function AssetHistoryDetailRouteScreen({
               <Text accessibilityRole="header" style={styles.changeField}>{activityFieldLabel(change.field)}</Text>
               {change.previousValue?.trim() || change.currentValue?.trim() ? <>
                 <Text style={styles.label}>{t('mobile.AssetHistoryDetailRouteScreen.before')}</Text>
-                <Text style={styles.value}>{change.previousValue?.trim() || 'None'}</Text>
+                <Text style={styles.value}>{change.previousValue?.trim() || t('mobile.AssetHistoryDetailRouteScreen.none')}</Text>
                 <Text style={styles.label}>{t('mobile.AssetHistoryDetailRouteScreen.after')}</Text>
-                <Text style={styles.value}>{change.currentValue?.trim() || 'None'}</Text>
+                <Text style={styles.value}>{change.currentValue?.trim() || t('mobile.AssetHistoryDetailRouteScreen.none')}</Text>
               </> : <Text style={styles.value}>{t('mobile.AssetHistoryDetailRouteScreen.changed')}</Text>}
             </View>
           ))}
@@ -173,7 +173,7 @@ export function AssetHistoryDetailRouteScreen({
       ) : null}
 
       {entry.undo?.status === 'available' && revertOutcome === 'available' && !detail.isRefetchError ? (
-        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : 'Revert change'} />
+        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : t('mobile.AssetHistoryDetailRouteScreen.revertChange')} />
       ) : null}
       {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeCanNoLongerBeSafelyReverted')}</Text> : null}
       {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeHasBeenReverted')}</Text> : null}

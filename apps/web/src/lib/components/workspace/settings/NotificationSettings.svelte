@@ -82,14 +82,14 @@
           <Label for={timezoneId}>{t('web.NotificationSettings.timezone')}</Label>
           <Input id={timezoneId} list={`${timezoneId}-choices`} placeholder={t('web.NotificationSettings.searchCityOrTimeZone')} value={timezone} oninput={(event) => { timezone = event.currentTarget.value; timezoneSaved = false; timezoneDirty = true; }} aria-invalid={!validTimezone} aria-describedby={`${timezoneId}-help`} />
           <datalist id={`${timezoneId}-choices`}>{#each availableZones as zone}<option value={zone}>{zone.replaceAll('_', ' ').split('/').reverse().join(' · ')}</option>{/each}</datalist>
-          <p id={`${timezoneId}-help`}>{validTimezone ? `Saved timezone: ${preferences.timezone}. Dates end at midnight in this timezone.` : 'Enter a timezone such as America/New_York or Europe/London.'}</p>
+          <p id={`${timezoneId}-help`}>{validTimezone ? t('web.NotificationSettings.savedTimezoneDatesEndAtMidnightInThisTimezone', { timezone: String(preferences.timezone) }) : t('web.NotificationSettings.enterATimezoneSuchAsAmericaNewYorkOr')}</p>
           <Button.Root type="submit" disabled={!validTimezone}>{t('web.NotificationSettings.saveTimezone')}</Button.Root>
           {#if timezoneSaved}<p role="status">{t('web.NotificationSettings.timezoneSaved')}</p>{/if}
         </form>
       </details>
       <section aria-label={t('web.NotificationSettings.assetTypeReminders')}><h2>{t('web.NotificationSettings.assetTypeReminders')}</h2>
         {#each types as type (type.id)}
-          <details><summary>{type.displayName} · {preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings.enabled === false ? 'Off' : preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? 'Custom' : 'Uses defaults'}</summary>
+          <details><summary>{type.displayName} · {preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings.enabled === false ? t('web.NotificationSettings.off') : preferences.overrides.some((value) => value.customAssetTypeId === type.id) ? t('web.NotificationSettings.custom') : t('web.NotificationSettings.usesDefaults')}</summary>
             <ExpirationReminderEditor initialPolicy={preferences.overrides.find((value) => value.customAssetTypeId === type.id)?.settings ?? null} inheritedPolicy={preferences.defaults} onSave={(policy) => save(() => session.saveTypeOverride(type.id, policy))} />
           </details>
         {:else}<p>{t('web.NotificationSettings.enableExpirationTrackingOnAnAssetTypeToCustomize')}</p>{/each}

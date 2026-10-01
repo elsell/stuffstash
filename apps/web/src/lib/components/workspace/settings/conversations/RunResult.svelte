@@ -16,12 +16,12 @@
   const title = (id: string) => fixture.data?.definition.assets.find(asset => asset.id === id)?.title ?? 'Unknown fixture';
 </script>
 <p>{t('web.RunResult.modelCallsSecondsFull', { value: result.verdict.passed ? 'Passed' : 'Failed', modelCalls: result.modelCalls, value3: (result.durationMilliseconds / 1000).toFixed(1) })}</p>
-<Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? 'Hide result' : 'Compare expected and observed'}</Button.Root>
+<Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? t('web.RunResult.hideResult') : t('web.RunResult.compareExpectedAndObserved')}</Button.Root>
 {#if expanded}
   {#if fixture.isPending}<p role="status">{t('web.RunResult.loadingExpectedResult')}</p>{:else if fixture.isError}<p role="alert">{t('web.RunResult.couldNotLoadTheSavedExpectations')} <Button.Root onclick={() => fixture.refetch()}>{t('web.RunResult.retryExpectations')}</Button.Root></p>
   {:else if fixture.data}<div class="result-comparison"><section><h5>{t('web.RunResult.expected')}</h5><CaseSummary value={fixture.data.definition} /></section>
     <section><h5>{t('web.RunResult.observed')}</h5><p>{t('web.RunResult.outcomeFull', { kind: result.observation.kind })}</p>
-      <p>{t('web.RunResult.referencedItems')} {result.observation.referencedAssets.map(title).join(', ') || 'None'}</p>
+      <p>{t('web.RunResult.referencedItems')} {result.observation.referencedAssets.map(title).join(', ') || t('web.RunResult.none')}</p>
       <ul>{#each result.observation.locations as location}<li>{t('web.RunResult.insideFull', { value: title(location.assetId), value2: title(location.ancestorId) })}</li>{/each}</ul>
       <ul>{#each result.observation.proposals as proposal}<li>{proposal.operation}{#if proposal.newKind} ({proposal.newKind}){/if}: {proposal.newTitle || title(proposal.targetId)}{#if proposal.destinationId} → {title(proposal.destinationId)}{/if}{#if proposal.details} · {proposal.details}{/if}</li>{/each}</ul>
       <p>{t('web.RunResult.executedOperationsFull', { value: result.observation.executedOperations.join(', ') || 'None' })}</p>

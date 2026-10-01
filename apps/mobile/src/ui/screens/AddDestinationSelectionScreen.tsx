@@ -50,16 +50,16 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
     const latest = current.current;
     if (focused.current && latest && !latest.disabled) latest.onQuery(query);
   }, []);
-  const creation = useFocusedSheetActions({ primaryLabel: 'Create place', secondaryLabel: 'Cancel new place', disabled: props.disabled || props.loading || props.failed || !creationOpen || !props.canCreate,
+  const creation = useFocusedSheetActions({ primaryLabel: t('mobile.AddDestinationSelectionScreen.createPlace'), secondaryLabel: t('mobile.AddDestinationSelectionScreen.cancelNewPlace'), disabled: props.disabled || props.loading || props.failed || !creationOpen || !props.canCreate,
     secondaryDisabled: props.disabled, onApply: props.onCreate, onBack: () => setCreationOpen(false) });
-  const openCreation = useFocusedSheetActions({ primaryLabel: 'New place', secondaryLabel: 'Retry suggestions', disabled: props.disabled || props.loading || props.failed,
+  const openCreation = useFocusedSheetActions({ primaryLabel: t('mobile.AddDestinationSelectionScreen.newPlace'), secondaryLabel: t('mobile.AddDestinationSelectionScreen.retrySuggestions'), disabled: props.disabled || props.loading || props.failed,
     secondaryDisabled: props.disabled, onApply: () => setCreationOpen(true), onBack: props.onRetry });
-  const close = useNativeHeaderActionOptions([{ kind: 'close', label: creationOpen ? 'Cancel new place' : 'Cancel location selection',
+  const close = useNativeHeaderActionOptions([{ kind: 'close', label: creationOpen ? t('mobile.AddDestinationSelectionScreen.cancelNewPlace') : t('mobile.AddDestinationSelectionScreen.cancelLocationSelection'),
     disabled: props.disabled, onPress: creationOpen ? creation.onBack : props.onClose }], 'left');
   const command = useNativeHeaderActionOptions(creationOpen
     ? [{ kind: 'save', label: t('mobile.AddDestinationSelectionScreen.createPlace'), disabled: creation.disabled, onPress: creation.onApply }]
     : [{ kind: 'add', label: t('mobile.AddDestinationSelectionScreen.newPlace'), disabled: openCreation.disabled, onPress: openCreation.onApply }]);
-  const headerOptions = useMemo(() => ({ title: creationOpen ? 'New place' : 'Put in', headerBackVisible: false,
+  const headerOptions = useMemo(() => ({ title: creationOpen ? t('mobile.AddDestinationSelectionScreen.newPlace') : t('mobile.AddDestinationSelectionScreen.putIn'), headerBackVisible: false,
     gestureEnabled: !props.disabled, ...close, ...command }), [creationOpen, props.disabled, close, command]);
   const search = { query: props.query, placeholder: t('mobile.AddDestinationSelectionScreen.searchParent'), onChange: changeQuery, onSubmit: changeQuery, onClear: () => changeQuery('') };
   const lookupStatus = <>
@@ -83,14 +83,14 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
           {props.creating ? <SettingsSection><SettingsLoadingRow label={t('mobile.AddDestinationSelectionScreen.creatingPlace')} /></SettingsSection> : null}
         </> : <>
         <SettingsSection footer="Choosing a destination changes this draft only.">
-          <View style={styles.navigationRow}><Text style={styles.rowContext}>{`Current: ${props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory'}`}</Text></View>
+          <View style={styles.navigationRow}><Text style={styles.rowContext}>{t('mobile.AddDestinationSelectionScreen.current', { value: String(props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory') })}</Text></View>
           <SettingsChoiceRow label={t('mobile.AddDestinationSelectionScreen.topLevel')} accessibilityLabel={t('mobile.AddDestinationSelectionScreen.chooseInventoryTopLevel')} selected={!props.selected && !props.unresolvedSelection} disabled={props.disabled} onPress={() => select()} />
         </SettingsSection>
         {props.error ? <SettingsSection><View style={styles.navigationRow}><Text accessibilityRole="alert" style={styles.rowContext}>{props.error}</Text></View></SettingsSection> : null}
         {lookupStatus}
-        <SettingsSection footer={!props.loading && !props.failed && !props.matches.length ? 'No matching destinations' : undefined}>
+        <SettingsSection footer={!props.loading && !props.failed && !props.matches.length ? t('mobile.AddDestinationSelectionScreen.noMatchingDestinations') : undefined}>
           {props.matches.map(parent => <SettingsChoiceRow key={parent.id} label={parent.title} context={parent.disabledReason ?? `${parent.selectionHint} · ${parent.pathLabel || parent.subtitle}`}
-            accessibilityLabel={`Choose destination ${parent.title}`} selected={props.selected?.id === parent.id} disabled={props.disabled || parent.canSelectAsParent === false} onPress={() => select(parent.id)} />)}
+            accessibilityLabel={t('mobile.AddDestinationSelectionScreen.chooseDestination', { title: String(parent.title) })} selected={props.selected?.id === parent.id} disabled={props.disabled || parent.canSelectAsParent === false} onPress={() => select(parent.id)} />)}
         </SettingsSection>
         </>}
       </ScrollView>;

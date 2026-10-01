@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/presentation/localization';
   import type { Component } from 'svelte';
   import * as Button from '$lib/components/ui/button/index.js';
 
@@ -42,7 +43,7 @@
     {/if}
   </span>
   <span class="binary-option-state" aria-hidden="true">
-    <span class="binary-option-status">{checked ? 'On' : 'Off'}</span>
+    <span class="binary-option-status">{checked ? t('web.BinaryOption.on') : t('web.BinaryOption.off')}</span>
     <span class="binary-option-track"><span></span></span>
   </span>
 </Button.Root>

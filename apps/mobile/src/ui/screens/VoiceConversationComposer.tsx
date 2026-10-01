@@ -25,7 +25,7 @@ export function VoiceConversationComposer({ onMic }: { readonly onMic: () => voi
       ? <NativeConversationButton kind="cancel" label={t('mobile.VoiceConversationComposer.cancelRequest')} onPress={() => { void cancelRealtime(); }} />
       : !cardOwnsProgress ? <View style={styles.progress}><ActivityIndicator accessibilityLabel={t('mobile.VoiceConversationComposer.workingOnYourRequest')} color={colors.action} /></View> : null
       : <NativeConversationButton kind={composerText.trim() || listening ? 'send' : 'record'}
-        label={composerText.trim() && !listening ? 'Send message' : listening ? 'Finish recording and send' : 'Start recording'}
+        label={composerText.trim() && !listening ? t('mobile.VoiceConversationComposer.sendMessage') : listening ? t('mobile.VoiceConversationComposer.finishRecordingAndSend') : t('mobile.VoiceConversationComposer.startRecording')}
         onPress={() => { if (composerText.trim() && !listening) void sendText(); else onMic(); }} />}
 
   </View>;

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetDetailViewModel } from '../../application/assets/AssetViewModels';
 import type { CreateAssetTagDraft } from '../../application/assets/AssetTagDraftResolution';
 
@@ -112,6 +113,6 @@ export function assetEditContext(
   return {
     kindLabel: asset.kindLabel,
     customTypeLabel: asset.customTypeLabel,
-    helperText: asset.customTypeLabel ? 'Kind and type are fixed after creation.' : 'Kind is fixed. You can assign a custom type below.'
+    helperText: asset.customTypeLabel ? t('mobile.AssetDetailEditPresentation.kindAndTypeAreFixedAfterCreation') : t('mobile.AssetDetailEditPresentation.kindIsFixedYouCanAssignACustomType')
   };
 }

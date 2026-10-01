@@ -22,7 +22,7 @@ export function AssetDetailActions({ asset, isActionPending, isPhotosLoading = f
   const actions: readonly { label: string; handler?: () => void; pending?: boolean }[] = [
     ...(showEditAction && asset.canEdit ? [{ label: t('mobile.AssetDetailActions.edit'), handler: onEdit }] : []),
     ...(showEditAction && asset.canAddPhotos ? [{ label: t('mobile.AssetDetailActions.addPhotos'), handler: onAddPhotos, pending: isPhotosLoading }] : []),
-    ...(showEditAction && asset.canMove ? [{ label: asset.kind === 'location' ? 'Move place' : 'Move', handler: onMove }] : []),
+    ...(showEditAction && asset.canMove ? [{ label: asset.kind === 'location' ? t('mobile.AssetDetailActions.movePlace') : t('mobile.AssetDetailActions.move'), handler: onMove }] : []),
     ...(availability && showEditAction ? [{ label: availability.label, handler: availability.id === 'return' ? onReturn : onCheckout }] : [])
   ];
   if (!actions.length) return null;

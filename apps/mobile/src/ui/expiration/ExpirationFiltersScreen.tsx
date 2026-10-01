@@ -17,13 +17,13 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
  const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
- const headerOptions = useMemo(() => ({ title: page === 'overview' ? 'Filters' : page === 'dates' ? 'Date range' : page[0].toUpperCase() + page.slice(1),
+ const headerOptions = useMemo(() => ({ title: page === 'overview' ? t('mobile.ExpirationFiltersScreen.filters') : page === 'dates' ? t('mobile.ExpirationFiltersScreen.dateRange') : page[0].toUpperCase() + page.slice(1),
   }), [page]);
  return <>
   <Stack.Screen options={headerOptions} />
-  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: `Search ${page}`, onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
-   primaryLabel: 'Apply filters', primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
-   secondaryLabel: page === 'overview' ? 'Cancel' : 'Back', disabled: rangeError,
+  <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: t('mobile.ExpirationFiltersScreen.search', { page: String(page) }), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
+   primaryLabel: t('mobile.ExpirationFiltersScreen.applyFilters'), primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
+   secondaryLabel: page === 'overview' ? t('mobile.ExpirationFiltersScreen.cancel') : t('mobile.ExpirationFiltersScreen.back'), disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)
   }}>
    {page === 'overview' ? <>

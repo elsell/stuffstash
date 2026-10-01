@@ -28,7 +28,7 @@ export function AssetCheckoutHistorySheet({
   return (
     <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} contentInsetAdjustmentBehavior="automatic">
       <Text accessibilityRole="header" style={styles.sheetSubtitle}>
-        {state.status === 'closed' ? 'Asset checkout history' : state.assetTitle}
+        {state.status === 'closed' ? t('mobile.AssetCheckoutHistorySheet.assetCheckoutHistory') : state.assetTitle}
       </Text>
       {state.status === 'loading' ? <LoadingHistory /> : null}
       {state.status === 'error' ? <ErrorHistory message={state.message} /> : null}

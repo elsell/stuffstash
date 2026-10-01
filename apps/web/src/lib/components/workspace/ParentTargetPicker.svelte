@@ -23,7 +23,7 @@
     groupLabel,
     rootLabel = 'Inventory root',
     rootSummaryLabel = 'inventory root',
-    searchPlaceholder = 'Search locations or containers',
+    searchPlaceholder = t('web.ParentTargetPicker.searchLocationsOrContainers'),
     search = $bindable(''),
     selectedId,
     targets,

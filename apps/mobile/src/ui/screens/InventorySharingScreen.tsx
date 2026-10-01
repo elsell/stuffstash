@@ -157,7 +157,7 @@ export function InventorySharingScreen({
         await linkActions.share({ link: visibleCreated.inviteUrl, inventoryName: scope.inventoryName });
       }
     } catch (error) {
-      if (ownsLinkFeedback()) setLinkFeedback({ title: `Could not ${action} invitation`, message: readableError(error) });
+      if (ownsLinkFeedback()) setLinkFeedback({ title: t('mobile.InventorySharingScreen.couldNotInvitation', { action: String(action) }), message: readableError(error) });
     } finally {
       if (activeLinkOperation.current === operation) {
         activeLinkOperation.current = undefined;
@@ -207,12 +207,12 @@ export function InventorySharingScreen({
   if (denied || (list.isError && !list.data)) {
     return (
       <ScrollView style={settingsStyles.shell} contentContainerStyle={settingsStyles.errorContainer}>
-        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>{denied ? 'Sharing unavailable' : 'Could not load invitations'}</Text>
+        <Text accessibilityRole="header" style={settingsStyles.errorTitle}>{denied ? t('mobile.InventorySharingScreen.sharingUnavailable') : t('mobile.InventorySharingScreen.couldNotLoadInvitations')}</Text>
         <Text style={settingsStyles.errorMessage}>{!canShare
-          ? `You don’t have permission to manage invitations for ${scope.inventoryName}.`
-          : denied ? 'Your access to this inventory could not be confirmed. Check again or return to your inventories.'
-          : 'Your invitations could not be loaded. Try again.'}</Text>
-        {canShare ? <NativeCommandButton label={denied ? 'Check Again' : 'Retry'} onPress={() => { void list.refetch({ cancelRefetch: false }); }} /> : null}
+          ? t('mobile.InventorySharingScreen.youDonTHavePermissionToManageInvitationsFor', { inventoryName: String(scope.inventoryName) })
+          : denied ? t('mobile.InventorySharingScreen.yourAccessToThisInventoryCouldNotBeConfirmed')
+          : t('mobile.InventorySharingScreen.yourInvitationsCouldNotBeLoadedTryAgain')}</Text>
+        {canShare ? <NativeCommandButton label={denied ? t('mobile.InventorySharingScreen.checkAgain') : t('mobile.InventorySharingScreen.retry')} onPress={() => { void list.refetch({ cancelRefetch: false }); }} /> : null}
       </ScrollView>
     );
   }
@@ -249,7 +249,7 @@ export function InventorySharingScreen({
           <SettingsPickerRow label={t('mobile.InventorySharingScreen.access')} accessibilityLabel={t('mobile.InventorySharingScreen.chooseInvitationAccess')} value={relationship}
             options={[{ value: 'viewer', label: t('mobile.InventorySharingScreen.viewer') }, { value: 'editor', label: t('mobile.InventorySharingScreen.editor') }] as const}
             disabled={working} onChange={value => { if (!workingRef.current) setRelationship(value); }} />
-          <NativeCommandButton prominence="primary" label={working ? 'Creating…' : 'Create Invitation'}
+          <NativeCommandButton prominence="primary" label={working ? 'Creating…' : t('mobile.InventorySharingScreen.createInvitation')}
             disabled={working || email.trim().length === 0} onPress={() => void create()} />
         </View>
       </SettingsSection>
@@ -269,10 +269,10 @@ export function InventorySharingScreen({
             </Text>
             <View style={styles.linkActions}>
               <View style={styles.linkCommand}>
-                <NativeCommandButton prominence="primary" label={linkWorking === 'share' ? 'Sharing…' : 'Share invitation'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
+                <NativeCommandButton prominence="primary" label={linkWorking === 'share' ? 'Sharing…' : t('mobile.InventorySharingScreen.shareInvitation')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
               </View>
               <View style={styles.linkCommand}>
-                <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : 'Copy link'} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
+                <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : t('mobile.InventorySharingScreen.copyLink')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
               </View>
             </View>
             {linkFeedback ? <View accessibilityLiveRegion="polite" accessibilityRole={linkFeedback.message ? 'alert' : undefined}>
@@ -333,9 +333,9 @@ function formatDate(value: string): string {
 }
 
 function confirmCancel(invitation: InventoryInvitationSummary, cancel: (value: InventoryInvitationSummary) => Promise<void>): void {
-  Alert.alert('Cancel invitation?', `${invitation.email} will no longer be able to use this invitation link.`, [
-    { text: 'Keep Invitation', style: 'cancel' },
-    { text: 'Cancel Invitation', style: 'destructive', onPress: () => void cancel(invitation) }
+  Alert.alert(t('mobile.InventorySharingScreen.cancelInvitation2'), t('mobile.InventorySharingScreen.willNoLongerBeAbleToUseThisInvitation', { email: String(invitation.email) }), [
+    { text: t('mobile.InventorySharingScreen.keepInvitation'), style: 'cancel' },
+    { text: t('mobile.InventorySharingScreen.cancelInvitation3'), style: 'destructive', onPress: () => void cancel(invitation) }
   ]);
 }
 

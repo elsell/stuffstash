@@ -118,19 +118,19 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
 
     {error ? <View><Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>{button('Retry notifications', () => void load(filter))}</View> : null}
     {busy && !loaded ? <ActivityIndicator accessibilityLabel={t('mobile.NotificationInboxScreen.updatingNotifications')} color={colors.action} /> : null}
-    {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.border }]}><Pressable accessibilityRole="button" accessibilityLabel={`Open ${row.title}`} accessibilityValue={{text:`${row.milestone === 'expired' ? 'Expired' : 'Expires'} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}`}} disabled={busy} onPress={() => void open(row)}>
+    {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.border }]}><Pressable accessibilityRole="button" accessibilityLabel={t('mobile.NotificationInboxScreen.open', { title: String(row.title) })} accessibilityValue={{text:`${row.milestone === 'expired' ? 'Expired' : 'Expires'} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}`}} disabled={busy} onPress={() => void open(row)}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {!row.readAt && !locallyRead.has(row.id) ? <View accessibilityElementsHidden style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.action }} /> : null}
         <Text style={[styles.title, { color: colors.text, fontWeight: row.readAt || locallyRead.has(row.id) ? '400' : '600', flexShrink: 1 }]}>{row.title}</Text>
       </View>
-      <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? 'Expired' : 'Expires'} {formatAssetExpiration(row.expiration)}</Text>
+      <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? t('mobile.NotificationInboxScreen.expired') : t('mobile.NotificationInboxScreen.expires')} {formatAssetExpiration(row.expiration)}</Text>
 
     </Pressable>
-      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={`Mark ${row.title} ${row.readAt || locallyRead.has(row.id) ? 'unread' : 'read'}`} disabled={busy} onPress={() => void toggleRead(row)} /></View>
-      {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? 'Partial location path' : 'Location unavailable'}</Text> : null}
+      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={t('mobile.NotificationInboxScreen.mark', { title: String(row.title), value: String(row.readAt || locallyRead.has(row.id) ? 'unread' : 'read') })} disabled={busy} onPress={() => void toggleRead(row)} /></View>
+      {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? t('mobile.NotificationInboxScreen.partialLocationPath') : t('mobile.NotificationInboxScreen.locationUnavailable')}</Text> : null}
       <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(mounted.current && focusSession.current && !pending.current)onOpenAsset(entry.id);}} />
     </View>)}
-    {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}</Text> : null}
+    {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? t('mobile.NotificationInboxScreen.noUnreadNotifications') : t('mobile.NotificationInboxScreen.noNotificationsYet')}</Text> : null}
     {cursor ? button('Load more notifications', () => void load(filter, cursor)) : null}
   </ScrollView></>;
 }

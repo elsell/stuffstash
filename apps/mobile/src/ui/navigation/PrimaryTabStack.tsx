@@ -18,7 +18,7 @@ export function PrimaryTabStack({ root }: { readonly root: 'index' | 'search' })
       headerStyle: { backgroundColor: palette.surface }, headerTintColor: palette.action,
       headerTitleStyle: { color: palette.text, fontWeight: '700' }
     }}>
-      <Stack.Screen name={root} options={{ title: home ? 'Home' : 'Browse',
+      <Stack.Screen name={root} options={{ title: home ? t('mobile.PrimaryTabStack.home') : t('mobile.PrimaryTabStack.browse'),
         ...nativeTabHeaderOptions(palette, Platform.OS, Platform.Version, home ? palette.background : palette.surface) }} />
       <Stack.Screen name="expiration" options={{ title: t('mobile.PrimaryTabStack.expiration') }} />
       <Stack.Screen name="settings/index" options={{ title: t('mobile.PrimaryTabStack.settings') }} />

@@ -56,7 +56,7 @@
 <Card.Root>
   <Card.Header>
     <ImportFlowStepper current="connect" {availableSteps} {onNavigateStep} />
-    <Card.Title>{sourceChoice === 'homebox_live' ? 'Connect to Homebox' : 'Upload Homebox CSV'}</Card.Title>
+    <Card.Title>{sourceChoice === 'homebox_live' ? t('web.ImportSourceSetup.connectToHomebox') : t('web.ImportSourceSetup.uploadHomeboxCSV')}</Card.Title>
     <Card.Description>{t('web.ImportSourceSetup.stuffStashWillVerifyTheSourceAndBuildA')}</Card.Description>
   </Card.Header>
   <Card.Content class="import-source-setup-content">
@@ -125,7 +125,7 @@
         <div class="connection-summary" aria-label={t('web.ImportSourceSetup.connectionSummary')}>
           <span><Server size={16} aria-hidden="true" />{t('web.ImportSourceSetup.liveHomeboxAPI')}</span>
           <span><LockKeyhole size={16} aria-hidden="true" />{t('web.ImportSourceSetup.credentialsAreEncryptedForPreviewAndImport')}</span>
-          <span><Image size={16} aria-hidden="true" />{includeImages ? 'Photos will be imported' : 'Photos will be skipped'}</span>
+          <span><Image size={16} aria-hidden="true" />{includeImages ? t('web.ImportSourceSetup.photosWillBeImported') : t('web.ImportSourceSetup.photosWillBeSkipped')}</span>
         </div>
       </div>
     {:else}

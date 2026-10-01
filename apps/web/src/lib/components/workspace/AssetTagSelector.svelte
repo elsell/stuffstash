@@ -163,7 +163,7 @@
     </div>
     {#if tags.length > 12}
       <Button.Root type="button" variant="ghost" class="min-h-11" onclick={() => { allTagsVisible = !allTagsVisible; }}>
-        {allTagsVisible ? 'Show fewer tags' : `Show all ${tags.length} tags`}
+        {allTagsVisible ? t('web.AssetTagSelector.showFewerTags') : t('web.AssetTagSelector.showAllTags', { length: String(tags.length) })}
       </Button.Root>
     {/if}
   {/if}

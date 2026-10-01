@@ -16,7 +16,7 @@
     tenantName = '',
     busy = false,
     error = '',
-    submitLabel = 'Create workspace',
+    submitLabel = t('web.WorkspaceSetupPanel.createWorkspace'),
     onSubmit
   }: {
     mode: WorkspaceSetupMode;

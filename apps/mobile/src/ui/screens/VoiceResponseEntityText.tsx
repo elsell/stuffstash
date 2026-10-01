@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { voiceResponseMarkdown, type VoiceMarkdownSpan } from './VoiceResponseMarkdown';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { VoiceResponseArtifact } from '../../application/voice/RealtimeVoiceSession';
@@ -31,8 +32,8 @@ export function VoiceResponseEntityText({
         {block.prefix}
         {block.links.segments.map((segment, index) => (
           <Text
-            accessibilityHint={enabled && segment.reference ? 'Opens this asset' : undefined}
-            accessibilityLabel={enabled && segment.reference ? `Open ${segment.reference.title}` : undefined}
+            accessibilityHint={enabled && segment.reference ? t('mobile.VoiceResponseEntityText.opensThisAsset') : undefined}
+            accessibilityLabel={enabled && segment.reference ? t('mobile.VoiceResponseEntityText.open', { title: String(segment.reference.title) }) : undefined}
             accessibilityRole={enabled && segment.reference ? 'link' : undefined}
             key={index}
             onPress={enabled && segment.reference ? () => onOpen(segment.reference!) : undefined}

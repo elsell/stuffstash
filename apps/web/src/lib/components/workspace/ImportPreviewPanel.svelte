@@ -77,7 +77,7 @@
       <section class="preview-issues-section" aria-label={t('web.ImportPreviewPanel.previewIssues')}>
         <div class="preview-section-heading">
           <h3>{t('web.ImportPreviewPanel.issues')}</h3>
-          <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? 'No blockers' : 'Grouped by cause'}</small>
+          <small>{previewJob.counts.warnings + previewJob.counts.errors === 0 ? t('web.ImportPreviewPanel.noBlockers') : t('web.ImportPreviewPanel.groupedByCause')}</small>
         </div>
         <ImportMessagesList
           messages={visiblePreviewMessages(previewJob)}

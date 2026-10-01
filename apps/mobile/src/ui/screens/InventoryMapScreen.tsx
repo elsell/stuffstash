@@ -468,7 +468,7 @@ export function InventoryMapScreen({
     }
 
     const asset = assetsById.get(match.assetId);
-    setSearchOutcome(asset ? { query: text.trim(), map, message: `Found ${asset.title} · ${asset.placementLabel}` } : undefined);
+    setSearchOutcome(asset ? { query: text.trim(), map, message: t('mobile.InventoryMapScreen.found', { title: String(asset.title), placementLabel: String(asset.placementLabel) }) } : undefined);
     setOpenPath(match.openPath);
     setHighlightedAssetId(match.assetId);
     setPendingScrollLevel(match.openPath.length);
@@ -574,7 +574,7 @@ export function InventoryMapScreen({
                 <View key={breadcrumb.key} style={styles.breadcrumbItem}>
                   {index > 0 ? <ChevronRight color={colors.textMuted} size={14} strokeWidth={2.5} /> : null}
                   <Pressable
-                    accessibilityLabel={`Open location ${breadcrumb.title}`}
+                    accessibilityLabel={t('mobile.InventoryMapScreen.openLocation', { title: String(breadcrumb.title) })}
                     accessibilityRole="button"
                     onPress={() => openBreadcrumb(breadcrumb.level)}
                     style={({ pressed }) => [
@@ -1090,7 +1090,7 @@ function InventoryMapRow({
           </Pressable>
         </Animated.View>
         <Pressable
-          accessibilityLabel={`Show details for ${asset.title}`}
+          accessibilityLabel={t('mobile.InventoryMapScreen.showDetailsFor', { title: String(asset.title) })}
           accessibilityRole="button"
           hitSlop={8}
           onPress={onOpenInfo}

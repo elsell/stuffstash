@@ -299,7 +299,7 @@
                     aria-busy={returningAssetId === asset.id}
                     disabled={returningAssetId !== null}
                     onclick={() => returnAsset(asset)}
-                  >{returningAssetId === asset.id ? 'Returning…' : 'Return'}</Button.Root>
+                  >{returningAssetId === asset.id ? 'Returning…' : t('web.HomeWorkspace.return')}</Button.Root>
                 {/if}
               </div>
             </div>

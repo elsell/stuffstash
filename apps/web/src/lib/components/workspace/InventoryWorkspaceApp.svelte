@@ -816,7 +816,7 @@
     notification = {
       id: `asset-operation:${operationId}`,
       kind: 'info',
-      title: direction === 'undo' ? 'Undoing change…' : 'Redoing change…',
+      title: direction === 'undo' ? t('web.InventoryWorkspaceApp.undoingChange') : t('web.InventoryWorkspaceApp.redoingChange'),
       important: true,
       duration: Infinity
     };
@@ -837,10 +837,10 @@
       const successNotification: WorkspaceNotification = {
         id: `asset-operation:${operationId}`,
         kind: 'success',
-        title: `${direction === 'undo' ? 'Undid' : 'Redid'} change to ${asset.title}.`,
+        title: t('web.InventoryWorkspaceApp.changeTo', { value: String(direction === 'undo' ? 'Undid' : 'Redid'), title: String(asset.title) }),
         duration: 10_000,
         action: {
-          label: inverse === 'undo' ? 'Undo' : 'Redo',
+          label: inverse === 'undo' ? t('web.InventoryWorkspaceApp.undo') : t('web.InventoryWorkspaceApp.redo'),
           onClick: () => applyUndoableAssetOperation(tenantId, inventoryId, operationId, inverse)
         }
       };
@@ -869,7 +869,7 @@
       notification = {
         id: `asset-operation:${operationId}`,
         kind: 'error',
-        title: direction === 'undo' ? 'Couldn’t undo change.' : 'Couldn’t redo change.',
+        title: direction === 'undo' ? t('web.InventoryWorkspaceApp.couldnTUndoChange') : t('web.InventoryWorkspaceApp.couldnTRedoChange'),
         description: safeOperationFailureDescription(caught),
         important: true,
         duration: Infinity

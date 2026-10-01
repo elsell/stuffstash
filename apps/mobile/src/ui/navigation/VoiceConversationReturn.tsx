@@ -12,9 +12,9 @@ export function VoiceConversationReturn() {
   if (!pathname.startsWith('/assets/') && !pathname.startsWith('/locations/')) return null;
   if (state.status !== 'ready' || (!state.realtime && !history.length)) return null;
   const review = state.stage === 'review';
-  return <Pressable accessibilityRole="button" accessibilityLabel={review ? 'Review ready. Return to conversation' : 'Return to conversation'}
+  return <Pressable accessibilityRole="button" accessibilityLabel={review ? t('mobile.VoiceConversationReturn.reviewReadyReturnToConversation') : t('mobile.VoiceConversationReturn.returnToConversation')}
     onPress={() => router.navigate('/voice')} style={[styles.accessory, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-    <Text style={{ color: colors.action, fontWeight: '600' }}>{review ? 'Review ready · ' : ''}{t('mobile.VoiceConversationReturn.returnToConversation')}</Text>
+    <Text style={{ color: colors.action, fontWeight: '600' }}>{review ? t('mobile.VoiceConversationReturn.reviewReady') : ''}{t('mobile.VoiceConversationReturn.returnToConversation')}</Text>
   </Pressable>;
 }
 const styles = StyleSheet.create({ accessory: { minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' } });

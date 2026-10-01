@@ -60,7 +60,7 @@
 {:else if route.settingsLevel === 'account'}
   <section class="workspace-main settings-management" aria-labelledby="account-settings-title">
     <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> {t('web.SettingsWorkspace.settings')}</Button.Root>
-    <header class="settings-management-heading"><p class="settings-eyebrow">{t('web.SettingsWorkspace.accountAndApp')}</p><h1 id="account-settings-title">{t('web.SettingsWorkspace.account')}</h1><p>{principal.email ?? 'Signed-in account'}</p></header>
+    <header class="settings-management-heading"><p class="settings-eyebrow">{t('web.SettingsWorkspace.accountAndApp')}</p><h1 id="account-settings-title">{t('web.SettingsWorkspace.account')}</h1><p>{principal.email ?? t('web.SettingsWorkspace.signedInAccount')}</p></header>
     <dl class="settings-readonly-details"><div><dt>{t('web.SettingsWorkspace.profileEditing')}</dt><dd>{t('web.SettingsWorkspace.notAvailable')}</dd></div><div><dt>{t('web.SettingsWorkspace.app')}</dt><dd>{t('web.SettingsWorkspace.stuffStashWeb')}</dd></div></dl>
   </section>
 {:else if !tenant || (route.settingsLevel === 'inventory' && !inventory)}

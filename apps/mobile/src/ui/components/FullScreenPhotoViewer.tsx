@@ -132,7 +132,7 @@ function PhotoViewerToolbar({
     }] : [] }
   ];
   return <View style={[styles.toolbarOuter, { paddingTop: Math.max(spacing.sm, safeTopInset) }]}>
-    <View accessible accessibilityRole="adjustable" accessibilityLabel={`Photo, ${state.positionLabel}`}
+    <View accessible accessibilityRole="adjustable" accessibilityLabel={t('mobile.FullScreenPhotoViewer.photo', { positionLabel: String(state.positionLabel) })}
       accessibilityHint={t('mobile.FullScreenPhotoViewer.swipeUpOrDownToChangePhotos')}
       accessibilityActions={[{ name: 'increment', label: t('mobile.FullScreenPhotoViewer.nextPhoto') }, { name: 'decrement', label: t('mobile.FullScreenPhotoViewer.previousPhoto') }]}
       onAccessibilityAction={({ nativeEvent }) => {

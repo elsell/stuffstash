@@ -56,7 +56,7 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
     }
   }
   return <>
-    {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? `Inventory defaults: ${reminderSummary(displayed)}.` : undefined}>
+    {inheritedPolicy ? <SettingsSection footer={mode === 'defaults' ? t('mobile.ExpirationReminderEditor.inventoryDefaults2', { value: String(reminderSummary(displayed)) }) : undefined}>
       <SettingsPickerRow label={t('mobile.ExpirationReminderEditor.reminders')} accessibilityLabel={t('mobile.ExpirationReminderEditor.chooseReminderMode')} value={mode}
         options={[{value:'defaults',label:t('mobile.ExpirationReminderEditor.useDefaults')},{value:'custom',label:t('mobile.ExpirationReminderEditor.custom')},{value:'off',label:t('mobile.ExpirationReminderEditor.off')}] as const}
         disabled={locked || error} onChange={nextMode => { if (nextMode !== mode) void commit(displayed, nextMode); }} />

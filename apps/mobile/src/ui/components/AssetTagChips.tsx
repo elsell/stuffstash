@@ -43,7 +43,7 @@ export function AssetTagChips({ tags, compact = false, overflowLimit, onTagPress
         );
       })}
       {presentation.hiddenCount > 0 ? (
-        <View accessibilityLabel={`${presentation.hiddenCount} more tags`} style={[styles.tagChip, styles.overflowChip]}>
+        <View accessibilityLabel={t('mobile.AssetTagChips.moreTags', { hiddenCount: String(presentation.hiddenCount) })} style={[styles.tagChip, styles.overflowChip]}>
           <Text numberOfLines={1} style={[styles.tagLabel, styles.overflowLabel]}>+{presentation.hiddenCount}</Text>
         </View>
       ) : null}
@@ -73,7 +73,7 @@ export function TagChip({
 
   return (
     <Pressable
-      accessibilityLabel={`Search for tag ${tag.label}`}
+      accessibilityLabel={t('mobile.AssetTagChips.searchForTag', { label: String(tag.label) })}
       accessibilityRole="button"
       hitSlop={6}
       onPress={() => onTagPress(tag)}

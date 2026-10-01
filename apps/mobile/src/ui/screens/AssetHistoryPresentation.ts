@@ -1,4 +1,4 @@
-import { t } from '../../presentation/localization';
+import { t, localization } from '../../presentation/localization';
 import type { AssetActivityEntry, AssetActivityRecordViewModel } from '../../application/assets/AssetActivityQuery';
 export function groupHistoryRecords(records: readonly AssetActivityRecordViewModel[]): readonly { readonly title: string; readonly data: readonly AssetActivityRecordViewModel[] }[] {
   const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
@@ -6,7 +6,7 @@ export function groupHistoryRecords(records: readonly AssetActivityRecordViewMod
   for (const record of records) {
     const date = new Date(record.occurredAt);
     const key = Number.isNaN(date.getTime()) ? 'unknown' : `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    const title = Number.isNaN(date.getTime()) ? 'Date unavailable' : formatter.format(date);
+    const title = Number.isNaN(date.getTime()) ? t('mobile.AssetHistoryPresentation.dateUnavailable') : formatter.format(date);
     const section = sections.get(key) ?? { title, data: [] };
     section.data.push(record);
     sections.set(key, section);
@@ -30,31 +30,26 @@ export function historyRevertConfirmation(entry: AssetActivityEntry): {
   if (actionOutcome) {
     return {
       title: t('mobile.AssetHistoryPresentation.revertThisChange'),
-      message: `${actionOutcome} Other changes to the item will stay as they are.`,
+      message: t('mobile.AssetHistoryPresentation.otherChangesToTheItemWillStayAsThey', { actionOutcome: String(actionOutcome) }),
       confirmLabel: t('mobile.AssetHistoryPresentation.revertChange')
     };
   }
   const fields = [...new Set(entry.changes.map((change) => userFieldLabel(change.field)))];
-  const changeDescription = fields.length === 0
-    ? 'this change'
-    : fields.length === 1
-      ? `the ${fields[0]} change`
-      : `the ${fields.slice(0, -1).join(', ')} and ${fields.at(-1)} changes`;
   return {
     title: t('mobile.AssetHistoryPresentation.revertThisChange'),
-    message: `This will reverse ${changeDescription} from this entry. Other changes to the item will stay as they are.`,
+    message: fields.length === 0 ? t('mobile.history.revertChange') : t('mobile.history.revertFields', { count: fields.length, fields: localization.list(fields) }),
     confirmLabel: t('mobile.AssetHistoryPresentation.revertChange')
   };
 }
 
 function historicalActionOutcome(action: string): string | undefined {
   switch (action) {
-    case 'asset.created': return 'This item will be archived.';
-    case 'asset.moved': return 'The item’s previous location will be restored.';
-    case 'asset.archived': return 'This item will be restored.';
-    case 'asset.restored': return 'This item will be archived.';
-    case 'asset.checked_out': return 'The checkout will be canceled.';
-    case 'asset.returned': return 'The item will be checked out again.';
+    case 'asset.created': return t('mobile.AssetHistoryPresentation.thisItemWillBeArchived');
+    case 'asset.moved': return t('mobile.AssetHistoryPresentation.theItemSPreviousLocationWillBeRestored');
+    case 'asset.archived': return t('mobile.AssetHistoryPresentation.thisItemWillBeRestored');
+    case 'asset.restored': return t('mobile.AssetHistoryPresentation.thisItemWillBeArchived');
+    case 'asset.checked_out': return t('mobile.AssetHistoryPresentation.theCheckoutWillBeCanceled');
+    case 'asset.returned': return t('mobile.AssetHistoryPresentation.theItemWillBeCheckedOutAgain');
     default: return undefined;
   }
 }

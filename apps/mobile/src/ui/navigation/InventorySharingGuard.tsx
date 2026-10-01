@@ -33,14 +33,14 @@ export function InventorySharingGuard({
   return (
     <ScrollView contentContainerStyle={styles.errorContainer} style={styles.shell}>
       <Text accessibilityRole="header" style={styles.errorTitle}>
-        {unavailable ? 'Sharing unavailable' : 'Could not verify Sharing access'}
+        {unavailable ? t('mobile.InventorySharingGuard.sharingUnavailable') : t('mobile.InventorySharingGuard.couldNotVerifySharingAccess')}
       </Text>
       <Text style={styles.errorMessage}>
         {unavailable
-          ? `You don’t have permission to manage invitations for ${decision.inventoryName}.`
+          ? t('mobile.InventorySharingGuard.youDonTHavePermissionToManageInvitationsFor', { inventoryName: String(decision.inventoryName) })
           : decision.message}
       </Text>
-      <NativeCommandButton label={unavailable ? 'Check Again' : 'Retry'} onPress={() => void load()} />
+      <NativeCommandButton label={unavailable ? t('mobile.InventorySharingGuard.checkAgain') : t('mobile.InventorySharingGuard.retry')} onPress={() => void load()} />
     </ScrollView>
   );
 }

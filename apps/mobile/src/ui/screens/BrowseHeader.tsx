@@ -91,7 +91,7 @@ export function SearchHeader({
         >
           {activeTokens.map((token) => (
             <Pressable
-              accessibilityLabel={`Remove filter ${token.label}`}
+              accessibilityLabel={t('mobile.BrowseHeader.removeFilter', { label: String(token.label) })}
               accessibilityRole="button"
               key={token.key}
               onPress={() => onRemoveFilter(token)}

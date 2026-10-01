@@ -34,9 +34,9 @@ export function HomeReturnDetailsSheet({ pendingReturn, canReturn, onCancel, onC
           initialValue={pendingReturn.details} onChangeText={onChangeDetails} textAlignVertical="top"
           style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.controlBorder }]} />
         <View style={styles.actions}>
-          <View style={styles.action}><NativeCommandButton label={canReturn && pendingReturn.undoableOperationId ? 'Cancel return' : 'Close'}
+          <View style={styles.action}><NativeCommandButton label={canReturn && pendingReturn.undoableOperationId ? t('mobile.HomeReturnDetailsSheet.cancelReturn') : t('mobile.HomeReturnDetailsSheet.close')}
             disabled={busy} onPress={close} /></View>
-          {canReturn ? <View style={styles.action}><NativeCommandButton label={busy ? (pendingReturn.operation === 'undo' ? 'Canceling return...' : 'Saving...') : 'Save'} disabled={busy} onPress={onSave} /></View> : null}
+          {canReturn ? <View style={styles.action}><NativeCommandButton label={busy ? (pendingReturn.operation === 'undo' ? t('mobile.HomeReturnDetailsSheet.cancelingReturn') : 'Saving...') : t('mobile.HomeReturnDetailsSheet.save')} disabled={busy} onPress={onSave} /></View> : null}
         </View>
       </ScrollView>;
 }

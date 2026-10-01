@@ -86,7 +86,7 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
       <NativeChoicePicker label={t('mobile.ExpirationField.month')} accessibilityLabel={t('mobile.ExpirationField.expirationMonth')} value={month ? String(Number(month)) : ''} disabled={disabled} options={expirationMonthOptions()} onChange={value => { setMonth(value); publishMonth(value, year); }} />
       <Text style={{ color: colors.text }}>{t('mobile.ExpirationField.year')}</Text>
       <AppTextInput accessibilityLabel={t('mobile.ExpirationField.expirationYear')} editable={!disabled} keyboardType="number-pad" value={year} placeholder={t('mobile.ExpirationField.yYYY')} style={[styles.input, { color: colors.text, borderColor: colors.controlBorder }]} onChangeText={(value) => { if (disabled) return; setYear(value); publishMonth(month, value); }} />
-      <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{monthValid ? 'Tracked through the end of this month.' : 'Enter a month from 1 to 12 and a four-digit year.'}</Text>
+      <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{monthValid ? t('mobile.ExpirationField.trackedThroughTheEndOfThisMonth') : t('mobile.ExpirationField.enterAMonthFrom1To12AndA')}</Text>
     </> : <>
       {Platform.OS === 'ios' ? day ?
         <DateTimePicker accessibilityLabel={t('mobile.ExpirationField.expirationDate')} disabled={disabled} mode="date" display="compact" value={currentPickerDate()} onChange={pickerChanged} /> :

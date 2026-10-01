@@ -105,7 +105,7 @@ export function AssetCard({
       <View style={[styles.body, isRow ? styles.rowBody : undefined]}>
         <Pressable
           hitSlop={isRow ? { top: 12, bottom: 12 } : undefined}
-          accessibilityLabel={`Open asset ${asset.title}${asset.expiration ? `. ${expirationStatusLabel(asset.expirationContext) ?? 'Expiration'}: ${formatAssetExpiration(asset.expiration)}` : ''}`}
+          accessibilityLabel={t('mobile.AssetCard.openAsset', { title: String(asset.title), value: String(asset.expiration ? `. ${expirationStatusLabel(asset.expirationContext) ?? 'Expiration'}: ${formatAssetExpiration(asset.expiration)}` : '') })}
           accessibilityRole="button"
           onPress={onPress}
           style={({ pressed }) => [styles.openTextRegion, isRow ? styles.rowOpenTextRegion : undefined, pressed ? styles.openTextRegionPressed : undefined]}
@@ -207,7 +207,7 @@ export function AssetBreadcrumbTrail({
       ref={scroll}
       onLayout={revealParent}
       onContentSizeChange={revealParent}
-      accessibilityLabel={`Location ${segments.map((segment) => segment.title).join(', ')}`}
+      accessibilityLabel={t('mobile.AssetCard.location', { value: String(segments.map((segment) => segment.title).join(', ')) })}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.breadcrumbScroller}
@@ -218,7 +218,7 @@ export function AssetBreadcrumbTrail({
           {index > 0 ? <Text style={styles.breadcrumbSeparator}>/</Text> : null}
           <Pressable
             disabled={disabled}
-            accessibilityLabel={`Open location ${segment.title}`}
+            accessibilityLabel={t('mobile.AssetCard.openLocation', { title: String(segment.title) })}
             accessibilityRole="button"
             onPress={() => onSegmentPress(segment)}
             style={({ pressed }) => [

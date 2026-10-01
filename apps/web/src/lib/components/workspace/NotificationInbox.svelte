@@ -109,11 +109,11 @@
   {#if loading && items.length === 0}<p role="status">{t('web.NotificationInbox.loadingNotifications')}</p>
   {:else}
     {#if error}<p role="alert">{error}</p><Button.Root disabled={marking} onclick={() => load()}>{t('web.NotificationInbox.retryNotifications')}</Button.Root>{/if}
-    {#if items.length === 0 && !hasMore && !error}<p>{filter === 'unread' ? 'No unread notifications.' : 'No expiration notifications yet.'}</p>{/if}
+    {#if items.length === 0 && !hasMore && !error}<p>{filter === 'unread' ? t('web.NotificationInbox.noUnreadNotifications') : t('web.NotificationInbox.noExpirationNotificationsYet')}</p>{/if}
     <ul>
       {#each items as item (item.id)}
         <li class:unread={!item.readAt && !readIds.has(item.id)}><Button.Root variant="ghost" class="notification-row" disabled={!!opening || marking} onclick={() => open(item)}>
-          <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? 'Expired' : 'Expires'} {dateLabel(item)}</span></span>
+          <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? t('web.NotificationInbox.expired') : t('web.NotificationInbox.expires')} {dateLabel(item)}</span></span>
           {#if opening === item.id}<span>{t('web.NotificationInbox.opening')}</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">{t('web.NotificationInbox.unread')}</span>{/if}
         </Button.Root>
           <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={`Mark ${item.title} ${item.readAt || readIds.has(item.id) ? 'unread' : 'read'}`} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
@@ -122,7 +122,7 @@
       {/each}
     </ul>
     {#if appendError}<p role="alert">{appendError}</p>{/if}
-    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening || marking} onclick={() => load(true)}>{appendLoading ? 'Loading more…' : appendError ? 'Retry more notifications' : 'Load more'}</Button.Root>{/if}
+    {#if hasMore}<Button.Root variant="outline" disabled={appendLoading || !!opening || marking} onclick={() => load(true)}>{appendLoading ? t('web.NotificationInbox.loadingMore') : appendError ? t('web.NotificationInbox.retryMoreNotifications') : t('web.NotificationInbox.loadMore')}</Button.Root>{/if}
   {/if}
 </section>
 

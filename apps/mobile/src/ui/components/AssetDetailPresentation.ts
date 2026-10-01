@@ -117,7 +117,7 @@ export function assetDetailPlacement(
   }
 
   return {
-    accessibilityLabel: `Location ${crumbs.map((crumb) => crumb.title).join(', ')}`,
+    accessibilityLabel: t('mobile.AssetDetailPresentation.location2', { value: String(crumbs.map((crumb) => crumb.title).join(', ')) }),
     crumbs
   };
 }

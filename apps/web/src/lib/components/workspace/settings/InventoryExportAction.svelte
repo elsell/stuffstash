@@ -38,7 +38,7 @@
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
         {#snippet child({ props })}
-          <Button.Root {...props} variant="outline" disabled={pending}><Download aria-hidden="true" />{pending ? 'Preparing export…' : 'Export inventory'}</Button.Root>
+          <Button.Root {...props} variant="outline" disabled={pending}><Download aria-hidden="true" />{pending ? t('web.InventoryExportAction.preparingExport') : t('web.InventoryExportAction.exportInventory')}</Button.Root>
         {/snippet}
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="start">

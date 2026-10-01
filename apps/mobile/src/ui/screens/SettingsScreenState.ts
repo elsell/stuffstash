@@ -15,7 +15,7 @@ export function useSettingsModel(query: SettingsQuery) {
   const scope = useMobileInventoryServerQuery({ key: mobileQueryKeys.settingsScope, query: (signal) => query.getSelectedScope({ signal }) });
   const diagnostics = query.getDiagnostics();
   const state: SettingsLoadState = isAccessFailure(scope.error) ? { status: 'error', message: t('mobile.SettingsScreenState.theseSettingsAreNoLongerAvailable') } : scope.data ? { status: 'ready', settings: {
-    principal: { id: principal.data?.id ?? '', primaryLabel: principal.data?.email ?? 'Signed in' },
+    principal: { id: principal.data?.id ?? '', primaryLabel: principal.data?.email ?? t('mobile.SettingsScreenState.signedIn') },
     selectedTenant: scope.data.tenant, selectedInventory: scope.data.inventory,
     serverUrl: diagnostics.apiBaseUrl, appVersion: diagnostics.appVersion, authenticationMode: diagnostics.authenticationMode
   } } : scope.isError ? { status: 'error', message: t('mobile.SettingsScreenState.stuffStashCouldNotLoadSettings') } : { status: 'loading' };

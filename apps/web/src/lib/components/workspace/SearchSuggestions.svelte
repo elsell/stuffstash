@@ -11,7 +11,7 @@
     idPrefix,
     suggestions,
     activeIndex,
-    label = 'Search suggestions',
+    label = t('web.SearchSuggestions.searchSuggestions'),
     query = '',
     showEmpty = false,
     assetHref,

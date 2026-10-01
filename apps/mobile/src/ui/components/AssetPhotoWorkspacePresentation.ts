@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetPhotoViewModel } from '../../application/assets/AssetViewModels';
 
 export type AssetPhotoViewerModel = {
@@ -96,7 +97,7 @@ export function assetPhotoStatusLabel({
   if (index !== 0) {
     return label;
   }
-  return 'First photo';
+  return t('mobile.AssetPhotoWorkspacePresentation.firstPhoto');
 }
 
 export function assetPhotoMetadataLabel(photo: AssetPhotoViewModel | undefined): string | undefined {
@@ -122,11 +123,11 @@ export function photoMetadataLabel(photo: {
 function safeImageContentTypeLabel(contentType: string | undefined): string | undefined {
   switch (contentType?.trim().toLocaleLowerCase()) {
     case 'image/jpeg':
-      return 'JPEG image';
+      return t('mobile.AssetPhotoWorkspacePresentation.jPEGImage');
     case 'image/png':
-      return 'PNG image';
+      return t('mobile.AssetPhotoWorkspacePresentation.pNGImage');
     case 'image/webp':
-      return 'WebP image';
+      return t('mobile.AssetPhotoWorkspacePresentation.webPImage');
     default:
       return undefined;
   }

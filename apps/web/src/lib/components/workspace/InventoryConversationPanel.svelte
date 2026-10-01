@@ -30,7 +30,7 @@
     {#if view.messages.length === 0}<p class="text-muted-foreground">{t('web.InventoryConversationPanel.findSomethingAskWhatSStoredHereOrDescribe')}</p>{/if}
     {#each view.messages as message, index (index)}
       <article aria-label={message.role === 'user' ? 'You' : 'Stuff Stash'} class:user-message={message.role === 'user'}>
-        <p class="speaker">{message.role === 'user' ? 'You' : 'Stuff Stash'}</p>
+        <p class="speaker">{message.role === 'user' ? t('web.InventoryConversationPanel.you') : t('web.InventoryConversationPanel.stuffStash')}</p>
         <p class="message-text" dir="auto">{message.text}</p>
         {#if message.assets.length}<ul>{#each message.assets as asset (asset.id)}<li><Button.Root variant="outline" href={workspaceRouteHref({ mode: 'asset', tenantId, inventoryId, assetId: asset.id }, tenantId, inventoryId)} onclick={(event) => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); showAsset(asset.id); } }}>{asset.title}</Button.Root></li>{/each}</ul>{/if}
       </article>
@@ -47,7 +47,7 @@
   {/if}
   {#if view.error}<p role="alert">{view.error}</p>{/if}
   {#if view.uncertain}<Button.Root variant="outline" disabled={view.busy} onclick={() => { void conversation.recover(); }}>{t('web.InventoryConversationPanel.refreshInventory')}</Button.Root>{/if}
-  {#if view.busy}<p role="status">{view.plan ? 'Applying your decision…' : 'Working…'}</p>{/if}
+  {#if view.busy}<p role="status">{view.plan ? t('web.InventoryConversationPanel.applyingYourDecision') : 'Working…'}</p>{/if}
   {#snippet footer()}
     <form class="composer" onsubmit={(event) => { event.preventDefault(); submit(); }}>
       <Label for="inventory-conversation-message" class="sr-only">{t('web.InventoryConversationPanel.messageStuffStash')}</Label>

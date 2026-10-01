@@ -183,7 +183,7 @@
               <span class="grid min-w-0 flex-1 gap-0.5" data-move-here-candidate-copy>
                 <strong class="break-words text-sm leading-tight">{candidate.title}</strong>
                 <small class="break-words text-xs leading-snug text-muted-foreground">
-                  {assetKindLabel(candidate.kind)} · {candidate.containmentTrail || 'Inventory root'}
+                  {assetKindLabel(candidate.kind)} · {candidate.containmentTrail || t('web.ContainedAssetWorkspace.inventoryRoot')}
                 </small>
               </span>
             </Button.Root>
@@ -194,8 +194,8 @@
         {/if}
       {:else}
         <div class="empty-state compact">
-          <h3>{moveQuery.trim() ? 'No matching movable assets' : 'Everything eligible is already here'}</h3>
-          <p>{moveQuery.trim() ? 'Try another name or current place.' : 'Search after adding or moving something elsewhere.'}</p>
+          <h3>{moveQuery.trim() ? t('web.ContainedAssetWorkspace.noMatchingMovableAssets') : t('web.ContainedAssetWorkspace.everythingEligibleIsAlreadyHere')}</h3>
+          <p>{moveQuery.trim() ? t('web.ContainedAssetWorkspace.tryAnotherNameOrCurrentPlace') : t('web.ContainedAssetWorkspace.searchAfterAddingOrMovingSomethingElsewhere')}</p>
           {#if moveQuery.trim()}
             <Button.Root variant="outline" onclick={() => { moveQuery = ''; }}>{t('web.ContainedAssetWorkspace.clearSearch')}</Button.Root>
           {/if}
@@ -208,7 +208,7 @@
       {#snippet footer()}
         <Button.Root href={assetDetailHref(target)} variant="outline" disabled={saving} onclick={closeMove}>{t('web.ContainedAssetWorkspace.cancel')}</Button.Root>
         <Button.Root disabled={!selectedCandidate || saving} onclick={() => { void confirmMove(); }}>
-          {selectedCandidate ? `Move ${selectedCandidate.title} here` : 'Choose an asset'}
+          {selectedCandidate ? t('web.ContainedAssetWorkspace.moveHere', { title: String(selectedCandidate.title) }) : t('web.ContainedAssetWorkspace.chooseAnAsset')}
         </Button.Root>
       {/snippet}
     </WorkspaceTaskSheet>
@@ -255,8 +255,8 @@
         </div>
       {:else}
         <div class="empty-state compact">
-          <h3>{contentsQuery.trim() ? `No matching ${section.key}` : section.emptyTitle}</h3>
-          <p>{contentsQuery.trim() ? 'Try another name or path.' : section.emptyMessage}</p>
+          <h3>{contentsQuery.trim() ? t('web.ContainedAssetWorkspace.noMatching', { key: String(section.key) }) : section.emptyTitle}</h3>
+          <p>{contentsQuery.trim() ? t('web.ContainedAssetWorkspace.tryAnotherNameOrPath') : section.emptyMessage}</p>
           {#if contentsQuery.trim()}<Button.Root variant="outline" onclick={() => { contentsQuery = ''; }}>{t('web.ContainedAssetWorkspace.clearSearch')}</Button.Root>{/if}
         </div>
       {/if}

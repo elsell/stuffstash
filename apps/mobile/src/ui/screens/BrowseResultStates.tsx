@@ -89,25 +89,25 @@ function emptyStatePresentation(props: BrowseEmptyStateProps): {
   switch (props.kind) {
     case 'inventory':
       return {
-        title: `No items in ${props.inventoryName}`,
+        title: t('mobile.BrowseResultStates.noItemsIn', { inventoryName: String(props.inventoryName) }),
         message: props.onAdd
-          ? 'Add your first item, container, or place.'
-          : 'An inventory editor can add the first item, container, or place.',
-        actionLabel: props.onAdd ? 'Add item' : undefined,
+          ? t('mobile.BrowseResultStates.addYourFirstItemContainerOrPlace')
+          : t('mobile.BrowseResultStates.anInventoryEditorCanAddTheFirstItemContainer'),
+        actionLabel: props.onAdd ? t('mobile.BrowseResultStates.addItem') : undefined,
         onAction: props.onAdd
       };
     case 'search':
       return {
-        title: `No results for “${props.query.trim()}”`,
+        title: t('mobile.BrowseResultStates.noResultsFor', { value: String(props.query.trim()) }),
         message: t('mobile.BrowseResultStates.tryAnotherSearchOrClearItToBrowseEverything'),
-        actionLabel: 'Clear search',
+        actionLabel: t('mobile.BrowseResultStates.clearSearch'),
         onAction: props.onClearSearch
       };
     case 'filters':
       return {
         title: t('mobile.BrowseResultStates.noItemsMatchTheseFilters'),
         message: t('mobile.BrowseResultStates.removeAFilterToSeeMoreOfYourInventory'),
-        actionLabel: 'Clear filters',
+        actionLabel: t('mobile.BrowseResultStates.clearFilters'),
         onAction: props.onClearFilters
       };
   }

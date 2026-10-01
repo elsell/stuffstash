@@ -79,7 +79,7 @@
     <div class="brand-mark" aria-hidden="true"><span></span></div>
     <div>
       <strong>{t('web.SideNav.stuffStash')}</strong>
-      <p>{selectedTenant?.name ?? 'Home'}</p>
+      <p>{selectedTenant?.name ?? t('web.SideNav.home')}</p>
     </div>
   </div>
 
