@@ -233,3 +233,16 @@ Stable value/id/state properties, CSS strings, user content and catalog calls
 remain exempt. Include an adversarial regression where translated direct props
 coexist with untranslated nested choices; direct-attribute coverage alone is
 insufficient.
+
+### Adapter-generated recovery copy
+
+Mobile timeout and provider-onboarding failures are application-authored recovery
+messages surfaced by existing error presenters. They must use catalog messages;
+timeout/caller-abort classification and tenant checks remain unchanged. Preserve
+external server diagnostics and user content rather than translating arbitrary
+error strings. Native expansion evidence identifies its source revision, runtime,
+workflow and limitations independently from physical acceptance.
+
+Retry policy must recognize a typed network timeout independently of localized
+message text. A timeout permits at most the existing single read retry; caller
+cancellation never becomes retryable merely because it interrupts the transport.

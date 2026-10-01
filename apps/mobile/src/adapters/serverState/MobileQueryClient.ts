@@ -1,3 +1,4 @@
+import { NetworkTimeoutError } from '../../application/shared/NetworkTimeoutError';
 import { isAccessFailure } from '../../application/shared/isAccessFailure';
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { MobileAuthenticationRequiredError } from '../../application/auth/MobileAuthSession';
@@ -37,9 +38,7 @@ export function shouldRetryMobileQuery(failureCount: number, error: unknown): bo
   if (status !== undefined) {
     return status >= 500;
   }
-  return error instanceof TypeError || (
-    error instanceof Error && error.message.startsWith('Network request timed out')
-  );
+  return error instanceof TypeError || error instanceof NetworkTimeoutError;
 }
 
 function errorStatus(error: unknown): number | undefined {

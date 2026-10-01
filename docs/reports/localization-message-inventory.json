@@ -374,18 +374,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/adapters/network/TimeoutFetch.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/providerProfiles/ApiProviderProfileRepository.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/serverState/MobileQueryClient.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/adapters/uploads/DirectUploadPolicy.ts",
       "candidates": 1
     },

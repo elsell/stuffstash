@@ -1,5 +1,7 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "mobile.providers.onboardingRequired": "Complete mobile onboarding before managing voice provider profiles.",
+  "mobile.network.timeout": "Network request timed out. Check that the API is reachable from this phone.",
   "web.options.seededInventoryRepository.cancellationRequested": "Cancellation requested",
   "web.options.seededInventoryRepository.queuedLocally": "Queued locally",
   "web.options.AssetDetailActionPanel.baseAsset": "Base asset",

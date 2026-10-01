@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { ignoreProviderProfileMutations, type ProviderProfileMutationObserver } from '../../application/providerProfiles/ProviderProfileMutationObserver';
 import type { ReadRequest } from '../../application/shared/ReadRequest';
 import type {
@@ -135,7 +136,7 @@ export class ApiProviderProfileRepository implements ProviderProfileRepository {
       ? this.tenantScope
       : await this.tenantScope.getCurrentTenantId(request);
     if (tenantId.trim().length === 0) {
-      throw new Error('Complete mobile onboarding before managing voice provider profiles.');
+      throw new Error(t('mobile.providers.onboardingRequired'));
     }
     return tenantId;
   }
