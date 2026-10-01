@@ -11,6 +11,8 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
+const maxImportRequestIDLength = dataportability.MaxImportRequestIDLength
+
 type importSourceIdentity = dataportability.ImportSourceIdentity
 type importImportedResourceInput = dataportability.ImportedResourceInput
 type importCancelledError = dataportability.ImportCancelledError

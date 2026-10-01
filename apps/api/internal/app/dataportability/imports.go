@@ -17,7 +17,9 @@ import (
 
 const MaxImportCSVBytes = 10 * 1024 * 1024
 const maxImportJobResourceSummaries = 50
-const maxImportRequestIDLength = 128
+
+// MaxImportRequestIDLength bounds the caller-supplied idempotency key.
+const MaxImportRequestIDLength = 128
 
 type ImportSourceInput struct {
 	SourceType          string
@@ -398,7 +400,7 @@ func (a ImportService) RemoveImportJobFromHistory(ctx context.Context, input Rem
 
 func normalizedImportRequestID(requestID string) (string, error) {
 	requestID = strings.TrimSpace(requestID)
-	if len(requestID) > maxImportRequestIDLength {
+	if len(requestID) > MaxImportRequestIDLength {
 		return "", apperrors.ErrInvalidInput
 	}
 	return requestID, nil
