@@ -14,7 +14,6 @@ import (
 	exportapp "github.com/stuffstash/stuff-stash/internal/app/dataportability"
 	mediaapp "github.com/stuffstash/stuff-stash/internal/app/media"
 	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
-	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
