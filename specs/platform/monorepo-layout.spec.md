@@ -179,3 +179,12 @@ attachment ownership checks, byte/content validation, durable thumbnail jobs,
 blob-cleanup leases/retries and safe read audit semantics. Existing attachment,
 direct-upload, thumbnail/concurrency and adversarial transport tests remain the
 acceptance contract for this behavior-preserving move.
+
+### Conversation tool contract ownership
+
+The agent-model `tools` package owns conversational proposal schemas, bounded
+read-tool argument validation and structured response-artifact validation. The
+root application package may retain forwarding functions and type aliases while
+session orchestration moves separately. Preserve wire schemas, validation bounds,
+unknown-argument rejection and existing adversarial tool/approval tests unchanged;
+this extraction does not alter grants or bypass application commands.

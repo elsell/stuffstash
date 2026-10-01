@@ -1,208 +1,55 @@
 package app
 
 import (
-	"strings"
+	"github.com/stuffstash/stuff-stash/internal/app/agentmodel/tools"
+)
 
-	"github.com/stuffstash/stuff-stash/internal/domain/asset"
-	"github.com/stuffstash/stuff-stash/internal/ports"
+type realtimeVoiceSearchArgs = tools.RealtimeVoiceSearchArgs
+type realtimeVoiceListArgs = tools.RealtimeVoiceListArgs
+type realtimeVoiceAssetAuditHistoryArgs = tools.RealtimeVoiceAssetAuditHistoryArgs
+type realtimeVoiceAssetDetailArgs = tools.RealtimeVoiceAssetDetailArgs
+type realtimeVoiceCheckedOutAssetsArgs = tools.RealtimeVoiceCheckedOutAssetsArgs
+type realtimeVoiceAssetCheckoutHistoryArgs = tools.RealtimeVoiceAssetCheckoutHistoryArgs
+
+const (
+	realtimeVoiceParentScopeAny  = tools.RealtimeVoiceParentScopeAny
+	realtimeVoiceParentScopeRoot = tools.RealtimeVoiceParentScopeRoot
 )
 
 func parseRealtimeVoiceSearchArgs(args map[string]any) (realtimeVoiceSearchArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "query", "lifecycleState", "limit"); err != nil {
-		return realtimeVoiceSearchArgs{}, err
-	}
-	query := strings.TrimSpace(stringArg(args["query"]))
-	if query == "" || len(query) > 120 {
-		return realtimeVoiceSearchArgs{}, ports.ErrInvalidProviderInput
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceSearchArgs{}, err
-	}
-	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
-	if err != nil {
-		return realtimeVoiceSearchArgs{}, err
-	}
-	return realtimeVoiceSearchArgs{Query: query, LifecycleState: lifecycleState, Limit: limit}, nil
+	return tools.ParseRealtimeVoiceSearchArgs(args)
 }
 
 func parseRealtimeVoiceListArgs(args map[string]any) (realtimeVoiceListArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "kind", "lifecycleState", "parentAssetId", "parentTitle", "locationTitle", "parentScope", "limit"); err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	kind, err := realtimeVoiceOptionalAssetKind(args["kind"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	parentTitle, err := optionalRealtimeVoiceTitle(args["parentTitle"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	locationTitle, err := optionalRealtimeVoiceTitle(args["locationTitle"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	parentAssetID := strings.TrimSpace(stringArg(args["parentAssetId"]))
-	if parentAssetID != "" {
-		if _, ok := asset.NewID(parentAssetID); !ok {
-			return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
-		}
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	lifecycleState, err := realtimeVoiceOptionalLifecycleState(args["lifecycleState"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	parentScope, err := realtimeVoiceOptionalParentScope(args["parentScope"])
-	if err != nil {
-		return realtimeVoiceListArgs{}, err
-	}
-	if parentScope == realtimeVoiceParentScopeRoot && (parentAssetID != "" || parentTitle != "" || locationTitle != "") {
-		return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
-	}
-	if parentAssetID != "" && (parentTitle != "" || locationTitle != "") {
-		return realtimeVoiceListArgs{}, ports.ErrInvalidProviderInput
-	}
-	return realtimeVoiceListArgs{Kind: kind, LifecycleState: lifecycleState, ParentAssetID: parentAssetID, ParentTitle: parentTitle, LocationTitle: locationTitle, ParentScope: parentScope, Limit: limit}, nil
+	return tools.ParseRealtimeVoiceListArgs(args)
 }
 
 func parseRealtimeVoiceAssetAuditHistoryArgs(args map[string]any) (realtimeVoiceAssetAuditHistoryArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId", "limit"); err != nil {
-		return realtimeVoiceAssetAuditHistoryArgs{}, err
-	}
-	assetID := strings.TrimSpace(stringArg(args["assetId"]))
-	if _, ok := asset.NewID(assetID); !ok {
-		return realtimeVoiceAssetAuditHistoryArgs{}, ports.ErrInvalidProviderInput
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceAssetAuditHistoryArgs{}, err
-	}
-	return realtimeVoiceAssetAuditHistoryArgs{AssetID: assetID, Limit: limit}, nil
+	return tools.ParseRealtimeVoiceAssetAuditHistoryArgs(args)
 }
 
 func parseRealtimeVoiceAssetDetailArgs(args map[string]any) (realtimeVoiceAssetDetailArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId"); err != nil {
-		return realtimeVoiceAssetDetailArgs{}, err
-	}
-	assetID := strings.TrimSpace(stringArg(args["assetId"]))
-	if _, ok := asset.NewID(assetID); !ok {
-		return realtimeVoiceAssetDetailArgs{}, ports.ErrInvalidProviderInput
-	}
-	return realtimeVoiceAssetDetailArgs{AssetID: assetID}, nil
+	return tools.ParseRealtimeVoiceAssetDetailArgs(args)
 }
 
 func parseRealtimeVoiceCheckedOutAssetsArgs(args map[string]any) (realtimeVoiceCheckedOutAssetsArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "limit"); err != nil {
-		return realtimeVoiceCheckedOutAssetsArgs{}, err
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceCheckedOutAssetsArgs{}, err
-	}
-	return realtimeVoiceCheckedOutAssetsArgs{Limit: limit}, nil
+	return tools.ParseRealtimeVoiceCheckedOutAssetsArgs(args)
 }
 
 func parseRealtimeVoiceAssetCheckoutHistoryArgs(args map[string]any) (realtimeVoiceAssetCheckoutHistoryArgs, error) {
-	if err := rejectUnknownRealtimeVoiceArgs(args, "assetId", "limit"); err != nil {
-		return realtimeVoiceAssetCheckoutHistoryArgs{}, err
-	}
-	assetID := strings.TrimSpace(stringArg(args["assetId"]))
-	if _, ok := asset.NewID(assetID); !ok {
-		return realtimeVoiceAssetCheckoutHistoryArgs{}, ports.ErrInvalidProviderInput
-	}
-	limit, err := realtimeVoiceToolLimit(args["limit"])
-	if err != nil {
-		return realtimeVoiceAssetCheckoutHistoryArgs{}, err
-	}
-	return realtimeVoiceAssetCheckoutHistoryArgs{AssetID: assetID, Limit: limit}, nil
+	return tools.ParseRealtimeVoiceAssetCheckoutHistoryArgs(args)
 }
 
 func rejectUnknownRealtimeVoiceArgs(args map[string]any, allowed ...string) error {
-	allowedSet := map[string]struct{}{}
-	for _, key := range allowed {
-		allowedSet[key] = struct{}{}
-	}
-	for key := range args {
-		if _, ok := allowedSet[key]; !ok {
-			return ports.ErrInvalidProviderInput
-		}
-	}
-	return nil
+	return tools.RejectUnknownRealtimeVoiceArgs(args, allowed...)
 }
 
 func optionalRealtimeVoiceTitle(raw any) (string, error) {
-	if raw == nil {
-		return "", nil
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	value = strings.TrimSpace(value)
-	if len(value) > 160 {
-		return "", ports.ErrInvalidProviderInput
-	}
-	return value, nil
+	return tools.OptionalRealtimeVoiceTitle(raw)
 }
 
 func realtimeVoiceOptionalParentScope(raw any) (string, error) {
-	if raw == nil {
-		return "", nil
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	value = strings.TrimSpace(value)
-	switch value {
-	case "", realtimeVoiceParentScopeAny, realtimeVoiceParentScopeRoot:
-		return value, nil
-	default:
-		return "", ports.ErrInvalidProviderInput
-	}
-}
-
-const (
-	realtimeVoiceParentScopeAny  = "any"
-	realtimeVoiceParentScopeRoot = "root"
-)
-
-type realtimeVoiceSearchArgs struct {
-	Query          string
-	LifecycleState string
-	Limit          int
-}
-
-type realtimeVoiceListArgs struct {
-	Kind           asset.Kind
-	LifecycleState string
-	ParentAssetID  string
-	ParentTitle    string
-	LocationTitle  string
-	ParentScope    string
-	Limit          int
-}
-
-type realtimeVoiceAssetAuditHistoryArgs struct {
-	AssetID string
-	Limit   int
-}
-
-type realtimeVoiceAssetDetailArgs struct {
-	AssetID string
-}
-
-type realtimeVoiceCheckedOutAssetsArgs struct {
-	Limit int
-}
-
-type realtimeVoiceAssetCheckoutHistoryArgs struct {
-	AssetID string
-	Limit   int
+	return tools.RealtimeVoiceOptionalParentScope(raw)
 }
 
 type realtimeVoiceAssetToolOutput struct {

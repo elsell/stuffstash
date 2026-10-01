@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/stuffstash/stuff-stash/internal/app/agentmodel/tools"
 	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
-	"math"
+
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-const realtimeVoiceToolMaxResults = 20
+const realtimeVoiceToolMaxResults = tools.RealtimeVoiceToolMaxResults
 
 func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
 	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
@@ -299,71 +300,6 @@ func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAsset
 	}, nil
 }
 
-func realtimeVoiceToolLimit(raw any) (int, error) {
-	if raw == nil {
-		return 10, nil
-	}
-	switch value := raw.(type) {
-	case float64:
-		if math.IsNaN(value) || value != math.Trunc(value) || value < 1 {
-			return 0, ports.ErrInvalidProviderInput
-		}
-		if value > realtimeVoiceToolMaxResults {
-			return realtimeVoiceToolMaxResults, nil
-		}
-		return int(value), nil
-	case int:
-		if value < 1 {
-			return 0, ports.ErrInvalidProviderInput
-		}
-		if value > realtimeVoiceToolMaxResults {
-			return realtimeVoiceToolMaxResults, nil
-		}
-		return value, nil
-	default:
-		return 0, ports.ErrInvalidProviderInput
-	}
-}
-
-func realtimeVoiceOptionalAssetKind(raw any) (asset.Kind, error) {
-	if raw == nil {
-		return "", nil
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return "", nil
-	}
-	kind, ok := asset.NewKind(value)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	return kind, nil
-}
-
-func realtimeVoiceOptionalLifecycleState(raw any) (string, error) {
-	if raw == nil {
-		return "active", nil
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", ports.ErrInvalidProviderInput
-	}
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return "active", nil
-	}
-	switch value {
-	case "active", "archived", "all":
-		return value, nil
-	default:
-		return "", ports.ErrInvalidProviderInput
-	}
-}
-
 func realtimeVoiceMatchFields(matches []search.Match) []string {
 	fields := make([]string, 0, len(matches))
 	seen := map[string]struct{}{}
@@ -384,4 +320,14 @@ func realtimeVoiceMatchFields(matches []search.Match) []string {
 func stringArg(raw any) string {
 	value, _ := raw.(string)
 	return value
+}
+
+func realtimeVoiceToolLimit(raw any) (int, error) { return tools.RealtimeVoiceToolLimit(raw) }
+
+func realtimeVoiceOptionalAssetKind(raw any) (asset.Kind, error) {
+	return tools.RealtimeVoiceOptionalAssetKind(raw)
+}
+
+func realtimeVoiceOptionalLifecycleState(raw any) (string, error) {
+	return tools.RealtimeVoiceOptionalLifecycleState(raw)
 }
