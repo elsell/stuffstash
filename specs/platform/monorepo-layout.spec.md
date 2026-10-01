@@ -207,3 +207,12 @@ silent replies, clarification/continuity completion rules, playable-chunk filter
 provider-stage error attribution and diagnostic redaction. Do not recreate session
 memory or change provider selection. Existing response, billing, diagnostics,
 silent-text and transport security tests remain the acceptance contract.
+
+Action-plan review projection belongs beside approval and execution in the
+agent-model action-plan service. Inject the existing scoped asset and custom-field
+repositories. Preserve caller authorization, tenant/inventory-scoped reads,
+application-authored change disclosures, active-definition labels, deterministic
+field ordering, expiration precision/clear state and dependent-parent references.
+Root realtime wrappers supply the decision scope; they must not reconstruct or
+change review content. Existing review, expiration and approval security tests
+remain the contract for this ownership change.

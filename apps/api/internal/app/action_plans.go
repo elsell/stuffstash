@@ -40,6 +40,7 @@ func (a App) actionPlanService() agentmodel.ActionPlanService {
 		Authorizer:               a.authorizer,
 		Clock:                    a.clock,
 		CustomAssetTypes:         a.customAssetTypes,
+		CustomFields:             a.customFields,
 		IDs:                      a.ids,
 		Inventories:              a.inventories,
 		MaxAttachmentBytes:       a.maxAttachmentBytes,

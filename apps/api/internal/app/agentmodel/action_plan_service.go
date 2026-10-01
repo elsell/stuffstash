@@ -14,6 +14,7 @@ type ActionPlanDependencies struct {
 	Authorizer               ports.Authorizer
 	Clock                    ports.Clock
 	CustomAssetTypes         ports.CustomAssetTypeRepository
+	CustomFields             ports.CustomFieldDefinitionRepository
 	IDs                      ports.IDGenerator
 	Inventories              ports.InventoryRepository
 	MaxAttachmentBytes       int

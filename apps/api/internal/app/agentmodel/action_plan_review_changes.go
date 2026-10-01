@@ -1,4 +1,4 @@
-package app
+package agentmodel
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 // Changes are application-authored disclosure; the model's summary is not an
 // authority for which values will change. Values remain plain text in clients.
-func (a App) actionPlanDetailChanges(ctx context.Context, session RealtimeVoiceSession, title, description *string, fields map[string]any) ([]string, error) {
+func (a ActionPlanService) actionPlanDetailChanges(ctx context.Context, session ActionPlanDecisionInput, title, description *string, fields map[string]any) ([]string, error) {
 	changes := []string{}
 	if title != nil {
 		changes = append(changes, "Name: "+strings.TrimSpace(*title))
@@ -24,10 +24,10 @@ func (a App) actionPlanDetailChanges(ctx context.Context, session RealtimeVoiceS
 		changes = append(changes, "Description: "+value)
 	}
 	if len(fields) > 0 {
-		if a.customFields == nil {
+		if a.deps.CustomFields == nil {
 			return nil, ports.ErrInvalidProviderInput
 		}
-		definitions, err := a.customFields.ListEffectiveCustomFieldDefinitions(ctx, session.TenantID, session.InventoryID)
+		definitions, err := a.deps.CustomFields.ListEffectiveCustomFieldDefinitions(ctx, session.TenantID, session.InventoryID)
 		if err != nil {
 			return nil, err
 		}
