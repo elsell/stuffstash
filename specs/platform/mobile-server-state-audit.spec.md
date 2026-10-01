@@ -1,5 +1,12 @@
 # Mobile Server State Audit Evidence
 
+> Historical server-state migration evidence. Current delivery sequencing is in
+> `roadmap.spec.md`; current mobile evidence is in the remediation README. Old
+> PR44/native-release pending statements below describe that migration revision,
+> not a present instruction to repeat it. The API limitations below remain
+> deliberate unless a later domain spec changes them.
+
+
 ## Completion Rule
 
 This matrix tracks implementation against `mobile-server-state.spec.md`. A migrated query is not a completed surface until its mounted behavior, cancellation, request graph, mutation reconciliation, and scope isolation are verified. All build validation runs in PR CI: the development host has insufficient disk for builds.

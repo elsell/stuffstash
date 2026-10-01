@@ -1,10 +1,24 @@
 # Image Performance Evidence
 
-## Measurement status
+## Current interpretation — October 1, 2026
 
-This is an incomplete investigation. Production/device baselines, full runtime
-instrumentation, image pipeline changes, and the final comparison remain pending.
-Follow `../platform/observability.spec.md` for the delivery contract.
+The September 6 HTTP comparison completed; its results and limitations appear
+below and in `docs/reports/image-performance-2026-09-06.md`. Background thumbnail
+work subsequently shipped; see `background-thumbnails.spec.md` and
+`docs/reports/thumbnail-scheduling-2026-09-07.md`.
+
+Profiling is implemented in the observability adapter and bootstrap. Client
+request reporting/session integration is implemented. Visible-image component
+instrumentation and broader physical-client/performance acceptance remain open
+(G7/V1 in `../platform/roadmap.spec.md`). Historical statements below about absent
+profiling, pending comparisons and failed frontend type checks describe their
+named revisions; they are not current implementation blockers.
+
+The earlier median improvement does not prove stable production tail latency or
+physical-device rendering. Preserve the slower-sample/storage-stall evidence.
+Follow `../platform/observability.spec.md` for the behavioral contract.
+
+## Historical measurement record — September 6, 2026
 
 ## Immediate delivery priority — user direction, 2026-09-06
 
@@ -79,7 +93,7 @@ and real WebSocket 101 regressions passed after their red run `34053649692`.
 Code critic review of wiring found no new confirmed defect.
 
 Continuous profiling configuration red tests were committed at `a692225fd`; the
-profiling adapter and runtime wiring are not implemented yet. Local `go tool pprof`
+profiling adapter and runtime wiring were not implemented at that checkpoint (now implemented). Local `go tool pprof`
 also attempted compilation and ran out of disk; profile summarization is now in
 the CI benchmark workflow. No thumbnail behavior has changed.
 
@@ -219,7 +233,7 @@ HTTP corpus does not establish device rendering performance, a stable production
 p95, or safety under concurrent cold-generation load.
 
 Final API race validation and image publication passed CI `34061597496`.
-The workflow's deferred frontend job still fails mobile test type checking.
+That run's deferred frontend job failed mobile test type checking; this is historical run evidence, not the current client status.
 GitOps `0f374fb` deployed the compared image; `ddf8c4d` restores the specified
 0.1 trace sample ratio after the paired runs. No further observability expansion
 or background-worker implementation is part of this completed comparison.
