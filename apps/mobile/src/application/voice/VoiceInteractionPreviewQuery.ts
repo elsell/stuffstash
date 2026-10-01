@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { VoiceInventoryContextRepository } from './VoiceInventoryContext';
 import type { ReadRequest } from '../shared/ReadRequest';
 
@@ -24,16 +25,16 @@ export class VoiceInteractionPreviewQuery {
     return {
       tenantName: context.tenantName,
       inventoryName: context.inventoryName,
-      sampleUtterance: 'Move the fertilizer from the garage shelf to the wire rack.',
-      assistantSummary: 'I found one likely move. Review the plan before anything changes.',
+      sampleUtterance: t('mobile.VoiceInteractionPreviewQuery.moveTheFertilizerFromTheGarageShelfToThe'),
+      assistantSummary: t('mobile.VoiceInteractionPreviewQuery.iFoundOneLikelyMoveReviewThePlanBefore'),
       actionPreview: {
-        summary: 'Move fertilizer',
+        summary: t('mobile.VoiceInteractionPreviewQuery.moveFertilizer'),
         steps: [
-          'Find Fertilizer in Garage shelf',
-          'Move it to Wire rack in Garage',
-          'Record the change in inventory history'
+          t('mobile.VoiceInteractionPreviewQuery.findFertilizerInGarageShelf'),
+          t('mobile.VoiceInteractionPreviewQuery.moveItToWireRackInGarage'),
+          t('mobile.VoiceInteractionPreviewQuery.recordTheChangeInInventoryHistory')
         ],
-        riskLabel: 'Needs approval before saving'
+        riskLabel: t('mobile.VoiceInteractionPreviewQuery.needsApprovalBeforeSaving')
       }
     };
   }

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 export type WorkspaceSetupMode = 'tenant_and_inventory' | 'inventory';
 
 export interface WorkspaceSetupDraft {
@@ -16,8 +17,8 @@ export interface WorkspaceSetupValidation {
 export function validateWorkspaceSetupDraft(mode: WorkspaceSetupMode, draft: WorkspaceSetupDraft): WorkspaceSetupValidation {
   const tenantName = draft.tenantName.trim();
   const inventoryName = draft.inventoryName.trim();
-  const tenantError = mode === 'tenant_and_inventory' && !tenantName ? 'Name your tenant.' : '';
-  const inventoryError = !inventoryName ? 'Name your inventory.' : '';
+  const tenantError = mode === 'tenant_and_inventory' && !tenantName ? t('web.workspaceOnboarding.nameYourTenant') : '';
+  const inventoryError = !inventoryName ? t('web.workspaceOnboarding.nameYourInventory') : '';
   return {
     valid: !tenantError && !inventoryError,
     tenantName,
@@ -28,11 +29,11 @@ export function validateWorkspaceSetupDraft(mode: WorkspaceSetupMode, draft: Wor
 }
 
 export function workspaceSetupTitle(mode: WorkspaceSetupMode): string {
-  return mode === 'tenant_and_inventory' ? 'Set up your workspace' : 'Create an inventory';
+  return mode === 'tenant_and_inventory' ? t('web.workspaceOnboarding.setUpYourWorkspace') : t('web.workspaceOnboarding.createAnInventory');
 }
 
 export function workspaceSetupDescription(mode: WorkspaceSetupMode, tenantName?: string): string {
   return mode === 'tenant_and_inventory'
-    ? 'Name the tenant and first inventory for this Stuff Stash instance.'
-    : `Name the first inventory for ${tenantName ?? 'this tenant'}.`;
+    ? t('web.workspaceOnboarding.nameTheTenantAndFirstInventoryForThisStuff')
+    : tenantName ? t('onboarding.firstInventoryNamed', { tenant: tenantName }) : t('onboarding.firstInventory');
 }

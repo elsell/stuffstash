@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 export type SignInState = 'default' | 'expired' | 'rejected';
 export type SignInFailure = 'configuration' | 'workspace' | 'start';
 
@@ -8,23 +9,23 @@ export interface SignInPresentation {
 
 const presentations: Record<SignInState, SignInPresentation> = {
   default: {
-    title: 'Sign in to Stuff Stash',
-    description: 'Continue to your secure sign-in page. You’ll return here when you’re done.'
+    title: t('web.signInPresentation.signInToStuffStash'),
+    description: t('web.signInPresentation.continueToYourSecureSignInPageYouLl')
   },
   expired: {
-    title: 'Session expired',
-    description: 'Your session ended. Sign in again to continue.'
+    title: t('web.signInPresentation.sessionExpired'),
+    description: t('web.signInPresentation.yourSessionEndedSignInAgainToContinue')
   },
   rejected: {
-    title: 'We couldn’t open your account',
-    description: 'Sign in again. If the problem continues, contact the person who manages this server.'
+    title: t('web.signInPresentation.weCouldnTOpenYourAccount'),
+    description: t('web.signInPresentation.signInAgainIfTheProblemContinuesContactThe')
   }
 };
 
 const failureMessages: Record<SignInFailure, string> = {
-  configuration: 'Stuff Stash isn’t ready to sign you in. Reload the page to try again.',
-  workspace: 'Stuff Stash couldn’t load your inventory. Refresh the page to try again.',
-  start: 'The secure sign-in page didn’t open. Try again.'
+  configuration: t('web.signInPresentation.stuffStashIsnTReadyToSignYouIn'),
+  workspace: t('web.signInPresentation.stuffStashCouldnTLoadYourInventoryRefreshThe'),
+  start: t('web.signInPresentation.theSecureSignInPageDidnTOpenTry')
 };
 
 export function signInPresentation(state: SignInState): SignInPresentation {

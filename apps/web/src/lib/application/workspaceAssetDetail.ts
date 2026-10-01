@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset, AssetAttachment, AssetCheckout, CustomFieldDefinition, WorkspaceData } from '$lib/domain/inventory';
 import type { InventoryRepository } from '$lib/ports/inventoryRepository';
 import { isAuthenticationRequiredError } from './authenticationRequired';
@@ -100,7 +101,7 @@ export function assetDetailFailureMessage(caught: unknown): string {
   if (safeForUser && caught instanceof Error && caught.message.trim() && !isGenericAdapterMessage(caught)) {
     return caught.message.trim();
   }
-  return 'Asset details could not be loaded. Try again.';
+  return t('web.workspaceAssetDetail.assetDetailsCouldNotBeLoadedTryAgain');
 }
 
 function isGenericAdapterMessage(caught: Error): boolean {
@@ -133,7 +134,7 @@ type LoadedWorkspaceAssetDetail = LoadWorkspaceAssetDetailResult & {
 };
 
 export function assetDescriptionText(description: string): string {
-  return description || 'No description.';
+  return description || t('web.workspaceAssetDetail.noDescription');
 }
 
 export function assetEditUnavailableStatus(canEdit: boolean): AssetDetailStatusPresentation | null {
@@ -142,7 +143,7 @@ export function assetEditUnavailableStatus(canEdit: boolean): AssetDetailStatusP
   }
   return {
     kind: 'edit-unavailable',
-    message: 'Edit actions require asset edit access.'
+    message: t('web.workspaceAssetDetail.editActionsRequireAssetEditAccess')
   };
 }
 
@@ -152,6 +153,6 @@ export function assetFilesStatus(fileCount: number): AssetDetailStatusPresentati
   }
   return {
     kind: 'files-empty',
-    message: 'No active files.'
+    message: t('web.workspaceAssetDetail.noActiveFiles')
   };
 }

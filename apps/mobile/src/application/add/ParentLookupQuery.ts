@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetKind, AssetSummary } from '../../domain/assets/AssetSummary';
 import type { ReadRequest } from '../shared/ReadRequest';
 
@@ -53,7 +54,7 @@ function toParentLookupResult(asset: AssetSummary): ParentLookupResult {
       ? asset.locationTrail.slice(1).join(' / ')
       : asset.title,
     selectionHint: willPromoteToContainer
-      ? 'Will become a container for this item'
+      ? t('mobile.ParentLookupQuery.willBecomeAContainerForThisItem')
       : parentKindLabel(asset.kind),
     willPromoteToContainer,
     canSelectAsParent: true,
@@ -66,17 +67,17 @@ function parentSubtitle(asset: AssetSummary): string {
     return asset.locationTrail.slice(0, -1).join(' / ');
   }
 
-  return asset.locationLabel === 'Inventory root' ? 'No parent' : asset.locationLabel;
+  return !asset.parentAssetId && !asset.parentLocationTrail?.length ? t('mobile.ParentLookupQuery.noParent') : asset.locationLabel;
 }
 
 function parentKindLabel(kind: AssetKind): string {
   switch (kind) {
     case 'location':
-      return 'Location';
+      return t('mobile.ParentLookupQuery.location');
     case 'container':
-      return 'Container';
+      return t('mobile.ParentLookupQuery.container');
     case 'item':
-      return 'Item';
+      return t('mobile.ParentLookupQuery.item');
   }
 }
 

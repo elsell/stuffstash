@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export class SelectedInventoryUnavailableError extends Error {
-  constructor() { super('The selected Stuff Stash inventory is no longer available.'); }
+  constructor() { super(t('mobile.SelectedInventoryUnavailableError.theSelectedStuffStashInventoryIsNoLongerAvailable')); }
 }

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReadRequest } from '../shared/ReadRequest';
 export { SelectedInventoryUnavailableError as SettingsScopeUnavailableError } from '../shared/SelectedInventoryUnavailableError';
 
@@ -72,7 +73,7 @@ export class SettingsQuery {
     return {
       principal: {
         id: principal.id,
-        primaryLabel: principal.email ?? 'Signed in'
+        primaryLabel: principal.email ?? t('mobile.SettingsQuery.signedIn')
       },
       selectedTenant: selectedScope.tenant,
       selectedInventory: selectedScope.inventory,

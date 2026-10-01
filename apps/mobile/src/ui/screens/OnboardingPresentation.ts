@@ -7,9 +7,10 @@ import { spacing, type MobileColorPalette } from '../theme/tokens';
 export const initialInventoryName = t('mobile.OnboardingPresentation.homeInventory');
 export function onboardingError(error: unknown): string {
   if (error instanceof MobileAuthenticationRequiredError) return t('mobile.OnboardingPresentation.signInAgainToContinueSetup');
-  if (error instanceof OnboardingRecoveryRequiredError) return error.message;
+  if (error instanceof OnboardingRecoveryRequiredError) return t('onboarding.creationUnknown');
   if (error instanceof Error) {
-    if (error.message === 'Enter a household name.' || error.message === 'Enter an inventory name.') return error.message;
+    if (error.message === 'Enter a household name.') return t('onboarding.householdRequired');
+    if (error.message === 'Enter an inventory name.') return t('onboarding.inventoryRequired');
     if (error.message === 'Enter a Stuff Stash instance URL.') return t('mobile.OnboardingPresentation.enterYourServerAddress');
     if (error.message === 'Enter a valid Stuff Stash instance URL.' || error.message === 'Stuff Stash instance URLs must use HTTP or HTTPS.') {
       return t('mobile.OnboardingPresentation.enterAValidServerAddressUsingHttpsOrHttp');

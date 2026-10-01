@@ -18,6 +18,11 @@ class FakeParentLookupRepository {
 }
 
 describe('ParentLookupQuery', () => {
+  it('uses containment identity rather than an English root label', async () => {
+    const root = { ...asset('root', 'Garage', 'location', 'Racine'), locationTrail: ['Garage'], parentLocationTrail: [], parentAssetId: undefined };
+    const result = await new ParentLookupQuery({ async listParentCandidates() { return [root]; } }).execute('');
+    expect(result[0].subtitle).toBe('No parent');
+  });
   it('forwards cancellation through the focused port', async () => {
     const repository = new FakeParentLookupRepository();
     const signal = new AbortController().signal;

@@ -118,3 +118,8 @@ summaries, notification recovery, onboarding guidance, and administrative status
 maps. Native module identifiers, keyboard keys, time-zone IDs, technical exceptions
 and semantic state values are not messages. Styling or section visibility must
 use explicit state flags instead of comparing translated labels.
+
+Parent suggestions derive root/parent status from containment identities, not an
+English location label. Application-produced validation, recovery and status copy
+uses catalog messages; onboarding's existing diagnostic matching stays stable
+while its user-facing messages translate at the presentation boundary.

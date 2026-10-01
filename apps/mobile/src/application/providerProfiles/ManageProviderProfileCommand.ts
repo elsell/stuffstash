@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {
   ProviderProfileLifecycleAction,
   ProviderProfileRepository,
@@ -16,16 +17,16 @@ export class ManageProviderProfileCommand {
     const input = template.input;
     return this.profiles.createProviderProfile({
       ...input,
-      displayName: requireText(input.displayName, 'Name the provider profile.'),
-      capability: requireText(input.capability, 'Choose a provider capability.'),
-      providerKind: requireText(input.providerKind, 'Choose a provider kind.')
+      displayName: requireText(input.displayName, t('mobile.ManageProviderProfileCommand.nameTheProviderProfile')),
+      capability: requireText(input.capability, t('mobile.ManageProviderProfileCommand.chooseAProviderCapability')),
+      providerKind: requireText(input.providerKind, t('mobile.ManageProviderProfileCommand.chooseAProviderKind'))
     });
   }
 
   async replacePromptTemplate(input: UpdateProviderProfileInput): Promise<ProviderProfileSummary> {
-    const promptTemplate = requireText(input.promptTemplate ?? '', 'Enter a replacement prompt template.');
+    const promptTemplate = requireText(input.promptTemplate ?? '', t('mobile.ManageProviderProfileCommand.enterAReplacementPromptTemplate'));
     return this.profiles.updateProviderProfile({
-      providerProfileId: requireText(input.providerProfileId, 'Choose a provider profile.'),
+      providerProfileId: requireText(input.providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
       promptTemplate
     });
   }
@@ -35,10 +36,10 @@ export class ManageProviderProfileCommand {
   ): Promise<ProviderProfileSummary> {
     const credential = input.purpose === 'server_adc'
       ? undefined
-      : requireText(input.credential ?? '', 'Enter the provider credential.');
+      : requireText(input.credential ?? '', t('mobile.ManageProviderProfileCommand.enterTheProviderCredential'));
 
     return this.profiles.replaceProviderProfileCredential({
-      providerProfileId: requireText(input.providerProfileId, 'Choose a provider profile.'),
+      providerProfileId: requireText(input.providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
       purpose: input.purpose,
       credential
     });
@@ -49,7 +50,7 @@ export class ManageProviderProfileCommand {
     action: ProviderProfileLifecycleAction
   ): Promise<ProviderProfileSummary> {
     return this.profiles.changeProviderProfileLifecycle(
-      requireText(providerProfileId, 'Choose a provider profile.'),
+      requireText(providerProfileId, t('mobile.ManageProviderProfileCommand.chooseAProviderProfile')),
       action
     );
   }

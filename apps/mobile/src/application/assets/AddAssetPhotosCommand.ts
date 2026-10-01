@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type {
   CreateInventoryAssetPhotoInput,
@@ -85,7 +86,7 @@ function photoUploadMessage(attachedCount: number, failedCount: number, failureM
     if (failureMessage) {
       return `Photos could not be uploaded: ${failureMessage}`;
     }
-    return 'Photos could not be uploaded.';
+    return t('mobile.AddAssetPhotosCommand.photosCouldNotBeUploaded');
   }
   return `${attachedCount.toString()} of ${(attachedCount + failedCount).toString()} photos added.`;
 }

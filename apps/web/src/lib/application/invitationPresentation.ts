@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { InvitationPreview } from '$lib/domain/invitation';
 
 export type InvitationPresentationState = 'ready' | 'expired' | 'revoked' | 'cancelled' | 'accepted';
@@ -11,7 +12,7 @@ export function invitationPresentationState(preview: InvitationPreview): Invitat
 }
 
 export function invitationRelationshipLabel(preview: InvitationPreview): string {
-  return preview.relationship === 'editor' ? 'Can edit' : 'Can view';
+  return preview.relationship === 'editor' ? t('web.invitationPresentation.canEdit') : t('web.invitationPresentation.canView');
 }
 
 export function invitationExpirationLabel(preview: InvitationPreview, locale?: string): string {

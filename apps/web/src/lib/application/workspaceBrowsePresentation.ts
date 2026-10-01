@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset } from '$lib/domain/inventory';
 
 export interface PlaceBrowseSummary {
@@ -9,10 +10,10 @@ export interface PlaceBrowseSummary {
 export type BrowseFailurePhase = 'initial' | 'replacement' | 'append' | 'map';
 
 const browseFailureFallbacks: Record<BrowseFailurePhase, string> = {
-  initial: 'Browse could not be loaded. Try again.',
-  replacement: 'Browse could not be refreshed. Try again.',
-  append: 'More results could not be loaded. Try again.',
-  map: 'Map could not be loaded. Try again.'
+  initial: t('web.workspaceBrowsePresentation.browseCouldNotBeLoadedTryAgain'),
+  replacement: t('web.workspaceBrowsePresentation.browseCouldNotBeRefreshedTryAgain'),
+  append: t('web.workspaceBrowsePresentation.moreResultsCouldNotBeLoadedTryAgain'),
+  map: t('web.workspaceBrowsePresentation.mapCouldNotBeLoadedTryAgain')
 };
 
 export function browseFailureMessage(error: unknown, phase: BrowseFailurePhase): string {

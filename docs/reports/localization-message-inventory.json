@@ -18,12 +18,12 @@
       "candidates": 16
     },
     {
-      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
       "candidates": 15
     },
     {
-      "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
-      "candidates": 15
+      "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+      "candidates": 14
     },
     {
       "file": "apps/web/src/lib/components/ui/button/button.svelte",
@@ -42,59 +42,11 @@
       "candidates": 9
     },
     {
-      "file": "apps/mobile/src/application/providerProfiles/RecommendedProviderProfiles.ts",
-      "candidates": 9
-    },
-    {
-      "file": "apps/web/src/lib/application/signInPresentation.ts",
-      "candidates": 9
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceContainedAssets.ts",
-      "candidates": 9
-    },
-    {
-      "file": "apps/mobile/src/application/notifications/NotificationFailure.ts",
-      "candidates": 8
-    },
-    {
-      "file": "apps/mobile/src/application/providerProfiles/ManageProviderProfileCommand.ts",
-      "candidates": 8
-    },
-    {
-      "file": "apps/web/src/lib/application/expirationPresentation.ts",
-      "candidates": 8
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceCustomizationPresentation.ts",
-      "candidates": 8
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceParentTargets.ts",
-      "candidates": 8
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/BrowsePanel.svelte",
       "candidates": 8
     },
     {
-      "file": "apps/mobile/src/application/customization/ManageCustomFields.ts",
-      "candidates": 7
-    },
-    {
-      "file": "apps/mobile/src/application/voice/VoiceInteractionPreviewQuery.ts",
-      "candidates": 7
-    },
-    {
       "file": "apps/mobile/src/ui/screens/OnboardingPresentation.ts",
-      "candidates": 7
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceOnboarding.ts",
-      "candidates": 7
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceRouteRecoveryPresentation.ts",
       "candidates": 7
     },
     {
@@ -110,26 +62,6 @@
       "candidates": 6
     },
     {
-      "file": "apps/mobile/src/application/add/ParentLookupQuery.ts",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/application/assets/AddAssetPhotosCommand.ts",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/application/auth/MobileAuthSession.ts",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/application/customization/ManageTags.ts",
-      "candidates": 6
-    },
-    {
-      "file": "apps/mobile/src/application/home/HomeDashboardQuery.ts",
-      "candidates": 6
-    },
-    {
       "file": "apps/mobile/src/application/onboarding/OnboardingCommand.ts",
       "candidates": 6
     },
@@ -142,11 +74,7 @@
       "candidates": 6
     },
     {
-      "file": "apps/web/src/lib/application/inventoryConversation.ts",
-      "candidates": 6
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAssetMedia.ts",
+      "file": "apps/web/src/lib/application/workspaceParentTargets.ts",
       "candidates": 6
     },
     {
@@ -162,11 +90,15 @@
       "candidates": 5
     },
     {
+      "file": "apps/mobile/src/application/assets/AddAssetPhotosCommand.ts",
+      "candidates": 5
+    },
+    {
       "file": "apps/mobile/src/application/assets/AssetCheckoutCommand.ts",
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/application/customization/CustomizationErrors.ts",
+      "file": "apps/mobile/src/application/auth/MobileAuthSession.ts",
       "candidates": 5
     },
     {
@@ -174,15 +106,7 @@
       "candidates": 5
     },
     {
-      "file": "apps/web/src/lib/application/signInCallbackPresentation.ts",
-      "candidates": 5
-    },
-    {
       "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
-      "candidates": 5
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceContextSwitching.ts",
       "candidates": 5
     },
     {
@@ -198,39 +122,11 @@
       "candidates": 4
     },
     {
-      "file": "apps/mobile/src/application/assets/InventoryMapQuery.ts",
-      "candidates": 4
-    },
-    {
       "file": "apps/mobile/src/application/assets/MoveAssetCommand.ts",
       "candidates": 4
     },
     {
-      "file": "apps/mobile/src/application/invitations/InventoryInvitationRepository.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/mobile/src/application/sharing/InventorySharing.ts",
-      "candidates": 4
-    },
-    {
       "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
-      "candidates": 4
-    },
-    {
-      "file": "apps/web/src/lib/application/expirationList.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAssetDetail.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceBrowsePresentation.ts",
-      "candidates": 4
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceSettingsNavigation.ts",
       "candidates": 4
     },
     {
@@ -270,10 +166,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/application/customization/ManageCustomAssetTypes.ts",
-      "candidates": 3
-    },
-    {
       "file": "apps/mobile/src/application/onboarding/ConnectionProfile.ts",
       "candidates": 3
     },
@@ -302,11 +194,7 @@
       "candidates": 3
     },
     {
-      "file": "apps/web/src/lib/application/personalWorkspaceProvisioning.ts",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceOperationNotifications.ts",
+      "file": "apps/web/src/lib/application/workspaceContainedAssets.ts",
       "candidates": 3
     },
     {
@@ -358,15 +246,19 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/application/assets/DeleteAssetPhotoCommand.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts",
       "candidates": 2
     },
     {
+      "file": "apps/mobile/src/application/assets/InventoryMapQuery.ts",
+      "candidates": 2
+    },
+    {
       "file": "apps/mobile/src/application/assets/UpdateAssetCommand.ts",
+      "candidates": 2
+    },
+    {
+      "file": "apps/mobile/src/application/home/HomeDashboardQuery.ts",
       "candidates": 2
     },
     {
@@ -378,11 +270,11 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/application/providerProfiles/ProviderProfileVoiceReadinessCheck.ts",
+      "file": "apps/mobile/src/application/providerProfiles/TestProviderProfileCommand.ts",
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/application/providerProfiles/TestProviderProfileCommand.ts",
+      "file": "apps/mobile/src/application/sharing/InventorySharing.ts",
       "candidates": 2
     },
     {
@@ -430,10 +322,6 @@
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/application/invitationPresentation.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/web/src/lib/application/notificationInbox.ts",
       "candidates": 2
     },
@@ -443,10 +331,6 @@
     },
     {
       "file": "apps/web/src/lib/application/settingsManagement.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/web/src/lib/application/workspaceAddAvailability.ts",
       "candidates": 2
     },
     {
@@ -570,6 +454,10 @@
       "candidates": 1
     },
     {
+      "file": "apps/mobile/src/application/assets/DeleteAssetPhotoCommand.ts",
+      "candidates": 1
+    },
+    {
       "file": "apps/mobile/src/application/assets/RevertAssetChangeCommand.ts",
       "candidates": 1
     },
@@ -582,23 +470,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/application/invitations/InvitationLinkParser.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/application/notifications/NotificationInboxQueries.ts",
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/application/settings/SettingsQuery.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/application/shared/ReadRequest.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/shared/SelectedInventoryUnavailableError.ts",
       "candidates": 1
     },
     {
@@ -698,11 +574,7 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/application/authenticationRequired.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/web/src/lib/application/expirationHome.ts",
+      "file": "apps/web/src/lib/application/expirationList.ts",
       "candidates": 1
     },
     {
@@ -710,15 +582,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/application/workspace.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/web/src/lib/application/workspaceAddFocus.ts",
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAddRoute.ts",
+      "file": "apps/web/src/lib/application/workspaceOperationNotifications.ts",
       "candidates": 1
     },
     {

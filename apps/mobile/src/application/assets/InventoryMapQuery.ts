@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ReadRequest } from '../shared/ReadRequest';
 import type { AssetId, AssetKind, AssetSummary } from '../../domain/assets/AssetSummary';
 import type { InventoryId, TenantId } from '../../domain/inventories/InventorySummary';
@@ -109,7 +110,7 @@ function toInventoryMapAssetViewModel(
 
 function labelParentPlacement(asset: AssetSummary): string {
   if (asset.parentLocationTrail.length === 0) {
-    return 'Inventory root';
+    return t('mobile.InventoryMapQuery.inventoryRoot');
   }
 
   return asset.parentLocationTrail.map((segment) => segment.title).join(' / ');
@@ -179,7 +180,7 @@ function stableTextSortKey(value: string): string {
 
 function labelChildCount(count: number): string {
   if (count === 0) {
-    return 'Empty';
+    return t('mobile.InventoryMapQuery.empty');
   }
   if (count === 1) {
     return '1 inside';

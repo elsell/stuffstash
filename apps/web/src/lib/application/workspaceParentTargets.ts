@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
 import { assetKindLabel } from '$lib/presentation/assetKindLabel';
 
@@ -84,13 +85,13 @@ function parentTargetPickerStatus(input: {
   targetCount: number;
 }): ParentTargetPickerStatus {
   if (input.hasSearch && input.visibleCount === 0) {
-    return { kind: 'no-matches', message: 'No matching locations or containers.' };
+    return { kind: 'no-matches', message: t('web.workspaceParentTargets.noMatchingLocationsOrContainers') };
   }
   if (input.hasSearch && input.matchingCount > input.visibleCount) {
     return { kind: 'overflow', message: `Showing the first ${input.visibleCount} of ${input.matchingCount} matches.` };
   }
   if (!input.hasSearch && input.targetCount === 0) {
-    return { kind: 'no-targets', message: 'No locations or containers yet.' };
+    return { kind: 'no-targets', message: t('web.workspaceParentTargets.noLocationsOrContainersYet') };
   }
   return { kind: 'none', message: '' };
 }

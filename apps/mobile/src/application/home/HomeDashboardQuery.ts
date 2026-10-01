@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetCardViewModel } from '../assets/AssetViewModels';
 import { toAssetCardViewModel } from '../assets/AssetViewModels';
 import { createInventoryOverview } from '../../domain/inventories/InventorySummary';
@@ -71,7 +72,7 @@ export class HomeDashboardQuery {
         tenantId: item.tenantId,
         tenantName:
           workspace.tenants.find((tenantOption) => tenantOption.id === item.tenantId)?.name ??
-          'Unknown tenant',
+          t('mobile.HomeDashboardQuery.unknownTenant'),
         name: item.name,
         roleLabel: labelAccessRole(item.role),
         updatedAtLabel: item.updatedAtLabel
@@ -90,10 +91,10 @@ export class HomeDashboardQuery {
 function labelAccessRole(role: AccessRole): string {
   switch (role) {
     case 'owner':
-      return 'Owner';
+      return t('mobile.HomeDashboardQuery.owner');
     case 'editor':
-      return 'Editor';
+      return t('mobile.HomeDashboardQuery.editor');
     case 'viewer':
-      return 'Viewer';
+      return t('mobile.HomeDashboardQuery.viewer');
   }
 }

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { InventoryConversationConnection, InventoryConversationEvent, InventoryConversationPlan, InventoryConversationScope, InventoryConversationTransport, ConversationAssetReference } from '$lib/ports/inventoryConversation';
 export interface InventoryConversationState {
   messages: { role: 'user' | 'assistant'; text: string; assets: ConversationAssetReference[] }[];
@@ -42,11 +43,11 @@ export class InventoryConversation {
     try {
       const refreshed = await this.refresh();
       if (generation !== this.generation || this.disposed) return;
-      this.state = { ...this.state, busy: false, uncertain: refreshed === false, error: refreshed === false ? 'Inventory could not be refreshed. Please try again.' : '' };
-    } catch { if (generation === this.generation && !this.disposed) this.state = { ...this.state, busy: false, error: 'Inventory could not be refreshed. Please try again.' }; }
+      this.state = { ...this.state, busy: false, uncertain: refreshed === false, error: refreshed === false ? t('web.inventoryConversation.inventoryCouldNotBeRefreshedPleaseTryAgain') : '' };
+    } catch { if (generation === this.generation && !this.disposed) this.state = { ...this.state, busy: false, error: t('web.inventoryConversation.inventoryCouldNotBeRefreshedPleaseTryAgain') }; }
     if (!this.disposed) this.changed();
   }
-  private refreshAfterChange(): void { void Promise.resolve().then(() => this.refresh()).catch(() => { if (!this.disposed) { this.state = { ...this.state, error: 'Your inventory could not be refreshed. Reload to see the latest changes.' }; this.changed(); } }); }
+  private refreshAfterChange(): void { void Promise.resolve().then(() => this.refresh()).catch(() => { if (!this.disposed) { this.state = { ...this.state, error: t('web.inventoryConversation.yourInventoryCouldNotBeRefreshedReloadToSee') }; this.changed(); } }); }
   stop(): void {
     if (this.disposed) return;
     if (this.approving) { this.fail('unavailable'); return; }
@@ -60,7 +61,7 @@ export class InventoryConversation {
   private fail(kind: 'authentication' | 'unavailable'): void {
     const uncertain = this.approving; this.approving = false; this.retire();
     this.state = { ...this.state, busy: false, plan: null, uncertain,
-      error: uncertain ? 'The connection ended before the result was confirmed. Refresh your inventory before trying another change.' : kind === 'authentication' ? 'Sign in again to continue.' : 'The conversation could not continue. Please try again.' };
+      error: uncertain ? t('web.inventoryConversation.theConnectionEndedBeforeTheResultWasConfirmedRefresh') : kind === 'authentication' ? t('web.inventoryConversation.signInAgainToContinue') : t('web.inventoryConversation.theConversationCouldNotContinuePleaseTryAgain') };
     if (uncertain) this.refreshAfterChange();
     this.changed(); if (kind === 'authentication') this.authenticationLost();
   }

@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { Asset, AssetViewModel } from '$lib/domain/inventory';
 import { compareNaturalText } from './textCollation';
 import { moveParentTargets, withTrail } from './workspace';
@@ -30,8 +31,8 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
       heading: `Inside ${target.title}`,
       countNoun: 'asset',
       assets: children,
-      emptyTitle: 'Nothing inside yet',
-      emptyMessage: 'Add an item or move something into this container.'
+      emptyTitle: t('web.workspaceContainedAssets.nothingInsideYet'),
+      emptyMessage: t('web.workspaceContainedAssets.addAnItemOrMoveSomethingIntoThisContainer')
     }];
   }
 
@@ -70,16 +71,16 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
       heading: `Spaces in ${target.title}`,
       countNoun: 'space',
       assets: directSpaces,
-      emptyTitle: 'No nested spaces',
-      emptyMessage: 'Containers and places directly inside will appear here.'
+      emptyTitle: t('web.workspaceContainedAssets.noNestedSpaces'),
+      emptyMessage: t('web.workspaceContainedAssets.containersAndPlacesDirectlyInsideWillAppearHere')
     },
     {
       key: 'items',
       heading: `Items in ${target.title}`,
       countNoun: 'item',
       assets: items,
-      emptyTitle: 'No items here yet',
-      emptyMessage: 'Add an item or move something into this place.'
+      emptyTitle: t('web.workspaceContainedAssets.noItemsHereYet'),
+      emptyMessage: t('web.workspaceContainedAssets.addAnItemOrMoveSomethingIntoThisPlace')
     }
   ];
 }

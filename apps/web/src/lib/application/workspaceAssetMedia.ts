@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { AssetAttachment, AssetLifecycleState, AssetViewModel, SelectedAttachment } from '$lib/domain/inventory';
 
 export type DetailPhoto = {
@@ -58,26 +59,26 @@ export function photoUploadUnavailableReason(input: {
   supportedImageTypeCount: number;
 }): string {
   if (!input.canEditAsset) {
-    return 'Photo upload requires asset edit access.';
+    return t('web.workspaceAssetMedia.photoUploadRequiresAssetEditAccess');
   }
   if (input.lifecycleState !== 'active') {
-    return 'Restore this asset before adding photos.';
+    return t('web.workspaceAssetMedia.restoreThisAssetBeforeAddingPhotos');
   }
   if (input.isSaving) {
-    return 'Finish the current change before adding photos.';
+    return t('web.workspaceAssetMedia.finishTheCurrentChangeBeforeAddingPhotos');
   }
   if (input.supportedImageTypeCount === 0) {
-    return 'Photo uploads are unavailable for this media policy.';
+    return t('web.workspaceAssetMedia.photoUploadsAreUnavailableForThisMediaPolicy');
   }
   return '';
 }
 
 export function unsupportedAttachmentTypeMessage(): string {
-  return 'Unsupported file type.';
+  return t('web.workspaceAssetMedia.unsupportedFileType');
 }
 
 export function unsupportedImageTypeMessage(): string {
-  return 'Unsupported image type.';
+  return t('web.workspaceAssetMedia.unsupportedImageType');
 }
 
 export function userSafeMediaErrorMessage(caught: unknown, fallback: string): string {

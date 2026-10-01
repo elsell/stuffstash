@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { InventoryAssetPhotoDeletionRepository } from '../home/InventorySummaryRepository';
 
@@ -22,7 +23,7 @@ export class DeleteAssetPhotoCommand {
     await this.inventories.deleteAssetPhoto(assetId(input.assetId), photoId);
 
     return {
-      message: 'Photo removed.'
+      message: t('mobile.DeleteAssetPhotoCommand.photoRemoved')
     };
   }
 }

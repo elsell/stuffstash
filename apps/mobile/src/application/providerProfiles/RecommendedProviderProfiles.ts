@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {
   CreateProviderProfileInput,
   ProviderCredentialPurpose,
@@ -15,31 +16,31 @@ export type RecommendedProviderProfileTemplate = {
 export const recommendedProviderProfiles: readonly RecommendedProviderProfileTemplate[] = [
   {
     key: 'gemini-stt-api-key',
-    title: 'Gemini speech-to-text',
-    description: 'Cheapest current Google path for transcribing local voice tests.',
+    title: t('mobile.RecommendedProviderProfiles.geminiSpeechToText'),
+    description: t('mobile.RecommendedProviderProfiles.cheapestCurrentGooglePathForTranscribingLocalVoiceTests'),
     credentialPurpose: 'api_key',
-    input: geminiProfile('speech_to_text', 'Gemini Flash-Lite speech-to-text')
+    input: geminiProfile('speech_to_text', t('mobile.RecommendedProviderProfiles.geminiFlashLiteSpeechToText'))
   },
   {
     key: 'gemini-language-api-key',
-    title: 'Gemini language inference',
-    description: 'Validated model for inventory changes, expiration dates, and answers.',
+    title: t('mobile.RecommendedProviderProfiles.geminiLanguageInference'),
+    description: t('mobile.RecommendedProviderProfiles.validatedModelForInventoryChangesExpirationDatesAndAnswers'),
     credentialPurpose: 'api_key',
     input: {
-      ...geminiProfile('language_inference', 'Gemini Flash language'),
+      ...geminiProfile('language_inference', t('mobile.RecommendedProviderProfiles.geminiFlashLanguage')),
       modelName: 'gemini-2.5-flash',
       promptTemplate: ''
     }
   },
   {
     key: 'google-cloud-tts-server-adc',
-    title: 'Google Cloud text-to-speech',
-    description: 'Standard voice for spoken responses using server Application Default Credentials.',
+    title: t('mobile.RecommendedProviderProfiles.googleCloudTextToSpeech'),
+    description: t('mobile.RecommendedProviderProfiles.standardVoiceForSpokenResponsesUsingServerApplicationDefault'),
     credentialPurpose: 'server_adc',
     input: {
       capability: 'text_to_speech',
       providerKind: 'gemini',
-      displayName: 'Google Cloud Standard voice',
+      displayName: t('mobile.RecommendedProviderProfiles.googleCloudStandardVoice'),
       runtimeOptions: {
         credentialType: 'server_adc',
         languageCode: 'en-US',

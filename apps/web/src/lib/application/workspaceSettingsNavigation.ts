@@ -160,7 +160,7 @@ export function settingsShellPresentation(input: {
     title: t('web.workspaceSettingsNavigation.settings'),
     contextLabel: `${input.inventory.name} / ${input.activeSection.label}`,
     liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
-    overviewContextLabel: `${input.tenant?.name ?? 'No tenant'} / ${input.inventory.name}`,
+    overviewContextLabel: `${input.tenant?.name ?? t('web.workspaceSettingsNavigation.noTenant')} / ${input.inventory.name}`,
     emptyState: null
   };
 }
@@ -176,10 +176,10 @@ export function settingsOverviewPresentation(input: {
     title: t('web.workspaceSettingsNavigation.overview'),
     contextLabel: input.contextLabel,
     rows: [
-      { label: t('web.workspaceSettingsNavigation.tenant'), value: input.tenantName ?? 'Not available' },
+      { label: t('web.workspaceSettingsNavigation.tenant'), value: input.tenantName ?? t('web.workspaceSettingsNavigation.notAvailable') },
       { label: t('web.workspaceSettingsNavigation.inventories'), value: String(input.inventoryCount) },
       { label: t('web.workspaceSettingsNavigation.access'), value: input.accessRelationship },
-      { label: t('web.workspaceSettingsNavigation.assetEdits'), value: input.canEditAssets ? 'Allowed' : 'View only' }
+      { label: t('web.workspaceSettingsNavigation.assetEdits'), value: input.canEditAssets ? t('web.workspaceSettingsNavigation.allowed') : t('web.workspaceSettingsNavigation.viewOnly') }
     ]
   };
 }

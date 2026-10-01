@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type CustomizationFailureKind = 'permission-denied' | 'not-found' | 'conflict' | 'invalid' | 'unavailable';
 
 export class CustomizationFailure extends Error {
@@ -15,11 +16,11 @@ export class CustomizationValidationError extends Error {
 }
 
 export function customizationFailureMessage(kind: CustomizationFailureKind): string {
-  if (kind === 'permission-denied') return 'Your access changed. This change was not saved.';
-  if (kind === 'not-found') return 'This setting is no longer available.';
-  if (kind === 'conflict') return 'This setting conflicts with another active setting.';
-  if (kind === 'invalid') return 'Some information is no longer valid. Review the form and try again.';
-  return 'Stuff Stash could not complete this request. Try again.';
+  if (kind === 'permission-denied') return t('mobile.CustomizationErrors.yourAccessChangedThisChangeWasNotSaved');
+  if (kind === 'not-found') return t('mobile.CustomizationErrors.thisSettingIsNoLongerAvailable');
+  if (kind === 'conflict') return t('mobile.CustomizationErrors.thisSettingConflictsWithAnotherActiveSetting');
+  if (kind === 'invalid') return t('mobile.CustomizationErrors.someInformationIsNoLongerValidReviewTheForm');
+  return t('mobile.CustomizationErrors.stuffStashCouldNotCompleteThisRequestTryAgain');
 }
 
 export function safeCustomizationMessage(error: unknown, fallback: string): string {

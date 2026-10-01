@@ -276,7 +276,7 @@ export class VoiceRealtimeCancelledError extends Error {
   readonly code = 'voice_cancelled';
 
   constructor() {
-    super('Voice session cancelled.');
+    super(t('mobile.RealtimeVoiceSession.voiceSessionCancelled'));
   }
 }
 

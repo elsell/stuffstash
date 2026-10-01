@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type MobileAuthMetadata = {
   readonly issuer: string;
   readonly clientId: string;
@@ -42,7 +43,7 @@ export type MobileAuthStatus =
   | { readonly status: 'signed_in'; readonly session: MobileAuthSession };
 
 export class MobileAuthenticationRequiredError extends Error {
-  constructor(message = 'Sign in to Stuff Stash.') {
+  constructor(message = t('mobile.MobileAuthSession.signInToStuffStash')) {
     super(message);
   }
 }

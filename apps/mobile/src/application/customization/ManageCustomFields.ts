@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { CustomFieldDefinition, CustomizationScope } from '../../domain/customization/Customization';
 import { customizationKeyIsValid, customizationKeyValidationMessage, suggestedCustomizationKey } from '../../domain/customization/Customization';
 import type { CreateCustomFieldInput, CustomizationContext, CustomizationRepository, DefinitionAddress, UpdateCustomFieldInput } from './CustomizationRepository';
@@ -17,10 +18,10 @@ export class ManageCustomFields {
 
   async update(address: DefinitionAddress, original: CustomFieldDefinition, input: UpdateCustomFieldInput) {
     if (input.enumOptions && original.enumOptions.some((option, index) => input.enumOptions?.[index] !== option)) {
-      throw new CustomizationValidationError('Existing options cannot be renamed, removed, or reordered.');
+      throw new CustomizationValidationError(t('mobile.ManageCustomFields.existingOptionsCannotBeRenamedRemovedOrReordered'));
     }
     if (original.applicability === 'all_assets' && input.applicability === 'custom_asset_types') {
-      throw new CustomizationValidationError('A field that applies to all assets cannot be narrowed.');
+      throw new CustomizationValidationError(t('mobile.ManageCustomFields.aFieldThatAppliesToAllAssetsCannotBe'));
     }
     return this.singleFlight(address.scope, 'update', () => this.repository.updateField(address, input));
   }
@@ -30,7 +31,7 @@ export class ManageCustomFields {
   delete(address: DefinitionAddress) { return this.singleFlight(address.scope, 'delete', () => this.repository.deleteField(address)); }
 
   private async singleFlight<T>(scope: CustomizationScope, action: 'create' | 'update' | 'archive' | 'restore' | 'delete', operation: () => Promise<T>): Promise<T> {
-    if (this.saving) throw new CustomizationValidationError('This custom field change is already being saved.');
+    if (this.saving) throw new CustomizationValidationError(t('mobile.ManageCustomFields.thisCustomFieldChangeIsAlreadyBeingSaved'));
     this.saving = true;
     this.observability.record({ name: 'customization.mutation_requested', resource: 'field', scope, action });
     try { const result = await operation(); this.observability.record({ name: 'customization.mutation_succeeded', resource: 'field', scope, action }); return result; }
@@ -40,10 +41,10 @@ export class ManageCustomFields {
 }
 
 function validateField(input: CreateCustomFieldInput): void {
-  if (!input.displayName.trim()) throw new CustomizationValidationError('Field name is required.');
-  if (input.type === 'enum' && input.enumOptions.length === 0) throw new CustomizationValidationError('Add at least one enum option.');
-  if (input.type !== 'enum' && input.enumOptions.length > 0) throw new CustomizationValidationError('Only enum fields can have options.');
-  if (input.applicability === 'custom_asset_types' && input.customAssetTypeIds.length === 0) throw new CustomizationValidationError('Choose at least one asset type.');
+  if (!input.displayName.trim()) throw new CustomizationValidationError(t('mobile.ManageCustomFields.fieldNameIsRequired'));
+  if (input.type === 'enum' && input.enumOptions.length === 0) throw new CustomizationValidationError(t('mobile.ManageCustomFields.addAtLeastOneEnumOption'));
+  if (input.type !== 'enum' && input.enumOptions.length > 0) throw new CustomizationValidationError(t('mobile.ManageCustomFields.onlyEnumFieldsCanHaveOptions'));
+  if (input.applicability === 'custom_asset_types' && input.customAssetTypeIds.length === 0) throw new CustomizationValidationError(t('mobile.ManageCustomFields.chooseAtLeastOneAssetType'));
 }
 
 function validateKey(key: string): void {
