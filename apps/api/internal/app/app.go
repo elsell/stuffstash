@@ -435,33 +435,6 @@ func normalizeMaxPageLimit(maxLimit int) int {
 	return appsupport.NormalizeMaxPageLimit(maxLimit)
 }
 
-func (a App) Authenticate(ctx context.Context, authorizationHeader string) (identity.Principal, error) {
-	principal, err := a.auth.Authenticate(ctx, authorizationHeader)
-	if err != nil {
-		a.observer.Record(ctx, ports.Event{
-			Name:    ports.EventAuthenticationFailed,
-			Message: "authentication failed",
-		})
-		return identity.Principal{}, err
-	}
-	if err := a.saveAuthenticatedUser(ctx, principal); err != nil {
-		return identity.Principal{}, err
-	}
-
-	return principal, nil
-}
-
-func (a App) saveAuthenticatedUser(ctx context.Context, principal identity.Principal) error {
-	if a.users == nil {
-		return nil
-	}
-	user, ok := identity.NewUser(principal.ID, principal.Email)
-	if !ok {
-		return nil
-	}
-	return a.users.SaveUser(ctx, user)
-}
-
 func (a App) Health(ctx context.Context) HealthStatus {
 	a.observer.Record(ctx, ports.Event{
 		Name:    ports.EventHealthChecked,
