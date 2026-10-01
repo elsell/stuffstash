@@ -148,3 +148,47 @@ func assetTag(t *testing.T, id string, tenantID tenant.ID, inventoryID inventory
 	}
 	return tag
 }
+
+func TestStoreExportTagsRetainArchivedAssignmentsAndScope(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, "home", "Home")
+	saveInventory(t, ctx, store, "main", "home", "Main")
+	item := assetItem("item", "home", "main", asset.KindItem, "")
+	if err := createAsset(t, ctx, store, item); err != nil {
+		t.Fatal(err)
+	}
+	tag := assetTag(t, "tag", "home", "main", "kept", "Kept")
+	if err := store.CreateAssetTag(ctx, tag, auditRecord(t, "tag-create", "home", "main", audit.ActionAssetTagCreated)); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SetAssetTags(ctx, "home", "main", item.ID, []assettag.ID{tag.ID}, auditRecord(t, "tag-assign", "home", "main", audit.ActionAssetUpdated)); err != nil {
+		t.Fatal(err)
+	}
+	tag.LifecycleState = assettag.LifecycleStateArchived
+	if err := store.UpdateAssetTagLifecycle(ctx, tag, auditRecord(t, "tag-archive", "home", "main", audit.ActionAssetTagArchived)); err != nil {
+		t.Fatal(err)
+	}
+	active, err := store.AssetTagsByAsset(ctx, "home", "main", item.ID)
+	if err != nil || len(active) != 0 {
+		t.Fatal("active reads changed")
+	}
+	retained, err := store.AllAssetTagsByAsset(ctx, "home", "main", item.ID)
+	if err != nil || len(retained) != 1 || retained[0].ID != tag.ID {
+		t.Fatalf("archived assignment lost: %#v %v", retained, err)
+	}
+	for _, scope := range []struct {
+		t tenant.ID
+		i inventory.InventoryID
+	}{{"home", "main"}, {"other", "main"}, {"home", "other"}} {
+		tags, err := store.ListAssetTags(ctx, scope.t, scope.i, ports.AssetTagPageRequest{IncludeArchived: true})
+		assigned, assignErr := store.AllAssetTagsByAsset(ctx, scope.t, scope.i, item.ID)
+		expected := 0
+		if scope.t == "home" && scope.i == "main" {
+			expected = 1
+		}
+		if err != nil || assignErr != nil || len(tags) != expected || len(assigned) != expected {
+			t.Fatalf("export tag isolation: %#v %#v %v %v", tags, assigned, err, assignErr)
+		}
+	}
+}

@@ -1,3 +1,5 @@
+import type { ExportInventoryCommand } from '../../application/exports/InventoryExport';
+import { InventoryExportAction } from './InventoryExportAction';
 import { NativeCommandButton } from '../components/NativeCommandButton';
 import { SettingsRefreshNotice } from './SettingsRefreshNotice';
 import { useEffect, useRef } from 'react';
@@ -9,9 +11,9 @@ import { useSettingsModel } from './SettingsScreenState';
 
 type ScopedDestination = 'sharing' | 'tags' | 'fields' | 'asset-types' | 'voice' | 'notifications';
 
-export function InventorySettingsScreen({ onNavigate, settingsQuery }: { readonly onNavigate: (destination: ScopedDestination) => void; readonly settingsQuery: SettingsQuery }) {
+export function InventorySettingsScreen({ onNavigate, settingsQuery, exportCommand }: { readonly exportCommand?: ExportInventoryCommand; readonly onNavigate: (destination: ScopedDestination) => void; readonly settingsQuery: SettingsQuery }) {
   const model = useSettingsModel(settingsQuery);
-  return <ScopeScreen model={model} onNavigate={onNavigate} scope="inventory" />;
+  return <ScopeScreen model={model} onNavigate={onNavigate} scope="inventory" exportCommand={exportCommand} />;
 }
 
 export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonly onNavigate: (destination: ScopedDestination) => void; readonly settingsQuery: SettingsQuery }) {
@@ -19,7 +21,7 @@ export function HouseholdSettingsScreen({ onNavigate, settingsQuery }: { readonl
   return <ScopeScreen model={model} onNavigate={onNavigate} scope="tenant" />;
 }
 
-function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
+function ScopeScreen({ model, onNavigate, scope, exportCommand }: { readonly exportCommand?: ExportInventoryCommand; readonly model: ReturnType<typeof useSettingsModel>; readonly onNavigate: (destination: ScopedDestination) => void; readonly scope: 'tenant' | 'inventory' }) {
   const { palette, styles } = useSettingsListStyles();
   if (model.state.status === 'loading') return <View style={[styles.shell, styles.errorContainer]}><SettingsLoadingRow label={scope === 'tenant' ? 'Loading household settings' : 'Loading inventory settings'} /></View>;
   if (model.state.status === 'error') return <ScrollView style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" style={styles.errorTitle}>Could not load settings</Text><Text style={styles.errorMessage}>{model.state.message}</Text><NativeCommandButton label="Retry" onPress={() => void model.load()} /></ScrollView>;
@@ -44,6 +46,7 @@ function ScopeScreen({ model, onNavigate, scope }: { readonly model: ReturnType<
     <SettingsRefreshNotice visible={model.hasRefreshError} onRetry={model.load} />
     <View style={styles.detailHeader}><Text accessibilityRole="header" style={styles.detailTitle}>{name}</Text><Text style={styles.detailSubtitle}>{scope === 'tenant' ? 'Household settings' : `Inventory in ${settings.selectedTenant.name}`}</Text></View>
     <SettingsSection>{rows.map((row, index) => <View key={row.id}>{index ? <SettingsSeparator hasLeadingIcon /> : null}<SettingsNavigationRow accessibilityLabel={`Open ${row.label} for ${name}`} context={row.context} icon={scopeIcon(row.id, palette.action)} label={row.label} onPress={() => onNavigate(row.id)} /></View>)}</SettingsSection>
+    {scope === 'inventory' && exportCommand ? <InventoryExportAction key={`${settings.selectedTenant.id}:${settings.selectedInventory.id}`} command={exportCommand} scope={{ tenantId: settings.selectedTenant.id, inventoryId: settings.selectedInventory.id }} /> : null}
   </ScrollView>;
 }
 

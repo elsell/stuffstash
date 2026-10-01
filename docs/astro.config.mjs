@@ -35,6 +35,7 @@ export default defineConfig({
             { label: 'Configuration Reference', slug: 'configuration' },
             { label: 'First Inventory', slug: 'first-inventory' },
             { label: 'Expiration Dates', slug: 'expiration' },
+            { label: 'Export An Inventory', slug: 'export-inventory' },
             { label: 'Concepts', slug: 'concepts' },
             { label: 'Trust And Security', slug: 'security' },
           ],
@@ -44,6 +45,8 @@ export default defineConfig({
           items: [
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
+            { label: 'Connect An Inventory Agent', slug: 'mcp' },
+            { label: 'Compatible Language Providers', slug: 'compatible-providers' },
             { label: 'Release To TestFlight', slug: 'testflight' },
             { label: 'Contributing', slug: 'specs-and-process' },
           ],

@@ -1,3 +1,4 @@
+import { InventoryExportClient } from './inventoryExportClient';
 import { ExpirationClient } from './expirationClient';
 import { NotificationsClient } from './notificationsClient';
 import createClient, { type Client } from 'openapi-fetch';
@@ -688,6 +689,7 @@ export class StuffStashAPIError extends Error {
 }
 
 export class StuffStashClient {
+  readonly exports: InventoryExportClient;
   readonly notifications: NotificationsClient;
   readonly expiration: ExpirationClient;
   private readonly client: Client<paths>;
@@ -695,6 +697,7 @@ export class StuffStashClient {
   private readonly tokenProvider: TokenProvider;
 
   constructor(options: StuffStashClientOptions) {
+    this.exports = new InventoryExportClient(options);
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
     this.tokenProvider = options.tokenProvider;
     this.client = createClient<paths>({

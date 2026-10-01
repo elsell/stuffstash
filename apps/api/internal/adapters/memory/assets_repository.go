@@ -561,6 +561,9 @@ func (s *Store) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inv
 		sortOrder = ports.AssetListSortIDAsc
 	}
 	for _, item := range s.assets {
+		if page.Parent.Applied && item.ParentAssetID != page.Parent.ID {
+			continue
+		}
 		if page.OnlyDated && item.Expiration.Value() == "" {
 			continue
 		}

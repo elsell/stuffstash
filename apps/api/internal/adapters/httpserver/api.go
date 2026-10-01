@@ -12,6 +12,7 @@ import (
 	customfieldroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/customfields/routes"
 	evaluationcaseroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/evaluationcases/routes"
 	evaluationrunroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/evaluationruns/routes"
+	exportroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/exports/routes"
 	identityroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/identity/routes"
 	importroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/imports/routes"
 	inventoryroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/inventories/routes"
@@ -25,6 +26,7 @@ import (
 )
 
 func registerRoutes(api huma.API, application app.App) {
+	exportroutes.Register(api, application)
 	notificationroutes.Register(api, application)
 	clienttelemetryroutes.Register(api, application)
 	identityroutes.Register(api, application)

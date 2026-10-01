@@ -7,7 +7,7 @@ export default function InventorySettingsRoute() {
   const router = useRouter();
   const services = useAppServices();
   useEffect(() => services.customizationObservability.record({ name: 'settings.level_selected', scope: 'inventory' }), [services.customizationObservability]);
-  return <InventorySettingsScreen settingsQuery={services.settingsQuery} onNavigate={(destination) => {
+  return <InventorySettingsScreen exportCommand={services.exportInventoryCommand} settingsQuery={services.settingsQuery} onNavigate={(destination) => {
     if (destination === 'sharing') router.push('/settings/sharing');
     else router.push(`/settings/inventory/${destination}` as never);
   }} />;

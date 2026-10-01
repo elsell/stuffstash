@@ -57,6 +57,7 @@ const (
 	ActionTenantRestored                            Action = "tenant.restored"
 	ActionTenantDeleted                             Action = "tenant.deleted"
 	ActionInventoryCreated                          Action = "inventory.created"
+	ActionInventoryExported                         Action = "inventory.exported"
 	ActionInventoryViewed                           Action = "inventory.viewed"
 	ActionInventoryListed                           Action = "inventory.listed"
 	ActionInventoryUpdated                          Action = "inventory.updated"
@@ -158,6 +159,7 @@ func NewAction(value string) (Action, bool) {
 		ActionTenantRestored,
 		ActionTenantDeleted,
 		ActionInventoryCreated,
+		ActionInventoryExported,
 		ActionInventoryViewed,
 		ActionInventoryListed,
 		ActionInventoryUpdated,

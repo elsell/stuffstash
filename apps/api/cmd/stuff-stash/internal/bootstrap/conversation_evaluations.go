@@ -16,7 +16,7 @@ import (
 func buildEvaluationRuntime(cfg config.Config, settings config.EvaluationSettings, limits agentmodel.WorkflowLimits, observer ports.Observer, authorizer ports.Authorizer, repositories repositories, vault ports.ProviderCredentialVault) evaluationServices {
 	clock := ports.SystemClock{}
 	ids := idgen.NewULIDGenerator()
-	resolver := voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, googleProviderProfileFactory(cfg))
+	resolver := voice.NewProviderProfileResolver(repositories.providerProfiles, repositories.voiceProviderConfigs, vault, providerProfileFactory(cfg))
 	executor := conversationeval.New(conversationeval.Dependencies{Clock: clock, IDs: ids, Observer: observer})
 	commands := modelapp.NewEvaluationRunCommandService(modelapp.EvaluationRunCommandDependencies{Authorizer: authorizer, Runs: repositories.evaluationRuns, Workflows: repositories.conversationWorkflows, Cases: repositories.evaluationCases, Providers: resolver, IDs: ids, Clock: clock, Observer: observer, Limits: limits, MaxAttempts: settings.MaxAttempts})
 	worker := modelapp.NewEvaluationWorker(modelapp.EvaluationWorkerDependencies{Runs: repositories.evaluationRuns, Authorizer: authorizer, Providers: resolver, Executor: executor, IDs: ids, Clock: clock, Observer: observer, LeaseGrace: settings.LeaseGrace, Delay: scheduling.Delay{}, PollInterval: settings.PollInterval})

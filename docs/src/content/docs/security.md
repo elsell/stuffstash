@@ -62,7 +62,9 @@ Replace first-run secrets before relying on a deployment:
 
 ## Exit Is Part Of Trust
 
-Stuff Stash is designed for JSON and CSV import/export behind project-owned
-ports. Export must preserve tenant and inventory authorization boundaries.
+JSON and CSV [exports](../export-inventory/) require inventory-view permission,
+including a final access check before download. Exports exclude credentials,
+sharing tokens, provider settings, and internal storage keys. Failed requests
+do not return partial files.
 
 Data portability is not a bonus feature. It is part of the trust story.

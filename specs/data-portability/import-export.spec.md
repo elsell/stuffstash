@@ -680,3 +680,104 @@ The web application must provide a polished import workflow for the first Homebo
 - What exact CSV columns should be used first?
 - Should exports include audit history?
 - Should exports include attachment metadata before binary file export is supported?
+
+## Inventory export v1 — October 1, 2026
+
+This closes the previously required JSON/CSV export capability. Export is a
+read-only bounded task, not an import protocol or a database/media backup.
+
+- `GET /tenants/{tenantId}/inventories/{inventoryId}/export?format=json|csv`
+  returns a downloadable UTF-8 file. Missing format defaults to JSON; unknown
+  formats fail validation. Content-Disposition uses a fixed safe filename plus
+  format, never untrusted inventory text. Responses are private/no-store.
+- Inventory view permission authorizes export, including viewer roles. Authorize
+  before reading export data and recheck immediately before publication. Tenant
+  and inventory IDs are mandatory on every repository read. Wrong-scope results
+  fail closed. No caller-supplied principal or permissions are accepted.
+- JSON uses schemaVersion1, exportedAt from the injected clock, tenant/inventory
+  identity and name, assets, tags, customAssetTypes and customFieldDefinitions.
+  Include active and archived assets and schema records, parent IDs, custom type
+  IDs, typed custom-field values, expiration date/precision, assigned tag IDs,
+  creation/update timestamps, current checkout metadata and attachment metadata.
+  Include archived tag definitions and their retained assignments, and archived
+  attachment metadata; deleted records are not recoverable. Export reads opt into
+  archived metadata explicitly; ordinary list and assignment reads stay active-only.
+  Include inherited tenant definitions, identifying their scope. IDs remain opaque
+  source identities. Do not export provider configuration/credentials, access or
+  invitation tokens, auth claims, raw audit/undo snapshots, blob keys or signed URLs.
+  Attachment metadata is not attachment content; media bytes and audit-history
+  backup packaging remain separate future contracts.
+- CSV is an asset table with stable columns for IDs, title/description, kind,
+  parent/type, lifecycle, timestamps, expiration, tags, custom-field values,
+  current checkout and attachment metadata. Nested values use compact JSON cells.
+  JSON is the authoritative format for complete schema metadata. Empty inventory
+  CSV still has headers. Preserve Unicode, multiline text, quotes and commas.
+  Prefix spreadsheet-formula-like text cells with a single quote; inspect the
+  first non-whitespace character for =, +, -, @, tab or carriage return. JSON
+  preserves original strings unchanged. Document this CSV safety transformation.
+- Traverse repository pages in stable ID/key order, detect nonadvancing cursors,
+  check cancellation between pages, and never omit an unprocessed page silently.
+  Exports are read-consistent per repository operation, not a transactional
+  point-in-time backup; concurrent inventory edits can affect the result.
+- Environment-backed positive limits default to10,000 records per collection and
+ 64MiB encoded output. Exceeding either fails with a safe explicit limit message;
+  no partial download is returned as success. Keep encoding and file-format
+  details behind an export-encoder port; application orchestration lives in the
+  data-portability application package. No new third-party package is required.
+- Write one safe `inventory.exported` read audit record after successful assembly
+  and final authorization, before returning bytes. Record format and asset count,
+  not exported content. Emit the corresponding domain observer event. A failed
+  audit write prevents publication. Client cancellation publishes no file.
+- Web inventory settings expose Export with JSON/CSV choices, pending/error/retry,
+  using an authenticated repository adapter and a local file download. Mobile
+  inventory settings use the same formats and a native save/share handoff through
+  a file-delivery port. Clear temporary mobile files after the handoff lifetime;
+  do not put download contents into persistent server-state caches or telemetry.
+
+Critical acceptance: authenticated viewer/editor/owner success, absent/malformed/
+expired-token denial through existing auth boundaries, cross-tenant/inventory
+isolation, all pages and archived data, field/tag/containment fidelity, secret/blob
+key exclusion, CSV formula safety and round trips, cancellation/limit/audit failure
+without a successful file, and one real client download per platform. Source
+encoding/HTTP tests do not prove the browser/native handoff.
+
+### Mobile export handoff
+
+- Inventory settings exposes one full-width native action-menu row, **Export
+  inventory**, with JSON and CSV commands. Use the existing NativeActionMenu row
+  adapter, not a new picker screen or competing standalone buttons. The format
+  selection starts that export. Keep pending status, cancel, and recoverable error
+  in the same settings group; prevent duplicate work while downloading/sharing.
+- Bind the operation to the displayed tenant/inventory and authenticated service
+  lifetime. Leaving that settings scope cancels outstanding reads and suppresses
+  late share presentations or notices. Never queue an export while offline.
+- Use pinned `expo-sharing`55.0.24 for native local-file sharing on iOS and Android,
+  behind a file-delivery port. React Native's text share wrapper is insufficient
+  for Android file attachments. Reuse `expo-file-system`55.0.22 for temporary files;
+  no incoming share extension, new permission prompt, or custom native package is
+  needed. The backend still requires no new dependency.
+- Temporary files live in a dedicated cache directory with opaque unique names.
+  The visible shared file has the fixed safe basename `stuff-stash-inventory` and
+  its format extension. Clean up failed writes and pre-handoff cancellation.
+  iOS completion/cancellation removes the file after its activity completes.
+  Android chooser completion is not receiver completion: retain its cache file
+  for at most24 hours of active app time and sweep expired remnants before later
+  exports and on startup. Apply the same expiry sweep to crash/interrupted iOS
+  remnants. OS cache eviction and app removal can also remove these files.
+- Cancellation after the native sheet appears cannot revoke copies already sent.
+  Do not delete a file still owned by an active native handoff. Cleanup failure
+  must not misreport a completed handoff as a failed export; emit a safe domain
+  diagnostic without file content, local path or credentials and retry via sweep.
+
+Pattern sources: Apple's [activity views](https://developer.apple.com/design/human-interface-guidelines/activity-views)
+and Expo SDK55 [Sharing](https://docs.expo.dev/versions/v55.0.0/sdk/sharing/).
+The existing settings menu supplies context-preserving format choice. Verify the
+real native share sheet, completion/dismissal, JSON/CSV content and return to
+Settings on iPhone/iPad. A fake delivery port is not native acceptance.
+
+Native export acceptance follows the system presentation on each device: iPhone
+activity sheets may expose Close, while iPad activity popovers dismiss through
+the system's outside-tap dismissal region. Tests must establish the exported file
+is present before dismissal, then verify temporary-file retirement and a usable
+Settings screen. The absence of an iPhone-style Close button on iPad is not itself
+a product defect.

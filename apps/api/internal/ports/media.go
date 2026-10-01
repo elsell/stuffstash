@@ -28,6 +28,7 @@ type AttachmentUnitOfWork interface {
 }
 
 type AttachmentListPageRequest struct {
+	IncludeArchived   bool
 	AfterAttachmentID media.ID
 	Limit             int
 }

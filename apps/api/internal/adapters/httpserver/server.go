@@ -21,6 +21,7 @@ func init() {
 }
 
 type Options struct {
+	MCPHandler                   http.Handler
 	CORSAllowedOrigins           []string
 	MobileAuth                   MobileAuthOptions
 	MaxJSONBodyBytes             int64
@@ -45,6 +46,7 @@ func NewServer(addr string, application app.App) *http.Server {
 
 func NewServerWithOptions(addr string, application app.App, options Options) *http.Server {
 	mux := http.NewServeMux()
+	registerMCPHandler(mux, options.MCPHandler)
 	mux.HandleFunc("GET /", handleIndex)
 	mux.HandleFunc("GET /healthz", handleHealth(application))
 	mux.HandleFunc("GET /.well-known/stuff-stash/mobile-auth", handleMobileAuthMetadata(options.MobileAuth))

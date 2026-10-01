@@ -86,6 +86,6 @@ else.
 
 ## Import And Export
 
-Your inventory should be portable. Stuff Stash is designed around JSON and CSV
-import/export boundaries so migration and backups can grow without trapping data
-inside the app.
+Import brings existing records into Stuff Stash. [Export](../export-inventory/)
+downloads an inventory as JSON or CSV, including archived assets and schema
+metadata. Exports do not contain photo/file bytes and do not replace server backups.

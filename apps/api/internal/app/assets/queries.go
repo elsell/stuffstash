@@ -110,12 +110,22 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	if err != nil {
 		return ListAssetsResult{}, apperrors.ErrInvalidInput
 	}
-	cursorPosition, err := decodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, input.Cursor)
+	cursorPosition, err := decodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, input.Parent, input.Cursor)
 	if err != nil {
 		return ListAssetsResult{}, apperrors.ErrInvalidInput
 	}
 
+	if input.Parent.Applied && input.Parent.ID != "" {
+		parent, err := s.GetAsset(ctx, GetAssetInput{Principal: input.Principal, TenantID: input.TenantID, InventoryID: input.InventoryID, AssetID: input.Parent.ID, Source: input.Source, RequestID: input.RequestID})
+		if err != nil {
+			return ListAssetsResult{}, err
+		}
+		if !parent.Kind.CanContainChildren() || parent.LifecycleState != asset.LifecycleStateActive {
+			return ListAssetsResult{}, apperrors.ErrInvalidInput
+		}
+	}
 	items, err := s.assets.ListAssetsByInventory(ctx, input.TenantID, input.InventoryID, ports.AssetListPageRequest{
+		Parent:          input.Parent,
 		AfterAssetID:    cursorPosition.AssetID,
 		AfterUpdatedAt:  cursorPosition.UpdatedAt,
 		Limit:           limit + 1,
@@ -130,7 +140,7 @@ func (s Service) ListAssets(ctx context.Context, input ListAssetsInput) (ListAss
 	var nextCursor *string
 	if hasMore {
 		items = items[:limit]
-		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, items[len(items)-1])
+		nextCursor = encodeAssetCursor(input.TenantID, input.InventoryID, lifecycleFilter, sort, input.Parent, items[len(items)-1])
 	}
 	primaryPhotos, err := s.primaryImageAttachments(ctx, input.TenantID, items)
 	if err != nil {

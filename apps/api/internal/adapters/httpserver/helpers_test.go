@@ -11,6 +11,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/credentials"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
+	"github.com/stuffstash/stuff-stash/internal/adapters/inventoryexport"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/adapters/push"
 	"github.com/stuffstash/stuff-stash/internal/app"
@@ -36,6 +37,7 @@ func newTestApp(observer ports.Observer, ids ...string) app.App {
 func newTestAppWithAuthorizer(observer ports.Observer, authorizer ports.Authorizer, ids ...string) app.App {
 	store := memory.NewStore()
 	application := app.New(app.Dependencies{
+		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: 10000, ExportMaxBytes: 64 * 1024 * 1024,
 		Observer:                   observer,
 		Auth:                       auth.NewLocalDevAuthenticator(),
 		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
@@ -123,6 +125,7 @@ func newSeededTestAppWithBlobAuthorizerAndImportSource(t *testing.T, state seede
 	}
 
 	application := app.New(app.Dependencies{
+		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: 10000, ExportMaxBytes: 64 * 1024 * 1024,
 		Observer:                   &fakeObserver{},
 		Auth:                       authenticator,
 		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",
@@ -177,6 +180,7 @@ func newSeededTestAppWithStoreAndAuthorizer(t *testing.T, state seededState, sto
 	seedMemoryStore(t, context.Background(), store, authorizer, state)
 
 	application := app.New(app.Dependencies{
+		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: 10000, ExportMaxBytes: 64 * 1024 * 1024,
 		Observer:                   &fakeObserver{},
 		Auth:                       auth.NewLocalDevAuthenticator(),
 		InvitationPublicBaseURL:    "https://stash.example.test/invitations/accept",

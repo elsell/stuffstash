@@ -431,6 +431,13 @@ func (s Store) ListAssetsByInventory(ctx context.Context, tenantID tenant.ID, in
 		TenantID:    tenantID.String(),
 		InventoryID: inventoryID.String(),
 	})
+	if page.Parent.Applied {
+		var parent any
+		if page.Parent.ID != "" {
+			parent = page.Parent.ID.String()
+		}
+		query = query.Where(clause.Eq{Column: clause.Column{Name: "parent_asset_id"}, Value: parent})
+	}
 	if page.OnlyDated {
 		query = query.Where(clause.Neq{Column: clause.Column{Name: "expiration_date"}, Value: ""})
 	}

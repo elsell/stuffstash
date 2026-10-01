@@ -44,7 +44,8 @@ test('edits cases, runs pinned revisions and activates only after review', async
 test('clears the entire conversation surface when access is revoked', async ({ page }) => {
   resetWorkspaceApiState(page); await installAuthenticatedWorkspace(page); const state = await installConversationFixture(page);
   await page.goto(path); await expect(page.getByRole('button', { name: 'Test cases', exact: true })).toBeVisible();
-  state.denied = true; await page.getByRole('button', { name: 'Test cases', exact: true }).click();
+  // Revoke at the next section read, so pending initial requests cannot remove the button before the click.
+  state.denyOnCaseRead = true; await page.getByRole('button', { name: 'Test cases', exact: true }).click();
   await expect(page.getByText('Your account no longer has access to configure this tenant.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'New workflow', exact: true })).toHaveCount(0);
   await expect(page.getByText('Find baby clothes', { exact: true })).toHaveCount(0);

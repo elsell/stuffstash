@@ -3554,6 +3554,32 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testInventoryExportUsesSystemShareAndRemovesTemporaryFiles() {
+    guard openFixtureURL("audit-inventory-export") else { return }
+    let export = app.buttons["Export inventory"].firstMatch
+    XCTAssertTrue(export.waitForExistence(timeout: 10))
+    for (format, label) in [("json", "JSON — complete inventory data"), ("csv", "CSV — spreadsheet rows")] {
+      for _ in 0..<4 where !export.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(export.isHittable); export.tap()
+      let choice = app.buttons[label].firstMatch
+      XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+      let file = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "stuff-stash-inventory")).firstMatch
+      XCTAssertTrue(file.waitForExistence(timeout: 10), "The native share sheet must receive the inventory file")
+      capture("inventory-export-\(format)-system-share")
+      let close = app.buttons["Close"].firstMatch
+      if close.exists {
+        XCTAssertTrue(close.isHittable); close.tap()
+      } else {
+        let dismiss = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(dismiss.waitForExistence(timeout: 5), "The system activity popover must expose outside-tap dismissal")
+        XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+      }
+      XCTAssertTrue(app.staticTexts["\(format): file removed"].waitForExistence(timeout: 10))
+      XCTAssertTrue(export.isEnabled)
+    }
+    capture("inventory-export-return-to-settings")
+  }
+
   func testSettingsCommandsRecoverReminderDraft() {
     guard openFixtureURL("audit-settings-commands") else { return }
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch

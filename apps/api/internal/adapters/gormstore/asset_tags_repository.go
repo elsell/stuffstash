@@ -167,8 +167,11 @@ func (s Store) AssetTagByKey(ctx context.Context, tenantID tenant.ID, inventoryI
 
 func (s Store) ListAssetTags(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetTagPageRequest) ([]assettag.Tag, error) {
 	query := s.db.WithContext(ctx).
-		Where(&assetTagModel{TenantID: tenantID.String(), InventoryID: inventoryID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
+		Where(&assetTagModel{TenantID: tenantID.String(), InventoryID: inventoryID.String()}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}})
+	if !page.IncludeArchived {
+		query = query.Where(&assetTagModel{LifecycleState: assettag.LifecycleStateActive.String()})
+	}
 	if page.AfterTagID.String() != "" {
 		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterTagID.String()})
 	}
@@ -202,7 +205,14 @@ func (s Store) AssetTagsByAssets(ctx context.Context, tenantID tenant.ID, invent
 	return s.assetTagsByAssetsInInventories(ctx, tenantID, []string{inventoryID.String()}, assetIDs)
 }
 
+func (s Store) AllAssetTagsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) ([]assettag.Tag, error) {
+	assigned, err := s.assetTagsWithLifecycle(ctx, tenantID, []string{inventoryID.String()}, []asset.ID{assetID}, true)
+	return assigned[assetID], err
+}
 func (s Store) assetTagsByAssetsInInventories(ctx context.Context, tenantID tenant.ID, inventoryIDValues []string, assetIDs []asset.ID) (map[asset.ID][]assettag.Tag, error) {
+	return s.assetTagsWithLifecycle(ctx, tenantID, inventoryIDValues, assetIDs, false)
+}
+func (s Store) assetTagsWithLifecycle(ctx context.Context, tenantID tenant.ID, inventoryIDValues []string, assetIDs []asset.ID, includeArchived bool) (map[asset.ID][]assettag.Tag, error) {
 	out := map[asset.ID][]assettag.Tag{}
 	if len(inventoryIDValues) == 0 || len(assetIDs) == 0 {
 		return out, nil
@@ -234,11 +244,14 @@ func (s Store) assetTagsByAssetsInInventories(ctx context.Context, tenantID tena
 		return out, nil
 	}
 	var models []assetTagModel
-	if err := s.db.WithContext(ctx).
-		Where(&assetTagModel{TenantID: tenantID.String(), LifecycleState: assettag.LifecycleStateActive.String()}).
+	query := s.db.WithContext(ctx).
+		Where(&assetTagModel{TenantID: tenantID.String()}).
 		Where(clause.IN{Column: clause.Column{Name: "inventory_id"}, Values: stringValues(inventoryIDValues)}).
-		Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(tagIDs)}).
-		Find(&models).Error; err != nil {
+		Where(clause.IN{Column: clause.Column{Name: "id"}, Values: stringValues(tagIDs)})
+	if !includeArchived {
+		query = query.Where(&assetTagModel{LifecycleState: assettag.LifecycleStateActive.String()})
+	}
+	if err := query.Find(&models).Error; err != nil {
 		return nil, err
 	}
 	tagsByID := make(map[string]assettag.Tag, len(models))

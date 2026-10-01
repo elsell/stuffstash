@@ -51,7 +51,7 @@ type assetUpdatedCursorPayload struct {
 	AssetID   string `json:"assetId"`
 }
 
-func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort, item asset.Asset) *string {
+func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort, parent ports.AssetParentFilter, item asset.Asset) *string {
 	if sort == ports.AssetListSortUpdatedDesc {
 		payload, err := json.Marshal(assetUpdatedCursorPayload{
 			UpdatedAt: item.UpdatedAt.UTC().Format(time.RFC3339Nano),
@@ -60,13 +60,13 @@ func encodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, li
 		if err != nil {
 			return nil
 		}
-		return encodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort), string(payload))
+		return encodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort, parent), string(payload))
 	}
-	return encodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort), item.ID.String())
+	return encodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort, parent), item.ID.String())
 }
 
-func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort, cursor string) (assetCursorPosition, error) {
-	decoded, err := decodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort), cursor)
+func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort, parent ports.AssetParentFilter, cursor string) (assetCursorPosition, error) {
+	decoded, err := decodePageCursor("assets", assetCursorScope(tenantID, inventoryID, lifecycleFilter, sort, parent), cursor)
 	if err != nil {
 		return assetCursorPosition{}, err
 	}
@@ -95,8 +95,12 @@ func decodeAssetCursor(tenantID tenant.ID, inventoryID inventory.InventoryID, li
 	return assetCursorPosition{AssetID: id}, nil
 }
 
-func assetCursorScope(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort) string {
-	return tenantID.String() + ":" + inventoryID.String() + ":" + string(lifecycleFilter) + ":" + string(sort)
+func assetCursorScope(tenantID tenant.ID, inventoryID inventory.InventoryID, lifecycleFilter ports.AssetLifecycleFilter, sort ports.AssetListSort, parent ports.AssetParentFilter) string {
+	scope := tenantID.String() + ":" + inventoryID.String() + ":" + string(lifecycleFilter) + ":" + string(sort)
+	if parent.Applied {
+		scope += ":parent=" + parent.ID.String()
+	}
+	return scope
 }
 
 func encodePageCursor(collection string, scope string, lastID string) *string {

@@ -8,6 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
+	"github.com/stuffstash/stuff-stash/internal/adapters/inventoryexport"
 	"github.com/stuffstash/stuff-stash/internal/adapters/voice"
 	"github.com/stuffstash/stuff-stash/internal/app"
 	"github.com/stuffstash/stuff-stash/internal/config"
@@ -15,6 +16,10 @@ import (
 )
 
 func buildApplication(ctx context.Context, cfg config.Config, observer ports.Observer, authenticator ports.Authenticator, authorizer ports.Authorizer, repositories repositories, pushSender ports.NotificationPushSender) (app.App, error) {
+	exportRecords, exportBytes, err := cfg.Exports.Limits()
+	if err != nil {
+		return app.App{}, err
+	}
 	evaluationSettings, err := cfg.ConversationEvaluations.Settings()
 	if err != nil {
 		return app.App{}, err
@@ -47,6 +52,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 	importer := homebox.NewLegacyImporter(nil)
 	evaluations := buildEvaluationRuntime(cfg, evaluationSettings, workflowLimits, observer, authorizer, repositories, providerCredentialVault)
 	application := app.New(app.Dependencies{
+		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: exportRecords, ExportMaxBytes: exportBytes,
 		NotificationPreferences:          repositories.notificationPreferences,
 		NotificationDevices:              repositories.notificationDevices,
 		NotificationPushTokens:           push.NativeTokens{},
@@ -97,7 +103,7 @@ func buildApplication(ctx context.Context, cfg config.Config, observer ports.Obs
 		ProviderProfileUnitOfWork:        repositories.providerProfileUnitOfWork,
 		VoiceProviderConfigs:             repositories.voiceProviderConfigs,
 		ProviderCredentialVault:          providerCredentialVault,
-		ProviderProfileTester:            voice.NewProviderProfileTester(googleProviderProfileFactory(cfg)),
+		ProviderProfileTester:            voice.NewProviderProfileTester(providerProfileFactory(cfg)),
 		RealtimeSessions:                 repositories.realtimeSessions,
 		ActionPlans:                      repositories.actionPlans,
 		ImportSources:                    importer,

@@ -13,11 +13,12 @@ export async function installConversationFixture(page: Page) {
       { id: 'clothes', title: '3–6 months clothes', kind: 'item', parentId: 'attic', description: 'Winter clothes', tagNames: ['baby', 'clothes'] }
     ], expectations: { kind: 'answer', referencedAssets: ['clothes'], locations: [{ assetId: 'clothes', ancestorId: 'attic' }], proposals: [], forbiddenOperations: ['create'] } } };
   let selection: WorkflowSelection | null = null; let run: EvaluationRun | null = null;
-  const state = { denied: false, queued: [] as RunQueue[], activations: 0 };
+  const state = { denied: false, denyOnCaseRead: false, queued: [] as RunQueue[], activations: 0 };
   const workflowRevisions = new Map([[workflow.id, workflow]]); const caseRevisions = new Map([[savedCase.id, savedCase]]);
   await page.route(/http:\/\/127\.0\.0\.1:18080\/tenants\/[^/]+\/(conversation-[^?]*|provider-profiles)(\?.*)?$/, async route => {
     const request = route.request(); const path = new URL(request.url()).pathname.split('/').slice(3); const method = request.method();
     const send = async (data: unknown, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ data, meta: { tenantId: 'tenant-home', pagination: { limit: 20, hasMore: false, nextCursor: null } } }) });
+    if (state.denyOnCaseRead && path[0] === 'conversation-evaluation-cases') state.denied = true;
     if (state.denied || !request.url().includes('/tenants/tenant-home/') || request.headers().authorization !== 'Bearer e2e-token') { await route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Denied' } } }); return; }
     const body = method === 'POST' ? request.postDataJSON() : undefined;
     if (path[0] === 'provider-profiles') return send([]);

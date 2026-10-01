@@ -7,3 +7,5 @@ export { createObservedFetch, type RequestPerformanceObserver } from './telemetr
 export { NotificationsClient, type NotificationDevice, type RegisterNotificationDevice, type NotificationPreferences, type UpdateNotificationPreferences, type ExpirationReminderPolicy, type ExpirationNotification } from './notificationsClient';
 
 export { ExpirationClient, type ExpirationWorkspaceOptions, type ExpirationWorkspaceAsset, type ExpirationWorkspacePage } from './expirationClient';
+
+export { InventoryExportClient, type InventoryExportFormat } from "./inventoryExportClient";

@@ -180,7 +180,7 @@ func (s *Store) ListAttachmentsByAsset(_ context.Context, tenantID tenant.ID, in
 
 	items := []media.Attachment{}
 	for _, attachment := range s.attachments {
-		if attachment.TenantID.String() == tenantID.String() && attachment.InventoryID.String() == inventoryID.String() && attachment.AssetID.String() == assetID.String() && attachment.IsActive() && attachment.ID.String() > page.AfterAttachmentID.String() {
+		if attachment.TenantID.String() == tenantID.String() && attachment.InventoryID.String() == inventoryID.String() && attachment.AssetID.String() == assetID.String() && (page.IncludeArchived || attachment.IsActive()) && attachment.ID.String() > page.AfterAttachmentID.String() {
 			items = append(items, attachment)
 		}
 	}

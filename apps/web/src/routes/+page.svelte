@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { InventoryExportClient } from '@stuff-stash/api-client';
+  import { ExportInventory } from '$lib/application/exportInventory';
+  import { ApiInventoryExportRepository } from '$lib/adapters/exports/ApiInventoryExportRepository';
+  import { BrowserExportFileDelivery } from '$lib/adapters/exports/BrowserExportFileDelivery';
   import { StuffStashExpirationRepository } from '$lib/adapters/api/stuffStashExpirationRepository';
   import type { ExpirationWorkspace } from '$lib/ports/expirationRepository';
   import { StuffStashNotificationRepository } from '$lib/adapters/api/stuffStashNotificationRepository';
@@ -41,6 +45,7 @@
   let repository = $state<WorkspaceRepository | null>(null);
   let expiration = $state<ExpirationWorkspace | undefined>();
   let notifications = $state<NotificationWorkspace | undefined>();
+  let exportCommand = $state<ExportInventory | undefined>();
   let conversations = $state<ConversationWorkspaceRepositories | undefined>();
   let workspaceData = $state<WorkspaceData | null>(null);
   let loading = $state(true);
@@ -91,6 +96,7 @@
           if (!mounted) return;
           expiration = { repository: new StuffStashExpirationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           notifications = { apiIdentity: loadedConfig.apiBaseUrl, repository: new StuffStashNotificationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
+          exportCommand = new ExportInventory(new ApiInventoryExportRepository(new InventoryExportClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), new BrowserExportFileDelivery());
           conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
           repository = nextRepository;
           workspaceData = nextWorkspace;
@@ -185,7 +191,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {exportCommand} {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

@@ -334,3 +334,61 @@ credential recovery guidance. Apply this consistently to profile details and voi
 stage setup. Keep actions available for another attempt after failure; do not
 optimistically enable a profile or mark it tested. Test fakes must use the actual
 server status vocabulary rather than an invented `success` status.
+
+## Executable OpenAI-Compatible Language Profiles — October 2026
+
+Both `openai_compatible` and `local_http` language-inference profiles execute
+through the existing conversation-model port and API-owned tool loop. They use
+nonstreaming Chat Completions, not provider-hosted inventory tools. Each Converse
+call makes exactly one HTTP request; the application retains turn, tool, timeout,
+authorization, and approval budgets. Gemini remains supported through the same
+factory dispatcher. Unsupported speech capabilities fail explicitly rather than
+pretending that a language endpoint provides transcription or synthesis; voice
+sessions may combine a compatible language profile with existing speech profiles.
+
+The profile endpoint is an explicit API base URL (for example ending in `/v1`),
+and the adapter appends `/chat/completions`. Model names remain tenant-configured;
+no model or hosted endpoint is silently selected. API-key and OAuth-bearer sealed
+credentials are sent only in the Authorization header. Local runtimes that ignore
+Bearer authentication may use a non-secret marker through the existing credential
+workflow; this preserves readiness, testing, rotation, and configuration identity
+without introducing an unauthenticated bypass in credential resolution.
+
+Operators explicitly allow each complete base URL using
+`STUFF_STASH_COMPATIBLE_PROVIDER_ENDPOINTS` (comma-separated; default empty).
+Tenant configuration cannot authorize network destinations. URLs must have no
+userinfo, query, fragment, or encoded path traversal; HTTPS is required for remote
+profiles. `local_http` may use explicitly allowed HTTP endpoints on operator-owned
+networks. Redirects are never followed, including redirects to another allowlisted
+endpoint. The allowlist is an operator trust decision for its named hosts and DNS;
+operators must not allow metadata services or hosts controlled by untrusted users.
+The adapter must not forward credentials to any URL other than the configured
+allowlisted endpoint. Disabled-by-default egress is deliberate.
+
+Runtime `httpTimeout` uses the existing validated profile timeout option. The
+adapter additionally caps request bodies at 1 MiB and responses at 1 MiB. It
+propagates caller cancellation, rejects non-success HTTP status, malformed or
+truncated output, refusals, unsupported finish reasons, empty output, duplicate
+call IDs, and unknown tool names. Errors expose safe categories only, never raw
+provider bodies, credentials, prompts, or endpoint internals.
+
+Instructions become a system message. User, assistant, and tool messages preserve
+order, assistant tool-call IDs, JSON arguments, and matching tool results.
+Function schemas come from the application tool catalog. If the catalog includes
+an answer/response tool, `tool_choice` is `required`; otherwise it is `auto`.
+Function arguments must decode to JSON objects. The adapter does not execute any
+returned tool or manufacture an approved action. Profile diagnostics make a real,
+bounded synthetic tool-call request without tenant data and validate its result.
+The same dispatcher must be used for diagnostics, live resolution, workflow
+resolution, and evaluation configuration identities.
+
+Critical verification uses a controlled HTTP provider with real requests: a
+multi-turn read/tool/result/answer exchange, required response tools, malformed
+and oversized output, cancellation, refusal, no redirect credential forwarding,
+operator allowlist enforcement, and existing tenant-scoped credential/profile
+boundary tests. A passing protocol fixture proves adapter execution, not the
+quality of a particular hosted or locally installed model. A real model smoke
+run must be recorded separately before claiming that provider deployment verified.
+
+Protocol references: [Chat Completions function calling](https://developers.openai.com/api/docs/guides/function-calling)
+and [structured output limitations](https://developers.openai.com/api/docs/guides/structured-outputs).

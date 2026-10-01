@@ -120,7 +120,7 @@ func (s *Store) ListAssetTags(_ context.Context, tenantID tenant.ID, inventoryID
 	defer s.mu.RUnlock()
 	tags := []assettag.Tag{}
 	for _, tag := range s.assetTags {
-		if tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+		if tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() || (!page.IncludeArchived && tag.LifecycleState != assettag.LifecycleStateActive) {
 			continue
 		}
 		if page.AfterTagID.String() != "" && tag.ID.String() <= page.AfterTagID.String() {
@@ -156,12 +156,20 @@ func (s *Store) AssetTagsByAssets(_ context.Context, tenantID tenant.ID, invento
 	return out, nil
 }
 
+func (s *Store) AllAssetTagsByAsset(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) ([]assettag.Tag, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.assetTagsForExportLocked(tenantID, inventoryID, assetID, true), nil
+}
 func (s *Store) assetTagsByAssetLocked(tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) []assettag.Tag {
+	return s.assetTagsForExportLocked(tenantID, inventoryID, assetID, false)
+}
+func (s *Store) assetTagsForExportLocked(tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, includeArchived bool) []assettag.Tag {
 	links := s.assetTagLinks[assetID]
 	tags := make([]assettag.Tag, 0, len(links))
 	for tagID := range links {
 		tag, found := s.assetTags[tagID]
-		if !found || tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() || tag.LifecycleState != assettag.LifecycleStateActive {
+		if !found || tag.TenantID.String() != tenantID.String() || tag.InventoryID.String() != inventoryID.String() || (!includeArchived && tag.LifecycleState != assettag.LifecycleStateActive) {
 			continue
 		}
 		tags = append(tags, tag)

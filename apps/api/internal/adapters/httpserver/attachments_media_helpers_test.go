@@ -5,6 +5,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/auth"
 	"github.com/stuffstash/stuff-stash/internal/adapters/homebox"
 	"github.com/stuffstash/stuff-stash/internal/adapters/importworker"
+	"github.com/stuffstash/stuff-stash/internal/adapters/inventoryexport"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	"github.com/stuffstash/stuff-stash/internal/adapters/worklimit"
 	"github.com/stuffstash/stuff-stash/internal/app"
@@ -44,6 +45,7 @@ func newSeededMediaTestApp(t *testing.T, state seededState, directUploads ports.
 		}
 	}
 	application := app.New(app.Dependencies{
+		ExportEncoder: inventoryexport.Encoder{}, ExportMaxRecords: 10000, ExportMaxBytes: 64 * 1024 * 1024,
 		Observer:                  &fakeObserver{},
 		Auth:                      auth.NewLocalDevAuthenticator(),
 		InvitationPublicBaseURL:   "https://stash.example.test/invitations/accept",

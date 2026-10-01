@@ -11,6 +11,7 @@ import (
 )
 
 type AssetTagRepository interface {
+	AllAssetTagsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) ([]assettag.Tag, error)
 	AssetTagByID(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, tagID assettag.ID) (assettag.Tag, bool, error)
 	AssetTagByKey(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, key assettag.Key) (assettag.Tag, bool, error)
 	ListAssetTags(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page AssetTagPageRequest) ([]assettag.Tag, error)
@@ -32,6 +33,7 @@ type AssetEditUnitOfWork interface {
 }
 
 type AssetTagPageRequest struct {
-	AfterTagID assettag.ID
-	Limit      int
+	IncludeArchived bool
+	AfterTagID      assettag.ID
+	Limit           int
 }

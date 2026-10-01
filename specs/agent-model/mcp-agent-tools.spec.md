@@ -196,3 +196,114 @@ Security-sensitive MCP behavior must have adversarial end-to-end tests before im
 - Should MCP tools live under the same public base URL as REST or under a separate configured origin?
 - What is the first external MCP client to verify against: Claude Desktop, Claude Code, ChatGPT/OpenAI Responses, Gemini CLI, or a protocol-level test client?
 - What confirmation-token or approved-action-plan contract should external MCP clients use for write tools?
+
+## Read-only delivery contract — October 2026
+
+Close G2 with an externally usable, authenticated read-only endpoint, not an
+internal tool registry or a transport placeholder. Writes remain explicitly
+unpublished until the approval contract above is delivered.
+
+### Deployment and protocol
+
+- Use the official `github.com/modelcontextprotocol/go-sdk` pinned to `v1.8.0`.
+  It supports the project's Go 1.25 toolchain and supplies protocol negotiation,
+  JSON-RPC validation and bounded transport decoding. Its transport hardening
+  makes it preferable to implementing another JSON-RPC/MCP stack locally.
+- Register `/mcp` through a dedicated adapter registration function, alongside
+  REST in the API process and inside the existing security-header and rate-limit
+  middleware. Keep server construction and bootstrap wiring thin.
+- Use stateless Streamable HTTP with JSON responses. Explicitly support protocol
+  revisions `2026-07-28` and `2025-11-25`; do not advertise resources, prompts,
+  server-to-client requests, subscriptions or write tools. Negotiation and the
+  legacy initialization handshake belong to the SDK. No transport session may
+  carry a principal across HTTP requests.
+- `STUFF_STASH_MCP_ENABLED` defaults to false. When enabled,
+  `STUFF_STASH_MCP_PUBLIC_URL` must be a canonical absolute HTTPS URL ending in
+  `/mcp`, with no user information, query or fragment. Explicit local-dev mode
+  may use HTTP on a loopback host. Reject malformed configuration at startup.
+- `STUFF_STASH_MCP_AUTH_MODE` must be explicitly set to the same `oidc` or
+  `local-dev` mode as the API. No inherited local-dev default. Authenticate every
+  protocol request through the existing application authentication boundary;
+  reject local-dev tokens in OIDC mode before any tool execution.
+- Validate Host against the configured public endpoint and validate any Origin
+  against its origin or the explicitly configured CORS origins. Reject malformed,
+  multiple and untrusted origins. Do not trust forwarded host headers to choose
+  an authentication issuer or public endpoint. Extend CORS only for required MCP
+  protocol headers, keeping the existing origin allowlist.
+- Enforce the configured API JSON body limit and request deadlines before SDK
+  decoding. Use `STUFF_STASH_HTTP_WRITE_TIMEOUT` as a context deadline, not only
+  a socket timeout; default to 30 seconds when constructed without a value. Rate-limit both discovery and tool traffic using the existing port.
+  Responses with inventory data are private/no-store. Never reflect raw adapter,
+  authorization-provider or repository errors to an external agent.
+
+### Authentication discovery
+
+Publish `/.well-known/oauth-protected-resource/mcp` when MCP is enabled, with its
+canonical resource URL and the same configured OIDC issuer in
+`authorization_servers`. A 401 response uses a Bearer challenge pointing to that
+metadata and a bland response body. Expose `WWW-Authenticate` to allowed browser
+origins so they can read the challenge. Metadata must contain no credentials or
+principal information. Local-dev metadata does not advertise an OAuth issuer.
+
+This uses the existing Stuff Stash bearer-token contract (verified OIDC ID tokens
+with the configured audiences). Do not imply that Google access tokens, arbitrary
+MCP client registrations, token exchange or dynamic registration are supported.
+Document a configured-token client example and the provider/client registration
+needed to obtain a token. Changing the project to a distinct OAuth access-token
+resource/audience requires a separate authentication specification; it must not
+be smuggled into this adapter.
+
+### Catalog and query behavior
+
+The application-owned catalog lives under the agent/model application package;
+SDK types remain in the MCP adapter. The catalog defines these stable tool names,
+required scope fields, bounded pagination and read-only annotations:
+
+| Tool | Required scope and behavior |
+| --- | --- |
+| `list_tenants` | Authenticated principal; only accessible tenants |
+| `list_inventories` | `tenantId`; only accessible inventories |
+| `search_assets` | `tenantId`, `inventoryId`, `query`; authorized exact/fuzzy search |
+| `get_asset` | `tenantId`, `inventoryId`, `assetId`; current detail |
+| `list_root_assets` | `tenantId`, `inventoryId`; active assets with no parent |
+| `list_location_assets` | `tenantId`, `inventoryId`, `assetId`; active direct children of an authorized container/location |
+| `list_checked_out_assets` | `tenantId`, `inventoryId`; current checkouts |
+| `list_asset_checkout_history` | `tenantId`, `inventoryId`, `assetId`; checkout history |
+
+- Call the same owning application queries and authorization ports as REST.
+  Never authorize through descriptor metadata alone or query a repository from
+  the adapter. Parent-filtered listing belongs in the asset application query and
+  repository contract, with the parent predicate applied before pagination.
+- Every paged tool uses the application's bounded `limit` and opaque `cursor`
+  contract. Root/parent filters participate in cursor scope so a cursor cannot
+  be reused against another location. Do not load every asset and then filter a
+  client-sized page. Check parent access and containment kind before listing.
+- Parse IDs and typed query values before execution. Reject unknown input fields,
+  invalid limits, malformed cursors and unsupported lifecycle/mutation arguments.
+  Inventory search requires an explicit inventory, even if tenant-wide search is
+  available through another adapter.
+- Project outputs explicitly: user-visible IDs, names/descriptions, containment,
+  lifecycle, expiration, tags/custom fields and checkout details as applicable,
+  with pagination metadata. Exclude storage keys, signed attachment URLs,
+  credentials, invitation tokens, hidden schema and raw transport/domain objects.
+  Text from assets is data, never a tool instruction or authorization grant.
+- Use `audit.SourceMCP` for domain reads where audit is required. Record tool name,
+  safe outcome and elapsed time through injected observability. Never log raw
+  arguments, returned inventory content, bearer tokens or model prompts.
+
+### Required completion evidence
+
+Exercise the HTTP endpoint using the official client, not only direct tool
+callbacks: discovery, every read tool, pagination, missing/invalid arguments,
+unknown write tools, read audit source, revocation and current-principal handling.
+Use a real signed-token test issuer for expired, unsigned, wrong-issuer,
+wrong-audience and malformed-token rejection. Verify explicit local-dev mode,
+production rejection of dev tokens, viewer/editor read success, cross-tenant and
+cross-inventory denial, hidden parent/resource denial, limits, Origin/Host checks,
+rate limiting and disabled configuration. A real client must retrieve an asset
+created through the existing authenticated REST boundary. Preserve bland errors
+and prove rejected requests do not execute or publish inventory data.
+
+Sources: [official Go SDK v1.8.0](https://github.com/modelcontextprotocol/go-sdk/releases/tag/v1.8.0),
+[SDK protocol documentation](https://github.com/modelcontextprotocol/go-sdk/blob/v1.8.0/docs/protocol.md),
+and [MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
