@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '.env.example'
   workflow_dispatch:
 
 permissions:
