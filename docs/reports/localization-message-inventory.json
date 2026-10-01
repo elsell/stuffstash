@@ -36,6 +36,36 @@
       "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
       "classification": "benchmark-fixture",
       "reason": "Benchmark corpus and case labels are not production product copy."
+    },
+    {
+      "file": "apps/mobile/src/application/inventories/CreateWorkspace.ts",
+      "classification": "technical-diagnostic",
+      "reason": "WorkspaceCreationForm guards empty input and replaces command errors with cataloged access/connection guidance.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/WorkspaceCreationForm.tsx: create catch"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/app/expiration-filters.tsx",
+      "classification": "technical-diagnostic",
+      "reason": "Scope-change exceptions become cataloged filtersCouldNotBeLoaded feedback; raw query errors are not rendered.",
+      "evidence": [
+        "apps/mobile/src/app/expiration-filters.tsx: state.isError"
+      ]
+    },
+    {
+      "file": "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx",
+      "strings": [
+        "Saved",
+        "Archived",
+        "Restored",
+        "Deleted"
+      ],
+      "classification": "state-enum",
+      "reason": "These values identify mutation outcomes and are mapped to customization catalog messages before rendering.",
+      "evidence": [
+        "apps/mobile/src/ui/screens/CustomizationEditorScreen.tsx: feedback message mapping"
+      ]
     }
   ],
   "files": [
@@ -221,14 +251,6 @@
     },
     {
       "file": "apps/mobile/src/application/notifications/NotificationPreferencesSession.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/application/providerProfiles/TestProviderProfileCommand.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/application/sharing/InventorySharing.ts",
       "candidates": 2
     },
     {

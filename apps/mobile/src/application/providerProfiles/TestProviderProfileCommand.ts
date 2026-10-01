@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {
   ProviderProfileRepository,
   ProviderProfileTestResult
@@ -9,12 +10,12 @@ export class TestProviderProfileCommand {
   async execute(providerProfileId: string): Promise<ProviderProfileTestResult> {
     const trimmed = providerProfileId.trim();
     if (trimmed.length === 0) {
-      throw new Error('Choose a provider profile to test.');
+      throw new Error(t('providerTest.chooseProfile'));
     }
 
     const result = await this.profiles.testProviderProfile(trimmed);
     if (result.status !== 'succeeded') {
-      throw new Error('Connection test failed. Check the profile configuration and credential, then try again.');
+      throw new Error(t('providerTest.failed'));
     }
     return result;
   }
