@@ -332,3 +332,6 @@ The following are known open questions and should be resolved through specs and 
 - MCP server capabilities and agent interaction model.
 - Local development topology for PostgreSQL, SQLite, SpiceDB, and OIDC.
 - Observability event taxonomy and fan-out adapter design.
+
+- Adding a domain audit action requires a forward PostgreSQL constraint migration.
+  The audit-action migration check must pass; in-memory tests are insufficient.
