@@ -252,6 +252,7 @@ export type VoiceSessionActivityPresentation =
 
 export type VoiceSessionActionPlanCommand = {
   readonly expirationLabel?: string;
+  readonly changes?: readonly string[];
   readonly id?: string;
   readonly editable: boolean;
   readonly title: string;
@@ -456,6 +457,7 @@ function formatActionPlanCommand(command: VoiceActionPlanCommand, titlesByID: Re
     subtitle: tone === 'create' ? `Create ${assetKind}` : command.summary,
     placement: placementLabel(command, titlesByID),
     expirationLabel: formatExpirationChange(command.expiration, command.expirationCleared),
+    changes: command.changes,
     photoDraftEligible: isPhotoDraftEligible(command, title),
     editable: tone === 'create' && Boolean(command.id),
     tone

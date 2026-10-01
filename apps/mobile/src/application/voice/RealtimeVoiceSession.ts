@@ -157,6 +157,7 @@ export type VoiceActionPlanProposal = {
 type VoiceActionPlanStatus = VoiceActionPlanProposal['status'];
 
 export type VoiceActionPlanCommand = {
+  readonly changes?: readonly string[];
   readonly expiration?: AssetExpiration;
   readonly expirationCleared?: boolean;
   readonly id?: string;
@@ -1207,6 +1208,7 @@ function safeActionPlanProposal(proposal: VoiceActionPlanProposal): VoiceActionP
       id: command.id,
       kind: safeBoundedText(command.kind, 40),
       summary: safeBoundedActionPlanText(command.summary, 180),
+      ...(command.changes ? { changes: [...command.changes] } : {}),
       operation: command.operation ? safeBoundedText(command.operation, 40) : undefined,
       title: command.title ? safeBoundedActionPlanText(command.title, 120) : undefined,
       assetKind: command.assetKind ? safeBoundedText(command.assetKind, 40) : undefined,
@@ -1249,7 +1251,8 @@ export function isValidVoiceActionPlanProposal(proposal: VoiceActionPlanProposal
     }
     if (command.expiration !== undefined && (!isAssetExpiration(command.expiration) || (command.kind !== 'create_asset' && command.kind !== 'create_location' && command.kind !== 'update_asset'))) return false;
     if (command.expirationCleared !== undefined && (typeof command.expirationCleared !== 'boolean' || (command.expirationCleared && (command.kind !== 'update_asset' || command.expiration !== undefined)))) return false;
-    if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true) return false;
+    if (command.kind === 'update_asset' && command.expiration === undefined && command.expirationCleared !== true && !command.changes?.length) return false;
+    if (command.changes !== undefined && !isValidVoiceActionPlanChanges(command.changes)) return false;
     const expectedOperation = voiceActionPlanOperations[command.kind as keyof typeof voiceActionPlanOperations];
     if (!expectedOperation || command.operation !== expectedOperation) {
       return false;
@@ -1509,4 +1512,9 @@ function safeBoundedDiagnosticDetail(value: string, maxLength: number): string {
 
 export class VoiceReviewValidationError extends Error {
   readonly code = 'review_validation_failed';
+}
+
+
+export function isValidVoiceActionPlanChanges(value: unknown): value is readonly string[] {
+ return Array.isArray(value) && value.length > 0 && value.length <= 12 && value.every(change => typeof change === 'string' && change.trim().length > 0 && change.length <= 4608);
 }

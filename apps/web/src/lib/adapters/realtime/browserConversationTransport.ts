@@ -1,3 +1,5 @@
+import { validExpirationInput } from '$lib/domain/expiration';
+import type { AssetExpiration } from '$lib/domain/inventory';
 import type { InventoryConversationConnection, InventoryConversationEvent, InventoryConversationScope, InventoryConversationTransport } from '$lib/ports/inventoryConversation';
 export type ConversationSocket = Pick<WebSocket, 'onopen' | 'onmessage' | 'onerror' | 'onclose' | 'send' | 'close'>;
 type SocketFactory = (url: string, protocol: string) => ConversationSocket;
@@ -53,8 +55,8 @@ export class BrowserConversationTransport implements InventoryConversationTransp
             onEvent({ type: 'answer', text: text(response.displayResponse), assets });
           } else if (message.type === 'action.plan.proposed') {
             const value = message.actionPlan;
-            if (plan || !object(value) || !text(value.planId) || !text(value.confirmationSummary) || !Array.isArray(value.commands) || !value.commands.length || !value.commands.every((command) => object(command) && text(command.summary))) throw new Error('Invalid review');
-            plan = text(value.planId); onEvent({ type: 'review', plan: { id: plan, summary: text(value.confirmationSummary), commands: value.commands.filter(object).map((command) => ({ summary: text(command.summary), title: text(command.title), destination: text(command.parentTitle) })), risks: Array.isArray(value.risks) ? value.risks.filter((risk): risk is string => typeof risk === 'string') : [] } });
+            if (plan || !object(value) || !text(value.planId) || !text(value.confirmationSummary) || !Array.isArray(value.commands) || !value.commands.length || !value.commands.every((command) => object(command) && text(command.summary) && (command.changes === undefined || validChanges(command.changes)) && validExpirationReview(command))) throw new Error('Invalid review');
+            plan = text(value.planId); onEvent({ type: 'review', plan: { id: plan, summary: text(value.confirmationSummary), commands: value.commands.filter(object).map((command) => ({ summary: text(command.summary), title: text(command.title), destination: text(command.parentTitle), ...(validExpiration(command.expiration) ? { expiration: { ...command.expiration } } : {}), ...(command.expirationCleared === true ? { expirationCleared: true } : {}), ...(validChanges(command.changes) ? { changes: [...command.changes] } : {}) })), risks: Array.isArray(value.risks) ? value.risks.filter((risk): risk is string => typeof risk === 'string') : [] } });
           } else if (message.type === 'action.plan.executed') { onEvent({ type: 'changed' }); close(); onEvent({ type: 'ended' }); }
           else if (message.type === 'action.plan.cancelled' || message.type === 'session.cancelled') { onEvent({ type: 'cancelled' }); close(); onEvent({ type: 'ended' }); }
           else if (message.type === 'action.plan.failed') fail('unavailable');
@@ -67,4 +69,16 @@ export class BrowserConversationTransport implements InventoryConversationTransp
       if (signal.aborted) close();
     });
   }
+}
+
+function validChanges(value: unknown): value is string[] {
+ return Array.isArray(value) && value.length > 0 && value.length <= 12 && value.every(change => typeof change === 'string' && change.trim().length > 0 && change.length <= 4608);
+}
+
+function validExpiration(value: unknown): value is AssetExpiration {
+ return object(value) && typeof value.date === 'string' && value.date.length > 0 && (value.precision === 'day' || value.precision === 'month') && validExpirationInput(value.date, value.precision);
+}
+function validExpirationReview(command: Record<string, unknown>): boolean {
+ return (command.expiration === undefined || validExpiration(command.expiration)) &&
+   (command.expirationCleared === undefined || command.expirationCleared === false || (command.expirationCleared === true && command.expiration === undefined && command.kind === 'update_asset'));
 }

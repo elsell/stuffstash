@@ -36,6 +36,10 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		args, err := parseActionPlanCreateArguments(command)
 		if err == nil {
 			proposal.Title = args.Title
+			proposal.Changes, err = a.actionPlanDetailChanges(ctx, session, nil, nil, args.CustomFields)
+			if err != nil {
+				return RealtimeVoiceActionPlanCommand{}, err
+			}
 			if args.Expiration != nil {
 				proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
 			}
@@ -58,7 +62,7 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 			proposal.ParentCommandID = args.ParentCommandID
 		}
 	} else if command.Kind == actionplan.CommandKindUpdateAsset {
-		args, err := parseActionPlanExpirationArguments(command)
+		args, err := parseActionPlanUpdateArguments(command)
 		if err != nil {
 			return RealtimeVoiceActionPlanCommand{}, err
 		}
@@ -68,7 +72,11 @@ func (a App) realtimeVoiceActionPlanCommand(ctx context.Context, session Realtim
 		}
 		proposal.Title = item.Title.String()
 		proposal.AssetKind = item.Kind.String()
-		proposal.ExpirationCleared = args.Expiration == nil
+		proposal.Changes, err = a.actionPlanDetailChanges(ctx, session, args.Title, args.Description, args.CustomFields)
+		if err != nil {
+			return RealtimeVoiceActionPlanCommand{}, err
+		}
+		proposal.ExpirationCleared = args.ExpirationPresent && args.Expiration == nil
 		if args.Expiration != nil {
 			proposal.Expiration = &RealtimeVoiceActionPlanExpiration{Date: args.Expiration.Date, Precision: args.Expiration.Precision}
 		}

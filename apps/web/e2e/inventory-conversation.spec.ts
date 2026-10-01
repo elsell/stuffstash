@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { installAuthenticatedWorkspace, resetWorkspaceApiState } from './workspace-fixture';
 
-async function installConversationServer(page: Page, propose: boolean) {
+async function installConversationServer(page: Page, propose: boolean, detailEdit = false) {
   const decisions: string[] = [];
   await page.routeWebSocket('ws://127.0.0.1:18080/v1/realtime/voice', socket => {
     let seq = 1; let authenticated = false;
@@ -12,7 +12,7 @@ async function installConversationServer(page: Page, propose: boolean) {
       expect(authenticated).toBe(true);
       if (message.type === 'session.start') { expect(message.tenantId).toBe('tenant-home'); expect(message.inventoryId).toBe('inventory-household'); send({ type: 'session.started' }); }
       if (message.type === 'text.input') {
-        if (propose) send({ type: 'action.plan.proposed', actionPlan: { planId: 'move-plan', confirmationSummary: 'Move the camping tent into Garage.', commands: [{ summary: 'Move Camping tent', parentTitle: 'Garage' }], risks: [] } });
+        if (propose) send({ type: 'action.plan.proposed', actionPlan: { planId: 'move-plan', confirmationSummary: detailEdit ? 'Update the camping tent.' : 'Move the camping tent into Garage.', commands: detailEdit ? [{ kind: 'update_asset', summary: 'Update name', changes: ['Name: Camping tent', 'Serial number: ST-2028'], expiration: { date: '2028-02', precision: 'month' } }] : [{ summary: 'Move Camping tent', parentTitle: 'Garage' }], risks: [] } });
         else { send({ type: 'assistant.response.completed', response: { sessionId: 'web-session', tenantId: 'tenant-home', inventoryId: 'inventory-household', displayResponse: 'The camping tent is in Garage.', artifacts: [] } }); send({ type: 'session.completed', followUpAvailable: true }); }
       }
       if (message.type === 'action.plan.approve' || message.type === 'action.plan.cancel') { decisions.push(message.type); send({ type: message.type === 'action.plan.approve' ? 'action.plan.executed' : 'action.plan.cancelled' }); }
@@ -35,12 +35,13 @@ test('typed conversation keeps composer reachable and restores focus', async ({ 
   await composer.press('Escape'); await expect(opener).toBeFocused(); await expect(dialog).not.toBeVisible();
 });
 for (const approve of [false, true]) {
-  test(`conversation ${approve ? 'approves' : 'cancels'} only after explicit review`, async ({ page }) => {
-    const decisions = await installConversationServer(page, true);
+  test(`conversation ${approve ? 'approves' : 'cancels'} only after explicit review`, async ({ page }, testInfo) => {
+    const decisions = await installConversationServer(page, true, approve);
     await page.goto('/tenants/tenant-home/inventories/inventory-household');
     await page.getByRole('button', { name: 'Ask Stuff Stash', exact: true }).click();
-    await page.getByRole('textbox', { name: 'Message Stuff Stash' }).fill('Move the tent into Garage'); await page.getByRole('button', { name: 'Send', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Message Stuff Stash' }).fill(approve ? 'Rename tent to Camping tent, set serial to ST-2028 and expiration to February 2028' : 'Move the tent into Garage'); await page.getByRole('button', { name: 'Send', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Review changes', exact: true })).toBeVisible(); expect(decisions).toEqual([]);
+    if (approve) { await expect(page.getByText('Name: Camping tent', { exact: true })).toBeVisible(); await expect(page.getByText('Serial number: ST-2028', { exact: true })).toBeVisible(); await expect(page.getByText('Expires February 2028', { exact: true })).toBeVisible(); await page.screenshot({ path: testInfo.outputPath('conversation-detail-review.png'), fullPage: true }); }
     await page.getByRole('button', { name: approve ? 'Approve changes' : 'Cancel changes', exact: true }).click();
     await expect.poll(() => decisions).toEqual([approve ? 'action.plan.approve' : 'action.plan.cancel']);
     await expect(page.getByRole('heading', { name: 'Review changes', exact: true })).not.toBeVisible();

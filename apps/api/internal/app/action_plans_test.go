@@ -420,7 +420,7 @@ func TestExecuteActionPlanFailsUnsupportedApprovedPlanWithoutChangingAssets(t *t
 	}{
 		{
 			name:   "unsupported command",
-			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindUpdateAsset, `{"assetId":"asset-1","title":"Updated"}`),
+			record: actionPlanRecordWithCommand("plan-1", actionplan.StateApproved, actionplan.CommandKindUpdateAsset, `{"assetId":"asset-1","kind":"item"}`),
 		},
 		{
 			name: "unsupported multi command mix",

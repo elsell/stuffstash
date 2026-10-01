@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { formatAssetExpiration } from '$lib/application/expirationPresentation';
   import { onDestroy } from 'svelte';
   import MessageCircle from '@lucide/svelte/icons/message-circle';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import { Textarea } from '$lib/components/ui/textarea/index.js';
   import * as Button from '$lib/components/ui/button/index.js';
   import WorkspaceTaskSheet from './action-surface/WorkspaceTaskSheet.svelte';
   import { workspaceRouteHref } from '$lib/application/workspaceRoute';
@@ -36,7 +39,7 @@
   {#if view.plan}
     <section class="review" aria-label="Review changes">
       <h3 class="font-semibold">Review changes</h3><p>{view.plan.summary}</p>
-      <ul>{#each view.plan.commands as command, index (index)}<li><p>{command.summary}</p>{#if command.destination}<p class="text-sm text-muted-foreground">Destination: {command.destination}</p>{/if}</li>{/each}</ul>
+      <ul>{#each view.plan.commands as command, index (index)}<li><p>{command.summary}</p>{#each command.changes ?? [] as change}<p class="whitespace-pre-wrap break-words">{change}</p>{/each}{#if command.expiration}<p>Expires {formatAssetExpiration(command.expiration)}</p>{:else if command.expirationCleared}<p>Remove expiration date</p>{/if}{#if command.destination}<p class="text-sm text-muted-foreground">Destination: {command.destination}</p>{/if}</li>{/each}</ul>
       {#each view.plan.risks as risk}<p class="text-sm">{risk}</p>{/each}
       <div class="flex flex-wrap gap-2"><Button.Root disabled={view.busy} onclick={() => conversation.decide(true)}>Approve changes</Button.Root><Button.Root variant="outline" disabled={view.busy} onclick={() => conversation.decide(false)}>Cancel changes</Button.Root></div>
     </section>
@@ -46,9 +49,9 @@
   {#if view.busy}<p role="status">{view.plan ? 'Applying your decision…' : 'Working…'}</p>{/if}
   {#snippet footer()}
     <form class="composer" onsubmit={(event) => { event.preventDefault(); submit(); }}>
-      <label for="inventory-conversation-message" class="sr-only">Message Stuff Stash</label>
-      <textarea id="inventory-conversation-message" bind:value={draft} rows="2" maxlength="8000" placeholder="Message Stuff Stash" disabled={view.busy || !!view.plan || view.uncertain}
-        onkeydown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); submit(); } }}></textarea>
+      <Label for="inventory-conversation-message" class="sr-only">Message Stuff Stash</Label>
+      <Textarea class="max-h-40 resize-y" id="inventory-conversation-message" bind:value={draft} rows={2} maxlength={8000} placeholder="Message Stuff Stash" disabled={view.busy || !!view.plan || view.uncertain}
+        onkeydown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); submit(); } }} />
       <div class="flex justify-end gap-2">{#if view.busy}<Button.Root type="button" variant="outline" onclick={() => conversation.stop()}>Stop</Button.Root>{/if}<Button.Root type="submit" disabled={view.busy || !!view.plan || view.uncertain || !draft.trim()}>Send</Button.Root></div>
     </form>
   {/snippet}
@@ -62,5 +65,4 @@
   ul { display: grid; gap: .5rem; margin-top: .75rem; }
   .review { display: grid; gap: .75rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
   .composer { display: grid; gap: .75rem; width: 100%; }
-  textarea { resize: vertical; max-height: 10rem; width: 100%; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); padding: .75rem; }
 </style>

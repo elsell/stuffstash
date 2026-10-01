@@ -400,6 +400,7 @@ type realtimeActionPlanExpiration struct {
 }
 
 type realtimeActionPlanCommand struct {
+	Changes           []string                      `json:"changes,omitempty"`
 	ExpirationCleared bool                          `json:"expirationCleared,omitempty"`
 	Expiration        *realtimeActionPlanExpiration `json:"expiration,omitempty"`
 	ID                string                        `json:"id,omitempty"`
@@ -725,6 +726,7 @@ func realtimeActionPlanFromApp(proposal app.RealtimeVoiceActionPlanProposal) *re
 		commands = append(commands, realtimeActionPlanCommand{
 			Expiration:        expiration,
 			ExpirationCleared: command.ExpirationCleared,
+			Changes:           append([]string(nil), command.Changes...),
 			ID:                command.ID,
 			Kind:              command.Kind,
 			Summary:           command.Summary,

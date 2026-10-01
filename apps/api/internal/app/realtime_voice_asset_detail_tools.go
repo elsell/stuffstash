@@ -20,7 +20,7 @@ func (a App) executeRealtimeVoiceAssetDetailTool(ctx context.Context, session Re
 	assetID, _ := asset.NewID(args.AssetID)
 	detail, err := a.GetAssetDetail(ctx, GetAssetInput{
 		Principal:   session.Principal,
-		Source:      audit.SourceAPI,
+		Source:      audit.SourceConversation,
 		TenantID:    session.TenantID,
 		InventoryID: session.InventoryID,
 		AssetID:     assetID,
@@ -36,6 +36,8 @@ func (a App) executeRealtimeVoiceAssetDetailTool(ctx context.Context, session Re
 	if err != nil {
 		return ports.AgentToolResult{}, err
 	}
+	toolItem.CustomFields = detail.Item.CustomFields.Values()
+	toolItem.CustomAssetTypeID = string(detail.Item.CustomAssetTypeID)
 	if detail.CurrentCheckout != nil {
 		toolItem.CheckoutState = &realtimeVoiceCheckoutState{
 			State:        detail.CurrentCheckout.State.String(),

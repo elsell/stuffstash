@@ -19,8 +19,8 @@ it('sends from the keyboard, reviews without automatic approval, and restores op
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true })); await tick(); expect(sent).toEqual([]);
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     await vi.waitFor(() => expect(sent).toEqual(['Move tent']));
-    emit({ type: 'review', plan: { id: 'plan', summary: 'Move tent into Garage', commands: [{ summary: 'Move tent', destination: 'Garage' }], risks: [] } });
-    await tick(); expect(document.body.textContent).toContain('Review changes'); expect(decisions).toEqual([]);
+    emit({ type: 'review', plan: { id: 'plan', summary: 'Move tent into Garage', commands: [{ summary: 'Move tent', destination: 'Garage', changes: ['Name: Camping tent', 'Description: ' + 'x'.repeat(300)], expiration: { date: '2028-02', precision: 'month' } }], risks: [] } });
+    await tick(); expect(document.body.textContent).toContain('Review changes'); expect(decisions).toEqual([]); expect(document.body.textContent).toContain('Name: Camping tent'); expect(document.body.textContent).toContain('February 2028'); expect(document.body.textContent).toContain('Description: ' + 'x'.repeat(300));
     const cancel = Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Cancel changes')!; cancel.click(); await tick(); expect(decisions).toEqual([false]);
     emit({ type: 'cancelled' }); await tick();
     document.querySelector<HTMLElement>('[role="dialog"]')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

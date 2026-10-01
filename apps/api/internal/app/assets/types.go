@@ -69,6 +69,7 @@ type UpdateAssetInput struct {
 	Description       *string
 	ParentAssetID     AssetParentUpdate
 	CustomFields      map[string]any
+	CustomFieldPatch  map[string]any
 	TagIDs            *[]string
 }
 

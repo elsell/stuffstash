@@ -19,8 +19,8 @@ implementation-mirroring tests or weaken security coverage to meet a batch size.
 | Batch | Three gaps | State |
 | --- | --- | --- |
 | Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | PR #213; required checks passed, merge pending |
-| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | In progress: export and MCP implemented; remote verification pending; provider execution next |
-| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Planned |
+| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | PR #214: all three implemented; CI at d8dd2c45 passed; native export acceptance pending |
+| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | G4 implemented with controlled desktop/mobile browser journeys; G5 detail patches implemented, API CI pending, definition/type creation remains; G6 pending |
 | Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | Planned |
 
 V1 includes authenticated browser journeys, representative connected native

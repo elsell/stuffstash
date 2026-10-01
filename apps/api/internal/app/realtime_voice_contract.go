@@ -137,6 +137,7 @@ type RealtimeVoiceActionPlanExpiration struct {
 }
 
 type RealtimeVoiceActionPlanCommand struct {
+	Changes           []string
 	ExpirationCleared bool
 	Expiration        *RealtimeVoiceActionPlanExpiration
 	ID                string

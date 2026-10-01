@@ -13,7 +13,7 @@ import (
 )
 
 func TestExpirationCorrectionRequiresExplicitValidDateOrClear(t *testing.T) {
-	for _, raw := range []string{`{"assetId":"bottle"}`, `{"assetId":"bottle","expiration":{"date":"2028-02-30","precision":"day"}}`, `{"assetId":"bottle","expiration":{"date":"2028-02","precision":"month","unknown":true}}`, `{"assetId":"bottle","expiration":null,"title":"Other"}`, `{"expiration":null}`} {
+	for _, raw := range []string{`{"assetId":"bottle"}`, `{"assetId":"bottle","expiration":{"date":"2028-02-30","precision":"day"}}`, `{"assetId":"bottle","expiration":{"date":"2028-02","precision":"month","unknown":true}}`, `{"assetId":"bottle","expiration":null,"kind":"item"}`, `{"expiration":null}`} {
 		if err := validateExecutableActionPlanArguments(actionplan.CommandKindUpdateAsset, []byte(raw)); err == nil {
 			t.Fatalf("invalid correction accepted: %s", raw)
 		}

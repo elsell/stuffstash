@@ -1436,6 +1436,7 @@ it('shows the expiration date on the voice review command', () => {
 });
 
 it('shows explicit expiration removal in the voice review', () => {
- const session = buildVoiceSessionPresentation({ diagnosticsEnabled: false, diagnosticsExpanded: false, inventoryName: 'Home', tenantName: 'Home', stage: 'review', realtime: { status: 'review', tenantName: 'Home', inventoryName: 'Home', progressLabel: 'Review', debugEvents: [], actionPlan: { planId: 'plan', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Add bottle', assetKind: 'item', expirationCleared: true }] } } });
+ const session = buildVoiceSessionPresentation({ diagnosticsEnabled: false, diagnosticsExpanded: false, inventoryName: 'Home', tenantName: 'Home', stage: 'review', realtime: { status: 'review', tenantName: 'Home', inventoryName: 'Home', progressLabel: 'Review', debugEvents: [], actionPlan: { planId: 'plan', status: 'proposed', confirmationSummary: 'Add bottle', risks: [], commands: [{ id: 'bottle', kind: 'update_asset', operation: 'update', title: 'Bottle', summary: 'Add bottle', assetKind: 'item', expirationCleared: true, changes: ['Name: Blue bottle', 'Serial number: NEW'] }] } } });
  expect(session.actionPlan?.commands[0]?.expirationLabel).toBe('Remove expiration date');
+ expect(session.actionPlan?.commands[0]?.changes).toEqual(['Name: Blue bottle', 'Serial number: NEW']);
 });

@@ -89,7 +89,8 @@ func TestConversationDetailPatchReviewAndApprovalBoundary(t *testing.T) {
 			}
 			proposal := findRealtimeEvent(t, events, "action.plan.proposed")["actionPlan"].(map[string]any)
 			command := proposal["commands"].([]any)[0].(map[string]any)
-			summary, _ := command["summary"].(string)
+			encodedChanges, _ := json.Marshal(command["changes"])
+			summary := string(encodedChanges)
 			for _, value := range []string{"Blue bottle", "Description", "Serial number", "NEW", "Capacity"} {
 				if !strings.Contains(summary, value) {
 					t.Fatalf("review hides %q: %s", value, summary)

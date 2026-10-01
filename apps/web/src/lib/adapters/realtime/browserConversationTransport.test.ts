@@ -20,7 +20,8 @@ it('authenticates in a frame then preserves scope and numbered text/approval mes
   socket.message({ type: 'session.started', seq: 1, sessionId: 'session' });
   const connection = await pending; connection.send('Find tent');
   expect(socket.sent[2]).toMatchObject({ type: 'text.input', seq: 2, sessionId: 'session', text: 'Find tent' });
-  socket.message({ type: 'action.plan.proposed', seq: 2, sessionId: 'session', actionPlan: { planId: 'plan', confirmationSummary: 'Move tent', commands: [{ summary: 'Move tent' }], risks: [] } });
+  socket.message({ type: 'action.plan.proposed', seq: 2, sessionId: 'session', actionPlan: { planId: 'plan', confirmationSummary: 'Move tent', commands: [{ kind: 'update_asset', summary: 'Update name', changes: ['Name: Camping tent'], expiration: { date: '2028-02', precision: 'month' } }], risks: [] } });
+  expect(events).toContainEqual(expect.objectContaining({ type: 'review', plan: expect.objectContaining({ commands: [expect.objectContaining({ changes: ['Name: Camping tent'], expiration: { date: '2028-02', precision: 'month' } })] }) }));
   connection.decide('plan', false); expect(socket.sent[3]).toMatchObject({ type: 'action.plan.cancel', seq: 3, planId: 'plan' });
   controller.abort(); expect(socket.closed).toBe(true);
   const count = events.length; socket.message({ type: 'session.completed', seq: 3, sessionId: 'session' }); expect(events).toHaveLength(count);

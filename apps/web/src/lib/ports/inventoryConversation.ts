@@ -1,9 +1,10 @@
+import type { AssetExpiration } from '$lib/domain/inventory';
 export interface InventoryConversationScope { tenantId: string; inventoryId: string }
 export interface ConversationAssetReference { id: string; title: string }
 export interface InventoryConversationPlan {
   id: string;
   summary: string;
-  commands: { summary: string; title?: string; destination?: string }[];
+  commands: { summary: string; title?: string; destination?: string; changes?: string[]; expiration?: AssetExpiration; expirationCleared?: boolean }[];
   risks: string[];
 }
 export type InventoryConversationEvent =

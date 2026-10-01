@@ -707,6 +707,7 @@ describe('WebSocketRealtimeVoiceTransport', () => {
   it.each([
     ['conflicting expiration removal', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item', expirationCleared: true, expiration: { date: '2028-02', precision: 'month' } }]],
     ['removal on creation', [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', expirationCleared: true }]],
+    ['invalid detail changes', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item', changes: ['Name: tent', { hidden: true }] }]],
     ['missing correction', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item' }]],
     ['false-only correction', [{ id: 'command-1', kind: 'update_asset', operation: 'update', summary: 'Update item', expirationCleared: false }]],
     ['invalid expiration', [{ id: 'command-1', kind: 'create_asset', operation: 'create', summary: 'Create item', expiration: { date: '2027-02-29', precision: 'day' } }]],
