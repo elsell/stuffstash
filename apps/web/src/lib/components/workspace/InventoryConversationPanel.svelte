@@ -60,7 +60,7 @@
   .conversation-transcript { display: grid; gap: 1.25rem; min-width: 0; }
   article { min-width: 0; padding: 1rem; border-radius: var(--radius); background: var(--muted); }
   .user-message { margin-left: 1.5rem; background: var(--accent); }
-  .speaker { font-size: .8rem; font-weight: 600; margin-bottom: .4rem; }
+  .speaker { font-size: var(--text-metadata-size); font-weight: 600; margin-bottom: .4rem; }
   .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
   ul { display: grid; gap: .5rem; margin-top: .75rem; }
   .review { display: grid; gap: .75rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
