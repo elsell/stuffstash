@@ -45,6 +45,7 @@ export default defineConfig({
             { label: 'Architecture', slug: 'architecture' },
             { label: 'Development Setup', slug: 'local-development' },
             { label: 'Release To TestFlight', slug: 'testflight' },
+            { label: 'Store Release Notes', slug: 'store-release-notes' },
             { label: 'Contributing', slug: 'specs-and-process' },
           ],
         },
