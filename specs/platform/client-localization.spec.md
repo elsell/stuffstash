@@ -150,3 +150,8 @@ untranslated. Classify those exclusions explicitly in the remaining-file invento
 Keyboard focus and element lookup must use owned element references or stable IDs,
 never translated accessible names. Browse Map jump selection/Escape returns focus
 to its bound search input regardless of locale.
+
+Save-with-parent and photo-upload outcomes use complete catalog sentences for each
+context, with cardinal forms for upload counts. Expiration labels select complete
+state/precision messages, including the month-end qualifier; map child counts use
+catalog plural messages. Preserve safe provider reasons and user titles verbatim.

@@ -182,8 +182,5 @@ function labelChildCount(count: number): string {
   if (count === 0) {
     return t('mobile.InventoryMapQuery.empty');
   }
-  if (count === 1) {
-    return '1 inside';
-  }
-  return `${count.toString()} inside`;
+  return t('contents.childCount', { count });
 }

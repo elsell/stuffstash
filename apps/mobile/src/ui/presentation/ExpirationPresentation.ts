@@ -29,14 +29,15 @@ export function expirationStatusLabel(context?: AssetExpirationContext): string 
 
 export function expirationDateLabel(value: AssetExpiration, context?: AssetExpirationContext, now = new Date(), locale?: string): string {
  const formatted = formatAssetExpiration(value, locale);
- const precision = value.precision === 'month' ? `${formatted} (end of month)` : formatted;
- if (!context) return t('mobile.ExpirationPresentation.expiration', { precision: String(precision) });
- if (!context.trackingEnabled) return t('mobile.ExpirationPresentation.expirationTrackingDisabled2', { precision: String(precision) });
+ const label = (state: 'default' | 'disabled' | 'today' | 'upcoming' | 'expired') =>
+   t(`expiration.${state}.${value.precision}`, { date: formatted });
+ if (!context) return label('default');
+ if (!context.trackingEnabled) return label('disabled');
  const parts = new Intl.DateTimeFormat('en-US', { timeZone: context.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
  const part = (name: string) => parts.find(part => part.type === name)?.value ?? '';
  const today = `${part('year')}-${part('month')}-${part('day')}`;
  const last = value.precision === 'month' ? new Date(Date.UTC(Number(value.date.slice(0,4)), Number(value.date.slice(5,7)), 0)).toISOString().slice(0,10) : value.date;
- return `${last === today ? t('mobile.ExpirationPresentation.expiresToday') : expirationStatusLabel(context) ?? t('mobile.ExpirationPresentation.expiration2')}: ${precision}`;
+ return label(last === today ? 'today' : context.state === 'current' ? 'default' : context.state);
 }
 
 /** Month values remain Gregorian periods, even when the device uses another calendar. */

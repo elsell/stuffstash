@@ -18,6 +18,10 @@ it('localizes voice navigation and move notices without changing user titles or 
       expect(label).toMatch(/^\[/);
       expect(label).not.toContain('Open ');
     }
+    const { expirationDateLabel } = await import('../../ui/presentation/ExpirationPresentation');
+    const expiration = expirationDateLabel({ date: '2028-02', precision: 'month' });
+    expect(expiration).not.toContain('end of month');
+    expect(expiration).toMatch(/^\[/);
     const requests: unknown[] = [];
     const command = new MoveAssetCommand({ async updateAsset(input) {
       requests.push(input);

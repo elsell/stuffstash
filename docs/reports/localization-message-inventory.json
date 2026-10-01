@@ -90,10 +90,6 @@
       "candidates": 5
     },
     {
-      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
-      "candidates": 5
-    },
-    {
       "file": "apps/mobile/src/adapters/expiration/ApiExpirationRepository.ts",
       "candidates": 4
     },
@@ -215,10 +211,6 @@
     },
     {
       "file": "apps/mobile/src/application/assets/InventoryAssetTypesQuery.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/application/assets/InventoryMapQuery.ts",
       "candidates": 2
     },
     {
@@ -474,10 +466,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/presentation/ExpirationPresentation.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/ui/screens/AddAssetInitialParent.ts",
       "candidates": 1
     },
@@ -507,6 +495,10 @@
     },
     {
       "file": "apps/web/src/lib/application/workspaceAddFocus.ts",
+      "candidates": 1
+    },
+    {
+      "file": "apps/web/src/lib/application/workspaceAssetWorkflow.ts",
       "candidates": 1
     },
     {

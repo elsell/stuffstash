@@ -62,5 +62,36 @@ export const workflowMessages = {
     "one": "Showing {count} suggested destination.",
     "other": "Showing {count} suggested destinations."
   },
-  "move.truncatedMatches": "Showing the first {shown} of {total} matches."
+  "move.truncatedMatches": "Showing the first {shown} of {total} matches.",
+  "expiration.default.day": "Expiration: {date}",
+  "expiration.default.month": "Expiration: {date} (end of month)",
+  "expiration.disabled.day": "Expiration tracking disabled: {date}",
+  "expiration.disabled.month": "Expiration tracking disabled: {date} (end of month)",
+  "expiration.today.day": "Expires today: {date}",
+  "expiration.today.month": "Expires today: {date} (end of month)",
+  "expiration.upcoming.day": "Expiring soon: {date}",
+  "expiration.upcoming.month": "Expiring soon: {date} (end of month)",
+  "expiration.expired.day": "Expired: {date}",
+  "expiration.expired.month": "Expired: {date} (end of month)",
+  "contents.childCount": {
+    "one": "{count} inside",
+    "other": "{count} inside"
+  },
+  "assets.savedIn": "Saved {title} in {parent}.",
+  "assets.savedWithUploads": {
+    "one": "Saved {title} with {count} photo upload.",
+    "other": "Saved {title} with {count} photo uploads."
+  },
+  "assets.savedInWithUploads": {
+    "one": "Saved {title} in {parent} with {count} photo upload.",
+    "other": "Saved {title} in {parent} with {count} photo uploads."
+  },
+  "photos.saveWarning": {
+    "one": "{saved} {count} photo upload failed.",
+    "other": "{saved} {count} photo uploads failed."
+  },
+  "photos.saveWarningWithReason": {
+    "one": "{saved} {count} photo upload failed. {reason}",
+    "other": "{saved} {count} photo uploads failed. {reason}"
+  }
 } as const;
