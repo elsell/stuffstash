@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func (e importAttachmentSessionStartError) Error() string {
 	return e.detail
 }
 
-func importAttachmentSessionFailureMessage(err error) importplan.Message {
+func ImportAttachmentSessionFailureMessage(err error) importplan.Message {
 	detail := "Stuff Stash could not establish a source session for image downloads. Check that the source is reachable, then preview and start a new import. Already imported records were kept."
 	var userError ports.ImportSourceUserError
 	if errors.As(err, &userError) && strings.TrimSpace(userError.Detail) != "" {
@@ -39,7 +39,7 @@ func importAttachmentSessionFailureMessage(err error) importplan.Message {
 	}
 }
 
-func importAttachmentReadFailureMessage(err error, attachment importplan.Attachment) importplan.Message {
+func ImportAttachmentReadFailureMessage(err error, attachment importplan.Attachment) importplan.Message {
 	message := importplan.Message{
 		Code:       "attachment-unavailable",
 		Severity:   importplan.SeverityWarning,

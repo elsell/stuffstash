@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"context"
@@ -6,18 +6,19 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) existingFieldKeys(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]struct{}, error) {
+func (a ImportService) existingFieldKeys(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]struct{}, error) {
 	keys := map[string]struct{}{}
-	if a.customFields == nil {
+	if a.deps.CustomFields == nil {
 		return keys, nil
 	}
-	fields, err := a.customFields.ListEffectiveCustomFieldDefinitions(ctx, tenantID, inventoryID)
+	fields, err := a.deps.CustomFields.ListEffectiveCustomFieldDefinitions(ctx, tenantID, inventoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -27,12 +28,12 @@ func (a App) existingFieldKeys(ctx context.Context, tenantID tenant.ID, inventor
 	return keys, nil
 }
 
-func (a App) existingHomeboxReferences(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]struct{}, error) {
+func (a ImportService) existingHomeboxReferences(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]struct{}, error) {
 	ids := map[string]struct{}{}
-	if a.assets == nil {
+	if a.deps.Assets == nil {
 		return ids, nil
 	}
-	items, err := a.assets.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{
+	items, err := a.deps.Assets.ListAssetsByInventory(ctx, tenantID, inventoryID, ports.AssetListPageRequest{
 		Limit:           10000,
 		LifecycleFilter: ports.AssetLifecycleFilterAll,
 		Sort:            ports.AssetListSortIDAsc,
@@ -50,7 +51,7 @@ func (a App) existingHomeboxReferences(ctx context.Context, tenantID tenant.ID, 
 	return ids, nil
 }
 
-func (a App) duplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, plan importplan.Plan, linkedAssetSourceIDs map[string]struct{}) []importplan.Message {
+func (a ImportService) duplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, plan importplan.Plan, linkedAssetSourceIDs map[string]struct{}) []importplan.Message {
 	duplicates, err := a.existingHomeboxReferences(ctx, tenantID, inventoryID)
 	if err != nil {
 		return nil
@@ -167,15 +168,15 @@ func stripAttachmentContent(plan *importplan.Plan) {
 
 func safeImportError(err error) string {
 	switch {
-	case errors.Is(err, ErrAttachmentTooLarge):
+	case errors.Is(err, apperrors.ErrAttachmentTooLarge):
 		return "attachment is too large"
-	case errors.Is(err, ErrAttachmentFileNameInvalid):
+	case errors.Is(err, apperrors.ErrAttachmentFileNameInvalid):
 		return "attachment file name is invalid"
-	case errors.Is(err, ErrAttachmentContentTypeUnsupported):
+	case errors.Is(err, apperrors.ErrAttachmentContentTypeUnsupported):
 		return "attachment file type is unsupported"
-	case errors.Is(err, ErrAttachmentContentMismatch):
+	case errors.Is(err, apperrors.ErrAttachmentContentMismatch):
 		return "attachment content did not match its file type"
-	case errors.Is(err, ErrAttachmentContentEmpty):
+	case errors.Is(err, apperrors.ErrAttachmentContentEmpty):
 		return "attachment content was empty"
 	case errors.As(err, new(importAttachmentSessionStartError)):
 		return err.Error()

@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -13,16 +14,16 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-type importSourceIdentity struct {
-	sourceType        importplan.SourceType
-	sourceInstanceKey string
+type ImportSourceIdentity struct {
+	SourceType        importplan.SourceType
+	SourceInstanceKey string
 }
 
-type importImportedResourceInput struct {
+type ImportedResourceInput struct {
 	TenantID         tenant.ID
 	InventoryID      inventory.InventoryID
 	JobID            importjob.ID
-	SourceIdentity   importSourceIdentity
+	SourceIdentity   ImportSourceIdentity
 	SourceEntityType ports.ImportSourceEntityType
 	SourceEntityID   string
 	ResourceType     ports.ImportResourceType
@@ -31,62 +32,62 @@ type importImportedResourceInput struct {
 	CreatedAt        time.Time
 }
 
-func importSourceIdentityForJob(source importjob.SourceRef) (importSourceIdentity, error) {
+func importSourceIdentityForJob(source importjob.SourceRef) (ImportSourceIdentity, error) {
 	instanceKey := strings.TrimSpace(source.BaseURL)
 	sourceType := importplan.SourceType(source.Type)
 	switch sourceType {
 	case importplan.SourceLegacyHomebox:
 		if instanceKey == "" {
-			return importSourceIdentity{}, ErrInvalidInput
+			return ImportSourceIdentity{}, apperrors.ErrInvalidInput
 		}
 	case importplan.SourceLegacyHomeboxCSV:
 		instanceKey = strings.TrimSpace(source.Fingerprint)
 		if instanceKey == "" {
-			return importSourceIdentity{}, ErrInvalidInput
+			return ImportSourceIdentity{}, apperrors.ErrInvalidInput
 		}
 	default:
-		return importSourceIdentity{}, ErrInvalidInput
+		return ImportSourceIdentity{}, apperrors.ErrInvalidInput
 	}
-	return importSourceIdentity{sourceType: sourceType, sourceInstanceKey: instanceKey}, nil
+	return ImportSourceIdentity{SourceType: sourceType, SourceInstanceKey: instanceKey}, nil
 }
 
-func importAssetSourceLinkKey(tenantID tenant.ID, inventoryID inventory.InventoryID, sourceIdentity importSourceIdentity, planned importplan.Asset) ports.ImportSourceLinkKey {
+func importAssetSourceLinkKey(tenantID tenant.ID, inventoryID inventory.InventoryID, sourceIdentity ImportSourceIdentity, planned importplan.Asset) ports.ImportSourceLinkKey {
 	return ports.ImportSourceLinkKey{
 		TenantID:          tenantID,
 		InventoryID:       inventoryID,
-		SourceType:        sourceIdentity.sourceType,
-		SourceInstanceKey: sourceIdentity.sourceInstanceKey,
+		SourceType:        sourceIdentity.SourceType,
+		SourceInstanceKey: sourceIdentity.SourceInstanceKey,
 		SourceEntityType:  ports.ImportSourceEntityAsset,
 		SourceEntityID:    strings.TrimSpace(planned.SourceID),
 	}
 }
 
-func importAttachmentSourceLinkKey(tenantID tenant.ID, inventoryID inventory.InventoryID, sourceIdentity importSourceIdentity, planned importplan.Attachment) ports.ImportSourceLinkKey {
+func ImportAttachmentSourceLinkKey(tenantID tenant.ID, inventoryID inventory.InventoryID, sourceIdentity ImportSourceIdentity, planned importplan.Attachment) ports.ImportSourceLinkKey {
 	return ports.ImportSourceLinkKey{
 		TenantID:          tenantID,
 		InventoryID:       inventoryID,
-		SourceType:        sourceIdentity.sourceType,
-		SourceInstanceKey: sourceIdentity.sourceInstanceKey,
+		SourceType:        sourceIdentity.SourceType,
+		SourceInstanceKey: sourceIdentity.SourceInstanceKey,
 		SourceEntityType:  ports.ImportSourceEntityAttachment,
 		SourceEntityID:    strings.TrimSpace(planned.SourceID),
 	}
 }
 
-func (a App) recordImportedResource(ctx context.Context, input importImportedResourceInput) error {
-	if a.importLinks == nil {
-		return ErrInvalidInput
+func (a ImportService) recordImportedResource(ctx context.Context, input ImportedResourceInput) error {
+	if a.deps.ImportLinks == nil {
+		return apperrors.ErrInvalidInput
 	}
-	link, record, err := a.importedResourceRecords(input)
+	link, record, err := a.ImportedResourceRecords(input)
 	if err != nil {
 		return err
 	}
-	if err := a.importLinks.SaveImportSourceLink(ctx, link); err != nil {
+	if err := a.deps.ImportLinks.SaveImportSourceLink(ctx, link); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
-			return ErrPrecondition
+			return apperrors.ErrPrecondition
 		}
 		return err
 	}
-	if err := a.importLinks.SaveImportJobResource(ctx, record); err != nil {
+	if err := a.deps.ImportLinks.SaveImportJobResource(ctx, record); err != nil {
 		if errors.Is(err, ports.ErrConflict) {
 			return nil
 		}
@@ -95,15 +96,15 @@ func (a App) recordImportedResource(ctx context.Context, input importImportedRes
 	return nil
 }
 
-func (a App) importedResourceRecords(input importImportedResourceInput) (ports.ImportSourceLink, ports.ImportJobResource, error) {
+func (a ImportService) ImportedResourceRecords(input ImportedResourceInput) (ports.ImportSourceLink, ports.ImportJobResource, error) {
 	if input.CreatedAt.IsZero() {
-		return ports.ImportSourceLink{}, ports.ImportJobResource{}, ErrInvalidInput
+		return ports.ImportSourceLink{}, ports.ImportJobResource{}, apperrors.ErrInvalidInput
 	}
 	key := ports.ImportSourceLinkKey{
 		TenantID:          input.TenantID,
 		InventoryID:       input.InventoryID,
-		SourceType:        input.SourceIdentity.sourceType,
-		SourceInstanceKey: input.SourceIdentity.sourceInstanceKey,
+		SourceType:        input.SourceIdentity.SourceType,
+		SourceInstanceKey: input.SourceIdentity.SourceInstanceKey,
 		SourceEntityType:  input.SourceEntityType,
 		SourceEntityID:    strings.TrimSpace(input.SourceEntityID),
 	}
@@ -121,8 +122,8 @@ func (a App) importedResourceRecords(input importImportedResourceInput) (ports.I
 		ResourceType:      input.ResourceType,
 		ResourceID:        strings.TrimSpace(input.ResourceID),
 		ResourceOwnerID:   strings.TrimSpace(input.ResourceOwnerID),
-		SourceType:        input.SourceIdentity.sourceType,
-		SourceInstanceKey: input.SourceIdentity.sourceInstanceKey,
+		SourceType:        input.SourceIdentity.SourceType,
+		SourceInstanceKey: input.SourceIdentity.SourceInstanceKey,
 		SourceEntityType:  input.SourceEntityType,
 		SourceEntityID:    strings.TrimSpace(input.SourceEntityID),
 		CreatedAt:         input.CreatedAt.UTC(),
@@ -130,9 +131,9 @@ func (a App) importedResourceRecords(input importImportedResourceInput) (ports.I
 	return link, record, nil
 }
 
-func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, source importjob.SourceRef, plan importplan.Plan) ([]importplan.Message, map[string]struct{}, error) {
+func (a ImportService) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, source importjob.SourceRef, plan importplan.Plan) ([]importplan.Message, map[string]struct{}, error) {
 	linkedAssetSourceIDs := map[string]struct{}{}
-	if a.importLinks == nil {
+	if a.deps.ImportLinks == nil {
 		return nil, linkedAssetSourceIDs, nil
 	}
 	sourceIdentity, err := importSourceIdentityForJob(source)
@@ -141,7 +142,7 @@ func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID
 	}
 	var messages []importplan.Message
 	for _, planned := range plan.Assets {
-		link, found, err := a.importLinks.ImportSourceLinkByKey(ctx, importAssetSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
+		link, found, err := a.deps.ImportLinks.ImportSourceLinkByKey(ctx, importAssetSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
 		if err != nil {
 			return nil, linkedAssetSourceIDs, err
 		}
@@ -162,7 +163,7 @@ func (a App) sourceLinkDuplicateWarnings(ctx context.Context, tenantID tenant.ID
 		})
 	}
 	for _, planned := range plan.Attachments {
-		link, found, err := a.importLinks.ImportSourceLinkByKey(ctx, importAttachmentSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
+		link, found, err := a.deps.ImportLinks.ImportSourceLinkByKey(ctx, ImportAttachmentSourceLinkKey(tenantID, inventoryID, sourceIdentity, planned))
 		if err != nil {
 			return nil, linkedAssetSourceIDs, err
 		}

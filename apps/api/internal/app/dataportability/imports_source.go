@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -14,22 +15,22 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) readImportSource(ctx context.Context, input ImportSourceInput) (importplan.Plan, error) {
-	request, err := a.importSourceRequest(input)
+func (a ImportService) readImportSource(ctx context.Context, input ImportSourceInput) (importplan.Plan, error) {
+	request, err := a.ImportSourceRequest(input)
 	if err != nil {
 		return importplan.Plan{}, err
 	}
 	return a.readImportSourceRequest(ctx, request)
 }
 
-func (a App) readImportSourceRequest(ctx context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {
-	if a.importSources == nil {
-		return importplan.Plan{}, ErrInvalidInput
+func (a ImportService) readImportSourceRequest(ctx context.Context, request ports.ImportSourceRequest) (importplan.Plan, error) {
+	if a.deps.ImportSources == nil {
+		return importplan.Plan{}, apperrors.ErrInvalidInput
 	}
-	return a.importSources.ReadImportPlan(ctx, request)
+	return a.deps.ImportSources.ReadImportPlan(ctx, request)
 }
 
-func (a App) importSourceRequest(input ImportSourceInput) (ports.ImportSourceRequest, error) {
+func (a ImportService) ImportSourceRequest(input ImportSourceInput) (ports.ImportSourceRequest, error) {
 	sourceType := importplan.SourceType(input.SourceType)
 	var content []byte
 	if strings.TrimSpace(input.ContentBase64) != "" {
@@ -57,7 +58,7 @@ func (a App) importSourceRequest(input ImportSourceInput) (ports.ImportSourceReq
 		IncludeImages:       input.IncludeImages,
 		AllowInsecureTLS:    input.AllowInsecureTLS,
 		AllowPrivateNetwork: input.AllowPrivateNetwork,
-		MaxAttachmentBytes:  int64(a.maxAttachmentBytes),
+		MaxAttachmentBytes:  int64(a.deps.MaxAttachmentBytes),
 		FileName:            input.FileName,
 		Content:             content,
 	}, nil
@@ -67,7 +68,7 @@ func importCSVTooLargeDetail() string {
 	return fmt.Sprintf("CSV import file is too large. Choose a CSV up to %d MB.", MaxImportCSVBytes/(1024*1024))
 }
 
-func (a App) importJobCommand(input StartImportJobInput) (ports.ImportJobCommand, error) {
+func (a ImportService) importJobCommand(input StartImportJobInput) (ports.ImportJobCommand, error) {
 	return ports.ImportJobCommand{
 		Principal:   input.Principal,
 		RequestID:   input.RequestID,
@@ -77,43 +78,43 @@ func (a App) importJobCommand(input StartImportJobInput) (ports.ImportJobCommand
 	}, nil
 }
 
-func (a App) importJobSourceScope(tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) ports.ImportJobSourceScope {
+func (a ImportService) importJobSourceScope(tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) ports.ImportJobSourceScope {
 	return ports.ImportJobSourceScope{TenantID: tenantID, InventoryID: inventoryID, JobID: jobID}
 }
 
-func (a App) storeImportJobSource(ctx context.Context, job importjob.Record, request ports.ImportSourceRequest) error {
-	if a.importSourceVault == nil {
-		return ErrInvalidInput
+func (a ImportService) storeImportJobSource(ctx context.Context, job importjob.Record, request ports.ImportSourceRequest) error {
+	if a.deps.ImportSourceVault == nil {
+		return apperrors.ErrInvalidInput
 	}
-	now := a.clock.Now().UTC()
-	return a.importSourceVault.StoreImportJobSource(ctx, a.importJobSourceScope(importJobTenantID(job.TenantID), importJobInventoryID(job.InventoryID), job.ID), request, now.Add(a.importJobTimeout), now)
+	now := a.deps.Clock.Now().UTC()
+	return a.deps.ImportSourceVault.StoreImportJobSource(ctx, a.importJobSourceScope(importJobTenantID(job.TenantID), importJobInventoryID(job.InventoryID), job.ID), request, now.Add(a.deps.ImportJobTimeout), now)
 }
 
-func (a App) importJobSourceRequest(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) (ports.ImportSourceRequest, error) {
-	if a.importSourceVault == nil {
-		return ports.ImportSourceRequest{}, ErrInvalidInput
+func (a ImportService) importJobSourceRequest(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) (ports.ImportSourceRequest, error) {
+	if a.deps.ImportSourceVault == nil {
+		return ports.ImportSourceRequest{}, apperrors.ErrInvalidInput
 	}
-	request, found, err := a.importSourceVault.ImportJobSourceRequest(ctx, a.importJobSourceScope(tenantID, inventoryID, jobID))
+	request, found, err := a.deps.ImportSourceVault.ImportJobSourceRequest(ctx, a.importJobSourceScope(tenantID, inventoryID, jobID))
 	if err != nil {
 		return ports.ImportSourceRequest{}, err
 	}
 	if !found {
-		return ports.ImportSourceRequest{}, ErrPrecondition
+		return ports.ImportSourceRequest{}, apperrors.ErrPrecondition
 	}
 	return request, nil
 }
 
-func importSourceInputError(err error) error {
+func ImportSourceInputError(err error) error {
 	var userError ports.ImportSourceUserError
 	if errors.As(err, &userError) {
 		return NewImportSourceInvalidInputError(strings.TrimSpace(userError.Detail))
 	}
-	return ErrInvalidInput
+	return apperrors.ErrInvalidInput
 }
 
-func (a App) normalizedImportPlanForJob(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, plan importplan.Plan) (importplan.Plan, error) {
+func (a ImportService) NormalizedImportPlanForJob(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, plan importplan.Plan) (importplan.Plan, error) {
 	plan = cloneImportPlan(plan)
-	fingerprint, err := sourceFingerprint(plan)
+	fingerprint, err := SourceFingerprint(plan)
 	if err != nil {
 		return importplan.Plan{}, err
 	}

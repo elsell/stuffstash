@@ -1,12 +1,12 @@
-package app
+package dataportability
 
 import (
 	"context"
 	"errors"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/assettag"
-	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
 	"github.com/stuffstash/stuff-stash/internal/domain/importplan"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -14,7 +14,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand, plan importplan.Plan, result *ImportResult) (map[string]string, error) {
+func (a ImportService) applyImportTags(ctx context.Context, command ports.ImportJobCommand, plan importplan.Plan, result *ImportResult) (map[string]string, error) {
 	tagIDsByKey := map[string]string{}
 	if len(plan.Tags) == 0 {
 		return tagIDsByKey, nil
@@ -24,7 +24,7 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 		return nil, err
 	}
 	total := len(plan.Tags)
-	if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, 0, total, "Creating tags"); err != nil {
+	if err := a.UpdateImportProgress(ctx, command, importjob.PhaseTags, 0, total, "Creating tags"); err != nil {
 		return nil, err
 	}
 	for index, tag := range plan.Tags {
@@ -34,23 +34,14 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 		if existingID := existing[tag.Key]; existingID != "" {
 			tagIDsByKey[tag.Key] = existingID
 			result.Counts.TagsExisting++
-			if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+			if err := a.UpdateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
 				return nil, err
 			}
 			continue
 		}
-		created, err := a.CreateAssetTag(ctx, CreateAssetTagInput{
-			Principal:   command.Principal,
-			Source:      audit.SourceImport,
-			RequestID:   command.RequestID,
-			TenantID:    command.TenantID,
-			InventoryID: command.InventoryID,
-			Key:         tag.Key,
-			DisplayName: tag.DisplayName,
-			Color:       tag.Color,
-		})
+		created, err := a.deps.Targets.CreateTag(ctx, command, tag)
 		if err != nil {
-			if errors.Is(err, ErrInvalidInput) {
+			if errors.Is(err, apperrors.ErrInvalidInput) {
 				tagID, found, findErr := a.activeImportTagIDByKey(ctx, command.TenantID, command.InventoryID, tag.Key)
 				if findErr != nil {
 					return nil, findErr
@@ -60,7 +51,7 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 				}
 				tagIDsByKey[tag.Key] = tagID
 				result.Counts.TagsExisting++
-				if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+				if err := a.UpdateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
 					return nil, err
 				}
 				continue
@@ -70,22 +61,22 @@ func (a App) applyImportTags(ctx context.Context, command ports.ImportJobCommand
 		tagIDsByKey[tag.Key] = created.ID.String()
 		existing[tag.Key] = created.ID.String()
 		result.Counts.TagsCreated++
-		if err := a.updateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
+		if err := a.UpdateImportProgress(ctx, command, importjob.PhaseTags, index+1, total, "Creating tags"); err != nil {
 			return nil, err
 		}
 	}
 	return tagIDsByKey, nil
 }
 
-func (a App) activeImportTagIDByKey(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, key string) (string, bool, error) {
-	if a.assetTags == nil {
+func (a ImportService) activeImportTagIDByKey(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, key string) (string, bool, error) {
+	if a.deps.AssetTags == nil {
 		return "", false, nil
 	}
 	parsedKey, ok := assettag.NewKey(key)
 	if !ok {
 		return "", false, nil
 	}
-	tag, found, err := a.assetTags.AssetTagByKey(ctx, tenantID, inventoryID, parsedKey)
+	tag, found, err := a.deps.AssetTags.AssetTagByKey(ctx, tenantID, inventoryID, parsedKey)
 	if err != nil || !found {
 		return "", false, err
 	}
@@ -95,12 +86,12 @@ func (a App) activeImportTagIDByKey(ctx context.Context, tenantID tenant.ID, inv
 	return tag.ID.String(), true, nil
 }
 
-func (a App) existingImportTagIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]string, error) {
+func (a ImportService) existingImportTagIDs(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID) (map[string]string, error) {
 	tags := map[string]string{}
-	if a.assetTags == nil {
+	if a.deps.AssetTags == nil {
 		return tags, nil
 	}
-	items, err := a.assetTags.ListAssetTags(ctx, tenantID, inventoryID, ports.AssetTagPageRequest{Limit: 10000})
+	items, err := a.deps.AssetTags.ListAssetTags(ctx, tenantID, inventoryID, ports.AssetTagPageRequest{Limit: 10000})
 	if err != nil {
 		return nil, err
 	}

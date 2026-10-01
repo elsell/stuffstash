@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"
 	"github.com/stuffstash/stuff-stash/internal/domain/importjob"
@@ -18,30 +19,30 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) ensureImportJobViewAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	return a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionViewImportJob)
+func (a ImportService) ensureImportJobViewAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.deps.Targets.EnsureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionViewImportJob)
 }
 
-func (a App) ensureImportJobCreateAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
-	return a.ensureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionCreateImportJob)
+func (a ImportService) ensureImportJobCreateAccess(ctx context.Context, principal identity.Principal, tenantID tenant.ID, inventoryID inventory.InventoryID) error {
+	return a.deps.Targets.EnsureActiveInventoryAccess(ctx, principal, tenantID, inventoryID, ports.InventoryPermissionCreateImportJob)
 }
 
-func (a App) importJob(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) (importjob.Record, error) {
-	if a.importJobs == nil || jobID.String() == "" {
-		return importjob.Record{}, ErrInvalidInput
+func (a ImportService) importJob(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobID importjob.ID) (importjob.Record, error) {
+	if a.deps.ImportJobs == nil || jobID.String() == "" {
+		return importjob.Record{}, apperrors.ErrInvalidInput
 	}
-	job, ok, err := a.importJobs.ImportJobByID(ctx, tenantID, inventoryID, jobID)
+	job, ok, err := a.deps.ImportJobs.ImportJobByID(ctx, tenantID, inventoryID, jobID)
 	if err != nil {
 		return importjob.Record{}, err
 	}
 	if !ok {
-		return importjob.Record{}, ErrNotFound
+		return importjob.Record{}, apperrors.ErrNotFound
 	}
 	return job, nil
 }
 
-func (a App) withImportJobResources(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobs []importjob.Record) ([]importjob.Record, error) {
-	if a.importLinks == nil {
+func (a ImportService) withImportJobResources(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, jobs []importjob.Record) ([]importjob.Record, error) {
+	if a.deps.ImportLinks == nil {
 		return jobs, nil
 	}
 	out := make([]importjob.Record, 0, len(jobs))
@@ -57,15 +58,15 @@ func (a App) withImportJobResources(ctx context.Context, tenantID tenant.ID, inv
 	return out, nil
 }
 
-func (a App) withImportJobResource(ctx context.Context, job importjob.Record) (importjob.Record, error) {
-	if a.importLinks == nil {
+func (a ImportService) withImportJobResource(ctx context.Context, job importjob.Record) (importjob.Record, error) {
+	if a.deps.ImportLinks == nil {
 		return job, nil
 	}
 	if job.Status == importjob.StatusCancelledDiscarded {
 		job.Resources = nil
 		return job, nil
 	}
-	records, err := a.importLinks.ListImportJobResources(ctx, importJobTenantID(job.TenantID), importJobInventoryID(job.InventoryID), job.ID, ports.ImportJobResourcePageRequest{Limit: maxImportJobResourceSummaries})
+	records, err := a.deps.ImportLinks.ListImportJobResources(ctx, importJobTenantID(job.TenantID), importJobInventoryID(job.InventoryID), job.ID, ports.ImportJobResourcePageRequest{Limit: maxImportJobResourceSummaries})
 	if err != nil {
 		return importjob.Record{}, err
 	}
@@ -88,23 +89,23 @@ func (a App) withImportJobResource(ctx context.Context, job importjob.Record) (i
 	return job, nil
 }
 
-func (a App) importJobResourceDisplayName(ctx context.Context, record ports.ImportJobResource) (string, error) {
+func (a ImportService) importJobResourceDisplayName(ctx context.Context, record ports.ImportJobResource) (string, error) {
 	switch record.ResourceType {
 	case ports.ImportResourceAsset:
-		if a.assets == nil {
+		if a.deps.Assets == nil {
 			return "", nil
 		}
 		assetID, ok := asset.NewID(strings.TrimSpace(record.ResourceID))
 		if !ok {
 			return "", nil
 		}
-		item, found, err := a.assets.AssetByID(ctx, record.TenantID, record.InventoryID, assetID)
+		item, found, err := a.deps.Assets.AssetByID(ctx, record.TenantID, record.InventoryID, assetID)
 		if err != nil || !found {
 			return "", err
 		}
 		return item.Title.String(), nil
 	case ports.ImportResourceAttachment:
-		if a.attachments == nil {
+		if a.deps.Attachments == nil {
 			return "", nil
 		}
 		ownerID, ownerOK := asset.NewID(strings.TrimSpace(record.ResourceOwnerID))
@@ -112,7 +113,7 @@ func (a App) importJobResourceDisplayName(ctx context.Context, record ports.Impo
 		if !ownerOK || !attachmentOK {
 			return "", nil
 		}
-		attachment, found, err := a.attachments.AttachmentByID(ctx, record.TenantID, record.InventoryID, ownerID, attachmentID)
+		attachment, found, err := a.deps.Attachments.AttachmentByID(ctx, record.TenantID, record.InventoryID, ownerID, attachmentID)
 		if err != nil || !found {
 			return "", err
 		}
@@ -122,7 +123,7 @@ func (a App) importJobResourceDisplayName(ctx context.Context, record ports.Impo
 	}
 }
 
-func sourceFingerprint(plan importplan.Plan) (string, error) {
+func SourceFingerprint(plan importplan.Plan) (string, error) {
 	safe := struct {
 		Source      importplan.SourceSummary
 		Fields      []importplan.FieldDefinition
@@ -174,20 +175,20 @@ func importJobEventFields(job importjob.Record) map[string]string {
 	}
 }
 
-func (a App) recordImportProgressUpdated(ctx context.Context, job importjob.Record, progress importjob.Progress) {
+func (a ImportService) recordImportProgressUpdated(ctx context.Context, job importjob.Record, progress importjob.Progress) {
 	fields := importJobEventFields(job)
 	fields["phase"] = string(progress.Phase)
 	fields["done"] = fmt.Sprintf("%d", progress.Done)
 	fields["total"] = fmt.Sprintf("%d", progress.Total)
-	a.observer.Record(ctx, ports.Event{
+	a.deps.Observer.Record(ctx, ports.Event{
 		Name:    ports.EventImportJobProgressUpdated,
 		Message: "Import job progress updated.",
 		Fields:  fields,
 	})
 }
 
-func (a App) recordImportSourceLinkDuplicateSkipped(ctx context.Context, command ports.ImportJobCommand, entityType ports.ImportSourceEntityType, jobID importjob.ID) {
-	a.observer.Record(ctx, ports.Event{
+func (a ImportService) recordImportSourceLinkDuplicateSkipped(ctx context.Context, command ports.ImportJobCommand, entityType ports.ImportSourceEntityType, jobID importjob.ID) {
+	a.deps.Observer.Record(ctx, ports.Event{
 		Name:    ports.EventImportJobSourceLinkDuplicateSkipped,
 		Message: "Import source link duplicate skipped.",
 		Fields: map[string]string{
@@ -199,11 +200,11 @@ func (a App) recordImportSourceLinkDuplicateSkipped(ctx context.Context, command
 	})
 }
 
-func (a App) recordImportDiscardCleanupEvent(ctx context.Context, job importjob.Record, name ports.EventName, recordsDiscarded int, sourceLinksDiscarded int) {
+func (a ImportService) recordImportDiscardCleanupEvent(ctx context.Context, job importjob.Record, name ports.EventName, recordsDiscarded int, sourceLinksDiscarded int) {
 	fields := importJobEventFields(job)
 	fields["records_discarded"] = fmt.Sprintf("%d", recordsDiscarded)
 	fields["source_links_discarded"] = fmt.Sprintf("%d", sourceLinksDiscarded)
-	a.observer.Record(ctx, ports.Event{
+	a.deps.Observer.Record(ctx, ports.Event{
 		Name:    name,
 		Message: "Import job discard cleanup updated.",
 		Fields:  fields,

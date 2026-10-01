@@ -1,4 +1,4 @@
-package app
+package dataportability
 
 import (
 	"github.com/stuffstash/stuff-stash/internal/domain/identity"

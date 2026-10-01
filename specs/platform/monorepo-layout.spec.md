@@ -113,3 +113,16 @@ URL restrictions. Root invitation error symbols alias package-owned errors so
 errors.Is identity survives migration. Existing application and HTTP adversarial
 access/invitation tests cover these unchanged boundaries; do not replace them with
 structural or happy-path-only tests.
+
+Import preview, job queries, durable execution/recovery, source validation,
+credential handling, source links, progress and cleanup belong to an ImportService
+in dataportability. Cross-context asset/tag/custom-field/media commands enter
+through an ImportTargets port expressed in domain values, composed by the root
+application from its existing services. Preparation still precedes the existing
+atomic import unit-of-work writes; do not substitute non-atomic create calls.
+Preserve import request fingerprints, idempotency/source-link deduplication,
+bounded streaming, cancellation/discard semantics, vault lifetime, audit and safe
+error projection. Import errors retain identity through root aliases. Existing
+adversarial import HTTP and durability/recovery application tests remain required.
+
+Attachment validation sentinels shared by media commands and import error projection live in `internal/app/apperrors`; root compatibility names alias the same values so `errors.Is` behavior remains unchanged.
