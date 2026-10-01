@@ -210,3 +210,10 @@ They must use catalog messages just as labels do. Preserve the existing exceptio
 types, validation order and English wording; do not translate server/provider data
 or protocol identifiers. Legacy errors already mapped by a presentation boundary
 remain stable inputs to that mapping.
+
+### Voice preview query failures
+
+The voice preview must render cataloged recovery copy for directory/transport
+failures instead of displaying arbitrary exception messages. Preserve the typed
+selected-inventory-unavailable guidance, which is already cataloged. Internal
+cursor/page-limit and server messages remain diagnostics, not untranslated UI.
