@@ -1,19 +1,38 @@
 # Native search acceptance — current diagnosis
 
-Follow-up [36928351670](https://github.com/elsell/stuffstash/actions/runs/36928351670),
-source `e3ea1b1b6e696fee590dbd84c33d5d3c9b25fd23`: iPad completed with six
-passes and two setup failures. Both managed-header React state and native title
-checks passed, as did the proposal location retry/selection/return workflow.
-Tag search failed at `app.launch()` with an Xcode launch timeout; expiration search
-failed at the same setup boundary with a background assertion error. Neither test
-reached its product assertions. Preserve these as unverified workflows, not
-confirmed app regressions. The iPhone job passed seven workflows, including managed reconfiguration, tag
-and expiration search. Its static comparison fixture immediately read `mi`; the
-[final screenshot](iphone-static-query-retained.png) shows complete `missing`.
-Use the shared bounded observer for both static fixture query assertions. After
-the queued expansion run, use filter-search-timing for the two iPad workflows
-and this static comparison; do not alter
-production behavior or weaken assertions to accommodate runner launch failures.
+PR #233 changes test observation, fixtures, evidence and documentation; it does not
+change production interaction behavior. Product fixes shipped in v0.27.3. The
+remaining runner failure is tracked separately in [issue #236](https://github.com/elsell/stuffstash/issues/236)
+and does not indefinitely gate this verification/documentation PR.
+
+[Targeted run36933539569](https://github.com/elsell/stuffstash/actions/runs/36933539569),
+source `7f20184e6ce0f18e653703910a26f7bac3eeda7c`: iPhone passed tag search,
+expiration search and static query/clear/retype. iPad passed static search; tag
+and expiration failed inside `app.launch()` before product assertions. The same
+iPad setup boundary failed in run36928351670. Those two workflows remain
+**unverified on iPad**. Stop unchanged retries; do not weaken assertions or change
+production behavior based on these failures.
+
+The earlier normal-search follow-up36928351670 passed seven iPhone workflows and
+six iPad workflows, including the managed React-state/native-title checks and
+proposal location retry/selection/return. Its iPhone static comparison immediately
+read `mi`; the [final screenshot](iphone-static-query-retained.png) shows complete
+`missing`. The shared bounded observer correction subsequently passed that fixture
+on both devices. It retains exact equality, the time budget and input behavior.
+
+[Expansion run36930043292](https://github.com/elsell/stuffstash/actions/runs/36930043292),
+source `f8f5c172cbb7190be039e405d43c2bf1d79af61b`, passed all three Add/recovery,
+protected-proposal and location-search workflows on iPhone and iPad. Inspected
+screenshots show the complete query, preserved user location names and visible
+completion actions:
+
+- iPad: [empty search](ipad-expanded-empty-search.png), [selected location](ipad-expanded-selected-location.png), [returned proposal](ipad-expanded-returned-proposal.png).
+- iPhone: [selected location](iphone-expanded-followup-location.png), [returned proposal](iphone-expanded-followup-proposal.png).
+
+This is normal-text simulator fixture evidence, not connected voice, physical
+integration or whole-app localization acceptance. RTL run36936112035 was already
+started; its result remains unverified here and is not a new merge gate. No more
+runs are authorized merely to make this PR's native ledger green.
 
 ## Earlier evidence
 

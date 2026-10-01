@@ -91,12 +91,21 @@ mergedb3b2a9c3 after approved pull-request checks passed. This batch delivered:
   Native search-placement run36923519340 completed seven of eight tests on each
   device; [scoped results and current diagnosis](../../docs/reports/spec-gap-evidence-2026-10-01/native-search/README.md).
 
-Current frozen acceptance batch, draft PR #233:
-- V1 native search/retry/selection/return under pseudolocales.
+Current verification/documentation batch, PR #233:
+- V1 native search observation and scoped acceptance evidence.
 - V1 pending-proposal preservation across close and cancelled reset.
 - G6 production-catalog expectations preserving user text and system controls.
-The suite is not accepted yet. Test-only observation corrections follow retained
-screenshots; they do not change production search or establish physical acceptance.
+Expansion run36930043292 passed all three workflows on both devices. Targeted
+run36933539569 passed all three on iPhone and static search on iPad; iPad tag and
+expiration launch failed before product assertions. Track those unverified
+workflows in [issue #236](https://github.com/elsell/stuffstash/issues/236).
+
+Per the user's decision, assess #233 against its verification/documentation scope,
+code review and required CI. Product fixes already shipped in v0.27.3. Repeated
+runner launch failures and missing RTL/physical evidence stay explicit acceptance
+obligations; they are not indefinite merge/release gates for this PR. Stop unchanged
+retries. Any later runner investigation must state competing causes, an outcome-
+dependent decision and a fixed run budget before starting.
 
 G8 source review found no further concrete root-policy ownership violation after
 #228; construction, cross-domain composition and compatibility facades remain
