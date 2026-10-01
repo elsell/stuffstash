@@ -30,6 +30,14 @@ live evidence succeeded. Track the specific remaining acceptance task and obtain
 needed user participation only when execution requires it. Three gaps per PR is
 a batching rule, not permission to replace missing implementation with scaffolding.
 
+## Next frozen batch — V1, G7, G8
+
+Continue from merged PR #216 with three scoped deliverables: V1 real browser
+OIDC/PKCE sign-in, automatic workspace provisioning and principal isolation;
+G7 representative native image lifecycle measurements; G8 remaining realtime
+application orchestration migration. This batch does not claim broader physical
+acceptance or all localization work is complete. Release only its verified changes.
+
 ## Delivery and acceptance rules
 
 - Delivery is authorized: complete checks and review, merge, and publish one release
