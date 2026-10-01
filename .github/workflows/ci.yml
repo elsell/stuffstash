@@ -245,7 +245,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: connected-browser-evidence
-          path: apps/web/test-results/connected/**/connected-browse.png
+          path: |
+            apps/web/test-results/connected/**/connected-browse.png
+            apps/web/test-results/connected/**/connected-export-*.png
           retention-days: 7
 
   ios-dependency-lock:

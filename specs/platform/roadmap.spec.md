@@ -21,7 +21,8 @@ implementation-mirroring tests or weaken security coverage to meet a batch size.
 | Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | Merged PR #213. |
 | Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | Merged PR #214. CI and native export share/cancel/cleanup passed; recipient saving remains V1. Native run 36862474560 at d8dd2c45. |
 | Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Merged PR #215. G4/G5 implemented; G6 catalogs, client copy migration and copy gate delivered. Native RTL Add/recovery passed on iPhone/iPad in run 36894135591; [inspected evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-localization.md). Remaining: residual copy migration and broader directional-layout coverage. |
-| Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | PR #216 delivers scoped image outcomes and browser decode/delivery verification, domain application extractions including response safety and action-plan review projection. Full CI 36899689933 passed at 045570f3; merge reconciliation receives its own CI. Remaining: realtime orchestration, native image measurements, and connected/physical acceptance. Unfinished connected OIDC test work is preserved outside this batch. |
+| Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | Merged PR #216 at f4a8dd48; full CI passed. Browser image delivery/decode and domain service extractions implemented. Remaining obligations continue below. |
+| Connected acceptance | V1 real OIDC/PKCE browser sign-in and principal isolation; G7 native image lifecycle measurements; G8 voice vocabulary ownership | Merged PR #218 at a91f9ec0. Final CI 36906940360 passed at 8b1adb7b. Native run 36904211794 at 4ef2f027 passed on iPhone17 and iPad mini. [Retained evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md). |
 
 V1 includes authenticated browser journeys, representative connected native
 workflows, relevant assistive/adaptation and physical integration checks, and
@@ -30,23 +31,27 @@ live evidence succeeded. Track the specific remaining acceptance task and obtain
 needed user participation only when execution requires it. Three gaps per PR is
 a batching rule, not permission to replace missing implementation with scaffolding.
 
-## Next frozen batch — V1, G7, G8
+## Next frozen batch — G8, G6, V1
 
-Continue from merged PR #216 with three scoped deliverables: V1 real browser
-OIDC/PKCE sign-in, automatic workspace provisioning and principal isolation;
-G7 representative native image lifecycle measurements; G8 voice vocabulary
-projection and resolution ownership within the remaining realtime migration. PR #218 implements these scoped changes. CI 36905702456 passed at 36f9ecec,
-including real browser OIDC and principal isolation. Native run 36904211794 at
-4ef2f027 passed on iPhone; iPad remains the final native release check. See the
-[retained evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
-This batch does not claim broader physical acceptance or all localization work is
-complete. Release only its verified changes.
+- G8: move scoped realtime read-tool orchestration into agent-model application
+  ownership; retain existing query authorization, wire contracts and adversarial tests.
+- G6: remove remaining Settings diagnostics fallback copy from adapter literals and
+  regenerate the residual-message inventory. This does not certify every remaining
+  candidate as migrated or broader directional-layout acceptance.
+- V1: extend the real OIDC browser journey with UI item creation and actual JSON/CSV
+  downloads, including unauthenticated and other-principal export rejection.
+
+Remaining acceptance includes physical iOS export recipient saving (requested from
+user), broader connected native/adaptation workflows, and bounded performance
+measurements beyond image callback samples. Remaining G8 orchestration and G6
+presentation candidates continue after this batch. Do not gate this batch on those
+unrelated remaining requirements or claim they are complete.
 
 ## Delivery and acceptance rules
 
 - Delivery is authorized: complete checks and review, merge, and publish one release
   per frozen batch. Do not hold passing batches for separate merge permission or
-  completion of the full audit. The current PR #213–#216 catch-up ships together.
+  completion of the full audit. PR #213–#216 shipped together in v0.26.0; subsequent batches ship separately.
 - Freeze each PR's three gaps and critical workflow/regression checks. Unrelated
   existing findings remain tracked and do not gate a verified frozen release.
 - Preserve the user's normal-text priority: structure and stable navigation,
@@ -86,11 +91,10 @@ expands these limits, update its domain/security contract first.
 
 ## Latest verified release evidence
 
-Main baseline: `dabe2839599c80c5db0ed22c8792adef1265ce95` (PR209), tag `v0.25.3`.
-Release run36664629076 completed successfully; iOS upload job109728590645 and
-changelog job109732833589 succeeded. Native run36661826231 passed its selected
-Browse header/filter workflows on iPhone17 and iPad mini at source38e493d9.
-This records the workflow outcome, not a new physical-device or whole-app review.
+Catch-up release `v0.26.0`, source `f4a8dd48`, run36903326170 succeeded,
+including TestFlight upload and build changelog publication. PR #218 merged
+`a91f9ec0`; its v0.26.1 release run36907915266 is in progress (iOS archive).
+These are delivery records, not new physical-device or whole-app acceptance.
 
 PR210 merged8308690e. Release36657966242 succeeded. Its source/native evidence
 includes sheet notice dismissal, Add keyboard and title copying; the failed

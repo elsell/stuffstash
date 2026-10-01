@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page, type APIRequestContext } from '@playwright/test';
 
 async function signIn(page: Page, email: string) {
@@ -28,7 +29,7 @@ async function inventoryStatus(request: APIRequestContext, url: string, token?: 
   }
 }
 
-test('real OIDC workspace creation preserves principal isolation', async ({ page, browser, request }, testInfo) => {
+test('real OIDC workspace, item creation and exports preserve principal isolation', async ({ page, browser, request }, testInfo) => {
   await signIn(page, 'owner@example.com');
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
   await page.getByRole('link', { name: /^Browse\b/ }).click();
@@ -43,6 +44,37 @@ test('real OIDC workspace creation preserves principal isolation', async ({ page
   await expect(page.getByRole('heading', { name: 'Browse', exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('connected-browse.png') });
 
+  const itemTitle = 'Connected export, flashlight';
+  await page.goto(`/tenants/${scope[1]}/inventories/${scope[2]}/add/item`);
+  await expect(page.getByRole('dialog', { name: 'Add item' })).toBeVisible();
+  await page.getByLabel('Item name').fill(itemTitle);
+  await page.getByRole('button', { name: 'Save item' }).click();
+  await expect(page.getByRole('heading', { name: itemTitle, exact: true })).toBeVisible();
+  await page.goto(`/settings/tenants/${scope[1]}/inventories/${scope[2]}`);
+  for (const format of ['json', 'csv'] as const) {
+    await page.getByRole('button', { name: 'Export inventory', exact: true }).click();
+    const downloaded = page.waitForEvent('download');
+    await page.getByRole('menuitem', { name: format === 'json' ? /JSON —/ : /CSV —/ }).click();
+    const file = await downloaded;
+    expect(file.suggestedFilename()).toBe(`stuff-stash-inventory.${format}`);
+    expect(await file.failure()).toBeNull();
+    const filePath = await file.path();
+    expect(filePath).not.toBeNull();
+    const contents = await readFile(filePath!, 'utf8');
+    if (format === 'json') {
+      const document = JSON.parse(contents);
+      expect(document.schemaVersion).toBe(1);
+      expect(document.assets).toEqual(expect.arrayContaining([expect.objectContaining({ title: itemTitle })]));
+    } else {
+      expect(contents.split(/\r?\n/, 1)[0]).toBe('id,title,description,kind,parentAssetId,customAssetTypeId,lifecycleState,createdAt,updatedAt,expirationDate,expirationPrecision,tagIds,customFields,currentCheckout,attachments');
+      expect(contents).toContain(`,"${itemTitle}",`);
+    }
+    await expect(page.getByRole('status').filter({ hasText: 'Inventory download started.' })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath(`connected-export-${format}.png`) });
+    await file.delete();
+    expect(await inventoryStatus(request, `${inventoryURL}/export?format=${format}`)).toBe(401);
+  }
+
   const otherContext = await browser.newContext({ baseURL: 'http://localhost:5173' });
   try {
     const otherPage = await otherContext.newPage();
@@ -51,5 +83,8 @@ test('real OIDC workspace creation preserves principal isolation', async ({ page
     const otherToken = await sessionToken(otherPage);
     expect(Boolean(otherToken)).toBe(true);
     expect([403, 404]).toContain(await inventoryStatus(request, inventoryURL, otherToken));
+    for (const format of ['json', 'csv']) {
+      expect([403, 404]).toContain(await inventoryStatus(request, `${inventoryURL}/export?format=${format}`, otherToken));
+    }
   } finally { await otherContext.close(); }
 });
