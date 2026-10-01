@@ -1,0 +1,38 @@
+[
+  {
+    "file": "apps/mobile/src/application/voice/RealtimeVoiceSession.ts",
+    "strings": [
+      "Enter a message of up to 8,000 characters.",
+      "Review fields could not be validated.",
+      "Too many voice plan edits were provided.",
+      "Voice plan edits could not be reviewed safely.",
+      "Photo size is required before approving this change.",
+      "Action plan review is no longer available."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Production callers replace these errors with cataloged guidance; translating them would not change visible copy.",
+    "evidence": [
+      "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: approve/retry/send handlers",
+      "apps/mobile/src/ui/navigation/VoiceInteractionStateContext.tsx: buildFailedVoiceRealtimeState"
+    ]
+  },
+  {
+    "file": "apps/web/src/lib/adapters/realtime/browserConversationTransport.ts",
+    "classification": "technical-diagnostic",
+    "reason": "Thrown transport/validation errors become typed failure categories or are caught by InventoryConversation; raw exception messages are not rendered.",
+    "evidence": [
+      "apps/web/src/lib/application/inventoryConversation.ts: send, decide, fail",
+      "apps/web/src/lib/components/workspace/InventoryConversationPanel.svelte: view.error"
+    ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/testing/InventoryApiClient.ts",
+    "classification": "test-fixture",
+    "reason": "In-memory test API data and diagnostics are not production product copy."
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/SearchLatency.bench.ts",
+    "classification": "benchmark-fixture",
+    "reason": "Benchmark corpus and case labels are not production product copy."
+  }
+]

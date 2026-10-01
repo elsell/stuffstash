@@ -74,5 +74,6 @@ await visit(path.join(root, 'apps/web/src'));
 files.sort((a, b) => b.candidates - a.candidates || a.file.localeCompare(b.file));
 process.stdout.write(JSON.stringify({
   purpose: 'Remaining literal-message candidates for manual classification. Includes technical errors and constants; not a test-cell count or proof of a product defect.',
+  reviewedClassifications: JSON.parse(await readFile(path.join(root, 'scripts/client-message-classifications.json'), 'utf8')),
   files,
 }, null, 2) + '\n');
