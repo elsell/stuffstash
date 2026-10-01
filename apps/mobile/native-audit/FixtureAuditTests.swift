@@ -3563,12 +3563,17 @@ final class FixtureAuditTests: XCTestCase {
       XCTAssertTrue(export.isHittable); export.tap()
       let choice = app.buttons[label].firstMatch
       XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
-      let close = app.buttons["Close"].firstMatch
-      XCTAssertTrue(close.waitForExistence(timeout: 10), "The system activity view must be dismissible")
       let file = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "stuff-stash-inventory")).firstMatch
-      XCTAssertTrue(file.exists, "The native share sheet must receive the inventory file")
+      XCTAssertTrue(file.waitForExistence(timeout: 10), "The native share sheet must receive the inventory file")
       capture("inventory-export-\(format)-system-share")
-      close.tap()
+      let close = app.buttons["Close"].firstMatch
+      if close.exists {
+        XCTAssertTrue(close.isHittable); close.tap()
+      } else {
+        let dismiss = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(dismiss.waitForExistence(timeout: 5), "The system activity popover must expose outside-tap dismissal")
+        XCTAssertTrue(dismiss.isHittable); dismiss.tap()
+      }
       XCTAssertTrue(app.staticTexts["\(format): file removed"].waitForExistence(timeout: 10))
       XCTAssertTrue(export.isEnabled)
     }
