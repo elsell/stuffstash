@@ -26,7 +26,7 @@ try {
   const source = await readFile(target, 'utf8');
   const marker = /\/\/ AUDIT_LOCALIZATION_LABELS_BEGIN[\s\S]*?\/\/ AUDIT_LOCALIZATION_LABELS_END/;
   if (!marker.test(source)) throw new Error('Missing native audit label marker');
-  await writeFile(target, source.replace(marker, `// AUDIT_LOCALIZATION_LABELS_BEGIN\nprivate let auditLocalizationLabels: [String: String] = [\n${entries.join(',\n')}\n]\n// AUDIT_LOCALIZATION_LABELS_END`));
+  await writeFile(target, source.replace(marker, `// AUDIT_LOCALIZATION_LABELS_BEGIN\nprivate let auditLocalizationLabels: [String: String] = [\n${entries.join(',\n')}\n]\nprivate let auditLocalizationRTL = ${translator.direction === 'rtl'}\n// AUDIT_LOCALIZATION_LABELS_END`));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

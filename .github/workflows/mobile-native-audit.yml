@@ -138,7 +138,9 @@ jobs:
         run: pod install --deployment
       - name: Prepare native locale labels from reviewed catalog
         if: matrix.suite == 'fixtures'
-        run: node scripts/prepare-native-localization-audit.mjs "$EXPO_PUBLIC_STUFF_STASH_UI_LOCALE"
+        run: |
+          node --test scripts/prepare-native-localization-audit.test.mjs
+          node scripts/prepare-native-localization-audit.mjs "$EXPO_PUBLIC_STUFF_STASH_UI_LOCALE"
       - name: Add runner-only XCTest target
         run: ruby scripts/prepare-ios-audit-target.rb
       - name: Install isolated fixture routes

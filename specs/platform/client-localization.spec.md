@@ -160,3 +160,16 @@ Import headings/range summaries, upload constraints, reminder summaries and
 identity-recovery notices are complete catalog messages. Byte displays retain
 binary scaling and the existing B/KB/MB convention while formatting numeric
 values with the selected locale. Product labels never determine identity or flow.
+
+## Native RTL audit integrity
+
+The RTL audit must verify native layout direction, not only Unicode-isolated
+English copy. Runner-only XCTest launches use the pinned React Native
+`RCTI18nUtil_forceRTL` launch default before bridge initialization and verify the
+actual `I18nManager.isRTL` value exposed by the isolated fixture. Add/recovery
+assertions include mirrored leading Close/trailing Save geometry and retained
+user text. Non-RTL runs explicitly launch without forced RTL. These settings
+remain in the audit harness; production startup and device preferences are unchanged.
+A run that fails direction or geometry cannot count as RTL acceptance.
+
+Reference: [React Native I18nManager](https://reactnative.dev/docs/i18nmanager).

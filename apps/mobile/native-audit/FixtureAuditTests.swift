@@ -3,12 +3,14 @@ import UIKit
 
 // AUDIT_LOCALIZATION_LABELS_BEGIN
 private let auditLocalizationLabels: [String: String] = [:]
+private let auditLocalizationRTL = false
 // AUDIT_LOCALIZATION_LABELS_END
 
 final class FixtureAuditTests: XCTestCase {
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
   override func setUpWithError() throws {
     continueAfterFailure = false
+    app.launchArguments = ["-RCTI18nUtil_forceRTL", auditLocalizationRTL ? "YES" : "NO"]
     app.launch()
     let entry = (name.contains("testHomeCollectionsReplaceBrowseRefinementsAndRetainTabs")
       || name.contains("testHistoryJourneyClearsPersistentChrome")
@@ -34,6 +36,8 @@ final class FixtureAuditTests: XCTestCase {
   }
   func testLocalizedAddDraftKeepsNativeActionsAndRecovery() {
     func label(_ english: String) -> String { auditLocalizationLabels[english] ?? english }
+    let direction = auditLocalizationRTL ? "rtl" : "ltr"
+    XCTAssertTrue(app.staticTexts["audit-native-direction-\(direction)"].exists)
     guard openFixtureURL("audit-add") else { return }
     let name = app.textFields[label("Asset name")]
     XCTAssertTrue(name.waitForExistence(timeout: 10))
@@ -43,6 +47,11 @@ final class FixtureAuditTests: XCTestCase {
     let close = app.buttons[label("Close Add")]
     XCTAssertTrue(save.exists); XCTAssertTrue(close.isHittable)
     XCTAssertTrue(app.frame.contains(save.frame)); XCTAssertTrue(app.frame.contains(close.frame))
+    if auditLocalizationRTL {
+      XCTAssertGreaterThan(close.frame.midX, save.frame.midX)
+    } else {
+      XCTAssertLessThan(close.frame.midX, save.frame.midX)
+    }
     capture("localized-add-before-input")
     name.tap(); waitForKeyboard(); name.typeText("Native draft name")
     XCTAssertEqual(name.value as? String, "Native draft name")

@@ -48,7 +48,7 @@ import { Host, TextField } from '@expo/ui/swift-ui';
 import { accessibilityLabel, autocorrectionDisabled, keyboardType, textFieldStyle, textInputAutocapitalization } from '@expo/ui/swift-ui/modifiers';
 import { VoicePlanPhotoDraftStrip } from '../src/ui/screens/VoicePlanPhotoDrafts';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Button, Image, Platform, ScrollView, Text, View } from 'react-native';
+import { Button, I18nManager, Image, Platform, ScrollView, Text, View } from 'react-native';
 import { Stack, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppearancePreferenceController, type AppearancePreference } from '../src/application/settings/AppearancePreference';
@@ -212,6 +212,7 @@ export function FixtureMenu() {
   if (draftPhotos) return <DraftPhotosFixture onBack={() => setDraftPhotos(false)} />;
   if (settingsControls) return <SettingsControlsFixture scrollEnabled={settingsControls === 'scroll'} onBack={() => setSettingsControls(undefined)} />;
   return <FixturePage>
+    <Text testID={`audit-native-direction-${I18nManager.isRTL ? "rtl" : "ltr"}`}>Native direction: {I18nManager.isRTL ? "rtl" : "ltr"}</Text>
     <Button title="Audit voice proposal" onPress={() => router.push('/voice' as Href)} />
     <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
     <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
