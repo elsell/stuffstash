@@ -217,6 +217,37 @@ jobs:
           path: apps/web/test-results
           retention-days: 7
 
+  connected-browser:
+    name: Connected OIDC browser journey
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install pinned browser
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Resolve isolated Dex issuer from the runner
+        run: echo '127.0.0.1 dex' | sudo tee -a /etc/hosts
+      - name: Exercise real OIDC and workspace isolation
+        run: scripts/verify-connected-browser.sh
+      - name: Retain post-login browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: connected-browser-evidence
+          path: apps/web/test-results/connected/**/connected-browse.png
+          retention-days: 7
+
   ios-dependency-lock:
     name: iOS dependency lock
     runs-on: macos-26

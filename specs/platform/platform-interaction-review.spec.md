@@ -1783,3 +1783,14 @@ styles. Preserve the shared down-chevron accessory, keyboard avoidance, Return
 behavior and interactive scroll dismissal. No draft values or submission semantics
 change. Details titles must support native long-press text selection and Copy,
 including long names, without entering Edit or changing the item.
+
+## Connected browser authentication evidence
+
+A connected browser acceptance job must use the real web OIDC authorization-code
+and PKCE flow against the isolated pinned Dex fixture, then reach the real API,
+Postgres and SpiceDB stack. Do not intercept requests or preload session tokens.
+Exercise workspace creation, browsing and reload; verify unauthenticated and
+other-principal reads cannot access the newly created inventory. Fixture credentials
+are test-only. Disable browser traces/videos and do not persist tokens; retain
+only post-login product screenshots. This proves that connected fixture journey,
+not production identity-provider configuration or physical mobile behavior.

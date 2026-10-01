@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/stuffstash/stuff-stash/internal/adapters/memory"
 	notificationapp "github.com/stuffstash/stuff-stash/internal/app/notifications"
+	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domainvalue/expirationdate"
@@ -61,7 +62,11 @@ func TestVoiceVocabularyExposesExpirationCapability(t *testing.T) {
 	if value["expirationEnabled"] != true || value["assetTypeId"] != "medicine" {
 		t.Fatal("manifest omitted capability")
 	}
-	for _, definition := range catalog.definitions {
+	definitions, unavailable, err := catalog.Resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomAssetType, Key: "medicine"}})
+	if err != nil || unavailable != 0 || len(definitions) != 1 {
+		t.Fatalf("resolve vocabulary capability: %v, unavailable=%d, definitions=%d", err, unavailable, len(definitions))
+	}
+	for _, definition := range definitions {
 		encoded, _ = json.Marshal(definition)
 		value = map[string]any{}
 		_ = json.Unmarshal(encoded, &value)

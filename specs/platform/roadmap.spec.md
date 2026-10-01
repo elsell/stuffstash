@@ -30,6 +30,18 @@ live evidence succeeded. Track the specific remaining acceptance task and obtain
 needed user participation only when execution requires it. Three gaps per PR is
 a batching rule, not permission to replace missing implementation with scaffolding.
 
+## Next frozen batch — V1, G7, G8
+
+Continue from merged PR #216 with three scoped deliverables: V1 real browser
+OIDC/PKCE sign-in, automatic workspace provisioning and principal isolation;
+G7 representative native image lifecycle measurements; G8 voice vocabulary
+projection and resolution ownership within the remaining realtime migration. PR #218 implements these scoped changes. CI 36905702456 passed at 36f9ecec,
+including real browser OIDC and principal isolation. Native run 36904211794 at
+4ef2f027 passed on iPhone; iPad remains the final native release check. See the
+[retained evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
+This batch does not claim broader physical acceptance or all localization work is
+complete. Release only its verified changes.
+
 ## Delivery and acceptance rules
 
 - Delivery is authorized: complete checks and review, merge, and publish one release

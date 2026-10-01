@@ -257,3 +257,14 @@ fetch implementation. Declare `@types/node` 24.13.1 explicitly for this test
 harness, reusing the existing workspace lockfile resolution. Background-work
 fakes signal entry only after recording the operation, so concurrency assertions
 observe a synchronized state rather than racing the notification.
+
+### Native image lifecycle evidence
+
+A runner-only fixture renders the production asset detail gallery using a bundled
+PNG and then an unavailable URI. It uses the production mobile performance session
+and a controlled delivery sink, retaining the reporter's allowlisted samples with
+real native load/error durations. XCTest verifies success and failure, finite
+nonnegative durations, bounded surface/variant values and the absence of image
+identity or credentials. Record simulator model, revision and image source/cache
+conditions with evidence. This verifies native lifecycle instrumentation, not
+production network latency, physical-device performance or real API delivery.
