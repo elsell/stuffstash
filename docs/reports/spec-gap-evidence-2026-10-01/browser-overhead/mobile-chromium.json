@@ -1,0 +1,263 @@
+{
+  "decoded": true,
+  "reported": 440,
+  "failed": 0,
+  "perBatch": 20,
+  "samples": [
+    {
+      "pair": 0,
+      "enabled": false,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 0,
+      "enabled": true,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 1,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 1,
+      "enabled": false,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 2,
+      "enabled": false,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 2,
+      "enabled": true,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 3,
+      "enabled": true,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 3,
+      "enabled": false,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 4,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 4,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 5,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 5,
+      "enabled": false,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 6,
+      "enabled": false,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 6,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 7,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 7,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 8,
+      "enabled": false,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 8,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 9,
+      "enabled": true,
+      "durationMs": 0.2999999523162842,
+      "perLifecycleMs": 0.01499999761581421
+    },
+    {
+      "pair": 9,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 10,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 10,
+      "enabled": true,
+      "durationMs": 0.2999999523162842,
+      "perLifecycleMs": 0.01499999761581421
+    },
+    {
+      "pair": 11,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 11,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 12,
+      "enabled": false,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 12,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 13,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 13,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 14,
+      "enabled": false,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 14,
+      "enabled": true,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 15,
+      "enabled": true,
+      "durationMs": 0.20000004768371582,
+      "perLifecycleMs": 0.010000002384185792
+    },
+    {
+      "pair": 15,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 16,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    },
+    {
+      "pair": 16,
+      "enabled": true,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 17,
+      "enabled": true,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 17,
+      "enabled": false,
+      "durationMs": 0.09999990463256836,
+      "perLifecycleMs": 0.004999995231628418
+    },
+    {
+      "pair": 18,
+      "enabled": false,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 18,
+      "enabled": true,
+      "durationMs": 0.19999980926513672,
+      "perLifecycleMs": 0.009999990463256836
+    },
+    {
+      "pair": 19,
+      "enabled": true,
+      "durationMs": 0.10000014305114746,
+      "perLifecycleMs": 0.005000007152557373
+    },
+    {
+      "pair": 19,
+      "enabled": false,
+      "durationMs": 0,
+      "perLifecycleMs": 0
+    }
+  ],
+  "summary": [
+    {
+      "enabled": false,
+      "batchAverageP50Ms": 0.004999995231628418,
+      "batchAverageP95Ms": 0.010000002384185792
+    },
+    {
+      "enabled": true,
+      "batchAverageP50Ms": 0.004999995231628418,
+      "batchAverageP95Ms": 0.01499999761581421
+    }
+  ],
+  "medianDifferenceMs": 0,
+  "runtime": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.7778.96 Mobile Safari/537.36",
+  "scope": "Percentiles describe 20-lifecycle batch averages, not individual lifecycle tails. Cached decoded 512px synthetic image; DOM action plus production reporter overhead. Controlled transport/scheduler. Excludes decode, network, scheduling, rendering and physical-device latency."
+}
