@@ -1,4 +1,6 @@
 <script lang="ts">
+  import InventoryConversationPanel from './InventoryConversationPanel.svelte';
+  import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
   import { inventoryExportContext } from '$lib/ports/inventoryExport';
   import type { ExportInventory } from '$lib/application/exportInventory';
   import { expirationWorkspaceContext, type ExpirationWorkspace, type ExpirationFilter } from '$lib/ports/expirationRepository';
@@ -105,7 +107,7 @@
 
   let {
     repository,
-    exportCommand, conversations,
+    exportCommand, conversations, inventoryConversation,
     notifications,
     expiration,
     observer = { record: () => {} },
@@ -115,6 +117,7 @@
   }: {
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
     exportCommand?: ExportInventory;
+    inventoryConversation?: InventoryConversationTransport;
     conversations?: ConversationWorkspaceRepositories;
     notifications?: NotificationWorkspace;
     expiration?: ExpirationWorkspace;
@@ -1888,6 +1891,13 @@
   </main>
 {:else}
   {#snippet notificationHeader()}
+    {#if inventoryConversation && selectedInventory && selectedTenant}
+      {#key JSON.stringify([data.context.principal.id, selectedTenant.id, selectedInventory.id])}
+        <InventoryConversationPanel transport={inventoryConversation} tenantId={selectedTenant.id} inventoryId={selectedInventory.id} inventoryName={selectedInventory.name}
+          onOpenAsset={(assetId) => navigateTo({ mode: 'asset', tenantId: selectedTenant!.id, inventoryId: selectedInventory!.id, assetId })}
+          onRefresh={refreshExpirationAssets} onAuthenticationLost={onSessionExpired} />
+      {/key}
+    {/if}
     {#if notifications && selectedInventory && selectedTenant}
       {#key JSON.stringify([notifications.apiIdentity, data.context.principal.id, selectedTenant.id, selectedInventory.id])}
         <NotificationBell tenantId={selectedTenant.id} inventoryId={selectedInventory.id} repository={notifications.repository} {observer}

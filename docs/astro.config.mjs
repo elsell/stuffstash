@@ -36,6 +36,7 @@ export default defineConfig({
             { label: 'First Inventory', slug: 'first-inventory' },
             { label: 'Expiration Dates', slug: 'expiration' },
             { label: 'Export An Inventory', slug: 'export-inventory' },
+            { label: 'Ask About Your Inventory', slug: 'conversation' },
             { label: 'Concepts', slug: 'concepts' },
             { label: 'Trust And Security', slug: 'security' },
           ],
