@@ -2,17 +2,9 @@ package app
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
+	agentapp "github.com/stuffstash/stuff-stash/internal/app/agentmodel"
 	"github.com/stuffstash/stuff-stash/internal/app/agentmodel/tools"
-	"github.com/stuffstash/stuff-stash/internal/domain/agentmodel"
-
-	"strings"
-	"time"
-
 	"github.com/stuffstash/stuff-stash/internal/domain/asset"
-	"github.com/stuffstash/stuff-stash/internal/domain/audit"
-	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/search"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -20,314 +12,57 @@ import (
 const realtimeVoiceToolMaxResults = tools.RealtimeVoiceToolMaxResults
 
 func (a App) executeRealtimeVoiceTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
-	toolCtx, cancel := context.WithTimeout(ctx, a.realtimeVoiceToolCallTimeout)
-	defer cancel()
-	switch call.Name {
-	case RealtimeVoiceToolGetExpirationCalendar:
-		result, err := a.executeRealtimeVoiceExpirationCalendar(toolCtx, session, call)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolQueryExpiringAssets:
-		result, err := a.executeRealtimeVoiceExpirationQuery(toolCtx, session, call)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolGetInventoryVocabulary:
-		result, err := a.executeRealtimeVoiceVocabularyTool(toolCtx, session, call)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolSearchAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceSearchTool(toolCtx, session, call)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolGetAssetDetail:
-		result, err := a.executeRealtimeVoiceAssetDetailTool(toolCtx, session, call, visibleAssetIDs)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolListAuthorizedAssets:
-		result, err := a.executeRealtimeVoiceListTool(toolCtx, session, call, visibleAssetIDs)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolListAssetAuditHistory:
-		result, err := a.executeRealtimeVoiceAssetAuditHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolListCheckedOutAssets:
-		result, err := a.executeRealtimeVoiceCheckedOutAssetsTool(toolCtx, session, call)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	case RealtimeVoiceToolListAssetCheckoutHistory:
-		result, err := a.executeRealtimeVoiceAssetCheckoutHistoryTool(toolCtx, session, call, visibleAssetIDs)
-		return result, realtimeVoiceToolDeadlineError(ctx, toolCtx, err)
-	default:
-		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
-	}
+	return a.realtimeReadTools().ExecuteRealtimeVoiceTool(ctx, realtimeReadScope(session), call, visibleAssetIDs)
 }
 
 func realtimeVoiceToolDeadlineError(parentCtx context.Context, toolCtx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	if errors.Is(err, context.DeadlineExceeded) && errors.Is(toolCtx.Err(), context.DeadlineExceeded) && parentCtx.Err() == nil {
-		return errRealtimeVoiceToolCallTimedOut
-	}
-	return err
+	return agentapp.RealtimeVoiceToolDeadlineError(parentCtx, toolCtx, err)
 }
 
 func (a App) executeRealtimeVoiceSearchTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall) (ports.AgentToolResult, error) {
-	args, err := parseRealtimeVoiceSearchArgs(call.Arguments)
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-	input := SearchAssetsInput{
-		Principal: session.Principal, TenantID: session.TenantID, InventoryIDs: []inventory.InventoryID{session.InventoryID}, Source: audit.SourceConversation, Query: args.Query, LifecycleState: args.LifecycleState, Limit: args.Limit,
-	}
-	var results SearchAssetsResult
-	for _, mode := range realtimeVoiceSearchModes(session) {
-		input.Mode = mode.String()
-		results, err = a.SearchAssets(ctx, input)
-		if err != nil {
-			return ports.AgentToolResult{}, err
-		}
-		if len(results.Items) > 0 {
-			break
-		}
-	}
-
-	items := make([]realtimeVoiceAssetToolItem, 0, len(results.Items))
-	for _, result := range results.Items {
-		item, err := a.realtimeVoiceAssetToolItem(ctx, session, result.Asset, result.Inventory.Name.String(), realtimeVoiceMatchFields(result.Matches), true)
-		if err != nil {
-			return ports.AgentToolResult{}, err
-		}
-		names := make([]string, 0, len(result.AssignedTags))
-		for _, tag := range result.AssignedTags {
-			names = append(names, tag.DisplayName.String())
-		}
-		item.TagNames = agentmodel.BoundedObservationTagNames(names)
-		items = append(items, item)
-	}
-	return realtimeVoiceToolResult(call, realtimeVoiceAssetToolOutput{
-		Tool:    call.Name,
-		Query:   args.Query,
-		Count:   len(items),
-		HasMore: results.HasMore,
-		Items:   items,
-	})
+	return a.realtimeReadTools().ExecuteRealtimeVoiceSearchTool(ctx, realtimeReadScope(session), call)
 }
 
 func (a App) executeRealtimeVoiceListTool(ctx context.Context, session RealtimeVoiceSession, call ports.AgentToolCall, visibleAssetIDs map[string]struct{}) (ports.AgentToolResult, error) {
-	args, err := parseRealtimeVoiceListArgs(call.Arguments)
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-	if args.ParentAssetID != "" {
-		if _, visible := visibleAssetIDs[args.ParentAssetID]; !visible {
-			return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
-		}
-	}
-	inventoryItem, err := a.GetInventory(ctx, GetInventoryInput{
-		Principal:   session.Principal,
-		Source:      audit.SourceAPI,
-		TenantID:    session.TenantID,
-		InventoryID: session.InventoryID,
-	})
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-
-	items := []realtimeVoiceAssetToolItem{}
-	hasMore := false
-	cursor := ""
-	for page := 0; page < 50 && len(items) < args.Limit; page++ {
-		result, err := a.ListAssets(ctx, ListAssetsInput{
-			Principal:      session.Principal,
-			Source:         audit.SourceAPI,
-			TenantID:       session.TenantID,
-			InventoryID:    session.InventoryID,
-			Limit:          100,
-			Cursor:         cursor,
-			LifecycleState: args.LifecycleState,
-			Sort:           string(ports.AssetListSortIDAsc),
-		})
-		if err != nil {
-			return ports.AgentToolResult{}, err
-		}
-		for _, visibleAsset := range result.Items {
-			toolItem, err := a.realtimeVoiceAssetToolItem(ctx, session, visibleAsset, inventoryItem.Name.String(), nil, true)
-			if err != nil {
-				return ports.AgentToolResult{}, err
-			}
-			if args.Kind != "" && toolItem.Kind != args.Kind.String() {
-				continue
-			}
-			if args.ParentAssetID != "" && toolItem.ParentAssetID != args.ParentAssetID {
-				continue
-			}
-			if args.ParentTitle != "" && !strings.EqualFold(toolItem.ParentTitle, args.ParentTitle) {
-				continue
-			}
-			if args.LocationTitle != "" && !strings.EqualFold(toolItem.LocationTitle, args.LocationTitle) {
-				continue
-			}
-			if args.ParentScope == realtimeVoiceParentScopeRoot && toolItem.ParentTitle != "" {
-				continue
-			}
-			items = append(items, toolItem)
-			if len(items) >= args.Limit {
-				break
-			}
-		}
-		hasMore = result.HasMore
-		if !result.HasMore || result.NextCursor == nil {
-			break
-		}
-		cursor = *result.NextCursor
-	}
-	return realtimeVoiceToolResult(call, realtimeVoiceAssetToolOutput{
-		Tool:    call.Name,
-		Count:   len(items),
-		HasMore: hasMore,
-		Filters: map[string]string{
-			"kind":           args.Kind.String(),
-			"lifecycleState": args.LifecycleState,
-			"parentAssetId":  args.ParentAssetID,
-			"parentTitle":    args.ParentTitle,
-			"locationTitle":  args.LocationTitle,
-			"parentScope":    args.ParentScope,
-		},
-		Items: items,
-	})
+	return a.realtimeReadTools().ExecuteRealtimeVoiceListTool(ctx, realtimeReadScope(session), call, visibleAssetIDs)
 }
 
 func (a App) realtimeVoiceAssetToolItem(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool) (realtimeVoiceAssetToolItem, error) {
-	return a.realtimeVoiceAssetToolItemWithCheckout(ctx, session, item, inventoryName, matchFields, includeAssetID, true)
+	return a.realtimeReadTools().RealtimeVoiceAssetToolItem(ctx, realtimeReadScope(session), item, inventoryName, matchFields, includeAssetID)
 }
 
 func (a App) realtimeVoiceAssetToolItemWithoutCheckoutLookup(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool) (realtimeVoiceAssetToolItem, error) {
-	return a.realtimeVoiceAssetToolItemWithCheckout(ctx, session, item, inventoryName, matchFields, includeAssetID, false)
+	return a.realtimeReadTools().RealtimeVoiceAssetToolItemWithoutCheckoutLookup(ctx, realtimeReadScope(session), item, inventoryName, matchFields, includeAssetID)
 }
 
 func (a App) realtimeVoiceAssetToolItemWithCheckout(ctx context.Context, session RealtimeVoiceSession, item asset.Asset, inventoryName string, matchFields []string, includeAssetID bool, includeCheckout bool) (realtimeVoiceAssetToolItem, error) {
-	ancestors, err := a.realtimeVoiceAncestors(ctx, session, item)
-	if err != nil {
-		return realtimeVoiceAssetToolItem{}, err
-	}
-	path := make([]string, 0, len(ancestors)+1)
-	locationTitle := ""
-	for _, ancestor := range ancestors {
-		path = append(path, ancestor.Title.String())
-		if ancestor.Kind == asset.KindLocation {
-			locationTitle = ancestor.Title.String()
-		}
-	}
-	path = append(path, item.Title.String())
-	parentTitle := ""
-	parentKind := ""
-	if len(ancestors) > 0 {
-		parent := ancestors[len(ancestors)-1]
-		parentTitle = parent.Title.String()
-		parentKind = parent.Kind.String()
-	}
-	if item.Kind == asset.KindLocation {
-		locationTitle = item.Title.String()
-	}
-
-	toolItem := realtimeVoiceAssetToolItem{
-		Title:           item.Title.String(),
-		Kind:            item.Kind.String(),
-		Description:     item.Description.String(),
-		InventoryName:   inventoryName,
-		LifecycleState:  item.LifecycleState.String(),
-		ParentAssetID:   item.ParentAssetID.String(),
-		ParentTitle:     parentTitle,
-		ParentKind:      parentKind,
-		LocationTitle:   locationTitle,
-		ContainmentPath: path,
-		MatchFields:     matchFields,
-	}
-	toolItem.Expiration, err = a.realtimeVoiceExpiration(ctx, session, item)
-	if err != nil {
-		return realtimeVoiceAssetToolItem{}, err
-	}
-	if includeAssetID {
-		toolItem.AssetID = item.ID.String()
-	}
-	if includeCheckout && a.checkouts != nil {
-		checkout, found, err := a.checkouts.CurrentAssetCheckout(ctx, session.TenantID, session.InventoryID, item.ID)
-		if err != nil {
-			return realtimeVoiceAssetToolItem{}, err
-		}
-		if found {
-			toolItem.CurrentCheckout = &realtimeVoiceCurrentCheckoutEntry{
-				ID:                      checkout.ID.String(),
-				CheckedOutAt:            checkout.CheckedOutAt.UTC().Format(time.RFC3339Nano),
-				CheckedOutByPrincipalID: checkout.CheckedOutByPrincipal,
-			}
-		}
-	}
-	return toolItem, nil
+	return a.realtimeReadTools().RealtimeVoiceAssetToolItemWithCheckout(ctx, realtimeReadScope(session), item, inventoryName, matchFields, includeAssetID, includeCheckout)
 }
 
 func (a App) realtimeVoiceAncestors(ctx context.Context, session RealtimeVoiceSession, item asset.Asset) ([]asset.Asset, error) {
-	ancestors := []asset.Asset{}
-	seen := map[asset.ID]struct{}{item.ID: {}}
-	for parentID := item.ParentAssetID; parentID.String() != ""; {
-		if _, duplicate := seen[parentID]; duplicate {
-			return nil, ports.ErrInvalidProviderInput
-		}
-		seen[parentID] = struct{}{}
-		parent, err := a.GetAsset(ctx, GetAssetInput{
-			Principal:   session.Principal,
-			Source:      audit.SourceAPI,
-			TenantID:    session.TenantID,
-			InventoryID: session.InventoryID,
-			AssetID:     parentID,
-		})
-		if err != nil {
-			return nil, err
-		}
-		ancestors = append([]asset.Asset{parent}, ancestors...)
-		parentID = parent.ParentAssetID
-	}
-	return ancestors, nil
+	return a.realtimeReadTools().RealtimeVoiceAncestors(ctx, realtimeReadScope(session), item)
 }
 
 func realtimeVoiceToolResult(call ports.AgentToolCall, output realtimeVoiceAssetToolOutput) (ports.AgentToolResult, error) {
-	if output.Count == 0 {
-		output.Note = "No visible assets were returned within this request's scope; hasMore indicates incomplete coverage."
-	}
-	payload, err := json.Marshal(output)
-	if err != nil {
-		return ports.AgentToolResult{}, err
-	}
-	return ports.AgentToolResult{
-		CallID:  call.ID,
-		Name:    call.Name,
-		Call:    call,
-		Content: string(payload),
-	}, nil
+	return agentapp.RealtimeVoiceToolResult(call, output)
 }
 
 func realtimeVoiceMatchFields(matches []search.Match) []string {
-	fields := make([]string, 0, len(matches))
-	seen := map[string]struct{}{}
-	for _, match := range matches {
-		field := match.Field.String()
-		if field == "" {
-			continue
-		}
-		if _, exists := seen[field]; exists {
-			continue
-		}
-		seen[field] = struct{}{}
-		fields = append(fields, field)
-	}
-	return fields
+	return agentapp.RealtimeVoiceMatchFields(matches)
 }
 
 func stringArg(raw any) string {
-	value, _ := raw.(string)
-	return value
+	return agentapp.StringArg(raw)
 }
 
-func realtimeVoiceToolLimit(raw any) (int, error) { return tools.RealtimeVoiceToolLimit(raw) }
+func realtimeVoiceToolLimit(raw any) (int, error) {
+	return agentapp.RealtimeVoiceToolLimit(raw)
+}
 
 func realtimeVoiceOptionalAssetKind(raw any) (asset.Kind, error) {
-	return tools.RealtimeVoiceOptionalAssetKind(raw)
+	return agentapp.RealtimeVoiceOptionalAssetKind(raw)
 }
 
 func realtimeVoiceOptionalLifecycleState(raw any) (string, error) {
-	return tools.RealtimeVoiceOptionalLifecycleState(raw)
+	return agentapp.RealtimeVoiceOptionalLifecycleState(raw)
 }

@@ -224,3 +224,20 @@ projection while authorized repository reads remain in the existing tool boundar
 Keep the catalog's backing map private; consumers and tests resolve definitions
 through its public method. Preserve existing vocabulary isolation and expiration
 capability checks during this behavior-preserving extraction.
+
+### Realtime read-tool orchestration
+
+The agent-model application package owns dispatch deadlines, argument validation,
+visible-ID guards, bounded search/list execution, safe detail/history projections,
+vocabulary reads and expiration/calendar queries. Inject a scoped query interface
+backed by existing authorized application commands, repository ports for existing
+scoped lookups, notification preferences and the application clock. Do not move
+queries directly into transport adapters or bypass current read audit history.
+
+The root facade converts session identity into a read-tool scope and adapts existing
+query envelopes. It may retain forwarding methods for compatibility, but must not
+retain the execution loops or projection policy. Preserve tool schemas, result
+shapes, error identity, pagination limits, source attribution, query order, final
+access checks and adversarial conversation tests. This extraction changes ownership,
+not the access model or user-visible behavior; existing tests remain the regression
+contract rather than duplicating tests for moved implementation details.

@@ -8,7 +8,7 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-var errRealtimeVoiceToolCallTimedOut = errors.New("realtime voice tool call timed out")
+var errRealtimeVoiceToolCallTimedOut = agentmodelapp.ErrRealtimeVoiceToolCallTimedOut
 
 type realtimeVoiceProviderStageError = agentmodelapp.RealtimeVoiceProviderStageError
 
