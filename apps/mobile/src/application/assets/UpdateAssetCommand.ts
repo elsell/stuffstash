@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import { assetId, type AssetExpiration } from '../../domain/assets/AssetSummary';
 import type {
   InventoryAssetUpdateRepository
@@ -57,7 +58,7 @@ export class UpdateAssetCommand {
     return {
       id: updated.id,
       title: updated.title,
-      message: `Updated ${updated.title}.`,
+      message: t("assets.updatedNamed", { title: updated.title }),
       undoableOperationId: updated.undoableOperationId
     };
   }

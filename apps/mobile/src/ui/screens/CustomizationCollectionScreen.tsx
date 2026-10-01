@@ -157,7 +157,7 @@ export function CustomizationCollectionScreen({ accessPolicy, contextQuery: sour
       : filtered.length === 0 ? <Empty title={t(`customization.empty.${kind}.${lifecycle}`)} message={canEdit && lifecycle === 'active' ? t(`customization.addFirst.${kind}`) : t('mobile.CustomizationCollectionScreen.thereIsNothingToShow')} />
       : <>
         {inherited.length ? <ResourceSection name={t('customization.fromTenant', { tenant: context.tenantName })} rows={inherited} onOpen={(row) => onOpen(row, true, context.tenantPermissions.includes('configure'))} inherited /> : null}
-        {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? `Only in ${context.inventoryName}` : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
+        {local.length ? <ResourceSection name={scope === 'inventory' && kind !== 'tag' ? t("customization.onlyIn", { inventory: context.inventoryName }) : undefined} rows={local} onOpen={(row) => onOpen(row, false, false)} /> : null}
       </>}
   </>, true);
 }

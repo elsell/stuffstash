@@ -57,7 +57,7 @@ export function DeniedSettingsState({ message }: { readonly message: string }) {
   useEffect(() => {
     const target = findNodeHandle(headingRef.current);
     if (target) AccessibilityInfo.setAccessibilityFocus(target);
-    else AccessibilityInfo.announceForAccessibility(`Settings unavailable. ${message}`);
+    else AccessibilityInfo.announceForAccessibility(t("settings.unavailableReason", { reason: message }));
   }, [message]);
   return <ScrollView accessibilityLiveRegion="assertive" style={styles.shell} contentContainerStyle={styles.errorContainer}><Text accessibilityRole="header" ref={headingRef} style={styles.errorTitle}>{t('mobile.ScopedSettingsScreens.settingsUnavailable')}</Text><Text style={styles.errorMessage}>{message}</Text></ScrollView>;
 }

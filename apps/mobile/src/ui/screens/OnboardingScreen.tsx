@@ -136,8 +136,8 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
             </Pressable>
             {helpVisible ? <View style={styles.help}><Text style={styles.body}>{t('mobile.OnboardingScreen.enterYourStuffStashServerSFullAddressIncluding')}{'\n\n'}{t('mobile.OnboardingScreen.youLlNeedARunningStuffStashServerTo')}</Text></View> : null}
           </> : <>
-            {household ? input(t('mobile.OnboardingScreen.householdName'), householdName, setHouseholdName, 'e.g. Maple Street household') : null}
-            {input(household ? t('mobile.OnboardingScreen.firstInventory') : t('mobile.OnboardingScreen.inventoryName'), inventoryName, setInventoryName, 'e.g. Home Inventory')}
+            {household ? input(t('mobile.OnboardingScreen.householdName'), householdName, setHouseholdName, t("onboarding.householdExample")) : null}
+            {input(household ? t('mobile.OnboardingScreen.firstInventory') : t('mobile.OnboardingScreen.inventoryName'), inventoryName, setInventoryName, t("onboarding.inventoryExample"))}
           </>}
           {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
           <View style={styles.footer}>

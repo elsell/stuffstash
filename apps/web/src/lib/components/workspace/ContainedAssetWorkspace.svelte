@@ -119,7 +119,7 @@
     try {
       await onMoveHere(selectedCandidate);
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : `Move not saved. ${selectedCandidate.title} stayed where it was.`;
+      saveError = caught instanceof Error ? caught.message : t("move.failed", { title: selectedCandidate.title });
     }
   }
 

@@ -451,7 +451,7 @@ export function SearchScreen({
           ) : (
             <BrowseEmptyState
               kind="inventory"
-              inventoryName={inventoryContext?.inventoryName ?? 'this inventory'}
+              inventoryName={inventoryContext?.inventoryName ?? t("browse.currentInventory")}
               palette={palette}
               onAdd={inventoryContext?.canAdd ? () => router.navigate('/add') : undefined}
             />

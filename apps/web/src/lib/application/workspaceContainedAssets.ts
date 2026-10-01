@@ -28,7 +28,7 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
     const children = containedWorkspaceChildren(target, assets).map((candidate) => ({ ...candidate, relativePath: '' }));
     return [{
       key: 'inside',
-      heading: `Inside ${target.title}`,
+      heading: t("contents.insideNamed", { title: target.title }),
       countNoun: 'asset',
       assets: children,
       emptyTitle: t('web.workspaceContainedAssets.nothingInsideYet'),
@@ -68,7 +68,7 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
   return [
     {
       key: 'spaces',
-      heading: `Spaces in ${target.title}`,
+      heading: t("contents.spacesIn", { title: target.title }),
       countNoun: 'space',
       assets: directSpaces,
       emptyTitle: t('web.workspaceContainedAssets.noNestedSpaces'),
@@ -76,7 +76,7 @@ export function containableWorkspaceSections(target: Asset, assets: Asset[]): Co
     },
     {
       key: 'items',
-      heading: `Items in ${target.title}`,
+      heading: t("contents.itemsIn", { title: target.title }),
       countNoun: 'item',
       assets: items,
       emptyTitle: t('web.workspaceContainedAssets.noItemsHereYet'),

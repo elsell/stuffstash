@@ -10,7 +10,7 @@ export function operationRefreshWarning(
     id: `asset-operation-refresh:${operationId}`,
     kind: 'warning',
     title: t('web.workspaceOperationNotifications.changeAppliedButThisViewCouldNotBeRefreshed'),
-    description: `${appliedTitle} Reload to see the latest inventory.`,
+    description: t("workspace.appliedRefreshNeeded", { result: appliedTitle }),
     important: true,
     duration: Infinity,
     action: inverseAction

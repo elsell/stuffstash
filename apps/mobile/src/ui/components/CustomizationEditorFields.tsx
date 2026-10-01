@@ -50,7 +50,7 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
       {props.eligibleTypes.map(type => {
         const persisted = props.persistedTargetIds.includes(type.id);
         const selected = props.targetIds.includes(type.id);
-        const label = `${type.displayName}${type.scope === 'tenant' ? ' · Inherited' : ''}`;
+        const label = type.scope === 'tenant' ? t("customization.inheritedName", { name: type.displayName }) : type.displayName;
         if (persisted) return <Text key={type.id} style={styles.lockedValue}>{t('mobile.CustomizationEditorFields.existing2', { label: String(label) })}</Text>;
         if (!props.canMutate) return selected ? <Text key={type.id} style={styles.lockedValue}>{label}</Text> : null;
         return <SettingsChoiceRow key={type.id} label={label} multiple selected={selected} disabled={disabled}

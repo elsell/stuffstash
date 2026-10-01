@@ -327,7 +327,7 @@
       selectedAssetAttachments = [];
       selectedAssetCheckoutHistory = [];
       replaceRoute({ mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId });
-      setSuccessNotification(`Created ${inventoryName}.`, {
+      setSuccessNotification(t("workspace.inventoryCreated", { title: inventoryName }), {
         label: t('web.InventoryWorkspaceApp.openInventory'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: data.context.selectedTenantId, inventoryId: data.context.selectedInventoryId },
@@ -445,7 +445,7 @@
         }
       };
       loadedAssetDetail = asset;
-      setMutationSuccessNotification(`Saved ${asset.title}.`, asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
+      setMutationSuccessNotification(t("assets.savedNamed", { title: asset.title }), asset, asset.parentAssetId !== previousParentId ? parentDestinationAction(asset.parentAssetId) : undefined);
     } catch (caught) {
       if (handleSessionExpired(caught)) {
         return;
@@ -470,19 +470,19 @@
     const target = selectedAsset ?? selectedLocation;
     if (!target || (target.kind !== 'container' && target.kind !== 'location')) return;
     if (!editAssetAllowed) {
-      throw new Error('Move not saved. You do not have permission to move assets in this inventory.');
+      throw new Error(t("move.permissionDenied"));
     }
     busy = true;
     notification = null;
     try {
       const moved = await repository.moveAsset(candidate.tenantId, candidate.inventoryId, candidate.id, target.id);
       data = replaceWorkspaceAsset(data, moved);
-      setMutationSuccessNotification(`Moved ${moved.title} into ${target.title}.`, moved, viewAssetAction(moved));
+      setMutationSuccessNotification(t("move.savedInto", { title: moved.title, parent: target.title }), moved, viewAssetAction(moved));
       closeAssetActionRoute();
     } catch (caught) {
       if (handleSessionExpired(caught)) return;
       const reason = safeOperationFailureDescription(caught);
-      throw new Error(`Move not saved. ${candidate.title} stayed where it was. ${reason}`);
+      throw new Error(t("move.failedWithReason", { title: candidate.title, reason }));
     } finally {
       busy = false;
     }
@@ -608,7 +608,7 @@
       const result = await repository.archiveAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Archived ${asset.title}.`, result, {
+      setMutationSuccessNotification(t("assets.archivedNamed", { title: asset.title }), result, {
         label: t('web.InventoryWorkspaceApp.viewArchived'),
         href: workspaceRouteHref(
           { mode: 'home', tenantId: asset.tenantId, inventoryId: asset.inventoryId, lifecycleState: 'archived' },
@@ -632,7 +632,7 @@
       const result = await repository.restoreAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setMutationSuccessNotification(`Restored ${asset.title}.`, result, viewAssetAction(asset));
+      setMutationSuccessNotification(t("assets.restoredNamed", { title: asset.title }), result, viewAssetAction(asset));
     });
   }
 
@@ -649,7 +649,7 @@
       await repository.deleteAsset(asset.tenantId, asset.inventoryId, asset.id);
       await refreshSelectedAssetLifecycle();
       closeDetailToHome();
-      setSuccessNotification(`Deleted ${asset.title}.`);
+      setSuccessNotification(t("assets.deletedNamed", { title: asset.title }));
     });
   }
 
@@ -669,7 +669,7 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Checked out ${refreshed.title}.`, { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
+      setMutationSuccessNotification(t("assets.checkedOutNamed", { title: refreshed.title }), { ...refreshed, undoableOperationId: checkout.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -689,7 +689,7 @@
       data = replaceWorkspaceAsset(data, refreshed);
       loadedAssetDetail = refreshed;
       selectedAssetId = refreshed.id;
-      setMutationSuccessNotification(`Returned ${refreshed.title}.`, { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
+      setMutationSuccessNotification(t("assets.returnedNamed", { title: refreshed.title }), { ...refreshed, undoableOperationId: returned.undoableOperationId }, viewAssetAction(refreshed));
     });
   }
 
@@ -702,7 +702,7 @@
       const returned = await repository.returnAsset(asset.tenantId, asset.inventoryId, asset.id, {});
       const returnedAsset: Asset = { ...asset, currentCheckout: undefined };
       data = replaceWorkspaceAsset(data, returnedAsset);
-      setMutationSuccessNotification(`Returned ${returnedAsset.title}.`, { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
+      setMutationSuccessNotification(t("assets.returnedNamed", { title: returnedAsset.title }), { ...returnedAsset, undoableOperationId: returned.undoableOperationId }, viewAssetAction(returnedAsset));
     });
   }
 
@@ -714,7 +714,7 @@
     await run(async () => {
       await repository.archiveAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       await refreshSelectedAttachments(attachment.tenantId, attachment.inventoryId, attachment.assetId);
-      setSuccessNotification(`Archived ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
+      setSuccessNotification(t("photos.archivedNamed", { title: attachment.fileName }), viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
     }, { rethrow: true });
   }
 
@@ -726,7 +726,7 @@
     await run(async () => {
       await repository.deleteAssetAttachment(attachment.tenantId, attachment.inventoryId, attachment.assetId, attachment.id);
       removeSelectedAttachment(attachment);
-      setSuccessNotification(`Deleted ${attachment.fileName}.`, viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
+      setSuccessNotification(t("photos.deletedNamed", { title: attachment.fileName }), viewAssetByIdAction(attachment.tenantId, attachment.inventoryId, attachment.assetId));
       void refreshSelectedAttachments(
         attachment.tenantId,
         attachment.inventoryId,
@@ -748,7 +748,7 @@
     await run(async () => {
       await repository.uploadAssetAttachment(asset.tenantId, asset.inventoryId, asset.id, attachment);
       await refreshSelectedAttachments(asset.tenantId, asset.inventoryId, asset.id);
-      setSuccessNotification(`Uploaded ${attachment.name}.`, viewAssetAction(asset));
+      setSuccessNotification(t("photos.uploadedNamed", { title: attachment.name }), viewAssetAction(asset));
     });
   }
 

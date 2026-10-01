@@ -44,7 +44,7 @@
         session.client.setQueryData(key('case', saved.caseId, 'latest'), saved);
         session.client.setQueryData(key('case', saved.caseId, saved.id), saved);
         void session.client.invalidateQueries({ queryKey: key('cases') });
-        editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null; message = `Test case revision ${saved.number} saved.`;
+        editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null; message = t("conversation.caseRevisionSaved", { revision: saved.number });
       }); } finally { if (session.active) busy = false; }
   }
 </script>

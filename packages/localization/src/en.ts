@@ -1,9 +1,11 @@
+import { workflowMessages } from './workflow';
 import { mobileMessages } from './mobile';
 import { webMessages } from './web';
 import type { Catalog } from './translator';
 
 /** English source catalog. Keys describe presentation context, never wire values. */
 export const en = {
+  ...workflowMessages,
   ...mobileMessages,
   ...webMessages,
   'browse.addAsset': 'Add an asset',

@@ -57,7 +57,7 @@
   let selectedTarget = $derived(targets.find((target) => target.id === selectedId) ?? null);
   let selectedTargetMetadataLabel = $derived(selectedTarget ? parentTargetMetadataLabel(selectedTarget) : rootSummaryLabel);
   let selectedDestinationName = $derived(selectedTarget?.title ?? rootLabel);
-  let selectedDestinationAnnouncement = $derived(`Current destination: ${selectedDestinationName}, ${selectedTargetMetadataLabel}`);
+  let selectedDestinationAnnouncement = $derived(t("move.currentDestination", { name: selectedDestinationName, metadata: selectedTargetMetadataLabel }));
   let hasSearch = $derived(normalizedSearch.length > 0);
   let presentation = $derived(
     parentTargetPickerPresentation({

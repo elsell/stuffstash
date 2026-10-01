@@ -41,7 +41,7 @@
   }
 
   let normalizedQuery = $derived(query.trim());
-  let emptyLabel = $derived(`No suggestions for "${normalizedQuery}". Press Search to run a full search.`);
+  let emptyLabel = $derived(t("search.noSuggestions", { query: normalizedQuery }));
 </script>
 
 {#if suggestions.length > 0}

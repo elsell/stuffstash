@@ -138,3 +138,15 @@ plural selection, and list formatting with optional Intl APIs absent, followed
 by the existing macOS native workflow. Node success alone is not native acceptance.
 
 The locale prerequisite uses the September 12 release (and its exact supported-values dependency), satisfying the fourteen-day supply-chain review window without an age exemption.
+
+The remaining-copy review must follow variable-derived labels and command notices,
+not just JSX/Svelte literals. Catalog-backed announcements include entity-link
+context and duplicate position, disconnected review recovery, upload partial
+success, move/save results, onboarding placeholders and parent-search summaries.
+Use complete plural messages for counts. Preserve user/provider text as parameters
+and leave protocol matching, developer diagnostics, CSS, key names and fixture data
+untranslated. Classify those exclusions explicitly in the remaining-file inventory.
+
+Keyboard focus and element lookup must use owned element references or stable IDs,
+never translated accessible names. Browse Map jump selection/Escape returns focus
+to its bound search input regardless of locale.
