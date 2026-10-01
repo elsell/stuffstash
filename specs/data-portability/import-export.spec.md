@@ -774,3 +774,10 @@ and Expo SDK55 [Sharing](https://docs.expo.dev/versions/v55.0.0/sdk/sharing/).
 The existing settings menu supplies context-preserving format choice. Verify the
 real native share sheet, completion/dismissal, JSON/CSV content and return to
 Settings on iPhone/iPad. A fake delivery port is not native acceptance.
+
+Native export acceptance follows the system presentation on each device: iPhone
+activity sheets may expose Close, while iPad activity popovers dismiss through
+the system's outside-tap dismissal region. Tests must establish the exported file
+is present before dismissal, then verify temporary-file retirement and a usable
+Settings screen. The absence of an iPhone-style Close button on iPad is not itself
+a product defect.
