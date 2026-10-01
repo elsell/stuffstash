@@ -74,7 +74,7 @@ function TenantSwitcherVisit({
       await selectInventoryCommand.execute(inventoryId, { signal: request.signal });
       if (focused.current && !request.signal.aborted) returnToPreviousOrHome(router);
     } catch {
-      if (focused.current && !request.signal.aborted) setSelectionError('Could not switch inventories. Try again.');
+      if (focused.current && !request.signal.aborted) setSelectionError(t('mobile.TenantSwitcherSheetScreen.couldNotSwitchInventoriesTryAgain'));
     } finally {
       if (pending.current === request) pending.current = undefined;
       if (focused.current) setSelecting(false);

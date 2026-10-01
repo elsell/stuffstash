@@ -45,7 +45,7 @@
       if (!session.active) return;
       if (compare) comparison = revision;
       else editor = { key: revision.id, revision, definition: revision.definition };
-    } catch { if (session.active) message = 'Could not load the workflow. Try again.'; }
+    } catch { if (session.active) message = t('web.WorkflowWorkspace.couldNotLoadTheWorkflowTryAgain'); }
     finally { if (session.active) busy = false; }
   }
   async function save(definition: WorkflowDefinition) {

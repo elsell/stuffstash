@@ -12,7 +12,7 @@ export function OnboardingAddressInput({ initialValue, onChangeText, disabled, o
   return <Host matchContents={{ vertical: true }} style={{ width: '100%', minHeight: 54 }}>
     <TextField defaultValue={seed.current} placeholder={t('mobile.OnboardingAddressInputios.httpsStashExampleCom')} onValueChange={onChangeText}
       modifiers={[
-        accessibilityLabel('Server address'), keyboardType('url'), autocorrectionDisabled(),
+        accessibilityLabel(t('mobile.OnboardingAddressInputios.serverAddress')), keyboardType('url'), autocorrectionDisabled(),
         textInputAutocapitalization('never'), textFieldStyle('roundedBorder'), nativeDisabled(disabled),
         submitLabel('go'), nativeSubmit(() => { if (!disabled) onSubmit(); })
       ]} />

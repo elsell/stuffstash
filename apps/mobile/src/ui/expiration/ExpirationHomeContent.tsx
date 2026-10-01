@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { useLayoutEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ExpirationWorkspaceQuery } from '../../application/expiration/ExpirationWorkspaceQuery';
@@ -24,5 +25,5 @@ export function ExpirationHomeContent({ query, onOpen, onOpenAsset }: {
   current.current = usableScope ? { owner, canOpenAsset: !isAccessFailure(state.error) } : undefined;
   return () => { current.current = undefined; };
  }, [owner, usableScope, state.error]);
- return <ExpirationHomeSection canOpen={usableScope} data={!usableScope || isAccessFailure(state.error) ? undefined : state.data} error={inventory.error || state.error ? 'Expiration could not be refreshed. Try again.' : undefined} onRetry={() => { if (inventory.isError) void inventory.refetch(); else void state.refetch(); }} onOpen={mode => { if (current.current?.owner === owner) onOpen(tenantId, inventoryId, mode); }} onOpenAsset={id => { if (current.current?.owner === owner && current.current.canOpenAsset) onOpenAsset(id); }} />;
+ return <ExpirationHomeSection canOpen={usableScope} data={!usableScope || isAccessFailure(state.error) ? undefined : state.data} error={inventory.error || state.error ? t('mobile.ExpirationHomeContent.expirationCouldNotBeRefreshedTryAgain') : undefined} onRetry={() => { if (inventory.isError) void inventory.refetch(); else void state.refetch(); }} onOpen={mode => { if (current.current?.owner === owner) onOpen(tenantId, inventoryId, mode); }} onOpenAsset={id => { if (current.current?.owner === owner && current.current.canOpenAsset) onOpenAsset(id); }} />;
 }

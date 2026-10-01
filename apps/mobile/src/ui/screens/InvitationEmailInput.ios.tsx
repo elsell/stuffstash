@@ -10,7 +10,7 @@ export function InvitationEmailInput({ email, editable, onChangeText }: Invitati
   return <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
     <TextField defaultValue={seed} placeholder={t('mobile.InvitationEmailInputios.friendExampleCom')}
       onValueChange={value => { if (editable) onChangeText(value); }}
-      modifiers={[accessibilityLabel('Invitee email'), keyboardType('email-address'),
+      modifiers={[accessibilityLabel(t('mobile.InvitationEmailInputios.inviteeEmail')), keyboardType('email-address'),
         textContentType('emailAddress'), autocorrectionDisabled(), textInputAutocapitalization('never'),
         textFieldStyle('roundedBorder'), disabled(!editable), frame({ minHeight: 54 })]} />
   </Host>;

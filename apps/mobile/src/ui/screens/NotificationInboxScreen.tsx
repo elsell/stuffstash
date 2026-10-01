@@ -71,7 +71,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     setLocallyRead(previous => new Set([...previous].filter(id => !page.items.some(row => row.id === id))));
     setCursor(page.pagination.hasMore ? page.pagination.nextCursor : null); setLoaded(true); setFilter(selected);
   }
-  function load(selected: Filter, after?: string) { return run((signal) => fetchPage(selected, signal, after), 'Notifications could not be loaded. Try refreshing.'); }
+  function load(selected: Filter, after?: string) { return run((signal) => fetchPage(selected, signal, after), t('mobile.NotificationInboxScreen.notificationsCouldNotBeLoadedTryRefreshing')); }
   const { refreshing, refresh } = usePullRefresh(async () => {
     if (!pending.current) await load(filter);
   });
@@ -86,14 +86,14 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
         onChanged();
         if (focusSession.current === session) onOpenAsset(assetId);
       }
-    }, 'This notification could not be opened. Refresh and try again.');
+    }, t('mobile.NotificationInboxScreen.thisNotificationCouldNotBeOpenedRefreshAndTry'));
   }
   function markAll() {
     return run(async (signal) => {
       await queries.markAllRead(tenantId, inventoryId, { signal });
       if (!mounted.current || signal.aborted) return;
       onChanged(); await fetchPage(filter, signal);
-    }, 'Could not finish marking notifications read. Refresh and try again.');
+    }, t('mobile.NotificationInboxScreen.couldNotFinishMarkingNotificationsReadRefreshAndTry'));
   }
   function toggleRead(row: ExpirationNotification) {
     const read = !!row.readAt || locallyRead.has(row.id);
@@ -103,7 +103,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       setLocallyRead((previous) => { const next = new Set(previous); next.delete(row.id); return next; });
       onChanged();
       await fetchPage(filter, signal);
-    }, 'Could not update this notification. Try again.');
+    }, t('mobile.NotificationInboxScreen.couldNotUpdateThisNotificationTryAgain'));
   }
   const button = (label: string, action: () => void, disabled = busy) => <NativeCommandButton label={label} disabled={disabled} onPress={action} />;
   const actionOptions = useNativeHeaderActionOptions([
@@ -116,9 +116,9 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.action} />}>
     <NativeSegmentedControl colors={colors} value={filter} disabled={busy} segments={[{ label: t('mobile.NotificationInboxScreen.all'), value: 'all' }, { label: t('mobile.NotificationInboxScreen.unread'), value: 'unread' }]} onChange={(value) => void load(value)} />
 
-    {error ? <View><Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>{button('Retry notifications', () => void load(filter))}</View> : null}
+    {error ? <View><Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>{button(t('mobile.NotificationInboxScreen.retryNotifications'), () => void load(filter))}</View> : null}
     {busy && !loaded ? <ActivityIndicator accessibilityLabel={t('mobile.NotificationInboxScreen.updatingNotifications')} color={colors.action} /> : null}
-    {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.border }]}><Pressable accessibilityRole="button" accessibilityLabel={t('mobile.NotificationInboxScreen.open', { title: String(row.title) })} accessibilityValue={{text:`${row.milestone === 'expired' ? 'Expired' : 'Expires'} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? 'Read' : 'Unread'}`}} disabled={busy} onPress={() => void open(row)}>
+    {rows.map((row) => <View key={row.id} style={[styles.card, { borderColor: colors.border }]}><Pressable accessibilityRole="button" accessibilityLabel={t('mobile.NotificationInboxScreen.open', { title: String(row.title) })} accessibilityValue={{text:`${row.milestone === 'expired' ? t('mobile.NotificationInboxScreen.expired') : t('mobile.NotificationInboxScreen.expires')} ${formatAssetExpiration(row.expiration)}. ${row.readAt || locallyRead.has(row.id) ? t('mobile.NotificationInboxScreen.read') : t('mobile.NotificationInboxScreen.unread')}`}} disabled={busy} onPress={() => void open(row)}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {!row.readAt && !locallyRead.has(row.id) ? <View accessibilityElementsHidden style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.action }} /> : null}
         <Text style={[styles.title, { color: colors.text, fontWeight: row.readAt || locallyRead.has(row.id) ? '400' : '600', flexShrink: 1 }]}>{row.title}</Text>
@@ -131,7 +131,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(mounted.current && focusSession.current && !pending.current)onOpenAsset(entry.id);}} />
     </View>)}
     {loaded && !rows.length && !cursor && !error ? <Text style={{ color: colors.textMuted }}>{filter === 'unread' ? t('mobile.NotificationInboxScreen.noUnreadNotifications') : t('mobile.NotificationInboxScreen.noNotificationsYet')}</Text> : null}
-    {cursor ? button('Load more notifications', () => void load(filter, cursor)) : null}
+    {cursor ? button(t('mobile.NotificationInboxScreen.loadMoreNotifications'), () => void load(filter, cursor)) : null}
   </ScrollView></>;
 }
 const styles = StyleSheet.create({

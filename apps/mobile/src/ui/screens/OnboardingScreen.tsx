@@ -44,10 +44,10 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
   const title = connection ? t('mobile.OnboardingScreen.connectToStuffStash') : household ? t('mobile.OnboardingScreen.setUpYourHousehold') : t('mobile.OnboardingScreen.createYourFirstInventory');
   const actionLabel = connection ? t('mobile.OnboardingScreen.connectAndSignIn') : household ? t('mobile.OnboardingScreen.createHousehold') : t('mobile.OnboardingScreen.createInventory');
   const requiredMessage = connection
-    ? (!apiBaseUrl.trim() ? 'Enter a server address to continue.' : undefined)
+    ? (!apiBaseUrl.trim() ? t('mobile.OnboardingScreen.enterAServerAddressToContinue') : undefined)
     : household && !householdName.trim()
-      ? 'Enter a household name to continue.'
-      : !inventoryName.trim() ? 'Enter an inventory name to continue.' : undefined;
+      ? t('mobile.OnboardingScreen.enterAHouseholdNameToContinue')
+      : !inventoryName.trim() ? t('mobile.OnboardingScreen.enterAnInventoryNameToContinue') : undefined;
   const actionDisabled = submitting || Boolean(requiredMessage);
 
   useEffect(() => {
@@ -129,15 +129,15 @@ export function OnboardingScreen({ command, initialApiBaseUrl, initialState, inv
           <Text ref={heading} accessibilityRole="header" style={styles.heading}>{title}</Text>
           {invitationPending ? <View style={styles.notice}><Text style={styles.body}>{t('mobile.OnboardingScreen.yourInvitationIsWaitingSignInToReviewIt')}</Text></View> : null}
           {connection ? <>
-            {input('Server address', apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
+            {input(t('mobile.OnboardingScreen.serverAddress'), apiBaseUrl, setApiBaseUrl, 'https://stash.example.com', true)}
             <Pressable accessibilityRole="button" accessibilityLabel={t('mobile.OnboardingScreen.needHelpConnecting')}
               accessibilityState={{ expanded: helpVisible }} onPress={() => setHelpVisible(value => !value)} style={styles.helpAction}>
               <Text style={styles.helpLink}>{t('mobile.OnboardingScreen.needHelpConnecting')}</Text>
             </Pressable>
             {helpVisible ? <View style={styles.help}><Text style={styles.body}>{t('mobile.OnboardingScreen.enterYourStuffStashServerSFullAddressIncluding')}{'\n\n'}{t('mobile.OnboardingScreen.youLlNeedARunningStuffStashServerTo')}</Text></View> : null}
           </> : <>
-            {household ? input('Household name', householdName, setHouseholdName, 'e.g. Maple Street household') : null}
-            {input(household ? 'First inventory' : 'Inventory name', inventoryName, setInventoryName, 'e.g. Home Inventory')}
+            {household ? input(t('mobile.OnboardingScreen.householdName'), householdName, setHouseholdName, 'e.g. Maple Street household') : null}
+            {input(household ? t('mobile.OnboardingScreen.firstInventory') : t('mobile.OnboardingScreen.inventoryName'), inventoryName, setInventoryName, 'e.g. Home Inventory')}
           </>}
           {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
           <View style={styles.footer}>

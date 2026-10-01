@@ -42,10 +42,10 @@ export function AssetExpirationEditor({ asset, draft, types, disabled, onChange 
     else apply();
   }
   if (!types) return <Text style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.loadingExpirationSettings')}</Text>;
-  const matchingTypes = [{ id: undefined, displayName: 'None', expirationEnabled: false }, ...types]
+  const matchingTypes = [{ id: undefined, displayName: t('mobile.AssetExpirationEditor.none'), expirationEnabled: false }, ...types]
     .filter(type => !query || type.displayName.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <View style={{ gap: spacing.sm }}>
-    {!asset.customAssetTypeId && types.length ? <SelectionRow label={t('mobile.AssetExpirationEditor.itemType')} value={selectedType?.displayName ?? 'None'} expanded={choosingType} disabled={disabled} onPress={() => setChoosingType(value => !value)}>
+    {!asset.customAssetTypeId && types.length ? <SelectionRow label={t('mobile.AssetExpirationEditor.itemType')} value={selectedType?.displayName ?? t('mobile.AssetExpirationEditor.none')} expanded={choosingType} disabled={disabled} onPress={() => setChoosingType(value => !value)}>
       <AppTextInput accessibilityLabel={t('mobile.AssetExpirationEditor.searchItemTypes')} placeholder={t('mobile.AssetExpirationEditor.searchTypes')} value={query} onChangeText={setQuery} style={{ minHeight: 44, padding: spacing.sm, color: colors.text }} />
       {matchingTypes.length === 0 ? <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>{t('mobile.AssetExpirationEditor.noMatchingItemTypes')}</Text> : null}
       {matchingTypes.map(type => <Pressable key={type.id ?? 'base'} accessibilityRole="radio" accessibilityState={{ checked: typeId === type.id, disabled }} accessibilityLabel={type.displayName} disabled={disabled} onPress={() => selectType(type.id)} style={{ minHeight: 48, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>

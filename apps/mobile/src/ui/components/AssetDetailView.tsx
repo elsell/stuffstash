@@ -76,8 +76,8 @@ type AssetDetailViewProps = {
   readonly refreshControl?: ReactElement<RefreshControlProps>;
 };
 
-export function assetDetailNavigationTitle(asset: Pick<AssetDetailViewModel, 'kind'>): 'Place' | 'Details' {
-  return asset.kind === 'location' ? 'Place' : 'Details';
+export function assetDetailNavigationTitle(asset: Pick<AssetDetailViewModel, 'kind'>): string {
+  return asset.kind === 'location' ? t('mobile.AssetDetailView.place') : t('mobile.AssetDetailView.details');
 }
 
 export function AssetDetailView({
@@ -288,19 +288,19 @@ function PhotoUploadProgressList({ uploads }: { readonly uploads: readonly Asset
 
 function uploadStatusLabel(status: AssetPhotoUploadProgressViewModel['status']): string {
   switch (status) {
-    case 'attached': return 'Attached to this asset';
-    case 'failed': return 'Needs retry';
-    case 'uploading': return 'Uploading original file';
-    case 'pending': return 'Waiting to upload';
+    case 'attached': return t('mobile.AssetDetailView.attachedToThisAsset');
+    case 'failed': return t('mobile.AssetDetailView.needsRetry');
+    case 'uploading': return t('mobile.AssetDetailView.uploadingOriginalFile');
+    case 'pending': return t('mobile.AssetDetailView.waitingToUpload');
   }
 }
 
 function uploadPillLabel(status: AssetPhotoUploadProgressViewModel['status']): string {
   switch (status) {
-    case 'attached': return 'Done';
-    case 'failed': return 'Failed';
-    case 'uploading': return 'Now';
-    case 'pending': return 'Queued';
+    case 'attached': return t('mobile.AssetDetailView.done');
+    case 'failed': return t('mobile.AssetDetailView.failed');
+    case 'uploading': return t('mobile.AssetDetailView.now');
+    case 'pending': return t('mobile.AssetDetailView.queued');
   }
 }
 

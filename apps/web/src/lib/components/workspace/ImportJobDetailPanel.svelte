@@ -129,15 +129,15 @@
 
   function cancellationSummary(job: ImportJob): string {
     if (job.status === 'cancel_requested' && job.cancellationMode === 'discard_partial_progress') {
-      return 'Cancellation requested. Partial progress will be discarded. Audit history remains.';
+      return t('web.ImportJobDetailPanel.cancellationRequestedPartialProgressWillBeDiscardedAuditHistory');
     }
     if (job.status === 'cancel_requested') {
-      return 'Cancellation requested. Partial progress will be kept.';
+      return t('web.ImportJobDetailPanel.cancellationRequestedPartialProgressWillBeKept');
     }
     if (job.cancellationMode === 'discard_partial_progress') {
-      return 'Partial progress discard was requested. Audit history remains.';
+      return t('web.ImportJobDetailPanel.partialProgressDiscardWasRequestedAuditHistoryRemains');
     }
-    return 'Partial progress was kept.';
+    return t('web.ImportJobDetailPanel.partialProgressWasKept');
   }
 
   function detailOverviewCells(job: ImportJob): CountCell[] {
@@ -174,10 +174,10 @@
   }
 
   function overviewCaption(job: ImportJob): string {
-    if (job.status === 'previewed') return 'Planned records';
-    if (job.status === 'cancelled_discarded') return 'Discarded progress';
-    if (job.status === 'cancelled_kept') return 'Kept partial progress';
-    return 'Saved and skipped records';
+    if (job.status === 'previewed') return t('web.ImportJobDetailPanel.plannedRecords');
+    if (job.status === 'cancelled_discarded') return t('web.ImportJobDetailPanel.discardedProgress');
+    if (job.status === 'cancelled_kept') return t('web.ImportJobDetailPanel.keptPartialProgress');
+    return t('web.ImportJobDetailPanel.savedAndSkippedRecords');
   }
 
   function menuActionClass(primitiveClass: unknown): string {

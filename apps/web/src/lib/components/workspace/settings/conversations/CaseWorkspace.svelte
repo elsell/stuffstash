@@ -34,7 +34,7 @@
         queryFn: ({ signal }) => cases.get(session.scope.tenantId, caseId, undefined, signal) });
       if (!session.active) return;
       if (compare) comparison = revision; else editor = { key: revision.id, revision, definition: revision.definition };
-    } catch { if (session.active) message = 'Could not load the test case. Try again.'; }
+    } catch { if (session.active) message = t('web.CaseWorkspace.couldNotLoadTheTestCaseTryAgain'); }
     finally { if (session.active) busy = false; }
   }
   async function save(definition: CaseDefinition) {

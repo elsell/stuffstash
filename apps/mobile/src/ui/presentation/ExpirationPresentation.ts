@@ -36,7 +36,7 @@ export function expirationDateLabel(value: AssetExpiration, context?: AssetExpir
  const part = (name: string) => parts.find(part => part.type === name)?.value ?? '';
  const today = `${part('year')}-${part('month')}-${part('day')}`;
  const last = value.precision === 'month' ? new Date(Date.UTC(Number(value.date.slice(0,4)), Number(value.date.slice(5,7)), 0)).toISOString().slice(0,10) : value.date;
- return `${last === today ? 'Expires today' : expirationStatusLabel(context) ?? 'Expiration'}: ${precision}`;
+ return `${last === today ? t('mobile.ExpirationPresentation.expiresToday') : expirationStatusLabel(context) ?? t('mobile.ExpirationPresentation.expiration2')}: ${precision}`;
 }
 
 /** Month values remain Gregorian periods, even when the device uses another calendar. */

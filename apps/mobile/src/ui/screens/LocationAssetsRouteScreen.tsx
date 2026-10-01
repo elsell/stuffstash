@@ -47,7 +47,7 @@ export function LocationAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {locationAssets.isPending && !locationAssets.data ? <LoadingState /> : null}
       {locationAssets.isError && !locationAssets.data ? (
-        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, 'Could not load location.')} />
+        <ErrorState retrying={locationAssets.isFetching} onRetry={() => { if (!locationAssets.isFetching) void locationAssets.refetch(); }} message={readableError(locationAssets.error, t('mobile.LocationAssetsRouteScreen.couldNotLoadLocation'))} />
       ) : null}
       {locationAssets.data ? (
         <LocationAssetList

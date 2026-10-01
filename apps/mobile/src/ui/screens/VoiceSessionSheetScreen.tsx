@@ -230,10 +230,10 @@ function VoiceSessionSheet({
   const session = buildVoiceSessionPresentation({
     diagnosticsEnabled,
     diagnosticsExpanded,
-    inventoryName: readyState?.realtime?.inventoryName || readyState?.preview.inventoryName || 'Inventory',
+    inventoryName: readyState?.realtime?.inventoryName || readyState?.preview.inventoryName || t('mobile.VoiceSessionSheetScreen.inventory'),
     realtime: readyState?.realtime ?? null,
     stage: state.stage,
-    tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || 'Tenant'
+    tenantName: readyState?.realtime?.tenantName || readyState?.preview.tenantName || t('mobile.VoiceSessionSheetScreen.tenant')
   });
   const body = buildVoiceSessionSheetBodyPresentation(state, session, diagnosticsEnabled);
   const bottomAction = session.bottomAction;
@@ -466,7 +466,7 @@ function EditablePlanCommandFields({
   const setValue = (next: string) => { if (command.id) setTitleEditor({ commandId: command.id, value: next }); };
   const setEditing = (next: boolean) => { if (!next) setTitleEditor(null); };
   const title = draft?.title ?? command.title;
-  const placement = draft?.parent?.label ?? command.placement?.replace(/^Inside (?:new )?/, '') ?? 'Inventory root';
+  const placement = draft?.parent?.label ?? command.placement?.replace(/^Inside (?:new )?/, '') ?? t('mobile.VoiceSessionSheetScreen.inventoryRoot');
 
   if (editing) {
     return (

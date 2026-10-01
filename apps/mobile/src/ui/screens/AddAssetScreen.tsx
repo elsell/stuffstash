@@ -204,13 +204,13 @@ function ScopedAddAssetScreen({
       if (addContext.isError) {
         setLoadState({
           status: 'error',
-          message: readableError(addContext.error, 'Could not load inventory context.')
+          message: readableError(addContext.error, t('mobile.AddAssetScreen.couldNotLoadInventoryContext'))
         });
       }
       return;
     }
     if (isAccessFailure(addContext.error) || principalError) {
-      setLoadState({ status: 'error', message: readableError(addContext.error ?? principalError, 'Could not load inventory context.') });
+      setLoadState({ status: 'error', message: readableError(addContext.error ?? principalError, t('mobile.AddAssetScreen.couldNotLoadInventoryContext')) });
       return;
     }
     if (!principalId) return;
@@ -519,7 +519,7 @@ function ScopedAddAssetScreen({
     blocked: draftBusy,
     onClose: () => setIsParentMenuOpen(false),
     content: <AddDestinationSelectionScreen query={parentSearchQuery} selected={selectedParent}
-      unresolvedSelection={parentAssetId || parentQuery.trim() ? parentQuery || 'Selected destination' : undefined}
+      unresolvedSelection={parentAssetId || parentQuery.trim() ? parentQuery || t('mobile.AddAssetScreen.selectedDestination') : undefined}
       matches={parentMatches} disabled={draftBusy} loading={!candidates.data && !candidates.isError}
       failed={candidates.isError} creating={isCreatingParent} canCreate={canCreateParent}
       error={saveState.status === 'error' ? saveState.message : undefined}
@@ -622,7 +622,7 @@ function ScopedAddAssetScreen({
                 />
 
                 <View style={styles.parentPicker}>
-                  <SelectionRow label={t('mobile.AddAssetScreen.putIn')} accessibilityLabel={t('mobile.AddAssetScreen.chooseDestination')} value={selectedParent?.title ?? (parentQuery.trim() || 'Top level')}
+                  <SelectionRow label={t('mobile.AddAssetScreen.putIn')} accessibilityLabel={t('mobile.AddAssetScreen.chooseDestination')} value={selectedParent?.title ?? (parentQuery.trim() || t('mobile.AddAssetScreen.topLevel'))}
                     disabled={destinationActions.disabled} onPress={destinationActions.onApply} />
                   {selectedParent && (selectedParent.pathLabel || selectedParent.subtitle) !== selectedParent.title ? <Text style={styles.parentMeta}>{selectedParent.pathLabel || selectedParent.subtitle}</Text> : null}
                   {selectedParent?.willPromoteToContainer ? <Text style={styles.parentPromotionText}>{t('mobile.AddAssetScreen.stuffStashWillTurn')}{selectedParent.title}{t('mobile.AddAssetScreen.intoAContainerForThisItem')}</Text> : null}

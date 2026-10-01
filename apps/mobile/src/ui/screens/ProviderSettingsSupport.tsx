@@ -62,5 +62,5 @@ export function ProviderStateView({
 }
 
 export function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'The action failed safely.';
+  return error instanceof Error ? error.message : t('mobile.ProviderSettingsSupport.theActionFailedSafely');
 }

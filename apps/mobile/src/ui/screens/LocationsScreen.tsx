@@ -41,7 +41,7 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>
       {locations.isPending && !locations.data ? <LoadingState /> : null}
       {locations.isError && !locations.data ? (
-        <ErrorState retrying={locations.isFetching} onRetry={() => { if (!locations.isFetching) void locations.refetch(); }} message={readableError(locations.error, 'Stuff Stash could not load locations.')} />
+        <ErrorState retrying={locations.isFetching} onRetry={() => { if (!locations.isFetching) void locations.refetch(); }} message={readableError(locations.error, t('mobile.LocationsScreen.stuffStashCouldNotLoadLocations'))} />
       ) : null}
       {locations.data ? (
         <LocationsList
@@ -149,7 +149,7 @@ function LocationRow({ location }: { readonly location: LocationBrowserItemViewM
             <Text style={styles.locationTitle}>{location.title}</Text>
             <Text style={styles.locationDescription}>{location.description}</Text>
           </View>
-          <Text style={location.photoLabel === 'Photo ready' ? styles.photoReady : styles.photoNeeded}>
+          <Text style={location.hasPhoto ? styles.photoReady : styles.photoNeeded}>
             {location.photoLabel}
           </Text>
         </View>

@@ -19,14 +19,14 @@
   const errors = $derived(validationMessages(issues)); let message = $state(''); let saving = $state(false); let conflict = $state(false);
   let form: HTMLFormElement; let summary = $state<HTMLDivElement>(); let alive = true;
   onDestroy(() => { alive = false; });
-  const labels: Record<string, string> = { 'case-title': 'Case title', 'case-utterance': 'Request', 'case-fixtures-title': 'Test inventory', 'case-expectations-title': 'Expected results', 'expected-outcome': 'Expected outcome' };
+  const labels: Record<string, string> = { 'case-title': t('web.CaseEditor.caseTitle'), 'case-utterance': t('web.CaseEditor.request'), 'case-fixtures-title': t('web.CaseEditor.testInventory'), 'case-expectations-title': t('web.CaseEditor.expectedResults'), 'expected-outcome': t('web.CaseEditor.expectedOutcome') };
   function fieldLabel(field: string) {
     if (labels[field]) return labels[field];
     if (field.startsWith('fixture-')) {
       const asset = draft.assets.find(asset => field.endsWith(`-${asset.id}`));
       return `Fixture ${asset?.title || 'settings'}`;
     }
-    return field.startsWith('location-') ? 'Expected location' : 'Proposed change';
+    return field.startsWith('location-') ? t('web.CaseEditor.expectedLocation') : t('web.CaseEditor.proposedChange');
   }
   function focusField(event: MouseEvent, field: string) {
     event.preventDefault();

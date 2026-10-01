@@ -96,7 +96,7 @@
           cells: {
             name: tag.displayName || tag.key,
             key: tag.key,
-            color: tag.color || 'No color'
+            color: tag.color || t('web.ImportPreviewSamples.noColor')
           }
         }))
       },
@@ -151,7 +151,7 @@
         rows: preview.attachments.map((attachment, index) => ({
           id: `attachment-${index}-${attachment.fileName || 'unnamed'}`,
           cells: {
-            name: `${attachment.fileName || 'Unnamed attachment'}${attachment.primary ? ' (primary)' : ''}`,
+            name: attachment.primary ? t('import.primaryAttachment', { name: attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment') }) : attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment'),
             type: attachment.contentType || 'unknown type',
             size: fileSizeLabel(attachment.sizeBytes)
           }
@@ -178,7 +178,7 @@
   }
 
   function sectionCountLabel(section: PlanSection): string {
-    if (section.rows.length === 0) return 'None planned';
+    if (section.rows.length === 0) return t('web.ImportPreviewSamples.nonePlanned');
     if (section.rows.length > PLAN_PAGE_SIZE || section.truncated) {
       return `${visibleStart(section) + 1}-${visibleEnd(section)} of ${section.rows.length}${section.truncated ? '+' : ''}`;
     }

@@ -13,7 +13,7 @@
   const fixture = createQuery(() => ({ queryKey: conversationKey(session.scope, 'case', pin.caseId, pin.revisionId), enabled: expanded,
     staleTime: Infinity, queryFn: ({ signal }) => cases.get(session.scope.tenantId, pin.caseId, pin.revisionId, signal)
   }), () => session.client);
-  const title = (id: string) => fixture.data?.definition.assets.find(asset => asset.id === id)?.title ?? 'Unknown fixture';
+  const title = (id: string) => fixture.data?.definition.assets.find(asset => asset.id === id)?.title ?? t('web.RunResult.unknownFixture');
 </script>
 <p>{t('web.RunResult.modelCallsSecondsFull', { value: result.verdict.passed ? 'Passed' : 'Failed', modelCalls: result.modelCalls, value3: (result.durationMilliseconds / 1000).toFixed(1) })}</p>
 <Button.Root variant="outline" aria-expanded={expanded} onclick={() => { expanded = !expanded; }}>{expanded ? t('web.RunResult.hideResult') : t('web.RunResult.compareExpectedAndObserved')}</Button.Root>

@@ -183,7 +183,7 @@ function DiagnosticIdentity({ label, task, value, pending, failed, retrying, onR
 }) {
   const { styles } = useSettingsListStyles();
   return <View>
-    {pending ? <SettingsLoadingRow label={t('mobile.SettingsDetailScreens.loading', { task: String(task) })} /> : <SettingsValueRow label={label} value={value || 'Unavailable'} />}
+    {pending ? <SettingsLoadingRow label={t('mobile.SettingsDetailScreens.loading', { task: String(task) })} /> : <SettingsValueRow label={label} value={value || t('mobile.SettingsDetailScreens.unavailable')} />}
     {failed ? <>
       <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? t('mobile.SettingsDetailScreens.couldNotRefreshPreviouslyLoadedValueIsShown', { task: String(task) }) : t('mobile.SettingsDetailScreens.couldNotLoad', { task: String(task) })}</Text>
       <NativeCommandButton label={retrying ? t('mobile.SettingsDetailScreens.retrying', { task: String(task) }) : t('mobile.SettingsDetailScreens.retry', { task: String(task) })} disabled={retrying} onPress={() => void onRetry()} />
@@ -210,11 +210,11 @@ function confirmChangeServer(serverUrl: string, onChangeServer: () => Promise<vo
 }
 
 function authenticationLabel(value: SettingsViewModel['authenticationMode']): string {
-  return value === 'oidc-sso' ? 'OIDC SSO' : 'Not configured';
+  return value === 'oidc-sso' ? t('mobile.SettingsDetailScreens.oIDCSSO') : t('mobile.SettingsDetailScreens.notConfigured');
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'The action failed safely. Try again.';
+  return error instanceof Error ? error.message : t('mobile.SettingsDetailScreens.theActionFailedSafelyTryAgain');
 }
 
 

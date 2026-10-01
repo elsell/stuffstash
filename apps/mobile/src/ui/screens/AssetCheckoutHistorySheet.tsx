@@ -78,7 +78,7 @@ function ReadyHistory({ history, footer }: { readonly history: AssetCheckoutHist
           <View style={styles.timelineRail}>
             <View style={[
               styles.timelineDot,
-              record.statusLabel === 'Checked out' ? styles.timelineDotOpen : null
+              record.isOpen ? styles.timelineDotOpen : null
             ]} />
           </View>
           <View style={styles.recordContent}>

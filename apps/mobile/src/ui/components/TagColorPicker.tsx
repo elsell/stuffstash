@@ -17,7 +17,7 @@ export const tagColorChoices = [
   '#DC2626',
   '#0F766E'
 ] as const;
-const tagColorNames: Readonly<Record<string, string>> = { '#2F80ED': 'Blue', '#2E7D32': 'Green', '#7C3AED': 'Purple', '#D97706': 'Orange', '#DC2626': 'Red', '#0F766E': 'Teal' };
+const tagColorNames: Readonly<Record<string, string>> = { '#2F80ED': t('mobile.TagColorPicker.blue'), '#2E7D32': t('mobile.TagColorPicker.green'), '#7C3AED': t('mobile.TagColorPicker.purple'), '#D97706': t('mobile.TagColorPicker.orange'), '#DC2626': t('mobile.TagColorPicker.red'), '#0F766E': t('mobile.TagColorPicker.teal') };
 
 type TagColorPickerProps = {
   readonly value: string;
@@ -129,9 +129,9 @@ export function TagColorPicker({ value, disabled = false, onChange, palette }: T
 }
 
 export function tagColorName(color: string | undefined): string {
-  if (!color) return 'No color';
+  if (!color) return t('mobile.TagColorPicker.noColor');
   const normalized = normalizeColor(color);
-  return normalized ? tagColorNames[normalized] ?? `Custom color ${normalized}` : 'Invalid color';
+  return normalized ? tagColorNames[normalized] ?? t('tag.customColor', { color: normalized }) : t('mobile.TagColorPicker.invalidColor');
 }
 
 export function swatchForeground(color: string): '#000000' | '#FFFFFF' {

@@ -4,7 +4,7 @@ import { MobileAuthenticationRequiredError } from '../../application/auth/Mobile
 import { OnboardingRecoveryRequiredError } from '../../application/onboarding/HouseholdSetup';
 import { spacing, type MobileColorPalette } from '../theme/tokens';
 
-export const initialInventoryName = 'Home Inventory';
+export const initialInventoryName = t('mobile.OnboardingPresentation.homeInventory');
 export function onboardingError(error: unknown): string {
   if (error instanceof MobileAuthenticationRequiredError) return t('mobile.OnboardingPresentation.signInAgainToContinueSetup');
   if (error instanceof OnboardingRecoveryRequiredError) return error.message;

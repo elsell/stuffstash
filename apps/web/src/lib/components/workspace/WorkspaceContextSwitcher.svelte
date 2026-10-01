@@ -171,7 +171,7 @@
       }
       handleOpenChange(false);
     } catch (caught) {
-      createError = caught instanceof Error ? caught.message : 'Could not create workspace.';
+      createError = caught instanceof Error ? caught.message : t('web.WorkspaceContextSwitcher.couldNotCreateWorkspace');
     } finally {
       creating = false;
     }

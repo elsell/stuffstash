@@ -16,7 +16,7 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  const rangeError = !!draft.fromDate && !!draft.throughDate && draft.fromDate > draft.throughDate;
  const open = (next: Page) => { setSearch(''); setPage(next); };
  const searchable = page === 'types' || page === 'tags' || page === 'locations';
- const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? 'Selected' : 'Any');
+ const label = (items: readonly Choice[], id?: string) => items.find(item => item.id === id)?.label ?? (id ? t('mobile.ExpirationFiltersScreen.selected') : t('mobile.ExpirationFiltersScreen.any'));
  const headerOptions = useMemo(() => ({ title: page === 'overview' ? t('mobile.ExpirationFiltersScreen.filters') : page === 'dates' ? t('mobile.ExpirationFiltersScreen.dateRange') : page[0].toUpperCase() + page.slice(1),
   }), [page]);
  return <>
@@ -31,9 +31,9 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
      <SettingsPickerRow label={t('mobile.ExpirationFiltersScreen.kind')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseItemKind')} value={draft.kind ?? ''} options={[{value:'',label:t('mobile.ExpirationFiltersScreen.anyKind')},{value:'item',label:t('mobile.ExpirationFiltersScreen.items')},{value:'container',label:t('mobile.ExpirationFiltersScreen.containers')},{value:'location',label:t('mobile.ExpirationFiltersScreen.places')}] as const} onChange={value => setDraft({...draft,kind:value || undefined})} />
      <SettingsPickerRow label={t('mobile.ExpirationFiltersScreen.availability')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseAvailability')} value={draft.checkoutState ?? ''} options={[{value:'',label:t('mobile.ExpirationFiltersScreen.anyAvailability')},{value:'available',label:t('mobile.ExpirationFiltersScreen.available')},{value:'checked_out',label:t('mobile.ExpirationFiltersScreen.checkedOut')}] as const} onChange={value => setDraft({...draft,checkoutState:value || undefined})} />
      <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseType')} label={t('mobile.ExpirationFiltersScreen.type')} value={label(choices.types, draft.typeId)} onPress={() => open('types')} />
-     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseTags')} label={t('mobile.ExpirationFiltersScreen.tags')} value={draft.tagIds?.length ? `${draft.tagIds.length} selected` : 'Any'} onPress={() => open('tags')} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseTags')} label={t('mobile.ExpirationFiltersScreen.tags')} value={draft.tagIds?.length ? t('expiration.selectedTags', { count: draft.tagIds.length }) : t('mobile.ExpirationFiltersScreen.any')} onPress={() => open('tags')} />
      <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseLocation')} label={t('mobile.ExpirationFiltersScreen.location')} value={label(choices.locations, draft.locationId)} onPress={() => open('locations')} />
-     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseDateRange')} label={t('mobile.ExpirationFiltersScreen.dateRange')} value={draft.fromDate || draft.throughDate ? 'Custom' : 'Any date'} onPress={() => open('dates')} />
+     <SettingsNavigationRow accessibilityLabel={t('mobile.ExpirationFiltersScreen.chooseDateRange')} label={t('mobile.ExpirationFiltersScreen.dateRange')} value={draft.fromDate || draft.throughDate ? t('mobile.ExpirationFiltersScreen.custom') : t('mobile.ExpirationFiltersScreen.anyDate')} onPress={() => open('dates')} />
     </SettingsSection>
     <SettingsSection><SettingsActionRow label={t('mobile.ExpirationFiltersScreen.clearFilters')} accessibilityLabel={t('mobile.ExpirationFiltersScreen.clearExpirationFilters')} onPress={() => setDraft({ mode: draft.mode })} /></SettingsSection>
    </> : page === 'dates' ? <ExpirationDateRange fromDate={draft.fromDate} throughDate={draft.throughDate} onChange={range => setDraft({ ...draft, ...range })} /> : <>

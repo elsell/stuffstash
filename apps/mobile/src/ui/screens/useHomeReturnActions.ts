@@ -63,7 +63,7 @@ export function useHomeReturnActions(command: AssetCheckoutCommand, reconcile: (
       }
       void reconcile(() => mounted.current && session.active);
     } catch (error) {
-      notice(session, 'Could not return asset', error, 'The asset was not returned.');
+      notice(session, t('mobile.useHomeReturnActions.couldNotReturnAsset'), error, t('mobile.useHomeReturnActions.theAssetWasNotReturned'));
     } finally {
       operationPending.current = false;
       if (mounted.current) setReturningAssetId(undefined);

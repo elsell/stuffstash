@@ -38,17 +38,17 @@
     saving = true; message = ''; conflict = false; invalid = false;
     try {
       await onSave($state.snapshot(draft));
-      if (alive) message = 'Draft saved. Run test cases before activating it.';
+      if (alive) message = t('web.WorkflowEditor.draftSavedRunTestCasesBeforeActivatingIt');
     } catch (error) {
       if (!alive) return;
       invalid = error instanceof ConversationFailure && error.kind === 'invalid';
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'A newer revision exists. Your edits are still here. Load the latest revision to compare.'
+      message = conflict ? t('web.WorkflowEditor.aNewerRevisionExistsYourEditsAreStillHere')
         : error instanceof ConversationFailure && ['forbidden', 'unauthenticated'].includes(error.kind)
-          ? 'You no longer have access to save this workflow.'
+          ? t('web.WorkflowEditor.youNoLongerHaveAccessToSaveThisWorkflow')
           : error instanceof ConversationFailure && error.kind === 'invalid'
-            ? 'These settings could not be saved. Check the values against your server’s configured limits.'
-            : 'Could not save the draft. Your edits are still here; try again.';
+            ? t('web.WorkflowEditor.theseSettingsCouldNotBeSavedCheckTheValues')
+            : t('web.WorkflowEditor.couldNotSaveTheDraftYourEditsAreStill');
       if (invalid) { await tick(); if (alive) errorSummary?.focus(); }
     } finally { if (alive) saving = false; }
   }

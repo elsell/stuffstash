@@ -44,7 +44,7 @@
       await onSave(inherit ? null : { ...draft, advanceDays: Number(days) });
       draft = { ...draft, advanceDays: Number(days) }; dirty = false; saved = true;
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Reminders could not be saved. Your changes are still here. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.ExpirationReminderEditor.remindersCouldNotBeSavedYourChangesAreStill'));
     } finally { saving = false; }
   }
 </script>

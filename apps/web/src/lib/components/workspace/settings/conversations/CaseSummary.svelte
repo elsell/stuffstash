@@ -2,7 +2,7 @@
   import { t } from '$lib/presentation/localization';
   import type { CaseDefinition } from '$lib/domain/conversationCase';
   let { value }: { value: CaseDefinition } = $props();
-  const title = (id: string) => value.assets.find(asset => asset.id === id)?.title || 'Unselected fixture';
+  const title = (id: string) => value.assets.find(asset => asset.id === id)?.title || t('web.CaseSummary.unselectedFixture');
 </script>
 <section class="case-summary">
   <h3>{value.title}</h3><p class="request">{value.utterance}</p>

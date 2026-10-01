@@ -182,24 +182,24 @@ export function progressTimeline(job: ImportJob): ImportJob['progressHistory'] {
 }
 
 export function sourceDescription(job: ImportJob): string {
-  const parts = [job.source.type === 'legacy_homebox_csv' ? 'CSV upload' : compactSourceURL(job.source.baseUrl) || 'Homebox'];
+  const parts = [job.source.type === 'legacy_homebox_csv' ? t('web.importWorkspacePresentation.cSVUpload') : compactSourceURL(job.source.baseUrl) || t('web.importWorkspacePresentation.homebox')];
   if (job.source.version) parts.push(job.source.version);
   return parts.join(' · ');
 }
 
 export function sourceOptionsSummary(job: ImportJob): string[] {
   if (job.source.type === 'legacy_homebox_csv') {
-    return ['CSV file', 'Photos are not included in Homebox CSV exports'];
+    return [t('web.importWorkspacePresentation.cSVFile'), t('web.importWorkspacePresentation.photosAreNotIncludedInHomeboxCSVExports')];
   }
-  const options = ['Connected directly to Homebox'];
+  const options = [t('web.importWorkspacePresentation.connectedDirectlyToHomebox')];
   if (job.source.imageImport === 'disabled') {
-    options.push('Photo import disabled');
+    options.push(t('web.importWorkspacePresentation.photoImportDisabled'));
   }
   if (job.source.allowPrivateNetwork) {
-    options.push('Allowed local/private network address');
+    options.push(t('web.importWorkspacePresentation.allowedLocalPrivateNetworkAddress'));
   }
   if (job.source.allowInsecureTLS) {
-    options.push('Allowed self-signed certificate');
+    options.push(t('web.importWorkspacePresentation.allowedSelfSignedCertificate'));
   }
   return options;
 }

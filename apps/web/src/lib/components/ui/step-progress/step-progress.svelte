@@ -48,9 +48,9 @@
   }
 
   function stateLabel(state: StepProgressState): string {
-    if (state === 'complete') return 'Completed';
-    if (state === 'current') return 'Current';
-    return 'Not started';
+    if (state === 'complete') return t('web.stepprogress.completed');
+    if (state === 'current') return t('web.stepprogress.current');
+    return t('web.stepprogress.notStarted');
   }
 
   function navigationLabel(step: StepProgressStep, state: StepProgressState): string {

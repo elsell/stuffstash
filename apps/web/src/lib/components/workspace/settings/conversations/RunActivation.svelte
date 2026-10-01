@@ -27,17 +27,17 @@
       return value;
     }, value => {
       session.client.setQueryData(key('selection'), { workflowId: value.workflowId, revisionId: value.id });
-      void session.client.invalidateQueries({ queryKey: key('workflows') }); message = 'Workflow activated.';
+      void session.client.invalidateQueries({ queryKey: key('workflows') }); message = t('web.RunActivation.workflowActivated');
     }); } catch (error) { if (session.active) {
       conflict = error instanceof ConversationFailure && error.kind === 'conflict';
-      message = conflict ? 'The active selection changed. Check the current selection before trying again.'
-        : error instanceof ConversationFailure && error.kind === 'precondition' ? 'This run no longer meets the current quality gate. Run the cases again after checking the workflow and provider configuration.'
-        : 'Could not activate this revision. The current selection has not been confirmed changed.';
+      message = conflict ? t('web.RunActivation.theActiveSelectionChangedCheckTheCurrentSelectionBefore')
+        : error instanceof ConversationFailure && error.kind === 'precondition' ? t('web.RunActivation.thisRunNoLongerMeetsTheCurrentQualityGate')
+        : t('web.RunActivation.couldNotActivateThisRevisionTheCurrentSelectionHas');
     } } finally { if (session.active) busy = false; }
   }
   async function refreshSelection() {
     if (busy) return;
-    const result = await selection.refetch(); if (session.active && result.isSuccess) { conflict = false; message = 'Current selection refreshed. Review before activating.'; }
+    const result = await selection.refetch(); if (session.active && result.isSuccess) { conflict = false; message = t('web.RunActivation.currentSelectionRefreshedReviewBeforeActivating'); }
   }
 </script>
 {#if eligible}<section class="run-activation" aria-label={t('web.RunActivation.workflowActivation')}><h4>{t('web.RunActivation.useThisTestedRevision')}</h4>

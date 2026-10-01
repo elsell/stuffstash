@@ -194,7 +194,7 @@ export function AssetDetailRouteScreen({
       await coreAsset.reconcile();
       feedback.showNotice({ tone: 'success', title: t('mobile.AssetDetailRouteScreen.editUndone'), message: t('mobile.AssetDetailRouteScreen.thePreviousValuesWereReapplied') });
     } catch (error) {
-      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: readableError(error, 'Undo failed.') });
+      feedback.showNotice({ tone: 'error', title: t('mobile.AssetDetailRouteScreen.couldNotUndoEdit'), message: readableError(error, t('mobile.AssetDetailRouteScreen.undoFailed')) });
     }
   }
 
@@ -220,7 +220,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset'),
-        message: readableError(error, 'Could not refresh asset.')
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.couldNotRefreshAsset2'))
       });
     }
   });
@@ -250,13 +250,13 @@ export function AssetDetailRouteScreen({
       () => source === 'camera'
         ? photoSelectionQuery.captureFromCamera(currentPhotoCount)
         : photoSelectionQuery.selectFromLibrary(currentPhotoCount),
-      'Could not add photos'
+      t('mobile.AssetDetailRouteScreen.couldNotAddPhotos')
     );
   }
 
   async function retryPhotos(): Promise<void> {
     if (failedPhotoDrafts.length === 0) return;
-    await uploadPhotos(async () => failedPhotoDrafts, 'Could not retry photos');
+    await uploadPhotos(async () => failedPhotoDrafts, t('mobile.AssetDetailRouteScreen.couldNotRetryPhotos'));
   }
 
   async function uploadPhotos(
@@ -290,7 +290,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: failureTitle,
-        message: readableError(error, 'Photo upload failed.')
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoUploadFailed'))
       });
     } finally {
       scope.pending = false;
@@ -324,7 +324,7 @@ export function AssetDetailRouteScreen({
       if (!canPresent()) return;
       feedback.showDialog({
         title: t('mobile.AssetDetailRouteScreen.couldNotRemovePhoto'),
-        message: readableError(error, 'Photo removal failed.'),
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.photoRemovalFailed')),
         primaryAction: { label: t('mobile.AssetDetailRouteScreen.oK') }
       });
     } finally {
@@ -447,7 +447,7 @@ export function AssetDetailRouteScreen({
       feedback.showNotice({
         tone: 'error',
         title: action === 'checkout' ? t('mobile.AssetDetailRouteScreen.couldNotCheckoutAsset') : t('mobile.AssetDetailRouteScreen.couldNotReturnAsset'),
-        message: readableError(error, 'Checkout action failed.')
+        message: readableError(error, t('mobile.AssetDetailRouteScreen.checkoutActionFailed'))
       });
     } finally {
       scope.pending = false;
@@ -537,7 +537,7 @@ export function AssetDetailRouteScreen({
             onRetryPhotos={() => void retryPhotos()}
             onTagPress={(tag) => navigateToAssetTagSearch(router, tag)}
             photoUploads={photoUploads}
-            photoStatusMessage={pendingAction === 'photos' ? 'Updating photos...' : photoStatus?.message}
+            photoStatusMessage={pendingAction === 'photos' ? t('mobile.AssetDetailRouteScreen.updatingPhotos') : photoStatus?.message}
             workspaceStatusKind={presentedWorkspaceStatus?.kind}
             workspaceStatusMessage={presentedWorkspaceStatus?.message}
             refreshControl={

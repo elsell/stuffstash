@@ -80,7 +80,7 @@ type VoiceInteractionStateProviderProps = {
 
 export function VoiceInteractionStateProvider(props: VoiceInteractionStateProviderProps) {
   const preview = useMobileInventoryServerQuery({ key: mobileQueryKeys.voiceContext, query: signal => props.previewQuery.execute({ signal }) });
-  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, 'Voice preview is not available.') } : { status: 'loading' };
+  const previewState: PreviewState = preview.data ? { status: 'ready', preview: preview.data } : preview.isError ? { status: 'error', message: readableError(preview.error, t('mobile.VoiceInteractionStateContext.voicePreviewIsNotAvailable')) } : { status: 'loading' };
   return <ScopedVoiceInteractionStateProvider scopeKey={JSON.stringify(preview.resourceKey)} {...props} previewState={previewState}
     retryPreview={async () => { await preview.refetch({ cancelRefetch: false }); }} />;
 }
@@ -287,7 +287,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         } catch (error) {
           if (interactionLifetime.current !== lifetime) return;
           if (isObject(error) && error.code === 'review_validation_failed') {
-            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: t('mobile.VoiceInteractionStateContext.checkReviewDetails'), errorMessage: 'Check the staged photos and edited fields, then approve again.' } : current);
+            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: t('mobile.VoiceInteractionStateContext.checkReviewDetails'), errorMessage: t('mobile.VoiceInteractionStateContext.checkTheStagedPhotosAndEditedFieldsThenApprove') } : current);
             setStage('review');
             return;
           }
@@ -468,7 +468,7 @@ export function buildFailedVoiceRealtimeState(error: unknown, context: VoiceFail
     progressLabel: t('mobile.VoiceInteractionStateContext.voiceFailed'),
     debugEvents: [],
     failureCode,
-    errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? 'The connection was interrupted. Try again when you are connected.' : 'Could not finish this request. Try again or start a new conversation.')
+    errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? t('mobile.VoiceInteractionStateContext.theConnectionWasInterruptedTryAgainWhenYouAre') : t('mobile.VoiceInteractionStateContext.couldNotFinishThisRequestTryAgainOrStart'))
   };
 }
 

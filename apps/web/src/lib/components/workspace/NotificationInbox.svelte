@@ -52,7 +52,7 @@
       hasMore = page.pagination.hasMore; nextCursor = page.pagination.nextCursor;
     } catch (caught) {
       if (controller.signal.aborted) return;
-      const message = safeWorkspaceErrorMessage(caught, 'Notifications could not be loaded. Try again.');
+      const message = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.notificationsCouldNotBeLoadedTryAgain'));
       if (append) appendError = message; else error = message;
     } finally { if (!controller.signal.aborted) { loading = false; appendLoading = false; } }
   }
@@ -67,7 +67,7 @@
       onRead();
       await load();
     } catch (caught) {
-      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'Not all notifications could be marked read. Try again.');
+      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.notAllNotificationsCouldBeMarkedReadTryAgain'));
     } finally { if (!controller.signal.aborted) marking = false; }
   }
   async function open(item: ExpirationNotification) {
@@ -81,7 +81,7 @@
       if (filter === 'unread') items = items.filter((value) => value.id !== item.id);
       onRead(); onOpenAsset(assetId);
     } catch (caught) {
-      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'This notification could not be opened. Refresh to check whether it is still available.');
+      if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.thisNotificationCouldNotBeOpenedRefreshToCheck'));
     } finally { if (!controller.signal.aborted) opening = null; }
   }
   async function toggleRead(item: ExpirationNotification) {
@@ -93,7 +93,7 @@
       if (controller.signal.aborted) return;
       readIds = new Set([...readIds].filter(id => id !== item.id));
       onRead(); await load();
-    } catch (caught) { if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, 'Could not change read state. Try again.'); }
+    } catch (caught) { if (!controller.signal.aborted) openError = safeWorkspaceErrorMessage(caught, t('web.NotificationInbox.couldNotChangeReadStateTryAgain')); }
     finally { if (!controller.signal.aborted) marking = false; }
   }
 </script>

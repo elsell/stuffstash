@@ -66,7 +66,7 @@ export function ExpirationReminderEditor({ initialPolicy, inheritedPolicy, disab
       <SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.defaultReminders')} value={mode !== 'off'} disabled={locked || error} onValueChange={enabled => void commit(draft, enabled ? 'custom' : 'off')} />
     </SettingsSection>}
     {mode === 'custom' ? <SettingsSection>
-      <SettingsNavigationRow label={t('mobile.ExpirationReminderEditor.beforeExpiration')} accessibilityLabel={t('mobile.ExpirationReminderEditor.beforeExpiration')} value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : 'Off'} disabled={locked || error} onPress={onEditDays} />
+      <SettingsNavigationRow label={t('mobile.ExpirationReminderEditor.beforeExpiration')} accessibilityLabel={t('mobile.ExpirationReminderEditor.beforeExpiration')} value={draft.upcoming ? reminderDaysLabel(draft.advanceDays) : t('mobile.ExpirationReminderEditor.off')} disabled={locked || error} onPress={onEditDays} />
       <SettingsSeparator /><SettingsSwitchRow label={t('mobile.ExpirationReminderEditor.whenExpired')} value={draft.expired} disabled={locked || error} onValueChange={expired => void commit({ ...draft, expired })} />
     </SettingsSection> : null}
     {saving ? <SettingsSection><SettingsLoadingRow label={t('mobile.ExpirationReminderEditor.savingReminders')} /></SettingsSection> : null}

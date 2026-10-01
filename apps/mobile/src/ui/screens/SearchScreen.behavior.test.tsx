@@ -200,7 +200,7 @@ describe('mounted Browse server state', () => {
       locationsQuery: { execute: async () => {
         summaries++;
         if (summaries === 1) throw new Error('Summary service unavailable');
-        return { inventoryName: 'Home', tenantName: 'Tenant', canAdd: true, locations: [{ id: 'Garage', title: 'Garage', description: '', containedAssetCountLabel: '2 assets', recentAssetLabel: '', photoLabel: 'Needs photo' }] };
+        return { inventoryName: 'Home', tenantName: 'Tenant', canAdd: true, locations: [{ id: 'Garage', title: 'Garage', description: '', containedAssetCountLabel: '2 assets', recentAssetLabel: '', photoLabel: 'Needs photo', hasPhoto: false }] };
       } }
     });
     try {

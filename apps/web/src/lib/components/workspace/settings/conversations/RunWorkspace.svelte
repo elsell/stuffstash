@@ -19,7 +19,7 @@
   $effect(() => { onNavigationBlockedChange(creating); });
   const heads = createQuery(() => ({ queryKey: conversationKey(session.scope, 'runs', cursor ?? ''), enabled: !denied,
     queryFn: ({ signal }) => repositories.runs.list(session.scope.tenantId, { limit: 20, cursor }, signal) }), () => session.client);
-  const names = { queued: 'Queued', running: 'Running', succeeded: 'Completed', failed: 'Failed', cancelled: 'Cancelled' };
+  const names = { queued: t('web.RunWorkspace.queued'), running: t('web.RunWorkspace.running'), succeeded: t('web.RunWorkspace.completed'), failed: t('web.RunWorkspace.failed'), cancelled: t('web.RunWorkspace.cancelled') };
 </script>
 {#if denied}<section role="alert"><h2>{t('web.RunWorkspace.runsUnavailable')}</h2><p>{t('web.RunWorkspace.youNoLongerHaveAccessToConfigureThisTenant')}</p></section>
 {:else}<section class="run-workspace" aria-labelledby="runs-title"><h2 id="runs-title">{t('web.RunWorkspace.runs')}</h2>

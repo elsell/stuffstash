@@ -319,7 +319,7 @@ export function InventorySharingScreen({
 }
 
 function statusLabel(invitation: InventoryInvitationSummary): string {
-  if (invitation.isExpired) return 'Expired';
+  if (invitation.isExpired) return t('mobile.InventorySharingScreen.expired');
   return titleCase(invitation.status);
 }
 
@@ -340,7 +340,7 @@ function confirmCancel(invitation: InventoryInvitationSummary, cancel: (value: I
 }
 
 function readableError(error: unknown): string {
-  return error instanceof Error ? error.message : 'The action failed safely. Try again.';
+  return error instanceof Error ? error.message : t('mobile.InventorySharingScreen.theActionFailedSafelyTryAgain');
 }
 
 function createStyles(colors: MobileColorPalette) {

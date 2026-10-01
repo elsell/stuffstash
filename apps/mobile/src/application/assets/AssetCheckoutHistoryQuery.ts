@@ -40,6 +40,7 @@ export type AssetCheckoutRecordViewModel = {
   readonly title: string;
   readonly subtitle: string;
   readonly statusLabel: string;
+  readonly isOpen: boolean;
   readonly checkedOutLabel: string;
   readonly returnedLabel?: string;
   readonly checkoutDetails?: string;
@@ -90,6 +91,7 @@ function toRecordViewModel(record: AssetCheckoutRecord): AssetCheckoutRecordView
     title: record.state === 'returned' ? t('mobile.AssetCheckoutHistoryQuery.returned') : t('mobile.AssetCheckoutHistoryQuery.checkedOut'),
     subtitle: t('mobile.AssetCheckoutHistoryQuery.checkedOutBy', { time: formatHistoryTimestamp(record.checkedOutAt, 'checkout'), principal: record.checkedOutByPrincipalId }),
     statusLabel: labelState(record.state),
+    isOpen: record.state === 'open',
     checkedOutLabel: labelCheckedOutAt(record.checkedOutAt),
     returnedLabel: returned,
     checkoutDetails: safeDetails(record.checkoutDetails),

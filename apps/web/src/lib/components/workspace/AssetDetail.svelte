@@ -179,7 +179,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   let descriptionText = $derived(assetDescriptionText(asset.description));
   let photoUploadDisabledReason = $derived(
     photoUploading
-      ? 'Photo upload is already in progress.'
+      ? t('web.AssetDetail.photoUploadIsAlreadyInProgress')
       : photoUploadUnavailableReason({
           canEditAsset: canEdit,
           lifecycleState: asset.lifecycleState,
@@ -368,7 +368,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       });
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to save asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToSaveAsset');
     }
   }
 
@@ -426,7 +426,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
     try {
       await onArchive();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to archive asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToArchiveAsset');
     }
   }
 
@@ -435,7 +435,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
     try {
       await onRestore();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to restore asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToRestoreAsset');
     }
   }
 
@@ -444,7 +444,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
     try {
       await onDelete();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to delete asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToDeleteAsset');
     }
   }
 
@@ -454,7 +454,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       await onCheckout(checkoutDetails.trim());
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to checkout asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToCheckoutAsset');
     }
   }
 
@@ -464,7 +464,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       await onReturn(checkoutDetails.trim());
       closePanel();
     } catch (caught) {
-      saveError = caught instanceof Error ? caught.message : 'Unable to return asset.';
+      saveError = caught instanceof Error ? caught.message : t('web.AssetDetail.unableToReturnAsset');
     }
   }
 
@@ -476,7 +476,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       fileError = {
         operation: 'archive',
         attachmentId: attachment.id,
-        message: userSafeMediaErrorMessage(caught, 'Unable to archive file.')
+        message: userSafeMediaErrorMessage(caught, t('web.AssetDetail.unableToArchiveFile'))
       };
     }
   }
@@ -509,7 +509,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       });
       input.value = '';
     } catch (caught) {
-      fileError = { operation: 'upload', message: userSafeMediaErrorMessage(caught, 'Unable to upload file.') };
+      fileError = { operation: 'upload', message: userSafeMediaErrorMessage(caught, t('web.AssetDetail.unableToUploadFile')) };
       input.value = '';
     }
   }
@@ -553,7 +553,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       failedPhotoUpload = null;
     } catch (caught) {
       failedPhotoUpload = attachment;
-      photoUploadError = userSafeMediaErrorMessage(caught, 'Unable to upload photo.');
+      photoUploadError = userSafeMediaErrorMessage(caught, t('web.AssetDetail.unableToUploadPhoto'));
     } finally {
       photoUploading = false;
     }
@@ -575,7 +575,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       panel = 'none';
       onAttachmentDeleteClose();
     } catch (caught) {
-      saveError = userSafeMediaErrorMessage(caught, 'Unable to delete attachment.');
+      saveError = userSafeMediaErrorMessage(caught, t('web.AssetDetail.unableToDeleteAttachment'));
     }
   }
 

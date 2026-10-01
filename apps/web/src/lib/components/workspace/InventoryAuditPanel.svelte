@@ -126,7 +126,7 @@
         return;
       }
       if (current === requestId && contextKey === expectedContext) {
-        error = safeWorkspaceErrorMessage(caught, 'Activity could not be loaded. Try again.');
+        error = safeWorkspaceErrorMessage(caught, t('web.InventoryAuditPanel.activityCouldNotBeLoadedTryAgain'));
       }
     } finally {
       if (controller?.signal === signal) {

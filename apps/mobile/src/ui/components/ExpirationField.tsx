@@ -77,7 +77,7 @@ export function ExpirationField({ initialValue, initialPickerDate, disabled = fa
     onChange(undefined, true);
   }
   const current = precision === 'day' ? (day ? { date: day, precision } : undefined) : (month && year && monthValid ? { date: `${year}-${month.padStart(2, '0')}`, precision } : undefined);
-  return <SelectionRow label={t('mobile.ExpirationField.expiration')} value={current ? formatAssetExpiration(current) : 'Not set'} expanded={editing} disabled={disabled} onPress={() => setEditing(value => !value)}>
+  return <SelectionRow label={t('mobile.ExpirationField.expiration')} value={current ? formatAssetExpiration(current) : t('mobile.ExpirationField.notSet')} expanded={editing} disabled={disabled} onPress={() => setEditing(value => !value)}>
     <View style={styles.field}>
     <NativeSegmentedControl colors={colors} disabled={disabled} value={precision} onChange={selectPrecision}
       segments={[{ value: 'day', label: t('mobile.ExpirationField.exactDate') }, { value: 'month', label: t('mobile.ExpirationField.monthAndYear') }]} />

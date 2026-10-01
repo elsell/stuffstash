@@ -112,3 +112,9 @@ and file sizes follow the client formatting locale, not a fixed US locale.
 Import history decides whether records changed from numeric counts, never from the
 localized “no records changed” label. A skipped-only run must not gain an empty
 change summary when the display language changes.
+
+The final presentation pass includes accessibility announcements, native choice
+summaries, notification recovery, onboarding guidance, and administrative status
+maps. Native module identifiers, keyboard keys, time-zone IDs, technical exceptions
+and semantic state values are not messages. Styling or section visibility must
+use explicit state flags instead of comparing translated labels.

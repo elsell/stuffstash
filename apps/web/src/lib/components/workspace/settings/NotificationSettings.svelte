@@ -44,7 +44,7 @@
       preferences = first ? await session.initialize(initialTimezone) : await session.refresh();
       assetTypes = loadedTypes;
       if (first || !timezoneDirty) timezone = preferences.timezone;
-    } catch (caught) { error = safeWorkspaceErrorMessage(caught, 'Reminder settings could not be loaded. Try again.'); }
+    } catch (caught) { error = safeWorkspaceErrorMessage(caught, t('web.NotificationSettings.reminderSettingsCouldNotBeLoadedTryAgain')); }
     finally { busy = false; }
   }
   async function save(operation: () => Promise<NotificationPreferences>) {
@@ -52,7 +52,7 @@
     busy = true; error = '';
     try { preferences = await operation(); await onChanged?.(); }
     catch (caught) {
-      error = 'Your changes are still here. If settings changed on another device, refresh saved settings before saving again.';
+      error = t('web.NotificationSettings.yourChangesAreStillHereIfSettingsChangedOn');
       throw caught;
     } finally { busy = false; }
   }
@@ -61,7 +61,7 @@
     if (!validTimezone || busy) return;
     timezoneSaved = false;
     try { await save(() => session.saveTimezone(timezone)); timezoneSaved = true; timezoneDirty = false; }
-    catch (caught) { error = safeWorkspaceErrorMessage(caught, 'Timezone could not be saved. Refresh saved settings and try again.'); }
+    catch (caught) { error = safeWorkspaceErrorMessage(caught, t('web.NotificationSettings.timezoneCouldNotBeSavedRefreshSavedSettingsAnd')); }
   }
 </script>
 

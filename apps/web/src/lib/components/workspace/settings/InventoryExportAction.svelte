@@ -20,12 +20,12 @@
     lastFormat = format; pending = true; message = ''; error = false;
     try {
       await command.execute(scope, format, request.signal);
-      if (!request.signal.aborted) message = 'Inventory download started.';
+      if (!request.signal.aborted) message = t('web.InventoryExportAction.inventoryDownloadStarted');
     } catch (caught) {
       if (!request.signal.aborted) {
         error = true;
         const status = (caught as { status?: number }).status;
-        message = status === 401 ? 'Sign in again to export this inventory.' : status === 403 ? 'You no longer have access to export this inventory.' : status === 422 ? 'This inventory exceeds the server’s export limit. Ask your administrator to increase it.' : 'Could not export this inventory. Try again.';
+        message = status === 401 ? t('web.InventoryExportAction.signInAgainToExportThisInventory') : status === 403 ? t('web.InventoryExportAction.youNoLongerHaveAccessToExportThisInventory') : status === 422 ? t('web.InventoryExportAction.thisInventoryExceedsTheServerSExportLimitAsk') : t('web.InventoryExportAction.couldNotExportThisInventoryTryAgain');
       }
     } finally { if (active === request) { pending = false; active = undefined; } }
   }

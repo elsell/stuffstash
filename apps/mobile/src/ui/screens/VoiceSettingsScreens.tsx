@@ -186,7 +186,7 @@ export function VoiceCapabilityScreen({
           ? {
               accessibilityLabel: t('mobile.VoiceSettingsScreens.enableFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
               label: operation === 'enable' ? t('mobile.VoiceSettingsScreens.enabling') : t('mobile.VoiceSettingsScreens.enableService'),
-              run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), 'Service enabled')
+              run: () => void act('enable', () => manageCommand.changeLifecycle(selectedProfile.id, 'enable').then(() => undefined), t('mobile.VoiceSettingsScreens.serviceEnabled'))
             }
           : undefined;
       case 'test_profile':
@@ -194,7 +194,7 @@ export function VoiceCapabilityScreen({
           ? {
               accessibilityLabel: t('mobile.VoiceSettingsScreens.testFor', { displayName: String(selectedProfile.displayName), title: String(stage.title) }),
               label: operation === 'test' ? t('mobile.VoiceSettingsScreens.testing') : t('mobile.VoiceSettingsScreens.testConnection'),
-              run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), 'Connection tested')
+              run: () => void act('test', () => testCommand.execute(selectedProfile.id).then(() => undefined), t('mobile.VoiceSettingsScreens.connectionTested'))
             }
           : undefined;
       default:
@@ -215,13 +215,13 @@ export function VoiceCapabilityScreen({
         {slot.selectedProfile ? (
           <SettingsNavigationRow
             accessibilityLabel={t('mobile.VoiceSettingsScreens.openProviderProfile', { displayName: String(slot.selectedProfile.displayName) })}
-            context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || 'Default model'}`}
+            context={`${slot.selectedProfile.providerKind} · ${slot.selectedProfile.modelName || t('mobile.VoiceSettingsScreens.defaultModel')}`}
             label={slot.selectedProfile.displayName}
             disabled={working}
             onPress={() => { if (!workingRef.current) onEditProfile(slot.selectedProfile!.id); }}
             value={formatVoiceProviderReadinessLabel(slot.readiness)}
           />
-        ) : <SettingsValueRow label={t('mobile.VoiceSettingsScreens.service')} value="Not selected" />}
+        ) : <SettingsValueRow label={t('mobile.VoiceSettingsScreens.service')} value={t('mobile.VoiceSettingsScreens.notSelected')} />}
       </SettingsSection>
       <SettingsSection
         footer={issueLabels.length > 0 ? issueLabels.join(' ') : undefined}
@@ -245,7 +245,7 @@ export function VoiceCapabilityScreen({
           options={serviceOptions} disabled={working} onChange={id => {
             if (workingRef.current || id === slot.selectedProfileId) return;
             const profile = availableProfiles.find(candidate => candidate.id === id);
-            if (profile) void act('select', () => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), 'Voice service selected');
+            if (profile) void act('select', () => selectProfile(manageCommand, providers.state.status === 'ready' ? providers.state.viewModel.configuration : undefined, slot, profile), t('mobile.VoiceSettingsScreens.voiceServiceSelected'));
           }} />
         {operation === 'select' ? <Text accessibilityLiveRegion="polite" style={styles.secondaryText}>{t('mobile.VoiceSettingsScreens.selectingService')}</Text> : null}
       </SettingsSection> : null}
@@ -260,7 +260,7 @@ function SettingsStateBridge({ state, onRetry }: { readonly state: ReturnType<ty
   return null;
 }
 
-function selectedProfileLabel(slot: VoiceProviderSlot): string { return slot.selectedProfile?.displayName ?? 'No service selected'; }
+function selectedProfileLabel(slot: VoiceProviderSlot): string { return slot.selectedProfile?.displayName ?? t('mobile.VoiceSettingsScreens.noServiceSelected'); }
 
 async function selectProfile(manageCommand: ManageProviderProfileCommand, configuration: VoiceProviderConfiguration | undefined, slot: VoiceProviderSlot, profile: ProviderProfileSummary): Promise<void> {
   if (!configuration) return;

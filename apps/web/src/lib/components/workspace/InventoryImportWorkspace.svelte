@@ -810,10 +810,10 @@
   }
 
   function workspaceTitle(): string {
-    if (step === 'history') return 'Imports';
-    if (step === 'detail') return selectedJob ? `${selectedJob.source.name} import` : 'Import details';
-    if (step === 'run') return 'Import running';
-    return 'New import';
+    if (step === 'history') return t('web.InventoryImportWorkspace.imports');
+    if (step === 'detail') return selectedJob ? t('import.sourceTitle', { name: selectedJob.source.name }) : t('web.InventoryImportWorkspace.importDetails');
+    if (step === 'run') return t('web.InventoryImportWorkspace.importRunning');
+    return t('web.InventoryImportWorkspace.newImport');
   }
 
   function workspaceSubtitle(): string {
@@ -821,8 +821,8 @@
     if (step === 'detail') {
       return selectedJob ? sourceDescription(selectedJob) : `Import details for ${inventory?.name ?? 'this inventory'}.`;
     }
-    if (step === 'run') return 'The job is running in the background.';
-    return 'Confirm the source, preview the plan, then run it in the background.';
+    if (step === 'run') return t('web.InventoryImportWorkspace.theJobIsRunningInTheBackground');
+    return t('web.InventoryImportWorkspace.confirmTheSourcePreviewThePlanThenRunIt');
   }
 
 </script>

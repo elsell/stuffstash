@@ -49,7 +49,7 @@
   let initialColor = $derived(selected?.color ?? '');
   let normalizedFormColor = $derived(normalizeTagColor(color));
   let nameBytes = $derived(utf8ByteLength(displayName.trim()));
-  let nameByteError = $derived(nameBytes > 80 ? 'Tag name must be 80 UTF-8 bytes or fewer.' : '');
+  let nameByteError = $derived(nameBytes > 80 ? t('web.TagSettingsManager.tagNameMustBe80UTF8BytesOr') : '');
   let formValid = $derived(Boolean(displayName.trim()) && nameBytes <= 80 && normalizedFormColor !== null);
   let dirty = $derived(displayName !== initialName || (normalizedFormColor ?? '') !== initialColor);
 

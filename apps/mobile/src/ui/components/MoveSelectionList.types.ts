@@ -10,7 +10,7 @@ export type MoveSelectionStatus = {
   readonly retry?: { readonly label: string; readonly disabled?: boolean; readonly onPress: () => void };
 };
 export type MoveSelectionListProps = {
-  readonly subjectLabel: string; readonly subject: string; readonly context: string;
+  readonly subjectLabel?: string; readonly subject: string; readonly context: string;
   readonly destinationLabel?: string;
   readonly title: string; readonly rows: readonly MoveSelectionRowModel[];
   readonly retainedSelection?: MoveSelectionRowModel; readonly statuses?: readonly MoveSelectionStatus[];

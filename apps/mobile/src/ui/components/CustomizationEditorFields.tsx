@@ -33,8 +33,8 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
         <NativeCommandButton label={t('mobile.CustomizationEditorFields.addOption')} disabled={disabled} onPress={() => {
           if (disabled) return;
           const next = suggestedCustomizationKey(props.newOption);
-          if (!next) { setOptionError('Use letters to start the option, then letters, numbers, or hyphens.'); return; }
-          if (props.enumOptions.includes(next)) { setOptionError('This option already exists.'); return; }
+          if (!next) { setOptionError(t('mobile.CustomizationEditorFields.useLettersToStartTheOptionThenLettersNumbers')); return; }
+          if (props.enumOptions.includes(next)) { setOptionError(t('mobile.CustomizationEditorFields.thisOptionAlreadyExists')); return; }
           props.onEnumOptions([...props.enumOptions, next]);
           setOptionError('');
           props.onNewOption('');

@@ -30,11 +30,11 @@
  async function loadChoices() {
   if (!workspace) return; choicesController?.abort(); const controller = new AbortController(); choicesController = controller; choicesLoading = true; choicesError = '';
   try { const next = await workspace.repository.choices(tenantId,inventoryId,controller.signal); if (!controller.signal.aborted) choices = next; }
-  catch { if (!controller.signal.aborted) choicesError = 'Filter choices could not be loaded.'; }
+  catch { if (!controller.signal.aborted) choicesError = t('web.ExpirationWorkspace.filterChoicesCouldNotBeLoaded'); }
   finally { if (!controller.signal.aborted) choicesLoading = false; }
  }
  let filtered = $derived(!!(filter.kind || filter.checkoutState || filter.query || filter.typeId || filter.locationId || filter.tagIds?.length || filter.fromDate || filter.throughDate));
- let options = $derived(([['soon','Expiring soon'],['expired','Expired'],['all','All dates']] as const).map(([value,label]) => ({value,label,description:listState.page ? String(listState.page.counts[value]) : undefined,href:workspaceRouteHref(route({...filter,mode:value}),tenantId,inventoryId)})));
+ let options = $derived(([['soon',t('web.ExpirationWorkspace.expiringSoon')],['expired',t('web.ExpirationWorkspace.expired')],['all',t('web.ExpirationWorkspace.allDates')]] as const).map(([value,label]) => ({value,label,description:listState.page ? String(listState.page.counts[value]) : undefined,href:workspaceRouteHref(route({...filter,mode:value}),tenantId,inventoryId)})));
 </script>
 <section class="workspace-main expiration-workspace" aria-label={t('web.ExpirationWorkspace.expiration')}>
  <header><div><h1>{t('web.ExpirationWorkspace.expiration')}</h1><p>{t('web.ExpirationWorkspace.reviewDatesForActiveItemsAcrossYourInventory')}</p></div><Button.Root variant="outline" onclick={() => { void refresh(); }} disabled={listState.loading}>{t('web.ExpirationWorkspace.refresh')}</Button.Root></header>

@@ -8,7 +8,7 @@
  import AssetThumb from '../AssetThumb.svelte';
  import AssetExpirationLabel from '../AssetExpirationLabel.svelte';
  let { items, onOpenAsset, grouped = true }: { items: ExpirationItem[]; onOpenAsset: (asset: Asset) => void; grouped?: boolean } = $props();
- function group(item: ExpirationItem) { return `${item.expirationContext?.state === 'expired' ? 'Expired · ' : ''}${new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${item.expiration!.date.slice(0,7)}-01T12:00:00Z`))}`; }
+ function group(item: ExpirationItem) { const month = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${item.expiration!.date.slice(0,7)}-01T12:00:00Z`)); return item.expirationContext?.state === 'expired' ? t('expiration.expiredMonth', { month }) : month; }
  function open(event: MouseEvent, item: Asset) { if (shouldHandleWorkspaceLinkClick(event)) { event.preventDefault(); onOpenAsset(item); } }
 </script>
 <div class="expiry-rows">

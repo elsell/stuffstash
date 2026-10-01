@@ -6,7 +6,7 @@ import { MoveSelectionList } from './MoveSelectionList.ios';
 it('keeps subject, selection and destination context distinct and rejects stale row actions', async () => {
   const h = new MobileRenderHarness(); const calls: string[] = [];
   const render = (disabled = false, owner = 'first') => h.render(<MoveSelectionList
-    subjectLabel="Moving" subject="Tent" context="Current location: Hall" title="Destinations"
+    subject="Tent" context="Current location: Hall" title="Destinations"
     rows={[{ id: 'garage', label: 'Garage', context: 'House', kind: 'location', selected: true, disabled,
       accessibilityLabel: 'Choose destination Garage', onPress: () => calls.push(owner) }]} />);
   try {
@@ -44,7 +44,7 @@ it('keeps recovery inside the native list and retires removed retry actions', as
 it('keeps filtered-out selection available beside destination context without committing it', async () => {
   const h = new MobileRenderHarness(); const calls: string[] = [];
   try {
-    await h.render(<MoveSelectionList subjectLabel="Moving" subject="Tent"
+    await h.render(<MoveSelectionList subject="Tent"
       context="Current location: Hall" title="Destinations" rows={[]}
       retainedSelection={{ id: 'shed', label: 'Shed', context: 'Garden', kind: 'location',
         selected: true, accessibilityLabel: 'Choose destination Shed', onPress: () => calls.push('shed') }} />);
@@ -62,7 +62,7 @@ it('keeps the Move to summary stable when search hides the selected destination'
   const h = new MobileRenderHarness();
   const row = { id: 'shed', label: 'Shed', context: 'Garden', kind: 'location' as const,
     selected: true, accessibilityLabel: 'Choose destination Shed', onPress: () => {} };
-  const render = (filtered: boolean) => h.render(<MoveSelectionList subjectLabel="Moving" subject="Tent"
+  const render = (filtered: boolean) => h.render(<MoveSelectionList subject="Tent"
     context="Current location: Hall" destinationLabel="Garden / Shed" title="Destinations"
     rows={filtered ? [] : [row]} retainedSelection={filtered ? row : undefined} />);
   try {

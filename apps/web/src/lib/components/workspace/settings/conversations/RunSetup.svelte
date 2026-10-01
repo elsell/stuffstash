@@ -33,7 +33,7 @@
     const input = { workflowId: selectedWorkflow.id, revisionId: revision.data.id, cases: selectedCases.map(value => ({ caseId: value.id, revisionId: value.latestRevisionId })) };
     busy = true; message = '';
     try { await session.mutate(() => repositories.runs.queue(session.scope.tenantId, input), run => { session.client.setQueryData(key('run', run.id), run); void session.client.invalidateQueries({ queryKey: key('runs') }); onQueued(run); }); }
-    catch (error) { if (session.active) message = error instanceof ConversationFailure && (error.kind === 'invalid' || error.kind === 'precondition') ? 'This setup is not ready to run. Check the selected revisions and provider configuration.' : 'Could not queue this run. Your selections are still here.'; }
+    catch (error) { if (session.active) message = error instanceof ConversationFailure && (error.kind === 'invalid' || error.kind === 'precondition') ? t('web.RunSetup.thisSetupIsNotReadyToRunCheckThe') : t('web.RunSetup.couldNotQueueThisRunYourSelectionsAreStill'); }
     finally { if (session.active) busy = false; }
   }
 </script>

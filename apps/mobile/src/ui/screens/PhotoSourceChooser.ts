@@ -15,7 +15,7 @@ export function showPhotoSourceChooser({
   if (Platform.OS === 'ios') {
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ['Take Photo', 'Choose from Library', 'Cancel'],
+        options: [t('mobile.PhotoSourceChooser.takePhoto'), t('mobile.PhotoSourceChooser.chooseFromLibrary'), t('mobile.PhotoSourceChooser.cancel')],
         cancelButtonIndex: 2
       },
       (buttonIndex) => {

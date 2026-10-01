@@ -274,7 +274,7 @@ export function locationRowsFromAssetCards(
       id: asset.id,
       title: asset.title,
       description: asset.description,
-      containedAssetCountLabel: location?.containedAssetCountLabel ?? 'Contents not summarized',
+      containedAssetCountLabel: location?.containedAssetCountLabel ?? t('mobile.SearchScreenPresentation.contentsNotSummarized'),
       recentAssetLabel: location?.recentAssetLabel ?? asset.locationTrailLabel,
       photo: asset.photo
     };

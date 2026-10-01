@@ -66,7 +66,7 @@ export function AssetHistoryRouteScreen({
     ? { ...firstPage, status: 'ready', records: history.data!.pages.flatMap((page) => page.records), hasMore: history.hasNextPage }
     : history.isError ? { status: 'error', ...historyLoadError(history.error) } : { status: 'loading' };
   const isLoadingMore = history.isFetchingNextPage;
-  const pageError = history.isFetchNextPageError ? 'Older activity could not be loaded.' : undefined;
+  const pageError = history.isFetchNextPageError ? t('mobile.AssetHistoryRouteScreen.olderActivityCouldNotBeLoaded') : undefined;
 
   const { refreshing: isRefreshing, refresh } = usePullRefreshFeedback({
     refresh: () => history.refetch({ throwOnError: true }),

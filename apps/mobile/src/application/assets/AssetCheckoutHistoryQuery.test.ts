@@ -80,6 +80,7 @@ describe('AssetCheckoutHistoryQuery', () => {
       records: [
         {
           id: 'checkout-open',
+          isOpen: true,
           title: 'Checked out',
           statusLabel: 'Checked out',
           subtitle: expect.stringContaining('Principal principal-home'),
@@ -88,6 +89,7 @@ describe('AssetCheckoutHistoryQuery', () => {
         },
         {
           id: 'checkout-returned',
+          isOpen: false,
           title: 'Returned',
           statusLabel: 'Returned',
           returnedLabel: expect.stringContaining('Principal principal-editor'),

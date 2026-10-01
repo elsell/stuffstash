@@ -43,11 +43,11 @@
 
   let available = $derived(Boolean(invitation && invitationActionIsAvailable(routeAction, invitation)));
   let confirmation = $derived(invitation ? invitationActionConfirmation(routeAction, invitation, busy) : null);
-  let title = $derived(available ? confirmation?.title ?? 'Confirm invitation action' : 'Invitation unavailable');
+  let title = $derived(available ? confirmation?.title ?? t('web.InventoryAccessInvitationActionPanel.confirmInvitationAction') : t('web.InventoryAccessInvitationActionPanel.invitationUnavailable'));
   let description = $derived(
     available
       ? confirmation?.description ?? ''
-      : 'This invitation is not available in the current access list.'
+      : t('web.InventoryAccessInvitationActionPanel.thisInvitationIsNotAvailableInTheCurrentAccess')
   );
   let open = $state(true);
   let dismissAfterClose = false;

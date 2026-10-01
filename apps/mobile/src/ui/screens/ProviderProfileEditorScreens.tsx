@@ -203,10 +203,10 @@ function ProviderEditorError({ message }: { readonly message: string }) {
 
 function credentialLabel(purpose: ProviderCredentialPurpose): string {
   return purpose === 'api_key'
-    ? 'API key'
+    ? t('mobile.ProviderProfileEditorScreens.aPIKey')
     : purpose === 'oauth_bearer'
-      ? 'OAuth bearer token'
-      : 'Server credentials';
+      ? t('mobile.ProviderProfileEditorScreens.oAuthBearerToken')
+      : t('mobile.ProviderProfileEditorScreens.serverCredentials');
 }
 
 function editorStyles(colors: MobileColorPalette) {

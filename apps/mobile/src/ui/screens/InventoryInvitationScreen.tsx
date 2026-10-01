@@ -205,7 +205,7 @@ function StateMessage({ icon, message, styles, title }: {
 }
 
 function relationshipLabel(relationship: InventoryInvitationPreview['relationship']): string {
-  return relationship === 'editor' ? 'Editor' : 'Viewer';
+  return relationship === 'editor' ? t('mobile.InventoryInvitationScreen.editor') : t('mobile.InventoryInvitationScreen.viewer');
 }
 
 function expirationLabel(value: string): string {

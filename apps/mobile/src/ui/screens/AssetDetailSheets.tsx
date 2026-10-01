@@ -250,7 +250,7 @@ export function MoveAssetSheet({
     onChange: onChangeQuery, onSubmit: onChangeQuery, onClear: () => onChangeQuery('') };
   function toRow(match: ParentLookupResult): MoveSelectionRowModel {
     return { id: match.id, label: match.title,
-      context: match.disabledReason ?? `${match.kind === 'location' ? 'Location' : 'Container'} · ${match.pathLabel || match.title}`,
+      context: match.disabledReason ?? `${match.kind === 'location' ? t('mobile.AssetDetailSheets.location') : t('mobile.AssetDetailSheets.container')} · ${match.pathLabel || match.title}`,
       kind: match.kind, selected: draft?.selectedParent?.id === match.id,
       disabled: disabled || match.canSelectAsParent === false,
       accessibilityLabel: t('mobile.AssetDetailSheets.chooseDestination', { title: String(match.title) }), onPress: () => onSelectParent(match) };
@@ -263,11 +263,11 @@ export function MoveAssetSheet({
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
-      {!creationExpanded ? <MoveSelectionList subjectLabel={t('mobile.AssetDetailSheets.moving2')} subject={asset.title}
-        context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title={t('mobile.AssetDetailSheets.destinations')}
+      {!creationExpanded ? <MoveSelectionList subject={asset.title}
+        context={t('move.currentLocation', { location: placement?.currentLocationLabel || t('mobile.AssetDetailSheets.inventoryRoot') })} title={t('mobile.AssetDetailSheets.destinations')}
         destinationLabel={draft?.selectedParent === null ? t('mobile.AssetDetailSheets.inventoryRoot') : draft?.selectedParent?.pathLabel || draft?.selectedParent?.title || t('mobile.AssetDetailSheets.chooseADestination')}
         statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
-        rows={[{ id: 'inventory-root', label: t('mobile.AssetDetailSheets.inventoryRoot'), context: 'Top level', kind: 'root',
+        rows={[{ id: 'inventory-root', label: t('mobile.AssetDetailSheets.inventoryRoot'), context: t('mobile.AssetDetailSheets.topLevel'), kind: 'root',
           selected: draft?.selectedParent === null, disabled, accessibilityLabel: t('mobile.AssetDetailSheets.chooseInventoryRoot'), onPress: onSelectRoot },
           ...(draft?.matches ?? []).map(toRow)]}
         retainedSelection={draft?.selectedParent && !draft.matches.some(match => match.id === draft.selectedParent?.id)
@@ -348,8 +348,8 @@ export function MoveThingsHereSheet({
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!disabled} />
         : !disabled ? <NativeFilterSearch {...search} /> : null}
-      <MoveSelectionList subjectLabel={t('mobile.AssetDetailSheets.destination')} subject={draft?.target.title ?? 'This place'}
-        context="Choose an item to move here." title={t('mobile.AssetDetailSheets.items')}
+      <MoveSelectionList subjectLabel={t('mobile.AssetDetailSheets.destination')} subject={draft?.target.title ?? t('mobile.AssetDetailSheets.thisPlace')}
+        context={t('mobile.AssetDetailSheets.chooseAnItemToMoveHere')} title={t('mobile.AssetDetailSheets.items')}
         statuses={[...moveSelectionStatuses(readOnly, isSaving, candidateStatus),
           ...(candidatesAvailable && draft?.matches.length === 0 ? [{ title: emptyState.title, message: emptyState.message }] : [])]}
         rows={(draft?.matches ?? []).map(toRow)}

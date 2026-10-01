@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import React, { type ComponentProps } from 'react';
 import { Button, Host } from '@expo/ui/swift-ui';
 import {
@@ -37,7 +38,7 @@ export function NativeRefinementButton({
           nativeAccessibilityLabel(accessibilityLabel),
           ...(accessibilityState?.expanded === undefined
             ? []
-            : [nativeAccessibilityValue(accessibilityState.expanded ? 'Expanded' : 'Collapsed')]),
+            : [nativeAccessibilityValue(accessibilityState.expanded ? t('mobile.NativeRefinementButtonios.expanded') : t('mobile.NativeRefinementButtonios.collapsed'))]),
           buttonStyle('bordered'),
           controlSize('regular'),
           ...(iconOnly ? [labelStyle('iconOnly')] : []),

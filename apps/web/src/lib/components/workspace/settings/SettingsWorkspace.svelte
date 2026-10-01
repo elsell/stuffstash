@@ -37,8 +37,8 @@
   let latestTypes: CustomAssetType[] = $state([]);
   let latestFields: CustomFieldDefinition[] = $state([]);
   let observedRoute = '';
-  let levelTitle = $derived(route.settingsLevel === 'tenant' ? tenant?.name : route.settingsLevel === 'inventory' ? inventory?.name : 'Settings');
-  let levelLabel = $derived(route.settingsLevel === 'tenant' ? 'Tenant settings' : route.settingsLevel === 'inventory' ? 'Inventory settings' : '');
+  let levelTitle = $derived(route.settingsLevel === 'tenant' ? tenant?.name : route.settingsLevel === 'inventory' ? inventory?.name : t('web.SettingsWorkspace.settings'));
+  let levelLabel = $derived(route.settingsLevel === 'tenant' ? t('web.SettingsWorkspace.tenantSettings') : route.settingsLevel === 'inventory' ? t('web.SettingsWorkspace.inventorySettings') : '');
   let levelHref = $derived(route.settingsLevel === 'tenant' && tenant ? settingsResourceHref({ level: 'tenant', tenantId: tenant.id }) : tenant && inventory ? settingsResourceHref({ level: 'inventory', tenantId: tenant.id, inventoryId: inventory.id }) : '/settings');
   function navigate(event: MouseEvent, href: string): void { event.preventDefault(); onNavigate(href); }
   function updateTypes(types: CustomAssetType[]): void { latestTypes = types; onSchemaChange(latestTypes, latestFields.length ? latestFields : currentFields); }

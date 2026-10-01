@@ -25,7 +25,7 @@
   },
     refetchInterval: query => query.state.data ? runPollInterval(query.state.data.state, failedPolls, visible && documentVisible && !cancelling) : false
   }), () => session.client);
-  const names = { queued: 'Queued', running: 'Running', succeeded: 'Completed', failed: 'Failed', cancelled: 'Cancelled' };
+  const names = { queued: t('web.RunDetails.queued'), running: t('web.RunDetails.running'), succeeded: t('web.RunDetails.completed'), failed: t('web.RunDetails.failed'), cancelled: t('web.RunDetails.cancelled') };
   const pending = $derived(run.data?.state === 'queued' || run.data?.state === 'running');
   async function cancel() {
     if (!run.data || !pending || cancelling) return;
@@ -35,7 +35,7 @@
       await session.mutate(() => runs.cancel(session.scope.tenantId, requestedId, version), value => { session.client.setQueryData(requestedKey, value); });
     } catch (error) {
       if (!session.active) return;
-      message = error instanceof ConversationFailure && error.kind === 'conflict' ? 'The run changed before cancellation. Refreshing its current status.' : 'Could not cancel the run. Check its current status and try again.';
+      message = error instanceof ConversationFailure && error.kind === 'conflict' ? t('web.RunDetails.theRunChangedBeforeCancellationRefreshingItsCurrentStatus') : t('web.RunDetails.couldNotCancelTheRunCheckItsCurrentStatus');
       void run.refetch();
     } finally { if (session.active) cancelling = false; }
   }

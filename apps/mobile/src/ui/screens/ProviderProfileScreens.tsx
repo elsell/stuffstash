@@ -53,7 +53,7 @@ export function ProviderProfileListScreen({
       </SettingsSection>
       <SettingsSection title={t('mobile.ProviderProfileScreens.profiles')}>
         {providers.state.viewModel.profiles.length === 0 ? (
-          <SettingsValueRow label={t('mobile.ProviderProfileScreens.noProfiles')} value="Add one to begin" />
+          <SettingsValueRow label={t('mobile.ProviderProfileScreens.noProfiles')} value={t('mobile.ProviderProfileScreens.addOneToBegin')} />
         ) : providers.state.viewModel.profiles.map((profile, index) => (
           <View key={profile.id}>
             {index > 0 ? <SettingsSeparator /> : null}
@@ -212,7 +212,7 @@ export function ProviderProfileDetailScreen({
         <Text style={styles.detailSubtitle}>{stagePresentation(profile.capability).title} · {profile.providerKind}</Text>
       </View>
       <SettingsSection title={t('mobile.ProviderProfileScreens.configuration')}>
-        <SettingsValueRow label={t('mobile.ProviderProfileScreens.model')} value={profile.modelName || 'Default'} />
+        <SettingsValueRow label={t('mobile.ProviderProfileScreens.model')} value={profile.modelName || t('mobile.ProviderProfileScreens.default')} />
         <SettingsSeparator />
         <SettingsValueRow label={t('mobile.ProviderProfileScreens.status')} value={formatProviderProfileLifecycleLabel(profile.lifecycleState)} />
         <SettingsSeparator />
@@ -223,8 +223,8 @@ export function ProviderProfileDetailScreen({
       <SettingsSection title={t('mobile.ProviderProfileScreens.actions')}>
         {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.replaceCredentialFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.replaceCredential')} disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
         {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.editPromptGuidanceFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.promptGuidance')} disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
-        <NativeCommandButton disabled={working} label={operation === 'test' ? t('mobile.ProviderProfileScreens.testing') : t('mobile.ProviderProfileScreens.testConnection')} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
-        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? t('mobile.ProviderProfileScreens.updating') : lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.enableProfile') : t('mobile.ProviderProfileScreens.disableProfile')} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
+        <NativeCommandButton disabled={working} label={operation === 'test' ? t('mobile.ProviderProfileScreens.testing') : t('mobile.ProviderProfileScreens.testConnection')} onPress={() => void act('test', () => testCommand.execute(profile.id), t('mobile.ProviderProfileScreens.connectionTested'))} />
+        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? t('mobile.ProviderProfileScreens.updating') : lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.enableProfile') : t('mobile.ProviderProfileScreens.disableProfile')} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.profileEnabled') : t('mobile.ProviderProfileScreens.profileDisabled'))} /></> : null}
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
         <SettingsSection footer={t('mobile.ProviderProfileScreens.archivedProfilesRemainInHistoryButCanTBe')}>
@@ -235,7 +235,7 @@ export function ProviderProfileDetailScreen({
             confirmArchive(profile, async () => {
               if (confirmed || !canPresent() || workingRef.current) return;
               confirmed = true;
-              await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), 'Profile archived');
+              await act('archive', () => manageCommand.changeLifecycle(profile.id, 'archive'), t('mobile.ProviderProfileScreens.profileArchived'));
             });
           }} />
         </SettingsSection>

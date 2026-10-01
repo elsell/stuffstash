@@ -18,7 +18,7 @@ export function MoveSelectionList(props: MoveSelectionListProps) {
   const contextColor = foregroundStyle(palette.textMuted);
   return <Host style={{ flex: 1, width: '100%', maxWidth: readableSelectionWidth, alignSelf: 'center' }}>
     <List modifiers={[listStyle('insetGrouped')]}>
-      <Section title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
+      <Section title={props.subjectLabel}>
         <VStack alignment="leading" spacing={spacing.sm}>
           <Text modifiers={[font({ weight: 'semibold' }), subjectColor]}>{props.subject}</Text>
           <Text modifiers={[contextColor]}>{props.context}</Text>
@@ -38,7 +38,7 @@ function Choice({ row }: { readonly row: MoveSelectionRowModel }) {
   const actions = useFocusedSheetActions({ primaryLabel: row.accessibilityLabel, secondaryLabel: '',
     disabled: !!row.disabled, onApply: row.onPress, onBack: () => {} });
   return <Button onPress={actions.onApply} modifiers={[buttonStyle('plain'), disabled(!!row.disabled),
-    accessibilityLabel(row.accessibilityLabel), accessibilityValue(row.selected ? 'Selected' : 'Not selected')]}>
+    accessibilityLabel(row.accessibilityLabel), accessibilityValue(row.selected ? t('mobile.MoveSelectionListios.selected') : t('mobile.MoveSelectionListios.notSelected'))]}>
     <HStack spacing={spacing.md} modifiers={[contentShape(shapes.rectangle())]}>
       <Image systemName={symbols[row.kind]} modifiers={[secondary, frame({ width: 24 })]} />
       <VStack alignment="leading" spacing={spacing.xs}>

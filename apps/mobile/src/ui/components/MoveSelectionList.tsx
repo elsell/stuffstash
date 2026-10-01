@@ -8,7 +8,7 @@ import type { MoveSelectionListProps, MoveSelectionRowModel, MoveSelectionStatus
 export function MoveSelectionList(props: MoveSelectionListProps) {
   const { styles } = useSettingsListStyles();
   return <ScrollView style={{ flex: 1 }} contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
-    <SettingsSection title={props.subjectLabel === 'Moving' ? undefined : props.subjectLabel}>
+    <SettingsSection title={props.subjectLabel}>
       <View style={styles.navigationRow}>
         <Text style={styles.rowLabel}>{props.subject}</Text>
         <Text style={styles.rowContext}>{props.context}</Text>

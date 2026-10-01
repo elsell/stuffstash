@@ -59,7 +59,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       feedback.showNotice({
         tone: 'error',
         title: t('mobile.HomeScreen.couldNotRefreshHome'),
-        message: readableError(error, 'Stuff Stash could not refresh the mobile home screen.')
+        message: readableError(error, t('mobile.HomeScreen.stuffStashCouldNotRefreshTheMobileHomeScreen'))
       });
     }
   }
@@ -72,7 +72,7 @@ export function HomeScreen({ assetCheckoutCommand, dashboardQuery, notificationA
       {dashboardState.isPending && !dashboardState.data ? <LoadingState /> : null}
       {dashboardState.isError && !dashboardState.data ? (
         <ErrorState
-          message={readableError(dashboardState.error, 'Stuff Stash could not load the mobile home screen.')}
+          message={readableError(dashboardState.error, t('mobile.HomeScreen.stuffStashCouldNotLoadTheMobileHomeScreen'))}
           onRetry={() => { void dashboardState.refetch(); }}
         />
       ) : null}

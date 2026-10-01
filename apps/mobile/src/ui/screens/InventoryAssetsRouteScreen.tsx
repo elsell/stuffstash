@@ -44,7 +44,7 @@ export function InventoryAssetsRouteScreen({
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>
       {inventoryAssets.isPending && !inventoryAssets.data ? <LoadingState /> : null}
       {inventoryAssets.isError && !inventoryAssets.data ? (
-        <ErrorState retrying={inventoryAssets.isFetching} onRetry={() => { if (!inventoryAssets.isFetching) void inventoryAssets.refetch(); }} message={readableError(inventoryAssets.error, 'Could not load assets.')} />
+        <ErrorState retrying={inventoryAssets.isFetching} onRetry={() => { if (!inventoryAssets.isFetching) void inventoryAssets.refetch(); }} message={readableError(inventoryAssets.error, t('mobile.InventoryAssetsRouteScreen.couldNotLoadAssets'))} />
       ) : null}
       {inventoryAssets.data ? (
         <InventoryAssetList

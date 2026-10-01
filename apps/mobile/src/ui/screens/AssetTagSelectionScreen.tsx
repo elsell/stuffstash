@@ -45,7 +45,7 @@ export function AssetTagSelectionScreen({ tags, initialSelectedIds, initialNewTa
       {initialNewTags !== undefined && available ? <SettingsSection>
         <NativeCommandButton label={t('mobile.AssetTagSelectionScreen.newTag')} onPress={() => setCreating(true)} />
         {newTags.map((tag, index) => <SettingsChoiceRow key={tag.displayName} multiple selected label={tag.displayName}
-          context="New tag" accessibilityLabel={t('mobile.AssetTagSelectionScreen.removeNewTag', { displayName: String(tag.displayName) })}
+          context={t('mobile.AssetTagSelectionScreen.newTag')} accessibilityLabel={t('mobile.AssetTagSelectionScreen.removeNewTag', { displayName: String(tag.displayName) })}
           onPress={() => setNewTags(current => current.filter((_, currentIndex) => currentIndex !== index))} />)}
       </SettingsSection> : null}
       {!available ? <SettingsSection><Text accessibilityRole="alert" style={styles.rowContext}>{t('mobile.AssetTagSelectionScreen.tagSelectionIsNoLongerAvailableForThisDraft')}</Text></SettingsSection> : (
@@ -54,7 +54,7 @@ export function AssetTagSelectionScreen({ tags, initialSelectedIds, initialNewTa
             accessibilityLabel={t('mobile.AssetTagSelectionScreen.selectTag', { label: String(tag.label) })} selected={selected.includes(tag.id)}
             onPress={() => setSelected(current => current.includes(tag.id) ? current.filter(id => id !== tag.id) : [...current, tag.id])} />)}
           {unavailable.map((id, index) => <SettingsChoiceRow key={id} multiple selected
-            label={t('mobile.AssetTagSelectionScreen.unavailableTag')} context="Not in the current tag list"
+            label={t('mobile.AssetTagSelectionScreen.unavailableTag')} context={t('mobile.AssetTagSelectionScreen.notInTheCurrentTagList')}
             accessibilityLabel={t('mobile.AssetTagSelectionScreen.removeUnavailableTag', { value: String(index + 1) })}
             onPress={() => setSelected(current => current.filter(selectedId => selectedId !== id))} />)}
         </SettingsSection>

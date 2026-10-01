@@ -431,7 +431,7 @@ export function SearchScreen({
             sort={sort}
             statusMessage={state.status === 'error' && state.phase === 'replacement'
               ? state.message
-              : scope === 'places' && places.isError ? 'Place summaries could not load. Your places are still available.' : undefined}
+              : scope === 'places' && places.isError ? t('mobile.SearchScreen.placeSummariesCouldNotLoadYourPlacesAreStill') : undefined}
             submittedQuery={state.results.query}
             tagFilters={tagFilters}
             onClearFilters={clearFilters}

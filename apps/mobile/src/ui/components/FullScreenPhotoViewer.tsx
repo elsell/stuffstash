@@ -116,7 +116,7 @@ function PhotoViewerToolbar({
   const state = fullScreenPhotoViewerActionState(photos, imageIndex, canShowRemoveAction);
   const currentPhoto = photos[imageIndex];
   useEffect(() => {
-    if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Removing photo…');
+    if (isRemoving && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(t('mobile.FullScreenPhotoViewer.removingPhoto'));
   }, [isRemoving]);
 
   const groups: readonly NativeActionMenuGroup[] = [

@@ -20,7 +20,7 @@ const choices = {
   checkoutState: [{ value: 'any', label: t('mobile.BrowseFiltersScreen.anyAvailability') }, { value: 'available', label: t('mobile.BrowseFiltersScreen.available') }, { value: 'checked_out', label: t('mobile.BrowseFiltersScreen.checkedOut') }],
   sort: [{ value: 'updated_desc', label: t('mobile.BrowseFiltersScreen.recentlyChanged') }, { value: 'id_asc', label: t('mobile.BrowseFiltersScreen.defaultOrder') }]
 } as const;
-const titles: Record<Page, string> = { overview: 'Filters', tags: 'Tags' };
+const titles: Record<Page, string> = { overview: t('mobile.BrowseFiltersScreen.filters'), tags: t('mobile.BrowseFiltersScreen.tags') };
 
 export function BrowseFiltersScreen({ initial, query, tags, busy = false, error, onApply, onCancel, onCancelPending, onExpiration }: {
   readonly initial: BrowseFilterDraft; readonly query: string; readonly tags: readonly AssetTagOptionViewModel[];
@@ -51,7 +51,7 @@ export function BrowseFiltersScreen({ initial, query, tags, busy = false, error,
           <SettingsPickerRow label={t('mobile.BrowseFiltersScreen.status')} accessibilityLabel={t('mobile.BrowseFiltersScreen.chooseStatus')} value={draft.lifecycleState} options={choices.lifecycleState} disabled={busy} onChange={value => setDraft({ ...draft, lifecycleState: value })} />
           <SettingsPickerRow label={t('mobile.BrowseFiltersScreen.availability')} accessibilityLabel={t('mobile.BrowseFiltersScreen.chooseAvailability')} value={draft.checkoutState} options={choices.checkoutState} disabled={busy} onChange={value => setDraft({ ...draft, checkoutState: value })} />
           <SettingsNavigationRow label={t('mobile.BrowseFiltersScreen.tags')} context={draft.tagIds.length ? t('tags.selected', { count: draft.tagIds.length }) : t('tags.any')} accessibilityLabel={t('mobile.BrowseFiltersScreen.chooseTags')} onPress={() => open('tags')} />
-          {searchMode ? <SettingsValueRow label={t('mobile.BrowseFiltersScreen.sort')} value="Relevance while searching" /> : <SettingsPickerRow label={t('mobile.BrowseFiltersScreen.sort')} accessibilityLabel={t('mobile.BrowseFiltersScreen.chooseSort')} value={draft.sort} options={choices.sort} disabled={busy} onChange={value => setDraft({ ...draft, sort: value })} />}
+          {searchMode ? <SettingsValueRow label={t('mobile.BrowseFiltersScreen.sort')} value={t('mobile.BrowseFiltersScreen.relevanceWhileSearching')} /> : <SettingsPickerRow label={t('mobile.BrowseFiltersScreen.sort')} accessibilityLabel={t('mobile.BrowseFiltersScreen.chooseSort')} value={draft.sort} options={choices.sort} disabled={busy} onChange={value => setDraft({ ...draft, sort: value })} />}
         </SettingsSection>
         <SettingsSection footer={t('mobile.BrowseFiltersScreen.reviewsActiveItemsOnly')}>
           <View style={styles.navigationRow}>

@@ -33,7 +33,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
   const [openingSettings, setOpeningSettings] = useState(false);
   const [settingsError, setSettingsError] = useState('');
   const settingsLaunch = useRef<object | undefined>(undefined);
-  const pushMessage = pushOutcome === 'enabled' ? 'Device setup completed.' : pushOutcome === 'denied' ? 'Allow notifications for Stuff Stash in your device settings, then try again.' : '';
+  const pushMessage = pushOutcome === 'enabled' ? t('mobile.NotificationSettingsScreen.deviceSetupCompleted') : pushOutcome === 'denied' ? t('mobile.NotificationSettingsScreen.allowNotificationsForStuffStashInYourDeviceSettings') : '';
   const pending = useRef(false); const mounted = useRef(true);
   const accessLost = useRef(false);
   const feedbackGeneration = useRef(0);
@@ -54,7 +54,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
     try { await Linking.openSettings(); }
     catch {
       if (mounted.current && settingsLaunch.current === launch && feedbackGeneration.current === generation) {
-        setSettingsError('Device settings could not be opened. Open Settings on your device and choose Stuff Stash to change notification access, or try again.');
+        setSettingsError(t('mobile.NotificationSettingsScreen.deviceSettingsCouldNotBeOpenedOpenSettingsOn'));
       }
     } finally {
       if (settingsLaunch.current === launch) { settingsLaunch.current = undefined; if (mounted.current) setOpeningSettings(false); }
@@ -72,7 +72,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
         accessLost.current = false;
         setTypes(loadedTypes.filter((type) => type.expirationEnabled)); setPreferences(loaded);
       }
-    } catch (caught) { if (mounted.current && !request.signal.aborted) presentFailure(caught, 'Reminder settings could not be loaded. Try again.'); }
+    } catch (caught) { if (mounted.current && !request.signal.aborted) presentFailure(caught, t('mobile.NotificationSettingsScreen.reminderSettingsCouldNotBeLoadedTryAgain')); }
     finally { if (controller.current === request) { pending.current = false; if (mounted.current) setBusy(false); } }
   }
   async function save(operation: (signal: AbortSignal) => Promise<NotificationPreferences>) {
@@ -85,7 +85,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
       if (!mounted.current || request.signal.aborted) throw new Error('Settings navigation changed.');
       setPreferences(loaded); onChanged?.();
     } catch (caught) {
-      if (mounted.current && !request.signal.aborted) presentFailure(caught, 'Your changes are still here. Refresh saved settings before trying again.');
+      if (mounted.current && !request.signal.aborted) presentFailure(caught, t('mobile.NotificationSettingsScreen.yourChangesAreStillHereRefreshSavedSettingsBefore'));
       throw caught;
     } finally { if (controller.current === request) { pending.current = false; if (mounted.current) setBusy(false); } }
   }
@@ -144,7 +144,7 @@ export function NotificationSettingsScreen({ tenantId, inventoryId, session, ass
         <SettingsSection title={t('mobile.NotificationSettingsScreen.assetTypeReminders')} footer={!types.length ? t('mobile.NotificationSettingsScreen.enableExpirationTrackingOnATypeToCustomizeIts') : t('mobile.NotificationSettingsScreen.eachTypeUsesYourInventoryDefaultsUnlessYouChoose')}>
           {types.map((entry,index) => {
             const rule=preferences.overrides.find(value => value.customAssetTypeId === entry.id)?.settings;
-            return <View key={entry.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow label={entry.displayName} accessibilityLabel={t('mobile.NotificationSettingsScreen.reminders', { displayName: String(entry.displayName) })} value={rule ? rule.enabled ? 'Custom' : 'Off' : 'Uses defaults'} disabled={busy} onPress={() => onNavigate({kind:'type',typeId:entry.id})} /></View>;
+            return <View key={entry.id}>{index ? <SettingsSeparator /> : null}<SettingsNavigationRow label={entry.displayName} accessibilityLabel={t('mobile.NotificationSettingsScreen.reminders', { displayName: String(entry.displayName) })} value={rule ? rule.enabled ? t('mobile.NotificationSettingsScreen.custom') : t('mobile.NotificationSettingsScreen.off') : t('mobile.NotificationSettingsScreen.usesDefaults')} disabled={busy} onPress={() => onNavigate({kind:'type',typeId:entry.id})} /></View>;
           })}
         </SettingsSection>
       </> : null}

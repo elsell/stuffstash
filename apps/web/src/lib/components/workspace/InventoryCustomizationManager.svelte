@@ -145,7 +145,7 @@
       typeName = '';
       typeDescription = '';
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be created. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryCustomizationManager.customAssetTypeCouldNotBeCreatedTryAgain'));
     } finally {
       busy = false;
     }
@@ -156,7 +156,7 @@
       return;
     }
     if (fieldApplicability === 'custom_asset_types' && fieldTargets.length === 0) {
-      error = 'Select at least one custom type for this field.';
+      error = t('web.InventoryCustomizationManager.selectAtLeastOneCustomTypeForThisField');
       return;
     }
     busy = true;
@@ -181,7 +181,7 @@
       fieldTargets = [];
       enumOptions = '';
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be created. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryCustomizationManager.customFieldCouldNotBeCreatedTryAgain'));
     } finally {
       busy = false;
     }
@@ -200,7 +200,7 @@
       onSchemaChange(nextAssetTypes, fieldDefinitions);
       return true;
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Custom asset type could not be archived. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryCustomizationManager.customAssetTypeCouldNotBeArchivedTryAgain'));
       return false;
     } finally {
       busy = false;
@@ -218,7 +218,7 @@
       onSchemaChange(assetTypes, nextFieldDefinitions);
       return true;
     } catch (caught) {
-      error = safeWorkspaceErrorMessage(caught, 'Custom field could not be archived. Try again.');
+      error = safeWorkspaceErrorMessage(caught, t('web.InventoryCustomizationManager.customFieldCouldNotBeArchivedTryAgain'));
       return false;
     } finally {
       busy = false;

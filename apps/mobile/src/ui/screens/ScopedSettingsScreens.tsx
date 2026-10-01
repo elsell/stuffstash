@@ -37,7 +37,7 @@ function ScopeScreen({ model, onNavigate, scope, exportCommand }: { readonly exp
       ] : []
     : [
         ...(settings.selectedInventory.permissions.includes('share') ? [{ id: 'sharing' as const, label: t('mobile.ScopedSettingsScreens.sharing') }] : []),
-        { id: 'notifications', label: t('mobile.ScopedSettingsScreens.notifications'), context: 'Your reminders' },
+        { id: 'notifications', label: t('mobile.ScopedSettingsScreens.notifications'), context: t('mobile.ScopedSettingsScreens.yourReminders') },
         { id: 'tags', label: t('mobile.ScopedSettingsScreens.tags') },
         { id: 'fields', label: t('mobile.ScopedSettingsScreens.customFields') },
         { id: 'asset-types', label: t('mobile.ScopedSettingsScreens.assetTypes') }
