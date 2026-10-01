@@ -1,7 +1,5 @@
 package agentmodel
 
-import ()
-
 type RealtimeVoiceAssetToolOutput struct {
 	NextCursor string                       `json:"nextCursor,omitempty"`
 	Tool       string                       `json:"tool"`

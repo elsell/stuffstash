@@ -1,4 +1,4 @@
-package app
+package agentmodel
 
 import (
 	"context"
@@ -10,13 +10,13 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
-func (a App) validateRealtimeVoiceProposalTypes(ctx context.Context, session RealtimeVoiceSession, commands []ports.ActionPlanCommandRecord) error {
+func (a RealtimeConversationService) validateRealtimeVoiceProposalTypes(ctx context.Context, session RealtimeConversationSession, commands []ports.ActionPlanCommandRecord) error {
 	for _, command := range commands {
-		if isCustomizationCommand(command.Kind) {
+		if IsCustomizationCommand(command.Kind) {
 			if len(commands) != 1 {
 				return ports.ErrInvalidProviderInput
 			}
-			if err := a.ensureActiveInventoryAccess(ctx, session.Principal, session.TenantID, session.InventoryID, ports.InventoryPermissionConfigure); err != nil {
+			if err := a.EnsureActiveInventoryAccess(ctx, session.Principal, session.TenantID, session.InventoryID, ports.InventoryPermissionConfigure); err != nil {
 				return err
 			}
 			continue
@@ -33,7 +33,7 @@ func (a App) validateRealtimeVoiceProposalTypes(ctx context.Context, session Rea
 		if command.Kind != actionplan.CommandKindCreateAsset && command.Kind != actionplan.CommandKindCreateLocation {
 			continue
 		}
-		args, err := parseActionPlanCreateArguments(command)
+		args, err := ParseActionPlanCreateArguments(command)
 		if err != nil {
 			return err
 		}
@@ -59,12 +59,12 @@ func (a App) validateRealtimeVoiceProposalTypes(ctx context.Context, session Rea
 	return nil
 }
 
-func (a App) validateRealtimeVoiceDetailCorrection(ctx context.Context, session RealtimeVoiceSession, command ports.ActionPlanCommandRecord) error {
-	args, err := parseActionPlanUpdateArguments(command)
+func (a RealtimeConversationService) validateRealtimeVoiceDetailCorrection(ctx context.Context, session RealtimeConversationSession, command ports.ActionPlanCommandRecord) error {
+	args, err := ParseActionPlanUpdateArguments(command)
 	if err != nil {
 		return err
 	}
-	item, err := a.GetAsset(ctx, GetAssetInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID, AssetID: args.AssetID, Source: audit.SourceConversation})
+	item, err := a.GetAsset(ctx, assetapp.GetAssetInput{Principal: session.Principal, TenantID: session.TenantID, InventoryID: session.InventoryID, AssetID: args.AssetID, Source: audit.SourceConversation})
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (a App) validateRealtimeVoiceDetailCorrection(ctx context.Context, session 
 	return nil
 }
 
-func (a App) validateConversationFields(ctx context.Context, session RealtimeVoiceSession, typeID asset.CustomAssetTypeID, fields map[string]any) error {
+func (a RealtimeConversationService) validateConversationFields(ctx context.Context, session RealtimeConversationSession, typeID asset.CustomAssetTypeID, fields map[string]any) error {
 	if a.customFields == nil {
 		return ports.ErrInvalidProviderInput
 	}

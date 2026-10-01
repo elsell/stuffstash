@@ -241,3 +241,20 @@ shapes, error identity, pagination limits, source attribution, query order, fina
 access checks and adversarial conversation tests. This extraction changes ownership,
 not the access model or user-visible behavior; existing tests remain the regression
 contract rather than duplicating tests for moved implementation details.
+
+### Realtime conversation and proposal coordination
+
+The agent-model application package owns conversation-memory leasing, legacy-turn
+adaptation, model/tool budgets, observed-asset freshness, final answer projection,
+proposal validation and draft preparation. These decisions must not remain in the
+root facade. Inject existing authorized asset/inventory query entrypoints, read
+execution, action-plan services and schema repositories. Session wiring supplies
+the prepared workflow, model, memory, context limit and scope explicitly.
+
+Completion and diagnostic callbacks may bridge the remaining realtime delivery
+coordinator during migration; they must preserve error identity, event ordering,
+and cancellation behavior. Proposal review metadata is resolved before persisting
+a draft; stale or unobserved references cannot become answers or approved changes.
+Keep existing production-entrypoint and adversarial tests authoritative. Root
+compatibility helpers may convert scope and delegate, but must not duplicate the
+conversation, validation, or tool-choice policy.

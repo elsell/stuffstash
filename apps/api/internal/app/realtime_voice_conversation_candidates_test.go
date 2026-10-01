@@ -17,7 +17,7 @@ func TestConversationSearchRetainsCompetingCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	executor := &realtimeConversationTools{application: application, session: session, emit: func(RealtimeVoiceEvent) error { return nil }, visible: map[string]struct{}{}, items: map[string]realtimeVoiceAssetToolItem{}}
+	executor := application.newRealtimeConversationTools(session, func(RealtimeVoiceEvent) error { return nil })
 	for _, args := range []map[string]any{{"query": "Coffee Counter", "limit": "one"}, {"query": ""}, {"query": "Coffee Counter", "unsupported": true}} {
 		failed, err := executor.ExecuteConversationTool(context.Background(), ports.AgentToolCall{ID: "malformed", Name: RealtimeVoiceToolSearchAuthorizedAssets, Arguments: args})
 		var feedback map[string]any
