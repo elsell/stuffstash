@@ -5,6 +5,7 @@ import "context"
 type EventName string
 
 const (
+	EventMCPToolCompleted                          EventName = "mcp_tool.completed"
 	EventNotificationDeliverySettled               EventName = "notification_delivery.settled"
 	EventNotificationWorkerFailed                  EventName = "notification_worker.failed"
 	EventNotificationDeviceUpdated                 EventName = "notification_device.updated"

@@ -590,6 +590,9 @@ func (f *fakeAssetRepository) AssetHasActiveChildren(_ context.Context, tenantID
 func (f *fakeAssetRepository) ListAssetsByInventory(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetListPageRequest) ([]asset.Asset, error) {
 	items := []asset.Asset{}
 	for _, item := range f.items {
+		if page.Parent.Applied && item.ParentAssetID != page.Parent.ID {
+			continue
+		}
 		if item.TenantID == asset.TenantID(tenantID.String()) && item.InventoryID == asset.InventoryID(inventoryID.String()) && item.ID.String() > page.AfterAssetID.String() && fakeAssetLifecycleMatches(item.LifecycleState, page.LifecycleFilter) {
 			items = append(items, item)
 		}

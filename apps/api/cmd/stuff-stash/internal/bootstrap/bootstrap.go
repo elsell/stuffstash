@@ -75,7 +75,12 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	if err := replayLocalDevelopmentAuthorization(ctx, cfg, authorizer, repositories); err != nil {
 		return err
 	}
+	mcpHandler, err := buildMCPHandler(cfg, application, observer)
+	if err != nil {
+		return err
+	}
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
+		MCPHandler:         mcpHandler,
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MobileAuth: httpserver.MobileAuthOptions{
 			Issuer:      cfg.OIDCIssuer,

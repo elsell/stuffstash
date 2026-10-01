@@ -107,7 +107,14 @@ const (
 	AssetLifecycleFilterAll      AssetLifecycleFilter = "all"
 )
 
+// AssetParentFilter distinguishes an unfiltered list from roots (Applied with an empty ID) and direct children.
+type AssetParentFilter struct {
+	Applied bool
+	ID      asset.ID
+}
+
 type AssetListPageRequest struct {
+	Parent          AssetParentFilter
 	OnlyDated       bool
 	AfterAssetID    asset.ID
 	AfterUpdatedAt  time.Time

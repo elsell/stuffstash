@@ -29,6 +29,7 @@ type CreateAssetInput struct {
 }
 
 type ListAssetsInput struct {
+	Parent         ports.AssetParentFilter
 	Principal      identity.Principal
 	Source         audit.Source
 	RequestID      string

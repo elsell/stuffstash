@@ -17,9 +17,10 @@ The API reads configuration from environment variables at startup.
 | Integer | Positive base-10 integers |
 | List | Comma-separated values, trimmed and deduplicated |
 
-Invalid primitive values fall back to their defaults during API environment
-parsing. Unsupported adapter modes, missing required adapter settings, and
-invalid enabled provider settings fail startup.
+Most legacy primitive settings fall back to their defaults when invalid.
+Strict settings, including MCP enablement and export limits, reject invalid
+values at startup. Unsupported adapter modes, missing required adapter settings,
+and invalid enabled provider settings also fail startup.
 
 ## API: HTTP
 
@@ -56,6 +57,32 @@ invalid enabled provider settings fail startup.
 
 `STUFF_STASH_OIDC_CLIENT_ID` is included in the accepted client ID set even when
 `STUFF_STASH_OIDC_CLIENT_IDS` is also configured.
+
+## API: External Agent Access
+
+MCP is disabled by default. See [Connect an Inventory Agent](../mcp/) for
+client requirements, authentication, and available read tools.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_MCP_ENABLED` | `false` | Enables `/mcp`. Use `true` or `false`; unrecognized values fail startup. |
+| `STUFF_STASH_MCP_AUTH_MODE` | empty | Must explicitly match the API authentication mode when enabled. |
+| `STUFF_STASH_MCP_PUBLIC_URL` | empty | Canonical HTTPS endpoint ending in `/mcp`. Explicit local development permits loopback HTTP. |
+
+MCP uses the API's body-size, rate-limit, CORS, and authentication settings.
+`STUFF_STASH_HTTP_WRITE_TIMEOUT` also bounds each MCP request's application work.
+
+## API: Inventory Export
+
+See [Export Your Inventory](../export-inventory/) for formats and included data.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUFF_STASH_EXPORT_MAX_RECORDS` | `10000` | Maximum records per exported collection. |
+| `STUFF_STASH_EXPORT_MAX_BYTES` | `67108864` | Maximum encoded export size in bytes. |
+
+Both limits must be positive integers. Invalid values fail startup; exports
+that exceed either bound fail without publishing a partial file.
 
 ## API: Authorization
 
