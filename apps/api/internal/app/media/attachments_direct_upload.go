@@ -1,0 +1,257 @@
+package media
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"strconv"
+	"strings"
+
+	"github.com/stuffstash/stuff-stash/internal/app/apperrors"
+	"github.com/stuffstash/stuff-stash/internal/domain/asset"
+	"github.com/stuffstash/stuff-stash/internal/domain/audit"
+	"github.com/stuffstash/stuff-stash/internal/domain/identity"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
+	"github.com/stuffstash/stuff-stash/internal/domain/tenant"
+	"github.com/stuffstash/stuff-stash/internal/ports"
+)
+
+type InitiateAttachmentDirectUploadInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	FileName    string
+	ContentType string
+	SizeBytes   int64
+}
+
+type CompleteAttachmentDirectUploadInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	UploadID    string
+}
+
+type verifiedAttachmentInput struct {
+	Principal   identity.Principal
+	Source      audit.Source
+	RequestID   string
+	TenantID    tenant.ID
+	InventoryID inventory.InventoryID
+	AssetID     asset.ID
+	ID          media.ID
+	StorageKey  media.StorageKey
+	FileName    media.FileName
+	ContentType media.ContentType
+	SizeBytes   int64
+	SHA256      media.SHA256
+}
+
+func (a AttachmentService) InitiateAttachmentDirectUpload(ctx context.Context, input InitiateAttachmentDirectUploadInput) (ports.DirectAttachmentUpload, error) {
+	if err := a.deps.Access.EnsureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return ports.DirectAttachmentUpload{}, err
+	}
+	if a.deps.DirectUploads == nil {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrInvalidInput
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return ports.DirectAttachmentUpload{}, err
+	}
+	fileName, ok := media.NewFileName(input.FileName)
+	if !ok {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrAttachmentFileNameInvalid
+	}
+	contentType, ok := media.NewContentType(input.ContentType)
+	if !ok {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrAttachmentContentTypeUnsupported
+	}
+	if input.SizeBytes <= 0 {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrInvalidInput
+	}
+	if input.SizeBytes > int64(a.deps.MaxAttachmentBytes) {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrAttachmentTooLarge
+	}
+	uploadID := a.deps.IDs.NewID()
+	attachmentID, ok := media.NewID(a.deps.IDs.NewID())
+	if !ok || strings.TrimSpace(uploadID) == "" {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrInvalidInput
+	}
+	storageKey, ok := media.NewStorageKey(input.TenantID.String() + "/" + input.InventoryID.String() + "/" + input.AssetID.String() + "/" + attachmentID.String())
+	if !ok {
+		return ports.DirectAttachmentUpload{}, apperrors.ErrInvalidInput
+	}
+	expiresAt := a.deps.Clock.Now().UTC().Add(a.deps.DirectUploadTTL)
+	upload, err := a.deps.DirectUploads.CreateDirectAttachmentUpload(ctx, ports.DirectAttachmentUploadRequest{
+		UploadID:     uploadID,
+		AttachmentID: attachmentID,
+		TenantID:     input.TenantID,
+		InventoryID:  input.InventoryID,
+		AssetID:      input.AssetID,
+		StorageKey:   storageKey,
+		FileName:     fileName,
+		ContentType:  contentType,
+		SizeBytes:    input.SizeBytes,
+		ExpiresAt:    expiresAt,
+	})
+	if err != nil {
+		a.deps.Observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "direct upload creation failed"})
+		return ports.DirectAttachmentUpload{}, err
+	}
+	a.deps.Observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentDirectUploadCreated,
+		Message: "attachment direct upload created",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": attachmentID.String(),
+			"principal_id":  input.Principal.ID.String(),
+		},
+	})
+	return upload, nil
+}
+
+func (a AttachmentService) CompleteAttachmentDirectUpload(ctx context.Context, input CompleteAttachmentDirectUploadInput) (media.Attachment, error) {
+	if err := a.deps.Access.EnsureActiveInventoryAccess(ctx, input.Principal, input.TenantID, input.InventoryID, ports.InventoryPermissionEditAsset); err != nil {
+		return media.Attachment{}, err
+	}
+	if a.deps.DirectUploads == nil || a.deps.Blobs == nil {
+		return media.Attachment{}, apperrors.ErrInvalidInput
+	}
+	if err := a.ensureActiveAssetForAttachment(ctx, input.TenantID, input.InventoryID, input.AssetID); err != nil {
+		return media.Attachment{}, err
+	}
+	completed, err := a.deps.DirectUploads.CompleteDirectAttachmentUpload(ctx, input.UploadID)
+	if err != nil {
+		a.deps.Observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "direct upload completion failed"})
+		switch {
+		case errors.Is(err, ports.ErrDirectUploadIncomplete):
+			return media.Attachment{}, apperrors.ErrNotFound
+		case errors.Is(err, ports.ErrDirectUploadInvalid), errors.Is(err, ports.ErrDirectUploadExpired), errors.Is(err, ports.ErrDirectUploadMismatch):
+			return media.Attachment{}, apperrors.ErrInvalidInput
+		}
+		return media.Attachment{}, err
+	}
+	if completed.UploadID != input.UploadID ||
+		completed.TenantID != input.TenantID ||
+		completed.InventoryID != input.InventoryID ||
+		completed.AssetID != input.AssetID ||
+		completed.SizeBytes <= 0 ||
+		completed.AttachmentID.String() == "" ||
+		completed.StorageKey.String() == "" ||
+		completed.FileName.String() == "" ||
+		completed.ContentType.String() == "" ||
+		completed.SHA256.String() == "" ||
+		completed.ExpiresAt.IsZero() ||
+		!completed.ExpiresAt.After(a.deps.Clock.Now().UTC()) {
+		return media.Attachment{}, apperrors.ErrInvalidInput
+	}
+	if completed.SizeBytes > int64(a.deps.MaxAttachmentBytes) {
+		return media.Attachment{}, apperrors.ErrAttachmentTooLarge
+	}
+	content, err := a.deps.Blobs.GetBlob(ctx, completed.StorageKey)
+	if err != nil {
+		a.deps.Observer.Record(ctx, ports.Event{Name: ports.EventBlobStorageFailed, Message: "direct upload content validation failed"})
+		return media.Attachment{}, err
+	}
+	hashBytes := sha256.Sum256(content)
+	if int64(len(content)) != completed.SizeBytes ||
+		completed.SHA256.String() != hex.EncodeToString(hashBytes[:]) {
+		return media.Attachment{}, apperrors.ErrInvalidInput
+	}
+	if !contentMatchesType(completed.ContentType, content) {
+		return media.Attachment{}, apperrors.ErrAttachmentContentMismatch
+	}
+	attachment, err := a.persistVerifiedAttachment(ctx, verifiedAttachmentInput{
+		Principal:   input.Principal,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		AssetID:     input.AssetID,
+		ID:          completed.AttachmentID,
+		StorageKey:  completed.StorageKey,
+		FileName:    completed.FileName,
+		ContentType: completed.ContentType,
+		SizeBytes:   completed.SizeBytes,
+		SHA256:      completed.SHA256,
+	})
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	a.deps.Observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentDirectUploadCompleted,
+		Message: "attachment direct upload completed",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": attachment.ID.String(),
+			"principal_id":  input.Principal.ID.String(),
+		},
+	})
+	return attachment, nil
+}
+
+func (a AttachmentService) persistVerifiedAttachment(ctx context.Context, input verifiedAttachmentInput) (media.Attachment, error) {
+	attachment, ok := media.NewAttachment(
+		input.ID,
+		media.TenantID(input.TenantID.String()),
+		media.InventoryID(input.InventoryID.String()),
+		media.AssetID(input.AssetID.String()),
+		input.StorageKey,
+		input.FileName,
+		input.ContentType,
+		input.SizeBytes,
+		input.SHA256,
+		a.deps.Clock.Now().UTC(),
+	)
+	if !ok {
+		return media.Attachment{}, apperrors.ErrInvalidInput
+	}
+	auditRecord, err := a.newAuditRecord(auditRecordInput{
+		Principal:   input.Principal,
+		TenantID:    input.TenantID,
+		InventoryID: input.InventoryID,
+		Source:      input.Source,
+		RequestID:   input.RequestID,
+		Action:      audit.ActionAttachmentCreated,
+		TargetType:  audit.TargetAsset,
+		TargetID:    input.AssetID.String(),
+		Metadata: map[string]string{
+			"attachment_id": attachment.ID.String(),
+			"content_type":  attachment.ContentType.String(),
+			"size_bytes":    strconv.FormatInt(attachment.SizeBytes, 10),
+		},
+	})
+	if err != nil {
+		return media.Attachment{}, err
+	}
+	thumbnailJob, err := media.PlanThumbnailJob(attachment)
+	if err != nil {
+		return media.Attachment{}, apperrors.ErrInvalidInput
+	}
+	if err := a.deps.AttachmentUnitOfWork.SaveAttachment(ctx, attachment, auditRecord, thumbnailJob); err != nil {
+		return media.Attachment{}, err
+	}
+	a.deps.Observer.Record(ctx, ports.Event{
+		Name:    ports.EventAttachmentCreated,
+		Message: "attachment created",
+		Fields: map[string]string{
+			"tenant_id":     input.TenantID.String(),
+			"inventory_id":  input.InventoryID.String(),
+			"asset_id":      input.AssetID.String(),
+			"attachment_id": attachment.ID.String(),
+			"principal_id":  input.Principal.ID.String(),
+		},
+	})
+	return attachment, nil
+}

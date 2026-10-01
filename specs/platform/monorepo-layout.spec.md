@@ -167,3 +167,15 @@ active-type assignment policy, optimistic conflicts, atomic repository applicati
 error identities and post-commit events. Root Undo/Redo APIs remain forwarding
 facades; existing unauthorized, cross-scope, conflict and checkout tests remain
 required rather than replacing them with extraction-specific tests.
+
+Attachment creation, direct upload, scoped reads, lifecycle changes, model-image
+preparation and deletion-outbox orchestration belong to `internal/app/media`.
+Reuse the inventory-owned active-access port and shared audit/pagination support.
+The root facade injects the same normalized configuration, repositories, reader,
+image processor and shared thumbnail singleflight/admission state; it must not
+allocate per-request coordination state. Separate upload, query, lifecycle,
+validation, deletion and thumbnail responsibilities. Preserve import preparation,
+attachment ownership checks, byte/content validation, durable thumbnail jobs,
+blob-cleanup leases/retries and safe read audit semantics. Existing attachment,
+direct-upload, thumbnail/concurrency and adversarial transport tests remain the
+acceptance contract for this behavior-preserving move.
