@@ -1,596 +1,99 @@
 # Roadmap Spec
 
-## Current structural priority: reference-led layout correction
-
-The September26 user review rejects the blanket bordered-command composition.
-Follow the reference-led reset in platform-interaction-review.spec.md and the
-linked reference-layout-reset.md. Redesign complete action/row layouts using
-established app task patterns, starting with Details/Move and Filters/Settings.
-Do not repeat another global button-style conversion. This is confirmed scope;
-normal-text screen composition needs new acceptance despite passing behavior tests.
-
-## Latest delivered batch
-
-TestFlight **0.25.0 (140.1)** delivered the confirmed hierarchy/creation batch:
-grouped Details commands, matched native top-right photo Close/More, separate tag
-creation, stable Move context and inset creation, trailing household switching,
-and mobile household/inventory creation. PR203 merged77d129c5; release36180827504
-and Apple changelog readback passed. Combined native acceptance covers the
-unchanged hierarchy workflows in36167444034 and all final photo workflows on
-both iPhone/iPad in36178128868. Required CI and adversarial creation checks pass.
-
-Resume the comprehensive audit from user-confirmed everyday workflow issues;
-this release does not imply the audit is complete. New suspected issues require
-user confirmation before dedicated investigation or remediation. Keep unrelated
-findings separate from release gates. The single current summary and durable
-evidence remain in `docs/reports/mobile-ui-remediation-2026-09-14/README.md`.
-
-Continue from unresolved workflow evidence, not historical pending labels.
-Prioritize any confirmed normal-text defect before enlarged-text work. Inspect
-existing failure captures before dispatching a new run; distinguish task failures
-from fixture-entry or observation timing. Keep physical integrations, assistive
-behavior and wider-device acceptance explicit. Native runs remain manually
-selected for frozen scopes; audit-only evidence does not require TestFlight.
-
-## Purpose
-
-Stuff Stash needs a durable place to record what work should happen next.
-
-This spec exists so a cold-start agent can recover the project direction from the repository without relying on chat history.
-
-## Scope
-
-This spec captures near-term sequencing, current focus, and known follow-up work.
-
-It is not a full product backlog, release plan, issue tracker, or substitute for domain specs.
-
-## Maintenance Rules
-
-- Keep this spec current whenever project focus, sequencing, completion evidence, or known blockers change.
-- Do not update this spec for tiny fixes, formatting-only changes, or routine refactors that do not change project direction.
-- Keep entries short, concrete, and ordered.
-- Move completed work into the repository history; do not let this spec become a changelog.
-- If a next step needs domain detail, create or update the relevant domain spec and link to it from the work item.
-- If this spec and a domain spec disagree, update the domain spec first, then update this roadmap.
-
-## Current Focus
-
-The user now authorizes full mobile audit **and remediation**, beyond the previous
-source-only report. Follow `specs/platform/mobile-comprehensive-ui-audit.spec.md`
-and the surface/axis ledger under `docs/reports/mobile-ui-remediation-2026-09-14/`.
-Completion requires tracking every applicable cell and confirmed finding; do not
-close the effort after only fixing the original ten audit examples.
-
-
-The next mobile review follows everyday workflows: Home → Browse List/Map →
-asset → Edit/Move → Filters and back. Prioritize stable screen structure and
-controls, appropriate task patterns, visual coherence, then detailed states.
-The144-surface/24-axis ledger checks omissions; it must not drive work toward easy
-measurements or tests. Preserve bounded investigation and quiet sleeping
-scripts that report terminal results, not repeated unchanged waiting messages.
-
-Earlier Edit/Move pattern candidates, persistent tabs and command-emphasis work
-have shipped. Their old candidate/PR status is historical; recover current decisions
-from the audit summary rather than restarting those investigations.
-
-The older expiration rollout notes below are historical baseline context. The user
-has since verified notifications work; do not treat the old APNs setup gap as a
-current blocker without rechecking deployment state.
-
-
-Expiration tracking is implemented and merged in PR 87: optional per-type tracking,
-exact-day and month-only dates, personal inventory defaults and type overrides,
-web/mobile inboxes, native push adapters, and conversational date commands and
-queries. Follow `specs/expiration/expiration-tracking.spec.md` and
-`specs/notifications/expiration-notifications.spec.md`. The user approved the
-existing shared/native UI direction; no additional design gate is pending.
-
-Version **0.22.0** is deployed through GitOps commit `9642b8a`; API and web health
-checks passed and migrations completed. TestFlight release workflow `34563993830`,
-attempt 2, successfully uploaded **0.22.0 (75.2)** on 2026-09-11. The archive's
-production push entitlement was verified. Apple processing and physical-device
-acceptance are not established by upload success. Signing maintenance PRs 89–91
-reused the existing distribution certificate to repair the provisioning profile.
-
-The feature remains open for **actual push delivery**: the deployment still needs
-an APNs signing key and provider configuration, followed by device receipt and tap
-verification. Do not describe push as delivered based on adapter tests or signing
-success. Confirm the deployed language profile uses the accepted model; explicit
-existing profiles are intentionally unchanged. Flash passed sixteen live
-expiration/audio cases plus the mixed tag-query fixture; Flash-Lite failed.
-See `specs/expiration/live-acceptance.spec.md` for the bounded evidence and remaining
-acceptance limits. This expiration work supersedes the older voice-only focus below.
-
-
-Durable background thumbnail generation and cooperative scheduling are implemented
-behind ports with an in-process worker, PostgreSQL queue, fenced publication and
-per-photo ownership. The controlled one-worker 500m/512Mi comparison reduced
-back-to-back immediate-open median from 8.04 to 4.82 seconds, but the slowest of six
-samples increased from 12.50 to 13.77 seconds. Peak memory was 341 MiB. Preserve
-this limit and worker count; the evidence does not justify more memory yet.
-Scheduler validation `34080191156` and final PR CI `34080988756` passed; code critic
-review found no blocker. PR 66 merged as `095e5ede9`; v0.20.0 is published and its
-API/web digests are deployed through GitOps `8b7b185`. All 18 released-image
-thumbnail variants matched reference hashes; unauthenticated access returned 401,
-and the queue had no pending, leased or failed jobs. See `docs/reports/thumbnail-scheduling-2026-09-07.md` for
-reproduction, trace evidence and the unresolved long-wait counterexample.
-
-Storage-path stalls persist independently of image scheduling. Read-only node or
-storage-server diagnostics remain needed; do not attribute them to a physical
-cause without evidence. Web/mobile telemetry activation, physical-device rendering,
-broader instrumentation, alerts/SLOs and extended profiling are deferred. Frontend
-telemetry type checks now pass. Keep builds in CI on the disk-constrained host.
-
-The next milestone is a successful real voice conversation through the intended production flow. Pause additional configuration features. Exercise recorded audio over the authenticated mobile WebSocket protocol against configured providers, inspect transcription and authorized retrieval, and require a grounded spoken answer for the baby-clothes location question. Fix only blockers exposed by this path before broadening the workspace. Follow `specs/agent-model/voice-conversation-quality.spec.md`; preserve the configurable workflow work already completed. All builds remain in CI. Release and Kubernetes changes still use TestFlight and the infra GitOps repository.
-
-The deployed baseline reproduced the reported failure on 2026-09-05: “Where are my baby clothes?” was transcribed correctly at 1.7 seconds, four search calls finished by 4.5 seconds, then `language_inference_failed` terminated the session at 7.5 seconds without speech. Session `01M1SNQ5KG3JXH7MJ6MBEVF070` is a failing live acceptance baseline, not evidence that the un-deployed branch fixes it. Keep sanitized event traces and measure the same path after correction. Synthetic recorded input exercises audio services but does not establish phone microphone/playback acceptance.
-
-The isolated real-audio branch regression failed at `ef87f0ee5` after retrieving two tagged items: evidence assessment returned invalid provider output. Candidate `64ed478be` clarifies location/category and resolution semantics without relaxing validation. Five ADC-backed MP4 → WebSocket → STT → investigation/retrieval → grounded response → MP3 runs passed on the authorized ADC host, with speech available in 4.8–5.8 seconds. Each answer named both correct bins and bound both fixture items. These runs used isolated inventory and injected real providers, not deployed OIDC/provider-profile routing or phone audio. The next gate is the same read-only question on the deployed API; do not resume configuration expansion first.
-
-The web workspace includes editing, fixture cases, pinned runs, cancellation, result comparison and activation. CI 33991039180 passed the full suite; browser evidence covers desktop and mobile layouts with fake HTTP responses. Case-history API and generated contract validation passed CI 33991840830, but further history UI and configuration expansion are deferred until the voice milestone. These checks do not establish real provider or speech quality.
-
-The branch implements workflow draft revisions and operator limits, production provider pinning and shared model budgets, retrieval policy, grounded fallback, answer continuity and explicit additional-item creation. These passed CI through run 33981024508. Isolated text execution through the production loop passed run 33981735515; versioned case storage with PostgreSQL/SQLite/memory parity passed run 33982114508. These results do not establish speech or device quality.
-
-The current pass adds audited tenant-configure case APIs and pinned run lifecycle transitions with lease fencing, sequential verdicts, cancellation and recovery limits. Red baselines are 33982397188 (absent case routes) and 33982825661 (absent run domain). Implementation tests passed CI 33982950653 at d863b95a5; its only failing step was the expected saved-contract drift check. The previous case API pass exposed a Huma schema-name collision; domain-specific request body names fix it. CI now regenerates the Go OpenAPI contract and uploads client-generation artifacts, so stale checked-in contracts cannot pass unnoticed. The regenerated OpenAPI and TypeScript artifact passed all checks in run 33983302041 at 2de2ee209. Unicode fixture/proposal title validation now matches production byte limits; its red baseline 33983186826 rejected the previously accepted 162-byte Unicode fixture, and the fix passed run 33983302041. Run rehydration and exact-successor validation now protect saved verdicts, immutable inputs, completed history, terminal states and timestamp round trips; these passed code-critic review and all checks in CI 33983682640 at c2cb5517c. Rehydration red baseline 33983377616 failed on the absent constructor as expected; successor red baseline 33983572947 failed before implementation. Run repository conformance baseline 33983912441 failed on missing ports/audit actions; memory and GORM repositories now implement atomic successor/CAS/audit saves, scoped reads/head pagination and bounded runnable discovery with migration 43. Source review passed; implementation CI remains pending, including PostgreSQL concurrent claims and sub-microsecond timestamp round trips.
-
-Durable run storage now has shared memory, SQLite and PostgreSQL conformance coverage for immutable snapshots, audited CAS transitions, concurrent claims, cancellation and timestamp precision. CI caught a PostgreSQL audit-target constraint omission affecting workflows, cases and runs; real-target fixtures and audit readback now guard the fix. The corrected storage pass passed all checks in CI 33984521095 at 5b2b08ff3, including PostgreSQL migration/claims and microsecond parity. Code review found no blockers; the shared legacy audit fixture retains its asset default for unrelated tests, while conversation tests explicitly supply their target.
-
-Authorized queue/cancel application commands now pin explicit workflow/case revisions through scoped repositories and provider snapshots through a dedicated port. Tests cover access checks, invalid pins/configuration, audit rollback, idempotent cancellation and cancellation racing a worker claim. Code review found no blockers; command CI passed in 33984737545 and PR CI 33984755591 at 9379a555b. Production snapshot resolution, worker wiring and adversarial HTTP boundary coverage remain required before exposure.
-
-Provider pinning now has a versioned credential-vault port that returns immutable record identity and owned secret bytes from the same repository read, with scope/retirement validation shared by legacy reads. Its failing-tests-first pass and code review are complete; CI 33984842126 passed at 73fcdec41. Effective provider fingerprints now cover canonical profile configuration, immutable credential ID and factory runtime identity; Google includes operator ADC project/region/quota and the environment-backed credential revision. This pass passed CI 33985005513 at d732a0de2. The production resolver now snapshots exact/default workflow model profiles using versioned credentials and factory identities, without model calls; tests and source review cover scope, readiness, default selection and repeated-profile consistency. Snapshot resolver CI 33985135795 passed at 1556a7ed8. Worker-side provider resolution now checks all pinned configurations before constructing any model, preserves the queued default and returns a tenant-scoped pinned resolver for the existing isolated executor. Tests cover drift, cross-tenant requests, changed defaults and a changed later profile; source review and CI 33985266385 passed at 5db9b30ef. The leased suite-processing application service now claims/resumes runs, checks current author access, records isolated case outcomes, rejects late cancellation results and fails exhausted leases. Tests cover completion, access/configuration failures, cancellation, prefix recovery and exhausted leases. Review found and corrected duration overflow before claiming. Worker CI 33985481549 passed at a012acea1. Active cancellation supervision now uses an injected delay and checks lease/version and current author access during execution; it cancels and joins the case monitor, rechecks access before results, and preserves recoverable leases for infrastructure errors. Controlled-pulse tests and source review are complete; supervision CI 33985620603 passed at 4153509d2. Bounded queue draining now processes 1–100 discovered references with 1–8 concurrent runs, isolates individual failures and joins active work on shutdown. Concurrency/failure/shutdown tests and source review are complete; queue CI 33985741208 passed at 458998cad. Runtime configuration and startup assembly now wire the bounded worker, configured provider resolver and isolated executor, with serial draining and shutdown joining before repository close. Environment validation, disabled-worker behavior, shutdown and configured-authorization assembly have tests; source review passed and runtime CI caught a test fixture calling the read-only tenant repository for creation; the fixture now uses TenantUnitOfWork, with corrected CI pending. Operator configuration docs include ADC credential revision handling. REST query/command exposure now has adversarial HTTP tests and explicit DTO projection; implementation CI is pending.
-
-Evaluation-run query services now require tenant configure permission, scope cursors and reads, and audit before returning data. Memory/SQLite/PostgreSQL conformance covers read-audit persistence through migration 44; application tests cover denied access, audit failure, tenant isolation and 100/101-row pagination. Required checks passed in CI 33986240218; PostgreSQL identified an overlong audit fixture ID, now corrected without changing production storage. Queue/list/get/cancel HTTP routes now use explicit safe DTOs, scoped services and optimistic cancellation versions, with text-only coverage labels. Adversarial route tests, pagination/isolation tests and live-lease/result mapping tests are implemented and source-reviewed. Red baseline 33986494363 failed on absent endpoints as expected. Implementation tests and PostgreSQL checks passed in 33986542127; its only failure was expected generated-contract drift. The OpenAPI/TypeScript contract is now refreshed from that CI artifact. Result/lease projection tests also passed in 33986605248, whose sole failure was the same expected contract drift.
-
-Workflow activation is integrated with runtime and HTTP: exact passing revision/suite/provider pins, current limits and audited selection CAS. CI caught a test fixture Store value/pointer mismatch; corrected activation and discovery repository code passed all checks in 33987255144 at 1f4dfd36c. Migration 45 backfills workflow summary names and latest revision IDs, and bounded head/history repositories avoid per-row revision reads. PostgreSQL backfill and memory/SQLite conformance passed that run.
-
-Workflow query services and five read endpoints now cover heads, latest/pinned revisions, history and current selection through configure authorization and read audits (migration 46). Tests cover denied access, tenant/workflow cursor isolation, audit failures, default/older selection and 100/101-row pages. Source review passed. Query validation 33987439028 passed all checks. HTTP tests and PostgreSQL checks passed in 33987570271 at 40b347da7; the only failure was expected generated-contract drift, now refreshed from its artifact. Read-endpoint red baseline is 33987531940.
-
-Web conversation cache ownership now uses pinned Svelte Query 6.1.38 with existing query-core 5.101.4. The adapter scopes keys by API/account/tenant, deduplicates reads, clears private data on access loss, cancels reads on disposal and bounds visible active-run polling. Source review passed; integrated PR CI 33987869625 passed all checks at b9942af8d, including the cache implementation and refreshed API contract. Mutation reconciliation must be fenced against disposed contexts when UI saves are wired. Only lockfile generation ran locally; no builds. A transient disk-full write failure cleared; roughly 866 MiB remained and redundant committed contract downloads were removed.
-
-Focused generated-transport and workflow repository adapters now preserve session cancellation, scoped identities, immutable settings and checked activation evidence. Transport red CI 33988026616 confirmed the missing implementation; transport validation 33988084437 and workflow PR CI 33988239986 passed. Case repository mapping passed CI 33988350120 with tag/containment/location/proposal round-trip regressions. Run adapters passed required checks in 33988539682; its only failure was contract drift. Source review corrected stalled-token cancellation and custom abort-reason translation. The selection endpoint nullability is corrected and its generated contract refreshed from CI 33988433456; schema regression and behavior checks passed, with only expected contract drift before refresh.
-
-The web interaction design is specified in `specs/agent-model/conversation-workspace.spec.md`; the draft workflow editor is implemented but not wired into the settings screen yet. Editor CI 33988692262 and model-choice CI 33988776192 remain pending. The tenant-only Conversations navigation entry is being wired; fixture/result screens, context-fenced mutations, browser review and live flow evidence remain incomplete. Next validate the remaining API contract and implement the web editing/evaluation workspace on these durable services. Preserve user-defined suites and configured providers without granting approval in fixture evaluations. Follow with real ADC audio cases, supported local-provider comparison where available, TestFlight publication and infra GitOps rollout. No local builds.
-
-The native cancellation and export-compliance fixes shipped in 0.16.4. The current
-search work uses compact authorized API paths to remove mobile ancestor HTTP
-waterfalls and bounds candidate hydration behind the search repository. Baseline
-and final PostgreSQL measurements live in `specs/search/search-latency.spec.md`: large-inventory queries improve to 107–163 ms in the latest run, with sharply reduced hydration. All implementation CI checks passed in run 33945506018; release validation remains pending. Production authenticated timings and query-plan variability remain follow-up work. Keep all builds in CI on this disk-constrained host.
-The first native GitHub Actions TestFlight path is operational and has installed a
-working signed build on a physical device; distribution remains a release gate,
-not the current implementation bottleneck.
-
-The immediate mobile trust focus is replacing bounded raw asset audit rows with a production-shaped, change-first History journey. The slice must preserve the complete audit stream while adding typed cursor-paginated asset activity, atomic field/tag edits with coherent audit and undo behavior, explicit tenant/inventory/asset scope, safe structured changes, immediate saved/Undo feedback, and a native accessible History list/detail flow.
-
-The immediate cross-platform access focus is completing clickable inventory invitation links. The backend token and acceptance primitives already exist; the current slice must add a canonical environment-configured HTTPS link, authenticated safe preview, OIDC/deep-link return behavior, permission-gated creation and one-time copy/share UX on web and mobile, explicit acceptance, terminal failure states, and verified post-accept inventory entry with two identities.
-
-The current focus is completing a production-capability audit and repair pass of the promoted SvelteKit web workspace, with screenshot-backed desktop/mobile verification and deliberate parity with the native mobile product. Home/Browse information architecture and transient-surface behavior are unified. The immediate repair slice consolidates the shell, Home, Browse, detail, settings, import, auth, and transient surfaces onto one native visual foundation with consistent typography, spacing, density, surface hierarchy, photo treatment, and responsive behavior.
-
-The mobile navigation and visual-polish repair is now an explicit parallel focus. Follow `specs/platform/mobile-navigation-and-visual-polish.spec.md`: keep Home/Browse as the only native tabs, preserve the prominent voice accessory and gesture-driven containment Map, and remove nested product navigation from transient surfaces. The first implementation pass routes Map selections through shared asset detail, dismisses Voice before cross-context navigation, removes the Voice child picker modal, fixes Add keyboard/dead-space behavior, and keeps asset location roots visible. Broader native-control migration, device visual verification, PR review, and release evidence remain pending; do not build locally on the disk-constrained host.
-
-The conversational focus is maintaining the production bounded voice investigation loop: broad semantic-family evaluation, calibrated fuzzy discovery, compact authorized custom vocabulary, grounded model-realized answers, deterministic action-plan compilation, and mobile review-contract stability as providers and inventory domains evolve.
-
-The web audit and Browse parity work needs a production-shaped path through:
-
-- a web visual system based on SvelteKit and Svelte-compatible shadcn primitives,
-- clear separation between generated API DTOs and frontend domain models,
-- performance-conscious frontend choices,
-- generated OpenAPI/client integration without hand-written API clients,
-- tenant-first inventory switching through frontend ports and adapters,
-- real tenant and inventory loading from authenticated API discovery,
-- session-scoped tenant and inventory selection without cross-principal bleed,
-- permission-aware empty states and add/create affordances,
-- mobile and desktop access to the same tenant-first context switching model,
-- focused web adapter tests for tenant selection, empty tenants, and selected-tenant inventory creation.
-
-## Current Evidence
-
-- `f18a6c6 feat: add postgres repository adapter` added the GORM repository adapter, initial tenant and inventory migrations, repository mode configuration, and Postgres-backed Compose path.
-- `2791159 chore: add code critic agent` added the code critic custom agent and made post-implementation critic review part of the process.
-- `make test` passed after the Postgres repository adapter was added.
-- `make docs-build` passed after the Postgres repository adapter was added.
-- Docker Compose verification passed on `paul` with Postgres persistence and SpiceDB authorization enabled.
-- Postgres on `paul` contained the tenant and inventory rows created by the verification script.
-- HTTP-level adversarial tests now cover protected-route auth rejection, unrelated-user denial, tenant-owner inventory listing, inventory-owner list filtering, and safe missing-tenant errors.
-- `make verify-spicedb-adapter` passed on `paul` against the pinned local SpiceDB image.
-- The real SpiceDB verifier found and drove fixes for tenant viewer relationships and fully consistent permission checks.
-- Tenant and inventory creation now write durable state and authorization grant intent through a transactional outbox before SpiceDB relationship writes are drained.
-- Authorization outbox retries now run on startup and on an environment-configured interval, not only after create requests.
-- Authorization outbox events now use claim IDs and lease deadlines so multiple API replicas do not update the same event at the same time.
-- The pinned migration library is wired into the `stuff-stash` binary, and the same image can run `migrate up` or `migrate status`.
-- Authorization outbox events now support a terminal dead-letter state for unrecoverable event data problems while keeping transient SpiceDB failures retryable.
-- The first asset REST slice implements asset creation, unified `item`/`container`/`location` kinds, same-inventory containment, cursor-paginated asset listing, and adversarial asset authorization tests.
-- Inventory listing now uses cursor pagination after authorization filtering, preserving the API collection contract without exposing hidden inventories.
-- Direct inventory sharing now supports owner-created viewer/editor grants, cursor-paginated grant listing, outbox-backed SpiceDB relationship writes, and adversarial API tests proving viewers and editors cannot share.
-- Custom field definitions now support tenant and inventory scopes, effective inventory listing, cursor pagination, asset value validation, and adversarial API tests for authorization and scope handling.
-- Asset update and same-inventory movement now support title, description, parent, and custom field updates while preserving containment invariants, editor/viewer authorization boundaries, and descendant relationships.
-- Durable audit history now records the first state-changing tenant, inventory, sharing, custom asset type, custom field definition, and asset actions behind a repository port, with authenticated and authorized paginated REST reads.
-- Custom asset types now exist for tenant and inventory scopes, can be assigned to assets, can be renamed with metadata updates, and custom fields can target all assets or specific custom asset types.
-- Custom field definitions can now be renamed and safely evolved by adding enum options, adding active custom asset type targets, or expanding targeted fields to all assets while rejecting incompatible narrowing or removals.
-- Asset lifecycle now supports archive and restore operations with audit history, active-only default listing, and authorization checks.
-- Asset media attachments now support JSON base64 upload, direct upload initiation/completion behind media ports, cursor-paginated listing, raw content download, thumbnail generation behind an image-processing port, model-image preparation readiness behind media ports, local filesystem blob storage, Garage S3-compatible blob storage, audit history, generated OpenAPI, and adversarial API tests.
-- Local Dex OIDC verification now runs the full API user flow with two Dex-issued ID tokens and SpiceDB authorization.
-- Authorized asset search now supports exact and fuzzy lookup across asset title, description, custom fields, custom asset type metadata, and attachment metadata, with tenant scoping, inventory authorization filtering, lifecycle filtering, cursor pagination, generated OpenAPI, adapter tests, and adversarial API tests.
-- Direct inventory access revocation now removes persisted viewer/editor grants, enqueues SpiceDB revoke events through the authorization outbox, records audit history, exposes a no-content REST endpoint, and has adversarial API tests.
-- Inventory invite-link tokens now support pending email-scoped invitations, time-limited one-time acceptance tokens, verified-email acceptance, outbox-backed SpiceDB grant creation, revocation, audit history, and adversarial API tests.
-- Custom asset type archive now preserves existing asset and custom field target references while hiding archived types from normal lists, blocking new assignments, blocking new field targets, recording audit history, and exposing adversarial API coverage.
-- Full REST lifecycle coverage now exists for tenants, inventories, assets, attachments, custom field definitions, custom asset types, access grant detail, and invitation detail/cancel/delete.
-- Lifecycle endpoints emit read/write audit records, preserve tenant and inventory security boundaries, and are covered by OpenAPI generation checks plus adversarial HTTP tests.
-- The separate SvelteKit web app exists under `apps/web`, uses Dex OIDC with PKCE, uses runtime configuration, calls the API through the generated OpenAPI client boundary, and proves inventory creation, asset creation, active/archived asset browsing, asset archive, asset restore, and asset hard delete.
-- `0c8d7d4 feat(web): add asset lifecycle controls` added the first web lifecycle controls and focused frontend interaction tests.
-- The current web screens are disposable tracer-bullet UI. Do not expand them into the real product UI before a dedicated UI spec and design workshop.
-- `cac140c feat(web): adopt shadcn component primitives` added the Svelte-compatible shadcn foundation and dependency freshness checks.
-- `182b7fb feat(web): add audit history viewing` exposed tenant and inventory audit history through the promoted web settings surface.
-- `a265e47 feat(web): add custom schema management` added promoted custom asset type and custom field management, create integration, edit integration, and focused web tests behind frontend ports.
-- `7daca8e feat(web): add parent quick-create flow`, `63cd859 feat(web): improve containment browsing`, and `ce98824 feat(web): expose location editing` deepened web location browsing, parent quick-create, duplicate-name-safe active rows, nested location navigation, and permission-gated location edit entry.
-- `798927d test(web): add browser smoke coverage` added pinned Playwright browser smoke coverage for the seeded local web workspace, covering desktop shell load, mobile add tray, desktop search, and location/detail/back navigation.
-- The web workspace now overlaps independent inventory reads, reuses bounded same-session Browse results and identity context, cancels replaced Browse and detail work, renders asset metadata before media and history supplements, pauses hidden import polling, and lazy-loads secondary workflow chunks; browser request-budget coverage protects Home/Browse navigation.
-- Sharing and user-management backend hardening now includes an explicit inventory access repository port, paginated invitation listing with status filters, pending-invitation expiration management, generated OpenAPI/client updates, documentation updates, and adversarial API tests for token redaction, tenant/inventory boundaries, and role denial.
-- The first audit-backed undo/redo slice now supports asset create, update, move, archive, and restore through operation-scoped compensating commands, dedicated undoable-operation persistence, generated OpenAPI/client updates, and adversarial API coverage.
-- Asset state-changing application commands now use a dedicated transactional asset unit-of-work port instead of overloading the read repository port with audit and undoable-operation write concerns.
-- Core API hardening now separates read repositories from explicit command/unit-of-work ports across the implemented write surfaces, uses durable blob-deletion intent for attachment hard delete cleanup, routes search visibility through an authorization query port, and applies HTTP security headers, request body limits, and configurable server timeouts.
-- Mobile realtime voice now uses one production typed investigation loop with shape and operation anchoring, reference-scoped authorized evidence, bounded two-round exploration, transcript-grounded containment repair, compact custom-type/field/tag vocabulary, application-owned grounded response briefs, schema-constrained model realization, deterministic action-plan compilation, per-audio-turn authorization refresh, and unchanged mobile progress/clarification/review event families. The removed deterministic factual renderer remains only as a test baseline and is not available as a runtime fallback.
-- Completed voice answers now carry bounded application-authored references for the authorized assets and immediate locations actually named in the displayed response. The mobile voice sheet renders exact, unambiguous mentions as links and exposes explicit Open controls for duplicate or otherwise unplaceable references, while provider prompts remain free of asset IDs and navigation metadata.
-- Provider credential sealing now has a port, AES-256-GCM adapter, encrypted GORM persistence, migrations, startup fail-closed validation, and tests.
-- Provider credentials now sit behind a provider credential vault port; the first adapter composes AES-256-GCM sealing with database-backed encrypted credential rows while preserving atomic provider-profile credential replacement through the existing unit-of-work boundary.
-- Tenant-scoped conversational provider profiles now have a typed agent/model domain model, application service boundary, memory and GORM persistence adapters, migrations, audit/observability taxonomy, and tests.
-- Tenant-scoped provider-profile management now exposes authenticated REST endpoints for create, list, detail, enable, disable, archive, and credential replacement with redacted responses, encrypted credential storage through the sealing port, audit records, generated OpenAPI coverage, and adversarial HTTP tests.
-- Realtime voice session startup now resolves session-scoped provider ports through a resolver boundary, carries selected provider profile IDs on the session, supports a tenant-profile resolver backed by provider profile and encrypted credential ports, and keeps the transitional process-configured dev/Google provider set behind the same resolver interface.
-- `b60bbe8d feat(api): add provider profile test operation` and `eca22004 feat(api): run safe provider diagnostic probes` added a tenant-scoped provider profile test endpoint, safe success/failure metadata, audit/observability hooks, provider-aware credential selection, and capability-specific diagnostic probes for Google-backed language inference, text-to-speech, and speech-to-text endpoint validation.
-- `a69d3f12 feat(api): support api-key Gemini profiles` added Google AI Gemini API-key support for speech-to-text and language-inference provider profiles using `x-goog-api-key`, while keeping Google Cloud Text-to-Speech OAuth-only.
-- Tenant-scoped language-inference provider profiles now support bounded prompt templates that round-trip through the management API, persist through GORM migrations, resolve with the selected provider set, and are passed into realtime language model calls while the API appends the mandatory agent contract.
-- Tenant-scoped provider-profile management now supports non-secret PATCH updates for display name, endpoint URL, model name, runtime options, capability metadata, and prompt template, with partial-update semantics, audit/observability, generated client coverage, and `lastTestedAt` reset when configuration changes.
-- Mobile startup now has a connection/onboarding gate that can save non-secret instance metadata, guide OIDC SSO sign-in, refresh secure mobile sessions, guide tenant and first-inventory creation, rebuild application services after onboarding, and reset the saved instance/session from Settings.
-- Mobile appearance now supports persisted device-local `Light`, `Dark`, and `System` preferences with immediate native chrome updates, semantic light/dark and increased-contrast palettes, app-wide surface adoption, and calm structural borders distinct from interactive control boundaries.
-- Mobile Browse now uses a content-first inventory hierarchy with visible kind scope, separate applied filters and sort, a native filter sheet, complete deep-link filter state, resilient loading/error/empty states, adaptive two-column asset density, one-column place rows, appearance-aware semantic colors, and no photo-readiness or update-time clutter on result cards.
-- Realtime voice sessions now persist durable safe session metadata through a repository port with memory and GORM adapters, including session scope, selected provider profile IDs, lifecycle state, timestamps, and safe failure codes without storing raw audio, transcripts, prompts, model responses, generated speech, credentials, bearer tokens, or provider session IDs.
-- Mobile provider-profile management now exposes safe tenant-scoped provider profile metadata, recommended profile creation, credential replacement, prompt-template replacement, lifecycle actions, safe provider tests, readiness summaries, and a voice-sheet recovery action that opens Voice providers when readiness fails before recording.
-- Mobile Settings now uses a native grouped hierarchy with dedicated account, appearance, server, diagnostics, about, Voice Setup, capability, and provider-profile destinations; Voice administration follows the current tenant dynamically, is permission-gated at every deep link, and has screenshot-backed light/dark and Dynamic Type verification.
-- Mobile individual asset detail now works as a production-shaped asset workspace: shared detail routes from home, inventory lists, search, and location lists; photo-first carousel/strip with add, local reorder preview, viewer, safe metadata, removal, direct-upload progress and retry; edit and move sheets backed by application commands and generated API adapters; lifecycle overflow with archive/restore/permanent delete confirmations; bounded safe audit history; and spatial container/location contents with Add item here and Move things here actions.
-- Mobile realtime voice cancellation now has an application boundary, recorder cleanup path, WebSocket abort path that sends `session.cancel` when session-bound, safe terminal cancelled state, API `session.cancelled` response for pre-processing cancellation, and focused mobile/API tests.
-- Mobile realtime voice can now expose a bounded `propose_action_plan` native tool, persist a proposed action plan through the application boundary, stream a safe `action.plan.proposed` WebSocket event, and render the proposal in the mobile voice sheet review stage without executing inventory writes.
-- Mobile realtime voice can now keep the review WebSocket session open after proposal, accept explicit mobile `action.plan.approve` or `action.plan.cancel` decisions, transition the persisted plan through application services, emit safe review outcome events, and disable duplicate mobile review decisions while awaiting the terminal review outcome.
-- Approved mobile voice action plans can now execute the first single create command slice through the existing asset application boundary, atomically persist the asset/audit/undoable operation with the terminal action-plan state, and stream safe `action.plan.executed` or `action.plan.failed` review outcomes back to mobile.
-- Approved mobile voice action plans can now execute a single `move_asset` command through the existing asset movement boundary, atomically persist the asset move/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
-- Approved mobile voice action plans can now execute a single `archive_asset` command through the existing asset lifecycle boundary, atomically persist the archive/audit/undoable operation with the terminal action-plan state in memory and GORM adapters, and stream safe execution outcomes back to mobile.
-- Approved mobile voice action plans can now execute a single `restore_asset` command through the existing asset lifecycle boundary, atomically persist the restore/audit/undoable operation with the terminal action-plan state, and stream safe execution outcomes back to mobile.
-- `.codex/skills/stuffstash-voice-evaluation` now provides a repo-local Codex skill and harness for live voice corpus trace capture, Codex-judge-assisted review, and primary-agent product-quality evaluation.
-- The final live Gemini realistic voice corpus passed all 24 scenarios with grounded response realization using `gemini-2.5-flash-lite` and ADC in `.stuffstash/voice-evals/20260717T120907Z`, with no execution, assertion, or product failures. A paired response-only comparison over ten semantic families and three repetitions per family—including a larger mixed inventory and a bounded maximum-size summary—passed independent spoken and display semantic predicates plus the production gates 30/30 versus 3/30 for the removed deterministic baseline, with zero generated implementation-language violations versus 24 baseline violations; added response-generation latency was approximately 622 ms median and 992 ms p95 in that run. The two formerly unstable broad-inventory and missing nested-create families also passed three consecutive targeted live repetitions after typed summary and containment-chain policy corrections. Earlier targeted generated production-versus-POC trials passed 5/5 on acquisition create, missing nested create, and missing nested move after exact-source failure analysis, while the 33-family generated run remains descriptive development evidence rather than an exhaustive population claim.
-- `.codex/skills/stuffstash-self-host-audit` now provides a repo-local Codex skill for ruthless outside-in self-hosting documentation audits on user-provided SSH targets, covering public docs, durable Docker Compose with Caddy HTTPS, Postgres, datastore-backed SpiceDB, Garage, bundled Dex OIDC verification, browser onboarding, image upload, production-readiness friction, redaction, cleanup, and reproducibility.
-- Asset checkout and return are implemented as first-class asset availability behavior across the API, generated client contract, web workspace, mobile app, button-confirmed voice action plans, undo/redo, audit history, checkout-aware search/listing, and internal agent read tools for checked-out assets and checkout history.
-
-## Known Gaps
-
-- Changing custom field type, removing custom field enum options or targets, production direct-upload provider adapters, model provider image use, and advanced search ranking/indexing are not implemented.
-- Undo/redo is implemented only for the first asset slice. It is not yet available for hard delete, tenants, inventories, sharing, attachments, custom asset types, custom field definitions, search, or audit reads.
-- Custom field definitions cannot yet perform destructive schema changes, be reordered, imported, exported, or managed through conversational flows.
-- The first web inventory workspace direction is specified in `specs/platform/web-inventory-workspace.spec.md` and has been promoted into `apps/web` with frontend domain, port, API adapter, seeded adapter, and focused workspace components.
-- The first SpiceDB search visibility adapter still evaluates candidate inventories one at a time behind the authorization visibility port; replace it with SpiceDB lookup APIs before large tenants are expected.
-- Rate limiting is specified as required before public or multi-user deployment, but is not implemented.
-- Inventory invitation token creation and API acceptance exist, but clients still expose a bare token instead of a clickable link and have no web/mobile preview-and-accept journey.
-- The general mobile build cannot safely receive arbitrary self-hosted browser invitations through the custom scheme yet. A future handoff must bind the source server and require an exact configured-server match or explicit switch before sending the token to any API.
-- The web UI still needs deeper media attachment management, production direct-upload UX, broader browser coverage against authenticated API/Dex flows, viewer-denied browser coverage, and component-level tests for the asset detail edit and move panels.
-- `specs/platform/ui-design-workshop.spec.md` and `.codex/skills/stuffstash-ui-design` now codify the UI design workshop process, including product-owner decision gates, real SvelteKit candidates, responsive review, accessibility review, and adversarial critique lenses.
-- API-key-backed speech synthesis adapters and the external MCP server are not yet complete. Checkout history is available to the internal agent tool catalog, but the public MCP transport still depends on the external MCP server work.
-
-## Next Work
-
-1. Validate the mobile server-state refactor in PR CI and on a device.
-   - Use `specs/platform/mobile-server-state.spec.md` as the source of truth.
-   - Source tests cover focused ports, scoped query identity, mutation reconciliation, cancellation, bounded Browse scans, denial recovery and progressive feedback; the route evidence matrix records deliberate API limits.
-   - Verify the added Expo connectivity module in a native CI build/device run, measure latency, and check Map gestures and recording. Do not run local builds on the disk-constrained host.
-2. Complete production-grade web and mobile settings customization parity.
-   - Use `specs/platform/client-settings-management.spec.md`, `specs/platform/web-inventory-workspace.spec.md`, `specs/platform/mobile-app-tracer-bullet.spec.md`, and the custom field, custom asset type, tag, lifecycle, and identity/access specs as the source of truth.
-   - Prove one account-based Settings entry, tenant and inventory drill-ins, inherited-versus-local presentation, permission-correct create/edit/lifecycle behavior, inventory tag management without invented restore behavior, equivalent failure and denied states, and screenshot-backed responsive/native verification.
-3. Complete the mobile asset History and atomic edit refactor.
-   - Use `specs/audit-history/audit-and-undo.spec.md`, `specs/assets/asset-model.spec.md`, `specs/platform/rest-api-initial-slice.spec.md`, and `specs/platform/mobile-app-tracer-bullet.spec.md` as the source of truth.
-   - Prove change-first activity after noisy reads, raw audit preservation, safe cursor scoping, one coherent edit/audit/operation, saved Undo feedback, and native accessibility behavior.
-4. Complete clickable web and mobile inventory invitations.
-   - Use `specs/identity-access/tenant-inventory-access.spec.md`, `specs/identity-access/authentication-flow.spec.md`, `specs/identity-access/mobile-oidc-authentication.spec.md`, and the web/mobile platform specs as the source of truth.
-   - Prove canonical link creation, token redaction, sign-in return, authenticated preview, explicit acceptance, terminal states, and post-accept inventory entry with two identities.
-5. Implement the external Stuff Stash MCP server.
-   - Use `specs/agent-model/mcp-agent-tools.spec.md` as the source of truth.
-   - Reuse the same application services, OIDC/auth middleware, authorization boundaries, and tool catalog used by the internal agent loop.
-6. Complete unified Home/Browse web parity and the remaining screenshot-backed audit closure matrix.
-   - Use `specs/platform/web-inventory-workspace.spec.md`, `specs/media/media-attachments.spec.md`, and `specs/identity-access/tenant-inventory-access.spec.md` as the source of truth.
-   - Prioritize the shared transient-surface migration, containable workspaces, media attachment management, browser-level coverage, tenant-first switching, inventory settings, and sharing/access management.
-
-## Later Work
-
-- Google OIDC adapter end-to-end verification.
-- Mobile inventory/auth tracer bullet after the Expo Go development loop is proven.
-- Conversational inventory provider profiles (`specs/agent-model/provider-profiles.spec.md`), MCP read tools (`specs/agent-model/mcp-agent-tools.spec.md`), mobile realtime voice query (`specs/agent-model/mobile-realtime-voice-query.spec.md`), API-mediated realtime sessions, credential sealing, ports, and broader action plan execution. Public MCP write tools must wait for the external approval/action-plan contract.
-- Import and export.
-
-
-## Approved Mobile Onboarding UX Follow-up
-
-The mobile onboarding redesign is specified in
-`specs/identity-access/mobile-oidc-authentication.spec.md#onboarding-ux` and aligned
-with the mobile tracer-bullet contract. An interactive HTML prototype was reviewed
-on 2026-09-05: combined connection/sign-in, conditional household and inventory
-setup, concise copy without a global stepper, and an aligned ghost start-over
-action. Native implementation and partial-creation/authentication recovery tests are in
-[PR #56](https://github.com/elsell/stuffstash/pull/56), which tracks final automated
-validation and merge evidence. Red baseline CI 33994428209 confirmed the missing
-combined commands and screen controls. Source review found no remaining blockers;
-CI is the merge gate, followed by the tagged TestFlight release workflow. Native
-device accessibility/keyboard review remains follow-up work.
-Invitation server-prefill and
-arbitrary-domain browser-to-app handoff remain deferred under the existing
-invitation contract.
-
-## Current mobile conversation focus
-
-Promote approved B1 to the shared native mobile surface: keyboard and voice input, retained exchanges and drafts, ordinary asset navigation with return to conversation, and rich photo result rails. Implementation follows `../agent-model/mobile-conversation-interface.spec.md`. Remote validation on `paul` passed the full API suite, mobile typecheck, 1,108 mobile tests, and relevant structural hooks. Code-critic findings were addressed, including scope-isolated typed continuation, paused capture/playback, retained name buffers and attachment retries. No local builds were run. [PR #73](https://github.com/elsell/stuffstash/pull/73) merged after all CI checks passed. [v0.21.0](https://github.com/elsell/stuffstash/releases/tag/v0.21.0) publishes the API and web images for this implementation. The [release run](https://github.com/elsell/stuffstash/actions/runs/34268710943) owns the tagged iOS archive and TestFlight upload and records their outcome. GitOps commit `45e502d` in the infrastructure repository pins both released images; manifests rendered successfully and the public API health endpoint was healthy after publication. Using `~/.kube/configs/local-don` on `paul`, Flux reported revision `master@sha1:45e502d008b6595f839a5f3b3dbc49a52dcfae3d` Ready and Healthy, and both API/web deployments were 1/1 ready with the exact v0.21.0 digests. Native keyboard/detent behavior still needs device verification from the CI-built release.
-
-## Current focus: expiration usability follow-through (2026-09-11)
-
-Implement the approved expiration UI/UX audit across native and web, mark-unread semantics, reliable badges and inventory-wide expiration status. Validate through remote tests and CI, code-critic review, PR and GitOps/TestFlight release. Native layout/device evidence is required separately from test counts. APNs provider credentials remain a separately deferred setup task.
-
-The first usability release exposed a browser transport gap: PUT preflights were rejected despite public PUT endpoints. The hotfix adds method parity between the published API and CORS, with real HTTP regression coverage; intercepted UI fixtures alone do not validate cross-origin transport.
-
-Device feedback on the first usability release requires a second native settings pass: reuse grouped settings components, replace expanding inline editors with focused navigation, and make inbox refresh cover blank space. The browser CORS hotfix is deployed as v0.23.1 with successful live PUT preflight and preserved authentication denial. Continue native verification and release for the settings pass.
-
-## Current focus: complete expiration workspace and notification taps (2026-09-12)
-
-The user confirmed production push receipt and found TestFlight 0.23.2 (82.1).
-Earlier missing-APNs/release blockers above are superseded. A direct APNs native
-payload mismatch causes notification taps to show a settings error; repair this
-with launch/live regression and authorization checks. Then implement the full
-approved `../expiration/expiration-workspace.spec.md` across native/web, including
-Home, complete date-grouped review, search/filters and Browse integration. Follow
-through remote/CI tests, critic review, PR merge, GitOps and signed TestFlight
-release. Calendar grids remain deferred; physical-device acceptance is recorded
-separately from automated release evidence.
-
-Notification tapping is repaired and uploaded in v0.23.3 (83.1), release workflow
-34693391123. The full expiration workspace merged through
-[PR #101](https://github.com/elsell/stuffstash/pull/101) and is published as
-[v0.24.0](https://github.com/elsell/stuffstash/releases/tag/v0.24.0): Home preview,
-date groups, all/soon/expired modes, combined filters, Browse entry, complete
-scoped counts and pagination, refresh/cancellation and shared detail navigation.
-All six final CI jobs passed, including API checks, 1,279 mobile tests, 1,119 web
-tests and 67 SDK tests. Final remote desktop/phone browser acceptance and complete
-web checks passed; required critic found no blockers. Infrastructure commit
-`5afd902c668d6b40a4a4d60109235c89e05b5119` deployed the released images, and Flux
-reported that exact revision Ready and Healthy with both deployments ready.
-The live health and expiration-contract checks passed, including unauthenticated
-401 denial. Signed iOS 0.24.0 (84.1) delivery is tracked by
-[release run 34696764927](https://github.com/elsell/stuffstash/actions/runs/34696764927).
-Apple processing and physical native acceptance remain separate from its upload
-result. See the workspace spec for detailed validation evidence and the measured
-query-strategy tradeoff.
-
-
-### Native expiration controls follow-through
-
-Device feedback requires replacing loose text actions with a native search bar,
-a system filter toolbar button, Home disclosure rows, and a full-height filter
-sheet with bottom native actions. Remove double insets and use compact system
-date pickers; preserve staged filters and settle pending search before navigation.
-Implementation follows the native control refinement in the expiration workspace
-spec. Remote full mobile tests (1,286), typecheck, targeted regressions and mobile
-structural checks passed; critic findings are addressed. [PR #104](https://github.com/elsell/stuffstash/pull/104) merged after all six CI
-jobs passed in run 34698884326. Signed TestFlight delivery is tracked by
-[release run 34699160120](https://github.com/elsell/stuffstash/actions/runs/34699160120). Physical touch/keyboard
-acceptance is separate from automated evidence.
-
-
-### September 15 interim mobile checkpoint
-
-PR140 merged as eca1ad7e after 1482 remote mobile tests, required CI and cumulative
-review. Release34939488611 succeeded: TestFlight0.24.18 (106.1) and its exact-build
-changelog were verified on September15 at07:39:56 UTC.
-Native6076e824 verifies onboarding margin dismissal and switcher recovery, while
-Add typing/loading and other recorded findings remain unresolved. Continue the
-full 141-surface/24-axis audit after this authorized release checkpoint. Detailed
-evidence and remaining limitations live in the mobile remediation report.
-
-The subsequent requested PR150 cutoff shipped as TestFlight0.24.23 (112.1),
-release35028077706 at main438bd902. Apple VALID processing and exact-build
-changelog read-back completed September15 at22:20:03 UTC. The comprehensive audit
-is resumed in draft PR153: inherited definition ownership, read-only tracking,
-stale discard confirmation, native collection search/Add, and current Add
-permission handling are corrected in source. All1,704 mobile tests plus static
-checks pass remotely atfcc2f9b8. Native acceptance remains incomplete; focused
-text-entry diagnostics35029455242 and subsequent full collection/header
-verification remain required. Normal-size findings still precede enlarged text.
-
-PR153 source71d54bb6 now passes1,824 mobile tests across285 files plus static checks
-on paul. Audit inventory is142 surfaces/24 axes; source coverage is not native
-acceptance. Full native run35046586497 at olderb6321dcb completed49/71 phone and
-58/71 iPad fixtures, with onboarding passing its applicable cases. Paced typing
-diagnostics pass while original controlled typing still fails. The iPad search
-reset procedure now follows captured platform controls; rerun verification is
-pending. Normal-size text entry, color activation/targets and header/search
-behavior remain priorities. Newer native run35050407693 is active; preserve its
-execution while continuing source work. Release remains pending native review,
-with detailed evidence in the mobile remediation report.
-
-The next source follow-up reaches292 pending cells after tag color, field
-applicability, push setup and Home Return details/recovery review. Unsaved field
-applicability is reversible in place; successful push setup announces its new
-Settings action accurately. Their targeted/static checks and critic reviews pass
-on paul. Inspected350465 phone/iPad Home Return captures verify M169's error
-overlap correction in normal-size light appearance; they do not close wider
-lifecycle or native acceptance. Continue remaining source coverage and the active
-native collection/header/text-input investigation before release.
-
-At2edf4dbd, the full remote suite passes1,830 tests/285 files plus type and mobile
-structural checks. Household/first-inventory/partial-recovery and the inventory
-reminder route now have complete source follow-ups;227 review cells remain pending.
-Onboarding commands reuse native controls and retain visible pending labels (M206).
-Native350504 onboarding passes applicable phone/iPad cases at older802e4955; the
-new command migration still needs its own keyboard/geometry verification. The
-active fixture jobs and unresolved normal-size failures continue to gate release.
-
-The source inventory now covers all142 surfaces ×24 axes, with zero unreviewed
-cells. This is a coverage milestone, not completion:522 cells retain findings and
-25 partial runtime evidence. M208–M212 add native Add-photo removal, safe asset
-action exits/eligibility, gallery preview recovery and checkout-history direct-entry
-exit. The last full remote checkpoint is1,849 tests/286 files; subsequent gallery
-and checkout changes pass focused tests plus static checks and critic review.
-Run350504 completed50/72 phone and58/72 iPad fixture cases; current350549 remains
-active at8a256a2a. Prioritize normal-size typing, native menu/keyboard coexistence,
-color activation and search placement before enlarged-text acceptance. Preserve
-live native runs and carry this larger batch through review and TestFlight with
-changelog after the runtime gate is satisfied.
-
-Remote validation atebdd3090 now passes1,854 tests/286 files plus TypeScript and
-structural checks with no tracked mobile source/configuration drift. Focused
-text-entry35056372549 atfdbf30bf is active alongside the retained full run350549.
-Onboarding350549 artifacts show eventual complete address entry and keyboard
-dismissal despite observation failures; bounded exact-value observation and
-per-gesture geometry reads are queued without weakening end-state assertions.
-Separate retained ordinary controlled input still contains reordered text. Do not
-generalize the onboarding timing diagnosis or close the native gate prematurely.
-
-The current checkpoint (348e5fe8 plus M215) passes1,869 tests/288 files, TypeScript
-and structural checks on paul. Source/configuration checksum comparison is clean.
-M214 extends direct-entry return to loaded Edit/Move actions. M215 stabilizes shared
-native search options while preserving current handlers and presentation changes;
-the captured bottom-search mismatch remains a separate native gate. Focused350563
-finishes8/10 iPad and7/10 phone, with default-assisted SwiftUI passing both. A scoped
-iOS Add-name candidate retains revision-owned draft resets and runs unchanged Add
-journeys in35058684319. Full350549 phone finishes52/73; iPad remains active. The
-coverage ledger now retains529 finding cells. Continue normal-size native work.
-
-Current normal-size audit checkpoint `460007a9` passes1,896 mobile tests/295 files,
-TypeScript and structural checks on paul. Native Android evidence now verifies
-photo zoom retention through warm return, control toggling, paging, draft escape
-and persisted-photo failure recovery. Older iPhone run350950 finishes65/83: Add
-draft/header and notice placement journeys pass, but Place search still moves to
-the bottom and Sharing retains missing typed characters despite its iOS default-
-value field. Its iPad fixture job remains active. Continue normal-size search,
-text-entry and sheet-body diagnosis; preserve the queued current-source native
-run. These partial results do not satisfy the release gate or complete the audit.
-
-Current checkpoint `c31199a3` passes1,910 mobile tests/298 files on paul. All914
-tracked mobile/client files match the source manifest after syncing the new Swift
-journey; Swift is not compiled by these Linux checks. Latest TypeScript, structural
-and six fixture-installer checks pass. M242 guards departed inbox actions and
-initial focus loading. Native Android normal/compact dark evidence covers inbox
-read-state, navigation return and denial recovery. M243/M244 fix native menu target
-bounds and selectable-item activation, with actual appearance/reminder selection
-and exactly-once preference writes verified in APKb76e227a.
-
-Run351121 at1c2f8173 completed with phone65/84 and iPad77/84 fixture passes;
-iPad onboarding passes3/3, while phone onboarding fails help activation (M240).
-Run35121454700 at1a15ca11 is active. The older run does not validate later Sharing,
-inbox or Android-menu corrections. Its phone Add-tag final capture retains Camping,
-so f54eec01 adds bounded exact-value observation. Incorrect controlled-name values
-persist in final hierarchies and remain a separate diagnostic concern. Candidate
-c196d527 adds native action registration to the passing managed-search comparison;
-no production search workaround is inferred. Continue native
-normal-size acceptance before enlarged text, then release the complete reviewed
-batch with the explicit TestFlight notes section and Apple readback. The full audit
-and release gate remain open.
-
-
-September16 follow-up: a46d7bb3 fixes M245 retained Android color gestures,
-accessibility adjustments and +/- callbacks targeting obsolete state. Mounted RED
-regressions,20 focused tests, TypeScript/structural checks, critic review and native
-Android drag/adjust/Cancel smoke checks complete. Full mobile suite now passes1,911
-tests/299 files on paul;915 tracked mobile/client files match the current source
-manifest. Log: `/tmp/mobile-audit-a46d7bb3-full.log`. Both onboarding jobs in
-351214 pass their applicable cases with captures inspected. Phone fixtures subsequently finish67/85 with18 failures; iPad logs79/85, but the90-minute budget cancels result finalization and prevents artifact retention; that older native source does not include the latest managed-search
-comparison, exact Add-tag wait or M245. Preserve normal-size-first sequencing and
-native acceptance before release; the comprehensive goal remains incomplete.
-
-Current source checkpoint5c05f66e also fixes M246/M247 Android target sizes and
-M248 missing native footer descriptions. Native normal-width/320dp target checks
-and expiration/voice command semantics pass; TalkBack remains unverified. All1,911
-mobile tests/299 files pass on paul with922 source/patch/lock files matched.
-Phone351214 narrows Add-photo failure to a wrong-direction fixture scroll and
-inbox failure to an AX-glyph size assumption. The next native candidates use
-geometric scrolling and real delivered-target taps; neither is yet accepted.
-Sharing recovery passes on phone; ordinary color opening, preconfigured Place
-search and controlled-input diagnostics remain unresolved.
-
-Run35130374705 at0586f845 is now active; preserve its original execution. Future
-full audit jobs receive120 minutes after the confirmed351214 evidence-loss timeout.
-The iPad result is log-only, with no visual acceptance claim. Remote YAML parsing
-and critic review pass; result export under the revised budget remains to verify.
-
-Run35130374705 fails all four jobs before tests: `pod install --deployment` detects
-ExpoUI's changed path after the Android patch altered pnpm's package identity.
-Both Podfile.lock source entries now follow the frozen-installed patched path;
-remote resolution checks pass and the podspec is byte-identical. No pod version
-or checksum changes. Critic found no blocker; macOS deployment validation remains
-required. Input-event diagnostics are deferred until this integration gate clears.
-
-
-September16 current UI audit checkpoint: full35148054814 completes with phone69/86
-and iPad79/86 fixture passes; both onboarding jobs pass applicable cases. iPad
-fixture evidence is log-reviewed, not visually accepted. Normal-size color and
-controlled-input failures remain. Focused filters35154627907 establishes that M249
-persists on phone despite settled-keyboard remeasurement; iPad keyboard journeys
-pass, while last-tag application fails after geometry checks succeed. M250 removes
-competing Browse search-option ownership and has scoped source tests and iPad
-search-journey evidence. A fixture-only coordinate probe at6128c8f5 now compares
-sheet boundary measurements with keyboard frames; no production offset guess is
-accepted. Provider-free input35156439952 and full35156794515 are active; focused
-geometry35158457674 is pending. Keep these executions, normal-text-first sequencing,
-and the complete native/release gate. The coverage inventory remains142 surfaces
-by24 axes (3,408 cells); source review does not substitute for native acceptance.
-
-
-Release sequencing correction (user-directed): freeze production cutoff33dfc002
-for the batch after112.1 and verify its changed workflows plus critical regressions.
-Use `docs/reports/mobile-ui-remediation-2026-09-14/release-batch-113.md` as the bounded
-acceptance record. Ship once those checks pass; do not require completion of the
-comprehensive audit. M249 and last-tag application affect required batch workflows;
-unrelated existing findings, enlarged-text follow-up and diagnostic-only layouts
-remain separately tracked. Keep ongoing native jobs and credit their evidence where
-production source matches. No unrelated remediation enters this frozen batch.
-
-
-September17 checkpoint: the authorized interim batch shipped as TestFlight0.24.24
-(113.1), release35171759572, with Apple processing and changelog readback verified.
-PR155 carries subsequent M249 keyboard-window measurement and M251 photo-status
-corrections. Native351811 verifies normal-text portrait Browse/Expiration action
-clearance on phone/iPad; native351832 passes five Add-draft journeys on each and
-reviewed captures verify light-draft viewer status contrast and last-removal
-restoration. Neither candidate is in113.1. Keep the existing phone color-picker
-activation failure, broader adaptation and remaining surface findings tracked
-separately; they do not automatically expand the next release gate. The full
-142-by24 audit remains incomplete. See native-boundary-351811.md and
-native-photo-status-351832.md in the remediation report.
-
-
-September17 release checkpoint: PR155 shipped as TestFlight0.24.25(114.1),
-release35186356231, with processing and exact changelog verification. The M249
-normal-text portrait filter correction and M251 photo status candidate are now
-in TestFlight. Continue normal-text audit findings, including intermittent color
-activation and native search placement; retain remaining saved/dark/swipe and
-window-adaptation verification separately. Release evidence is in
-release-batch-114.md; the full audit remains incomplete.
-
-
-September17 release checkpoint: M252/M253 shipped as TestFlight0.24.26(115.1),
-release35207859105, with Apple processing and exact notes readback verified.
-Native351993 accepts RGB retention and lock/unlock on phone/iPad; full outcomes
-remain73/89 and82/89. Continue normal-text M51 activation and M207 search-placement
-investigation using existing failure evidence. See release-batch-115.md and
-native-full-351993.md. The comprehensive audit remains incomplete; unrelated
-findings do not gate already verified frozen batches.
-
-
-September17 search checkpoint: candidate352366 passes8/8 phone and6/8 iPad
-workflows. Voice re-entry is accepted on both; iPad filter observation timeouts
-remain. Subsequent captured state satisfies keyboard/query expectations, and
-ordinary automation calls show multi-second stalls. Isolate observation latency
-from product response before another identical run or production dependency
-change. Retain M51 and other runtime findings independently. Current matrix has
-142 surfaces/3408 cells:2593 source-reviewed,576 finding,198 not-applicable,41
-runtime-partial. Source coverage does not imply native acceptance or audit closure.
-TestFlight115.1 remains the released batch; no production fix is in this checkpoint.
-
-Current audit delivery is TestFlight0.24.41 (136.1), released2026-09-25 through
-PR196/release36098436371 with verified Apple changelog readback. Native command
-measurement now contains enlarged labels without forcing ordinary labels to wrap.
-The earlier M270 sequencing paragraph is superseded by the connected workflow
-acceptance in docs/reports/mobile-ui-remediation-2026-09-14/README.md. That report
-is the sole current audit status; historical checkpoints above are not new work.
-Continue normal-text connected workflow review before remaining adaptation gaps;
-keep verified batch releases independent of unrelated audit findings.
+## Current objective — October 1, 2026
+
+Close the documentation, implementation and verification gaps in
+`docs/reports/spec-implementation-audit-2026-10-01.md`. That report is a dated
+baseline at `dabe2839`, not a mutable backlog. This file owns current delivery
+status and sequencing. Domain specs continue to own behavior.
+
+The user authorizes implementation of all found gaps, largest capabilities first,
+in delivery batches of three named gaps per PR. Correct documentation first.
+Use atomic commits within each PR. Update the relevant behavior spec before code;
+write only critical behavior, recovery and adversarial boundary tests. Existing
+required checks and code-critic review remain mandatory. Do not add low-value
+implementation-mirroring tests or weaken security coverage to meet a batch size.
+
+## Frozen batch sequence
+
+| Batch | Three gaps | State |
+| --- | --- | --- |
+| Documentation | D1 inaccurate roadmap; D2 historical evidence/spec status drift; D3 ambiguous audit coverage and delivery status | In progress |
+| Capabilities 1 | G1 JSON/CSV inventory export; G2 authenticated external MCP read tools; G3 executable OpenAI-compatible/local providers | Next |
+| Capabilities 2 | G4 web inventory conversation; G5 approved conversational asset/custom-field edits; G6 localization infrastructure and client migration | Planned |
+| Completion | G7 visible-image telemetry; G8 domain application-package migration; V1 connected acceptance and performance evidence | Planned |
+
+V1 includes authenticated browser journeys, representative connected native
+workflows, relevant assistive/adaptation and physical integration checks, and
+bounded image/performance measurements. Do not claim missing physical access or
+live evidence succeeded. Track the specific remaining acceptance task and obtain
+needed user participation only when execution requires it. Three gaps per PR is
+a batching rule, not permission to replace missing implementation with scaffolding.
+
+## Delivery and acceptance rules
+
+- Freeze each PR's three gaps and critical workflow/regression checks. Unrelated
+  existing findings remain tracked and do not gate a verified frozen release.
+- Preserve the user's normal-text priority: structure and stable navigation,
+  everyday tasks, visual hierarchy, then detailed/adaptation states.
+- Ask before expanding work into newly suspected product/design defects. The
+  October 1 gaps and previously confirmed defects are already authorized.
+- Shared-control tests plus representative consumers and critical workflows are
+  preferred over one test for every surface/axis cell.
+- Keep one current diagnosis per investigation, specify what an experiment will
+  distinguish, and make a concrete implementation decision within a bounded budget.
+- Long-running CI waits use sleeping scripts that collect terminal outcomes;
+  avoid repeated unchanged status checks and polling commentary.
+- Preserve disk space. Native builds run on macOS CI; do not build iOS locally.
+- Source tests, native fixtures, physical-device acceptance, upload, processing,
+  and deployment are distinct evidence. Record exact revisions and scope.
+
+## Current implementation baseline
+
+These are implemented, not new backlog: API rate limiting (default enabled),
+SpiceDB LookupResources-based search visibility, S3 direct uploads, canonical
+invitation links and client acceptance, durable Homebox live/CSV imports, web
+media/actions, conversation workflow/case/run administration, asset-scoped
+undo/redo, scoped server state, expiration workspace and notification adapters.
+The user has verified notification delivery; historical APNs setup notes do not
+reopen that issue. Source presence does not certify every runtime boundary.
+
+The eight G1–G8 gaps above remain open. In particular, administrative conversation
+evaluation is not web inventory conversation; a supported profile enum is not an
+executable provider; request telemetry is not visible-image telemetry; and import
+is not export.
+
+Deliberate scope limits are not defects: offline writes/sync, cross-inventory
+moves, multi-inventory plans, calendar-grid expiration, non-asset undo, whole-asset
+time travel, destructive field-schema changes, arbitrary-server invitation app
+handoff, model photo consumption and Android store distribution. If later work
+expands these limits, update its domain/security contract first.
+
+## Latest verified release evidence
+
+Main baseline: `dabe2839599c80c5db0ed22c8792adef1265ce95` (PR209), tag `v0.25.3`.
+Release run36664629076 completed successfully; iOS upload job109728590645 and
+changelog job109732833589 succeeded. Native run36661826231 passed its selected
+Browse header/filter workflows on iPhone17 and iPad mini at source38e493d9.
+This records the workflow outcome, not a new physical-device or whole-app review.
+
+PR210 merged8308690e. Release36657966242 succeeded. Its source/native evidence
+includes sheet notice dismissal, Add keyboard and title copying; the failed
+pushed-notice Back check ended with Settings/Siri foregrounded and is unresolved
+verification evidence, not an established app defect. Do not simply relabel it
+passed or retry unchanged until green.
+
+## Audit and historical evidence
+
+`docs/reports/mobile-ui-remediation-2026-09-14/README.md` owns mobile evidence
+interpretation; its matrix is an omission inventory, not a defect count or release
+queue. Current inventory:147 surfaces,24 axes,3,528 cells. Historical evidence
+must retain its revision/date and may not override later acceptance or this
+current sequencing. Old roadmap checkpoint narratives remain in Git history.
+
+## Maintenance
+
+Update this file when batch scope, status, acceptance or material blockers change.
+Keep it concise; do not append execution transcripts or duplicate domain specs.
+Close a gap only with implementation and the required evidence, or with an explicit
+user-approved scope decision. Removing an unmet requirement is not remediation.

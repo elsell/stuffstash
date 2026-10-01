@@ -1,5 +1,12 @@
 # Mobile Selection Batch
 
+> Historical selection-batch scope and acceptance record. The old merge hold and
+> pending runs below describe their named candidate revisions. Subsequent native
+> and release evidence is reconciled in the mobile remediation README; follow
+> `roadmap.spec.md` for current delivery. Preserve the interaction requirements
+> without restarting already completed candidate investigations.
+
+
 ## Frozen scope
 
 This follow-up batch contains M265–M273: clearer root Map and empty-photo detail

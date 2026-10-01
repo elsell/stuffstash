@@ -1,5 +1,11 @@
 # Comprehensive mobile UI audit and remediation
 
+> Current sequencing: `roadmap.spec.md`. This document retains binding interaction
+> requirements and dated investigation/acceptance records. A historical candidate
+> hold, pending run or cell count is not current status; consult the remediation
+> README before reopening it. Completion still requires scoped runtime evidence.
+
+
 ## Governing objective and priority order — September 23
 
 Audit and improve the whole mobile experience across all recorded surfaces and
