@@ -54,8 +54,8 @@
   }
 
   function navigationLabel(step: StepProgressStep, state: StepProgressState): string {
-    const prefix = state === 'current' ? `${step.label}, current step` : `Go to ${step.label}, ${stateLabel(state).toLowerCase()} step`;
-    return step.description ? `${prefix}. ${step.description}` : prefix;
+    const prefix = t(`progress.navigation.${state}`, { step: step.label });
+    return step.description ? t('progress.navigation.described', { label: prefix, description: step.description }) : prefix;
   }
 </script>
 

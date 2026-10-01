@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import { ReadPageGuard } from '../shared/ReadPageGuard';
 import type {
@@ -227,7 +228,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       role: mapAccessRole(inventory.access.relationship),
       permissions: [...inventory.access.permissions],
       description: '',
-      updatedAtLabel: 'Loaded from API',
+      updatedAtLabel: t('inventory.loaded'),
       locationCount: 0,
       locations: [],
       assets: inventory.id === selected.inventory.id ? mappedRecentAssets : [],
@@ -494,7 +495,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
         role: mapAccessRole(inventory.access.relationship),
         permissions: [...inventory.access.permissions],
         description: '',
-        updatedAtLabel: 'Loaded from API',
+        updatedAtLabel: t('inventory.loaded'),
         locationCount: locations.length,
         locations,
         assets: mappedAssets,

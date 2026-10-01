@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { InvitationLinkActions } from '../../application/sharing/InventorySharing';
 
 export type ClipboardGateway = {
@@ -20,8 +21,8 @@ export class NativeInvitationLinkActions implements InvitationLinkActions {
 
   async share(input: { readonly link: string; readonly inventoryName: string }): Promise<void> {
     await this.nativeShare.share({
-      message: `You’re invited to ${input.inventoryName} in Stuff Stash.\n\n${input.link}`,
-      title: 'Share Stuff Stash invitation'
+      message: t('sharing.invitation.message', { inventory: input.inventoryName, link: input.link }),
+      title: t('sharing.invitation.title')
     });
   }
 }

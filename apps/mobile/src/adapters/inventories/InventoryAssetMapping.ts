@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {
   Asset,
   AssetTag,
@@ -85,7 +86,7 @@ export function emptyInventorySummary(tenant: Tenant, inventory: Inventory): Inv
     role: mapAccessRole(inventory.access.relationship),
     permissions: [...inventory.access.permissions],
     description: '',
-    updatedAtLabel: 'Loaded from API',
+    updatedAtLabel: t('inventory.loaded'),
     locationCount: 0,
     locations: [],
     assets: [],
@@ -136,7 +137,7 @@ export function mapLocation(
     title: location.title,
     parentLocationTrail: ancestors.map(ancestor => ({ id: assetId(ancestor.id), title: ancestor.title })),
     parentLocationTrailIncomplete: !!(ancestors[0] ?? location).parentAssetId,
-    description: location.description || 'Location asset',
+    description: location.description || t('inventory.locationAsset'),
     containedAssetCount: children.length,
     recentAssetTitles: recentChildren.map((asset) => asset.title),
     hasPhoto: photo !== undefined,
@@ -225,7 +226,7 @@ export function mapAsset(
     kind: asset.kind,
     lifecycleState: asset.lifecycleState,
     parentAssetId: parentAssetID ? assetId(parentAssetID) : undefined,
-    locationLabel: ancestors[ancestors.length - 1]?.title ?? parent?.title ?? 'Inventory root',
+    locationLabel: ancestors[ancestors.length - 1]?.title ?? parent?.title ?? t('inventory.root'),
     locationTrail: [inventoryName, ...ancestors.map((ancestor) => ancestor.title), asset.title].filter(isString),
     parentLocationTrail: ancestors.map((ancestor) => ({
       id: assetId(ancestor.id),
@@ -295,16 +296,16 @@ export function searchMatchFieldLabel(field: string): string {
   switch (field) {
     case 'tag_display_name':
     case 'tag_key':
-      return 'Tag';
+      return t('search.match.tag');
     case 'title':
-      return 'Title';
+      return t('search.match.title');
     case 'description':
-      return 'Description';
+      return t('search.match.description');
     case 'location':
     case 'path':
-      return 'Location';
+      return t('search.match.location');
     case 'custom_field':
-      return 'Custom field';
+      return t('search.match.customField');
     default:
       return humanizeSearchMatchField(field);
   }
@@ -313,7 +314,7 @@ export function searchMatchFieldLabel(field: string): string {
 export function humanizeSearchMatchField(field: string): string {
   const label = field.trim().replace(/[_-]+/g, ' ');
   if (label.length === 0) {
-    return 'Match';
+    return t('search.match.generic');
   }
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
@@ -344,17 +345,17 @@ export function isString(value: string | undefined): value is string {
 export function updatedAtLabel(asset: Asset): string {
   const timestamp = asset.updatedAt || asset.createdAt;
   if (!timestamp) {
-    return 'Loaded from API';
+    return t('inventory.loaded');
   }
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) {
-    return 'Loaded from API';
+    return t('inventory.loaded');
   }
-  return `Updated ${date.toLocaleDateString(undefined, {
+  return t('inventory.updated', { date: date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  })}`;
+  }) });
 }
 
 export function summaryToApiAsset(
