@@ -9,9 +9,53 @@ remediation or dedicated diagnostic runs. Source review and simulator failures
 are evidence to discuss, not permission to declare a user-facing defect. Continue
 already confirmed issues without asking again.
 
+## Current delivery and coverage — October 1, 2026
+
+Current cross-product delivery sequencing is owned by
+[the roadmap](../../../specs/platform/roadmap.spec.md). This report interprets mobile
+evidence; the October 1 [spec audit](../spec-implementation-audit-2026-10-01.md)
+is a baseline, not a second current backlog.
+
+PR209 merged as `dabe2839` (tag `v0.25.3`).
+[Release36664629076](https://github.com/elsell/stuffstash/actions/runs/36664629076)
+succeeded, including iOS upload109728590645 and changelog109732833589.
+[Native36661826231](https://github.com/elsell/stuffstash/actions/runs/36661826231)
+passed the selected Browse header/filter workflows on iPhone17 and iPad mini at
+38e493d9. These results establish that batch's automated acceptance and release
+workflow outcomes, not a new physical-device or whole-app visual review.
+
+PR210 merged8308690e; release36657966242 succeeded. Native36656142186 passed
+sheet notice dismissal, Add keyboard and title-copy checks on both devices.
+The pushed-notice return check failed on iPhone: its final screenshot shows
+Settings/Siri while the app hierarchy remains on Notice placement. The cause is
+unresolved; this is verification evidence, not an accepted new navigation defect.
+Do not retry unchanged until green or treat the prior successful cases as proof
+that this failed assertion passed.
+
+The inventory currently contains **147 surfaces ×24 axes =3,528 cells**:
+2,672 source-reviewed;576 finding;57 runtime-partial;12 unverified;211 not applicable.
+Those statuses describe historical evidence granularity. A finding repeated across
+cells is not multiple independent defects, and shipped fixes do not automatically
+certify every cell. The matrix remains an omission index. The dated reports and
+exact changed-workflow acceptance establish completion; this README and roadmap
+establish what to do next. Do not turn the cells into individual test assignments.
+
+Remaining acceptance includes representative connected normal-text workflows,
+real authenticated browser/API integration, relevant assistive/device adaptation,
+and bounded performance/visible-image evidence. Previously verified notification
+delivery remains accepted. The new goal authorizes the October 1 gaps; ask before
+expanding into newly suspected user-facing defects outside that scope.
+
+## Historical mobile batch evidence
+
+The sections below retain source revisions, failure diagnoses, screenshots and
+release receipts. Their old “current”, “next”, “pending” and “latest” labels are
+local to the dated batch. They do not supersede the current summary above or
+reopen completed investigations. Binding behavior remains in the workflow specs.
+
 ## Delivery
 
-Latest verified TestFlight is **0.25.0 (140.1)**. PR203 merged77d129c5;
+The September26 verified baseline was **0.25.0 (140.1)**. PR203 merged77d129c5;
 release36180827504, iOS upload108225255412 and Apple changelog readback108231235984
 passed. This batch groups Details commands, simplifies photo inspection, separates
 new-tag entry, clarifies Move context, aligns the household switch action, and adds

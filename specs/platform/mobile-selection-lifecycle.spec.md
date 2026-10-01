@@ -1,5 +1,11 @@
 # Asset Selection Visit Lifecycle
 
+> This file combines selection behavior requirements with dated native run
+> records. Old pending statements refer to those revisions. Current delivery and
+> later acceptance are in `roadmap.spec.md` and the mobile remediation README;
+> do not restart the earlier M271/M272 investigation from this historical label.
+
+
 ## Confirmed defects and decisions
 
 M271: run35880132749 phone capture confirms Add returns from Tags with an empty
