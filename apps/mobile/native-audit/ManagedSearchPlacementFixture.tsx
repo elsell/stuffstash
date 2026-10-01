@@ -20,6 +20,7 @@ export function ManagedSearchPlacementFixture() {
       <Button title="Enable managed search" onPress={() => setEnabled(true)} />
       <Button title="Reconfigure search header" onPress={() => setReconfigured(true)} />
       <Button title="Add native header action" onPress={() => setShowAction(true)} />
+      <Text>{reconfigured ? 'Header state: updated' : 'Header state: initial'}</Text>
       <Text>Action activations: {activations}</Text>
       <Text>{enabled ? 'Managed search enabled' : 'Managed search disabled'}</Text>
       <Text>Query: {query}</Text>

@@ -7,6 +7,14 @@ private let auditLocalizationRTL = false
 // AUDIT_LOCALIZATION_LABELS_END
 
 final class FixtureAuditTests: XCTestCase {
+  private func localized(_ value: String) -> String { auditLocalizationLabels[value] ?? value }
+  private func assertNativeSearchValue(_ expected: String) {
+    XCTAssertEqual(observePredicate("search-query-timing", predicate: NSPredicate { _, _ in
+      let current = self.app.searchFields.firstMatch
+      return current.exists && current.value as? String == expected
+    }, object: app), .completed, "Native search must retain the complete query")
+  }
+
   func testNativeGalleryReportsImageLoadAndFailure() throws {
     let entry = app.buttons["Audit image telemetry"]
     XCTAssertTrue(entry.waitForExistence(timeout: 10))
@@ -1106,9 +1114,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(search.waitForExistence(timeout: 5))
     waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
-    XCTAssertEqual(observePredicate("search-query-timing",
-      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
-      .completed, "Native search must retain the complete query")
+    assertNativeSearchValue("Tools")
     let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Filter by tag Holiday supplies").firstMatch.waitForNonExistence(timeout: 5))
@@ -1530,6 +1536,9 @@ final class FixtureAuditTests: XCTestCase {
     let initialPlacement = headerSearchIsPresent("Managed search")
     capture("managed-search-after-enable")
     app.buttons["Reconfigure search header"].tap()
+    XCTAssertTrue(app.staticTexts["Header state: updated"].waitForExistence(timeout: 5),
+      "The reconfigure tap must update React state before checking native presentation")
+    capture("managed-search-react-state-updated")
     XCTAssertTrue(app.navigationBars["Search reconfigured"].waitForExistence(timeout: 5))
     let updatedPlacement = headerSearchIsPresent("Search reconfigured")
     capture("managed-search-after-header-update")
@@ -1568,7 +1577,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("static-search-placement-expanded")
     waitForKeyboard()
     field.typeText("missing")
-    XCTAssertEqual(field.value as? String, "missing")
+    assertNativeSearchValue("missing")
     capture("static-search-before-focused-clear")
     let clear = field.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable)
@@ -1584,7 +1593,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.isHittable)
     waitForKeyboard()
     field.typeText("Garage")
-    XCTAssertEqual(field.value as? String, "Garage")
+    assertNativeSearchValue("Garage")
     capture("static-search-fresh-query")
   }
 
@@ -2066,7 +2075,10 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
     XCTAssertEqual(observePredicate("search-query-timing",
-      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      predicate: NSPredicate { _, _ in
+        let current = self.app.searchFields.firstMatch
+        return current.exists && current.value as? String == "Tools"
+      }, object: app),
       .completed, "Native search must retain the complete query")
     XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
@@ -3951,33 +3963,33 @@ final class FixtureAuditTests: XCTestCase {
     let open = app.buttons["Audit voice proposal"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
-    let original = app.buttons["Change containing location, currently Inventory root"]
+    let original = app.buttons[localized("Change containing location, currently Inventory root")]
     XCTAssertTrue(original.waitForExistence(timeout: 15))
     let context = app.staticTexts["Audit inventory · Audit home"].firstMatch
     XCTAssertTrue(context.exists)
-    let conversationHeader = app.navigationBars["Conversation"]
+    let conversationHeader = app.navigationBars[localized("Conversation")]
     XCTAssertGreaterThanOrEqual(context.frame.minY, conversationHeader.frame.maxY,
       "The inventory context must be fully below native navigation chrome")
     XCTAssertLessThanOrEqual(context.frame.maxY, app.frame.maxY)
     capture("voice-proposal-entry-context")
     revealVoiceProposalLocation(original)
     original.tap()
-    let header = app.navigationBars["Containing location"]
+    let header = app.navigationBars[localized("Containing location")]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    let retry = app.buttons["Retry locations"]
+    let retry = app.buttons[localized("Retry locations")]
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["Could not load locations."].exists)
+    XCTAssertTrue(app.staticTexts[localized("Could not load locations.")].exists)
     XCTAssertTrue(retry.isHittable)
     capture("voice-location-retry"); retry.tap()
-    let bin = app.descendants(matching: .any).matching(identifier: "Select Garage bin, Garage / Garage bin").firstMatch
+    let bin = app.descendants(matching: .any).matching(identifier: localized("Select Garage bin, Garage / Garage bin")).firstMatch
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     let search = app.buttons["Search"].firstMatch
     XCTAssertTrue(search.isHittable); search.tap()
     let field = app.searchFields.firstMatch
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     waitForKeyboard(); field.typeText("missing")
-    XCTAssertEqual(field.value as? String, "missing")
-    XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
+    assertNativeSearchValue("missing")
+    XCTAssertTrue(app.staticTexts[localized("No matching locations")].waitForExistence(timeout: 10))
     XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
     capture("voice-location-empty-search")
     let clear = field.buttons["Clear text"]
@@ -4002,16 +4014,16 @@ final class FixtureAuditTests: XCTestCase {
     }
     XCTAssertTrue(clearedField.waitForExistence(timeout: 5), "Cleared search must accept a fresh query")
     XCTAssertTrue(clearedField.isHittable); waitForKeyboard(); clearedField.typeText("Garage")
-    XCTAssertEqual(clearedField.value as? String, "Garage")
+    assertNativeSearchValue("Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()
-    let changed = app.buttons["Change containing location, currently Garage / Garage bin"]
+    let changed = app.buttons[localized("Change containing location, currently Garage / Garage bin")]
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     revealVoiceProposalLocation(changed)
     capture("voice-proposal-selected-location"); changed.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
-    let back = header.buttons["Back to conversation"].firstMatch
+    let back = header.buttons[localized("Back to conversation")].firstMatch
     XCTAssertTrue(back.isHittable); back.tap()
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     XCTAssertFalse(original.exists)
@@ -4022,7 +4034,7 @@ final class FixtureAuditTests: XCTestCase {
   private func revealVoiceProposalLocation(_ control: XCUIElement) {
     let scroll = app.scrollViews.containing(.button, identifier: control.label).firstMatch
     XCTAssertTrue(scroll.exists, "The proposal location must belong to the conversation scroll view")
-    let header = app.navigationBars["Conversation"]
+    let header = app.navigationBars[localized("Conversation")]
     func visibleViewport() -> CGRect {
       let bounds = scroll.frame.intersection(app.frame)
       let top = max(bounds.minY, header.frame.maxY)
@@ -4054,17 +4066,17 @@ final class FixtureAuditTests: XCTestCase {
     let open = app.buttons["Audit voice proposal"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
-    let header = app.navigationBars["Conversation"]
+    let header = app.navigationBars[localized("Conversation")]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    let proposal = app.buttons["Change containing location, currently Inventory root"]
+    let proposal = app.buttons[localized("Change containing location, currently Inventory root")]
     XCTAssertTrue(proposal.waitForExistence(timeout: 15))
-    let newConversation = header.buttons["New conversation"]
-    let close = header.buttons["Close voice session"]
+    let newConversation = header.buttons[localized("New conversation")]
+    let close = header.buttons[localized("Close voice session")]
     XCTAssertTrue(newConversation.isHittable); XCTAssertTrue(close.isHittable)
     newConversation.tap()
-    let confirmation = app.alerts["Start a new conversation?"]
+    let confirmation = app.alerts[localized("Start a new conversation?")]
     XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
-    confirmation.buttons["Keep conversation"].tap()
+    confirmation.buttons[localized("Keep conversation")].tap()
     XCTAssertTrue(proposal.exists)
     capture("voice-native-header-protected-proposal")
     XCTAssertTrue(close.isHittable); close.tap()
