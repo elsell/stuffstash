@@ -436,6 +436,7 @@ jobs:
             filter-search-timing)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testStaticNativeSearchPlacementComparison'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testBrowseTagSearchKeepsActionsAboveKeyboardAccessory'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testExpirationSearchKeepsActionsReachableWithKeyboard'
               )

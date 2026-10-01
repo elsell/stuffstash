@@ -80,7 +80,9 @@ release36925924885 succeeded as v0.27.2, including TestFlight build/upload. This
 - D2 inventory fidelity: include expressions in component option attributes in
   residual-copy triage and correct the AssetDetail error-classification source path.
 
-PR #232 merged001dfb28; release36929650300 is pending:
+PR #232 merged001dfb28; release36929650300 succeeded as v0.27.3,
+including TestFlight build/upload and the build changelog. Image-pin PR #235
+mergedb3b2a9c3 after approved pull-request checks passed. This batch delivered:
 - G6 adapter recovery: catalog surfaced timeout and onboarding failures while
   preserving cancellation and tenancy semantics.
 - V1 native expansion: retain inspected en-XA Add/recovery evidence on phone/tablet.

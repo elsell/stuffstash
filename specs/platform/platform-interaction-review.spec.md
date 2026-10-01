@@ -1553,6 +1553,12 @@ shared observation budget below. Product code stays frozen.
 
 ## Native keyboard observation budget
 
+Native query-completion checks, including static comparison fixtures, must use
+the shared bounded live-field observer after typing. Keep exact query equality
+and the existing timeout; do not replay input. The filter-search-timing selection
+covers tag search, expiration search and the static query/clear/retype fixture.
+App-launch failures leave workflows unverified and do not justify product changes.
+
 Use15s as the shared keyboard-key readiness observation budget on macOS runners.
 Run36093575172 retained a4.28s snapshot evaluation followed by a post-timeout
 hittable key;5s can end after just one evaluation. This budget governs automation

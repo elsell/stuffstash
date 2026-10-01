@@ -1577,7 +1577,7 @@ final class FixtureAuditTests: XCTestCase {
     capture("static-search-placement-expanded")
     waitForKeyboard()
     field.typeText("missing")
-    XCTAssertEqual(field.value as? String, "missing")
+    assertNativeSearchValue("missing")
     capture("static-search-before-focused-clear")
     let clear = field.buttons["Clear text"].firstMatch
     XCTAssertTrue(clear.isHittable)
@@ -1593,7 +1593,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.isHittable)
     waitForKeyboard()
     field.typeText("Garage")
-    XCTAssertEqual(field.value as? String, "Garage")
+    assertNativeSearchValue("Garage")
     capture("static-search-fresh-query")
   }
 

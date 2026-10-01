@@ -1,5 +1,22 @@
 # Native search acceptance — current diagnosis
 
+Follow-up [36928351670](https://github.com/elsell/stuffstash/actions/runs/36928351670),
+source `e3ea1b1b6e696fee590dbd84c33d5d3c9b25fd23`: iPad completed with six
+passes and two setup failures. Both managed-header React state and native title
+checks passed, as did the proposal location retry/selection/return workflow.
+Tag search failed at `app.launch()` with an Xcode launch timeout; expiration search
+failed at the same setup boundary with a background assertion error. Neither test
+reached its product assertions. Preserve these as unverified workflows, not
+confirmed app regressions. The iPhone job passed seven workflows, including managed reconfiguration, tag
+and expiration search. Its static comparison fixture immediately read `mi`; the
+[final screenshot](iphone-static-query-retained.png) shows complete `missing`.
+Use the shared bounded observer for both static fixture query assertions. After
+the queued expansion run, use filter-search-timing for the two iPad workflows
+and this static comparison; do not alter
+production behavior or weaken assertions to accommodate runner launch failures.
+
+## Earlier evidence
+
 Run [36923519340](https://github.com/elsell/stuffstash/actions/runs/36923519340),
 source `58bb40a81d0ce7a70863222a10db78964e2ee6df`, English, normal text size.
 Both iPhone17 and iPad mini (A17 Pro) completed eight tests: seven passed and one
