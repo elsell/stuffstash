@@ -180,3 +180,8 @@ strings when only part of a file was reviewed and caller evidence where errors
 are replaced with localized guidance. Keep protocol diagnostics and test/benchmark
 fixtures separate from product copy. A classification does not suppress the
 rendered-copy gate or establish that unreviewed strings are acceptable.
+
+Step-progress navigation accessibility labels use complete catalog sentences for
+current, completed and upcoming steps, with step names/descriptions interpolated.
+Do not concatenate English instructions with translated state labels or lowercase
+translated labels to build a sentence. Keep navigation reachability unchanged.

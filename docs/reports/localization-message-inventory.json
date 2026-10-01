@@ -196,10 +196,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/web/src/lib/components/ui/step-progress/step-progress.svelte",
-      "candidates": 3
-    },
-    {
       "file": "apps/web/src/lib/components/ui/tabs/tabs-list.svelte",
       "candidates": 3
     },

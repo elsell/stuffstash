@@ -146,5 +146,9 @@ export const workflowMessages = {
   "recovery.notificationFailed": "The notification operation could not be completed. Try again.",
   "recovery.inventoryChanged": "Inventory changed. Reopen Browse filters.",
   "recovery.inventoryFailed": "Inventory could not be loaded.",
-  "recovery.assetFailed": "Asset could not be loaded."
+  "recovery.assetFailed": "Asset could not be loaded.",
+  "progress.navigation.current": "{step}, current step",
+  "progress.navigation.complete": "Go to {step}, completed step",
+  "progress.navigation.upcoming": "Go to {step}, not started step",
+  "progress.navigation.described": "{label}. {description}"
 } as const;
