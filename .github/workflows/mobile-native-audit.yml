@@ -599,6 +599,8 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testLocalizedAddDraftKeepsNativeActionsAndRecovery'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceProposalLocationSearchRetryAndReturn'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testVoiceNativeHeaderKeepsProposalOnCloseAndCancelledReset'
               )
               ;;
             image-telemetry)

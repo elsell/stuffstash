@@ -22,7 +22,25 @@ try {
   const { createTranslator } = require('./translator.js');
   const translator = createTranslator(en, { locale });
   const keys = ['mobile.AddAssetScreen.assetName', 'mobile.AddAssetScreen.addItem', 'mobile.AddAssetScreen.saveItem', 'mobile.AddAssetScreen.closeAdd', 'add.error.save'];
+  keys.push(
+    'mobile.VoiceConversationHeader.conversation', 'mobile.VoiceConversationHeader.closeVoiceSession',
+    'mobile.VoiceConversationHeader.newConversation', 'mobile.VoicePlanLocationRouteScreen.backToConversation',
+    'mobile.VoicePlanLocationRouteScreen.containingLocation', 'mobile.VoicePlanLocationScreen.retryLocations',
+    'mobile.VoicePlanLocationScreen.couldNotLoadLocations', 'mobile.VoicePlanLocationScreen.noMatchingLocations',
+    'mobile.useNewConversation.startANewConversation',
+    'mobile.useNewConversation.keepConversation'
+  );
   const entries = keys.map(key => `  ${JSON.stringify(en[key])}: ${JSON.stringify(translator.message(key))}`);
+  const english = createTranslator(en, { locale: 'en' });
+  const cases = [
+    ['mobile.VoiceSessionSheetScreen.changeContainingLocationCurrently', { placement: 'Inventory root' },
+      { placement: translator.message('mobile.VoiceSessionSheetScreen.inventoryRoot') }],
+    ['mobile.VoiceSessionSheetScreen.changeContainingLocationCurrently', { placement: 'Garage / Garage bin' }],
+    ['mobile.VoicePlanLocationScreen.select', { title: 'Garage bin', detail: 'Garage / Garage bin' }]
+  ];
+  for (const [key, params, localizedParams = params] of cases) {
+    entries.push(`  ${JSON.stringify(english.message(key, params))}: ${JSON.stringify(translator.message(key, localizedParams))}`);
+  }
   const source = await readFile(target, 'utf8');
   const marker = /\/\/ AUDIT_LOCALIZATION_LABELS_BEGIN[\s\S]*?\/\/ AUDIT_LOCALIZATION_LABELS_END/;
   if (!marker.test(source)) throw new Error('Missing native audit label marker');

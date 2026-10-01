@@ -16,6 +16,16 @@ test('native audit generates locale-specific labels and explicit layout directio
       assert.ok(result.includes(`private let auditLocalizationRTL = ${locale === 'ar-XB'}`));
       assert.equal((result.match(/private let auditLocalizationRTL =/g) ?? []).length, 1);
       assert.ok(result.includes('"Asset name":'));
+      const dictionary = result.match(/auditLocalizationLabels: \[String: String\] = \[([\s\S]*?)\n\]/);
+      const labels = JSON.parse(`{${dictionary[1]}}`);
+      const selected = labels['Select Garage bin, Garage / Garage bin'];
+      assert.ok(selected.includes('Garage bin'));
+      assert.ok(selected.includes('Garage / Garage bin'));
+      for (const label of ['Conversation', 'Keep conversation', 'Change containing location, currently Inventory root']) {
+        assert.equal(typeof labels[label], 'string');
+        if (locale === 'en') assert.equal(labels[label], label);
+        else assert.notEqual(labels[label], label);
+      }
     }
   } finally {
     await rm(directory, { recursive: true, force: true });

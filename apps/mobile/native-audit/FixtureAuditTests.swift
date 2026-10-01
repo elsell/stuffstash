@@ -7,6 +7,7 @@ private let auditLocalizationRTL = false
 // AUDIT_LOCALIZATION_LABELS_END
 
 final class FixtureAuditTests: XCTestCase {
+  private func localized(_ value: String) -> String { auditLocalizationLabels[value] ?? value }
   func testNativeGalleryReportsImageLoadAndFailure() throws {
     let entry = app.buttons["Audit image telemetry"]
     XCTAssertTrue(entry.waitForExistence(timeout: 10))
@@ -3951,25 +3952,25 @@ final class FixtureAuditTests: XCTestCase {
     let open = app.buttons["Audit voice proposal"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
-    let original = app.buttons["Change containing location, currently Inventory root"]
+    let original = app.buttons[localized("Change containing location, currently Inventory root")]
     XCTAssertTrue(original.waitForExistence(timeout: 15))
     let context = app.staticTexts["Audit inventory · Audit home"].firstMatch
     XCTAssertTrue(context.exists)
-    let conversationHeader = app.navigationBars["Conversation"]
+    let conversationHeader = app.navigationBars[localized("Conversation")]
     XCTAssertGreaterThanOrEqual(context.frame.minY, conversationHeader.frame.maxY,
       "The inventory context must be fully below native navigation chrome")
     XCTAssertLessThanOrEqual(context.frame.maxY, app.frame.maxY)
     capture("voice-proposal-entry-context")
     revealVoiceProposalLocation(original)
     original.tap()
-    let header = app.navigationBars["Containing location"]
+    let header = app.navigationBars[localized("Containing location")]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    let retry = app.buttons["Retry locations"]
+    let retry = app.buttons[localized("Retry locations")]
     XCTAssertTrue(retry.waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["Could not load locations."].exists)
+    XCTAssertTrue(app.staticTexts[localized("Could not load locations.")].exists)
     XCTAssertTrue(retry.isHittable)
     capture("voice-location-retry"); retry.tap()
-    let bin = app.descendants(matching: .any).matching(identifier: "Select Garage bin, Garage / Garage bin").firstMatch
+    let bin = app.descendants(matching: .any).matching(identifier: localized("Select Garage bin, Garage / Garage bin")).firstMatch
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     let search = app.buttons["Search"].firstMatch
     XCTAssertTrue(search.isHittable); search.tap()
@@ -3977,7 +3978,7 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertTrue(field.waitForExistence(timeout: 5))
     waitForKeyboard(); field.typeText("missing")
     XCTAssertEqual(field.value as? String, "missing")
-    XCTAssertTrue(app.staticTexts["No matching locations"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts[localized("No matching locations")].waitForExistence(timeout: 10))
     XCTAssertTrue(bin.waitForNonExistence(timeout: 5))
     capture("voice-location-empty-search")
     let clear = field.buttons["Clear text"]
@@ -4005,13 +4006,13 @@ final class FixtureAuditTests: XCTestCase {
     XCTAssertEqual(clearedField.value as? String, "Garage")
     XCTAssertTrue(bin.waitForExistence(timeout: 10))
     XCTAssertTrue(bin.isHittable); bin.tap()
-    let changed = app.buttons["Change containing location, currently Garage / Garage bin"]
+    let changed = app.buttons[localized("Change containing location, currently Garage / Garage bin")]
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     revealVoiceProposalLocation(changed)
     capture("voice-proposal-selected-location"); changed.tap()
     XCTAssertTrue(header.waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["Garage / Garage bin"].firstMatch.waitForExistence(timeout: 5))
-    let back = header.buttons["Back to conversation"].firstMatch
+    let back = header.buttons[localized("Back to conversation")].firstMatch
     XCTAssertTrue(back.isHittable); back.tap()
     XCTAssertTrue(changed.waitForExistence(timeout: 10))
     XCTAssertFalse(original.exists)
@@ -4022,7 +4023,7 @@ final class FixtureAuditTests: XCTestCase {
   private func revealVoiceProposalLocation(_ control: XCUIElement) {
     let scroll = app.scrollViews.containing(.button, identifier: control.label).firstMatch
     XCTAssertTrue(scroll.exists, "The proposal location must belong to the conversation scroll view")
-    let header = app.navigationBars["Conversation"]
+    let header = app.navigationBars[localized("Conversation")]
     func visibleViewport() -> CGRect {
       let bounds = scroll.frame.intersection(app.frame)
       let top = max(bounds.minY, header.frame.maxY)
@@ -4054,17 +4055,17 @@ final class FixtureAuditTests: XCTestCase {
     let open = app.buttons["Audit voice proposal"]
     for _ in 0..<12 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
     XCTAssertTrue(open.isHittable); open.tap()
-    let header = app.navigationBars["Conversation"]
+    let header = app.navigationBars[localized("Conversation")]
     XCTAssertTrue(header.waitForExistence(timeout: 10))
-    let proposal = app.buttons["Change containing location, currently Inventory root"]
+    let proposal = app.buttons[localized("Change containing location, currently Inventory root")]
     XCTAssertTrue(proposal.waitForExistence(timeout: 15))
-    let newConversation = header.buttons["New conversation"]
-    let close = header.buttons["Close voice session"]
+    let newConversation = header.buttons[localized("New conversation")]
+    let close = header.buttons[localized("Close voice session")]
     XCTAssertTrue(newConversation.isHittable); XCTAssertTrue(close.isHittable)
     newConversation.tap()
-    let confirmation = app.alerts["Start a new conversation?"]
+    let confirmation = app.alerts[localized("Start a new conversation?")]
     XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
-    confirmation.buttons["Keep conversation"].tap()
+    confirmation.buttons[localized("Keep conversation")].tap()
     XCTAssertTrue(proposal.exists)
     capture("voice-native-header-protected-proposal")
     XCTAssertTrue(close.isHittable); close.tap()

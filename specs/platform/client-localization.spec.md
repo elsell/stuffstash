@@ -246,3 +246,13 @@ workflow and limitations independently from physical acceptance.
 Retry policy must recognize a typed network timeout independently of localized
 message text. A timeout permits at most the existing single read retry; caller
 cancellation never becomes retryable merely because it interrupts the transport.
+
+### Representative native search and proposal acceptance
+
+The pseudolocale native suite reuses production search/retry/selection/return and
+pending-proposal close/reopen/reset-protection workflows alongside Add/recovery.
+Generate expected accessibility labels from the production catalog and formatter,
+including interpolated location names and the localized inventory-root fallback.
+Preserve fixture names, user search input and system-owned keyboard labels.
+Expanded and RTL runs remain separate evidence and neither substitutes for actual
+VoiceOver/TalkBack use or physical integrations.
