@@ -159,3 +159,13 @@ viewer cancels that attempt. Returning to a cached loaded page may settle
 immediately. Each attempt finishes once, and observer exceptions cannot affect
 paging, retry or dismissal. Extend the pinned viewer patch through an optional
 load-attempt callback; do not estimate readiness from selection changes.
+
+## Browser runtime acceptance
+
+A representative browser journey must capture actual production image-observer
+batches while navigating Home and asset Details. Use controlled API fixtures and
+explicit telemetry configuration, verify authenticated delivery and the exact
+measurement field allowlist, and retain bounded timing samples as a test artifact.
+Exercise real image decode success and malformed-image failure. Fixture results
+prove browser lifecycle/reporting integration, not production HTTP latency, real
+OIDC authentication, physical-device rendering or a population percentile.
