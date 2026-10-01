@@ -66,12 +66,13 @@ failed tag creation because its token lacked workflows permission.
 At the user's request, all remaining open PR work was consolidated into #228:
 localization guidance, remaining identity/expiration/voice application ownership,
 and v0.27.0 image pins. Combined CI36921590281 passed; merged58bb40a8.
-PRs #226 and #229 were closed as incorporated. Catch-up release36922285320 is
-pending. Future batches wait for the preceding release to finish before merge.
+PRs #226 and #229 were closed as incorporated. Catch-up release36922285320 succeeded as v0.27.1, including TestFlight
+build/upload. Future batches wait for the preceding release to finish before merge.
 Native expansion run36920101432 passed on iPhone/iPad at673fb0b5;
 [inspected Add/recovery evidence](../../docs/reports/spec-gap-evidence-2026-10-01/native-localization.md).
 
-Next frozen batch has three named gaps:
+PR #230 merged0538ddb6 after CI36922781635 passed. Its separate
+release36925924885 is pending. This batch closed three named gaps:
 - G6 option copy: migrate previously missed nested option labels and displayed
   fixture-selection fallback labels into the catalog, preserving wire values.
 - G6 enforcement: check display properties inside option objects and Svelte
@@ -79,7 +80,7 @@ Next frozen batch has three named gaps:
 - D2 inventory fidelity: include expressions in component option attributes in
   residual-copy triage and correct the AssetDetail error-classification source path.
 
-Prepared successor (not a release gate for the option-copy batch):
+Current frozen batch, PR #232 (not a release gate for #230):
 - G6 adapter recovery: catalog surfaced timeout and onboarding failures while
   preserving cancellation and tenancy semantics.
 - V1 native expansion: retain inspected en-XA Add/recovery evidence on phone/tablet.
