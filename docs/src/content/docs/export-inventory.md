@@ -3,7 +3,7 @@ title: Export an inventory
 description: Download your inventory as JSON or CSV.
 ---
 
-In the web app, open **Settings**, choose your inventory, then choose
+In the web or mobile app, open **Settings**, choose your inventory, then choose
 **Export inventory**. Anyone who can view the inventory can export it.
 
 - **JSON** keeps the complete inventory document, including field definitions and
@@ -23,6 +23,11 @@ is being prepared; it is not a point-in-time snapshot.
 CSV protects against spreadsheet formulas by prefixing formula-like text with a
 single quote. JSON preserves the original text. Both formats preserve Unicode,
 commas, quotes, and multiline descriptions.
+
+On mobile, choose a format and use the system share sheet to save or send the
+file. On iPhone and iPad, **Save to Files** keeps a copy in your chosen folder.
+Canceling preparation prevents the share sheet from opening. Once you send a
+copy to another app, canceling cannot take it back.
 
 ## If a download fails
 

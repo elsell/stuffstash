@@ -1,3 +1,8 @@
+import { ExportInventoryCommand, type InventoryExportObserver } from '../application/exports/InventoryExport';
+import { ApiInventoryExportRepository } from '../adapters/exports/ApiInventoryExportRepository';
+import { ExpoExportTemporaryFiles } from '../adapters/exports/ExpoExportTemporaryFiles';
+import { ExpoExportFileShare } from '../adapters/exports/ExpoExportFileShare';
+import { NativeExportFileDelivery } from '../adapters/exports/NativeExportFileDelivery';
 import { CreateWorkspace } from '../application/inventories/CreateWorkspace';
 import { ApiWorkspaceCreation } from '../adapters/inventories/ApiWorkspaceCreation';
 import { ExpirationWorkspaceQuery } from '../application/expiration/ExpirationWorkspaceQuery';
@@ -175,6 +180,7 @@ export type MobileComposition = {
   readonly previewInventoryInvitationQuery: PreviewInventoryInvitationQuery;
   readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
+  readonly exportInventoryCommand: ExportInventoryCommand;
   readonly inventoryAssetTypesQuery: InventoryAssetTypesQuery;
   readonly customizationContextQuery: CustomizationContextQuery;
   readonly customizationCollectionQuery: CustomizationCollectionQuery;
@@ -197,6 +203,7 @@ export type MobileComposition = {
 };
 
 export type MobileCompositionOptions = {
+  readonly onExportEvent?: (event: Parameters<InventoryExportObserver['record']>[0]) => void;
   readonly onExpirationEvent?: (event: ExpirationEvent) => void;
   readonly onNotificationEvent?: (event: NotificationEvent) => void;
   readonly onAuthenticationRequired?: () => void;
@@ -262,6 +269,10 @@ export function createMobileComposition(
     fetch: createTimeoutFetch(mobileApiRequestTimeoutMs)
   });
   const client = createStuffStashClient(profile, sessionOptions, performanceSession.fetch);
+  const exportObserver: InventoryExportObserver = { record: event => options.onExportEvent?.(event) };
+  const exportFiles = new ExpoExportTemporaryFiles(exportObserver);
+  void exportFiles.sweep().catch(() => exportObserver.record({ name: 'inventory_export.cleanup_failed' }));
+  const exportInventoryCommand = new ExportInventoryCommand(new ApiInventoryExportRepository(client.exports), new NativeExportFileDelivery(exportFiles, new ExpoExportFileShare(), Platform.OS === 'ios' ? 'ios' : 'android', exportObserver));
   const serviceScopeId = createServiceScopeId();
   const queryClient = createMobileQueryClient();
   const config = toRuntimeConfig(profile);
@@ -360,6 +371,7 @@ export function createMobileComposition(
     previewInventoryInvitationQuery: new PreviewInventoryInvitationQuery(inventoryInvitations),
     acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
     settingsQuery,
+    exportInventoryCommand,
     inventoryAssetTypesQuery: new InventoryAssetTypesQuery(customizationContextQuery, customizationCollectionQuery),
     customizationContextQuery,
     customizationCollectionQuery,

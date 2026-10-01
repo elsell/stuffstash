@@ -3554,6 +3554,27 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testInventoryExportUsesSystemShareAndRemovesTemporaryFiles() {
+    guard openFixtureURL("audit-inventory-export") else { return }
+    let export = app.buttons["Export inventory"].firstMatch
+    XCTAssertTrue(export.waitForExistence(timeout: 10))
+    for (format, label) in [("json", "JSON — complete inventory data"), ("csv", "CSV — spreadsheet rows")] {
+      for _ in 0..<4 where !export.isHittable { app.scrollViews.firstMatch.swipeUp() }
+      XCTAssertTrue(export.isHittable); export.tap()
+      let choice = app.buttons[label].firstMatch
+      XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.tap()
+      let close = app.buttons["Close"].firstMatch
+      XCTAssertTrue(close.waitForExistence(timeout: 10), "The system activity view must be dismissible")
+      let file = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "stuff-stash-inventory")).firstMatch
+      XCTAssertTrue(file.exists, "The native share sheet must receive the inventory file")
+      capture("inventory-export-\(format)-system-share")
+      close.tap()
+      XCTAssertTrue(app.staticTexts["\(format): file removed"].waitForExistence(timeout: 10))
+      XCTAssertTrue(export.isEnabled)
+    }
+    capture("inventory-export-return-to-settings")
+  }
+
   func testSettingsCommandsRecoverReminderDraft() {
     guard openFixtureURL("audit-settings-commands") else { return }
     let choice = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Choose reminder mode")).firstMatch

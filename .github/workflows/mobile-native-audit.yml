@@ -34,6 +34,7 @@ on:
           - history-journey
           - settings-overview
           - settings-commands
+          - inventory-export
           - release-corrections
           - menu-ownership
           - archive-notice
@@ -568,6 +569,12 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddDraftWithHeaderConfiguredBeforePresentation'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddPhotoPreviewPagingAndDraftRemoval'
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testAddRetainsUnfinishedTagAcrossDetailsDisclosure'
+              )
+              ;;
+            inventory-export)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInventoryExportUsesSystemShareAndRemovesTemporaryFiles'
               )
               ;;
             settings-commands)

@@ -150,6 +150,10 @@ func realUseScenarioOperations(t *testing.T) executedScenarioCoverage {
 	}, http.StatusCreated)
 	assetID := decodeAsset(t, assetCreate).Data.ID
 	assetPath := inventoryPath + "/assets/" + assetID
+	exported := coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/export", inventoryPath+"/export?format=json", "Bearer dev:owner", nil, http.StatusOK)
+	if !strings.Contains(exported.Body.String(), "Cordless Drill") {
+		t.Fatal("inventory export omitted the newly created asset")
+	}
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets", inventoryPath+"/assets?limit=10", "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodGet, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", assetPath, "Bearer dev:owner", nil, http.StatusOK)
 	coverage.request(t, server, http.MethodPatch, "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", assetPath, "Bearer dev:owner", map[string]any{"title": "Impact Driver"}, http.StatusOK)
@@ -390,6 +394,7 @@ func realUseAdversarialFixture(t *testing.T) adversarialFixture {
 		{method: http.MethodDelete, template: "/tenants/{tenantId}/inventories/{inventoryId}/imports/jobs/{jobId}", path: inventoryPath + "/imports/jobs/job-one"},
 		{method: http.MethodPost, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets", path: inventoryPath + "/assets", body: map[string]any{"kind": "item", "title": "Blocked"}},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets", path: inventoryPath + "/assets?limit=10"},
+		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/export", path: inventoryPath + "/export?format=json"},
 		{method: http.MethodGet, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", path: assetPath},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}", path: assetPath, body: map[string]any{"title": "Blocked"}},
 		{method: http.MethodPatch, template: "/tenants/{tenantId}/inventories/{inventoryId}/assets/{assetId}/archive", path: assetPath + "/archive"},

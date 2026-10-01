@@ -1,3 +1,4 @@
+export { InventoryExportFixture } from './InventoryExportFixture';
 import { SettingsReadbackProvider } from './SettingsReadbackFixture';
 export { SettingsReadbackFixture } from './SettingsReadbackFixture';
 import { BrowseFilterJourneyProvider } from './BrowseFilterJourneyFixture';
@@ -164,6 +165,7 @@ function FixtureNavigation({ keyboardProviderEnabled }: { readonly keyboardProvi
       <Stack.Screen name="audit-sharing" options={{ title: 'Sharing' }} />
       <Stack.Screen name="audit-footer-appearance" options={{ ...sheets.move, sheetInitialDetentIndex: 1 }} />
       <Stack.Screen name="audit-menu-ownership" options={{ title: 'Menu ownership' }} />
+      <Stack.Screen name="audit-inventory-export" options={{ title: 'Inventory settings' }} />
       <Stack.Screen name="audit-settings-commands" options={{ title: 'Reminder recovery' }} />
       <Stack.Screen name="audit-command-height" options={{ title: 'Command sizing' }} />
       <Stack.Screen name="audit-move-destination" options={sheets.move} />

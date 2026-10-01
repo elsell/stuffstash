@@ -740,3 +740,37 @@ isolation, all pages and archived data, field/tag/containment fidelity, secret/b
 key exclusion, CSV formula safety and round trips, cancellation/limit/audit failure
 without a successful file, and one real client download per platform. Source
 encoding/HTTP tests do not prove the browser/native handoff.
+
+### Mobile export handoff
+
+- Inventory settings exposes one full-width native action-menu row, **Export
+  inventory**, with JSON and CSV commands. Use the existing NativeActionMenu row
+  adapter, not a new picker screen or competing standalone buttons. The format
+  selection starts that export. Keep pending status, cancel, and recoverable error
+  in the same settings group; prevent duplicate work while downloading/sharing.
+- Bind the operation to the displayed tenant/inventory and authenticated service
+  lifetime. Leaving that settings scope cancels outstanding reads and suppresses
+  late share presentations or notices. Never queue an export while offline.
+- Use pinned `expo-sharing`55.0.24 for native local-file sharing on iOS and Android,
+  behind a file-delivery port. React Native's text share wrapper is insufficient
+  for Android file attachments. Reuse `expo-file-system`55.0.22 for temporary files;
+  no incoming share extension, new permission prompt, or custom native package is
+  needed. The backend still requires no new dependency.
+- Temporary files live in a dedicated cache directory with opaque unique names.
+  The visible shared file has the fixed safe basename `stuff-stash-inventory` and
+  its format extension. Clean up failed writes and pre-handoff cancellation.
+  iOS completion/cancellation removes the file after its activity completes.
+  Android chooser completion is not receiver completion: retain its cache file
+  for at most24 hours of active app time and sweep expired remnants before later
+  exports and on startup. Apply the same expiry sweep to crash/interrupted iOS
+  remnants. OS cache eviction and app removal can also remove these files.
+- Cancellation after the native sheet appears cannot revoke copies already sent.
+  Do not delete a file still owned by an active native handoff. Cleanup failure
+  must not misreport a completed handoff as a failed export; emit a safe domain
+  diagnostic without file content, local path or credentials and retry via sweep.
+
+Pattern sources: Apple's [activity views](https://developer.apple.com/design/human-interface-guidelines/activity-views)
+and Expo SDK55 [Sharing](https://docs.expo.dev/versions/v55.0.0/sdk/sharing/).
+The existing settings menu supplies context-preserving format choice. Verify the
+real native share sheet, completion/dismissal, JSON/CSV content and return to
+Settings on iPhone/iPad. A fake delivery port is not native acceptance.
