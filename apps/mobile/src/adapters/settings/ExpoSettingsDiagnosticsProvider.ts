@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import Constants from 'expo-constants';
 import type {
   SettingsDiagnostics,
@@ -10,8 +11,8 @@ export class ExpoSettingsDiagnosticsProvider implements SettingsDiagnosticsProvi
 
   getDiagnostics(): SettingsDiagnostics {
     return {
-      apiBaseUrl: this.runtimeConfig?.apiBaseUrl ?? 'Not configured',
-      appVersion: Constants.expoConfig?.version ?? 'Unknown',
+      apiBaseUrl: this.runtimeConfig?.apiBaseUrl ?? t('settings.serverNotConfigured'),
+      appVersion: Constants.expoConfig?.version ?? t('settings.versionUnknown'),
       authenticationMode: this.runtimeConfig ? 'oidc-sso' : 'unconfigured'
     };
   }
