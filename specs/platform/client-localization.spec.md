@@ -256,3 +256,9 @@ including interpolated location names and the localized inventory-root fallback.
 Preserve fixture names, user search input and system-owned keyboard labels.
 Expanded and RTL runs remain separate evidence and neither substitutes for actual
 VoiceOver/TalkBack use or physical integrations.
+
+Native acceptance observers must re-query replaceable search fields while waiting
+for user-entered values. A stale XCTest element must not be treated as loss of
+input when the current hierarchy retains it. Diagnostic header probes must expose
+React state separately from native title state, distinguishing missed interaction
+from presentation updates without changing production behavior on inconclusive evidence.

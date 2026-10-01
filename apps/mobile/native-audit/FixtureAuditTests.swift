@@ -1108,7 +1108,10 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
     XCTAssertEqual(observePredicate("search-query-timing",
-      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      predicate: NSPredicate { _, _ in
+        let current = self.app.searchFields.firstMatch
+        return current.exists && current.value as? String == "Tools"
+      }, object: app),
       .completed, "Native search must retain the complete query")
     let tools = app.descendants(matching: .any).matching(identifier: "Filter by tag Tools").firstMatch
     XCTAssertTrue(tools.waitForExistence(timeout: 5))
@@ -1531,6 +1534,9 @@ final class FixtureAuditTests: XCTestCase {
     let initialPlacement = headerSearchIsPresent("Managed search")
     capture("managed-search-after-enable")
     app.buttons["Reconfigure search header"].tap()
+    XCTAssertTrue(app.staticTexts["Header state: updated"].waitForExistence(timeout: 5),
+      "The reconfigure tap must update React state before checking native presentation")
+    capture("managed-search-react-state-updated")
     XCTAssertTrue(app.navigationBars["Search reconfigured"].waitForExistence(timeout: 5))
     let updatedPlacement = headerSearchIsPresent("Search reconfigured")
     capture("managed-search-after-header-update")
@@ -2067,7 +2073,10 @@ final class FixtureAuditTests: XCTestCase {
     waitForKeyboard(keyLabel: "t")
     search.typeText("Tools")
     XCTAssertEqual(observePredicate("search-query-timing",
-      predicate: NSPredicate(format: "value == %@", "Tools"), object: search),
+      predicate: NSPredicate { _, _ in
+        let current = self.app.searchFields.firstMatch
+        return current.exists && current.value as? String == "Tools"
+      }, object: app),
       .completed, "Native search must retain the complete query")
     XCTAssertTrue(holiday.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "Tools").firstMatch.exists)
