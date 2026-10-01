@@ -12,7 +12,7 @@ const target = process.argv[3] || path.join(root, 'apps/mobile/native-audit/Fixt
 const directory = await mkdtemp(path.join(tmpdir(), 'stuffstash-native-labels-'));
 try {
   // Compile the reviewed, dependency-free production formatter; do not duplicate pseudolocalization.
-  for (const name of ['mobile', 'web', 'en', 'translator']) {
+  for (const name of ['mobile', 'web', 'workflow', 'en', 'translator']) {
     const source = await readFile(path.join(root, 'packages/localization/src', `${name}.ts`), 'utf8');
     const result = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } });
     await writeFile(path.join(directory, `${name}.js`), result.outputText);
@@ -26,7 +26,7 @@ try {
   const source = await readFile(target, 'utf8');
   const marker = /\/\/ AUDIT_LOCALIZATION_LABELS_BEGIN[\s\S]*?\/\/ AUDIT_LOCALIZATION_LABELS_END/;
   if (!marker.test(source)) throw new Error('Missing native audit label marker');
-  await writeFile(target, source.replace(marker, `// AUDIT_LOCALIZATION_LABELS_BEGIN\nprivate let auditLocalizationLabels: [String: String] = [\n${entries.join(',\n')}\n]\n// AUDIT_LOCALIZATION_LABELS_END`));
+  await writeFile(target, source.replace(marker, `// AUDIT_LOCALIZATION_LABELS_BEGIN\nprivate let auditLocalizationLabels: [String: String] = [\n${entries.join(',\n')}\n]\nprivate let auditLocalizationRTL = ${translator.direction === 'rtl'}\n// AUDIT_LOCALIZATION_LABELS_END`));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

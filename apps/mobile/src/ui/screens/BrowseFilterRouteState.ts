@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetTagOptionViewModel } from '../../application/assets/InventoryAssetTagsQuery';
 import type { BrowseFilterDraft } from './BrowseFiltersScreen';
 export type BrowseFilterTarget = { readonly tenantId: string; readonly inventoryId: string; readonly sessionScope: string };
@@ -5,7 +6,7 @@ type InventoryScope = { readonly tenantId: string; readonly inventoryId: string 
 export function verifyBrowseFilterScope(target: BrowseFilterTarget, sessionScope: string, current: InventoryScope) {
   if (!target.tenantId || !target.inventoryId || !target.sessionScope || target.sessionScope !== sessionScope ||
       target.tenantId !== current.tenantId || target.inventoryId !== current.inventoryId) {
-    throw new Error('Inventory changed. Reopen Browse filters.');
+    throw new Error(t('recovery.inventoryChanged'));
   }
 }
 export async function loadBrowseFilterTags(target: BrowseFilterTarget, sessionScope: string, loadScope: () => Promise<InventoryScope>, loadTags: () => Promise<readonly AssetTagOptionViewModel[]>) {

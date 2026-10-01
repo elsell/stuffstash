@@ -71,9 +71,9 @@ export function parentTargetPickerPresentation(input: {
   suggestedCount: number;
 }): ParentTargetPickerPresentation {
   return {
-    resultCountLabel: input.hasSearch ? `${input.matchingCount} ${input.matchingCount === 1 ? 'match' : 'matches'}` : '',
-    destinationCountLabel: `${input.targetCount} possible ${input.targetCount === 1 ? 'destination' : 'destinations'}`,
-    suggestedCountLabel: `Showing ${input.suggestedCount} suggested ${input.suggestedCount === 1 ? 'destination' : 'destinations'}.`,
+    resultCountLabel: input.hasSearch ? t("move.matchCount", { count: input.matchingCount }) : '',
+    destinationCountLabel: t("move.destinationCount", { count: input.targetCount }),
+    suggestedCountLabel: t("move.suggestionCount", { count: input.suggestedCount }),
     status: parentTargetPickerStatus(input)
   };
 }
@@ -88,7 +88,7 @@ function parentTargetPickerStatus(input: {
     return { kind: 'no-matches', message: t('web.workspaceParentTargets.noMatchingLocationsOrContainers') };
   }
   if (input.hasSearch && input.matchingCount > input.visibleCount) {
-    return { kind: 'overflow', message: `Showing the first ${input.visibleCount} of ${input.matchingCount} matches.` };
+    return { kind: 'overflow', message: t("move.truncatedMatches", { shown: input.visibleCount, total: input.matchingCount }) };
   }
   if (!input.hasSearch && input.targetCount === 0) {
     return { kind: 'no-targets', message: t('web.workspaceParentTargets.noLocationsOrContainersYet') };

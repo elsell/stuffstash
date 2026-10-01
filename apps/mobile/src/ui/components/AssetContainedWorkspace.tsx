@@ -109,7 +109,7 @@ function containedSectionItems(
 }
 
 export function containedAssetRowAccessibilityLabel(asset: ContainedAssetRowViewModel): string {
-  return [`Open asset ${asset.title}`, asset.eyebrowLabel, asset.supportingLabel]
+  return [t("assets.openNamed", { title: asset.title }), asset.eyebrowLabel, asset.supportingLabel]
     .filter((value) => value.trim().length > 0)
     .join('. ');
 }

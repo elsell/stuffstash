@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type {
   PhotoSelectionProvider,
   SelectedAssetPhoto
@@ -20,7 +21,7 @@ export class ExpoPhotoSelectionProvider implements PhotoSelectionProvider {
     const ImagePicker = await import('expo-image-picker');
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      throw new Error('Camera access is required to take a photo. Allow camera access for Stuff Stash in device settings, then try again. You can also choose a photo from your library.');
+      throw new Error(t('recovery.cameraRequired'));
     }
 
     const result = await ImagePicker.launchCameraAsync({
@@ -47,7 +48,7 @@ async function mapImagePickerResult(
   for (const [index, asset] of (result.assets ?? []).entries()) {
     const contentType = normalizeImageContentType(asset.mimeType);
     if (!contentType) {
-      throw new Error('Choose JPEG, PNG, or WebP photos. This selection includes an unsupported image format.');
+      throw new Error(t('recovery.photoFormat'));
     }
     selectedPhotos.push({
       id: `${asset.assetId ?? asset.uri}-${selectedAt}-${index.toString()}`,

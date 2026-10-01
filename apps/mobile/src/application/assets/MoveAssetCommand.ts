@@ -1,3 +1,4 @@
+import { t } from "../../presentation/localization";
 import { assetId } from '../../domain/assets/AssetSummary';
 import type { InventoryAssetUpdateRepository } from '../home/InventorySummaryRepository';
 
@@ -19,7 +20,7 @@ export class MoveAssetCommand {
     const targetAssetId = assetId(input.assetId);
     const parentAssetId = input.parentAssetId ? assetId(input.parentAssetId) : null;
     if (parentAssetId === targetAssetId) {
-      throw new Error('An asset cannot be moved into itself.');
+      throw new Error(t("move.cannotContainSelf"));
     }
 
     const updated = await this.inventories.updateAsset({
@@ -30,7 +31,7 @@ export class MoveAssetCommand {
     return {
       id: updated.id,
       title: updated.title,
-      message: parentAssetId ? `Moved ${updated.title}.` : `Moved ${updated.title} to No parent.`
+      message: parentAssetId ? t("move.saved", { title: updated.title }) : t("move.savedAtRoot", { title: updated.title })
     };
   }
 }

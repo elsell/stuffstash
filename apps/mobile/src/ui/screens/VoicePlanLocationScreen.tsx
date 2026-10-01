@@ -35,7 +35,7 @@ export function VoicePlanLocationScreen({ current, proposed, matches, query, loa
           <NativeCommandButton label={t('mobile.VoicePlanLocationScreen.retryLocations')} onPress={onRetry} /></> : null}
         {matches.map(match => {
           const parent: VoicePlanParentDraft = { kind: 'asset', id: match.id, label: match.pathLabel };
-          const detail = match.disabledReason ?? (match.willPromoteToContainer ? `${match.pathLabel} · Will become a container` : match.pathLabel);
+          const detail = match.disabledReason ?? (match.willPromoteToContainer ? t("move.promotedPath", { path: match.pathLabel }) : match.pathLabel);
           return <SettingsChoiceRow key={match.id} label={match.title} context={detail}
             accessibilityLabel={t('mobile.VoicePlanLocationScreen.select', { title: String(match.title), detail: String(detail) })} selected={selected(parent)}
             disabled={match.canSelectAsParent === false} onPress={() => { if (match.canSelectAsParent !== false) onSelect(parent); }} />;

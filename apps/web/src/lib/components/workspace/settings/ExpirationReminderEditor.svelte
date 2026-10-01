@@ -69,7 +69,7 @@
     <p id={`${id}-help`}>{!inherit && !validDays ? t('web.ExpirationReminderEditor.enterAWholeNumberFrom0To3650') : t('web.ExpirationReminderEditor.calendarDaysBeforeTheExpirationDateEnds')}</p>
   </div>{/if}{/if}
   <Label class="setting"><Checkbox checked={displayed.expired} disabled={controlsDisabled} onchange={(event) => { draft.expired = event.currentTarget.checked; changed(); void save(); }} />{t('web.ExpirationReminderEditor.whenExpired')}</Label>{/if}
-  {:else}<p>{displayed.enabled ? `${displayed.upcoming ? `${displayed.advanceDays} days before expiration` : ''}${displayed.expired ? ' and when expired' : ''}` : t('web.ExpirationReminderEditor.defaultRemindersAreOff')}</p>{/if}
+  {:else}<p>{displayed.enabled && displayed.upcoming ? t(displayed.expired ? 'reminders.beforeAndExpired' : 'reminders.before', { count: displayed.advanceDays }) : displayed.enabled && displayed.expired ? t('reminders.whenExpired') : t('reminders.none')}</p>{/if}
   {#if error}<p role="alert">{error}</p>{/if}
   {#if saved}<p role="status">{t('web.ExpirationReminderEditor.remindersSaved')}</p>{/if}
   {#if dirty && !saving}<Button.Root type="button" variant="ghost" onclick={() => { const policy = initialPolicy ?? inheritedPolicy!; draft = {...policy}; days = String(policy.advanceDays); inherit = initialPolicy === null; dirty = false; error = ''; editingDays = false; }}>{t('web.ExpirationReminderEditor.discardChanges')}</Button.Root>{/if}

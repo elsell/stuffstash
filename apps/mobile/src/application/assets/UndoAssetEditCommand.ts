@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetOperationReversalRepository } from './AssetOperationReversalRepository';
 
 export class UndoAssetEditCommand {
@@ -8,7 +9,7 @@ export class UndoAssetEditCommand {
     const inventoryId = input.inventoryId.trim();
     const operationId = input.operationId.trim();
     if (!tenantId || !inventoryId || !operationId) {
-      throw new Error('Undo is not available.');
+      throw new Error(t('recovery.undoUnavailable'));
     }
     await this.repository.reverseAssetOperation({ tenantId, inventoryId, operationId });
   }

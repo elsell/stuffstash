@@ -24,7 +24,7 @@
     if (labels[field]) return labels[field];
     if (field.startsWith('fixture-')) {
       const asset = draft.assets.find(asset => field.endsWith(`-${asset.id}`));
-      return `Fixture ${asset?.title || 'settings'}`;
+      return asset?.title ? t('conversation.fixtureNamed', { title: asset.title }) : t('conversation.fixtureSettings');
     }
     return field.startsWith('location-') ? t('web.CaseEditor.expectedLocation') : t('web.CaseEditor.proposedChange');
   }

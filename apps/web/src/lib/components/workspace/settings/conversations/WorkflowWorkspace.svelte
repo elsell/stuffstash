@@ -59,7 +59,7 @@
         void session.client.invalidateQueries({ queryKey: key('workflows') });
         void session.client.invalidateQueries({ queryKey: key('workflow-history', saved.workflowId) });
         editor = { key: saved.id, revision: saved, definition: saved.definition }; comparison = null;
-        message = `Draft revision ${saved.number} saved. Run test cases before activation.`;
+        message = t("conversation.workflowRevisionSaved", { revision: saved.number });
       }); } finally { if (session.active) busy = false; }
   }
 </script>

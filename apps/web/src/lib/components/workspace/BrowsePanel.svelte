@@ -87,6 +87,7 @@
 
   let mapPathIds = $state<string[]>([]);
   let mapQuery = $state('');
+  let mapSearchInput = $state<HTMLInputElement | null>(null);
   let mapActiveIndex = $state(-1);
   let mapColumnLimits = $state<Record<string, number>>({});
   let filterOpen = $state(false);
@@ -215,7 +216,7 @@
     mapPathIds = asset.kind === 'item' ? ancestors : [...ancestors, asset.id];
     mapQuery = '';
     mapActiveIndex = -1;
-    queueMicrotask(() => document.querySelector<HTMLInputElement>('input[aria-label="Jump to a place or container"]')?.focus());
+    queueMicrotask(() => mapSearchInput?.focus());
   }
 
   function mapSearchKeydown(event: KeyboardEvent): void {
@@ -234,7 +235,7 @@
     if (event.key === 'Escape') {
       event.preventDefault();
       mapActiveIndex = -1;
-      document.querySelector<HTMLInputElement>('input[aria-label="Jump to a place or container"]')?.focus();
+      mapSearchInput?.focus();
       return;
     }
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
@@ -387,7 +388,7 @@
       {#if error}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>{t('web.BrowsePanel.tryMapAgain')}</Button.Root></div>{/if}
       <div class="containment-map-toolbar">
         <nav class="containment-breadcrumb" aria-label={t('web.BrowsePanel.containmentPath')}><Button.Root variant="ghost" onclick={() => { mapPathIds = []; }}>{t('web.BrowsePanel.inventoryRoot')}</Button.Root>{#each mapPathIds as assetId, index}<span>/</span><Button.Root variant="ghost" onclick={() => { mapPathIds = mapPathIds.slice(0, index + 1); }}>{mapAssets.find((asset) => asset.id === assetId)?.title}</Button.Root>{/each}</nav>
-        <div class="containment-jump"><Search aria-hidden="true" /><Input bind:value={mapQuery} aria-label={t('web.BrowsePanel.jumpToAPlaceOrContainer')} role="combobox" aria-autocomplete="list" aria-expanded={mapMatches.length > 0} aria-controls={mapMatches.length > 0 ? 'map-jump-results' : undefined} aria-activedescendant={mapActiveIndex >= 0 ? `map-jump-option-${mapActiveIndex}` : undefined} placeholder={t('web.BrowsePanel.jumpTo')} onkeydown={mapSearchKeydown} />{#if mapMatches.length}<div id="map-jump-results" class="containment-jump-results" role="listbox" aria-label={t('web.BrowsePanel.mapJumpResults')}>{#each mapMatches as asset, index}<Button.Root id={`map-jump-option-${index}`} role="option" aria-selected={mapActiveIndex === index} variant="ghost" onfocus={() => { mapActiveIndex = index; }} onkeydown={(event) => mapMatchKeydown(event, index)} onclick={() => revealMapMatch(asset)}>{asset.title}<small>{assetKindLabel(asset.kind)}</small></Button.Root>{/each}</div>{/if}</div>
+        <div class="containment-jump"><Search aria-hidden="true" /><Input bind:ref={mapSearchInput} bind:value={mapQuery} aria-label={t('web.BrowsePanel.jumpToAPlaceOrContainer')} role="combobox" aria-autocomplete="list" aria-expanded={mapMatches.length > 0} aria-controls={mapMatches.length > 0 ? 'map-jump-results' : undefined} aria-activedescendant={mapActiveIndex >= 0 ? `map-jump-option-${mapActiveIndex}` : undefined} placeholder={t('web.BrowsePanel.jumpTo')} onkeydown={mapSearchKeydown} />{#if mapMatches.length}<div id="map-jump-results" class="containment-jump-results" role="listbox" aria-label={t('web.BrowsePanel.mapJumpResults')}>{#each mapMatches as asset, index}<Button.Root id={`map-jump-option-${index}`} role="option" aria-selected={mapActiveIndex === index} variant="ghost" onfocus={() => { mapActiveIndex = index; }} onkeydown={(event) => mapMatchKeydown(event, index)} onclick={() => revealMapMatch(asset)}>{asset.title}<small>{assetKindLabel(asset.kind)}</small></Button.Root>{/each}</div>{/if}</div>
       </div>
       {#if selectedMapAsset}<aside class="containment-inspector" aria-label={t('web.BrowsePanel.selectedMapAsset')}><AssetThumb asset={selectedMapAsset} size="md" /><div><strong>{selectedMapAsset.title}</strong><small>{assetKindLabel(selectedMapAsset.kind)} · {selectedMapAsset.lifecycleState}</small></div><Button.Root href={searchAssetHref(selectedMapAsset)} onclick={(event) => open(event, selectedMapAsset)}>{t('web.BrowsePanel.open')}</Button.Root></aside>{/if}
       <div class:root-only={mapColumns.length === 1} class="containment-columns">{#each mapColumns as column, columnIndex}<section aria-label={column.title}><h2>{column.title}</h2>{#each column.assets.slice(0, mapColumnLimit(column.parentId)) as asset}<Button.Root variant={mapPathIds[columnIndex] === asset.id ? 'secondary' : 'ghost'} class="containment-node" onclick={() => openMapNode(asset, columnIndex)}><span class="containment-node-kind" aria-hidden="true"><KindIcon kind={asset.kind} /></span><span><strong>{asset.title}</strong><AssetExpirationLabel context={asset.expirationContext} expiration={asset.expiration} /><small>{assetKindLabel(asset.kind)}</small></span></Button.Root>{/each}{#if column.assets.length === 0}<p class="muted">{t('web.BrowsePanel.nothingIsContainedHere')}</p>{:else if column.assets.length > mapColumnLimit(column.parentId)}<Button.Root variant="outline" class="containment-show-more" onclick={() => showMoreMapNodes(column.parentId)}>{t('web.BrowsePanel.showNextFull', { value: Math.min(100, column.assets.length - mapColumnLimit(column.parentId)) })}</Button.Root><p class="muted" role="status">{t('web.BrowsePanel.ofShownFull', { value: mapColumnLimit(column.parentId), length: column.assets.length })}</p>{/if}</section>{/each}</div>

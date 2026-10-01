@@ -278,19 +278,18 @@ async function uploadPhotos(
 }
 
 function createAssetMessage(asset: Asset, uploadResult: PhotoUploadResult, createdParent: Asset | null): string {
-  const locationSuffix = createdParent ? ` in ${createdParent.title}` : '';
-  const uploadSuffix =
-    uploadResult.uploaded.length > 0 ? ` with ${photoUploadCountLabel(uploadResult.uploaded.length)}` : '';
-  const savedMessage = `Saved ${asset.title}${locationSuffix}${uploadSuffix}.`;
-  if (uploadResult.failures > 0) {
-    const reasonSuffix = uploadResult.failureReasons.length > 0 ? ` ${uploadResult.failureReasons.join(' ')}` : '';
-    return `${savedMessage} ${photoUploadCountLabel(uploadResult.failures)} failed.${reasonSuffix}`;
-  }
-  return savedMessage;
-}
-
-function photoUploadCountLabel(count: number): string {
-  return t('photos.uploadCount', { count });
+  const count = uploadResult.uploaded.length;
+  const savedMessage = createdParent
+    ? count > 0
+      ? t('assets.savedInWithUploads', { title: asset.title, parent: createdParent.title, count })
+      : t('assets.savedIn', { title: asset.title, parent: createdParent.title })
+    : count > 0
+      ? t('assets.savedWithUploads', { title: asset.title, count })
+      : t('assets.savedNamed', { title: asset.title });
+  if (uploadResult.failures === 0) return savedMessage;
+  return uploadResult.failureReasons.length > 0
+    ? t('photos.saveWarningWithReason', { saved: savedMessage, count: uploadResult.failures, reason: uploadResult.failureReasons.join(' ') })
+    : t('photos.saveWarning', { saved: savedMessage, count: uploadResult.failures });
 }
 
 function uniqueFailureReasons(reasons: string[]): string[] {

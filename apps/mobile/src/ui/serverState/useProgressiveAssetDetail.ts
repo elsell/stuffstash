@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetCoreQuery } from '../../application/assets/AssetCoreQuery';
 import { assetContentsIdentity } from '../../application/assets/AssetCoreQuery';
 import type { AssetContentsQuery } from '../../application/assets/AssetContentsQuery';
@@ -32,7 +33,7 @@ export function useProgressiveAssetDetail(assetId: string | undefined, queries: 
   async function refresh(): Promise<void> {
     const priorIdentity = coreAsset.data ? assetContentsIdentity(coreAsset.data.snapshot) : undefined;
     const nextCore = await coreAsset.refetch({ throwOnError: true, cancelRefetch: false });
-    if (!nextCore.data) throw new Error('Asset could not be loaded.');
+    if (!nextCore.data) throw new Error(t('recovery.assetFailed'));
     await Promise.all([
       assetPhotos.refetch({ throwOnError: true, cancelRefetch: false }),
       ...(assetContentsIdentity(nextCore.data.snapshot) === priorIdentity

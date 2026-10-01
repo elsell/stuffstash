@@ -144,12 +144,12 @@ export function DiagnosticsSettingsScreen({ settingsQuery }: { readonly settings
         <SettingsValueRow label={t('mobile.SettingsDetailScreens.authentication')} value={authenticationLabel(diagnostics.authenticationMode)} />
       </SettingsSection>
       <SettingsSection title={t('mobile.SettingsDetailScreens.identity')}>
-        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.principalID')} task="account identity"
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.principalID')} task="account"
           value={isAccessFailure(principal.error) ? undefined : principal.data?.id}
           pending={principal.isPending} failed={principal.isError} retrying={principal.isFetching}
           onRetry={async () => { await principal.refetch({ cancelRefetch: false }); }} />
         <SettingsSeparator />
-        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.tenantID')} task="household identity" value={scope.data?.tenant.id}
+        <DiagnosticIdentity label={t('mobile.SettingsDetailScreens.tenantID')} task="household" value={scope.data?.tenant.id}
           pending={scope.isPending} failed={scope.isError} retrying={scope.isFetching}
           onRetry={async () => { await scope.refetch({ cancelRefetch: false }); }} />
       </SettingsSection>
@@ -177,16 +177,16 @@ export function AboutSettingsScreen({ settingsQuery }: { readonly settingsQuery:
 }
 
 function DiagnosticIdentity({ label, task, value, pending, failed, retrying, onRetry }: {
-  readonly label: string; readonly task: string; readonly value?: string;
+  readonly label: string; readonly task: 'account' | 'household'; readonly value?: string;
   readonly pending: boolean; readonly failed: boolean; readonly retrying: boolean;
   readonly onRetry: () => Promise<void>;
 }) {
   const { styles } = useSettingsListStyles();
   return <View>
-    {pending ? <SettingsLoadingRow label={t('mobile.SettingsDetailScreens.loading', { task: String(task) })} /> : <SettingsValueRow label={label} value={value || t('mobile.SettingsDetailScreens.unavailable')} />}
+    {pending ? <SettingsLoadingRow label={t(`identity.${task}.loading`)} /> : <SettingsValueRow label={label} value={value || t('mobile.SettingsDetailScreens.unavailable')} />}
     {failed ? <>
-      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? t('mobile.SettingsDetailScreens.couldNotRefreshPreviouslyLoadedValueIsShown', { task: String(task) }) : t('mobile.SettingsDetailScreens.couldNotLoad', { task: String(task) })}</Text>
-      <NativeCommandButton label={retrying ? t('mobile.SettingsDetailScreens.retrying', { task: String(task) }) : t('mobile.SettingsDetailScreens.retry', { task: String(task) })} disabled={retrying} onPress={() => void onRetry()} />
+      <Text accessibilityRole="alert" style={styles.errorMessage}>{value ? t(`identity.${task}.refreshFailed`) : t(`identity.${task}.loadFailed`)}</Text>
+      <NativeCommandButton label={retrying ? t(`identity.${task}.retrying`) : t(`identity.${task}.retry`)} disabled={retrying} onPress={() => void onRetry()} />
     </> : null}
   </View>;
 }

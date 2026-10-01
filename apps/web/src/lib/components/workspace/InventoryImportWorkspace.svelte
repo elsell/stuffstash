@@ -817,9 +817,9 @@
   }
 
   function workspaceSubtitle(): string {
-    if (step === 'history') return `View current and past data imports for ${inventory?.name ?? 'this inventory'}.`;
+    if (step === 'history') return t('import.historyFor', { inventory: inventory?.name ?? t('browse.currentInventory') });
     if (step === 'detail') {
-      return selectedJob ? sourceDescription(selectedJob) : `Import details for ${inventory?.name ?? 'this inventory'}.`;
+      return selectedJob ? sourceDescription(selectedJob) : t('import.detailsFor', { inventory: inventory?.name ?? t('browse.currentInventory') });
     }
     if (step === 'run') return t('web.InventoryImportWorkspace.theJobIsRunningInTheBackground');
     return t('web.InventoryImportWorkspace.confirmTheSourcePreviewThePlanThenRunIt');

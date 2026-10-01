@@ -228,11 +228,11 @@
     const rejected: string[] = [];
     for (const file of Array.from(files)) {
       if (!mediaPolicy.supportedContentTypes.includes(file.type as SelectedPhoto['contentType'])) {
-        rejected.push(`${file.name} is not a supported image type.`);
+        rejected.push(t('photos.unsupportedNamed', { name: file.name }));
         continue;
       }
       if (file.size <= 0 || file.size > mediaPolicy.maxBytes) {
-        rejected.push(`${file.name} is larger than ${formatBytes(mediaPolicy.maxBytes)}.`);
+        rejected.push(t('photos.oversizedNamed', { name: file.name, size: formatBytes(mediaPolicy.maxBytes) }));
         continue;
       }
       nextPhotos.push({
