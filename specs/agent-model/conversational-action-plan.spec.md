@@ -259,3 +259,38 @@ Authorized `get_asset_detail` results expose the asset's current custom field
 values and custom asset type ID so conversation can read and resolve the fields
 it edits. These are user data, not provider instructions. Search results stay
 compact; the existing observed-ID and tenant/inventory read checks apply.
+
+## Explicit customization creation (G5)
+
+Conversation may propose `create_custom_asset_type` or
+`create_custom_field_definition` as one-command plans scoped to the current
+inventory. Never create tenant-wide definitions through conversation. Never mix
+customization creation with an asset write: the user first approves the new
+schema, then a subsequent turn may use its authorized vocabulary entry.
+
+Type arguments are `key`, `displayName`, optional `description`, and optional
+`expirationEnabled` (false when omitted). Field arguments are `key`,
+`displayName`, `fieldType`, `applicability`, optional `enumOptions`, and optional
+`customAssetTypeIds`. All keys, types, enum choices, and applicability follow the
+existing customization domain contract. Target type IDs must resolve to active,
+authorized effective types in this inventory. Unknown arguments, tenant/inventory
+IDs, supplied resource IDs, and existing-record update claims are rejected.
+
+Inventory configure permission is required both before proposing and when
+executing. Review uses application-authored labels and values, including field
+type, enum choices, applicability target names, and expiration tracking. The
+model's summary cannot replace this disclosure. Existing review controls apply;
+no inline implicit creation and no automatic approval from speech or text.
+
+Customization services prepare the validated domain record and audit record.
+A dedicated action-plan customization persistence port commits that record,
+its domain audit, and the approved-to-executed transition in one transaction.
+A duplicate, revoked permission, invalid target, stale plan, or persistence
+failure must leave both schema and plan execution unapplied. Model output never
+writes to repositories directly. Publish the existing domain observer event only
+after successful commit. Results identify a completed configuration change, not
+an invented asset link. Clients refresh effective configuration after execution.
+
+Critical tests exercise creation and cancellation through the realtime boundary,
+owner/configure versus viewer/editor denial, malformed and cross-inventory target
+IDs, permission revocation, duplicate/replayed approval, and atomic rollback.
