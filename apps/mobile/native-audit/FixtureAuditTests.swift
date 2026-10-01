@@ -7,6 +7,42 @@ private let auditLocalizationRTL = false
 // AUDIT_LOCALIZATION_LABELS_END
 
 final class FixtureAuditTests: XCTestCase {
+  func testNativeGalleryReportsImageLoadAndFailure() throws {
+    let entry = app.buttons["Audit image telemetry"]
+    XCTAssertTrue(entry.waitForExistence(timeout: 10))
+    entry.tap()
+    let samples = app.staticTexts["audit-image-samples"]
+    XCTAssertTrue(samples.waitForExistence(timeout: 10))
+    let success = NSPredicate(format: "label CONTAINS %@", "success")
+    expectation(for: success, evaluatedWith: samples)
+    waitForExpectations(timeout: 15)
+    capture("native-gallery-image-success")
+    app.buttons["Load missing image"].tap()
+    expectation(for: NSPredicate(format: "label CONTAINS %@", "failure"), evaluatedWith: samples)
+    waitForExpectations(timeout: 15)
+    let data = try XCTUnwrap(samples.label.data(using: .utf8))
+    let measurements = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+    XCTAssertGreaterThanOrEqual(measurements.count, 2)
+    let allowed: Set<String> = ["platform", "operation", "surface", "variant", "outcome", "durationMs"]
+    for measurement in measurements {
+      XCTAssertEqual(Set(measurement.keys), allowed)
+      XCTAssertEqual(measurement["platform"] as? String, "ios")
+      XCTAssertTrue(["success", "failure", "cancelled"].contains(measurement["outcome"] as? String ?? ""))
+      XCTAssertEqual(measurement["operation"] as? String, "image")
+      XCTAssertEqual(measurement["surface"] as? String, "gallery")
+      XCTAssertEqual(measurement["variant"] as? String, "large")
+      let duration = try XCTUnwrap(measurement["durationMs"] as? Double)
+      XCTAssertTrue(duration.isFinite && duration >= 0 && duration <= 60000)
+    }
+    let outcomes = Set(measurements.compactMap { $0["outcome"] as? String })
+    XCTAssertTrue(outcomes.contains("success")); XCTAssertTrue(outcomes.contains("failure"))
+    let evidence = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+    evidence.name = "native-gallery-image-measurements"
+    evidence.lifetime = .keepAlways
+    add(evidence)
+    capture("native-gallery-image-failure")
+  }
+
   private let app = XCUIApplication(bundleIdentifier: "org.stuffstash.mobile")
   override func setUpWithError() throws {
     continueAfterFailure = false

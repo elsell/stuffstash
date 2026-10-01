@@ -35,6 +35,7 @@ on:
           - settings-overview
           - settings-commands
           - inventory-export
+          - image-telemetry
           - localization
           - release-corrections
           - menu-ownership
@@ -598,6 +599,12 @@ jobs:
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testLocalizedAddDraftKeepsNativeActionsAndRecovery'
+              )
+              ;;
+            image-telemetry)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeGalleryReportsImageLoadAndFailure'
               )
               ;;
             inventory-export)

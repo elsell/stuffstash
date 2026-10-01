@@ -1,3 +1,4 @@
+import { ImagePerformanceFixture } from './ImagePerformanceFixture';
 export { InventoryExportFixture } from './InventoryExportFixture';
 import { SettingsReadbackProvider } from './SettingsReadbackFixture';
 export { SettingsReadbackFixture } from './SettingsReadbackFixture';
@@ -195,6 +196,7 @@ export function FixtureMenu() {
   const router = useRouter();
   const { result, setResult, setKeyboardAccessoryEnabled } = useContext(ResultContext);
   const feedback = useAppFeedback();
+  const [imagePerformance, setImagePerformance] = useState(false);
   const [fieldChoices, setFieldChoices] = useState(false);
   const [showDraftOptions, setShowDraftOptions] = useState(false);
   const [onboardingSubmission, setOnboardingSubmission] = useState(false);
@@ -202,6 +204,7 @@ export function FixtureMenu() {
   const [draftPhotos, setDraftPhotos] = useState(false);
   const [photoRecovery, setPhotoRecovery] = useState<'removal' | 'missing' | 'last-removal'>();
   const [inputMode, setInputMode] = useState<InputFixtureMode>();
+  if (imagePerformance) return <ImagePerformanceFixture onBack={() => setImagePerformance(false)} />;
   if (inputMode) return <FixturePage key={`input-${inputMode}`} persistHandledTaps>
     <InputFixture mode={inputMode} />
     <Button title="Back to audit menu" onPress={() => { setInputMode(undefined); setKeyboardAccessoryEnabled(true); }} />
@@ -213,6 +216,7 @@ export function FixtureMenu() {
   if (settingsControls) return <SettingsControlsFixture scrollEnabled={settingsControls === 'scroll'} onBack={() => setSettingsControls(undefined)} />;
   return <FixturePage>
     <Text testID={`audit-native-direction-${I18nManager.isRTL ? "rtl" : "ltr"}`}>Native direction: {I18nManager.isRTL ? "rtl" : "ltr"}</Text>
+    <Button title="Audit image telemetry" onPress={() => setImagePerformance(true)} />
     <Button title="Audit voice proposal" onPress={() => router.push('/voice' as Href)} />
     <Button title="Audit Notice push" onPress={() => router.push('/audit-notice' as Href)} />
     <Button title="Audit Notice sheet" onPress={() => router.push('/audit-notice-sheet' as Href)} />
