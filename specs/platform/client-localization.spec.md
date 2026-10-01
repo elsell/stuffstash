@@ -123,3 +123,16 @@ Parent suggestions derive root/parent status from containment identities, not an
 English location label. Application-produced validation, recovery and status copy
 uses catalog messages; onboarding's existing diagnostic matching stays stable
 while its user-facing messages translate at the presentation boundary.
+
+## Native Intl compatibility
+
+Hermes does not provide every Intl API available in browser/Node verification.
+The mobile presentation adapter installs pinned FormatJS compatibility modules
+before constructing its translator: intl-getcanonicallocales 3.2.12, intl-locale
+5.3.12, intl-pluralrules 6.3.15, and intl-listformat 8.3.15. Install only missing
+APIs and register English data for the initial shipping message language; future
+production translations must register corresponding plural/list data. Preserve
+native number/date/collation formatters. This runtime compatibility dependency
+belongs to mobile, not the dependency-free shared message package. Verify startup,
+plural selection, and list formatting with optional Intl APIs absent, followed
+by the existing macOS native workflow. Node success alone is not native acceptance.

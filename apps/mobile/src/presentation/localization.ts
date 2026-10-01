@@ -1,3 +1,4 @@
+import './nativeIntl';
 import { createTranslator, en } from '@stuff-stash/localization';
 
 // Explicit pseudolocale builds are for verification; normal builds use the device locale.
