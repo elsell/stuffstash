@@ -294,6 +294,7 @@ jobs:
             fi
           fi
 
+          gh workflow run ci.yml --ref "$digest_branch"
           gh pr merge "$pr_number" --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ github.token }}

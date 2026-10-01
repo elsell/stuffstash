@@ -224,3 +224,9 @@ while ordering candidates and352442 cover the intended header and filter flows.
 Use pnpm's canonical patch identity and resolved RNScreens pod source paths. The
 production patch replaces the runner-only transformation; verify installed-package
 search workflows and CocoaPods resolution, not a second transformation in CI.
+
+## October 2026 backlog dependency refresh
+
+The reviewed catch-up batch pins Astro to 6.4.6 and Go's crypto, net, and sys
+modules to 0.52.0, 0.54.0, and 0.45.0 respectively, with their committed
+lockfiles. CI must validate the combined docs build and API/security suites.

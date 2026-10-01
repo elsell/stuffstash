@@ -49,6 +49,7 @@ export default defineConfig({
             { label: 'Connect An Inventory Agent', slug: 'mcp' },
             { label: 'Compatible Language Providers', slug: 'compatible-providers' },
             { label: 'Release To TestFlight', slug: 'testflight' },
+            { label: 'Store Release Notes', slug: 'store-release-notes' },
             { label: 'Contributing', slug: 'specs-and-process' },
           ],
         },

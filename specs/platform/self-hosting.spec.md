@@ -16,15 +16,14 @@ development loops.
   path.
 - Published API and web image references used by the self-host env example must
   be immutable digest references.
-- The release workflow must create or refresh a branch-protected pull request
-  that updates the tracked self-host release env artifact with the newly
-  published API and web image digests before creating the release.
-- The release workflow must explicitly dispatch and require success from the
-  required CI workflow for that digest-update branch when the automation token
-  would otherwise suppress normal pull request checks.
-- The release workflow must merge the validated digest-update pull request
-  before creating the GitHub release, while keeping the release tag on the
-  source commit that produced the published image attestations.
+- Release automation creates a branch-protected follow-up pull request with the
+  newly published immutable image references and explicitly dispatches CI because
+  the workflow token suppresses normal pull-request triggers. Auto-merge remains
+  subject to required checks; publication does not wait for this follow-up.
+- Catch-up merging retains the newest published image references and closes
+  older image-reference PRs as superseded instead of rolling versions backward.
+- Product changes are frozen into one reviewed PR per delivery batch, producing
+  one release. Image-reference maintenance is a chore and produces no new release.
 - Each GitHub release must attach a checksum-protected self-host bundle that
   contains the Compose file, digest-pinned environment example, mounted
   configuration, and operator scripts needed to start that release. Public
