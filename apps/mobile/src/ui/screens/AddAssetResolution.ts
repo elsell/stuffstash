@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { ParentLookupResult } from '../../application/add/ParentLookupQuery';
 
 export type ParentSelection = {
@@ -35,7 +36,7 @@ export function resolveParentAssetId(
     return exactParent.id;
   }
 
-  throw new Error('Create this parent or clear the Put in field.');
+  throw new Error(t('recovery.createParent'));
 }
 
 export function resolveSelectedParent(
@@ -56,7 +57,7 @@ export function resolveSelectedParent(
 
 export function assertSelectableParent(parent: ParentSelection | ParentLookupResult | undefined): void {
   if (parent?.canSelectAsParent === false) {
-    throw new Error(parent.disabledReason ?? 'Choose a place or container for Put in.');
+    throw new Error(parent.disabledReason ?? t('recovery.chooseParent'));
   }
 }
 

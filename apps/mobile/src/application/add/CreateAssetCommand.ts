@@ -34,7 +34,7 @@ export class CreateAssetCommand {
   async execute(input: CreateAssetCommandInput): Promise<CreateAssetCommandResult> {
     const title = input.title.trim();
     if (title.length === 0) {
-      throw new Error('Name is required.');
+      throw new Error(t('recovery.nameRequired'));
     }
 
     const reconciledTags = reconcilePendingAssetTagDrafts({

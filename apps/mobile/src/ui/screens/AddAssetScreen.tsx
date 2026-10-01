@@ -272,7 +272,7 @@ function ScopedAddAssetScreen({
         lastParent
       );
       if (parentAssetId && !selectedParent) {
-        throw new Error('Choose this parent again before saving.');
+        throw new Error(t('recovery.reselectParent'));
       }
       assertSelectableParent(selectedParent);
       const resolvedParentAssetId = resolveParentAssetId(
@@ -349,7 +349,7 @@ function ScopedAddAssetScreen({
       const refreshed = await addContext.refetch({ throwOnError: true });
       const context = refreshed.data;
       if (!context) {
-        throw new Error('Could not refresh inventory context.');
+        throw new Error(t('recovery.refreshInventory'));
       }
       setLoadState({ status: 'ready', context });
       const reconciled = reconcileCreatedAssetTags(stagedTags, context.assetTags);

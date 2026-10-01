@@ -155,3 +155,8 @@ Save-with-parent and photo-upload outcomes use complete catalog sentences for ea
 context, with cardinal forms for upload counts. Expiration labels select complete
 state/precision messages, including the month-end qualifier; map child counts use
 catalog plural messages. Preserve safe provider reasons and user titles verbatim.
+
+Import headings/range summaries, upload constraints, reminder summaries and
+identity-recovery notices are complete catalog messages. Byte displays retain
+binary scaling and the existing B/KB/MB convention while formatting numeric
+values with the selected locale. Product labels never determine identity or flow.

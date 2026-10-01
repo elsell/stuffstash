@@ -529,7 +529,7 @@ import { assetKindLabel } from '$lib/presentation/assetKindLabel';
       return;
     }
     if (file.size > mediaPolicy.maxBytes) {
-      photoUploadError = `Attachment must be ${formatBytes(mediaPolicy.maxBytes)} or smaller.`;
+      photoUploadError = t('photos.maximumSize', { size: formatBytes(mediaPolicy.maxBytes) });
       input.value = '';
       return;
     }

@@ -114,15 +114,7 @@
       "candidates": 4
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryImportWorkspace.svelte",
-      "candidates": 4
-    },
-    {
       "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
-      "candidates": 3
-    },
-    {
-      "file": "apps/mobile/src/adapters/sharing/ApiInventoryInvitationManagementRepository.ts",
       "candidates": 3
     },
     {
@@ -174,23 +166,11 @@
       "candidates": 3
     },
     {
-      "file": "apps/web/src/lib/components/workspace/AssetDetail.svelte",
-      "candidates": 3
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte",
-      "candidates": 3
-    },
-    {
       "file": "apps/web/src/lib/runtimeConfig.ts",
       "candidates": 3
     },
     {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetBrowse.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/adapters/photos/ExpoPhotoSelectionProvider.ts",
       "candidates": 2
     },
     {
@@ -242,18 +222,6 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/ui/screens/AddAssetResolution.ts",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/AddAssetScreen.tsx",
-      "candidates": 2
-    },
-    {
-      "file": "apps/mobile/src/ui/screens/SettingsDetailScreens.tsx",
-      "candidates": 2
-    },
-    {
       "file": "apps/mobile/src/ui/theme/tokens.ts",
       "candidates": 2
     },
@@ -298,19 +266,7 @@
       "candidates": 2
     },
     {
-      "file": "apps/web/src/lib/components/workspace/AddAssetTray.svelte",
-      "candidates": 2
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/formatBytes.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/ImportJobHistory.svelte",
-      "candidates": 2
-    },
-    {
-      "file": "apps/web/src/lib/components/workspace/ImportPreviewSamples.svelte",
       "candidates": 2
     },
     {
@@ -331,10 +287,6 @@
     },
     {
       "file": "apps/mobile/src/adapters/exports/ExpoExportFileShare.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/exports/NativeExportFileDelivery.ts",
       "candidates": 1
     },
     {
@@ -370,14 +322,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/application/add/CreateAssetCommand.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/assets/AddAssetPhotosCommand.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/application/assets/AssetActivityQuery.ts",
       "candidates": 1
     },
@@ -390,31 +334,7 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/application/assets/AssetTagDraftResolution.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/application/assets/DeleteAssetPhotoCommand.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/assets/RevertAssetChangeCommand.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/assets/UndoAssetEditCommand.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/assets/UpdateAssetCommand.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/expiration/ExpirationWorkspaceQuery.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/application/notifications/NotificationInboxQueries.ts",
       "candidates": 1
     },
     {
@@ -474,18 +394,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/ui/screens/BrowseFilterRouteState.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/ui/serverState/useMobileInventoryServerQuery.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/ui/serverState/useProgressiveAssetDetail.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/web/src/lib/application/expirationList.ts",
       "candidates": 1
     },
@@ -510,6 +418,10 @@
       "candidates": 1
     },
     {
+      "file": "apps/web/src/lib/components/workspace/AssetDetail.svelte",
+      "candidates": 1
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/HomeWorkspace.svelte",
       "candidates": 1
     },
@@ -522,7 +434,7 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/settings/conversations/CaseEditor.svelte",
+      "file": "apps/web/src/lib/components/workspace/settings/ExpirationReminderEditor.svelte",
       "candidates": 1
     },
     {

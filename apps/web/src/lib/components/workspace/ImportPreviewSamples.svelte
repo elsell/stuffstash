@@ -152,7 +152,7 @@
           id: `attachment-${index}-${attachment.fileName || 'unnamed'}`,
           cells: {
             name: attachment.primary ? t('import.primaryAttachment', { name: attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment') }) : attachment.fileName || t('web.ImportPreviewSamples.unnamedAttachment'),
-            type: attachment.contentType || 'unknown type',
+            type: attachment.contentType || t('import.unknownContentType'),
             size: fileSizeLabel(attachment.sizeBytes)
           }
         }))
@@ -180,7 +180,7 @@
   function sectionCountLabel(section: PlanSection): string {
     if (section.rows.length === 0) return t('web.ImportPreviewSamples.nonePlanned');
     if (section.rows.length > PLAN_PAGE_SIZE || section.truncated) {
-      return `${visibleStart(section) + 1}-${visibleEnd(section)} of ${section.rows.length}${section.truncated ? '+' : ''}`;
+      return t(section.truncated ? 'import.visibleRangeTruncated' : 'import.visibleRange', { start: visibleStart(section) + 1, end: visibleEnd(section), total: section.rows.length });
     }
     return t('import.records', { count: section.rows.length });
   }

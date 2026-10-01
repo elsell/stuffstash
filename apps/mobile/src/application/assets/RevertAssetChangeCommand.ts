@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import type { AssetOperationReversalRepository } from './AssetOperationReversalRepository';
 
 export class RevertAssetChangeCommand {
@@ -10,7 +11,7 @@ export class RevertAssetChangeCommand {
     const inventoryId = input.inventoryId.trim();
     const operationId = input.operationId.trim();
     if (!tenantId || !inventoryId || !operationId) {
-      throw new Error('This change can’t be reverted.');
+      throw new Error(t('recovery.revertUnavailable'));
     }
     const operationKey = `${tenantId}\u0000${inventoryId}\u0000${operationId}`;
     if (this.activeOperations.has(operationKey)) return false;

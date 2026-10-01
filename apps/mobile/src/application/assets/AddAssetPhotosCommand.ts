@@ -33,7 +33,7 @@ export class AddAssetPhotosCommand {
 
   async execute(input: AddAssetPhotosCommandInput): Promise<AddAssetPhotosCommandResult> {
     if (input.photos.length === 0) {
-      throw new Error('Choose at least one photo.');
+      throw new Error(t('recovery.choosePhoto'));
     }
 
     const targetAssetId = assetId(input.assetId);

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { toAssetCardViewModel } from '../assets/AssetViewModels';
 import { assertReadActive } from '../shared/ReadRequest';
 import type { ExpirationFilter, ExpirationObserver, ExpirationRepository } from './ExpirationRepository';
@@ -9,7 +10,7 @@ export class ExpirationWorkspaceQuery {
    assertReadActive(signal);
    const page = await this.repository.list(tenantId, inventoryId, filter, signal);
    assertReadActive(signal);
-   if (page.hasMore && (!page.nextCursor || page.nextCursor === filter.cursor)) throw new Error('Expiration results could not be continued. Refresh and try again.');
+   if (page.hasMore && (!page.nextCursor || page.nextCursor === filter.cursor)) throw new Error(t('recovery.expirationContinuation'));
    this.observer.record({ operation: 'list', outcome: 'succeeded' });
    return { ...page, items: page.items.map(toAssetCardViewModel) };
   } catch (error) { this.observer.record({ operation: 'list', outcome: 'failed' }); throw error; }

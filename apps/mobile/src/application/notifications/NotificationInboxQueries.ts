@@ -1,9 +1,10 @@
+import { t } from '../../presentation/localization';
 import { assertReadActive, type ReadRequest } from '../shared/ReadRequest';
 import type { InboxOptions, NotificationRepository } from './NotificationRepository';
 import type { NotificationEvent, NotificationObservability } from './NotificationObservability';
 type InboxRepository = Pick<NotificationRepository, 'listInbox' | 'countUnreadPage' | 'getNotification' | 'markRead' | 'markUnread' | 'markAllReadPage'>;
 const maximumPages = 100;
-function incomplete(): Error { return new Error('The notification operation could not be completed. Try again.'); }
+function incomplete(): Error { return new Error(t('recovery.notificationFailed')); }
 
 export class NotificationInboxQueries {
   constructor(private readonly repository: InboxRepository, private readonly observer: NotificationObservability) {}

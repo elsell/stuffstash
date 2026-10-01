@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { expirationRefreshDelay } from './expirationRefreshDelay';
 import { isAccessFailure } from './isAccessFailure';
 import { useQuery, useQueryClient, type QueryKey, type RefetchOptions, type UseQueryResult } from '@tanstack/react-query';
@@ -48,7 +49,7 @@ export function useMobileInventoryServerQuery<TData>({
       return { data: await reconcile(), error: null };
     } catch (error) {
       if (options?.throwOnError) throw error;
-      return { data: undefined, error: error instanceof Error ? error : new Error('Inventory could not be loaded.') };
+      return { data: undefined, error: error instanceof Error ? error : new Error(t('recovery.inventoryFailed')) };
     }
   };
   if (!inventoryScope.isError) {
