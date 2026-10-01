@@ -126,3 +126,13 @@ error projection. Import errors retain identity through root aliases. Existing
 adversarial import HTTP and durability/recovery application tests remain required.
 
 Attachment validation sentinels shared by media commands and import error projection live in `internal/app/apperrors`; root compatibility names alias the same values so `errors.Is` behavior remains unchanged.
+
+Search orchestration belongs in `internal/app/search`: tenant visibility,
+authorized inventory intersection, query/filter validation, scoped cursors,
+repository queries, ancestor/photo projection, safe read audit and domain events.
+The root facade only composes that authorized read model with existing expiration
+and media services. Preserve the empty-authorized-scope short circuit; expose
+that internal scope to composition without adding it to transport responses.
+Shared lifecycle filter parsing belongs in application support, with existing
+asset callers retaining compatibility. Existing scoped search and adversarial
+HTTP tests remain the behavior contract for this extraction.
