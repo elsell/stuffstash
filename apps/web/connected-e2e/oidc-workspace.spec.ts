@@ -31,7 +31,7 @@ async function inventoryStatus(request: APIRequestContext, url: string, token?: 
 test('real OIDC workspace creation preserves principal isolation', async ({ page, browser, request }, testInfo) => {
   await signIn(page, 'owner@example.com');
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Browse', exact: true }).click();
+  await page.getByRole('link', { name: /^Browse\b/ }).click();
   await expect(page).toHaveURL(/\/tenants\/[^/]+\/inventories\/[^/?#]+/);
   const scope = new URL(page.url()).pathname.match(/\/tenants\/([^/]+)\/inventories\/([^/]+)/)!;
   const inventoryURL = `http://localhost:8080/tenants/${scope[1]}/inventories/${scope[2]}`;
