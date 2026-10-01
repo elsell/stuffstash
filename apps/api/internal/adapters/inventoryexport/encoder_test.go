@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -77,6 +78,26 @@ func TestExportEncoderNeverReturnsPartialSuccess(t *testing.T) {
 		body, err = (Encoder{}).Encode(ctx, doc, format, 4096)
 		if !errors.Is(err, context.Canceled) || len(body) != 0 {
 			t.Fatalf("cancel published partial %s", format)
+		}
+	}
+}
+
+func TestExportExcludesStorageKeysAndBoundsEveryByte(t *testing.T) {
+	doc := ports.InventoryExportDocument{SchemaVersion: 1, Assets: []ports.InventoryExportAsset{{Title: "photo", Attachments: []media.Attachment{{ID: "photo-id", StorageKey: "private-storage-key", FileName: "photo.jpg", ContentType: "image/jpeg", LifecycleState: media.LifecycleStateArchived}}}}}
+	for _, format := range []ports.InventoryExportFormat{ports.InventoryExportJSON, ports.InventoryExportCSV} {
+		content, err := (Encoder{}).Encode(context.Background(), doc, format, 10000)
+		if err != nil || strings.Contains(string(content), "private-storage-key") || !strings.Contains(string(content), "photo.jpg") {
+			t.Fatalf("unsafe export: %s %v", content, err)
+		}
+		for _, limit := range []int{len(content) - 1, len(content)} {
+			bounded, err := (Encoder{}).Encode(context.Background(), doc, format, limit)
+			if limit < len(content) {
+				if !errors.Is(err, ports.ErrInventoryExportLimit) || len(bounded) != 0 {
+					t.Fatalf("last byte bypassed size limit: %v", err)
+				}
+			} else if err != nil || len(bounded) != limit {
+				t.Fatalf("exact size rejected: %v", err)
+			}
 		}
 	}
 }

@@ -124,3 +124,38 @@ func testAttachment(t *testing.T, id string, item asset.Asset, fileNameValue str
 	}
 	return attachment
 }
+
+func TestStoreExportAttachmentArchiveFilterPreservesScope(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t, ctx)
+	saveTenant(t, ctx, store, "home", "Home")
+	saveInventory(t, ctx, store, "main", "home", "Main")
+	item := assetItem("item", "home", "main", asset.KindItem, "")
+	if err := createAsset(t, ctx, store, item); err != nil {
+		t.Fatal(err)
+	}
+	saveSearchAttachment(t, ctx, store, "photo", item, "photo.jpg", media.ContentTypeJPEG)
+	attachment, found, err := store.AttachmentByID(ctx, "home", "main", item.ID, "photo")
+	if err != nil || !found {
+		t.Fatal(err)
+	}
+	attachment.LifecycleState = media.LifecycleStateArchived
+	if err := store.UpdateAttachmentLifecycle(ctx, attachment, auditRecord(t, "photo-archive", "home", "main", audit.ActionAttachmentArchived)); err != nil {
+		t.Fatal(err)
+	}
+	for _, scope := range []struct {
+		t tenant.ID
+		i inventory.InventoryID
+		a asset.ID
+	}{{"home", "main", item.ID}, {"other", "main", item.ID}, {"home", "other", item.ID}, {"home", "main", "other"}} {
+		all, err := store.ListAttachmentsByAsset(ctx, scope.t, scope.i, scope.a, ports.AttachmentListPageRequest{IncludeArchived: true})
+		active, activeErr := store.ListAttachmentsByAsset(ctx, scope.t, scope.i, scope.a, ports.AttachmentListPageRequest{})
+		expected := 0
+		if scope.t == "home" && scope.i == "main" && scope.a == item.ID {
+			expected = 1
+		}
+		if err != nil || activeErr != nil || len(all) != expected || len(active) != 0 {
+			t.Fatalf("attachment scope/archive filter: %#v %#v %v %v", all, active, err, activeErr)
+		}
+	}
+}

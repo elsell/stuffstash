@@ -141,6 +141,7 @@ const (
 const defaultGoogleCredentialMode = GoogleCredentialModeADC
 
 type Config struct {
+	Exports                          ExportConfiguration
 	ConversationWorkflows            WorkflowConfiguration
 	ConversationEvaluations          EvaluationConfiguration
 	HTTPAddr                         string
@@ -220,6 +221,7 @@ type Config struct {
 
 func Load() Config {
 	return Config{
+		Exports:                          loadExportConfiguration(),
 		ConversationWorkflows:            loadWorkflowConfiguration(),
 		ConversationEvaluations:          loadEvaluationConfiguration(),
 		HTTPAddr:                         envOrDefault(envHTTPAddr, defaultHTTPAddr),

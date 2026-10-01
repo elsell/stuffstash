@@ -33,6 +33,7 @@ const (
 	EventTenantRestored                            EventName = "tenant.restored"
 	EventTenantDeleted                             EventName = "tenant.deleted"
 	EventInventoryCreated                          EventName = "inventory.created"
+	EventInventoryExported                         EventName = "inventory.exported"
 	EventInventoryViewed                           EventName = "inventory.viewed"
 	EventInventoryUpdated                          EventName = "inventory.updated"
 	EventInventoryArchived                         EventName = "inventory.archived"

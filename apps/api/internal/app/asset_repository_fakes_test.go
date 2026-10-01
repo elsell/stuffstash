@@ -111,7 +111,7 @@ func (f *fakeAssetRepository) AssetTagByKey(_ context.Context, tenantID tenant.I
 func (f *fakeAssetRepository) ListAssetTags(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, page ports.AssetTagPageRequest) ([]assettag.Tag, error) {
 	items := []assettag.Tag{}
 	for _, tag := range f.assetTags {
-		if tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() && tag.LifecycleState == assettag.LifecycleStateActive && tag.ID.String() > page.AfterTagID.String() {
+		if tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() && (page.IncludeArchived || tag.LifecycleState == assettag.LifecycleStateActive) && tag.ID.String() > page.AfterTagID.String() {
 			items = append(items, tag)
 		}
 	}
@@ -121,6 +121,18 @@ func (f *fakeAssetRepository) ListAssetTags(_ context.Context, tenantID tenant.I
 	if page.Limit > 0 && len(items) > page.Limit {
 		items = items[:page.Limit]
 	}
+	return items, nil
+}
+
+func (f *fakeAssetRepository) AllAssetTagsByAsset(_ context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID) ([]assettag.Tag, error) {
+	items := []assettag.Tag{}
+	for id := range f.assetTagLinks[assetID] {
+		tag, ok := f.assetTags[id]
+		if ok && tag.TenantID.String() == tenantID.String() && tag.InventoryID.String() == inventoryID.String() {
+			items = append(items, tag)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool { return items[i].Key.String() < items[j].Key.String() })
 	return items, nil
 }
 

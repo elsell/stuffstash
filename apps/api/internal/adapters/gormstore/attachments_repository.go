@@ -145,11 +145,13 @@ func (s Store) AttachmentByID(ctx context.Context, tenantID tenant.ID, inventory
 func (s Store) ListAttachmentsByAsset(ctx context.Context, tenantID tenant.ID, inventoryID inventory.InventoryID, assetID asset.ID, page ports.AttachmentListPageRequest) ([]media.Attachment, error) {
 	var models []attachmentModel
 	query := s.db.WithContext(ctx).Where(&attachmentModel{
-		TenantID:       tenantID.String(),
-		InventoryID:    inventoryID.String(),
-		AssetID:        assetID.String(),
-		LifecycleState: media.LifecycleStateActive.String(),
+		TenantID:    tenantID.String(),
+		InventoryID: inventoryID.String(),
+		AssetID:     assetID.String(),
 	})
+	if !page.IncludeArchived {
+		query = query.Where(&attachmentModel{LifecycleState: media.LifecycleStateActive.String()})
+	}
 	if page.AfterAttachmentID.String() != "" {
 		query = query.Where(clause.Gt{Column: clause.Column{Name: "id"}, Value: page.AfterAttachmentID.String()})
 	}

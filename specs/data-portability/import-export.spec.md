@@ -699,6 +699,9 @@ read-only bounded task, not an import protocol or a database/media backup.
   Include active and archived assets and schema records, parent IDs, custom type
   IDs, typed custom-field values, expiration date/precision, assigned tag IDs,
   creation/update timestamps, current checkout metadata and attachment metadata.
+  Include archived tag definitions and their retained assignments, and archived
+  attachment metadata; deleted records are not recoverable. Export reads opt into
+  archived metadata explicitly; ordinary list and assignment reads stay active-only.
   Include inherited tenant definitions, identifying their scope. IDs remain opaque
   source identities. Do not export provider configuration/credentials, access or
   invitation tokens, auth claims, raw audit/undo snapshots, blob keys or signed URLs.
