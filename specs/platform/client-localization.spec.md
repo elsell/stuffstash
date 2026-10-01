@@ -129,10 +129,12 @@ while its user-facing messages translate at the presentation boundary.
 Hermes does not provide every Intl API available in browser/Node verification.
 The mobile presentation adapter installs pinned FormatJS compatibility modules
 before constructing its translator: intl-getcanonicallocales 3.2.12, intl-locale
-5.3.12, intl-pluralrules 6.3.15, and intl-listformat 8.3.15. Install only missing
+5.3.11, intl-pluralrules 6.3.15, and intl-listformat 8.3.15. Install only missing
 APIs and register English data for the initial shipping message language; future
 production translations must register corresponding plural/list data. Preserve
 native number/date/collation formatters. This runtime compatibility dependency
 belongs to mobile, not the dependency-free shared message package. Verify startup,
 plural selection, and list formatting with optional Intl APIs absent, followed
 by the existing macOS native workflow. Node success alone is not native acceptance.
+
+The locale prerequisite uses the September 12 release (and its exact supported-values dependency), satisfying the fourteen-day supply-chain review window without an age exemption.
