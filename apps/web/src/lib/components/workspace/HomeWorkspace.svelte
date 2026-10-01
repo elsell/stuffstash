@@ -22,7 +22,7 @@
     visibleAssetCountLabel
   } from '$lib/application/workspaceBrowseNavigation';
   import type { Asset, AssetLifecycleFilter, AssetTag, AssetViewModel, LocationAsset, LocationSummary } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import { homeLocationPreview } from '$lib/application/workspace';
   import AssetTagChips from './AssetTagChips.svelte';
   import AssetThumb from './AssetThumb.svelte';
@@ -295,11 +295,11 @@
                 {#if canEditAsset}
                   <Button.Root
                     variant="outline"
-                    aria-label={returningAssetId === asset.id ? `Returning ${asset.title}` : `Return ${asset.title}`}
+                    aria-label={returningAssetId === asset.id ? t('web.HomeWorkspace.returning2', { title: String(asset.title) }) : t('web.HomeWorkspace.return2', { title: String(asset.title) })}
                     aria-busy={returningAssetId === asset.id}
                     disabled={returningAssetId !== null}
                     onclick={() => returnAsset(asset)}
-                  >{returningAssetId === asset.id ? 'Returning…' : t('web.HomeWorkspace.return')}</Button.Root>
+                  >{returningAssetId === asset.id ? t('web.HomeWorkspace.returning') : t('web.HomeWorkspace.return')}</Button.Root>
                 {/if}
               </div>
             </div>
@@ -370,7 +370,7 @@
           href={browseLocationHref(summary.location)}
           variant="ghost"
           class="location-tile"
-          aria-label={`Open location ${summary.location.title}`}
+          aria-label={t('web.HomeWorkspace.openLocation', { title: String(summary.location.title) })}
           onclick={(event) => openLocation(event, summary.location)}
         >
           <AssetThumb asset={summary.location} size="lg" />

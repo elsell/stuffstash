@@ -241,7 +241,7 @@
           {#if createError}<p class="form-error" role="alert">{createError}</p>{/if}
           <div class="context-create-actions">
             <Button.Root type="button" variant="ghost" onclick={cancelCreate}>{t('web.WorkspaceContextSwitcher.cancel')}</Button.Root>
-            <Button.Root type="submit" disabled={creating}>{creating ? 'Creating...' : createMode === 'tenant_and_inventory' ? t('web.WorkspaceContextSwitcher.createWorkspace') : t('web.WorkspaceContextSwitcher.createInventory')}</Button.Root>
+            <Button.Root type="submit" disabled={creating}>{creating ? t('web.WorkspaceContextSwitcher.creating') : createMode === 'tenant_and_inventory' ? t('web.WorkspaceContextSwitcher.createWorkspace') : t('web.WorkspaceContextSwitcher.createInventory')}</Button.Root>
           </div>
         </form>
       {:else if showingTenants}

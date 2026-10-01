@@ -1,3 +1,4 @@
+import { t } from '../../../../../../presentation/localization';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppServices } from '../../../../../../ui/navigation/AppServicesContext';
 import { AssetHistoryRouteScreen } from '../../../../../../ui/screens/AssetHistoryRouteScreen';
@@ -16,7 +17,7 @@ export default function AssetHistoryRoute() {
       tenantId={params.tenantId}
       inventoryId={params.inventoryId}
       assetId={params.assetId}
-      assetTitle={params.assetTitle ?? 'Item'}
+      assetTitle={params.assetTitle ?? t('mobile.index.item')}
     />
   );
 }

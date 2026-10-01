@@ -2,7 +2,7 @@
   import { t } from '$lib/presentation/localization';
   import * as Button from '$lib/components/ui/button/index.js';
   import type { Asset } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import AssetExpirationLabel from './AssetExpirationLabel.svelte';
   import AssetThumb from './AssetThumb.svelte';
 
@@ -54,7 +54,7 @@
           variant="ghost"
           class="suggestion-row"
           data-active={activeIndex === index}
-          aria-label={`Open ${suggestion.title}`}
+          aria-label={t('web.SearchSuggestions.open', { title: String(suggestion.title) })}
           role="option"
           tabindex={-1}
           aria-selected={activeIndex === index}

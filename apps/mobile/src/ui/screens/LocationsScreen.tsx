@@ -35,7 +35,7 @@ export function LocationsScreen({ locationsQuery }: LocationsScreenProps) {
     query: (signal) => locationsQuery.execute({ signal })
   });
 
-  const pullRefresh = usePullRefreshFeedback({ refresh: () => locations.refetch({ throwOnError: true }), resourceKey: locations.resourceKey, failureTitle: 'Could not refresh locations' });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => locations.refetch({ throwOnError: true }), resourceKey: locations.resourceKey, failureTitle: t('mobile.LocationsScreen.couldNotRefreshLocations') });
 
   return (
     <SafeAreaView style={styles.shell} edges={['top', 'left', 'right']}>

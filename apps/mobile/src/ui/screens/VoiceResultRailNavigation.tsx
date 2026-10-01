@@ -9,7 +9,7 @@ export function VoiceResultRailNavigation({ position, count, onMove }: {
   const palette = useAppearancePalette();
   return <View style={styles.row}>
     <View style={styles.command}><NativeCommandButton label={t('mobile.VoiceResultRailNavigation.previous')} disabled={position <= 0} onPress={() => onMove(position - 1)} /></View>
-    <Text style={{ color: palette.textMuted }}>{`${position + 1} of ${count}`}</Text>
+    <Text style={{ color: palette.textMuted }}>{t('pagination.position', { position: position + 1, total: count })}</Text>
     <View style={styles.command}><NativeCommandButton label={t('mobile.VoiceResultRailNavigation.next')} disabled={position >= count - 1} onPress={() => onMove(position + 1)} /></View>
   </View>;
 }

@@ -146,7 +146,7 @@
       <div class="settings-search"><Search aria-hidden="true" /><Label class="visually-hidden" for="tag-settings-search">{t('web.TagSettingsManager.searchTags')}</Label><Input id="tag-settings-search" type="search" bind:value={query} placeholder={t('web.TagSettingsManager.searchTags')} /></div>
     {/if}
     {#if filtered.length === 0}
-      <SettingsCollectionState kind="empty" title={query ? 'No matching tags' : 'No active tags'} message={query ? 'Try a different name.' : canManage ? 'Add a tag to organize assets and filters.' : 'No tags are available in this inventory.'} />
+      <SettingsCollectionState kind="empty" title={query ? t('web.TagSettingsManager.noMatchingTags') : t('web.TagSettingsManager.noActiveTags')} message={query ? t('web.TagSettingsManager.tryADifferentName') : canManage ? t('web.TagSettingsManager.addATagToOrganizeAssetsAndFilters') : t('web.TagSettingsManager.noTagsAreAvailableInThisInventory')} />
     {:else}
       <div class="settings-resource-list" aria-label={t('web.TagSettingsManager.activeTags')}>
         {#each filtered as tag}
@@ -159,11 +159,11 @@
         {/each}
       </div>
     {/if}
-    {#if appendError}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.couldNotLoadMore')} message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? 'Loading…' : t('web.TagSettingsManager.loadMore')}</Button.Root><small>{t('web.TagSettingsManager.moreTagsAreAvailable')}</small></div>{/if}
+    {#if appendError}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.couldNotLoadMore')} message={appendError} onRetry={() => { void loadMore(); }} />{:else if hasMore}<div class="settings-pagination"><Button.Root variant="outline" disabled={loadingMore} onclick={() => { void loadMore(); }}>{loadingMore ? t('web.TagSettingsManager.loading') : t('web.TagSettingsManager.loadMore')}</Button.Root><small>{t('web.TagSettingsManager.moreTagsAreAvailable')}</small></div>{/if}
   {/if}
 </section>
 
-<WorkspaceTaskSheet open={formOpen} title={action === 'new' ? 'Add Tag' : selected ? `Edit ${selected.displayName}` : 'Tag unavailable'} description={t('web.TagSettingsManager.tagsBelongOnlyToThisInventory')} busy={saving} dismissible={!saving} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); requestClose(); }} onOpenChange={(open) => { if (!open && !saving) requestClose(); }}>
+<WorkspaceTaskSheet open={formOpen} title={action === 'new' ? t('web.TagSettingsManager.addTag') : selected ? t('web.TagSettingsManager.edit', { displayName: String(selected.displayName) }) : t('web.TagSettingsManager.tagUnavailable')} description={t('web.TagSettingsManager.tagsBelongOnlyToThisInventory')} busy={saving} dismissible={!saving} closeHref={collectionHref} onCloseLink={(event) => { event.preventDefault(); requestClose(); }} onOpenChange={(open) => { if (!open && !saving) requestClose(); }}>
   {#if !canManage}<SettingsCollectionState kind="denied" title={t('web.TagSettingsManager.readOnly')} message={t('web.TagSettingsManager.yourDraftIsPreservedButThisAccountCanNo')} />{/if}
   {#if action === 'edit' && !selected}<SettingsCollectionState kind="error" title={t('web.TagSettingsManager.tagUnavailable')} message={t('web.TagSettingsManager.thisTagMayHaveBeenArchivedOrIsNo')} />
   {:else}
@@ -172,7 +172,7 @@
     <fieldset class="settings-color-picker" disabled={!canManage}><legend>{t('web.TagSettingsManager.color')}</legend>
       <div class="settings-color-swatches">
         {#each ['#2F80ED', '#6B90AA', '#F5AB4B', '#2E7D32', '#7C3AED', ''] as swatch}
-          <Button.Root type="button" variant="outline" class="settings-color-swatch" style={swatch ? `--swatch: ${swatch}` : undefined} aria-label={swatch ? `Use color ${swatch}` : 'Use no color'} aria-pressed={color.toUpperCase() === swatch} onclick={() => { color = swatch; }}>
+          <Button.Root type="button" variant="outline" class="settings-color-swatch" style={swatch ? `--swatch: ${swatch}` : undefined} aria-label={swatch ? t('web.TagSettingsManager.useColor', { swatch: String(swatch) }) : t('web.TagSettingsManager.useNoColor')} aria-pressed={color.toUpperCase() === swatch} onclick={() => { color = swatch; }}>
             <span style={swatch ? `background:${swatch}` : undefined}></span>{#if color.toUpperCase() === swatch}<Check aria-hidden="true" />{/if}
           </Button.Root>
         {/each}
@@ -196,7 +196,7 @@
   {#snippet action()}<Button.Root variant="destructive" onclick={() => { discardOpen = false; onNavigate(collectionHref); }}>{t('web.TagSettingsManager.discardChanges2')}</Button.Root>{/snippet}
 </WorkspaceConfirmationDialog>
 
-<WorkspaceConfirmationDialog open={archiveOpen} title={t('web.TagSettingsManager.archiveTag')} description={selected ? `${selected.displayName} will no longer be available for new assignments or normal filtering. Existing history remains.` : 'This tag is no longer available.'} busy={saving} onOpenChange={(open) => { if (!open && !saving) onNavigate(collectionHref); }}>
+<WorkspaceConfirmationDialog open={archiveOpen} title={t('web.TagSettingsManager.archiveTag')} description={selected ? t('web.TagSettingsManager.willNoLongerBeAvailableForNewAssignmentsOr', { displayName: String(selected.displayName) }) : t('web.TagSettingsManager.thisTagIsNoLongerAvailable')} busy={saving} onOpenChange={(open) => { if (!open && !saving) onNavigate(collectionHref); }}>
   {#if formError}<p class="settings-form-error" role="alert">{formError}</p>{/if}
   {#snippet cancel()}<Button.Root variant="outline" disabled={saving} onclick={() => onNavigate(collectionHref)}>{t('web.TagSettingsManager.cancel')}</Button.Root>{/snippet}
   {#snippet action()}<Button.Root variant="destructive" disabled={saving || !selected || !canManage} onclick={() => { void archive(); }}>{t('web.TagSettingsManager.archive')}</Button.Root>{/snippet}

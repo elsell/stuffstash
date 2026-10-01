@@ -329,7 +329,7 @@
       <section class="customization-column customization-surface" aria-labelledby="custom-asset-types-title">
         <div class="customization-surface-heading">
           <h3 id="custom-asset-types-title">{t('web.InventoryCustomizationManager.assetTypes')}</h3>
-          <span aria-label={`${activeAssetTypes.length} custom asset types`}>{activeAssetTypes.length}</span>
+          <span aria-label={t('web.InventoryCustomizationManager.customAssetTypes2', { length: String(activeAssetTypes.length) })}>{activeAssetTypes.length}</span>
         </div>
         <SegmentedControl
           label={t('web.InventoryCustomizationManager.customTypeScope')}
@@ -367,7 +367,7 @@
                   href={archiveAssetTypeHref(assetType)}
                   variant="ghost"
                   size="icon-xs"
-                  aria-label={`Archive ${assetType.displayName}`}
+                  aria-label={t('web.InventoryCustomizationManager.archive', { displayName: String(assetType.displayName) })}
                   disabled={busy || !canScope(assetType.scope)}
                   onclick={(event) => openArchiveAction(event, 'archive_asset_type', assetType.id)}
                 >
@@ -383,7 +383,7 @@
       <section class="customization-column customization-surface" aria-labelledby="custom-field-definitions-title">
         <div class="customization-surface-heading">
           <h3 id="custom-field-definitions-title">{t('web.InventoryCustomizationManager.fieldDefinitions')}</h3>
-          <span aria-label={`${activeFieldDefinitions.length} custom fields`}>{activeFieldDefinitions.length}</span>
+          <span aria-label={t('web.InventoryCustomizationManager.customFields2', { length: String(activeFieldDefinitions.length) })}>{activeFieldDefinitions.length}</span>
         </div>
         <SegmentedControl
           label={t('web.InventoryCustomizationManager.customFieldScope')}
@@ -423,7 +423,7 @@
             <p class="selection-summary">
               {selectedTargetCount === 0
                 ? t('web.InventoryCustomizationManager.noCustomTypesSelected')
-                : t('web.InventoryCustomizationManager.customSelected', { selectedTargetCount: String(selectedTargetCount), value: String(selectedTargetCount === 1 ? 'type' : 'types') })}
+                : t('customization.selectedTypes', { count: selectedTargetCount })}
             </p>
             <ChoiceGrid
               label={t('web.InventoryCustomizationManager.fieldCustomTypeTargets')}
@@ -452,7 +452,7 @@
                   href={archiveFieldDefinitionHref(definition)}
                   variant="ghost"
                   size="icon-xs"
-                  aria-label={`Archive ${definition.displayName}`}
+                  aria-label={t('web.InventoryCustomizationManager.archive', { displayName: String(definition.displayName) })}
                   disabled={busy || !canScope(definition.scope)}
                   onclick={(event) => openArchiveAction(event, 'archive_field_definition', definition.id)}
                 >

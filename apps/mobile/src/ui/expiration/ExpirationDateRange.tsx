@@ -8,7 +8,7 @@ function calendarDate(date: Date) { return `${String(date.getFullYear()).padStar
 export function ExpirationDateRange({ fromDate, throughDate, onChange }: { readonly fromDate?: string; readonly throughDate?: string; readonly onChange: (range: { fromDate?: string; throughDate?: string }) => void }) {
  const [editing, setEditing] = useState<'fromDate' | 'throughDate' | null>(null);
  const range = { fromDate, throughDate };
- return <SettingsSection footer="Month-only dates are included by their month end.">
+ return <SettingsSection footer={t('mobile.ExpirationDateRange.monthOnlyDatesAreIncludedByTheirMonthEnd')}>
   {(['fromDate','throughDate'] as const).map(key => <View key={key}>
    <SettingsSwitchRow label={key === 'fromDate' ? t('mobile.ExpirationDateRange.fromDate') : t('mobile.ExpirationDateRange.throughDate')} value={!!range[key]} onValueChange={enabled => { onChange({...range,[key]:enabled ? calendarDate(new Date()) : undefined}); if (Platform.OS !== 'ios') setEditing(enabled ? key : null); }} />
    {range[key] && Platform.OS !== 'ios' ? <SettingsNavigationRow accessibilityLabel={key === 'fromDate' ? t('mobile.ExpirationDateRange.changeFirstExpirationDate') : t('mobile.ExpirationDateRange.changeLastExpirationDate')} label={t('mobile.ExpirationDateRange.date')} value={formatAssetExpiration({date:range[key]!,precision:'day'})} onPress={() => setEditing(key)} /> : null}

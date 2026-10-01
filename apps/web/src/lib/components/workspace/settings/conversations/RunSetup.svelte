@@ -72,6 +72,6 @@
     {:else}<p>{t('web.RunSetup.model')} {revision.data.definition.providerProfileId ? profiles.data.find(profile => profile.id === revision.data?.definition.providerProfileId)?.name ?? t('web.RunSetup.selectedProfileUnavailable') : t('web.RunSetup.tenantDefaultModel')}</p>{/if}
     <p>{t('web.RunSetup.textOnlyCoverageSpeechInputAndPlaybackNeedSeparate')}</p>
   </section>{/if}
-  <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? 'Queueing…' : t('web.RunSetup.runSelectedCases')}</Button.Root><p role="status">{message}</p>
+  <Button.Root disabled={busy || !revision.data || revision.isError || !profiles.isSuccess || selectedCases.length === 0} onclick={queue}>{busy ? t('web.RunSetup.queueing') : t('web.RunSetup.runSelectedCases')}</Button.Root><p role="status">{message}</p>
 </section>
 <style>.run-setup { display: grid; gap: 1.25rem; max-width: 56rem; overflow-wrap: anywhere; } ul { display: grid; gap: .5rem; list-style: none; padding: 0; } h3, h4 { font-weight: 600; } section section { display: grid; gap: .75rem; }</style>

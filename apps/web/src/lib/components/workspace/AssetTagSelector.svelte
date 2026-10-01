@@ -138,7 +138,7 @@
       {#each newTags as tag, index}
         <span class={`tag-chip pending-tag${tag.color ? ' tag-chip-colored' : ''}`} style={tag.color ? `--tag-color: ${tag.color}` : undefined}>
           <span>{tag.displayName}</span>
-          <Button.Root type="button" variant="ghost" size="icon-sm" class="size-11" aria-label={`Remove ${tag.displayName}`} onclick={() => removeNewTag(index)}>
+          <Button.Root type="button" variant="ghost" size="icon-sm" class="size-11" aria-label={t('web.AssetTagSelector.remove', { displayName: String(tag.displayName) })} onclick={() => removeNewTag(index)}>
             <X />
           </Button.Root>
         </span>

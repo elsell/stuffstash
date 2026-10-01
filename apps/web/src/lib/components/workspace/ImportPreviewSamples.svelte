@@ -209,7 +209,7 @@
       {#if section.rows.length === 0}
         <div class="quiet-row"><CheckCircle2 size={16} aria-hidden="true" /> {section.emptyText}</div>
       {:else}
-        <Table.Root aria-label={`${section.title} plan preview`}>
+        <Table.Root aria-label={t('web.ImportPreviewSamples.planPreview', { title: String(section.title) })}>
           <Table.Header>
             <Table.Row>
               {#each section.columns as column}
@@ -248,7 +248,7 @@
               variant="outline"
               size="icon"
               disabled={pageBySection[section.id] === 0}
-              aria-label={`Previous ${section.title.toLowerCase()} plan page`}
+              aria-label={t('web.ImportPreviewSamples.previousPlanPage', { value: String(section.title.toLowerCase()) })}
               onclick={() => setPage(section, pageBySection[section.id] - 1)}
             >
               <ChevronLeft size={16} aria-hidden="true" />
@@ -257,7 +257,7 @@
               variant="outline"
               size="icon"
               disabled={pageBySection[section.id] >= planPageCount(section) - 1}
-              aria-label={`Next ${section.title.toLowerCase()} plan page`}
+              aria-label={t('web.ImportPreviewSamples.nextPlanPage', { value: String(section.title.toLowerCase()) })}
               onclick={() => setPage(section, pageBySection[section.id] + 1)}
             >
               <ChevronRight size={16} aria-hidden="true" />

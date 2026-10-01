@@ -147,9 +147,9 @@ export function settingsShellPresentation(input: {
   if (!input.inventory) {
     return {
       title: t('web.workspaceSettingsNavigation.settings'),
-      contextLabel: 'No inventory selected',
+      contextLabel: t('web.workspaceSettingsNavigation.noInventorySelected'),
       liveAnnouncement: `${input.activeSection.label}: ${input.activeSection.description}`,
-      overviewContextLabel: 'Not available',
+      overviewContextLabel: t('web.workspaceSettingsNavigation.notAvailable'),
       emptyState: {
         title: t('web.workspaceSettingsNavigation.noInventorySelected'),
         message: t('web.workspaceSettingsNavigation.selectOrCreateAnInventoryBeforeManagingSettings')

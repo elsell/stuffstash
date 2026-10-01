@@ -53,8 +53,8 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   const [fieldType, setFieldType] = useState<CustomFieldType>('text'); const [applicability, setApplicability] = useState<CustomFieldApplicability>('all_assets');
   const [enumOptions, setEnumOptions] = useState<readonly string[]>([]); const [newOption, setNewOption] = useState(''); const [targetIds, setTargetIds] = useState<readonly string[]>([]);
   const [advanced, setAdvanced] = useState(false); const [saving, setSaving] = useState(false); const [error, setError] = useState<string>();
-  const [errorTitle, setErrorTitle] = useState('Could not save');
-  const [deniedMessage, setDeniedMessage] = useState("You don’t have permission to change this setting.");
+  const [errorTitle, setErrorTitle] = useState(t('customization.saveFailed'));
+  const [deniedMessage, setDeniedMessage] = useState(t('customization.denied'));
   const [initialSnapshot, setInitialSnapshot] = useState('');
   const [draftDenied, setDraftDenied] = useState(false);
   const [completion, setCompletion] = useState<'Saved' | 'Archived' | 'Restored' | 'Deleted'>();
@@ -130,7 +130,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
           accessPolicy.readOrRecord(refreshedContext, kind, scope);
         }
         clearLoadedRecord();
-        setDeniedMessage('Your access changed. This setting can’t be shown.');
+        setDeniedMessage(t('customization.accessChanged'));
         setStatus('denied');
         return;
       }
@@ -217,7 +217,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   if (mode === 'create' && !canMutate && !draftDenied) return <DeniedSettingsState message={t('mobile.CustomizationEditorScreen.youDonTHavePermissionToAddThisSetting')} />;
 
   if (completion) return <ScrollView style={settings.styles.shell} contentContainerStyle={settings.styles.content} contentInsetAdjustmentBehavior="automatic">
-    <SettingsSection title={completion} footer="This change is complete. Return to the collection to continue.">
+    <SettingsSection title={t(({ Saved: 'customization.saved', Archived: 'customization.archived', Restored: 'customization.restored', Deleted: 'customization.deleted' } as const)[completion])} footer={t('mobile.CustomizationEditorScreen.thisChangeIsCompleteReturnToTheCollectionTo')}>
       <NativeCommandButton label={t('mobile.CustomizationEditorScreen.returnToCollection')} onPress={onDone} />
     </SettingsSection>
   </ScrollView>;
@@ -225,7 +225,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
   async function save() {
     const owner = focusOwner.current; const resource = resourceOwner.current; const workflow = workflowRef.current;
     if (completed || !resource || !owner || !context || !valid || (mode === 'edit' && !dirty) || !workflow.beginSave()) return;
-    setSaving(true); setError(undefined); setErrorTitle('Could not save');
+    setSaving(true); setError(undefined); setErrorTitle(t('customization.saveFailed'));
     try {
       await saveCustomizationEditor({ context, draft: editorDraft, kind, managers: { assetTypes: manageAssetTypes, fields: manageFields, tags: manageTags }, mode, record: record?.kind === 'field' ? record : undefined, resourceId, scope });
       if (resourceOwner.current !== resource) return;
@@ -276,7 +276,7 @@ export function CustomizationEditorScreen({ accessPolicy, contextQuery: sourceCo
     {kind !== 'tag' ? <SettingsSection title={t('mobile.CustomizationEditorScreen.details')}><Pressable accessibilityRole="button" onPress={() => setAdvanced((value) => !value)} style={styles.disclosure}><Text style={styles.disclosureText}>{advanced ? t('mobile.CustomizationEditorScreen.hideTechnicalDetails') : t('mobile.CustomizationEditorScreen.showTechnicalDetails')}</Text><ChevronDown color={colors.textMuted} size={18} style={{ transform: [{ rotate: advanced ? '180deg' : '0deg' }] }} /></Pressable>{advanced ? <>{mode === 'create' ? <CustomizationLabeledInput editable={draftEditable} error={!validation.keyValid ? validation.keyMessage : undefined} inputRef={keyInputRef} label={t('mobile.CustomizationEditorScreen.stableKey')} onChangeText={(value) => { const next = withManualEditorKey(editorDraft, value); setKey(next.key); setKeyManuallyEdited(next.keyManuallyEdited); }} value={key} /> : <><SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.key')} value={key} /></>}<SettingsSeparator /><SettingsValueRow label={t('mobile.CustomizationEditorScreen.scope')} value={scope === 'tenant' || effectiveInherited ? context.tenantName : context.inventoryName} /></> : null}</SettingsSection> : null}
     {effectiveInherited ? <Text style={styles.readOnly}>{t('mobile.CustomizationEditorScreen.inheritedFromManageItFromHouseholdSettings', { tenantName: String(context.tenantName) })}</Text> : null}
     {effectiveInherited && context.tenantPermissions.includes('configure') && onManageInherited ? <SettingsSection><NativeCommandButton label={t('mobile.CustomizationEditorScreen.manageIn', { tenantName: String(context.tenantName) })} onPress={onManageInherited} /></SettingsSection> : null}
-    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? 'Saving…' : t('mobile.CustomizationEditorScreen.save')} disabled={saveActions.disabled} onPress={saveActions.onApply} /></View> : null}
+    {canMutate && lifecycle === 'active' ? <View style={[settings.styles.contentBlock, { marginTop: spacing.lg }]}><NativeCommandButton prominence="primary" label={saving ? t('mobile.CustomizationEditorScreen.saving') : t('mobile.CustomizationEditorScreen.save')} disabled={saveActions.disabled} onPress={saveActions.onApply} /></View> : null}
     {mode === 'edit' && canMutate ? <CustomizationLifecycleSection busy={lifecycleBusy || saving} kind={kind} lifecycle={lifecycle} onAction={lifecycleAction} /> : null}
     <SettingsRefreshNotice visible={reads.resource.isRefetchError || reads.types.isRefetchError} onRetry={reads.refreshDefinitions} />
     {dirty ? <Text style={styles.unsaved}>{t('mobile.CustomizationEditorScreen.unsavedChanges')}</Text> : null}

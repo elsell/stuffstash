@@ -30,7 +30,7 @@ export function InventoryExportAction({ command, scope }: { readonly command: Ex
       }
     } finally { if (active.current === request) { active.current = undefined; setPending(false); } }
   };
-  return <SettingsSection footer="Includes archived items and attachment details. Photo and file contents are not included.">
+  return <SettingsSection footer={t('mobile.InventoryExportAction.includesArchivedItemsAndAttachmentDetailsPhotoAndFile')}>
     <NativeActionMenu accessibilityLabel={t('mobile.InventoryExportAction.exportInventory')} disabled={pending || !focused} trigger={{ kind: 'row', label: t('mobile.InventoryExportAction.exportInventory') }} groups={[{ id: 'formats', items: [
       { id: 'json', label: t('mobile.InventoryExportAction.jSONCompleteInventoryData'), systemImage: 'doc', onPress: () => void run('json') },
       { id: 'csv', label: t('mobile.InventoryExportAction.cSVSpreadsheetRows'), systemImage: 'tablecells', onPress: () => void run('csv') }

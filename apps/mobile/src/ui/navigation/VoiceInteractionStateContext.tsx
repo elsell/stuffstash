@@ -287,7 +287,7 @@ function ScopedVoiceInteractionStateProvider({ children, diagnosticsEnabled = fa
         } catch (error) {
           if (interactionLifetime.current !== lifetime) return;
           if (isObject(error) && error.code === 'review_validation_failed') {
-            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: 'Check review details', errorMessage: 'Check the staged photos and edited fields, then approve again.' } : current);
+            setRealtime(current => current ? { ...current, status: 'review', reviewDecisionPending: false, progressLabel: t('mobile.VoiceInteractionStateContext.checkReviewDetails'), errorMessage: 'Check the staged photos and edited fields, then approve again.' } : current);
             setStage('review');
             return;
           }
@@ -376,7 +376,7 @@ export function markReviewDecisionPending(state: VoiceRealtimeState | null, prog
 }
 
 export function markPhotoRetryInProgress(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
-  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: 'Adding photos', ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: t('mobile.VoiceInteractionStateContext.addingPhotos'), canRetry: false } } : {}) } : state;
+  return voiceStateMatchesActionPlan(state, planId) ? { ...state, progressLabel: t('mobile.VoiceInteractionStateContext.addingPhotos2'), ...(state.photoAttachmentStatus ? { photoAttachmentStatus: { ...state.photoAttachmentStatus, message: t('mobile.VoiceInteractionStateContext.addingPhotos'), canRetry: false } } : {}) } : state;
 }
 
 export function markPhotoRetryResult(
@@ -386,7 +386,7 @@ export function markPhotoRetryResult(
 ): VoiceRealtimeState | null {
   return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
-    progressLabel: photoAttachmentStatus.status === 'uploading' ? 'Adding photos' : photoAttachmentStatus.status === 'attached' ? 'Photos updated' : 'Photo upload failed',
+    progressLabel: photoAttachmentStatus.status === 'uploading' ? t('mobile.VoiceInteractionStateContext.addingPhotos2') : photoAttachmentStatus.status === 'attached' ? t('mobile.VoiceInteractionStateContext.photosUpdated') : t('mobile.VoiceInteractionStateContext.photoUploadFailed'),
     photoAttachmentStatus
   } : state;
 }
@@ -394,7 +394,7 @@ export function markPhotoRetryResult(
 export function markPhotoRetryFailure(state: VoiceRealtimeState | null, planId: string): VoiceRealtimeState | null {
   return voiceStateMatchesActionPlan(state, planId) ? {
     ...state,
-    progressLabel: 'Photo upload failed',
+    progressLabel: t('mobile.VoiceInteractionStateContext.photoUploadFailed'),
     photoAttachmentStatus: {
       status: 'failed',
       message: t('mobile.VoiceInteractionStateContext.photosCouldNotBeAttachedTryAgain'),
@@ -464,7 +464,7 @@ export function buildFailedVoiceRealtimeState(error: unknown, context: VoiceFail
     status: 'failed',
     tenantName: safeContextLabel(context.tenantName),
     inventoryName: safeContextLabel(context.inventoryName),
-    progressLabel: 'Voice failed',
+    progressLabel: t('mobile.VoiceInteractionStateContext.voiceFailed'),
     debugEvents: [],
     failureCode,
     errorMessage: readinessFailure?.message ?? (isObject(error) && error.code === 'connection_interrupted' ? 'The connection was interrupted. Try again when you are connected.' : 'Could not finish this request. Try again or start a new conversation.')

@@ -72,7 +72,7 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       contentContainerStyle={{ paddingBottom: 20 + (Platform.OS === 'ios' ? insets.bottom : 0) }}>
         {creationOpen ? <>
-          <SettingsSection title={t('mobile.AddDestinationSelectionScreen.name')} footer="A new place is saved immediately, even if you cancel adding the item later.">
+          <SettingsSection title={t('mobile.AddDestinationSelectionScreen.name')} footer={t('mobile.AddDestinationSelectionScreen.aNewPlaceIsSavedImmediatelyEvenIfYou')}>
             <View style={styles.navigationRow}>
               <DraftTextField accessibilityLabel={t('mobile.AddDestinationSelectionScreen.newPlaceName')} value={props.query} editable={!props.disabled}
                 onChangeText={changeQuery} placeholder={t('mobile.AddDestinationSelectionScreen.placeName')} style={{ minHeight: 48, color: palette.text }} />
@@ -82,7 +82,7 @@ export function AddDestinationSelectionScreen(props: AddDestinationSelectionProp
           {lookupStatus}
           {props.creating ? <SettingsSection><SettingsLoadingRow label={t('mobile.AddDestinationSelectionScreen.creatingPlace')} /></SettingsSection> : null}
         </> : <>
-        <SettingsSection footer="Choosing a destination changes this draft only.">
+        <SettingsSection footer={t('mobile.AddDestinationSelectionScreen.choosingADestinationChangesThisDraftOnly')}>
           <View style={styles.navigationRow}><Text style={styles.rowContext}>{t('mobile.AddDestinationSelectionScreen.current', { value: String(props.selected?.pathLabel || props.selected?.title || props.unresolvedSelection || 'Top level in this inventory') })}</Text></View>
           <SettingsChoiceRow label={t('mobile.AddDestinationSelectionScreen.topLevel')} accessibilityLabel={t('mobile.AddDestinationSelectionScreen.chooseInventoryTopLevel')} selected={!props.selected && !props.unresolvedSelection} disabled={props.disabled} onPress={() => select()} />
         </SettingsSection>

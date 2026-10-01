@@ -27,13 +27,13 @@ export function NewAssetTagScreen({ tags, selectedIds, newTags, onDone, onCancel
   return <>
     <Stack.Screen options={{ title: t('mobile.NewAssetTagScreen.newTag') }} />
     <NativeFilterSheet title={t('mobile.NewAssetTagScreen.newTag')} footerTestID="new-asset-tag-actions" actions={{ primaryLabel: t('mobile.NewAssetTagScreen.addTag'), secondaryLabel: t('mobile.NewAssetTagScreen.cancel'),
-      secondaryAccessibilityLabel: 'Cancel new tag', disabled: !available || !canApplyInlineAssetTagResolution(resolution),
+      secondaryAccessibilityLabel: t('mobile.NewAssetTagScreen.cancelNewTag'), disabled: !available || !canApplyInlineAssetTagResolution(resolution),
       onApply: () => {
         if (!available) return;
         const next = applyInlineAssetTagResolution({ resolution, selectedTagIds: selectedIds, pendingTags: newTags });
         if (next.shouldClearInputs) onDone(next.selectedTagIds, next.pendingTags);
       }, onBack: onCancel }}>
-      <SettingsSection title={t('mobile.NewAssetTagScreen.name')} footer="This tag will be saved with the asset.">
+      <SettingsSection title={t('mobile.NewAssetTagScreen.name')} footer={t('mobile.NewAssetTagScreen.thisTagWillBeSavedWithTheAsset')}>
         <View style={styles.navigationRow}><DraftTextField style={[styles.rowLabel, { flex: 1, minHeight: 48 }]} placeholderTextColor={palette.textMuted} accessibilityLabel={t('mobile.NewAssetTagScreen.newTagName')} placeholder={t('mobile.NewAssetTagScreen.tagName')}
           value={name} onChangeText={setName} editable={available} /></View>
         {resolution.status === 'display_name_too_long' ? <Text accessibilityRole="alert" style={styles.rowContext}>{t('mobile.NewAssetTagScreen.useAShorterTagName')}</Text> : null}

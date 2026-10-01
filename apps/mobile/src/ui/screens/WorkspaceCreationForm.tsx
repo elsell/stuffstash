@@ -36,7 +36,7 @@ export function WorkspaceCreationForm({ task, command, onCancel, onCreated, onBu
   const label = task.kind === 'household' ? t('mobile.WorkspaceCreationForm.householdName') : t('mobile.WorkspaceCreationForm.inventoryName');
   return <NativeFilterSheet title={task.kind === 'household' ? t('mobile.WorkspaceCreationForm.newHousehold') : t('mobile.WorkspaceCreationForm.newInventory')} footerTestID="workspace-creation-actions"
     actions={{ primaryLabel: task.kind === 'household' ? t('mobile.WorkspaceCreationForm.createHousehold') : t('mobile.WorkspaceCreationForm.createInventory'), secondaryLabel: t('mobile.WorkspaceCreationForm.cancel'),
-      secondaryAccessibilityLabel: 'Cancel creation', disabled: saving || !name.trim(), secondaryDisabled: saving,
+      secondaryAccessibilityLabel: t('mobile.WorkspaceCreationForm.cancelCreation'), disabled: saving || !name.trim(), secondaryDisabled: saving,
       onApply: () => { void create(); }, onBack: onCancel }}>
     <SettingsSection title={label} footer={task.kind === 'inventory' ? t('mobile.WorkspaceCreationForm.in', { name: String(task.household.name) }) : t('mobile.WorkspaceCreationForm.aHouseholdHasItsOwnInventoriesAndSharing')}>
       <View style={styles.navigationRow}><DraftTextField style={[styles.rowLabel, { flex: 1, minHeight: 48 }]} placeholderTextColor={palette.textMuted} accessibilityLabel={label} placeholder={label}

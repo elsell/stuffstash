@@ -5,7 +5,7 @@
   let { checkout, compact = false }: { checkout: CurrentCheckout; compact?: boolean } = $props();
 </script>
 
-<span class:compact class="checkout-badge" title={`Checked out ${new Date(checkout.checkedOutAt).toLocaleString()}`}> {t('web.CheckoutBadge.checkedOut')} </span>
+<span class:compact class="checkout-badge" title={t('web.CheckoutBadge.checkedOut2', { value: String(new Date(checkout.checkedOutAt).toLocaleString()) })}> {t('web.CheckoutBadge.checkedOut')} </span>
 
 <style>
   .checkout-badge {

@@ -122,7 +122,7 @@
 </script>
 
 {#if panel === 'edit'}
-  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.editAsset')} description={t('web.AssetDetailActionPanel.updateTheNameDetailsFieldsAndTags')} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close edit" initialFocusSelector="#edit-asset-title" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.editAsset')} description={t('web.AssetDetailActionPanel.updateTheNameDetailsFieldsAndTags')} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel={t('web.AssetDetailActionPanel.closeEdit')} initialFocusSelector="#edit-asset-title" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="edit-asset-title">{t('web.AssetDetailActionPanel.name')}</Label>
       <Input id="edit-asset-title" bind:value={title} />
@@ -182,11 +182,11 @@
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'move'}
-  <WorkspaceTaskSheet open title={asset.kind === 'location' ? 'Move place' : 'Move asset'} description={`Choose a new place for ${asset.title}.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close move" initialFocusSelector="#move-parent-search" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={asset.kind === 'location' ? t('web.AssetDetailActionPanel.movePlace') : t('web.AssetDetailActionPanel.moveAsset')} description={t('web.AssetDetailActionPanel.chooseANewPlaceFor', { title: String(asset.title) })} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel={t('web.AssetDetailActionPanel.closeMove')} initialFocusSelector="#move-parent-search" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <ParentTargetPicker
       legend="Parent"
       searchId="move-parent-search"
-      groupLabel="Move target"
+      groupLabel={t('web.AssetDetailActionPanel.moveTarget')}
       bind:search={moveParentSearch}
       selectedId={parentAssetId}
       targets={parentTargets}
@@ -201,7 +201,7 @@
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'archive'}
-  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.archiveAsset')} description={`Move ${asset.title} out of active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.archiveAsset')} description={t('web.AssetDetailActionPanel.moveOutOfActiveBrowsing', { title: String(asset.title) })} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
@@ -209,7 +209,7 @@
     {#snippet action()}<Button.Root variant="outline" disabled={saving} onclick={() => { void onArchive(); }}>{t('web.AssetDetailActionPanel.archive')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'restore'}
-  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.restoreAsset')} description={`Return ${asset.title} to active browsing?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.restoreAsset')} description={t('web.AssetDetailActionPanel.returnToActiveBrowsing', { title: String(asset.title) })} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
@@ -217,7 +217,7 @@
     {#snippet action()}<Button.Root disabled={saving} onclick={() => { void onRestore(); }}>{t('web.AssetDetailActionPanel.restore')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'delete'}
-  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAsset')} description={`Delete ${asset.title} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAsset')} description={t('web.AssetDetailActionPanel.deletePermanently', { title: String(asset.title) })} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}
@@ -225,7 +225,7 @@
     {#snippet action()}<Button.Root variant="destructive" disabled={saving} onclick={() => { void onDelete(); }}>{t('web.AssetDetailActionPanel.delete')}</Button.Root>{/snippet}
   </WorkspaceConfirmationDialog>
 {:else if panel === 'checkout'}
-  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.checkOutAsset')} description={`${asset.title} will stay in its home location and be marked as checked out.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close check out" initialFocusSelector="#checkout-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.checkOutAsset')} description={t('web.AssetDetailActionPanel.willStayInItsHomeLocationAndBeMarked', { title: String(asset.title) })} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel={t('web.AssetDetailActionPanel.closeCheckOut')} initialFocusSelector="#checkout-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="checkout-asset-details">{t('web.AssetDetailActionPanel.details')}</Label>
       <Textarea id="checkout-asset-details" bind:value={checkoutDetails} placeholder={t('web.AssetDetailActionPanel.optionalUsingAtDeskLoanedToSam')} />
@@ -239,7 +239,7 @@
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'return'}
-  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.returnAsset')} description={`Mark ${asset.title} as returned.`} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel="Close return" initialFocusSelector="#return-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceTaskSheet open title={t('web.AssetDetailActionPanel.returnAsset')} description={t('web.AssetDetailActionPanel.markAsReturned', { title: String(asset.title) })} busy={saving} dismissible={!taskDirty} closeHref={detailHref} closeLabel={t('web.AssetDetailActionPanel.closeReturn')} initialFocusSelector="#return-asset-details" onCloseLink={onClose} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     <div class="field-stack">
       <Label for="return-asset-details">{t('web.AssetDetailActionPanel.details')}</Label>
       <Textarea id="return-asset-details" bind:value={checkoutDetails} placeholder={t('web.AssetDetailActionPanel.optionalBackInBinReturnedByAlex')} />
@@ -253,7 +253,7 @@
     {/snippet}
   </WorkspaceTaskSheet>
 {:else if panel === 'attachment-delete' && selectedAttachment}
-  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAttachment')} description={`Delete ${selectedAttachment.fileName} permanently?`} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
+  <WorkspaceConfirmationDialog open title={t('web.AssetDetailActionPanel.deleteAttachment')} description={t('web.AssetDetailActionPanel.deletePermanently2', { fileName: String(selectedAttachment.fileName) })} busy={saving} onOpenChange={(open) => { if (!open) onDismiss(); }} {onCloseAutoFocus}>
     {#if saveError}
       <p class="denied-note" role="alert">{saveError}</p>
     {/if}

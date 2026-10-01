@@ -73,8 +73,8 @@
         <Button.Root
           href={removePhotoHref}
           variant="outline"
-          aria-label={`Remove photo ${heroPhoto.fileName}`}
-          title={`Remove ${heroPhoto.fileName}`}
+          aria-label={t('web.AssetDetailHero.removePhoto2', { fileName: String(heroPhoto.fileName) })}
+          title={t('web.AssetDetailHero.remove', { fileName: String(heroPhoto.fileName) })}
           onclick={onRemovePhoto}
         ><Trash2 /> {t('web.AssetDetailHero.removePhoto')}</Button.Root>
       {/if}
@@ -92,7 +92,7 @@
           <Button.Root
             variant="ghost"
             class={photo.id === heroPhoto?.id ? 'active' : ''}
-            aria-label={`Show ${photo.fileName}`}
+            aria-label={t('web.AssetDetailHero.show', { fileName: String(photo.fileName) })}
             aria-pressed={photo.id === heroPhoto?.id}
             onclick={() => onSelectPhoto(photo.id)}
           >
@@ -110,7 +110,7 @@
     {#if uploadBusy}
       <p class="photo-upload-status" role="status">{t('web.AssetDetailHero.uploadingPhoto')}</p>
     {:else if retryPhotoName}
-      <Button.Root variant="outline" aria-label={`Retry ${retryPhotoName}`} onclick={onRetryPhoto}>{t('web.AssetDetailHero.retryFull', { retryPhotoName: retryPhotoName })}</Button.Root>
+      <Button.Root variant="outline" aria-label={t('web.AssetDetailHero.retry2', { retryPhotoName: String(retryPhotoName) })} onclick={onRetryPhoto}>{t('web.AssetDetailHero.retryFull', { retryPhotoName: retryPhotoName })}</Button.Root>
     {/if}
   </div>
   {/if}

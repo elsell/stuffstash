@@ -15,25 +15,25 @@ export function stagePresentation(
       return {
         title: t('mobile.VoiceStagePresentation.listen'),
         description: t('mobile.VoiceStagePresentation.speechToText'),
-        longDescription: 'Choose the service that turns your spoken words into text.'
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatTurnsYourSpokenWordsInto')
       };
     case 'language_inference':
       return {
         title: t('mobile.VoiceStagePresentation.understand'),
         description: t('mobile.VoiceStagePresentation.languageModel'),
-        longDescription: 'Choose the service that interprets inventory requests and plans actions.'
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatInterpretsInventoryRequestsAndPlans')
       };
     case 'text_to_speech':
       return {
         title: t('mobile.VoiceStagePresentation.speak'),
         description: t('mobile.VoiceStagePresentation.spokenResponses'),
-        longDescription: 'Choose the service that reads Stuff Stash responses aloud.'
+        longDescription: t('mobile.VoiceStagePresentation.chooseTheServiceThatReadsStuffStashResponsesAloud')
       };
     default:
       return {
         title: t('mobile.VoiceStagePresentation.voiceService'),
         description: t('mobile.VoiceStagePresentation.unknownCapability'),
-        longDescription: 'Review this voice service.'
+        longDescription: t('mobile.VoiceStagePresentation.reviewThisVoiceService')
       };
   }
 }

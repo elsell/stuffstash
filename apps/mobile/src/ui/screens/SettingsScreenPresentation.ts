@@ -64,14 +64,14 @@ export function buildSettingsRootSections(
   const sections: SettingsRootSection[] = [
     {
       id: 'account',
-      rows: [row('account', 'Account', input.principal.primaryLabel, 'account',
-        `Open Account settings for ${input.principal.primaryLabel}`)]
+      rows: [row('account', t('settings.account'), input.principal.primaryLabel, 'account',
+        t('settings.openAccount', { name: input.principal.primaryLabel }))]
     },
     {
       id: 'preferences',
       title: t('mobile.SettingsScreenPresentation.preferences'),
-      rows: [row('appearance', 'Appearance', appearanceLabel(input.appearance), 'appearance',
-        `Open Appearance settings. Current selection ${appearanceLabel(input.appearance)}`)]
+      rows: [row('appearance', t('settings.appearance'), appearanceLabel(input.appearance), 'appearance',
+        t('settings.openAppearance', { selection: appearanceLabel(input.appearance) }))]
     }
   ];
 
@@ -79,10 +79,10 @@ export function buildSettingsRootSections(
     id: 'scope',
     title: t('mobile.SettingsScreenPresentation.householdAndInventory'),
     rows: [
-      row('tenant-settings', input.selectedTenant.name, 'Household settings', 'tenant-settings',
-        `Open household settings for ${input.selectedTenant.name}`),
-      row('inventory-settings', input.selectedInventory.name, `In ${input.selectedTenant.name}`, 'inventory-settings',
-        `Open inventory settings for ${input.selectedInventory.name}, in ${input.selectedTenant.name}`)
+      row('tenant-settings', input.selectedTenant.name, t('settings.household'), 'tenant-settings',
+        t('settings.openHousehold', { name: input.selectedTenant.name })),
+      row('inventory-settings', input.selectedInventory.name, t('settings.inHousehold', { name: input.selectedTenant.name }), 'inventory-settings',
+        t('settings.openInventory', { name: input.selectedInventory.name, household: input.selectedTenant.name }))
     ]
   });
 
@@ -90,17 +90,17 @@ export function buildSettingsRootSections(
     {
       id: 'connection',
       title: t('mobile.SettingsScreenPresentation.connection'),
-      rows: [row('server', 'Stuff Stash server', serverHostname(input.serverUrl), 'connection',
-        `Open Stuff Stash server settings for ${serverHostname(input.serverUrl)}`)]
+      rows: [row('server', t('settings.server'), serverHostname(input.serverUrl), 'connection',
+        t('settings.openServer', { host: serverHostname(input.serverUrl) }))]
     },
     {
       id: 'about',
       title: t('mobile.SettingsScreenPresentation.about'),
       rows: [
-        row('about', 'About Stuff Stash', `Version ${input.appVersion}`, 'about',
-          `Open About Stuff Stash. Version ${input.appVersion}`),
-        row('diagnostics', 'Diagnostics', undefined, 'diagnostics',
-          'Open developer and connection Diagnostics')
+        row('about', t('settings.about'), t('settings.version', { version: input.appVersion }), 'about',
+          t('settings.openAbout', { version: input.appVersion })),
+        row('diagnostics', t('settings.diagnostics'), undefined, 'diagnostics',
+          t('settings.openDiagnostics'))
       ]
     }
   );
@@ -135,7 +135,7 @@ function row(
 }
 
 export function appearanceLabel(value: AppearancePreference): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  return t(`settings.theme.${value}`);
 }
 
 export function serverHostname(serverUrl: string): string {

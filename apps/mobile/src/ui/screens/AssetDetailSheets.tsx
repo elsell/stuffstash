@@ -263,9 +263,9 @@ export function MoveAssetSheet({
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={searchEnabled} />
         : searchEnabled ? <NativeFilterSearch {...search} /> : null}
-      {!creationExpanded ? <MoveSelectionList subjectLabel="Moving" subject={asset.title}
+      {!creationExpanded ? <MoveSelectionList subjectLabel={t('mobile.AssetDetailSheets.moving2')} subject={asset.title}
         context={`Current location: ${placement?.currentLocationLabel || 'Inventory root'}`} title={t('mobile.AssetDetailSheets.destinations')}
-        destinationLabel={draft?.selectedParent === null ? 'Inventory root' : draft?.selectedParent?.pathLabel || draft?.selectedParent?.title || 'Choose a destination'}
+        destinationLabel={draft?.selectedParent === null ? t('mobile.AssetDetailSheets.inventoryRoot') : draft?.selectedParent?.pathLabel || draft?.selectedParent?.title || t('mobile.AssetDetailSheets.chooseADestination')}
         statuses={moveSelectionStatuses(readOnly, isSaving, candidateStatus)}
         rows={[{ id: 'inventory-root', label: t('mobile.AssetDetailSheets.inventoryRoot'), context: 'Top level', kind: 'root',
           selected: draft?.selectedParent === null, disabled, accessibilityLabel: t('mobile.AssetDetailSheets.chooseInventoryRoot'), onPress: onSelectRoot },
@@ -348,7 +348,7 @@ export function MoveThingsHereSheet({
       <Stack.Screen options={headerOptions} />
       {Platform.OS === 'ios' ? <NativeNavigationSearch {...search} placement="stacked" enabled={!disabled} />
         : !disabled ? <NativeFilterSearch {...search} /> : null}
-      <MoveSelectionList subjectLabel="Destination" subject={draft?.target.title ?? 'This place'}
+      <MoveSelectionList subjectLabel={t('mobile.AssetDetailSheets.destination')} subject={draft?.target.title ?? 'This place'}
         context="Choose an item to move here." title={t('mobile.AssetDetailSheets.items')}
         statuses={[...moveSelectionStatuses(readOnly, isSaving, candidateStatus),
           ...(candidatesAvailable && draft?.matches.length === 0 ? [{ title: emptyState.title, message: emptyState.message }] : [])]}

@@ -48,7 +48,7 @@
   <ExpirationRefresh assets={listState.page.items} timezone={listState.page.timezone} scope={`${tenantId}/${inventoryId}`} onRefresh={refresh} />
   <ExpirationRows items={listState.page.items} onOpenAsset={openAsset} />
   {#if !listState.page.items.length}<div class="empty"><h2>{filtered?t('web.ExpirationWorkspace.noMatchingItems'):filter.mode==='all'?t('web.ExpirationWorkspace.noExpirationDates'):filter.mode==='soon'?t('web.ExpirationWorkspace.noneExpiringSoon'):t('web.ExpirationWorkspace.noExpiredItems')}</h2><p>{filtered?t('web.ExpirationWorkspace.tryChangingOrClearingYourFilters'):filter.mode==='all'?t('web.ExpirationWorkspace.addExpirationDatesFromAnItemSDetails'):t('web.ExpirationWorkspace.youCanReviewAllRecordedDatesInAllDates')}</p></div>{/if}
-  {#if listState.page.hasMore}<div class="more"><Button.Root variant="outline" disabled={listState.appending || listState.loading} onclick={() => {void list?.load(tenantId,inventoryId,filter,true);}}>{listState.appending?'Loading…':t('web.ExpirationWorkspace.loadMore')}</Button.Root></div>{/if}
+  {#if listState.page.hasMore}<div class="more"><Button.Root variant="outline" disabled={listState.appending || listState.loading} onclick={() => {void list?.load(tenantId,inventoryId,filter,true);}}>{listState.appending?t('web.ExpirationWorkspace.loading'):t('web.ExpirationWorkspace.loadMore')}</Button.Root></div>{/if}
  {/if}
  <ExpirationFilters bind:open={filtersOpen} {filter} {choices} loading={choicesLoading} error={choicesError} onApply={navigate} onRetry={() => {void loadChoices();}} />
  {:else}<p role="alert">{t('web.ExpirationWorkspace.expirationIsUnavailableInThisSession')}</p>{/if}

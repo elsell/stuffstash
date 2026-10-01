@@ -22,7 +22,7 @@ export function ExpirationFiltersScreen({ initial, choices, onApply, onCancel }:
  return <>
   <Stack.Screen options={headerOptions} />
   <NativeFilterSheet title={headerOptions.title} search={searchable ? { query: search, placeholder: t('mobile.ExpirationFiltersScreen.search', { page: String(page) }), onChange: setSearch, onSubmit: setSearch, onClear: () => setSearch('') } : undefined} footerTestID="expiration-filter-footer" actions={{
-   primaryLabel: t('mobile.ExpirationFiltersScreen.applyFilters'), primaryAccessibilityLabel: 'Apply expiration filters', secondaryAccessibilityLabel: 'Cancel or return to filters',
+   primaryLabel: t('mobile.ExpirationFiltersScreen.applyFilters'), primaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.applyExpirationFilters'), secondaryAccessibilityLabel: t('mobile.ExpirationFiltersScreen.cancelOrReturnToFilters'),
    secondaryLabel: page === 'overview' ? t('mobile.ExpirationFiltersScreen.cancel') : t('mobile.ExpirationFiltersScreen.back'), disabled: rangeError,
    onBack: () => page === 'overview' ? onCancel() : open('overview'), onApply: () => onApply(draft)
   }}>

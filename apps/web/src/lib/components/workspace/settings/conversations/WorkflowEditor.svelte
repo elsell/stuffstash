@@ -67,7 +67,7 @@
     <div class="budget-grid">{#each budgets as budget}<Label.Root class="grid gap-2 text-sm">{budget.label}<Input.Root name={budget.key} disabled={saving || disabled} type="number" min={1} step={1} required bind:value={draft.budget[budget.key]} /></Label.Root>{/each}</div>
     <p class="help">{t('web.WorkflowEditor.callAndProcessingLimitsApplyToEachTurnTime')}</p>
   </details>
-  <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? 'Saving…' : t('web.WorkflowEditor.saveDraft')}</Button.Root>
+  <div class="editor-actions"><Button.Root type="submit" disabled={saving || disabled}>{saving ? t('web.WorkflowEditor.saving') : t('web.WorkflowEditor.saveDraft')}</Button.Root>
     {#if conflict && onReload}<Button.Root type="button" variant="outline" disabled={saving || disabled} onclick={onReload}>{t('web.WorkflowEditor.loadLatestToCompare')}</Button.Root>{/if}
   </div>
   <p bind:this={errorSummary} tabindex="-1" role={invalid ? "alert" : "status"} aria-live="polite">{message}</p>

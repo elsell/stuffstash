@@ -69,7 +69,7 @@
   <section class="workspace-main settings-management" aria-labelledby="settings-level-title">
     <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> {t('web.SettingsWorkspace.settings')}</Button.Root>
     <header class="settings-management-heading"><p class="settings-eyebrow">{levelLabel}</p><h1 id="settings-level-title">{levelTitle}</h1>{#if inventory}<p>{t('web.SettingsWorkspace.belongsToFull', { name: inventory.name, name2: tenant.name })}</p>{:else}<p>{t('web.SettingsWorkspace.settingsSharedWithThisTenantSInventories')}</p>{/if}</header>
-    <SettingsDestinationList label={`${levelTitle} settings`} destinations={route.settingsLevel === 'tenant' ? tenantSettingsDestinations(tenant) : inventorySettingsDestinations(inventory!)} {onNavigate} />
+    <SettingsDestinationList label={t('web.SettingsWorkspace.settings2', { levelTitle: String(levelTitle) })} destinations={route.settingsLevel === 'tenant' ? tenantSettingsDestinations(tenant) : inventorySettingsDestinations(inventory!)} {onNavigate} />
     {#if route.settingsLevel === 'inventory' && inventory && exportCommand}
       {#key JSON.stringify([principal.id, tenant.id, inventory.id])}
         <InventoryExportAction command={exportCommand} scope={{ tenantId: tenant.id, inventoryId: inventory.id }} />

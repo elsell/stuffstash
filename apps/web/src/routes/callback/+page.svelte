@@ -31,7 +31,7 @@
 </script>
 
 <svelte:head>
-  <title>{failure ? 'Sign-in failed · Stuff Stash' : 'Signing in · Stuff Stash'}</title>
+  <title>{failure ? t('web.page.signInFailedStuffStash') : t('web.page.signingInStuffStash')}</title>
 </svelte:head>
 
 <AuthSurface title={failure?.title ?? pending.title} description={failure?.description ?? pending.description}>

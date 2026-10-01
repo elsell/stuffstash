@@ -280,7 +280,7 @@
                 </div>
                 <ImportMessagesList
                   messages={detailMessages(job)}
-                  emptyText="No import messages."
+                  emptyText={t('web.ImportJobDetailPanel.noImportMessages')}
                   truncated={job.messages.length === 0 && job.preview.messagesTruncated}
                   reportedWarnings={reportedWarningCount(job)}
                   reportedErrors={reportedErrorCount(job)}
@@ -333,7 +333,7 @@
                               <a
                                 class="resource-link"
                                 href={resourceHref(resource)}
-                                aria-label={`Open ${resourceLabel(resource)}`}
+                                aria-label={t('web.ImportJobDetailPanel.open2', { value: String(resourceLabel(resource)) })}
                                 onclick={(event) => onOpenResource(event, resource)}
                               > {t('web.ImportJobDetailPanel.open')} </a>
                             {:else}
@@ -420,12 +420,12 @@
           <section class="detail-actions" aria-label={t('web.ImportJobDetailPanel.importActions')}>
             {#if canCreateImports && canRequestCancellation}
               <Button.Root variant="outline" onclick={onCancel} disabled={busy}>
-                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.cancel')} busyLabel="Cancelling" />
+                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.cancel')} busyLabel={t('web.ImportJobDetailPanel.cancelling')} />
               </Button.Root>
             {/if}
             {#if canCreateImports && job.status === 'previewed'}
               <Button.Root onclick={onContinue} disabled={busy}>
-                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.continueImport')} busyLabel="Opening preview" />
+                <Button.BusyContent {busy} label={t('web.ImportJobDetailPanel.continueImport')} busyLabel={t('web.ImportJobDetailPanel.openingPreview')} />
               </Button.Root>
             {/if}
             <DropdownMenu.Root>

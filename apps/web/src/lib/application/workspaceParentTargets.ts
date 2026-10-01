@@ -1,5 +1,5 @@
 import type { ParentTargetViewModel } from '$lib/domain/inventory';
-import { assetKindLabel } from '$lib/domain/inventory';
+import { assetKindLabel } from '$lib/presentation/assetKindLabel';
 
 export interface ParentTargetSearchResult {
   matchingTargets: ParentTargetViewModel[];

@@ -30,7 +30,7 @@
   import { Label } from '$lib/components/ui/label/index.js';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
   import { assetDetailHref } from '$lib/application/workspaceAssetActions';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import {
     addItemHereHref,
     containableWorkspaceSections,
@@ -133,7 +133,7 @@
 <section
   class:location-contained-workspace={target.kind === 'location'}
   class="contained-workspace"
-  aria-label={`${target.title} contents`}
+  aria-label={t('web.ContainedAssetWorkspace.contents', { title: String(target.title) })}
 >
   {#if canAddHere || canMoveHere}
     <div class="contained-spatial-actions" aria-label={t('web.ContainedAssetWorkspace.spatialActions')}>
@@ -160,7 +160,7 @@
   {/if}
 
   {#if moveHereOpen}
-    <WorkspaceTaskSheet open title={t('web.ContainedAssetWorkspace.moveItemsHere')} description={`Choose one item, container, or place to move into ${target.title}.`} busy={saving} dismissible={!selectedCandidate} closeHref={assetDetailHref(target)} closeLabel="Close move items here" initialFocusSelector="#move-here-search" onCloseLink={closeMove} onOpenChange={(open) => { if (!open) onCloseMoveHere(); }} onCloseAutoFocus={(event) => { if (moveTrigger?.isConnected) { event.preventDefault(); moveTrigger.focus(); } }}>
+    <WorkspaceTaskSheet open title={t('web.ContainedAssetWorkspace.moveItemsHere')} description={t('web.ContainedAssetWorkspace.chooseOneItemContainerOrPlaceToMoveInto', { title: String(target.title) })} busy={saving} dismissible={!selectedCandidate} closeHref={assetDetailHref(target)} closeLabel={t('web.ContainedAssetWorkspace.closeMoveItemsHere')} initialFocusSelector="#move-here-search" onCloseLink={closeMove} onOpenChange={(open) => { if (!open) onCloseMoveHere(); }} onCloseAutoFocus={(event) => { if (moveTrigger?.isConnected) { event.preventDefault(); moveTrigger.focus(); } }}>
       <div class="field-stack">
         <Label for="move-here-search">{t('web.ContainedAssetWorkspace.findAnAsset')}</Label>
         <div class="relative">
@@ -168,14 +168,14 @@
           <Input class="pl-9" id="move-here-search" bind:value={moveQuery} placeholder={t('web.ContainedAssetWorkspace.searchByNameOrCurrentPlace')} />
         </div>
       </div>
-      <p class="visually-hidden" aria-live="polite">{t('web.ContainedAssetWorkspace.eligibleFull', { totalCount: candidatePage.totalCount, value: candidatePage.totalCount === 1 ? 'asset' : 'assets' })}</p>
+      <p class="visually-hidden" aria-live="polite">{t('assets.eligible', { count: candidatePage.totalCount })}</p>
       {#if candidatePage.candidates.length > 0}
         <div class="grid gap-2" data-move-here-candidates role="group" aria-label={t('web.ContainedAssetWorkspace.eligibleAssets')}>
           {#each candidatePage.candidates as candidate (candidate.id)}
             <Button.Root
               variant={candidate.id === selectedCandidateId ? 'secondary' : 'ghost'}
               class="h-auto min-h-14 w-full justify-start gap-3 whitespace-normal rounded-xl border border-transparent px-3 py-2 text-left"
-              aria-label={`Select ${candidate.title}`}
+              aria-label={t('web.ContainedAssetWorkspace.select', { title: String(candidate.title) })}
               aria-pressed={candidate.id === selectedCandidateId}
               onclick={() => { selectedCandidateId = candidate.id; saveError = ''; }}
             >

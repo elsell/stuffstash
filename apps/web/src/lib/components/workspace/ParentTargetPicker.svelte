@@ -19,10 +19,10 @@
   let {
     legend,
     searchId,
-    searchLabel = 'Find parent',
+    searchLabel = t('web.ParentTargetPicker.findParent'),
     groupLabel,
-    rootLabel = 'Inventory root',
-    rootSummaryLabel = 'inventory root',
+    rootLabel = t('web.ParentTargetPicker.inventoryRoot'),
+    rootSummaryLabel = t('web.ParentTargetPicker.inventoryRoot2'),
     searchPlaceholder = t('web.ParentTargetPicker.searchLocationsOrContainers'),
     search = $bindable(''),
     selectedId,
@@ -105,7 +105,7 @@
     <Label for={searchId}>{searchLabel}</Label>
     <Input id={searchId} bind:value={search} placeholder={searchPlaceholder} />
   </div>
-  <div class="parent-current-shell" role="group" aria-label={`${groupLabel} current destination`}>
+  <div class="parent-current-shell" role="group" aria-label={t('web.ParentTargetPicker.currentDestination2', { groupLabel: String(groupLabel) })}>
     <div>
       <p class="selection-summary">{t('web.ParentTargetPicker.currentDestination')}</p>
       <div
@@ -138,7 +138,7 @@
     {/if}
   </div>
   {#if selectedTarget}
-    <div class="parent-picker parent-current" role="group" aria-label={`${groupLabel} root destination`}>
+    <div class="parent-picker parent-current" role="group" aria-label={t('web.ParentTargetPicker.rootDestination', { groupLabel: String(groupLabel) })}>
       <Button.Root
         type="button"
         variant="outline"
@@ -151,7 +151,7 @@
   {/if}
   <p class="selection-summary" aria-live="polite" aria-atomic="true">{presentation.resultCountLabel}</p>
   {#if hasSearch}
-    <div id={`${searchId}-results`} class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} search results`}>
+    <div id={`${searchId}-results`} class="parent-picker parent-picker-results option-grid" role="group" aria-label={t('web.ParentTargetPicker.searchResults', { groupLabel: String(groupLabel) })}>
       {#if locationResults.length > 0}
         <div class="parent-result-group" role="group" aria-label={t('web.ParentTargetPicker.locations')} aria-labelledby={`${searchId}-location-results-label`}>
           <p id={`${searchId}-location-results-label`} class="parent-result-heading">{t('web.ParentTargetPicker.locations')}</p>
@@ -177,7 +177,7 @@
           variant="outline"
           size="sm"
           class="parent-show-more"
-          aria-label={`Show all ${matchingTargets.length} matching parent destinations`}
+          aria-label={t('web.ParentTargetPicker.showAllMatchingParentDestinations', { length: String(matchingTargets.length) })}
           onclick={expandSearchResults}
         > {t('web.ParentTargetPicker.showAllMatchesFull', { length: matchingTargets.length })} </Button.Root>
       {/if}
@@ -187,7 +187,7 @@
       <p class="selection-summary">{t('web.ParentTargetPicker.suggestedDestinations')}</p>
       <p class="muted-note">{presentation.destinationCountLabel}. {presentation.suggestedCountLabel}</p>
     </div>
-    <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={`${groupLabel} suggested destinations`}>
+    <div class="parent-picker parent-picker-results option-grid" role="group" aria-label={t('web.ParentTargetPicker.suggestedDestinations2', { groupLabel: String(groupLabel) })}>
       {#each suggestedTargets as target}
         <ParentTargetButton {target} selected={selectedId === target.id} onSelect={onSelect} />
       {/each}

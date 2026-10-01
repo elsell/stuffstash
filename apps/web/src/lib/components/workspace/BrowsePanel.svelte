@@ -24,7 +24,7 @@
     Asset, AssetTag, BrowseScope, BrowseSort, BrowseSurface, SearchCheckoutFilter,
     SearchLifecycleFilter, SearchMode, SearchResult
   } from '$lib/domain/inventory';
-  import { assetKindLabel } from '$lib/domain/inventory';
+  import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import * as Button from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import AssetTagChips from './AssetTagChips.svelte';
@@ -343,7 +343,7 @@
     </div>
 
     {#if appliedFilters.length}
-      <div class="browse-applied-filters" aria-label={t('web.BrowsePanel.appliedFilters')}>{#each appliedFilters as filter}<Button.Root variant="secondary" aria-label={`Remove ${filter.label}`} onclick={() => removeFilter(filter.key)}>{filter.label}<span aria-hidden="true">×</span></Button.Root>{/each}{#if filterCount > 1}<Button.Root variant="ghost" onclick={() => onStateChange({ lifecycleState: 'active', checkoutState: 'any', selectedTagIds: [] })}>{t('web.BrowsePanel.clearAll')}</Button.Root>{/if}</div>
+      <div class="browse-applied-filters" aria-label={t('web.BrowsePanel.appliedFilters')}>{#each appliedFilters as filter}<Button.Root variant="secondary" aria-label={t('web.BrowsePanel.remove', { label: String(filter.label) })} onclick={() => removeFilter(filter.key)}>{filter.label}<span aria-hidden="true">×</span></Button.Root>{/each}{#if filterCount > 1}<Button.Root variant="ghost" onclick={() => onStateChange({ lifecycleState: 'active', checkoutState: 'any', selectedTagIds: [] })}>{t('web.BrowsePanel.clearAll')}</Button.Root>{/if}</div>
     {/if}
     {#if error && filteredAssets.length === 0}<div class="empty-state spacious" role="alert"><h2>{t('web.BrowsePanel.browseFailed')}</h2><p>{error}</p><Button.Root onclick={onRetry}>{t('web.BrowsePanel.tryAgain')}</Button.Root></div>
     {:else if busy && filteredAssets.length === 0}<div class="empty-state spacious" role="status"><h2>{t('web.BrowsePanel.loadingInventory')}</h2></div>
@@ -374,7 +374,7 @@
           </article>
         {/each}
       </div>
-      {#if hasMore}<div class="browse-load-more"><Button.Root disabled={loadingMore} onclick={onLoadMore}>{loadingMore ? 'Loading…' : t('web.BrowsePanel.loadMore')}</Button.Root></div>{/if}
+      {#if hasMore}<div class="browse-load-more"><Button.Root disabled={loadingMore} onclick={onLoadMore}>{loadingMore ? t('web.BrowsePanel.loading') : t('web.BrowsePanel.loadMore')}</Button.Root></div>{/if}
       {#if error && filteredAssets.length > 0}<div class="browse-inline-error" role="alert"><span>{error}</span><Button.Root variant="outline" onclick={onRetry}>{t('web.BrowsePanel.tryAgain')}</Button.Root></div>{/if}
     {/if}
     </div>

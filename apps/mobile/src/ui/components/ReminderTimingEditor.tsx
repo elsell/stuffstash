@@ -45,12 +45,12 @@ export function ReminderTimingEditor({ policy, disabled = false, onSave, onDone 
   const headerOptions = useMemo(() => ({ title: t('mobile.ReminderTimingEditor.beforeExpiration'), gestureEnabled: !saving, headerBackVisible: !saving, ...actionOptions }), [saving, actionOptions]);
   return <>
     <Stack.Screen options={headerOptions} />
-    <SettingsSection footer="Choose when to remind you before the expiration date. Expired reminders are set separately.">
+    <SettingsSection footer={t('mobile.ReminderTimingEditor.chooseWhenToRemindYouBeforeTheExpirationDate')}>
       <SettingsChoiceRow label={t('mobile.ReminderTimingEditor.off')} selected={!selection.upcoming && !custom} disabled={locked} onPress={() => { setCustom(false); void save(false, policy.advanceDays); }} />
       {presets.map(value => <View key={value}><SettingsSeparator /><SettingsChoiceRow label={value === 0 ? t('mobile.ReminderTimingEditor.onTheExpirationDate') : t('mobile.ReminderTimingEditor.before', { value: String(reminderDaysLabel(value)) })} selected={!custom && selection.upcoming && selection.advanceDays === value} disabled={locked} onPress={() => { setCustom(false); void save(true, value); }} /></View>)}
       <SettingsSeparator /><SettingsChoiceRow label={t('mobile.ReminderTimingEditor.custom')} accessibilityLabel={t('mobile.ReminderTimingEditor.customDays')} selected={custom} disabled={locked} onPress={() => { setCustom(true); setDirty(true); }} />
     </SettingsSection>
-    {custom ? <SettingsSection footer="Enter 0–3650 days. Save your changes, or go back to cancel.">
+    {custom ? <SettingsSection footer={t('mobile.ReminderTimingEditor.enter03650DaysSaveYourChangesOrGo')}>
       <View style={styles.navigationRow}><View style={styles.navigationRowContent}>
         <Text style={[styles.rowLabel, styles.rowText]}>{t('mobile.ReminderTimingEditor.daysBefore')}</Text>
         <AppTextInput accessibilityLabel={t('mobile.ReminderTimingEditor.daysBeforeExpiration')} keyboardType="number-pad" editable={!locked} value={days} selectTextOnFocus onChangeText={value => { setDays(value); setDirty(true); }} style={{ color: palette.text, fontSize: 17, minHeight: 44, minWidth: 88, textAlign: 'right' }} />

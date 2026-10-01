@@ -687,11 +687,11 @@
   }
 
   function historySummaryDescription(): string {
-    if (activeJobs.length > 0) return `${activeJobs.length} running now. You can leave this page and return later.`;
-    if (draftJobs.length > 0) return `${draftJobs.length} preview waiting for confirmation.`;
-    if (attentionJobs.length > 0) return `${attentionJobs.length} ${attentionJobs.length === 1 ? 'import requires' : 'imports require'} action.`;
-    if (completedJobs.length > 0) return `${completedJobs.length} completed import ${completedJobs.length === 1 ? 'run' : 'runs'} in this inventory.`;
-    return 'No import runs yet.';
+    if (activeJobs.length > 0) return t('import.runningSummary', { count: activeJobs.length });
+    if (draftJobs.length > 0) return t('import.previewSummary', { count: draftJobs.length });
+    if (attentionJobs.length > 0) return t('import.attentionSummary', { count: attentionJobs.length });
+    if (completedJobs.length > 0) return t('import.completedSummary', { count: completedJobs.length });
+    return t('import.noRuns');
   }
 
   function resourceCanOpen(job: ImportJob, resource: ImportJob['resources'][number]): boolean {
@@ -835,13 +835,13 @@
     </div>
     {#if step === 'history'}
       <Button.Root variant="outline" size="sm" onclick={() => { void loadJobs(); }} disabled={loading || !canViewImports}>
-        <Button.BusyContent busy={loading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel="Refreshing" />
+        <Button.BusyContent busy={loading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel={t('web.InventoryImportWorkspace.refreshing')} />
       </Button.Root>
     {:else}
       <div class="toolbar-actions">
         {#if step === 'detail' || step === 'run'}
           <Button.Root variant="outline" size="sm" onclick={() => { void refreshVisibleImportView(); }} disabled={loading || detailLoading || manualRefreshLoading || !canViewImports}>
-            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel="Refreshing" />
+            <Button.BusyContent busy={loading || detailLoading || manualRefreshLoading} icon={RefreshCw} label={t('web.InventoryImportWorkspace.refresh')} busyLabel={t('web.InventoryImportWorkspace.refreshing')} />
           </Button.Root>
         {/if}
         <Button.Root variant="outline" size="sm" onclick={returnToHistory} disabled={busy}>{t('web.InventoryImportWorkspace.backToHistory')}</Button.Root>

@@ -22,7 +22,7 @@ export type AssetDetailIdentityPresentation = {
 export type AssetDetailPlacementPresentation = {
   readonly accessibilityLabel: string;
   readonly crumbs: readonly AssetParentLocationCrumbViewModel[];
-  readonly fallbackLabel?: 'No location' | 'Loading location…';
+  readonly fallbackLabel?: string;
 };
 
 export type AssetDetailAvailabilityAction = {
@@ -106,13 +106,13 @@ export function assetDetailPlacement(
       return {
         accessibilityLabel: t('mobile.AssetDetailPresentation.locationLoading'),
         crumbs,
-        fallbackLabel: 'Loading location…'
+        fallbackLabel: t('mobile.AssetDetailPresentation.loadingLocation')
       };
     }
     return {
       accessibilityLabel: t('mobile.AssetDetailPresentation.locationNoLocation'),
       crumbs,
-      fallbackLabel: 'No location'
+      fallbackLabel: t('mobile.AssetDetailPresentation.noLocation')
     };
   }
 

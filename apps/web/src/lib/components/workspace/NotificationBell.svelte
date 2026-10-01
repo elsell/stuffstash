@@ -51,7 +51,7 @@
   function navigate(action: () => void) { navigating = true; open = false; action(); }
 </script>
 
-<Button.Root bind:ref={bell} variant="ghost" size="icon" class="notification-bell" aria-label={error ? 'Notifications, unread count unavailable' : count === null ? 'Notifications, loading unread count' : `Notifications, ${count} unread`} onclick={show}>
+<Button.Root bind:ref={bell} variant="ghost" size="icon" class="notification-bell" aria-label={error ? t('web.NotificationBell.notificationsUnreadCountUnavailable') : count === null ? t('web.NotificationBell.notificationsLoadingUnreadCount') : t('web.NotificationBell.notificationsUnread', { count: String(count) })} onclick={show}>
   <Bell aria-hidden="true" />
   {#if count !== null && count > 0}<span class="badge" aria-hidden="true">{count > 99 ? '99+' : count}</span>{/if}
 </Button.Root>

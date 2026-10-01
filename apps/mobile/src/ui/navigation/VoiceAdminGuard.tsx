@@ -43,14 +43,14 @@ export function voiceAdminGuardPresentation(
     return {
       title: t('mobile.VoiceAdminGuard.voiceSettingsUnavailable'),
       message: t('mobile.VoiceAdminGuard.onlyTenantAdministratorsCanConfigureVoiceFor', { tenantName: String(decision.tenantName) }),
-      retryLabel: 'Check Again'
+      retryLabel: t('mobile.VoiceAdminGuard.checkAgain')
     };
   }
 
   return {
     title: t('mobile.VoiceAdminGuard.couldNotVerifyVoiceSettingsAccess'),
     message: decision.message,
-    retryLabel: 'Retry'
+    retryLabel: t('mobile.VoiceAdminGuard.retry')
   };
 }
 

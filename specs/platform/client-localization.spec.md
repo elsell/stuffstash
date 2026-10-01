@@ -77,3 +77,9 @@ codes and unchanged legacy diagnostic fields. They must not inspect translated
 cause labels. Unknown source diagnostics stay verbatim; recognized causes and
 client explanations are catalog-backed. Group identity remains stable when only
 the display language changes.
+
+The required-checks and pre-commit `client-message-check` gate rejects embedded
+copy directly rendered as JSX/Svelte text, display attributes, conditional labels
+or fallback/template messages. It preserves protocol strings and variable-derived
+user content. It does not prove the provenance of every variable or application
+error; the remaining-file inventory and source review cover those boundaries.

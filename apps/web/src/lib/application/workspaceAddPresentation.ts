@@ -1,6 +1,7 @@
 import { t } from '$lib/presentation/localization';
 import type { AssetKind, MediaUploadPolicy, ParentTargetViewModel, SelectedPhoto } from '$lib/domain/inventory';
-import { assetKindLabel, assetKinds } from '$lib/domain/inventory';
+import { assetKinds } from '$lib/domain/inventory';
+import { assetKindLabel } from '$lib/presentation/assetKindLabel';
 
 export interface AddAssetKindCopy {
   heading: string;
@@ -44,30 +45,30 @@ export interface AddFormPresentation {
 }
 
 export const addPhotoPickerPresentation: AddPhotoPickerPresentation = {
-  actionGroupLabel: 'Photo actions',
-  uploadLabel: 'Choose photos',
-  cameraLabel: 'Take photo',
-  uploadInputLabel: 'Choose photos',
-  cameraInputLabel: 'Take photo',
-  selectedListLabel: 'Selected photos'
+  actionGroupLabel: t('web.workspaceAddPresentation.photoActions'),
+  uploadLabel: t('web.workspaceAddPresentation.choosePhotos'),
+  cameraLabel: t('web.workspaceAddPresentation.takePhoto'),
+  uploadInputLabel: t('web.workspaceAddPresentation.choosePhotos'),
+  cameraInputLabel: t('web.workspaceAddPresentation.takePhoto'),
+  selectedListLabel: t('web.workspaceAddPresentation.selectedPhotos')
 };
 
 export const addFormPresentation: AddFormPresentation = {
-  summaryTypeLabel: 'Type',
-  summaryParentLabel: 'Parent',
-  summaryPhotosLabel: 'Photos',
-  assetKindLegend: 'Asset kind',
-  parentPickerLegend: 'Place in existing parent',
-  parentPickerGroupLabel: 'Parent target',
-  quickParentLegend: 'Create missing parent',
-  quickParentToggleLabel: 'Create a parent first',
-  quickParentToggleDescription: 'Use this when the shelf, box, or location does not exist yet.',
-  quickParentContextLabel: 'Created under',
-  quickParentNameLabel: 'Parent name',
-  quickParentNamePlaceholder: 'Laundry shelf',
-  quickParentKindLabel: 'New parent kind',
-  descriptionLabel: 'Description',
-  descriptionPlaceholder: 'Optional notes'
+  summaryTypeLabel: t('web.workspaceAddPresentation.type'),
+  summaryParentLabel: t('web.workspaceAddPresentation.parent'),
+  summaryPhotosLabel: t('web.workspaceAddPresentation.photos'),
+  assetKindLegend: t('web.workspaceAddPresentation.assetKind'),
+  parentPickerLegend: t('web.workspaceAddPresentation.placeInExistingParent'),
+  parentPickerGroupLabel: t('web.workspaceAddPresentation.parentTarget'),
+  quickParentLegend: t('web.workspaceAddPresentation.createMissingParent'),
+  quickParentToggleLabel: t('web.workspaceAddPresentation.createAParentFirst'),
+  quickParentToggleDescription: t('web.workspaceAddPresentation.useThisWhenTheShelfBoxOrLocationDoes'),
+  quickParentContextLabel: t('web.workspaceAddPresentation.createdUnder'),
+  quickParentNameLabel: t('web.workspaceAddPresentation.parentName'),
+  quickParentNamePlaceholder: t('web.workspaceAddPresentation.laundryShelf'),
+  quickParentKindLabel: t('web.workspaceAddPresentation.newParentKind'),
+  descriptionLabel: t('web.workspaceAddPresentation.description'),
+  descriptionPlaceholder: t('web.workspaceAddPresentation.optionalNotes')
 };
 
 export const quickParentKindOptions: AddControlOption<'location' | 'container'>[] = [
@@ -83,11 +84,11 @@ export function addAssetKindCopy(kind: AssetKind): AddAssetKindCopy {
   const kindLabel = assetKindLabel(kind);
   const selectedKindLabel = kindLabel.toLowerCase();
   return {
-    heading: `Add ${selectedKindLabel}`,
+    heading: t(`asset.add.${kind}`),
     kindLabel,
-    nameLabel: `${kindLabel} name`,
+    nameLabel: t(`asset.name.${kind}`),
     namePlaceholder: addAssetNamePlaceholder(kind),
-    saveLabel: `Save ${selectedKindLabel}`,
+    saveLabel: t(`asset.save.${kind}`),
     selectedKindLabel
   };
 }
@@ -102,8 +103,7 @@ export function addDestinationSummary(input: {
     return input.selectedParent?.title ?? t('web.workspaceAddPresentation.inventoryRoot');
   }
 
-  const parentKindLabel = assetKindLabel(input.quickParentKind);
-  const parentName = input.quickParentTitle.trim() ? `New ${parentKindLabel}: ${input.quickParentTitle.trim()}` : `New ${parentKindLabel}`;
+  const parentName = input.quickParentTitle.trim() ? t(`asset.newNamed.${input.quickParentKind}`, { name: input.quickParentTitle.trim() }) : t(`asset.new.${input.quickParentKind}`);
   return t('web.workspaceAddPresentation.in', { parentName: String(parentName), value: String(quickParentContainerSummary(input.selectedParent)) });
 }
 

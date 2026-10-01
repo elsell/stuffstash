@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import { t } from '$lib/presentation/localization';
   export type StepProgressStep = {
     id: string;
     label: string;
@@ -28,7 +29,7 @@
     steps,
     current,
     reachableStepIds = [],
-    ariaLabel = 'Progress',
+    ariaLabel = t('web.stepprogress.progress'),
     orientation = 'horizontal',
     density = 'compact',
     onNavigateStep

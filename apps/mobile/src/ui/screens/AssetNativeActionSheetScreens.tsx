@@ -181,8 +181,8 @@ function EditAssetForm({ asset, inventoryAssetTypesQuery, inventoryAssetTagsQuer
       <EditAssetSheet
         readOnly={!asset.canEdit}
         metadataRecovery={<>
-          {types.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.assetTypesCouldNotBeLoaded')} retryLabel="Retry asset types" onRetry={() => void types.refetch()} /> : null}
-          {tags.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.tagsCouldNotBeLoaded')} retryLabel="Retry tags" onRetry={() => void tags.refetch()} /> : null}
+          {types.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.assetTypesCouldNotBeLoaded')} retryLabel={t('mobile.AssetNativeActionSheetScreens.retryAssetTypes')} onRetry={() => void types.refetch()} /> : null}
+          {tags.isError ? <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.tagsCouldNotBeLoaded')} retryLabel={t('mobile.AssetNativeActionSheetScreens.retryTags')} onRetry={() => void tags.refetch()} /> : null}
         </>}
         asset={asset}
         assetTypes={types.data}
@@ -417,7 +417,7 @@ function candidateSelectionStatus(candidates: ReturnType<typeof useParentCandida
 }
 
 function CandidateStatus({ candidates }: { candidates: ReturnType<typeof useParentCandidates> }) {
-  if (candidates.isError) return <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.suggestionsCouldNotBeLoaded')} retryLabel="Retry suggestions" onRetry={() => void candidates.refetch()} />;
+  if (candidates.isError) return <InlineQueryError message={t('mobile.AssetNativeActionSheetScreens.suggestionsCouldNotBeLoaded')} retryLabel={t('mobile.AssetNativeActionSheetScreens.retrySuggestions')} onRetry={() => void candidates.refetch()} />;
   if (!candidates.data) return <Text accessibilityLiveRegion="polite">{t('mobile.AssetNativeActionSheetScreens.loadingSuggestions')}</Text>;
   return null;
 }

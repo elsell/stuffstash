@@ -73,7 +73,7 @@
   {#if error}<p role="alert">{error}</p>{/if}
   {#if saved}<p role="status">{t('web.ExpirationReminderEditor.remindersSaved')}</p>{/if}
   {#if dirty && !saving}<Button.Root type="button" variant="ghost" onclick={() => { const policy = initialPolicy ?? inheritedPolicy!; draft = {...policy}; days = String(policy.advanceDays); inherit = initialPolicy === null; dirty = false; error = ''; editingDays = false; }}>{t('web.ExpirationReminderEditor.discardChanges')}</Button.Root>{/if}
-  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? 'Saving…' : t('web.ExpirationReminderEditor.saveReminders')}</Button.Root>{/if}
+  {#if dirty || saving}<Button.Root type="submit" disabled={saving || (!inherit && !validDays)}>{saving ? t('web.ExpirationReminderEditor.saving') : t('web.ExpirationReminderEditor.saveReminders')}</Button.Root>{/if}
 </form>
 
 <style>

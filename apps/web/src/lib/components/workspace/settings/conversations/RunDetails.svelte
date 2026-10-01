@@ -47,7 +47,7 @@
   <p>{t('web.RunDetails.textOnlyEvaluationThisDoesNotTestRecordingTranscription')}</p>
   <p>{t('web.RunDetails.ofCasesCompletedPassedFull', { completedCases: run.data.completedCases, totalCases: run.data.totalCases, passedCases: run.data.passedCases })}</p>
   {#if run.isError}<p role="alert">{t('web.RunDetails.statusCouldNotBeRefreshedShowingTheLastReceived')}</p>{/if}
-  {#if pending}<Button.Root variant="outline" disabled={cancelling} onclick={cancel}>{cancelling ? 'Cancelling…' : t('web.RunDetails.cancelRun')}</Button.Root>{/if}
+  {#if pending}<Button.Root variant="outline" disabled={cancelling} onclick={cancel}>{cancelling ? t('web.RunDetails.cancelling') : t('web.RunDetails.cancelRun')}</Button.Root>{/if}
   {#if run.data.failureCode}<p role="alert">{t('web.RunDetails.theRunCouldNotFinishCheckTheConfiguredProvider')} <span class="failure-code">{t('web.RunDetails.referenceFull', { failureCode: run.data.failureCode })}</span></p>{/if}
   <ul>{#each run.data.cases as pin (pin.revisionId)}{@const result = run.data.results.find(value => value.caseRevisionId === pin.revisionId)}
     <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{t('web.RunDetails.noPassingResultRecordedFull', { value: pending ? 'Not run yet' : 'Not completed' })}</p>{/if}</li>

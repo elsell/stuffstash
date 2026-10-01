@@ -8,6 +8,7 @@ export const en = {
   ...webMessages,
   'browse.addAsset': 'Add an asset',
   'browse.title': 'Browse',
+  'pagination.position': '{position} of {total}',
   'browse.filters': 'Filters',
   'browse.filtersApplied': { one: 'Filters, {count} applied', other: 'Filters, {count} applied' },
   "assets.visibleCount": {"one": "{count} visible asset", "other": "{count} visible assets"},

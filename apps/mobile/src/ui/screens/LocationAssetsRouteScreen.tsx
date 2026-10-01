@@ -41,7 +41,7 @@ export function LocationAssetsRouteScreen({
     query: (signal) => locationAssetsQuery.execute(locationId, { signal })
   });
 
-  const pullRefresh = usePullRefreshFeedback({ refresh: () => locationAssets.refetch({ throwOnError: true }), resourceKey: locationAssets.resourceKey, failureTitle: 'Could not refresh location' });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => locationAssets.refetch({ throwOnError: true }), resourceKey: locationAssets.resourceKey, failureTitle: t('mobile.LocationAssetsRouteScreen.couldNotRefreshLocation') });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>

@@ -915,11 +915,11 @@ function InventoryMapRow({
   const onBranchSwipeProgressRef = useRef(onBranchSwipeProgress);
   const canSwipeBranch = asset.canContainAssets;
   const rowAccessibilityLabel = asset.canContainAssets
-    ? `${asset.title}, ${asset.kindLabel}, ${asset.childCount.toString()} inside`
+    ? t('mobile.InventoryMapScreen.inside', { title: String(asset.title), kindLabel: String(asset.kindLabel), value: String(asset.childCount.toString()) })
     : `${asset.title}, ${asset.kindLabel}`;
   const rowAccessibilityHint = asset.canContainAssets
-    ? 'Opens the next containment column. Swipe left to open this branch.'
-    : 'Shows item details.';
+    ? t('mobile.InventoryMapScreen.opensTheNextContainmentColumnSwipeLeftToOpen')
+    : t('mobile.InventoryMapScreen.showsItemDetails');
 
   const resetRowOffset = useCallback(() => {
     if (reduceMotionEnabled) {

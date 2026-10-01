@@ -15,7 +15,7 @@
     busy = false,
     dismissible = true,
     closeHref,
-    closeLabel = 'Close',
+    closeLabel = t('web.WorkspaceTaskSheet.close'),
     initialFocusSelector,
     onCloseLink,
     onCloseAutoFocus,

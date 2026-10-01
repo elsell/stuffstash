@@ -52,7 +52,7 @@ function ThemedApp() {
         screenLayout={AppNoticeScreenLayout}
         screenOptions={{
           contentStyle: { backgroundColor: palette.background },
-          headerBackTitle: 'Back',
+          headerBackTitle: t('mobile.layout.back'),
           headerStyle: { backgroundColor: palette.surface },
           headerTintColor: palette.action,
           headerTitleStyle: {

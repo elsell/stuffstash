@@ -249,14 +249,14 @@ export function InventorySharingScreen({
           <SettingsPickerRow label={t('mobile.InventorySharingScreen.access')} accessibilityLabel={t('mobile.InventorySharingScreen.chooseInvitationAccess')} value={relationship}
             options={[{ value: 'viewer', label: t('mobile.InventorySharingScreen.viewer') }, { value: 'editor', label: t('mobile.InventorySharingScreen.editor') }] as const}
             disabled={working} onChange={value => { if (!workingRef.current) setRelationship(value); }} />
-          <NativeCommandButton prominence="primary" label={working ? 'Creating…' : t('mobile.InventorySharingScreen.createInvitation')}
+          <NativeCommandButton prominence="primary" label={working ? t('mobile.InventorySharingScreen.creating') : t('mobile.InventorySharingScreen.createInvitation')}
             disabled={working || email.trim().length === 0} onPress={() => void create()} />
         </View>
       </SettingsSection>
 
       {visibleCreated ? (
         <SettingsSection
-          footer="Copy or share this link before leaving this screen or creating another invitation. It cannot be recovered later."
+          footer={t('mobile.InventorySharingScreen.copyOrShareThisLinkBeforeLeavingThisScreen')}
           title={t('mobile.InventorySharingScreen.invitationLink')}
         >
           <View style={styles.oneTimeLink}>
@@ -269,10 +269,10 @@ export function InventorySharingScreen({
             </Text>
             <View style={styles.linkActions}>
               <View style={styles.linkCommand}>
-                <NativeCommandButton prominence="primary" label={linkWorking === 'share' ? 'Sharing…' : t('mobile.InventorySharingScreen.shareInvitation')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
+                <NativeCommandButton prominence="primary" label={linkWorking === 'share' ? t('mobile.InventorySharingScreen.sharing') : t('mobile.InventorySharingScreen.shareInvitation')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('share')} />
               </View>
               <View style={styles.linkCommand}>
-                <NativeCommandButton label={linkWorking === 'copy' ? 'Copying…' : t('mobile.InventorySharingScreen.copyLink')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
+                <NativeCommandButton label={linkWorking === 'copy' ? t('mobile.InventorySharingScreen.copying') : t('mobile.InventorySharingScreen.copyLink')} disabled={linkWorking !== undefined} onPress={() => void performLinkAction('copy')} />
               </View>
             </View>
             {linkFeedback ? <View accessibilityLiveRegion="polite" accessibilityRole={linkFeedback.message ? 'alert' : undefined}>
@@ -283,7 +283,7 @@ export function InventorySharingScreen({
         </SettingsSection>
       ) : null}
 
-      <SettingsSection footer="Invitation links are shown only when created. Existing invitations never reveal their links again." title={t('mobile.InventorySharingScreen.invitations')}>
+      <SettingsSection footer={t('mobile.InventorySharingScreen.invitationLinksAreShownOnlyWhenCreatedExistingInvitations')} title={t('mobile.InventorySharingScreen.invitations')}>
         {visibleInvitations.length === 0 ? (
           <View style={styles.empty}><Text style={styles.emptyText}>{t('mobile.InventorySharingScreen.noInvitationsYet')}</Text></View>
         ) : visibleInvitations.map((invitation, index) => (

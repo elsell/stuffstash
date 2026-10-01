@@ -1886,7 +1886,7 @@
       tenantName={selectedTenant?.name}
       {busy}
       {error}
-      submitLabel={data.context.selectedTenantId ? 'Create inventory' : 'Create workspace'}
+      submitLabel={data.context.selectedTenantId ? t('web.InventoryWorkspaceApp.createInventory') : t('web.InventoryWorkspaceApp.createWorkspace')}
       onSubmit={createStarterInventory}
     />
   </main>

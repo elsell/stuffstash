@@ -45,7 +45,7 @@
   {:else if revision.isError || selection.isError}<p role="alert">{t('web.RunActivation.couldNotCheckTheWorkflowSelection')} <Button.Root onclick={() => { void revision.refetch(); void selection.refetch(); }}>{t('web.RunActivation.retryActivationCheck')}</Button.Root></p>
   {:else if revision.data}<p>{t('web.RunActivation.revisionFull', { name: revision.data.definition.name, number: revision.data.number })}</p>
     {#if active}<p role="status">{t('web.RunActivation.thisRevisionIsActive')}</p>{:else}<p>{t('web.RunActivation.theServerChecksCurrentCasesProvidersAndLimitsFull', { value: selection.data ? 'This will replace the current custom workflow.' : 'This will replace the default conversation workflow.' })}</p>
-      <Button.Root disabled={busy || conflict || selection.isFetching} onclick={activate}>{busy ? 'Activating…' : t('web.RunActivation.activateTestedRevision')}</Button.Root>
+      <Button.Root disabled={busy || conflict || selection.isFetching} onclick={activate}>{busy ? t('web.RunActivation.activating') : t('web.RunActivation.activateTestedRevision')}</Button.Root>
     {/if}
   {/if}
   {#if conflict}<Button.Root variant="outline" disabled={busy || selection.isFetching} onclick={refreshSelection}>{t('web.RunActivation.checkCurrentSelection')}</Button.Root>{/if}

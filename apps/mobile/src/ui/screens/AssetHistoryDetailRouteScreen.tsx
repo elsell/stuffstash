@@ -173,7 +173,7 @@ export function AssetHistoryDetailRouteScreen({
       ) : null}
 
       {entry.undo?.status === 'available' && revertOutcome === 'available' && !detail.isRefetchError ? (
-        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? 'Reverting…' : t('mobile.AssetHistoryDetailRouteScreen.revertChange')} />
+        <NativeCommandButton disabled={isReverting} onPress={confirmRevert} label={isReverting ? t('mobile.AssetHistoryDetailRouteScreen.reverting') : t('mobile.AssetHistoryDetailRouteScreen.revertChange')} />
       ) : null}
       {revertOutcome === 'unavailable' ? <Text accessibilityRole="alert" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeCanNoLongerBeSafelyReverted')}</Text> : null}
       {revertOutcome === 'applied' ? <Text accessibilityLiveRegion="polite" style={styles.muted}>{t('mobile.AssetHistoryDetailRouteScreen.thisChangeHasBeenReverted')}</Text> : null}

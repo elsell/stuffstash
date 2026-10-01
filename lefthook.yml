@@ -23,6 +23,9 @@ pre-commit:
     web-test:
       glob: "apps/web/**"
       run: make web-test web-check
+    client-message-check:
+      glob: "{apps/mobile/src/**,apps/web/src/**,packages/localization/**,scripts/client-message-check*}"
+      run: make client-message-check
     mobile-ui-structural-check:
       glob: "apps/mobile/src/**/*.{ts,tsx,xml}"
       run: make mobile-ui-structural-check

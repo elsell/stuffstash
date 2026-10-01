@@ -159,8 +159,8 @@
         <Button.BusyContent
           {busy}
           icon={CheckCircle2}
-          label={sourceChoice === 'homebox_live' ? 'Confirm connection' : 'Prepare preview'}
-          busyLabel={sourceChoice === 'homebox_live' ? 'Confirming connection' : 'Preparing preview'}
+          label={sourceChoice === 'homebox_live' ? t('web.ImportSourceSetup.confirmConnection') : t('web.ImportSourceSetup.preparePreview')}
+          busyLabel={sourceChoice === 'homebox_live' ? t('web.ImportSourceSetup.confirmingConnection') : t('web.ImportSourceSetup.preparingPreview')}
         />
       </Button.Root>
       <Button.Root variant="outline" onclick={onBack} disabled={busy}>{t('web.ImportSourceSetup.back')}</Button.Root>

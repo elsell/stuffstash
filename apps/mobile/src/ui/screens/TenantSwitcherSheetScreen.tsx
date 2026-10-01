@@ -85,7 +85,7 @@ function TenantSwitcherVisit({
   const displayed = data ? { ...data,
     tenants: [...data.tenants, ...createdHouseholds.filter(item => !data.tenants.some(tenant => tenant.id === item.id))],
     inventories: [...data.inventories, ...createdInventories.filter(item => !data.inventories.some(inventory => inventory.id === item.id)).map(item => ({ ...item,
-      tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: 'Owner', updatedAtLabel: 'Just created' }))]
+      tenantName: createdHouseholds.find(tenant => tenant.id === item.tenantId)?.name ?? '', roleLabel: t('mobile.TenantSwitcherSheetScreen.owner'), updatedAtLabel: t('mobile.TenantSwitcherSheetScreen.justCreated') }))]
   } : undefined;
   const actionOptions = useNativeHeaderActionOptions([{ kind: 'close', label: creation ? t('mobile.TenantSwitcherSheetScreen.cancelCreation') : t('mobile.TenantSwitcherSheetScreen.closeInventorySwitcher'), disabled: creating, onPress: () => {
     if (creating) return;
@@ -230,7 +230,7 @@ function TenantSwitcher({
                 <View style={styles.optionText}>
                   <Text style={styles.optionName}>{tenant.name}</Text>
                   <Text style={styles.optionMeta}>
-                    {`${inventoryCount} ${inventoryCount === 1 ? 'inventory' : 'inventories'}`}
+                    {t('inventory.count', { count: inventoryCount })}
                   </Text>
                 </View>
               </Pressable>

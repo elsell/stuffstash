@@ -45,7 +45,7 @@ export function VoiceResponseEntityText({
         <View style={styles.responseEntityActions}>
           {fallbackReferences.map((reference) => {
             const label = voiceResponseEntityOpenLabel(reference, fallbackReferences);
-            const unavailableLabel = `${reference.title}${reference.context ? ` in ${reference.context}` : ''}, available after the response finishes`;
+            const unavailableLabel = t('mobile.VoiceResponseEntityText.availableAfterTheResponseFinishes', { title: String(reference.title), value: String(reference.context ? ` in ${reference.context}` : '') });
             return (
               <Pressable
                 accessibilityLabel={enabled ? label : unavailableLabel}

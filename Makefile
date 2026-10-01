@@ -196,7 +196,7 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
-required-checks: dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+required-checks: client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
 
 release-plan-test:
 	scripts/test-release-planner.sh
@@ -281,3 +281,8 @@ api-client-test:
 
 api-client-check-generated:
 	PATH="$(DOCS_PATH)" PNPM="$(PNPM)" scripts/check-api-client-generated.sh
+
+.PHONY: client-message-check
+client-message-check:
+	PATH="$(DOCS_PATH)" node --test scripts/client-message-check.test.mjs
+	PATH="$(DOCS_PATH)" node scripts/client-message-check.mjs

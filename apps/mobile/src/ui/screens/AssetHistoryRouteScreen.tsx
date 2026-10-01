@@ -71,7 +71,7 @@ export function AssetHistoryRouteScreen({
   const { refreshing: isRefreshing, refresh } = usePullRefreshFeedback({
     refresh: () => history.refetch({ throwOnError: true }),
     resourceKey: mobileQueryKeys.assetHistory(scopeId, tenantId, inventoryId, assetId, view),
-    failureTitle: 'Could not refresh History'
+    failureTitle: t('mobile.AssetHistoryRouteScreen.couldNotRefreshHistory')
   });
 
   async function loadMore(): Promise<void> {

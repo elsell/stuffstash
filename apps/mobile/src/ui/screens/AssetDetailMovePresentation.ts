@@ -47,7 +47,7 @@ export function parentFromCurrentAssetPath(asset: AssetDetailViewModel): ParentL
     kind: 'container',
     subtitle: t('mobile.AssetDetailMovePresentation.currentParent'),
     pathLabel: asset.parentLocationTrailLabel,
-    selectionHint: 'Current parent',
+    selectionHint: t('mobile.AssetDetailMovePresentation.currentParent'),
     willPromoteToContainer: false
   };
 }
@@ -76,7 +76,7 @@ export function movePlacementPreview(
   const currentLocationLabel = asset.parentLocationTrailLabel;
   const proposedLocationLabel = selectedParent
     ? selectedParent.pathLabel
-    : 'Inventory root';
+    : t('mobile.AssetDetailMovePresentation.inventoryRoot');
 
   return {
     currentLocationLabel,
@@ -88,7 +88,7 @@ export function movePlacementPreview(
 export function moveDestinationRow(parent: ParentLookupResult): MoveDestinationRow {
   return {
     title: parent.title,
-    kindLabel: parent.kind === 'location' ? 'Location' : 'Container',
+    kindLabel: parent.kind === 'location' ? t('mobile.AssetDetailMovePresentation.location') : t('mobile.AssetDetailMovePresentation.container'),
     pathLabel: parent.pathLabel
   };
 }
@@ -214,7 +214,7 @@ export function createdMoveDestinationParent({
     title,
     kind,
     parentAssetId: placement.parentAssetId,
-    subtitle: t('mobile.AssetDetailMovePresentation.new', { kind: String(kind) }),
+    subtitle: t(`move.new.${kind}`),
     pathLabel: placement.parentPathLabel ? `${placement.parentPathLabel} / ${title}` : title,
     selectionHint: kindLabel,
     willPromoteToContainer: false

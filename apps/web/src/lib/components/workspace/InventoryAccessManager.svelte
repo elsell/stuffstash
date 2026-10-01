@@ -666,7 +666,7 @@
       </div>
     </div>
     {#if revokeTarget}
-      <WorkspaceConfirmationDialog open title={t('web.InventoryAccessManager.revokeAccess')} description={`Remove ${revokeTarget.relationship} access for ${revokeTarget.principalId}?`} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
+      <WorkspaceConfirmationDialog open title={t('web.InventoryAccessManager.revokeAccess')} description={t('web.InventoryAccessManager.removeAccessFor', { relationship: String(revokeTarget.relationship), principalId: String(revokeTarget.principalId) })} {busy} onOpenChange={(open) => { if (!open && !busy) revokeTarget = null; }}>
         {#if revokeError}<p class="denied-note" role="alert">{revokeError}</p>{/if}
         {#snippet cancel()}<Button.Root variant="outline" autofocus disabled={busy} onclick={() => { revokeTarget = null; revokeError = ''; }}>{t('web.InventoryAccessManager.cancel')}</Button.Root>{/snippet}
         {#snippet action()}<Button.Root variant="destructive" disabled={busy} onclick={() => { if (revokeTarget) void revokeGrant(revokeTarget); }}>{t('web.InventoryAccessManager.revokeAccess')}</Button.Root>{/snippet}

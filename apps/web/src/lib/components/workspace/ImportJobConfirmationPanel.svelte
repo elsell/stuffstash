@@ -36,7 +36,7 @@
 {#if cancelJob}
   <WorkspaceConfirmationDialog
     open
-    title={`Cancel ${cancelJob.source.name}?`}
+    title={t('web.ImportJobConfirmationPanel.cancel', { name: String(cancelJob.source.name) })}
     description={`${sourceDescription(cancelJob)} · ${cancelJob.progress.message || statusLabel(cancelJob)}`}
     {busy}
     onOpenChange={(open) => { if (!open) onDismissCancel(); }}
@@ -59,7 +59,7 @@
             onCancelJob(cancelJob, 'keep_partial_progress');
           }}
         >
-          <strong><Button.BusyContent busy={pendingAction === 'keep' && busy} label={t('web.ImportJobConfirmationPanel.keepImportedItems')} busyLabel="Cancelling import" /></strong>
+          <strong><Button.BusyContent busy={pendingAction === 'keep' && busy} label={t('web.ImportJobConfirmationPanel.keepImportedItems')} busyLabel={t('web.ImportJobConfirmationPanel.cancellingImport')} /></strong>
           <span>{t('web.ImportJobConfirmationPanel.stopFutureWorkAndLeaveAnythingAlreadyImportedIn')}</span>
         </Button.Root>
         <Button.Root
@@ -72,7 +72,7 @@
             onCancelJob(cancelJob, 'discard_partial_progress');
           }}
         >
-          <strong><Button.BusyContent busy={pendingAction === 'discard' && busy} label={t('web.ImportJobConfirmationPanel.discardImportedItems')} busyLabel="Cancelling import" /></strong>
+          <strong><Button.BusyContent busy={pendingAction === 'discard' && busy} label={t('web.ImportJobConfirmationPanel.discardImportedItems')} busyLabel={t('web.ImportJobConfirmationPanel.cancellingImport')} /></strong>
           <span>{t('web.ImportJobConfirmationPanel.stopFutureWorkAndRemoveRecordsCreatedByThis')}</span>
         </Button.Root>
       </div>
@@ -81,7 +81,7 @@
 {:else if removeJob}
   <WorkspaceConfirmationDialog
     open
-    title={`Remove ${removeJob.source.name} from history?`}
+    title={t('web.ImportJobConfirmationPanel.removeFromHistory2', { name: String(removeJob.source.name) })}
     description={t('web.ImportJobConfirmationPanel.importedRecordsAndAuditHistoryWillRemainThisOnly')}
     {busy}
     onOpenChange={(open) => { if (!open) onDismissRemove(); }}
@@ -108,7 +108,7 @@
         }}
         disabled={busy}
       >
-        <Button.BusyContent busy={pendingAction === 'remove' && busy} label={t('web.ImportJobConfirmationPanel.removeFromHistory')} busyLabel="Removing from history" />
+        <Button.BusyContent busy={pendingAction === 'remove' && busy} label={t('web.ImportJobConfirmationPanel.removeFromHistory')} busyLabel={t('web.ImportJobConfirmationPanel.removingFromHistory')} />
       </Button.Root>
     {/snippet}
   </WorkspaceConfirmationDialog>

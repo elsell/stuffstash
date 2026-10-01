@@ -1,5 +1,6 @@
 import type { AssetKind, Inventory, Principal, WorkspaceMode } from '$lib/domain/inventory';
-import { assetKindLabel, assetKinds, canViewImportJobs } from '$lib/domain/inventory';
+import { assetKinds, canViewImportJobs } from '$lib/domain/inventory';
+import { assetKindLabel } from '$lib/presentation/assetKindLabel';
 import { workspaceRouteHref, type SettingsSection, type WorkspaceRouteState } from './workspaceRoute';
 
 export type ShellWorkspaceMode = Extract<WorkspaceMode, 'home' | 'browse' | 'import' | 'settings'>;

@@ -26,4 +26,4 @@
   }
 </script>
 
-<StepProgress {steps} {current} reachableStepIds={availableSteps} ariaLabel="Import progress" onNavigateStep={navigate} />
+<StepProgress {steps} {current} reachableStepIds={availableSteps} ariaLabel={t('web.ImportFlowStepper.importProgress')} onNavigateStep={navigate} />

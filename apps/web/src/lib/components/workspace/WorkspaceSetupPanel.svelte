@@ -82,7 +82,7 @@
         <p class="form-error" role="alert">{formError}</p>
       {/if}
 
-      <Button.Root type="submit" disabled={busy}>{busy ? 'Creating...' : submitLabel}</Button.Root>
+      <Button.Root type="submit" disabled={busy}>{busy ? t('web.WorkspaceSetupPanel.creating') : submitLabel}</Button.Root>
     </form>
   </Card.Content>
 </Card.Root>

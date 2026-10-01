@@ -44,7 +44,7 @@
           variant="ghost"
           class={`tag-chip tag-chip-action${tag.color ? ' tag-chip-colored' : ''}`}
           style={tag.color ? `--tag-color: ${tag.color}` : undefined}
-          aria-label={`Search for tag ${tag.displayName}`}
+          aria-label={t('web.AssetTagChips.searchForTag', { displayName: String(tag.displayName) })}
           aria-pressed={selected}
           data-selected={selected ? 'true' : undefined}
           onclick={(event) => selectTag(event, tag)}
@@ -58,7 +58,7 @@
       {/if}
     {/each}
     {#if hiddenCount > 0}
-      <span class="tag-chip tag-chip-overflow" aria-label={`${hiddenCount} more tags`}>+{hiddenCount}</span>
+      <span class="tag-chip tag-chip-overflow" aria-label={t('web.AssetTagChips.moreTags', { hiddenCount: String(hiddenCount) })}>+{hiddenCount}</span>
     {/if}
   </span>
 {/if}

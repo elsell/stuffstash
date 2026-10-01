@@ -112,7 +112,7 @@
           {...props}
           variant="ghost"
           class="account-trigger"
-          aria-label={`Account menu for ${userLabel}`}
+          aria-label={t('web.AccountMenu.accountMenuFor', { userLabel: String(userLabel) })}
         >
           {@render identity()}
           <ChevronUp class="account-chevron" aria-hidden="true" />

@@ -77,7 +77,7 @@ export function buildInventoryMapColumns(
     level: 0,
     title: map.inventoryName,
     assets: childrenByParent.get(rootKey) ?? [],
-    emptyLabel: 'No active assets yet'
+    emptyLabel: t('mobile.InventoryMapPresentation.noActiveAssetsYet')
   }];
 
   safePath.forEach((assetIdValue, index) => {
@@ -92,7 +92,7 @@ export function buildInventoryMapColumns(
       title: asset.title,
       parentId: asset.id,
       assets: childrenByParent.get(asset.id) ?? [],
-      emptyLabel: `${asset.title} is empty`
+      emptyLabel: t('mobile.InventoryMapPresentation.isEmpty', { title: String(asset.title) })
     });
   });
 

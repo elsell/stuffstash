@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 export type FullScreenPhotoViewerPhoto = {
   readonly id?: string;
   readonly label: string;
@@ -25,8 +26,8 @@ export function fullScreenPhotoViewerActionState(
       canGoPrevious: false,
       canGoNext: false,
       canRemove: false,
-      positionLabel: '0 of 0',
-      fileLabel: 'Photo',
+      positionLabel: t('mobile.FullScreenPhotoViewerPresentation.0Of0'),
+      fileLabel: t('mobile.FullScreenPhotoViewerPresentation.photo'),
       metadataLabel: undefined
     };
   }
@@ -36,8 +37,8 @@ export function fullScreenPhotoViewerActionState(
     canGoPrevious: imageIndex > 0,
     canGoNext: imageIndex >= 0 && imageIndex < photos.length - 1,
     canRemove: canRemove && photo?.id !== undefined,
-    positionLabel: photos.length > 0 ? `${(imageIndex + 1).toString()} of ${photos.length.toString()}` : '0 of 0',
-    fileLabel: photo?.label ?? 'Photo',
+    positionLabel: photos.length > 0 ? t('mobile.FullScreenPhotoViewerPresentation.of', { value: String((imageIndex + 1).toString()), value2: String(photos.length.toString()) }) : t('mobile.FullScreenPhotoViewerPresentation.0Of0'),
+    fileLabel: photo?.label ?? t('mobile.FullScreenPhotoViewerPresentation.photo'),
     metadataLabel: photo?.metadataLabel
   };
 }

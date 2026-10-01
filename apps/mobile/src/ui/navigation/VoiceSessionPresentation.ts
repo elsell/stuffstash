@@ -619,14 +619,14 @@ function completedVoicePresentation(realtime: VoiceRealtimeState | null | undefi
     case 'executed':
       return {
         accessibilityLabel: t('mobile.VoiceSessionPresentation.openAppliedVoiceChange'),
-        bottomHint: 'The reviewed change was applied.',
+        bottomHint: t('mobile.VoiceSessionPresentation.theReviewedChangeWasApplied'),
         title: t('mobile.VoiceSessionPresentation.changeApplied'),
         tone: 'ready'
       };
     case 'cancelled':
       return {
         accessibilityLabel: t('mobile.VoiceSessionPresentation.openCancelledVoiceChange'),
-        bottomHint: 'No change was made.',
+        bottomHint: t('mobile.VoiceSessionPresentation.noChangeWasMade'),
         title: t('mobile.VoiceSessionPresentation.changeCancelled'),
         tone: 'attention'
       };
@@ -635,21 +635,21 @@ function completedVoicePresentation(realtime: VoiceRealtimeState | null | undefi
     case 'unsupported_action':
       return {
         accessibilityLabel: t('mobile.VoiceSessionPresentation.openUnsupportedVoiceResult'),
-        bottomHint: 'Try another way to make this change.',
+        bottomHint: t('mobile.VoiceSessionPresentation.tryAnotherWayToMakeThisChange'),
         title: t('mobile.VoiceSessionPresentation.voiceActionUnavailable'),
         tone: 'attention'
       };
     case 'safe_failure':
       return {
         accessibilityLabel: t('mobile.VoiceSessionPresentation.openSafeVoiceResult'),
-        bottomHint: 'Start a fresh request or close this.',
+        bottomHint: t('mobile.VoiceSessionPresentation.startAFreshRequestOrCloseThis'),
         title: t('mobile.VoiceSessionPresentation.couldNotFinishSafely'),
         tone: 'attention'
       };
     default:
       return {
         accessibilityLabel: t('mobile.VoiceSessionPresentation.openVoiceAnswer'),
-        bottomHint: 'You can ask another question or close this.',
+        bottomHint: t('mobile.VoiceSessionPresentation.youCanAskAnotherQuestionOrCloseThis'),
         title: t('mobile.VoiceSessionPresentation.answerReady'),
         tone: 'ready'
       };

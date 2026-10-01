@@ -16,8 +16,8 @@ function ReviewDecision({ planId }: { readonly planId: string }) {
   const { titleEditor, photoDrafts, commandDraftState, approveRealtimeActionPlan, cancelRealtimeActionPlan } = useVoiceInteractionState();
   const drafts = commandDraftState.planId === planId ? commandDraftState.drafts : {};
   const actions = useFocusedSheetActions({
-    primaryLabel: t('mobile.VoiceReviewActions.approve'), primaryAccessibilityLabel: 'Approve voice change',
-    secondaryLabel: t('mobile.VoiceReviewActions.cancel'), secondaryAccessibilityLabel: 'Cancel voice change',
+    primaryLabel: t('mobile.VoiceReviewActions.approve'), primaryAccessibilityLabel: t('mobile.VoiceReviewActions.approveVoiceChange'),
+    secondaryLabel: t('mobile.VoiceReviewActions.cancel'), secondaryAccessibilityLabel: t('mobile.VoiceReviewActions.cancelVoiceChange'),
     disabled: !!titleEditor && !titleEditor.value.trim(),
     onApply: () => { void approveRealtimeActionPlan(planId, photoDrafts, voicePlanCommandEdits(drafts)); },
     onBack: () => { void cancelRealtimeActionPlan(planId); }

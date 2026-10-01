@@ -42,13 +42,13 @@ export function ProviderProfileListScreen({
   const { styles } = useSettingsListStyles();
   const providers = useProviderProfileModel(query);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView taskLabel="provider profiles" state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileScreens.providerProfiles')} state={providers.state} onRetry={providers.retry} />;
   }
 
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsRefreshNotice visible={providers.hasRefreshError} onRetry={providers.retry} />
-      <SettingsSection footer="Profiles are shared tenant-wide and supply one stage of the voice pipeline.">
+      <SettingsSection footer={t('mobile.ProviderProfileScreens.profilesAreSharedTenantWideAndSupplyOneStage')}>
         <SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.addAProviderProfile')} label={t('mobile.ProviderProfileScreens.addProfile')} onPress={onAdd} />
       </SettingsSection>
       <SettingsSection title={t('mobile.ProviderProfileScreens.profiles')}>
@@ -162,13 +162,13 @@ export function ProviderProfileDetailScreen({
   const workingRef = useRef(false);
   const capturePresentation = useTaskPresentation(manageCommand, `${providers.ownerKey}:${profileId}`);
   if (providers.state.status !== 'ready') {
-    return <ProviderStateView taskLabel="provider profile" state={providers.state} onRetry={providers.retry} />;
+    return <ProviderStateView taskLabel={t('mobile.ProviderProfileScreens.providerProfile')} state={providers.state} onRetry={providers.retry} />;
   }
   const profile = providers.state.viewModel.profiles.find((item) => item.id === profileId);
   if (!profile) {
     return (
       <ProviderStateView
-        taskLabel="provider profile"
+        taskLabel={t('mobile.ProviderProfileScreens.providerProfile')}
         state={{ status: 'error', message: t('mobile.ProviderProfileScreens.thisProviderProfileIsNoLongerAvailable') }}
         onRetry={providers.retry}
       />
@@ -223,12 +223,12 @@ export function ProviderProfileDetailScreen({
       <SettingsSection title={t('mobile.ProviderProfileScreens.actions')}>
         {profile.credentialPurpose ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.replaceCredentialFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.replaceCredential')} disabled={working} onPress={() => { if (!workingRef.current) onEditCredential(); }} /><SettingsSeparator /></> : null}
         {profile.capability === 'language_inference' ? <><SettingsNavigationRow accessibilityLabel={t('mobile.ProviderProfileScreens.editPromptGuidanceFor', { displayName: String(profile.displayName) })} label={t('mobile.ProviderProfileScreens.promptGuidance')} disabled={working} onPress={() => { if (!workingRef.current) onEditPrompt(); }} /><SettingsSeparator /></> : null}
-        <NativeCommandButton disabled={working} label={operation === 'test' ? 'Testing…' : t('mobile.ProviderProfileScreens.testConnection')} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
-        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? 'Updating…' : lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.enableProfile') : t('mobile.ProviderProfileScreens.disableProfile')} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
+        <NativeCommandButton disabled={working} label={operation === 'test' ? t('mobile.ProviderProfileScreens.testing') : t('mobile.ProviderProfileScreens.testConnection')} onPress={() => void act('test', () => testCommand.execute(profile.id), 'Connection tested')} />
+        {profile.lifecycleState !== 'archived' ? <><SettingsSeparator /><NativeCommandButton disabled={working} label={operation === 'lifecycle' ? t('mobile.ProviderProfileScreens.updating') : lifecycleAction === 'enable' ? t('mobile.ProviderProfileScreens.enableProfile') : t('mobile.ProviderProfileScreens.disableProfile')} onPress={() => void act('lifecycle', () => manageCommand.changeLifecycle(profile.id, lifecycleAction), lifecycleAction === 'enable' ? 'Profile enabled' : 'Profile disabled')} /></> : null}
       </SettingsSection>
       {profile.lifecycleState !== 'archived' ? (
-        <SettingsSection footer="Archived profiles remain in history but can’t be selected for voice.">
-          <NativeCommandButton disabled={working} label={operation === 'archive' ? 'Archiving…' : t('mobile.ProviderProfileScreens.archiveProfile')} onPress={() => {
+        <SettingsSection footer={t('mobile.ProviderProfileScreens.archivedProfilesRemainInHistoryButCanTBe')}>
+          <NativeCommandButton disabled={working} label={operation === 'archive' ? t('mobile.ProviderProfileScreens.archiving') : t('mobile.ProviderProfileScreens.archiveProfile')} onPress={() => {
             const canPresent = capturePresentation();
             if (!canPresent() || workingRef.current) return;
             let confirmed = false;

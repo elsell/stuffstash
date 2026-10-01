@@ -31,7 +31,7 @@ export function AccountSettingsScreen({
   const feedback = useAppFeedback();
   const { styles } = useSettingsListStyles();
   const principal = useMobileServerQuery({ key: mobileQueryKeys.principal, query: signal => settingsQuery.getPrincipal({ signal }) });
-  const principalLabel = principal.data?.email ?? 'Current account';
+  const principalLabel = principal.data?.email ?? t('mobile.SettingsDetailScreens.currentAccount');
   const capturePresentation = useTaskPresentation(settingsQuery, principal.data?.id ?? '');
   const [working, setWorking] = useState(false);
   const workingRef = useRef(false);
@@ -56,7 +56,7 @@ export function AccountSettingsScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsRefreshNotice visible={principal.isError} message={principal.data ? undefined : t('mobile.SettingsDetailScreens.couldNotLoadAccountDetailsYouCanRetryOr')} onRetry={async () => { await principal.refetch(); }} />
-          <SettingsSection footer="Signing out keeps this server on your device so you can sign in again quickly.">
+          <SettingsSection footer={t('mobile.SettingsDetailScreens.signingOutKeepsThisServerOnYourDeviceSo')}>
             <SettingsValueRow label={t('mobile.SettingsDetailScreens.signedInAs')} value={principalLabel} />
           </SettingsSection>
           <SettingsSection>
@@ -73,7 +73,7 @@ export function AccountSettingsScreen({
 export function AppearanceSettingsScreen() {
   const { styles } = useSettingsListStyles();
   return <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
-    <SettingsSection footer="System follows your device’s appearance setting.">
+    <SettingsSection footer={t('mobile.SettingsDetailScreens.systemFollowsYourDeviceSAppearanceSetting')}>
       <SettingsAppearanceRow />
     </SettingsSection>
   </ScrollView>;
@@ -113,14 +113,14 @@ export function ConnectionSettingsScreen({
   return (
     <ScrollView contentContainerStyle={styles.content} style={styles.shell}>
       <SettingsSection
-        footer="This server determines where the app signs in and stores your Stuff Stash data."
+        footer={t('mobile.SettingsDetailScreens.thisServerDeterminesWhereTheAppSignsInAnd')}
         title={t('mobile.SettingsDetailScreens.currentServer')}
       >
         <SettingsValueRow label={t('mobile.SettingsDetailScreens.server')} value={serverHostname(diagnostics.apiBaseUrl)} />
         <SettingsSeparator />
         <SettingsValueRow label={t('mobile.SettingsDetailScreens.address')} value={diagnostics.apiBaseUrl} />
       </SettingsSection>
-      <SettingsSection footer="Changing servers signs you out and forgets this server and household selection on this device. It does not delete data from the server.">
+      <SettingsSection footer={t('mobile.SettingsDetailScreens.changingServersSignsYouOutAndForgetsThisServer')}>
         <SettingsActionRow
           disabled={working}
           label={working ? t('mobile.SettingsDetailScreens.changingServer') : t('mobile.SettingsDetailScreens.changeServer')}

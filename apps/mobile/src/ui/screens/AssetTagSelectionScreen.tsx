@@ -29,14 +29,14 @@ export function AssetTagSelectionScreen({ tags, initialSelectedIds, initialNewTa
   const ordered = useMemo(() => [...tags].sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' })), [tags]);
   const visible = ordered.filter(tag => view === 'selected' ? selected.includes(tag.id) : tag.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const unavailable = view === 'selected' ? selected.filter(id => !tags.some(tag => tag.id === id)) : [];
-  const empty = view === 'selected' ? 'No tags selected' : tags.length === 0 ? 'No tags available' : 'No matching tags';
+  const empty = view === 'selected' ? t('tags.noneSelected') : tags.length === 0 ? t('tags.noneAvailable') : t('tags.noneMatching');
   if (creating) return <NewAssetTagScreen tags={tags} selectedIds={selected} newTags={newTags} available={available}
     onCancel={() => setCreating(false)} onDone={(ids, pending) => { setSelected([...ids]); setNewTags(pending); setCreating(false); }} />;
   return <>
     <Stack.Screen options={{ title: t('mobile.AssetTagSelectionScreen.tags') }} />
     <NativeFilterSheet title={t('mobile.AssetTagSelectionScreen.tags')} footerTestID="asset-tag-selection-actions"
       search={available && view === 'all' ? { query, placeholder: t('mobile.AssetTagSelectionScreen.searchTags'), onChange: setQuery, onSubmit: setQuery, onClear: () => setQuery('') } : undefined}
-      actions={{ primaryLabel: t('mobile.AssetTagSelectionScreen.done'), primaryAccessibilityLabel: 'Done selecting tags', secondaryLabel: t('mobile.AssetTagSelectionScreen.cancel'), secondaryAccessibilityLabel: 'Cancel selecting tags', disabled: !available, onApply: () => onDone(selected, initialNewTags === undefined ? undefined : newTags), onBack: onCancel }}>
+      actions={{ primaryLabel: t('mobile.AssetTagSelectionScreen.done'), primaryAccessibilityLabel: t('mobile.AssetTagSelectionScreen.doneSelectingTags'), secondaryLabel: t('mobile.AssetTagSelectionScreen.cancel'), secondaryAccessibilityLabel: t('mobile.AssetTagSelectionScreen.cancelSelectingTags'), disabled: !available, onApply: () => onDone(selected, initialNewTags === undefined ? undefined : newTags), onBack: onCancel }}>
       <SettingsSection>
         <NativeSegmentedControl colors={palette} disabled={!available} value={view} onChange={setView}
           segments={[{ value: 'all', label: t('mobile.AssetTagSelectionScreen.allTags') }, { value: 'selected', label: t('mobile.AssetTagSelectionScreen.selected') }]} />

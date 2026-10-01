@@ -46,7 +46,8 @@
     CustomAssetType,
     UpdateAssetDraft
   } from '$lib/domain/inventory';
-  import { applicableCustomFieldDefinitions, assetKindLabel } from '$lib/domain/inventory';
+  import { applicableCustomFieldDefinitions } from '$lib/domain/inventory';
+import { assetKindLabel } from '$lib/presentation/assetKindLabel';
   import AssetDetailActionPanel, { type AssetDetailPanel } from './AssetDetailActionPanel.svelte';
   import AssetDetailHero from './AssetDetailHero.svelte';
   import AssetTagChips from './AssetTagChips.svelte';

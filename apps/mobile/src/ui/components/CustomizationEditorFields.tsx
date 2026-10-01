@@ -58,7 +58,7 @@ export function CustomizationFieldControls(props: { readonly persistedApplicabil
             if (!disabled) props.onTargets(selected ? props.targetIds.filter(id => id !== type.id) : [...props.targetIds, type.id]);
           }} />;
       })}
-      {unavailableSavedCount > 0 ? <Text style={styles.lockedValue}>{t('mobile.CustomizationEditorFields.existingAssetUnavailable', { unavailableSavedCount: String(unavailableSavedCount), value: String(unavailableSavedCount === 1 ? 'type is' : 'types are') })}</Text> : null}
+      {unavailableSavedCount > 0 ? <Text style={styles.lockedValue}>{t('customization.unavailableTypes', { count: unavailableSavedCount })}</Text> : null}
       {unavailableDraftTargets.length > 0 ? <SettingsChoiceRow label={t('mobile.CustomizationEditorFields.unavailableSelections')} accessibilityLabel={t('mobile.CustomizationEditorFields.includeUnavailableDraftSelections')} multiple selected disabled={disabled}
         onPress={() => { if (!disabled) props.onTargets(props.targetIds.filter(id => !unavailableDraftTargets.includes(id))); }} /> : null}
       {props.targetIds.length === 0 && props.canMutate ? <Text accessibilityLiveRegion="polite" style={styles.validationText}>{t('mobile.CustomizationEditorFields.chooseAtLeastOneAssetType')}</Text> : null}

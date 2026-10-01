@@ -239,7 +239,7 @@ function DashboardHeader({
                 footerAction={dashboard.canReturn ? {
                   accessibilityLabel: t('mobile.HomeScreen.return', { title: String(asset.title) }),
                   disabled: isReturnDisabled(asset),
-                  label: returningAssetId === asset.id ? 'Returning...' : t('mobile.HomeScreen.return2'),
+                  label: returningAssetId === asset.id ? t('mobile.HomeScreen.returning') : t('mobile.HomeScreen.return2'),
                   onPress: () => void returnAsset(asset)
                 } : undefined}
                 key={asset.id}

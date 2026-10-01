@@ -43,7 +43,7 @@ export function AssetCheckoutHistorySheetRouteScreen({ assetCheckoutHistoryQuery
   if (coreAccess.identity !== coreIdentity || coreAccess.denied !== coreAccessDenied) {
     setCoreAccess({ identity: coreIdentity, denied: coreAccessDenied });
   }
-  const assetTitle = core.data?.view.title ?? 'Asset';
+  const assetTitle = core.data?.view.title ?? t('mobile.AssetCheckoutHistoryScreen.asset');
   const accessDenied = isAccessFailure(history.error) || isAccessFailure(inventory.error) || coreAccessDenied;
   const first = accessDenied ? undefined : history.data?.pages[0];
   const state: AssetCheckoutHistorySheetState = first

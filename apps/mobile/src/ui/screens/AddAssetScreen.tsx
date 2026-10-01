@@ -385,7 +385,7 @@ function ScopedAddAssetScreen({
         kind: 'location' as const,
         subtitle: t('mobile.AddAssetScreen.newLocation'),
         pathLabel: result.title,
-        selectionHint: 'Location',
+        selectionHint: t('mobile.AddAssetScreen.location'),
         willPromoteToContainer: false
       };
       setParentAssetId(result.id);

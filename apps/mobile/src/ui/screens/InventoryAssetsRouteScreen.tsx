@@ -38,7 +38,7 @@ export function InventoryAssetsRouteScreen({
     query: (signal) => inventoryAssetsQuery.execute({ signal })
   });
 
-  const pullRefresh = usePullRefreshFeedback({ refresh: () => inventoryAssets.refetch({ throwOnError: true }), resourceKey: inventoryAssets.resourceKey, failureTitle: 'Could not refresh assets' });
+  const pullRefresh = usePullRefreshFeedback({ refresh: () => inventoryAssets.refetch({ throwOnError: true }), resourceKey: inventoryAssets.resourceKey, failureTitle: t('mobile.InventoryAssetsRouteScreen.couldNotRefreshAssets') });
 
   return (
     <SafeAreaView style={styles.shell} edges={['left', 'right']}>

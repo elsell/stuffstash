@@ -94,7 +94,7 @@
 <WorkspaceConfirmationDialog
   {open}
   title={confirmation.title}
-  description={confirmation.unavailable ? 'The requested archive target is not available.' : confirmation.description}
+  description={confirmation.unavailable ? t('web.InventoryCustomizationArchivePanel.theRequestedArchiveTargetIsNotAvailable') : confirmation.description}
   {busy}
   onOpenChange={(nextOpen) => { if (!nextOpen) requestDismiss(); }}
   onCloseAutoFocus={handleCloseAutoFocus}

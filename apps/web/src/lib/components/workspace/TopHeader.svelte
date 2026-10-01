@@ -196,7 +196,7 @@
       />
     </div>
   {:else if inventory}
-    <p class="desktop-header-context" aria-label={`Current inventory: ${inventory.name}`}>
+    <p class="desktop-header-context" aria-label={t('web.TopHeader.currentInventory2', { name: String(inventory.name) })}>
       <small>{t('web.TopHeader.currentInventory')}</small>
       <strong>{inventory.name}</strong>
     </p>

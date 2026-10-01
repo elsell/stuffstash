@@ -14,7 +14,7 @@ export function PrimaryTabStack({ root }: { readonly root: 'index' | 'search' })
   return <VoiceTabContent platform={Platform.OS} version={Platform.Version}
     accessory={<VoiceAccessoryContent placement="regular" />}>
     <Stack screenLayout={AppNoticeScreenLayout} screenOptions={{
-      contentStyle: { backgroundColor: palette.background }, headerBackTitle: 'Back',
+      contentStyle: { backgroundColor: palette.background }, headerBackTitle: t('mobile.PrimaryTabStack.back'),
       headerStyle: { backgroundColor: palette.surface }, headerTintColor: palette.action,
       headerTitleStyle: { color: palette.text, fontWeight: '700' }
     }}>

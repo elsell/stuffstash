@@ -81,7 +81,7 @@
         </div>
         <ImportMessagesList
           messages={visiblePreviewMessages(previewJob)}
-          emptyText="No blocking issues found."
+          emptyText={t('web.ImportPreviewPanel.noBlockingIssuesFound')}
           truncated={previewJob.preview.messagesTruncated}
           reportedWarnings={reportedWarningCount(previewJob)}
           reportedErrors={reportedErrorCount(previewJob)}
@@ -98,7 +98,7 @@
 
     <div class="action-row">
       <Button.Root onclick={onStart} disabled={!previewReady || busy}>
-        <Button.BusyContent {busy} icon={Play} label={t('web.ImportPreviewPanel.startBackgroundImport')} busyLabel="Starting import" />
+        <Button.BusyContent {busy} icon={Play} label={t('web.ImportPreviewPanel.startBackgroundImport')} busyLabel={t('web.ImportPreviewPanel.startingImport')} />
       </Button.Root>
       <Button.Root variant="outline" onclick={onBack} disabled={busy}>{t('web.ImportPreviewPanel.back')}</Button.Root>
     </div>
