@@ -91,20 +91,14 @@ type realtimeVoiceTimeouts struct {
 	idle     time.Duration
 }
 
-func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts) http.HandlerFunc {
+func handleRealtimeVoice(application app.App, timeouts realtimeVoiceTimeouts, allowedOrigins []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.NotFound(w, r)
 			return
 		}
-		principal, err := application.Authenticate(r.Context(), r.Header.Get("Authorization"))
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		connection, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
-		if err != nil {
+		connection, principal, accepted := acceptRealtime(w, r, application, allowedOrigins)
+		if !accepted {
 			return
 		}
 		defer connection.Close(websocket.StatusInternalError, "voice session ended")
