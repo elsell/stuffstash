@@ -69,7 +69,7 @@ batch until this delivery queue is complete; inspect exact terminal evidence.
 Prepared follow-up:
 - D2: enforce the one-release-per-batch contract by suppressing product release
   triggers for image-pin-only pushes and serializing future product merges.
-- G6: catalog shared customization-key guidance and surfaced Home/asset query
+- G6: catalog shared customization-key guidance and surfaced Home query
   messages while keeping domain validation independent of localization.
 - V1: run the existing native Add/recovery workflow in en-XA on iPhone and iPad.
   This provides expansion evidence alongside prior ar-XB evidence; it does not

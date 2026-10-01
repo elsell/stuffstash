@@ -1,7 +1,6 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
   "customization.keyGuidance": "Key must start with a letter and use lowercase letters, numbers, or hyphens.",
-  "inventory.assetUnavailable": "Asset is not available in the selected inventory.",
   "inventory.workspaceEmpty": "Inventory workspace must include at least one inventory.",
   "inventory.tenantMissing": "Selected inventory must belong to a tenant.",
   "providerTest.chooseProfile": "Choose a provider profile to test.",

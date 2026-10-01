@@ -222,5 +222,5 @@ cursor/page-limit and server messages remain diagnostics, not untranslated UI.
 
 Customization key rules remain pure domain predicates. Their explanatory copy
 belongs to the catalog and is shared by inline editor validation and command
-rejections. Inventory-detail and Home query guidance rendered to users is also
+rejections. Home query guidance rendered to users is also
 catalog-backed. Preserve existing English wording and validation semantics.
