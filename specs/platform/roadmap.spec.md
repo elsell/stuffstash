@@ -34,8 +34,8 @@ a batching rule, not permission to replace missing implementation with scaffoldi
 
 Continue from merged PR #216 with three scoped deliverables: V1 real browser
 OIDC/PKCE sign-in, automatic workspace provisioning and principal isolation;
-G7 representative native image lifecycle measurements; G8 remaining realtime
-application orchestration migration. This batch does not claim broader physical
+G7 representative native image lifecycle measurements; G8 voice vocabulary
+projection and resolution ownership within the remaining realtime migration. This batch does not claim broader physical
 acceptance or all localization work is complete. Release only its verified changes.
 
 ## Delivery and acceptance rules

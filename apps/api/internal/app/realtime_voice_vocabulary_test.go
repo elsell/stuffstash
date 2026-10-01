@@ -80,7 +80,7 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 	if len(manifest.CustomAssetTypes) != 1 || manifest.CustomAssetTypes[0].Key != "medicine" || len(manifest.CustomFields) != 1 || len(manifest.Tags) != 1 {
 		t.Fatalf("unexpected manifest: %+v", manifest)
 	}
-	definitions, unavailable, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: "expiration-date"}})
+	definitions, unavailable, err := catalog.Resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: "expiration-date"}})
 	if err != nil || unavailable != 0 || len(definitions) != 1 {
 		t.Fatalf("resolve field definition: %+v, %v", definitions, err)
 	}
@@ -91,7 +91,7 @@ func TestRealtimeVoiceVocabularyLoadsActiveScopedManifestAndResolvesRequestedDef
 		t.Fatalf("model vocabulary must not expose internal IDs: %+v", definitions[0])
 	}
 	for _, missing := range []string{"not-in-manifest", "private-field", "other-field"} {
-		definitions, unavailable, err := catalog.resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: missing}})
+		definitions, unavailable, err := catalog.Resolve([]agentmodel.VoiceVocabularyRequest{{Kind: agentmodel.VoiceVocabularyKindCustomField, Key: missing}})
 		if err != nil || unavailable != 1 || len(definitions) != 0 {
 			t.Fatalf("key %q must remain unavailable without disclosing its existence: %+v, %d, %v", missing, definitions, unavailable, err)
 		}

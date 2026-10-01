@@ -59,7 +59,7 @@ func (a App) executeRealtimeVoiceVocabularyTool(ctx context.Context, session Rea
 	manifest.CustomAssetTypesTruncated = manifest.CustomAssetTypesTruncated || types.HasMore
 	manifest.CustomFieldsTruncated = manifest.CustomFieldsTruncated || fields.HasMore
 	manifest.TagsTruncated = manifest.TagsTruncated || tags.HasMore
-	definitions, unavailable, err := catalog.resolve(validDefinitions)
+	definitions, unavailable, err := catalog.Resolve(validDefinitions)
 	if err != nil {
 		return ports.AgentToolResult{}, ports.ErrInvalidProviderInput
 	}

@@ -216,3 +216,11 @@ field ordering, expiration precision/clear state and dependent-parent references
 Root realtime wrappers supply the decision scope; they must not reconstruct or
 change review content. Existing review, expiration and approval security tests
 remain the contract for this ownership change.
+
+Bounded voice vocabulary projection and definition resolution belong to the
+agent-model application package. It owns truncation, stable-key applicability,
+deduplication and unavailable-definition accounting. The root facade may forward
+projection while authorized repository reads remain in the existing tool boundary.
+Keep the catalog's backing map private; consumers and tests resolve definitions
+through its public method. Preserve existing vocabulary isolation and expiration
+capability checks during this behavior-preserving extraction.
