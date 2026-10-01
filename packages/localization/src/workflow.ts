@@ -1,5 +1,9 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "providerTest.chooseProfile": "Choose a provider profile to test.",
+  "providerTest.failed": "Connection test failed. Check the profile configuration and credential, then try again.",
+  "sharing.emailRequired": "Enter a valid email address.",
+  "sharing.invitationRequired": "Invitation ID must not be empty.",
   "settings.serverNotConfigured": "Not configured",
   "settings.versionUnknown": "Unknown",
   "voice.openEntityIn": "Open {title} in {context}",

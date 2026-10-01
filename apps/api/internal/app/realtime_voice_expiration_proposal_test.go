@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/stuffstash/stuff-stash/internal/domain/audit"
 	"github.com/stuffstash/stuff-stash/internal/domain/customfield"
 	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
@@ -31,15 +32,16 @@ func TestExpirationProposalRejectsUnavailableTypeBeforeReview(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			executor := realtimeConversationTools{application: application, session: checkoutToolSession(), visible: map[string]struct{}{}}
-			result, err := executor.propose(context.Background(), ports.AgentToolCall{ID: "propose", Name: realtimeConversationProposeTool, Arguments: map[string]any{"summary": "Add bottle expiring February 2028", "commands": []any{map[string]any{"id": "bottle", "kind": "create_asset", "summary": "Add bottle", "arguments": map[string]any{"title": "Bottle", "customAssetTypeId": "medicine", "expiration": map[string]any{"date": "2028-02", "precision": "month"}}}}}})
+			executor := application.newRealtimeConversationTools(checkoutToolSession(), func(RealtimeVoiceEvent) error { return nil })
+			result, err := executor.ExecuteConversationTool(context.Background(), ports.AgentToolCall{ID: "propose", Name: realtimeConversationProposeTool, Arguments: map[string]any{"summary": "Add bottle expiring February 2028", "commands": []any{map[string]any{"id": "bottle", "kind": "create_asset", "summary": "Add bottle", "arguments": map[string]any{"title": "Bottle", "customAssetTypeId": "medicine", "expiration": map[string]any{"date": "2028-02", "precision": "month"}}}}}})
 			if mode != "enabled" {
-				if err == nil || result.ApprovalPlanID != "" || executor.proposal != nil {
+				var feedback map[string]any
+				if err != nil || json.Unmarshal([]byte(result.Result.Content), &feedback) != nil || feedback["error"] == nil || result.ApprovalPlanID != "" || executor.Proposal() != nil {
 					t.Fatal("unavailable type became dated review")
 				}
 				return
 			}
-			if err != nil || executor.proposal == nil || executor.proposal.Commands[0].Expiration == nil {
+			if err != nil || executor.Proposal() == nil || executor.Proposal().Commands[0].Expiration == nil {
 				t.Fatalf("valid dated review failed: %v", err)
 			}
 			saved, found, err := store.ActionPlanByID(context.Background(), "tenant-home", "inventory-home", result.ApprovalPlanID)

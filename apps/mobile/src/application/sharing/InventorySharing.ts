@@ -78,7 +78,7 @@ export class CreateInventoryInvitationCommand {
     requireShare(scope);
     const email = input.email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new Error('Enter a valid email address.');
+      throw new Error(t('sharing.emailRequired'));
     }
     let result: CreatedInventoryInvitation;
     try {
@@ -99,7 +99,7 @@ export class CancelInventoryInvitationCommand {
     requireShare(scope);
     const id = invitationId.trim();
     if (id.length === 0) {
-      throw new Error('Invitation ID must not be empty.');
+      throw new Error(t('sharing.invitationRequired'));
     }
     await this.invitations.cancel(scope, id);
     this.observer.onInvitationsChanged(scope, id);

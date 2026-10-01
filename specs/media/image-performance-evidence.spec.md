@@ -9,7 +9,7 @@ work subsequently shipped; see `background-thumbnails.spec.md` and
 
 Profiling is implemented in the observability adapter and bootstrap. Client
 request reporting/session integration is implemented. Visible-image component
-instrumentation and broader physical-client/performance acceptance remain open
+instrumentation is implemented; broader physical-client/performance acceptance remains open
 (G7/V1 in `../platform/roadmap.spec.md`). Historical statements below about absent
 profiling, pending comparisons and failed frontend type checks describe their
 named revisions; they are not current implementation blockers.
@@ -237,3 +237,17 @@ That run's deferred frontend job failed mobile test type checking; this is histo
 GitOps `0f374fb` deployed the compared image; `ddf8c4d` restores the specified
 0.1 trace sample ratio after the paired runs. No further observability expansion
 or background-worker implementation is part of this completed comparison.
+
+## Bounded browser lifecycle overhead — October 2026
+
+Measure the production visible-image action and web performance-session adapter
+in Chromium against the same decoded synthetic image with telemetry disabled
+and enabled. Alternate order across paired repetitions, retain all batch timings
+and nearest-rank p50/p95 of batch-average lifecycle costs, and report the per-lifecycle difference. Exercise actual
+DOM image load/decode before timing cached lifecycle setup/completion/cleanup.
+Exclude corpus creation and decoding from this overhead measurement. Use the
+production reporter with a controlled transport and scheduler; network/server
+latency and timer scheduling costs are excluded and must be stated. This is a
+bounded diagnostic measurement, not an FPS, physical-device, cold-cache, network,
+whole-screen latency, or production p95 claim. Do not gate CI on noisy timing
+thresholds; gate on finite samples and successful lifecycle reporting.

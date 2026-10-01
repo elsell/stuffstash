@@ -201,3 +201,12 @@ existing date formatting; translating a display label must not change API values
 Settings diagnostics must resolve missing server/version labels through the client
 catalog. Actual configured URLs and version identifiers remain verbatim; the
 authentication-mode enum remains a protocol value.
+
+## Command validation shown in the UI
+
+Invitation input validation and provider connection
+test failures are presentation messages when their callers display Error.message.
+They must use catalog messages just as labels do. Preserve the existing exception
+types, validation order and English wording; do not translate server/provider data
+or protocol identifiers. Legacy errors already mapped by a presentation boundary
+remain stable inputs to that mapping.

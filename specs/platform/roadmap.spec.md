@@ -44,15 +44,32 @@ a batching rule, not permission to replace missing implementation with scaffoldi
 PR #221 merged at `31f81eff` before its failing connected export check was required
 by GitHub. Its release run36911487216 was cancelled before image/tag publication.
 The connected run36910592292 exposed HTTP500: PostgreSQL rejected the new
-`inventory.exported` audit action. The follow-up adds migration59 and a domain-action
-migration guard. The connected job is now a required main check. Finish this same
-batch's delivery after corrected downloads and persisted audit history pass.
+`inventory.exported` audit action. PR #222 adds migration59 and a domain-action migration guard; merged `39700a21`.
+CI36912314042 passed at `b6b07b1c`, including actual JSON/CSV downloads, persisted
+export audit history, and other-principal rejection. The connected job is now a
+required main check. Release36913294557 succeeded for this completed batch (v0.26.2).
+[Retained acceptance](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
 
 Remaining acceptance includes physical iOS export recipient saving (requested from
 user), broader connected native/adaptation workflows, and bounded performance
 measurements beyond image callback samples. Remaining G8 orchestration and G6
 presentation candidates continue after this batch. Do not gate this batch on those
 unrelated remaining requirements or claim they are complete.
+
+## Next frozen batch — G8, G6, V1
+
+- G8: move realtime conversation coordination and proposal policy to agentmodel,
+  preserving authorization, fresh-read requirements and review before persistence.
+- G6: catalog surfaced invitation-validation and provider-test errors. Caller
+  review excludes internal errors already replaced by localized UI fallbacks.
+- V1: measure bounded cached-image observer overhead using the production browser
+  action and reporter, alternating enabled/disabled measurements. This excludes
+  image decoding, network, scheduling, physical-device and whole-screen latency.
+
+Source review passed for the conversation extraction. CI/native/physical evidence
+must remain distinct; this batch does not close all remaining G6/G8/V1 obligations.
+PR #224 merged the separate catch-up backlog at e8e39201; release36915932407 was
+started. Older image-pin PRs were superseded; CI dispatch now unblocks future pins.
 
 ## Delivery and acceptance rules
 
