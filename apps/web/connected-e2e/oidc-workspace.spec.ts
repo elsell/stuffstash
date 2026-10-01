@@ -29,6 +29,17 @@ async function inventoryStatus(request: APIRequestContext, url: string, token?: 
   }
 }
 
+async function exportedAuditFormats(request: APIRequestContext, url: string, token: string): Promise<string[]> {
+  try {
+    const response = await request.get(`${url}/audit-records?limit=100`, { headers: { Authorization: `Bearer ${token}` } });
+    if (response.status() !== 200) throw new Error('Audit history unavailable.');
+    const body = await response.json() as { data: { action: string; metadata: { format?: string } }[] };
+    return body.data.filter(record => record.action === 'inventory.exported').map(record => record.metadata.format ?? '');
+  } catch {
+    throw new Error('Could not verify persisted inventory export history.');
+  }
+}
+
 test('real OIDC workspace, item creation and exports preserve principal isolation', async ({ page, browser, request }, testInfo) => {
   await signIn(page, 'owner@example.com');
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
@@ -80,6 +91,8 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
     await file.delete();
     expect(await inventoryStatus(request, `${inventoryURL}/export?format=${format}`)).toBe(401);
   }
+
+  expect(await exportedAuditFormats(request, inventoryURL, ownerToken)).toEqual(expect.arrayContaining(['json', 'csv']));
 
   const otherContext = await browser.newContext({ baseURL: 'http://localhost:5173' });
   try {

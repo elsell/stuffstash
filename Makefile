@@ -196,7 +196,7 @@ docker-build-web:
 dependency-age-check:
 	python3 scripts/check-dependency-age.py
 
-required-checks: client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
+required-checks: audit-action-migration-check client-message-check dependency-age-check scripts-test go-structural-check mobile-ui-structural-check test api-release-build web-install web-test web-check web-build mobile-test mobile-check api-client-test api-client-check api-client-check-generated docs-install docs-build
 
 release-plan-test:
 	scripts/test-release-planner.sh
@@ -211,6 +211,7 @@ scripts-test: release-plan-test release-image-signing-test selfhost-happy-path-c
 	PATH="$(DOCS_PATH)" node --test scripts/test-ios-profile-maintenance.mjs scripts/test-apple-maintenance-client.mjs
 	python3 scripts/test-ios-signing.py
 	python3 scripts/test-ios-profile-metadata.py
+	python3 scripts/test-audit-action-migrations.py
 	scripts/test-go-structural-rules.sh
 	scripts/test-mobile-ui-structural-rules.sh
 	scripts/test-mobile-association-files.sh
@@ -286,3 +287,7 @@ api-client-check-generated:
 client-message-check: web-install
 	PATH="$(DOCS_PATH)" node --test scripts/client-message-check.test.mjs
 	PATH="$(DOCS_PATH)" node scripts/client-message-check.mjs
+
+.PHONY: audit-action-migration-check
+audit-action-migration-check:
+	python3 scripts/check-audit-action-migrations.py

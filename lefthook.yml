@@ -8,6 +8,8 @@ pre-commit:
     go-test:
       glob: "*.go"
       run: GOCACHE="$PWD/.cache/go-build" go test ./apps/api/...
+    audit-action-migrations:
+      run: python3 scripts/check-audit-action-migrations.py
     go-structural-rules:
       glob: "*.go"
       run: scripts/check-go-structural-rules.sh {staged_files}
