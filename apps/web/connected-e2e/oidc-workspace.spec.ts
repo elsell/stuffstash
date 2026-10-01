@@ -55,12 +55,26 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
   await expect(page.getByRole('heading', { name: 'Browse', exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('connected-browse.png') });
 
-  const itemTitle = 'Connected export, flashlight';
+  const originalTitle = 'Connected export, flashlight';
+  const itemTitle = 'Connected edited, flashlight';
   await page.goto(`/tenants/${scope[1]}/inventories/${scope[2]}/add/item`);
   await expect(page.getByRole('dialog', { name: 'Add item' })).toBeVisible();
-  await page.getByLabel('Item name').fill(itemTitle);
+  await page.getByLabel('Item name').fill(originalTitle);
   await page.getByRole('button', { name: 'Save item' }).click();
+  await expect(page.getByRole('heading', { name: originalTitle, exact: true })).toBeVisible();
+  const assetPath = new URL(page.url()).pathname;
+  expect(assetPath).toMatch(/\/assets\/[^/]+$/);
+  const assetURL = `http://localhost:8080${assetPath}`;
+  await page.goto(`${assetPath}/edit`);
+  const edit = page.getByRole('dialog', { name: 'Edit asset' });
+  await expect(edit).toBeVisible();
+  await edit.getByLabel('Name', { exact: true }).fill(itemTitle);
+  await edit.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('heading', { name: itemTitle, exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: itemTitle, exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('connected-edited-asset.png') });
+  expect(await inventoryStatus(request, assetURL)).toBe(401);
   await page.goto(`/settings/tenants/${scope[1]}/inventories/${scope[2]}`);
   for (const format of ['json', 'csv'] as const) {
     await page.getByRole('button', { name: 'Export inventory', exact: true }).click();
@@ -102,6 +116,7 @@ test('real OIDC workspace, item creation and exports preserve principal isolatio
     const otherToken = await sessionToken(otherPage);
     expect(Boolean(otherToken)).toBe(true);
     expect([403, 404]).toContain(await inventoryStatus(request, inventoryURL, otherToken));
+    expect([403, 404]).toContain(await inventoryStatus(request, assetURL, otherToken));
     for (const format of ['json', 'csv']) {
       expect([403, 404]).toContain(await inventoryStatus(request, `${inventoryURL}/export?format=${format}`, otherToken));
     }

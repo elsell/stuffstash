@@ -1802,3 +1802,11 @@ exports JSON and CSV through inventory settings, and inspects actual browser
 downloads for the saved item. Verify export rejects absent and other-principal
 credentials. No route interception or injected sessions may stand in for the API.
 Browser downloads do not substitute for physical iOS recipient saving.
+
+### Connected edit acceptance for the October 2026 gap audit
+
+The real OIDC browser journey must create an item, open its edit task, save a
+changed title, reload the item and verify the persisted title in both JSON and CSV
+exports. Verify unauthenticated and other-principal asset reads are denied.
+Retain a screenshot of the reloaded detail. This is connected browser evidence,
+not physical mobile or visual acceptance of unrelated surfaces.
