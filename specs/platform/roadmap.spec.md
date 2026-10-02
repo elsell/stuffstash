@@ -80,7 +80,11 @@ SpiceDB and the API on the hosted Mac's loopback interface with SQLite/filesyste
 storage, avoiding reusable tunnel credentials and any production-server mutation.
 Source review and local process/evidence tests pass; the first hosted attempt must
 still establish compilation, startup, system-auth behavior and persisted state.
-No connected-native acceptance is claimed from the harness implementation.
+First hosted run37049766681 at0c70ae4f compiled the pinned services but stopped
+before native compilation during API startup. The harness omitted the invitation
+origin required by real OIDC startup validation; the next revision supplies an
+explicit loopback origin and records exited service names. No connected-native
+acceptance is claimed from this attempt.
 
 ## Current objective — October 1, 2026
 

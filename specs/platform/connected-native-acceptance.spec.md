@@ -32,7 +32,9 @@ Use the repository's reviewed Dex and SpiceDB versions. Pin any downloaded sourc
 or binary by immutable commit or digest, verify it before execution, and keep Go,
 Node, Expo and Xcode selections consistent with existing workflows. Run compilation
 on the hosted runner, never this Linux workstation. Each run gets disposable data,
-loopback listeners, synthetic principals and explicit process cleanup.
+loopback listeners, synthetic principals and explicit process cleanup. Configure
+the API's required invitation origin explicitly as loopback HTTP with the existing
+local-development opt-in; the harness must meet real startup validation.
 
 The simulator uses real onboarding and configured OIDC discovery. Do not run the
 fixture-route preparation script, replace repositories, intercept API responses,

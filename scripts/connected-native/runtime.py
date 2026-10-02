@@ -19,7 +19,8 @@ def wait_http(url, processes, timeout=90):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if any(process.poll() is not None for process in processes):
-            raise RuntimeError('A connected service exited before readiness')
+            exited = ', '.join(Path(process.args[0]).name for process in processes if process.poll() is not None)
+            raise RuntimeError('Connected service exited before readiness: ' + exited)
         try:
             with urllib.request.urlopen(url, timeout=2) as response:
                 if response.status == 200:
@@ -72,6 +73,8 @@ def main():
     env = {**os.environ,
         'STUFF_STASH_HTTP_ADDR': '127.0.0.1:8080',
         'STUFF_STASH_AUTH_MODE': 'oidc', 'STUFF_STASH_AUTHZ_MODE': 'spicedb',
+        'STUFF_STASH_INVITATION_PUBLIC_BASE_URL': 'http://localhost:8080/invitations/accept',
+        'STUFF_STASH_INVITATION_ALLOW_INSECURE_LOCAL_HTTP': 'true',
         'STUFF_STASH_REPOSITORY_MODE': 'sqlite',
         'STUFF_STASH_DATABASE_DSN': str(data / 'inventory.sqlite'),
         'STUFF_STASH_BLOB_STORAGE_MODE': 'filesystem',
@@ -130,6 +133,7 @@ def main():
             raise RuntimeError('Native journey failed; inspect allowlisted test evidence')
         result.update(outcome='passed', stage='completed')
     finally:
+        result['exitedServices'] = [Path(p.args[0]).name for p in processes if p.poll() is not None and p.returncode != 0]
         try:
             stop(processes)
         finally:
