@@ -122,7 +122,7 @@ export class MobileAuthSessionController {
     }
     if (!session.refreshToken) {
       await this.clearMatchingSession(session);
-      throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
+      throw new MobileAuthenticationRequiredError(t('auth.refreshRequired'));
     }
     const key = refreshKey(session);
     if (!this.refreshInFlight || this.refreshInFlight.key !== key) {
@@ -164,7 +164,7 @@ export class MobileAuthSessionController {
     const generation = this.sessionGeneration;
     if (!session.refreshToken) {
       await this.clearMatchingSession(session);
-      throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
+      throw new MobileAuthenticationRequiredError(t('auth.refreshRequired'));
     }
 
     try {
@@ -196,7 +196,7 @@ export class MobileAuthSessionController {
       if (error instanceof MobileAuthenticationRequiredError) {
         throw error;
       }
-      throw new MobileAuthenticationRequiredError('Sign in again to refresh your Stuff Stash session.');
+      throw new MobileAuthenticationRequiredError(t('auth.refreshRequired'));
     }
   }
 }
@@ -213,10 +213,10 @@ function sessionFromTokens(
   tokens: MobileAuthTokenResult
 ): MobileAuthSession {
   if (!tokens.idToken || !Number.isFinite(tokens.expiresAt) || tokens.expiresAt <= 0) {
-    throw new MobileAuthenticationRequiredError('Sign-in did not return a usable Stuff Stash session.');
+    throw new MobileAuthenticationRequiredError(t('auth.unusableSession'));
   }
   if (requiresRefreshToken(metadata) && !tokens.refreshToken) {
-    throw new MobileAuthenticationRequiredError('Sign-in did not return a refreshable Stuff Stash session.');
+    throw new MobileAuthenticationRequiredError(t('auth.unrefreshableSession'));
   }
 
   return {

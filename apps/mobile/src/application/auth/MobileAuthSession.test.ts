@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { describe, expect, it } from 'vitest';
 import {
   MobileAuthenticationRequiredError,
@@ -335,4 +336,19 @@ it('finishes a stale-session clear before storing a newer sign-in', async () => 
   release();
   await Promise.all([expired, newSignIn]);
   expect(stored?.idToken).toBe('new-token');
+});
+
+it.each([
+  ['refresh', 'auth.refreshRequired'],
+  ['unusable', 'auth.unusableSession'],
+  ['unrefreshable', 'auth.unrefreshableSession']
+] as const)('localizes %s session recovery without accepting invalid credentials', async (kind, key) => {
+  const store = new FakeSessionStore(kind === 'refresh' ? { ...freshSession(), expiresAt: 1_020, refreshToken: undefined } : undefined);
+  const oidc = new FakeOidcClient({ idToken: kind === 'unusable' ? '' : 'id-token', expiresAt: 2_000 });
+  const controller = new MobileAuthSessionController(store, new FakeMetadataGateway(metadata), oidc, () => 1_000, 60);
+  const failure = await (kind === 'refresh' ? controller.validIdToken('https://api.example.test') : controller.signIn('https://api.example.test')).catch(error => error);
+  expect(failure).toBeInstanceOf(MobileAuthenticationRequiredError);
+  expect(failure.message).toBe(t(key));
+  expect(await store.load()).toBeUndefined();
+  expect(oidc.refreshCalls).toBe(0);
 });
