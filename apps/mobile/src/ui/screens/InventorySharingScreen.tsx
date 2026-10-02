@@ -131,14 +131,12 @@ export function InventorySharingScreen({
       setCreated(invitation);
       setCreatedScopeKey(requestedScopeKey);
       setEmail('');
+      setEmailRevision(value => value + 1);
     } catch (error) {
       if (ownsFeedback()) setCreationError(error instanceof InventoryInvitationLinkUnavailableError
         ? { title: t('mobile.InventorySharingScreen.invitationCreatedLinkUnavailable'), message: t('mobile.InventorySharingScreen.ifTheInvitationIsStillPendingBelowCancelIt') }
         : { title: t('mobile.InventorySharingScreen.couldNotCreateInvitation'), message: readableError(error) });
     } finally {
-      // A disabled SwiftUI field can restore focus after a menu closes.
-      // End this input session on failure too, preserving the React email draft.
-      if (currentScopeKeyRef.current === requestedScopeKey) setEmailRevision(value => value + 1);
       workingRef.current = false;
       setWorking(false);
     }
