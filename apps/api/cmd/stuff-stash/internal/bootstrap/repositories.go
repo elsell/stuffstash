@@ -18,6 +18,12 @@ import (
 )
 
 type repositories struct {
+	archiveBlobs               ports.StreamingBlobStorage
+	archiveJobs                ports.ArchiveJobRepository
+	archiveArtifacts           ports.ArchiveArtifactRepository
+	archiveCommands            ports.ArchiveJobCommands
+	archiveSnapshots           ports.ArchiveSnapshotRepository
+	archivePublication         func(ports.Clock, int) ports.ArchiveRestoreUnitOfWork
 	notificationDevices        ports.NotificationDeviceRepository
 	notificationPreferences    ports.NotificationPreferencesRepository
 	notificationDeliveries     ports.NotificationDeliveryRepository
@@ -116,7 +122,14 @@ func repositoriesFromGORMStore(cfg config.Config, store gormstore.Store, closeSt
 		_ = closeStore()
 		return repositories{}, nil, err
 	}
-	return repositories{notificationDeliveries: store, notificationDevices: store, notificationPreferences: store, notificationInbox: store, workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, blobDeletionRechecks: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, imageBatch: blobstore.StandardImageProcessor{}, thumbnailQueue: store, thumbnailBackfill: store, thumbnailGuard: guard, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, actionPlanCustomizations: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
+	streaming, ok := blobs.(ports.StreamingBlobStorage)
+	if !ok {
+		_ = closeStore()
+		return repositories{}, nil, errors.New("blob store must support archive streaming")
+	}
+	return repositories{archiveBlobs: streaming, archiveJobs: store, archiveArtifacts: store, archiveCommands: store, archiveSnapshots: store, archivePublication: func(clock ports.Clock, limit int) ports.ArchiveRestoreUnitOfWork {
+		return gormstore.NewArchiveRestorePublisher(store, clock, limit)
+	}, notificationDeliveries: store, notificationDevices: store, notificationPreferences: store, notificationInbox: store, workflowDiscovery: store, evaluationRuns: store, evaluationCases: store, conversationWorkflows: store, tenants: store, tenantUnitOfWork: store, inventories: store, inventoryAccess: store, inventoryAccessUnitOfWork: store, inventoryUnitOfWork: store, customAssetTypes: store, customAssetTypeUnitOfWork: store, customFields: store, customFieldUnitOfWork: store, assets: store, checkouts: store, assetTags: store, assetUnitOfWork: store, assetTagUnitOfWork: store, assetEditUnitOfWork: store, undoables: store, search: store, attachments: store, attachmentUnitOfWork: store, blobs: blobs, blobDeletionOutbox: store, blobDeletionRechecks: store, directUploads: directUploads, imageProcessor: blobstore.StandardImageProcessor{}, imageBatch: blobstore.StandardImageProcessor{}, thumbnailQueue: store, thumbnailBackfill: store, thumbnailGuard: guard, audit: store, outbox: store, providerProfiles: store, providerProfileUnitOfWork: store, voiceProviderConfigs: store, providerCredentials: store, realtimeSessions: store, actionPlans: store, actionPlanCustomizations: store, importJobs: store, importJobSources: store, importLinks: store, importAssetUnitOfWork: store, importAttachmentUnitOfWork: store, users: store}, closeStore, nil
 }
 
 func buildBlobStorage(cfg config.Config) (ports.BlobStorage, ports.DirectAttachmentUploader, error) {

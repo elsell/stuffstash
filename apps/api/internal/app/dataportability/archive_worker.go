@@ -174,3 +174,20 @@ func archiveExecutionFailure(err error) archivejob.Failure {
 		return archivejob.FailureStorage
 	}
 }
+
+// Drain recovers an expired claim or starts the next queued job. Competing
+// workers use the same atomic claim operation; only one can execute each job.
+func (w ArchiveWorker) Drain(ctx context.Context) (bool, error) {
+	jobs, err := w.deps.Service.deps.Jobs.ListRunnableArchiveJobs(ctx, w.deps.Service.deps.Clock.Now(), 1)
+	if err != nil {
+		return false, err
+	}
+	if len(jobs) == 0 {
+		return false, nil
+	}
+	err = w.RunJob(ctx, jobs[0])
+	if errors.Is(err, ports.ErrArchiveJobConflict) {
+		return false, nil
+	}
+	return true, err
+}

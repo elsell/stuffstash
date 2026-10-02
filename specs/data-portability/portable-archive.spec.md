@@ -270,3 +270,17 @@ unreferenced keys through the existing durable blob-deletion outbox. Retired key
 remain reserved against reuse. Existing deletion rechecks remove late writes from
 interrupted workers. Cleanup must not depend on listing an object-storage bucket
 or on the client remaining connected.
+
+### Runtime limits and scheduling
+
+Archive jobs are enabled by default with PostgreSQL or SQLite. The ephemeral
+in-memory development mode does not offer durable archive jobs; explicitly enabling
+them there is a startup error. Runtime settings use `STUFF_STASH_ARCHIVE_` variables:
+`ENABLED`, `MAX_BYTES` (1 GiB), `EXPANDED_BYTES` (4 GiB), `METADATA_BYTES` (64 MiB),
+`ENTRY_BYTES` (512 MiB), `MAX_RECORDS` and `MAX_ENTRIES` (100,000), `CONCURRENCY` (1),
+`RETENTION` (24h), `LEASE` (2m), `HEARTBEAT` (20s), `POLL_INTERVAL` (2s),
+`CLEANUP_INTERVAL` (1m), `JOB_TIMEOUT` (2h), `TRANSFER_TIMEOUT` (30m), and
+`SCRATCH_DIRECTORY` (the host temporary directory). Invalid or unbounded settings
+fail startup. At most eight workers execute concurrently. Worker shutdown cancels
+and joins active work before closing repositories. A separate cleanup loop uses
+the same cancellation lifecycle. Blob deletion continues through its existing queue.
