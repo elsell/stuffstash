@@ -303,7 +303,7 @@
     {expirationRefinement}
     tenantId={workspace.data.context.selectedTenantId}
     inventoryId={workspace.data.context.selectedInventoryId}
-    inventoryName={workspace.selectedInventory?.name ?? 'Inventory'}
+    inventoryName={workspace.selectedInventory?.name ?? t('web.workspaceShellNavigation.inventory')}
     assets={route.browseAssets}
     placementAssets={workspace.assets}
     inventoryEmpty={route.browseInventoryEmpty}
