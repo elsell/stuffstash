@@ -354,3 +354,12 @@ failure: neither case may silently retry through JSON or complete metadata.
 Critical tests cover both causes, presentation through the safe-error boundary and
 expanded-locale output. Keep technical target-selection and invalid-invitation
 errors distinct from this deliberately user-visible upload error.
+
+### Asset region recovery sentences
+
+Details contents/photo failure, loading and retry messages must be complete
+catalog entries for each region. Region identifiers are control-flow values,
+not user text to interpolate. Preserve independent region retries and disabled
+retry controls while a request is running. Verify rendered messages in the
+expanded pseudolocale so untranslated region words cannot hide inside a
+translated sentence.
