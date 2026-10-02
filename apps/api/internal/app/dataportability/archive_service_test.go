@@ -61,7 +61,7 @@ func TestArchiveJobsRequireOwnerAndCurrentScopePermission(t *testing.T) {
 	}
 	commands := &commitAcknowledgmentFailure{ArchiveJobCommands: store}
 	blobRoot := t.TempDir()
-	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: store, Commands: commands, Authorizer: authorizer, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: archiveTestClock{}, Storage: blobstore.NewFileSystemStore(blobRoot), Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1024, Retention: time.Hour, CleanupTimeout: time.Second})
+	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: commands, Authorizer: authorizer, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: archiveTestClock{}, Storage: blobstore.NewFileSystemStore(blobRoot), Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1024, Retention: time.Hour, CleanupTimeout: time.Second})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -44,6 +44,9 @@ func (s ArchiveService) UploadRestore(ctx context.Context, a ArchiveAccess, key 
 	if err != nil {
 		return empty, err
 	}
+	if err = s.deps.Artifacts.RegisterArchiveArtifact(ctx, job, artifact, ports.ArchiveArtifactSource, s.deps.Clock.Now()); err != nil {
+		return empty, err
+	}
 	// Publication of the queued job follows the complete private upload. A worker
 	// can never claim a job whose source is still being written.
 	err = s.deps.Storage.PutBlobStream(ctx, ports.BlobStreamWrite{Key: artifact, ContentType: "application/zip", SizeBytes: size, MaxBytes: s.deps.MaxArchiveBytes, Content: scratch})

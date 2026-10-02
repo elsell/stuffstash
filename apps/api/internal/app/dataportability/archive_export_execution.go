@@ -56,6 +56,9 @@ func (w ArchiveWorker) export(ctx context.Context, job archivejob.Record) (strin
 	if !ok {
 		return "", archivejob.ErrInvalid
 	}
+	if err = s.deps.Artifacts.RegisterArchiveArtifact(ctx, job, key, ports.ArchiveArtifactExport, s.deps.Clock.Now()); err != nil {
+		return "", err
+	}
 	if err = s.deps.Storage.PutBlobStream(ctx, ports.BlobStreamWrite{Key: key, ContentType: "application/zip", SizeBytes: size, MaxBytes: w.deps.Limits.CompressedBytes, Content: scratch}); err != nil {
 		return "", err
 	}

@@ -95,6 +95,9 @@ func (w ArchiveWorker) previewRestore(ctx context.Context, job archivejob.Record
 	if !ok {
 		return failed(ErrArchiveMetadata)
 	}
+	if err = w.deps.Service.deps.Artifacts.RegisterArchiveArtifact(ctx, job, key, ports.ArchiveArtifactPlan, w.deps.Service.deps.Clock.Now()); err != nil {
+		return failed(err)
+	}
 	if err = w.deps.Service.deps.Storage.PutBlobStream(ctx, ports.BlobStreamWrite{Key: key, ContentType: "application/json", SizeBytes: int64(len(data)), MaxBytes: w.deps.Limits.MetadataBytes, Content: bytes.NewReader(data)}); err != nil {
 		return failed(err)
 	}
@@ -140,7 +143,7 @@ func (w ArchiveWorker) stageRestore(ctx context.Context, job archivejob.Record) 
 	defer closer.Close()
 	for _, a := range plan.Document.Assets {
 		for _, m := range a.Attachments {
-			if err = w.stageRestoreMedia(ctx, archive.Source, m); err != nil {
+			if err = w.stageRestoreMedia(ctx, job, archive.Source, m); err != nil {
 				return plan, err
 			}
 		}
@@ -182,7 +185,7 @@ func (w ArchiveWorker) loadRestorePlan(ctx context.Context, job archivejob.Recor
 	}
 	return plan, nil
 }
-func (w ArchiveWorker) stageRestoreMedia(ctx context.Context, source ports.ArchiveContentSource, m media.Attachment) error {
+func (w ArchiveWorker) stageRestoreMedia(ctx context.Context, job archivejob.Record, source ports.ArchiveContentSource, m media.Attachment) error {
 	if m.SizeBytes <= 0 || m.SizeBytes > w.deps.Limits.EntryBytes {
 		return ports.ErrBlobStreamSize
 	}
@@ -203,6 +206,9 @@ func (w ArchiveWorker) stageRestoreMedia(ctx context.Context, source ports.Archi
 	}
 	if size != m.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != m.SHA256.String() {
 		return ErrArchiveMetadata
+	}
+	if err = w.deps.Service.deps.Artifacts.RegisterArchiveArtifact(ctx, job, m.StorageKey, ports.ArchiveArtifactRestoredMedia, w.deps.Service.deps.Clock.Now()); err != nil {
+		return err
 	}
 	return w.deps.Service.deps.Storage.PutBlobStream(ctx, ports.BlobStreamWrite{Key: m.StorageKey, ContentType: m.ContentType.String(), SizeBytes: size, MaxBytes: w.deps.Limits.EntryBytes, Content: scratch})
 }

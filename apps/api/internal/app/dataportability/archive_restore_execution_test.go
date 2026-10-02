@@ -43,10 +43,11 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			principal := identity.Principal{ID: "new-owner"}
 			must(auth.GrantTenantOwner(ctx, principal, "destination"))
 			storage := blobstore.NewFileSystemStore(t.TempDir())
-			deps := dataportability.ArchiveDependencies{Jobs: store, Commands: store, Authorizer: auth, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: archiveTestClock{}, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second}
+			clock := &archiveAdvancingClock{}
+			deps := dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: store, Authorizer: auth, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: clock, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second}
 			service, err := dataportability.NewArchiveService(deps)
 			must(err)
-			publisher := gormstore.NewArchiveRestorePublisher(store, archiveTestClock{}, 100)
+			publisher := gormstore.NewArchiveRestorePublisher(store, clock, 100)
 			worker, err := dataportability.NewArchiveWorker(dataportability.ArchiveWorkerDependencies{Service: service, Snapshots: store, Metadata: inventoryarchive.MetadataCodec{}, Packages: inventoryarchive.PackageCodec{}, Readers: inventoryarchive.PackageCodec{}, Plans: inventoryarchive.PlanCodec{}, Fields: store, Types: store, Publisher: publisher, Limits: ports.ArchivePackageLimits{CompressedBytes: 1 << 20, ExpandedBytes: 1 << 20, MetadataBytes: 1 << 16, EntryBytes: 1 << 20, Entries: 100}, MaxRecords: 100, LeaseDuration: time.Minute, HeartbeatInterval: time.Second})
 			must(err)
 			access := dataportability.ArchiveAccess{Principal: principal, TenantID: "destination"}
@@ -117,6 +118,30 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			if !bytes.Equal(original, restored) {
 				t.Fatal("cross-instance original changed")
 			}
+			stream.Close()
+			clock.offset.Store(int64(2 * time.Hour))
+			must(service.CleanupArchives(ctx, 100))
+			expired, err := service.Job(ctx, access, job.ID)
+			must(err)
+			if expired.State != archivejob.Expired {
+				t.Fatal("retention did not expire job")
+			}
+			deletions, err := store.ClaimPendingBlobDeletionEvents(ctx, "archive-cleanup", 100, clock.Now(), clock.Now().Add(time.Minute))
+			must(err)
+			if len(deletions) != 2 {
+				t.Fatalf("expected source and plan cleanup, got %d", len(deletions))
+			}
+			for _, event := range deletions {
+				if event.StorageKey == attachments[0].StorageKey {
+					t.Fatal("cleanup deletes restored original")
+				}
+				must(storage.DeleteBlob(ctx, event.StorageKey))
+				must(store.MarkBlobDeletionEventProcessed(ctx, event.ID, event.ClaimID))
+			}
+			kept, _, err := storage.OpenBlobStream(ctx, attachments[0].StorageKey)
+			must(err)
+			kept.Close()
+
 		})
 	}
 }

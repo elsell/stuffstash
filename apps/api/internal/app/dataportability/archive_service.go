@@ -16,6 +16,7 @@ import (
 type ArchiveDependencies struct {
 	Observer        ports.Observer
 	Jobs            ports.ArchiveJobRepository
+	Artifacts       ports.ArchiveArtifactRepository
 	Commands        ports.ArchiveJobCommands
 	Authorizer      ports.Authorizer
 	Inventories     ports.InventoryRepository
@@ -36,7 +37,7 @@ type ArchiveAccess struct {
 }
 
 func NewArchiveService(d ArchiveDependencies) (ArchiveService, error) {
-	if d.Jobs == nil || d.Commands == nil || d.Authorizer == nil || d.Inventories == nil || d.Tenants == nil || d.IDs == nil || d.Clock == nil || d.Storage == nil || d.Scratch == nil || d.MaxArchiveBytes <= 0 || d.MaxArchiveBytes > ports.MaxSinglePutBytes || d.Retention <= 0 || d.CleanupTimeout <= 0 {
+	if d.Jobs == nil || d.Artifacts == nil || d.Commands == nil || d.Authorizer == nil || d.Inventories == nil || d.Tenants == nil || d.IDs == nil || d.Clock == nil || d.Storage == nil || d.Scratch == nil || d.MaxArchiveBytes <= 0 || d.MaxArchiveBytes > ports.MaxSinglePutBytes || d.Retention <= 0 || d.CleanupTimeout <= 0 {
 		return ArchiveService{}, apperrors.ErrInvalidInput
 	}
 	return ArchiveService{deps: d}, nil
