@@ -272,10 +272,6 @@
       "candidates": 6
     },
     {
-      "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
-      "candidates": 6
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/AssetTagSelector.svelte",
       "candidates": 6
     },
@@ -288,11 +284,11 @@
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/application/auth/MobileAuthSession.ts",
+      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
       "candidates": 5
     },
     {
-      "file": "apps/mobile/src/application/onboarding/OnboardingTestSupport.ts",
+      "file": "apps/web/src/lib/adapters/api/stuffStashInventoryRepository.ts",
       "candidates": 5
     },
     {

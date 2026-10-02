@@ -50,7 +50,7 @@
   {#if pending}<Button.Root variant="outline" disabled={cancelling} onclick={cancel}>{cancelling ? t('web.RunDetails.cancelling') : t('web.RunDetails.cancelRun')}</Button.Root>{/if}
   {#if run.data.failureCode}<p role="alert">{t('web.RunDetails.theRunCouldNotFinishCheckTheConfiguredProvider')} <span class="failure-code">{t('web.RunDetails.referenceFull', { failureCode: run.data.failureCode })}</span></p>{/if}
   <ul>{#each run.data.cases as pin (pin.revisionId)}{@const result = run.data.results.find(value => value.caseRevisionId === pin.revisionId)}
-    <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{t('web.RunDetails.noPassingResultRecordedFull', { value: pending ? 'Not run yet' : 'Not completed' })}</p>{/if}</li>
+    <li><h4>{pin.title}</h4>{#if result}<RunResult {session} {cases} {pin} {result} />{:else}<p>{t('web.RunDetails.noPassingResultRecordedFull', { value: t(pending ? 'evaluation.notRun' : 'evaluation.notCompleted') })}</p>{/if}</li>
   {/each}</ul>
   {#if conversationRunHasCompleteResults(run.data)}<RunComparison {session} {runs} current={run.data} />{/if}
   {#if workflows}<RunActivation {session} {workflows} run={run.data} />{/if}

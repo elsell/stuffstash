@@ -505,10 +505,10 @@ function isPhotoDraftEligible(command: VoiceActionPlanCommand, title: string): b
 
 function placementLabel(command: VoiceActionPlanCommand, titlesByID: ReadonlyMap<string, string>): string | undefined {
   if (command.parentCommandId) {
-    return t('mobile.VoiceSessionPresentation.insideNew', { value: String(titlesByID.get(command.parentCommandId) ?? 'container') });
+    return t('mobile.VoiceSessionPresentation.insideNew', { value: String(titlesByID.get(command.parentCommandId) ?? t('voice.fallbackContainer')) });
   }
   if (command.parentAssetId) {
-    return t('mobile.VoiceSessionPresentation.inside', { value: String(command.parentTitle ?? 'existing place') });
+    return t('mobile.VoiceSessionPresentation.inside', { value: String(command.parentTitle ?? t('voice.fallbackPlace')) });
   }
   return undefined;
 }

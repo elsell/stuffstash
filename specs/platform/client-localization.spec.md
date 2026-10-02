@@ -371,3 +371,21 @@ capitalized route identifiers. History's selected filter accessibility label use
 the same cataloged option label as its picker. The Add destination root fallback
 is cataloged; selected destination paths and user-authored unresolved names remain
 verbatim. Preserve filter draft staging, page transitions and destination choices.
+
+### Interpolated literal enforcement
+
+The rendered-copy gate must inspect literal interpolation values passed to the
+project's `t` function in TypeScript, JSX and Svelte. Catch direct English
+values, conditional/fallback values and values wrapped in `String`; a catalog
+template does not translate those values. Preserve message keys, variable
+references containing user text, nested catalog calls, numeric formatting and
+unrelated protocol/style values. This is bounded syntax checking, not proof of
+variable provenance or full client migration.
+
+The first interpolation-gate migration covers mobile voice-placement fallbacks,
+asset lifecycle notices, notification read actions and deferred entity labels;
+web containment permission guidance, notification actions, expiration summaries
+and conversation evaluation/activation summaries. Preserve user names, dates,
+durations, operation identifiers and selection state. Product-owned fallback
+words and sentence fragments must come from catalogs; read/unread actions and
+deferred entity labels use complete alternative messages.

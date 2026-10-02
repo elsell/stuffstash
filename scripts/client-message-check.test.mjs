@@ -57,3 +57,23 @@ test('checks each-block collection display properties and leaves protocol values
   const source = '<script>let local = [];</script>{#each level === "inventory" ? [{ value: "List", label: "List", title: `From ${tenant.name}` }] : [{ value: "Map", label: t("browse.map"), title: t("group", { name: inventory.name }) }] as option}<span>{option.label}</span>{/each}';
   assert.deepEqual(embeddedDisplayMessages(source, 'Example.svelte').map(x => x.text), ['List', 'From {value}']);
 });
+
+test('checks literal interpolation values without flagging keys or user text', () => {
+  for (const filename of ['Example.tsx', 'Example.svelte']) {
+    const expression = "t('current', { value: String(name || 'Top level'), selected: active ? 'Changes' : 'All events', literal: 'Photos', translated: t('photos'), title: item.title, count: String(12) })";
+    const source = filename.endsWith('.svelte') ? '<span>{' + expression + '}</span>' : 'const label = ' + expression;
+    assert.deepEqual(embeddedDisplayMessages(source, filename).map(x => x.text), ['Top level', 'Changes', 'All events', 'Photos']);
+  }
+});
+
+test('reports a translated interpolation literal once at its source offset', () => {
+  const source = "const label = t('notice', { title: 'Saved item' });";
+  const issues = embeddedDisplayMessages(source, 'Example.ts');
+  assert.deepEqual(issues.map(x => x.text), ['Saved item']);
+  assert.equal(source.slice(issues[0].offset, issues[0].offset + 12), "'Saved item'");
+});
+
+test('checks literals hidden inside interpolation template spans', () => {
+  const source = "const label = t('current', { value: `${active ? 'Changes' : 'All events'}` });";
+  assert.deepEqual(embeddedDisplayMessages(source, 'Example.ts').map(x => x.text), ['Changes', 'All events']);
+});

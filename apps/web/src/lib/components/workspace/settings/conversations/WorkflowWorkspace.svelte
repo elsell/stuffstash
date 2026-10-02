@@ -71,7 +71,7 @@
     <header><h1 id="conversation-workflows-title">{t('web.WorkflowWorkspace.conversations')}</h1><p>{t('web.WorkflowWorkspace.tuneHowYourConfiguredModelsWorkWithYourInventory')}</p></header>
     {#if selection.isError}<p role="alert">{t('web.WorkflowWorkspace.couldNotLoadTheActiveWorkflow')} <Button.Root variant="outline" onclick={() => selection.refetch()}>{t('web.WorkflowWorkspace.retryActiveWorkflow')}</Button.Root></p>
     {:else if selection.isPending}<p role="status">{t('web.WorkflowWorkspace.loadingActiveWorkflow')}</p>
-    {:else}<p>{selection.data ? t('web.WorkflowWorkspace.activeWorkflow', { value: String(heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? 'Saved workflow') }) : t('web.WorkflowWorkspace.usingTheDefaultConversationWorkflow')}</p>{/if}
+    {:else}<p>{selection.data ? t('web.WorkflowWorkspace.activeWorkflow', { value: String(heads.data?.items.find(head => head.id === selection.data?.workflowId)?.name ?? t('workflow.savedFallback')) }) : t('web.WorkflowWorkspace.usingTheDefaultConversationWorkflow')}</p>{/if}
     {#if editor}
       {#if editor.revision?.settingsMigration}<p role="status">{t('web.WorkflowWorkspace.thisRevisionWasConvertedFromThePreviousWorkflowFormat')}</p>{/if}
       <Button.Root variant="outline" disabled={busy} onclick={() => { editor = null; comparison = null; }}>{t('web.WorkflowWorkspace.closeEditorAndDiscardUnsavedEdits')}</Button.Root>

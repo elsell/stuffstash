@@ -126,7 +126,7 @@ export function NotificationInboxScreen({ tenantId, inventoryId, queries, onOpen
       <Text style={{ color: colors.text }}>{row.milestone === 'expired' ? t('mobile.NotificationInboxScreen.expired') : t('mobile.NotificationInboxScreen.expires')} {formatAssetExpiration(row.expiration)}</Text>
 
     </Pressable>
-      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={t('mobile.NotificationInboxScreen.mark', { title: String(row.title), value: String(row.readAt || locallyRead.has(row.id) ? 'unread' : 'read') })} disabled={busy} onPress={() => void toggleRead(row)} /></View>
+      <View style={styles.readAction}><NativeReadStateButton read={!!row.readAt || locallyRead.has(row.id)} label={t(row.readAt || locallyRead.has(row.id) ? 'notification.markUnread' : 'notification.markRead', { title: row.title })} disabled={busy} onPress={() => void toggleRead(row)} /></View>
       {row.parentTrailIncomplete ? <Text style={{color:colors.textMuted}}>{row.parentTrail?.length ? t('mobile.NotificationInboxScreen.partialLocationPath') : t('mobile.NotificationInboxScreen.locationUnavailable')}</Text> : null}
       <AssetBreadcrumbTrail palette={colors} disabled={busy} segments={(row.parentTrail ?? []).map((entry,index)=>({id:entry.assetId,title:entry.title,isImmediateParent:index===(row.parentTrail?.length ?? 0)-1}))} onSegmentPress={entry=>{if(mounted.current && focusSession.current && !pending.current)onOpenAsset(entry.id);}} />
     </View>)}

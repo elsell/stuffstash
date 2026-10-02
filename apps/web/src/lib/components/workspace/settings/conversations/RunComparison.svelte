@@ -33,7 +33,7 @@
       <tr><th scope="row">{t('web.RunComparison.caseExecution')}</th><td>{t('web.RunComparison.sFull', { value: (comparison.baseline.durationMilliseconds / 1000).toFixed(2) })}</td><td>{t('web.RunComparison.sFull', { value: (comparison.candidate.durationMilliseconds / 1000).toFixed(2) })}</td></tr>
     </tbody></table>
       <p>{t('web.RunComparison.recordedCaseResultsExcludeQueueTimeAndAnyAttempts')}</p>
-      <ul>{#each comparison.cases as value}<li><h5>{value.title}</h5><p>{t('web.RunComparison.selectedRunCallsSFull', { value: value.baseline.passed ? 'Passed' : 'Failed', modelCalls: value.baseline.modelCalls, value3: (value.baseline.durationMilliseconds / 1000).toFixed(2) })}</p><p>{t('web.RunComparison.thisRunCallsSFull', { value: value.candidate.passed ? 'Passed' : 'Failed', modelCalls: value.candidate.modelCalls, value3: (value.candidate.durationMilliseconds / 1000).toFixed(2) })}</p></li>{/each}</ul>
+      <ul>{#each comparison.cases as value}<li><h5>{value.title}</h5><p>{t('web.RunComparison.selectedRunCallsSFull', { value: t(value.baseline.passed ? 'evaluation.passed' : 'evaluation.failed'), modelCalls: value.baseline.modelCalls, value3: (value.baseline.durationMilliseconds / 1000).toFixed(2) })}</p><p>{t('web.RunComparison.thisRunCallsSFull', { value: t(value.candidate.passed ? 'evaluation.passed' : 'evaluation.failed'), modelCalls: value.candidate.modelCalls, value3: (value.candidate.durationMilliseconds / 1000).toFixed(2) })}</p></li>{/each}</ul>
     {/if}
   {/if}
 </section>{/if}

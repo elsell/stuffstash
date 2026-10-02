@@ -222,6 +222,7 @@ These instructions are binding for all agents and contributors working in this r
 - Before a screenshot-driven UI correction, inspect the full-screen baseline at the named build/state. Resolve contradictions between element captures and the visible composition before claiming a rendering defect; preserve counterevidence.
 - Dynamic native header options must settle across navigation-context updates. Reuse `useNativeHeaderActionOptions` for stable presentation with current committed handlers; verify latest draft, disabled/removed actions and teardown. Do not freeze callback closures or suppress legitimate header state updates to hide a render loop.
 - Native pull indicators track an explicit, focused pull gesture. Do not bind them to background query loading/refetch flags; reuse `usePullRefresh` and verify navigation return and late completion. The mobile structural check guards direct query-activity bindings.
+- Catalog templates do not translate their interpolation values. Catalog product-owned fallback words and labels, preserve user-authored values, and run the client message gate for both direct and interpolated display copy.
 - API contracts:
   - REST endpoints must follow standard REST conventions.
   - REST endpoints must use consistent response envelopes, error envelopes, and pagination behavior.

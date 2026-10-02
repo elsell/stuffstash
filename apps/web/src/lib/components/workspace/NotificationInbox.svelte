@@ -116,7 +116,7 @@
           <span><strong>{#if !item.readAt && !readIds.has(item.id)}<span class="unread-dot" aria-hidden="true"></span>{/if}{item.title}</strong><span>{item.milestone === 'expired' ? t('web.NotificationInbox.expired') : t('web.NotificationInbox.expires')} {dateLabel(item)}</span></span>
           {#if opening === item.id}<span>{t('web.NotificationInbox.opening')}</span>{:else if !item.readAt && !readIds.has(item.id)}<span class="sr-only">{t('web.NotificationInbox.unread')}</span>{/if}
         </Button.Root>
-          <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={t('web.NotificationInbox.mark', { title: String(item.title), value: String(item.readAt || readIds.has(item.id) ? 'unread' : 'read') })} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
+          <Button.Root variant="ghost" size="icon" class="read-action" disabled={!!opening || marking} aria-label={t(item.readAt || readIds.has(item.id) ? 'notification.markUnread' : 'notification.markRead', { title: item.title })} onclick={() => toggleRead(item)}>{#if item.readAt || readIds.has(item.id)}<Mail aria-hidden="true" />{:else}<MailOpen aria-hidden="true" />{/if}</Button.Root>
           <AssetLocationTrail segments={item.parentTrail} incomplete={item.parentTrailIncomplete} disabled={!!opening || marking} onOpen={onOpenAsset} />
         </li>
       {/each}

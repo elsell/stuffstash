@@ -398,7 +398,7 @@ export function AssetDetailRouteScreen({
         if (!scope.active || !canPresent()) return;
         feedback.showNotice({
           tone: 'error',
-          title: t('mobile.AssetDetailRouteScreen.succeeded', { value: String(action === 'archive' ? 'Archive' : 'Restore') }),
+          title: t(action === 'archive' ? 'asset.archiveSucceeded' : 'asset.restoreSucceeded'),
           message: t('mobile.AssetDetailRouteScreen.theLatestAssetStateCouldNotBeRefreshedYet')
         });
       }
