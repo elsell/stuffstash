@@ -169,3 +169,29 @@ users. No transaction stays open while streaming blob data or waiting for approv
 
 The required PostgreSQL CI job verifies a concurrent mutation stays outside the
 archive snapshot and exercises migration-backed job timestamp/revision fencing.
+
+### Restore plan
+
+After validating source bytes, build a destination plan with fresh identifiers for
+assets, tags, custom types, fields, checkouts and included attachments. Retain all
+creation/update times and expiration precision. Parent links, tag assignments,
+field applicability, custom types and field-value keys are remapped together.
+The plan drops intentionally excluded attachment rows and reports their count.
+Checkout source actors are retained as restore provenance; the local initiating
+principal owns the recreated checkout action. Persist the exact plan privately
+before approval so retries reuse it; approval cannot regenerate identifiers or
+silently change key remappings. Blob keys are derived from the new destination
+scope and attachment identifiers, never taken from archive input.
+
+### Streaming storage
+
+Archive workers use a bounded private temporary file while producing or receiving
+an archive, then stream the known size to object storage. Closing the workspace
+removes it, including on cancellation/failure. This avoids holding the ZIP in
+memory and permits bounded random-access ZIP verification. S3 archive publication
+uses a single bounded PUT (maximum 5 GiB), avoiding orphan multipart uploads on
+cancellation. Archive limits are separate from ordinary photo upload limits.
+Original blob reads and archive reads expose streams/random access rather than
+byte slices. S3 reads bind to the observed ETag so a changed object fails instead
+of mixing bytes from different versions. Filesystem writes stage privately and
+rename only after a complete, size-checked copy.
