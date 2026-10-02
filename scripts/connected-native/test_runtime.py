@@ -22,7 +22,7 @@ class RuntimeTests(unittest.TestCase):
             exported = root / 'private'
             evidence = root / 'public'
             exported.mkdir(); evidence.mkdir()
-            names = ['connected-safe-persisted-detail_0.png', 'connected-stage_0.txt',
+            names = ['connected-safe-persisted-detail_0.png', 'connected-stage_0.txt', 'connected-failure_0.txt',
                      'FailureScreenshot_0.png', 'auth-token_0.txt', 'runtime-log_0.txt']
             attachments = []
             for index, name in enumerate(names):
@@ -32,7 +32,7 @@ class RuntimeTests(unittest.TestCase):
             (exported / 'manifest.json').write_text(json.dumps([{'attachments': attachments}]))
             module.retain_evidence(exported, evidence)
             self.assertEqual(sorted(p.name for p in evidence.iterdir()),
-                             ['connected-safe-persisted-detail.png', 'connected-stage.txt'])
+                             ['connected-failure.txt', 'connected-safe-persisted-detail.png', 'connected-stage.txt'])
 
     def test_cleanup_reaps_running_and_already_exited_services(self):
         live = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'], start_new_session=True)

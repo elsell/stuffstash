@@ -8,7 +8,8 @@ import subprocess
 
 def retain_evidence(exported, evidence):
     allowed = {'connected-safe-persisted-detail': '.png',
-               'connected-safe-other-account-setup': '.png', 'connected-stage': '.txt'}
+               'connected-safe-other-account-setup': '.png', 'connected-stage': '.txt',
+               'connected-failure': '.txt'}
     for test in json.loads((exported / 'manifest.json').read_text()):
         for attachment in test['attachments']:
             name = attachment['suggestedHumanReadableName']

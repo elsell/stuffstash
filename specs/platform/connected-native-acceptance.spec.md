@@ -60,3 +60,10 @@ and product-workflow failures. A failed attempt requires a diagnosis and an
 implementation decision before another run; unchanged retries are prohibited.
 A sleeping script waits for the terminal workflow result. Upload only bounded,
 allowlisted evidence. This spec defines intended verification, not achieved results.
+
+Sign-in failure evidence must distinguish server entry, connection submission,
+system permission, provider form, credential submission and callback. Retain only
+static stage identifiers and XCTest source line numbers, never issue descriptions,
+entered values or authentication screenshots. If the first journey fails with an
+ambiguous stage, one instrumented attempt may resolve that ambiguity; stop and
+record a concrete disposition before further runs.

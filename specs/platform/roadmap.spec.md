@@ -93,9 +93,14 @@ startup but stopped at the anonymous probe: the harness incorrectly used
 `GET /tenants` instead of the existing `GET /me/tenants` discovery route. The
 probe and both authenticated XCTest discovery calls now use that contract; a
 local HTTP regression requires exactly 401 and rejects other statuses. Native
-compilation and journeys remain unverified until corrected run37051856986 at
-4e4bc4d9 completes. The branch was subsequently rebased onto de87e4ae; the
-connected harness source is unchanged by that rebase.
+run37051856986 at4e4bc4d9 compiled successfully and observed anonymous401,
+but failed at `owner-sign-in` before any persistence/isolation acceptance. Only a
+coarse stage was retained, so the exact cause remains unknown. One instrumented
+attempt will distinguish server entry, system authentication, provider form and
+callback using static stage names and source line numbers. No credential text,
+auth screenshots or raw test logs are published. Stop after that result to make
+a concrete decision; do not infer a product defect or retry unchanged. The branch
+was rebased onto de87e4ae with identical harness source before instrumentation.
 
 ## Current objective — October 1, 2026
 

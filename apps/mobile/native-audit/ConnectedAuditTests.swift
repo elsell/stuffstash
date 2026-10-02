@@ -10,6 +10,15 @@ final class ConnectedAuditTests: XCTestCase {
     app.launch()
   }
 
+  override func record(_ issue: XCTIssue) {
+    let line = issue.sourceCodeContext.location?.lineNumber ?? 0
+    let evidence = XCTAttachment(string: "stage=\(stage); sourceLine=\(line)")
+    evidence.name = "connected-failure"
+    evidence.lifetime = .keepAlways
+    add(evidence)
+    super.record(issue)
+  }
+
   override func tearDownWithError() throws {
     let evidence = XCTAttachment(string: stage)
     evidence.name = "connected-stage"
@@ -46,35 +55,45 @@ final class ConnectedAuditTests: XCTestCase {
   private func signIn(_ email: String, first: Bool) {
     stage = first ? "owner-sign-in" : "other-sign-in"
     if first {
+      stage = "server-address-entry"
       enter(app.textFields["Server address"].firstMatch, "http://localhost:8080")
+      stage = "connection-submit"
       tap("Connect and sign in")
     } else {
+      stage = "connection-submit"
       tap("Connect and sign in")
     }
+    stage = "system-auth-permission"
     // ASWebAuthenticationSession may ask to continue before showing the provider.
     let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
     let permission = springboard.alerts.buttons["Continue"].firstMatch
     if permission.waitForExistence(timeout: 3) { permission.tap() }
     let localPermission = app.alerts.buttons["Continue"].firstMatch
     if localPermission.exists { localPermission.tap() }
+    stage = "system-auth-browser"
     let safari = XCUIApplication(bundleIdentifier: "com.apple.SafariViewService")
     let inAppWeb = app.webViews.firstMatch
     let web = inAppWeb.waitForExistence(timeout: 5) ? inAppWeb : safari.webViews.firstMatch
     XCTAssertTrue(web.waitForExistence(timeout: 20), "System authentication browser must open")
+    stage = "provider-login-form"
     let localLogin = web.links.matching(NSPredicate(format: "label CONTAINS[c] 'email'")).firstMatch
     if localLogin.waitForExistence(timeout: 2) { localLogin.tap() }
     let login = web.textFields.firstMatch
     XCTAssertTrue(login.waitForExistence(timeout: 15), "Provider login form")
+    stage = "provider-email-entry"
     login.tap(); login.typeText(email)
     let completeEmail = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
       login.value as? String == email
     }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [completeEmail], timeout: 10), .completed, "Provider email must settle")
+    stage = "provider-password-entry"
     let password = web.secureTextFields.firstMatch
     XCTAssertTrue(password.waitForExistence(timeout: 5))
     password.tap(); password.typeText("password")
+    stage = "provider-submit"
     let submit = web.buttons.matching(NSPredicate(format: "label MATCHES[c] '(sign in|log in)'")).firstMatch
     XCTAssertTrue(submit.waitForExistence(timeout: 5)); submit.tap()
+    stage = "oidc-callback"
     XCTAssertTrue(button("Create household").waitForExistence(timeout: 30), "Real OIDC callback must reach setup")
   }
 
