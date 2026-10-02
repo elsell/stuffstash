@@ -2,7 +2,10 @@
   import { t } from '$lib/presentation/localization';
   import { BrowserConversationTransport } from '$lib/adapters/realtime/browserConversationTransport';
   import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
-  import { InventoryExportClient } from '@stuff-stash/api-client';
+  import { ArchiveClient, InventoryExportClient } from '@stuff-stash/api-client';
+  import type { InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
+  import { ApiInventoryArchiveRepository } from '$lib/adapters/archives/ApiInventoryArchiveRepository';
+  import { BrowserArchiveFileDelivery } from '$lib/adapters/archives/BrowserArchiveFileDelivery';
   import { ExportInventory } from '$lib/application/exportInventory';
   import { ApiInventoryExportRepository } from '$lib/adapters/exports/ApiInventoryExportRepository';
   import { BrowserExportFileDelivery } from '$lib/adapters/exports/BrowserExportFileDelivery';
@@ -48,6 +51,7 @@
   let repository = $state<WorkspaceRepository | null>(null);
   let expiration = $state<ExpirationWorkspace | undefined>();
   let notifications = $state<NotificationWorkspace | undefined>();
+  let archives = $state<InventoryArchiveWorkspace | undefined>();
   let exportCommand = $state<ExportInventory | undefined>();
   let inventoryConversation = $state<InventoryConversationTransport | undefined>();
   let conversations = $state<ConversationWorkspaceRepositories | undefined>();
@@ -100,6 +104,7 @@
           if (!mounted) return;
           expiration = { repository: new StuffStashExpirationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
           notifications = { apiIdentity: loadedConfig.apiBaseUrl, repository: new StuffStashNotificationRepository(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch) };
+          archives = { repository: new ApiInventoryArchiveRepository(new ArchiveClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), files: new BrowserArchiveFileDelivery() };
           exportCommand = new ExportInventory(new ApiInventoryExportRepository(new InventoryExportClient({ baseUrl: loadedConfig.apiBaseUrl, tokenProvider: () => getStoredSession()?.idToken ?? null, fetch: ownedPerformance?.fetch })), new BrowserExportFileDelivery());
           inventoryConversation = new BrowserConversationTransport(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null);
           conversations = conversationWorkspaceRepositories(loadedConfig.apiBaseUrl, () => getStoredSession()?.idToken ?? null, ownedPerformance?.fetch);
@@ -196,7 +201,7 @@
     onSignIn={signIn}
   />
 {:else if repository && workspaceData}
-  <InventoryWorkspaceApp {inventoryConversation} {exportCommand} {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
+  <InventoryWorkspaceApp {archives} {inventoryConversation} {exportCommand} {expiration} {repository} {conversations} {notifications} observer={workspaceObserver} initialData={workspaceData} onSignOut={signOutAndReset} onSessionExpired={expireSession} />
 {:else if workspaceError}
   <main class="loading-shell">
     <Card.Root>

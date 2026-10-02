@@ -18,13 +18,15 @@ Preserve prior unresolved native/physical evidence; do not let it block independ
 archive implementation. Production GitOps deployment is part of release completion.
 
 Draft PR #244 contains the archive format, durable jobs, metadata validation,
-immutable restore previews, atomic restore publication, and export/restore workers
-with artifact retention and runtime scheduling. These passed CI at `19b2d5b2`
-(run `37014417945`). Authenticated job/preview/approval and streaming ZIP routes
-are implemented next, including a real HTTP round-trip test; CI is pending for
-this pass. Remaining delivery work: generated client contract, stale scratch-file
-recovery, web/mobile controls, connected acceptance, release and production
-deployment. Do not treat this draft as shipped.
+immutable restore previews, atomic publication, artifact retention and runtime
+scheduling. Workers/runtime passed CI at `19b2d5b2` (`37014417945`). HTTP round-trip
+and security tests passed in `37017505855`; that run failed its separate operation
+coverage registry, now wired to the same journey in `0f8b8a66` (CI pending).
+The generated API client and web export/restore settings flow are implemented:
+73 client tests, six focused web tests and TypeScript/Svelte checks pass locally.
+Rendered/browser acceptance is not yet established. Remaining delivery work:
+stale scratch-file recovery, mobile controls, connected cross-instance acceptance,
+release and production deployment. Do not treat this draft as shipped.
 
 ## Current objective — October 1, 2026
 

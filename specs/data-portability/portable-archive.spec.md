@@ -306,7 +306,39 @@ state transitions return conflict; expired downloads and previews are unavailabl
 Configured browser origins permit the `Idempotency-Key` request header for archive
 creation and ZIP upload. Unconfigured origins receive no CORS grant.
 
+### Client transport and task composition
+
+The shared generated API client wraps archive job operations and streamed ZIP
+transfers behind authenticated transport. Resolve current credentials per request,
+reject redirects, preserve server error status, and support cancellation without
+turning an error response into a saved ZIP. A cancelled local request does not
+implicitly cancel its durable job. Creation retries reuse the same request key.
+Archive bytes must not enter query caches or JSON serialization. The transfer
+adapter consumes the response stream and owns platform file lifetime.
+
+Clients present a grouped Export archive task in inventory settings: metadata is
+always included, Photos and Other files are two labeled inclusion controls, and
+Create archive is the single completion action. Job rows show status and expiry;
+Download/Share appears only when ready. Cancel and Retry are contextual job actions.
+Restore belongs to the household context alongside new-inventory creation, so an
+empty household can receive an archive. File selection leads to validation status,
+then one review with the destination name, counts and omitted media before Restore.
+Neither dismissing a task nor returning to browse cancels server work. Reopening
+loads the requesting user's jobs for the current scope. Scope changes retire local
+requests and clear their data before loading another household or inventory.
+
+This follows the existing Settings grouped forms and Files document/share task
+patterns; it does not introduce a new global dashboard or duplicate app navigation.
+Web uses accessible grouped forms and inline job status. Mobile reuses native
+settings rows, switches, document picker, task completion and system sharing.
+
 Archive HTTP DTO schema names are domain-qualified to avoid collisions with other
 bounded contexts in the shared OpenAPI registry.
 
 Job lists return newest IDs first, with the next cursor selecting older records.
+Clients preserve loaded pages and reconcile active jobs outside the first page.
+A list response started before a mutation must not overwrite its result. Browser
+file saving streams directly when the platform offers a writable file picker; the
+portable Blob download fallback is capped at 128 MiB and reports the limitation
+instead of exhausting memory. Larger files require a browser with streaming save
+or native sharing. The server archive limit remains independently configured.

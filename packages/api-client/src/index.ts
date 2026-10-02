@@ -9,3 +9,4 @@ export { NotificationsClient, type NotificationDevice, type RegisterNotification
 export { ExpirationClient, type ExpirationWorkspaceOptions, type ExpirationWorkspaceAsset, type ExpirationWorkspacePage } from './expirationClient';
 
 export { InventoryExportClient, type InventoryExportFormat } from "./inventoryExportClient";
+export { ArchiveClient, type ArchiveJob, type ArchivePreview, type ArchiveScope } from './archiveClient';
