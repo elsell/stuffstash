@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
+import { t } from '$lib/presentation/localization';
 import { mount, unmount } from 'svelte';
 import { createConversationSession, type ConversationSession } from '$lib/adapters/query/conversationSession';
 import type { CaseRevision } from '$lib/domain/conversationCase';
@@ -22,6 +23,10 @@ it('lazily reads the pinned case and exposes a mismatched creation kind', async 
   expect(reads).toEqual([]);
   document.querySelector('button')!.click();
   await expect.poll(() => reads).toEqual(['pinned']);
-  await expect.poll(() => document.body.textContent).toContain('container');
-  expect(document.body.textContent).toContain('(item)');
+  await expect.poll(() => document.body.textContent).toContain(t('asset.kind.container'));
+  expect(document.body.textContent).toContain('(' + t('asset.kind.item') + ')');
+  expect(document.body.textContent).toContain(t('case.operation.create'));
+  expect(document.body.textContent).toContain(t('case.outcome.proposal'));
+  expect(result.observation.proposals[0].operation).toBe('create');
+  expect(result.observation.proposals[0].newKind).toBe('item');
 });

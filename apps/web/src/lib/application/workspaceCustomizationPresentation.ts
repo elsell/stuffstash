@@ -22,7 +22,7 @@ const scopeLabels: Record<CustomDefinitionScope, string> = {
 const fieldTypeLabels: Record<CustomFieldType, string> = {
   text: t('web.workspaceCustomizationPresentation.text'),
   number: t('web.workspaceCustomizationPresentation.number'),
-  boolean: 'Yes/no',
+  boolean: t('web.FieldSettingsManager.yesNo'),
   date: t('web.workspaceCustomizationPresentation.date'),
   url: t('web.workspaceCustomizationPresentation.uRL'),
   enum: t('web.workspaceCustomizationPresentation.list')
@@ -70,4 +70,8 @@ export function customizationTargetAssetTypeOptions(input: {
       label: assetType.displayName,
       description: scopeLabels[assetType.scope]
     }));
+}
+
+export function customizationScopeLabel(scope: CustomDefinitionScope): string {
+  return scopeLabels[scope];
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { customizationScopeLabel } from "$lib/application/workspaceCustomizationPresentation";
   import { t } from '$lib/presentation/localization';
   import { safeWorkspaceErrorMessage } from '$lib/application/workspaceSafeError';
   import { shouldHandleWorkspaceLinkClick } from '$lib/application/workspaceLinkHandling';
@@ -362,7 +363,7 @@
                 <small>{assetType.key}</small>
               </div>
               <div class="audit-meta">
-                <Badge variant="outline">{assetType.scope}</Badge>
+                <Badge variant="outline">{customizationScopeLabel(assetType.scope)}</Badge>
                 <Button.Root
                   href={archiveAssetTypeHref(assetType)}
                   variant="ghost"
@@ -447,7 +448,7 @@
                 <small>{definition.key} / {definition.type}</small>
               </div>
               <div class="audit-meta">
-                <Badge variant="outline">{definition.scope}</Badge>
+                <Badge variant="outline">{customizationScopeLabel(definition.scope)}</Badge>
                 <Button.Root
                   href={archiveFieldDefinitionHref(definition)}
                   variant="ghost"

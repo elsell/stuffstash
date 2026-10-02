@@ -389,3 +389,11 @@ and conversation evaluation/activation summaries. Preserve user names, dates,
 durations, operation identifiers and selection state. Product-owned fallback
 words and sentence fragments must come from catalogs; read/unread actions and
 deferred entity labels use complete alternative messages.
+
+### Web domain-value presentation
+
+Render asset lifecycle badges, customization scope/boolean type labels, and
+conversation case/outcome/operation summaries through typed catalog mappings.
+Reuse the same mappings in expected and observed summaries, including forbidden
+and executed operation lists. Keep wire enums, fixture IDs, authored names and
+technical verdict codes unchanged; localization must not change evaluator inputs.
