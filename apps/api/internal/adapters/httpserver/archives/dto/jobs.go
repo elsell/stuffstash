@@ -6,21 +6,21 @@ import (
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 )
 
-type Access struct {
+type ArchiveAccessInput struct {
 	Authorization string `header:"Authorization"`
 	TenantID      string `path:"tenantId"`
 	InventoryID   string `query:"inventoryId"`
 }
-type JobInput struct {
-	Access
+type ArchiveJobInput struct {
+	ArchiveAccessInput
 	JobID string `path:"jobId"`
 }
-type ListInput struct {
-	Access
+type ArchiveListInput struct {
+	ArchiveAccessInput
 	After string `query:"after"`
 	Limit int    `query:"limit" default:"25" minimum:"1" maximum:"100"`
 }
-type CreateInput struct {
+type CreateArchiveInput struct {
 	Authorization  string `header:"Authorization"`
 	TenantID       string `path:"tenantId"`
 	IdempotencyKey string `header:"Idempotency-Key" required:"true" minLength:"1" maxLength:"200"`
@@ -30,13 +30,13 @@ type CreateInput struct {
 		OtherFiles  bool   `json:"otherFiles"`
 	}
 }
-type ApproveInput struct {
-	JobInput
+type ApproveArchiveInput struct {
+	ArchiveJobInput
 	Body struct {
 		Name string `json:"name" minLength:"1" maxLength:"200"`
 	}
 }
-type Job struct {
+type ArchiveJob struct {
 	ID                     string    `json:"id"`
 	Kind                   string    `json:"kind"`
 	State                  string    `json:"state"`
@@ -49,24 +49,28 @@ type Job struct {
 	ExpiresAt              time.Time `json:"expiresAt"`
 	Failure                string    `json:"failure,omitempty"`
 }
-type KeyRemapping struct {
+type ArchiveKeyRemapping struct {
 	Family         string `json:"family"`
 	SourceKey      string `json:"sourceKey"`
 	DestinationKey string `json:"destinationKey"`
 }
-type Preview struct {
-	InventoryName      string         `json:"inventoryName"`
-	Assets             int            `json:"assets"`
-	Tags               int            `json:"tags"`
-	CustomAssetTypes   int            `json:"customAssetTypes"`
-	CustomFields       int            `json:"customFields"`
-	Photos             int            `json:"photos"`
-	OtherFiles         int            `json:"otherFiles"`
-	OmittedAttachments int            `json:"omittedAttachments"`
-	KeyRemappings      []KeyRemapping `json:"keyRemappings"`
+type ArchivePreview struct {
+	InventoryName      string                `json:"inventoryName"`
+	Assets             int                   `json:"assets"`
+	Tags               int                   `json:"tags"`
+	CustomAssetTypes   int                   `json:"customAssetTypes"`
+	CustomFields       int                   `json:"customFields"`
+	Photos             int                   `json:"photos"`
+	OtherFiles         int                   `json:"otherFiles"`
+	OmittedAttachments int                   `json:"omittedAttachments"`
+	KeyRemappings      []ArchiveKeyRemapping `json:"keyRemappings"`
 }
-type JobOutput struct{ Body shared.SuccessEnvelope[Job] }
-type ListOutput struct{ Body shared.SuccessEnvelope[[]Job] }
-type PreviewOutput struct {
-	Body shared.SuccessEnvelope[Preview]
+type ArchiveJobOutput struct {
+	Body shared.SuccessEnvelope[ArchiveJob]
+}
+type ArchiveListOutput struct {
+	Body shared.SuccessEnvelope[[]ArchiveJob]
+}
+type ArchivePreviewOutput struct {
+	Body shared.SuccessEnvelope[ArchivePreview]
 }

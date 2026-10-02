@@ -18,8 +18,8 @@ const jobsPath = "/tenants/{tenantId}/archive-jobs"
 
 func Register(api huma.API, application app.App, service *dataportability.ArchiveService, timeout time.Duration) {
 	registerTransfers(api, application, service, timeout)
-	huma.Post(api, jobsPath, func(ctx context.Context, in *dto.CreateInput) (*dto.JobOutput, error) {
-		access, err := authenticate(ctx, application, service, dto.Access{Authorization: in.Authorization, TenantID: in.TenantID, InventoryID: in.Body.InventoryID})
+	huma.Post(api, jobsPath, func(ctx context.Context, in *dto.CreateArchiveInput) (*dto.ArchiveJobOutput, error) {
+		access, err := authenticate(ctx, application, service, dto.ArchiveAccessInput{Authorization: in.Authorization, TenantID: in.TenantID, InventoryID: in.Body.InventoryID})
 		if err != nil {
 			return nil, err
 		}
@@ -27,10 +27,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.JobOutput{Body: shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchiveJobOutput{Body: shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation, shared.CreatedOperation)
-	huma.Get(api, jobsPath, func(ctx context.Context, in *dto.ListInput) (*dto.ListOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Get(api, jobsPath, func(ctx context.Context, in *dto.ArchiveListInput) (*dto.ArchiveListOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if hasMore {
 			jobs = jobs[:in.Limit]
 		}
-		items := make([]dto.Job, 0, len(jobs))
+		items := make([]dto.ArchiveJob, 0, len(jobs))
 		for _, job := range jobs {
 			items = append(items, mapper.Job(job))
 		}
@@ -51,10 +51,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 			last := jobs[len(jobs)-1].ID
 			cursor = &last
 		}
-		return &dto.ListOutput{Body: shared.SuccessEnvelope[[]dto.Job]{Data: items, Meta: shared.PaginatedMeta(in.TenantID, in.Limit, cursor, hasMore)}}, nil
+		return &dto.ArchiveListOutput{Body: shared.SuccessEnvelope[[]dto.ArchiveJob]{Data: items, Meta: shared.PaginatedMeta(in.TenantID, in.Limit, cursor, hasMore)}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
-	huma.Get(api, jobsPath+"/{jobId}", func(ctx context.Context, in *dto.JobInput) (*dto.JobOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Get(api, jobsPath+"/{jobId}", func(ctx context.Context, in *dto.ArchiveJobInput) (*dto.ArchiveJobOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -62,10 +62,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.JobOutput{Body: shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchiveJobOutput{Body: shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
-	huma.Delete(api, jobsPath+"/{jobId}", func(ctx context.Context, in *dto.JobInput) (*dto.JobOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Delete(api, jobsPath+"/{jobId}", func(ctx context.Context, in *dto.ArchiveJobInput) (*dto.ArchiveJobOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -73,10 +73,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.JobOutput{Body: shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchiveJobOutput{Body: shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
-	huma.Post(api, jobsPath+"/{jobId}/retry", func(ctx context.Context, in *dto.JobInput) (*dto.JobOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Post(api, jobsPath+"/{jobId}/retry", func(ctx context.Context, in *dto.ArchiveJobInput) (*dto.ArchiveJobOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -84,10 +84,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.JobOutput{Body: shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchiveJobOutput{Body: shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
-	huma.Post(api, jobsPath+"/{jobId}/approve", func(ctx context.Context, in *dto.ApproveInput) (*dto.JobOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Post(api, jobsPath+"/{jobId}/approve", func(ctx context.Context, in *dto.ApproveArchiveInput) (*dto.ArchiveJobOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -95,10 +95,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.JobOutput{Body: shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchiveJobOutput{Body: shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
-	huma.Get(api, jobsPath+"/{jobId}/preview", func(ctx context.Context, in *dto.JobInput) (*dto.PreviewOutput, error) {
-		access, err := authenticate(ctx, application, service, in.Access)
+	huma.Get(api, jobsPath+"/{jobId}/preview", func(ctx context.Context, in *dto.ArchiveJobInput) (*dto.ArchivePreviewOutput, error) {
+		access, err := authenticate(ctx, application, service, in.ArchiveAccessInput)
 		if err != nil {
 			return nil, err
 		}
@@ -106,10 +106,10 @@ func Register(api huma.API, application app.App, service *dataportability.Archiv
 		if err != nil {
 			return nil, shared.ToHumaError(err)
 		}
-		return &dto.PreviewOutput{Body: shared.SuccessEnvelope[dto.Preview]{Data: mapper.Preview(preview), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
+		return &dto.ArchivePreviewOutput{Body: shared.SuccessEnvelope[dto.ArchivePreview]{Data: mapper.Preview(preview), Meta: shared.Meta{TenantID: in.TenantID}}}, nil
 	}, huma.OperationTags("archives"), shared.SecuredOperation)
 }
-func authenticate(ctx context.Context, application app.App, service *dataportability.ArchiveService, in dto.Access) (dataportability.ArchiveAccess, error) {
+func authenticate(ctx context.Context, application app.App, service *dataportability.ArchiveService, in dto.ArchiveAccessInput) (dataportability.ArchiveAccess, error) {
 	principal, err := shared.Authenticate(ctx, application, in.Authorization)
 	if err != nil {
 		return dataportability.ArchiveAccess{}, err

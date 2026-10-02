@@ -305,3 +305,6 @@ state transitions return conflict; expired downloads and previews are unavailabl
 
 Configured browser origins permit the `Idempotency-Key` request header for archive
 creation and ZIP upload. Unconfigured origins receive no CORS grant.
+
+Archive HTTP DTO schema names are domain-qualified to avoid collisions with other
+bounded contexts in the shared OpenAPI registry.

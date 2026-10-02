@@ -28,13 +28,13 @@ func registerTransfers(api huma.API, application app.App, service *dataportabili
 	if timeout <= 0 {
 		timeout = 30 * time.Minute
 	}
-	response := api.OpenAPI().Components.Schemas.Schema(reflect.TypeFor[shared.SuccessEnvelope[dto.Job]](), true, "ArchiveJobEnvelope")
+	response := api.OpenAPI().Components.Schemas.Schema(reflect.TypeFor[shared.SuccessEnvelope[dto.ArchiveJob]](), true, "ArchiveJobEnvelope")
 	upload := huma.Operation{OperationID: "upload-archive-restore", Method: http.MethodPost, Path: "/tenants/{tenantId}/archive-restores", Tags: []string{"archives"}, DefaultStatus: 201, Parameters: []*huma.Param{{Name: "tenantId", In: "path", Required: true, Schema: &huma.Schema{Type: "string"}}, {Name: "Idempotency-Key", In: "header", Required: true, Schema: &huma.Schema{Type: "string"}}}, RequestBody: &huma.RequestBody{Required: true, Content: map[string]*huma.MediaType{"application/zip": {Schema: &huma.Schema{Type: "string", Format: "binary"}}}}, Responses: map[string]*huma.Response{"201": {Description: "Restore uploaded for validation", Content: map[string]*huma.MediaType{"application/json": {Schema: response}}}}}
 	addTransferErrors(api, &upload)
 	shared.SecuredOperation(&upload)
 	api.OpenAPI().AddOperation(&upload)
 	api.Adapter().Handle(&upload, api.Middlewares().Handler(func(c huma.Context) {
-		access, err := authenticate(c.Context(), application, service, dto.Access{Authorization: c.Header("Authorization"), TenantID: c.Param("tenantId")})
+		access, err := authenticate(c.Context(), application, service, dto.ArchiveAccessInput{Authorization: c.Header("Authorization"), TenantID: c.Param("tenantId")})
 		if err != nil {
 			writeTransferError(api, c, err)
 			return
@@ -63,14 +63,14 @@ func registerTransfers(api huma.API, application app.App, service *dataportabili
 		c.SetHeader("Content-Type", "application/json")
 		c.SetHeader("Cache-Control", "private, no-store")
 		c.SetStatus(201)
-		_ = json.NewEncoder(c.BodyWriter()).Encode(shared.SuccessEnvelope[dto.Job]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: access.TenantID.String()}})
+		_ = json.NewEncoder(c.BodyWriter()).Encode(shared.SuccessEnvelope[dto.ArchiveJob]{Data: mapper.Job(job), Meta: shared.Meta{TenantID: access.TenantID.String()}})
 	}))
 	download := huma.Operation{OperationID: "download-inventory-archive", Method: http.MethodGet, Path: jobsPath + "/{jobId}/content", Tags: []string{"archives"}, Parameters: []*huma.Param{{Name: "tenantId", In: "path", Required: true, Schema: &huma.Schema{Type: "string"}}, {Name: "jobId", In: "path", Required: true, Schema: &huma.Schema{Type: "string"}}, {Name: "inventoryId", In: "query", Schema: &huma.Schema{Type: "string"}}}, Responses: map[string]*huma.Response{"200": {Description: "Portable inventory ZIP", Content: map[string]*huma.MediaType{"application/zip": {Schema: &huma.Schema{Type: "string", Format: "binary"}}}}}}
 	addTransferErrors(api, &download)
 	shared.SecuredOperation(&download)
 	api.OpenAPI().AddOperation(&download)
 	api.Adapter().Handle(&download, api.Middlewares().Handler(func(c huma.Context) {
-		access, err := authenticate(c.Context(), application, service, dto.Access{Authorization: c.Header("Authorization"), TenantID: c.Param("tenantId"), InventoryID: c.Query("inventoryId")})
+		access, err := authenticate(c.Context(), application, service, dto.ArchiveAccessInput{Authorization: c.Header("Authorization"), TenantID: c.Param("tenantId"), InventoryID: c.Query("inventoryId")})
 		if err != nil {
 			writeTransferError(api, c, err)
 			return
