@@ -207,7 +207,7 @@ It uses create-only inserts, never upserts existing user resources. Parent links
 are applied after all assets exist inside that same transaction. Preserved archived
 references are valid restore state; ordinary interactive creation restrictions must
 not silently discard them. The transaction records audit history and enqueues the
-inventory owner grant together with the successful job transition. It locks the
+inventory owner grant together with the durable finalization transition. It locks the
 expected job revision, checks its live lease before work and again immediately
 before completing, using an injected clock. Failure at any step rolls everything
 back. Existing schema key guards remain active to reject concurrent conflicts.
@@ -254,7 +254,7 @@ attachments (including lengths). Preview allocates destination IDs once and save
 a bounded, private plan with its own checksum. Execution verifies that checksum,
 uses the approved name, and stages each original file under its remapped attachment
 key. Only after all selected bytes are staged does the atomic publication command
-create the inventory and complete the job. A changed source, incomplete media set,
+create the inventory and enter finalization. A changed source, incomplete media set,
 or altered plan cannot produce a successful restore.
 
 Restored image attachments enqueue the normal thumbnail work in the same atomic
@@ -401,3 +401,30 @@ the app's pinned React Native Gradle plugin; this exposes the already-used OkHtt
 API without introducing another version. A dispatch-only Android build generates
 the project from the locked Expo SDK and compiles the application on a hosted
 runner. Build success is compilation evidence, not Android runtime acceptance.
+
+### Restore completion and authorization finalization
+
+Publishing restored metadata is not completion from the user's perspective. The
+atomic publication transaction stores the inventory graph, audit records,
+thumbnail work and owner-grant outbox event, then advances the restore to a durable
+`finalization` phase. Persist the exact grant event ID with the job. Do not report
+`ready` or offer Open inventory until that event is processed and the initiating
+principal currently has destination view access.
+
+Reclaimed finalization work checks the existing publication; it never stages or
+inserts the inventory again. Authorization writes remain owned by the existing
+outbox processor, not archive reads. After publication, cancellation is rejected:
+it cannot truthfully undo the created inventory. Permission or service failures
+must preserve the published inventory and its original blobs. Retrying finalization
+must not regrant revoked access or create another inventory. Retention may remove
+source archives and plans, but never published originals, regardless of job status.
+
+Verify delayed authorization, restart after publication, stale leases/cancellation,
+and revocation before completion through meaningful worker and HTTP-boundary tests.
+The connected browser journey must open the inventory on its first offered action.
+
+Pending grant checks persist a next-attempt timestamp and are ineligible until
+that time (the configured worker heartbeat interval, capped by job expiry).
+Deferral is an operational CAS update, not another user-visible audit event.
+Later eligible jobs can proceed while a restore awaits authorization. Permission
+denial or dead-lettered grants use the permission-changed failure category.

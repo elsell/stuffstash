@@ -136,6 +136,30 @@ func (w ArchiveWorker) fail(ctx context.Context, job archivejob.Record, failure 
 
 func (w ArchiveWorker) publish(ctx context.Context, job archivejob.Record, output archiveWorkResult) error {
 	s := w.deps.Service
+	if job.Phase == archivejob.Finalization {
+		var next archivejob.Record
+		var err error
+		if output.awaitingGrant {
+			now := s.deps.Clock.Now()
+			nextAttempt := now.Add(w.deps.HeartbeatInterval)
+			if nextAttempt.After(job.ExpiresAt) {
+				nextAttempt = job.ExpiresAt
+			}
+			next, err = job.DeferFinalization(job.LeaseToken, now, nextAttempt)
+			if err != nil {
+				return err
+			}
+			changed, err := s.deps.Jobs.UpdateArchiveJob(ctx, next, job.Revision)
+			if err == nil && !changed {
+				return ports.ErrArchiveJobConflict
+			}
+			return err
+		} else {
+			next, err = job.Complete(job.LeaseToken, s.deps.Clock.Now(), "")
+		}
+		_, err = s.transition(ctx, job, next, err)
+		return err
+	}
 	if job.Kind == archivejob.Restore && job.Phase == archivejob.Execution {
 		if output.plan == nil {
 			return w.fail(ctx, job, archivejob.FailureInternal, ErrArchiveMetadata)
@@ -166,6 +190,8 @@ func (w ArchiveWorker) publish(ctx context.Context, job archivejob.Record, outpu
 
 func archiveExecutionFailure(err error) archivejob.Failure {
 	switch {
+	case errors.Is(err, ports.ErrForbidden):
+		return archivejob.FailurePermission
 	case errors.Is(err, ErrArchiveMetadata), errors.Is(err, ports.ErrArchivePackageInvalid):
 		return archivejob.FailureInvalidArchive
 	case errors.Is(err, ports.ErrArchivePackageLimit), errors.Is(err, ports.ErrInventoryExportLimit), errors.Is(err, ports.ErrBlobStreamSize):

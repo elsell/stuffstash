@@ -133,3 +133,50 @@ func TestApprovalCannotReplaceValidatedPlan(t *testing.T) {
 		t.Fatal("plan substitution accepted")
 	}
 }
+
+func TestPublishedRestoreCannotCompleteOrCancelBeforeFinalization(t *testing.T) {
+	now := startTime()
+	r, _ := New(Request{RequestKey: "restore", ID: "job", TenantID: "tenant", PrincipalID: "owner", Kind: Restore, SourceArtifactID: "upload", SourceSHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, now, now.Add(time.Hour))
+	r, _ = r.Claim("validate", now, now.Add(time.Minute))
+	r, _ = r.PreviewReady("validate", now, "plan", r.SourceSHA256, "destination")
+	r, _ = r.Approve("Restored", now)
+	r, _ = r.Claim("publish", now, now.Add(time.Minute))
+	if _, err := r.Complete("publish", now, ""); err == nil {
+		t.Fatal("ready before authorization finalization")
+	}
+	published, err := r.Published("publish", now, "grant")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = ValidateSuccessor(r, published); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = published.Cancel(now); err == nil {
+		t.Fatal("cancelled published inventory")
+	}
+	claimed, err := published.Claim("finalize", now, now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pending, err := claimed.DeferFinalization("finalize", now, now.Add(time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = ValidateSuccessor(claimed, pending); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pending.Claim("early", now, now.Add(time.Minute)); err == nil {
+		t.Fatal("claimed before delay")
+	}
+	restarted, err := pending.Claim("restarted", now.Add(time.Second), now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = restarted.Complete("finalize", now.Add(time.Second), ""); err == nil {
+		t.Fatal("stale finalizer completed")
+	}
+	ready, err := restarted.Complete("restarted", now.Add(time.Second), "")
+	if err != nil || ready.State != Ready || ready.OwnerGrantEventID != "grant" {
+		t.Fatal("finalization lost publication", err)
+	}
+}

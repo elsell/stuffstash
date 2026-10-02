@@ -3,6 +3,7 @@ package dataportability_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"path/filepath"
 	"testing"
@@ -25,8 +26,9 @@ import (
 // A fresh database, authorization store, and blob root model another instance.
 func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original []byte) {
 	t.Helper()
-	for _, corrupt := range []bool{false, true} {
-		t.Run(map[bool]string{false: "cross-instance restore", true: "changed preview rejected"}[corrupt], func(t *testing.T) {
+	for _, scenario := range []string{"cross-instance restore", "changed preview rejected", "revoked finalization"} {
+		t.Run(scenario, func(t *testing.T) {
+			corrupt := scenario == "changed preview rejected"
 			ctx := context.Background()
 			must := func(err error) {
 				t.Helper()
@@ -39,7 +41,7 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			must(gormstore.Migrate(ctx, db))
 			store := gormstore.NewStore(db)
 			must(store.SaveTenant(ctx, tenant.Tenant{ID: "destination", Name: "Other home"}))
-			auth := memory.NewAuthorizer()
+			auth := &archiveFinalizationAuthorizer{Authorizer: memory.NewAuthorizer()}
 			principal := identity.Principal{ID: "new-owner"}
 			must(auth.GrantTenantOwner(ctx, principal, "destination"))
 			storage := blobstore.NewFileSystemStore(t.TempDir())
@@ -84,9 +86,49 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			must(err)
 			complete, err := service.Job(ctx, access, job.ID)
 			must(err)
-			if complete.State != archivejob.Ready {
-				t.Fatal("restore not complete")
+			if complete.Phase != archivejob.Finalization || complete.State != archivejob.Queued {
+				t.Fatal("restore reported complete before grant")
 			}
+			must(worker.RunJob(ctx, complete))
+			pending, err := service.Job(ctx, access, job.ID)
+			must(err)
+			if pending.State != archivejob.Queued || pending.OwnerGrantEventID != complete.OwnerGrantEventID {
+				t.Fatal("pending grant lost publication")
+			}
+			events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "grant-worker", 10, clock.Now(), clock.Now().Add(time.Minute))
+			must(err)
+			for _, event := range events {
+				must(auth.GrantInventoryOwner(ctx, principal, event.TenantID, event.InventoryID))
+				must(store.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, event.ClaimID))
+			}
+			eligible, err := store.ListRunnableArchiveJobs(ctx, clock.Now(), 100)
+			must(err)
+			if len(eligible) != 0 {
+				t.Fatal("pending finalization remains immediately eligible")
+			}
+			clock.offset.Add(int64(time.Second))
+			auth.deny = scenario == "revoked finalization"
+			err = worker.RunJob(ctx, pending)
+			if auth.deny {
+				if !errors.Is(err, ports.ErrForbidden) {
+					t.Fatal("revoked restore finalized", err)
+				}
+			} else {
+				must(err)
+			}
+			complete, err = service.Job(ctx, access, job.ID)
+			must(err)
+			expected := archivejob.Ready
+			if auth.deny {
+				expected = archivejob.Failed
+			}
+			if auth.deny && complete.Failure != archivejob.FailurePermission {
+				t.Fatal("permission denial misclassified", complete.Failure)
+			}
+			if complete.State != expected {
+				t.Fatal("incorrect finalization state", complete.State)
+			}
+
 			destination := inventory.InventoryID(complete.DestinationInventoryID)
 			inv, found, err := store.InventoryByID(ctx, "destination", destination)
 			must(err)
@@ -144,4 +186,16 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 
 		})
 	}
+}
+
+type archiveFinalizationAuthorizer struct {
+	ports.Authorizer
+	deny bool
+}
+
+func (a *archiveFinalizationAuthorizer) CheckInventory(ctx context.Context, p identity.Principal, permission ports.InventoryPermission, id inventory.InventoryID) error {
+	if a.deny {
+		return ports.ErrForbidden
+	}
+	return a.Authorizer.CheckInventory(ctx, p, permission, id)
 }

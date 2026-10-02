@@ -30,20 +30,28 @@ empty household. Mobile review precedes approval, loaded-job pagination survives
 creation races, and closing cancels local transfers/selection without cancelling
 server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
 review passed; the existing browser export fixture passed before primitive reuse.
-Connected archive UI acceptance remains unverified. CI `37028438126` confirms
-S3 validation, preview, approval and restore completion now succeed. Opening the
-new inventory exposed a stale web workspace snapshot; navigation now refreshes
-the authorized list once before rejecting an unknown destination. The new test
-failed before the fix; all 92 workspace/archive panel tests pass afterward, including session-expiry
-and network-failure recovery. Code-critic review passed. The
-connected journey also now includes a real photo and checks fresh asset/attachment
-IDs and byte-identical restored originals. Connected replay remains required.
-All other checks in `37028438126`, including Required checks, passed.
-Native run `37027352935` verifies the corrected Swift SDK call and real loopback
-upload plus review workflow; Android build `37027458024` is queued behind it.
-Neither is yet runtime acceptance evidence. Remaining delivery work: native
-transfer/runtime verification, connected cross-instance acceptance, release and
-production deployment. Do not treat this draft as shipped.
+Connected archive UI acceptance remains unverified. CI `37029867844` restores
+metadata and a real photo but still exposes Open inventory before the ownership
+outbox grant makes the destination visible. Refreshing the web inventory snapshot
+alone is insufficient. Durable authorization finalization is now implemented before Ready. Migration64
+adds delayed retry eligibility, preventing tight loops while grants are pending.
+Reclaims preserve the publication; permission failures retain original blobs and
+never regrant access. Domain/application, GORM and real HTTP archive tests passed
+on Paul, including DELETE rejection after publication. Four mobile and four web
+archive tests, mobile type checking and web checking passed; code review passed.
+The mobile structural check passed; Go-backed hooks remain delegated to CI.
+The earlier 92 web tests covered stale-snapshot and refresh-error regressions.
+
+Native run `37027352935` passed the new upload byte-integrity, rejection/cancellation
+and restore-review/keyboard cases on iPhone17 and iPad mini. The iPad run also
+passed legacy export sharing/cleanup. The iPhone legacy share assertion timed out;
+its retained screenshot shows the correct JSON file in the system share sheet,
+but phone dismissal/cleanup was not reached. Track that remaining observation
+separately; do not rerun the already passing archive cases without a relevant
+change. Android build `37027458024` is now able to run after the native job.
+Remaining delivery work: authorization finalization, connected restored-original
+acceptance, Android build results, release and production deployment. This draft
+has not shipped.
 
 ## Current objective — October 1, 2026
 

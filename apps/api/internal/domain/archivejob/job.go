@@ -32,8 +32,9 @@ const (
 type Phase string
 
 const (
-	Validation Phase = "validation"
-	Execution  Phase = "execution"
+	Validation   Phase = "validation"
+	Execution    Phase = "execution"
+	Finalization Phase = "finalization"
 )
 
 type Failure string
@@ -69,12 +70,14 @@ type Record struct {
 	ExpiresAt              time.Time
 	LeaseToken             string
 	LeaseUntil             time.Time
+	NextAttemptAt          time.Time
 	Attempts               int
 	DestinationInventoryID string
 	DestinationName        string
 	PlanArtifactID         string
 	PlanSHA256             string
 	ResultArtifactID       string
+	OwnerGrantEventID      string
 	Failure                Failure
 }
 
@@ -99,16 +102,17 @@ func New(request Request, now, expires time.Time) (Record, error) {
 	return Record{Request: request, State: Queued, Phase: phase, Revision: 1, CreatedAt: now.UTC().Truncate(time.Microsecond), UpdatedAt: now.UTC().Truncate(time.Microsecond), ExpiresAt: expires.UTC().Truncate(time.Microsecond)}, nil
 }
 func (r Record) Claim(token string, now, until time.Time) (Record, error) {
-	if !r.current(now) || strings.TrimSpace(token) == "" || token == r.LeaseToken || !until.After(now) || until.After(r.ExpiresAt) {
+	if now.Before(r.NextAttemptAt) || !r.current(now) || strings.TrimSpace(token) == "" || token == r.LeaseToken || !until.After(now) || until.After(r.ExpiresAt) {
 		return Record{}, ErrTransition
 	}
 	if r.State != Queued && (r.State != Running || r.LeaseUntil.After(now)) {
 		return Record{}, ErrTransition
 	}
-	if r.Kind == Restore && r.Phase == Execution && (r.DestinationInventoryID == "" || r.DestinationName == "") {
+	if r.Kind == Restore && (r.Phase == Execution || r.Phase == Finalization) && (r.DestinationInventoryID == "" || r.DestinationName == "") {
 		return Record{}, ErrTransition
 	}
 	r.State = Running
+	r.NextAttemptAt = time.Time{}
 	r.LeaseToken = token
 	r.LeaseUntil = until.UTC().Truncate(time.Microsecond)
 	r.Attempts++
@@ -141,8 +145,27 @@ func (r Record) Approve(name string, now time.Time) (Record, error) {
 	r.State = Queued
 	return r.changed(now), nil
 }
+func (r Record) Published(token string, now time.Time, grantEventID string) (Record, error) {
+	if !r.owns(token, now) || r.Kind != Restore || r.Phase != Execution || r.DestinationInventoryID == "" || strings.TrimSpace(grantEventID) == "" {
+		return Record{}, ErrTransition
+	}
+	r.Phase = Finalization
+	r.OwnerGrantEventID = grantEventID
+	r.State = Queued
+	r.clearLease()
+	return r.changed(now), nil
+}
+func (r Record) DeferFinalization(token string, now, nextAttempt time.Time) (Record, error) {
+	if !r.owns(token, now) || r.Kind != Restore || r.Phase != Finalization || r.OwnerGrantEventID == "" || !nextAttempt.After(now) || nextAttempt.After(r.ExpiresAt) {
+		return Record{}, ErrTransition
+	}
+	r.State = Queued
+	r.NextAttemptAt = nextAttempt.UTC().Truncate(time.Microsecond)
+	r.clearLease()
+	return r.changed(now), nil
+}
 func (r Record) Complete(token string, now time.Time, artifactID string) (Record, error) {
-	if !r.owns(token, now) || r.Phase != Execution {
+	if !r.owns(token, now) || (r.Kind == Export && r.Phase != Execution) || (r.Kind == Restore && (r.Phase != Finalization || r.OwnerGrantEventID == "")) {
 		return Record{}, ErrTransition
 	}
 	if r.Kind == Export {
@@ -175,7 +198,7 @@ func (r Record) Retry(now time.Time) (Record, error) {
 	return r.changed(now), nil
 }
 func (r Record) Cancel(now time.Time) (Record, error) {
-	if !r.current(now) || (r.State != Queued && r.State != Running && r.State != AwaitingApproval && r.State != Failed) {
+	if r.Phase == Finalization || !r.current(now) || (r.State != Queued && r.State != Running && r.State != AwaitingApproval && r.State != Failed) {
 		return Record{}, ErrTransition
 	}
 	r.State = Cancelled
@@ -239,6 +262,10 @@ func ValidateSuccessor(previous, next Record) error {
 	case Queued:
 		if previous.State == AwaitingApproval {
 			expected, err = previous.Approve(next.DestinationName, next.UpdatedAt)
+		} else if previous.State == Running && previous.Phase == Execution {
+			expected, err = previous.Published(previous.LeaseToken, next.UpdatedAt, next.OwnerGrantEventID)
+		} else if previous.State == Running && previous.Phase == Finalization {
+			expected, err = previous.DeferFinalization(previous.LeaseToken, next.UpdatedAt, next.NextAttemptAt)
 		} else {
 			expected, err = previous.Retry(next.UpdatedAt)
 		}

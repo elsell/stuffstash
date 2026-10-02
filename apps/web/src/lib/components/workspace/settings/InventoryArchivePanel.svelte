@@ -82,6 +82,7 @@
     await run(async () => { await workspace.files.save(() => workspace.repository.download(scope, job.id, lifetime.signal), lifetime.signal); if (!disposed) message = t('archive.downloadStarted'); });
   }
   function status(job: ArchiveJob) {
+    if (job.phase === 'finalization' && ['queued', 'running'].includes(job.state)) return t('archive.restoring');
     if (job.state === 'running') return t(job.kind === 'export' ? 'archive.running' : job.phase === 'validation' ? 'archive.validating' : 'archive.restoring');
     return t(`archive.${job.state}`);
   }
@@ -126,7 +127,7 @@
           {#if job.state === 'ready' && job.kind === 'restore' && job.destinationInventoryId}<Button.Root href={workspaceRouteHref({ mode: 'home' }, scope.tenantId, job.destinationInventoryId)}>{t('archive.open')}</Button.Root>{/if}
           {#if job.state === 'awaiting_approval'}<Button.Root variant="outline" disabled={pending} onclick={() => inspect(job)}>{t('archive.review')}</Button.Root>{/if}
           {#if job.state === 'failed'}<Button.Root variant="outline" disabled={pending} onclick={() => run(async () => remember(await workspace.repository.retry(scope, job.id, lifetime.signal)))}>{t('archive.retry')}</Button.Root>{/if}
-          {#if ['queued', 'running', 'awaiting_approval', 'failed'].includes(job.state)}<Button.Root variant="outline" disabled={pending} onclick={() => run(async () => { remember(await workspace.repository.cancel(scope, job.id, lifetime.signal)); if (review?.id === job.id) review = undefined; })}>{t('archive.cancel')}</Button.Root>{/if}
+          {#if job.phase !== 'finalization' && ['queued', 'running', 'awaiting_approval', 'failed'].includes(job.state)}<Button.Root variant="outline" disabled={pending} onclick={() => run(async () => { remember(await workspace.repository.cancel(scope, job.id, lifetime.signal)); if (review?.id === job.id) review = undefined; })}>{t('archive.cancel')}</Button.Root>{/if}
         </div>
       </li>
     {/each}

@@ -110,7 +110,7 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
         {jobs.map((job, index) => <View key={job.id}>
           {index ? <SettingsSeparator /> : null}
           <View style={styles.navigationRow}>
-            <Text style={styles.rowLabel}>{t(job.state === 'running' ? job.kind === 'export' ? 'archive.running' : job.phase === 'validation' ? 'archive.validating' : 'archive.restoring' : `archive.${job.state}`)}</Text>
+            <Text style={styles.rowLabel}>{t(job.phase === 'finalization' && ['queued', 'running'].includes(job.state) ? 'archive.restoring' : job.state === 'running' ? job.kind === 'export' ? 'archive.running' : job.phase === 'validation' ? 'archive.validating' : 'archive.restoring' : `archive.${job.state}`)}</Text>
             <Text style={styles.rowContext}>{t('archive.expires', { date: new Date(job.expiresAt).toLocaleString() })}</Text>
           </View>
           {job.state === 'ready' ? <SettingsActionRow disabled={busy} label={t(job.kind === 'export' ? 'archive.download' : 'archive.open')} onPress={() => void run(async visit => {
@@ -121,7 +121,7 @@ export function InventoryArchiveScreen({ workspace, scope, onClose, onOpen }: {
             const preview = await workspace.repository.preview(scope.tenantId, job.id, visit.signal);
             if (!visit.signal.aborted) { setReview({ job, preview }); setName(preview.inventoryName); }
           })} /> : null}
-          {['queued', 'running', 'awaiting_approval', 'failed'].includes(job.state) ? <NativeActionMenu disabled={busy} accessibilityLabel={t('archive.jobs')} trigger={{ kind: 'ellipsis' }} groups={[{ id: 'job', items: job.state === 'failed' ? [{ id: 'retry', label: t('archive.retry'), onPress: () => void run(async visit => saveJob(visit, await workspace.repository.retry(scope, job.id, visit.signal))) }] : [{ id: 'cancel', label: t('archive.cancel'), isDestructive: true, onPress: () => void run(async visit => { saveJob(visit, await workspace.repository.cancel(scope, job.id, visit.signal)); }) }] }]} /> : null}
+          {(job.phase !== 'finalization' || job.state === 'failed') && ['queued', 'running', 'awaiting_approval', 'failed'].includes(job.state) ? <NativeActionMenu disabled={busy} accessibilityLabel={t('archive.jobs')} trigger={{ kind: 'ellipsis' }} groups={[{ id: 'job', items: job.state === 'failed' ? [{ id: 'retry', label: t('archive.retry'), onPress: () => void run(async visit => saveJob(visit, await workspace.repository.retry(scope, job.id, visit.signal))) }] : [{ id: 'cancel', label: t('archive.cancel'), isDestructive: true, onPress: () => void run(async visit => { saveJob(visit, await workspace.repository.cancel(scope, job.id, visit.signal)); }) }] }]} /> : null}
         </View>)}
         {cursor ? <SettingsActionRow label={t('archive.more')} disabled={busy} onPress={() => void run(async visit => { const page = await workspace.repository.list(scope, cursor, visit.signal); if (!visit.signal.aborted) { merge(page.jobs); setCursor(page.nextCursor); } })} /> : null}
       </SettingsSection> : null}

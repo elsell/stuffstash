@@ -53,7 +53,7 @@ func (p ArchiveRestorePublisher) PublishArchiveRestore(ctx context.Context, inpu
 		if job != input.Job {
 			return ports.ErrArchiveJobConflict
 		}
-		if _, err = job.Complete(input.Job.LeaseToken, p.clock.Now(), ""); err != nil {
+		if _, err = job.Published(input.Job.LeaseToken, p.clock.Now(), input.OwnerGrantEventID); err != nil {
 			return err
 		}
 		if err = tx.Create(&inventoryModel{ID: d.InventoryID, TenantID: d.TenantID, Name: d.InventoryName, LifecycleState: "active"}).Error; err != nil {
@@ -76,7 +76,7 @@ func (p ArchiveRestorePublisher) PublishArchiveRestore(ctx context.Context, inpu
 		if err = tx.Create(&authorizationOutboxEventModel{ID: input.OwnerGrantEventID, Kind: string(ports.AuthorizationOutboxGrantInventoryOwner), PrincipalID: job.PrincipalID, TenantID: d.TenantID, InventoryID: &d.InventoryID}).Error; err != nil {
 			return err
 		}
-		completed, err = job.Complete(job.LeaseToken, p.clock.Now(), "")
+		completed, err = job.Published(job.LeaseToken, p.clock.Now(), input.OwnerGrantEventID)
 		if err != nil {
 			return err
 		}
@@ -93,4 +93,19 @@ func (p ArchiveRestorePublisher) PublishArchiveRestore(ctx context.Context, inpu
 		return empty, err
 	}
 	return completed, nil
+}
+
+func (p ArchiveRestorePublisher) ArchiveRestoreGrantProcessed(ctx context.Context, job archivejob.Record) (bool, error) {
+	if job.Kind != archivejob.Restore || job.Phase != archivejob.Finalization || job.OwnerGrantEventID == "" {
+		return false, archivejob.ErrInvalid
+	}
+	var event authorizationOutboxEventModel
+	err := p.store.db.WithContext(ctx).Where("id = ? AND tenant_id = ? AND inventory_id = ? AND principal_id = ? AND kind = ?", job.OwnerGrantEventID, job.TenantID, job.DestinationInventoryID, job.PrincipalID, string(ports.AuthorizationOutboxGrantInventoryOwner)).First(&event).Error
+	if err != nil {
+		return false, err
+	}
+	if event.DeadLetteredAt != nil {
+		return false, ports.ErrForbidden
+	}
+	return event.ProcessedAt != nil, nil
 }

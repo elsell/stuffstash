@@ -103,7 +103,7 @@ func (s Store) UpdateArchiveJob(ctx context.Context, r archivejob.Record, expect
 		if err != nil {
 			return err
 		}
-		result := archiveJobQuery(tx.Model(&archiveJobModel{}), scope).Where(clause.Eq{Column: "id", Value: r.ID}).Where(clause.Eq{Column: "revision", Value: expected}).Updates(map[string]any{"state_json": m.StateJSON, "state": m.State, "revision": m.Revision, "updated_at": m.UpdatedAt, "lease_until": m.LeaseUntil})
+		result := archiveJobQuery(tx.Model(&archiveJobModel{}), scope).Where(clause.Eq{Column: "id", Value: r.ID}).Where(clause.Eq{Column: "revision", Value: expected}).Updates(map[string]any{"state_json": m.StateJSON, "state": m.State, "revision": m.Revision, "updated_at": m.UpdatedAt, "lease_until": m.LeaseUntil, "next_attempt_at": m.NextAttemptAt})
 		updated = result.RowsAffected == 1
 		return result.Error
 	})
@@ -113,7 +113,7 @@ func (s Store) ListRunnableArchiveJobs(ctx context.Context, now time.Time, limit
 	if now.IsZero() || limit <= 0 || limit > 200 {
 		return nil, ports.ErrArchiveJobScope
 	}
-	q := s.db.WithContext(ctx).Model(&archiveJobModel{}).Where(clause.Gt{Column: "expires_at", Value: now}).Where(clause.Or(clause.Eq{Column: "state", Value: string(archivejob.Queued)}, clause.And(clause.Eq{Column: "state", Value: string(archivejob.Running)}, clause.Lte{Column: "lease_until", Value: now})))
+	q := s.db.WithContext(ctx).Model(&archiveJobModel{}).Where(clause.Gt{Column: "expires_at", Value: now}).Where(clause.Or(clause.And(clause.Eq{Column: "state", Value: string(archivejob.Queued)}, clause.Lte{Column: "next_attempt_at", Value: now}), clause.And(clause.Eq{Column: "state", Value: string(archivejob.Running)}, clause.Lte{Column: "lease_until", Value: now})))
 	return readArchiveJobs(q.Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Limit(limit))
 }
 func archiveJobQuery(db *gorm.DB, scope ports.ArchiveJobScope) *gorm.DB {
@@ -146,7 +146,7 @@ func archiveJobModelFromRecord(r archivejob.Record) (archiveJobModel, error) {
 	if err != nil {
 		return archiveJobModel{}, err
 	}
-	return archiveJobModel{ID: r.ID, TenantID: r.TenantID, SourceInventoryID: r.SourceInventoryID, PrincipalID: r.PrincipalID, RequestKey: r.RequestKey, RequestJSON: string(request), StateJSON: string(state), State: string(r.State), Revision: r.Revision, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt, ExpiresAt: r.ExpiresAt, LeaseUntil: r.LeaseUntil}, nil
+	return archiveJobModel{ID: r.ID, TenantID: r.TenantID, SourceInventoryID: r.SourceInventoryID, PrincipalID: r.PrincipalID, RequestKey: r.RequestKey, RequestJSON: string(request), StateJSON: string(state), State: string(r.State), Revision: r.Revision, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt, ExpiresAt: r.ExpiresAt, LeaseUntil: r.LeaseUntil, NextAttemptAt: r.NextAttemptAt}, nil
 }
 func archiveJobRecordFromModel(m archiveJobModel) (archivejob.Record, error) {
 	var r archivejob.Record
@@ -156,7 +156,7 @@ func archiveJobRecordFromModel(m archiveJobModel) (archivejob.Record, error) {
 	if err := json.Unmarshal([]byte(m.RequestJSON), &r.Request); err != nil {
 		return r, err
 	}
-	if r.ID != m.ID || r.TenantID != m.TenantID || r.SourceInventoryID != m.SourceInventoryID || r.PrincipalID != m.PrincipalID || r.RequestKey != m.RequestKey || r.Revision != m.Revision || string(r.State) != m.State || !r.CreatedAt.Equal(m.CreatedAt) || !r.UpdatedAt.Equal(m.UpdatedAt) || !r.ExpiresAt.Equal(m.ExpiresAt) || !r.LeaseUntil.Equal(m.LeaseUntil) {
+	if r.ID != m.ID || r.TenantID != m.TenantID || r.SourceInventoryID != m.SourceInventoryID || r.PrincipalID != m.PrincipalID || r.RequestKey != m.RequestKey || r.Revision != m.Revision || string(r.State) != m.State || !r.CreatedAt.Equal(m.CreatedAt) || !r.UpdatedAt.Equal(m.UpdatedAt) || !r.ExpiresAt.Equal(m.ExpiresAt) || !r.LeaseUntil.Equal(m.LeaseUntil) || !r.NextAttemptAt.Equal(m.NextAttemptAt) {
 		return archivejob.Record{}, archivejob.ErrInvalid
 	}
 	return r, nil

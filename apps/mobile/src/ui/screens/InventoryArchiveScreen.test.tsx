@@ -7,6 +7,17 @@ import type { ArchiveJob, InventoryArchiveWorkspace } from '../../application/ar
 
 const job: ArchiveJob = { id: 'job', kind: 'restore', state: 'awaiting_approval', phase: 'validation', createdAt: '', expiresAt: '2026-10-03T00:00:00Z', photos: true, otherFiles: true };
 describe('mobile archive tasks', () => {
+  it('does not offer open or cancel while published access is finalizing', async () => {
+    const h = new MobileRenderHarness();
+    const workspace = { newRequestKey: () => 'key', files: {}, repository: { list: async () => ({ jobs: [{ ...job, state: 'queued', phase: 'finalization', destinationInventoryId: 'restored' }] }) } } as unknown as InventoryArchiveWorkspace;
+    try {
+      await h.render(<InventoryArchiveScreen workspace={workspace} scope={{ tenantId: 'home' }} onClose={() => {}} onOpen={async () => {}} />);
+      expect(h.allText().join(' ')).toContain('Restoring');
+      expect(h.allText().join(' ')).not.toContain('Open inventory');
+      expect(h.byLabel('Recent jobs')).toBeUndefined();
+      expect(h.byLabel('Open inventory')).toBeUndefined();
+    } finally { await h.unmount(); }
+  });
   it('reviews a validated archive before approving a new inventory', async () => {
     const h = new MobileRenderHarness(); const approved: string[] = [];
     const workspace = {

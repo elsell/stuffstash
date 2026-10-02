@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/stuffstash/stuff-stash/internal/domain/archivejob"
+	"github.com/stuffstash/stuff-stash/internal/domain/inventory"
 	"github.com/stuffstash/stuff-stash/internal/domain/media"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
@@ -16,9 +17,21 @@ type archiveWorkResult struct {
 	artifact, planHash, destination string
 	plan                            *ports.ArchiveRestorePlan
 	err                             error
+	awaitingGrant                   bool
 }
 
 func (w ArchiveWorker) execute(ctx context.Context, job archivejob.Record) archiveWorkResult {
+	if job.Phase == archivejob.Finalization {
+		processed, err := w.deps.Publisher.ArchiveRestoreGrantProcessed(ctx, job)
+		if err != nil {
+			return archiveWorkResult{err: err}
+		}
+		if !processed {
+			return archiveWorkResult{awaitingGrant: true}
+		}
+		err = w.deps.Service.deps.Authorizer.CheckInventory(ctx, archiveJobAccess(job).Principal, ports.InventoryPermissionView, inventory.InventoryID(job.DestinationInventoryID))
+		return archiveWorkResult{err: err}
+	}
 	if job.Kind == archivejob.Export {
 		id, err := w.export(ctx, job)
 		return archiveWorkResult{artifact: id, err: err}

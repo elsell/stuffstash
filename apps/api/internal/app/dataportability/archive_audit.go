@@ -55,7 +55,7 @@ func BuildArchiveRestoreAudits(plan ports.ArchiveRestorePlan, job archivejob.Rec
 		inventoryID := audit.InventoryID(d.InventoryID)
 		if target.kind == audit.TargetArchiveJob {
 			inventoryID = ""
-			metadata["state"] = string(archivejob.Ready)
+			metadata["state"] = string(archivejob.Queued)
 			metadata["kind"] = string(archivejob.Restore)
 		}
 		record, ok := audit.NewRecord(audit.ID(ids.NewID()), audit.TenantID(d.TenantID), inventoryID, audit.PrincipalID(job.PrincipalID), target.action, audit.SourceImport, target.kind, target.id, clock.Now(), job.ID, metadata)

@@ -24,6 +24,14 @@ function render(repository: Repository, inventoryId?: string) {
   component = mount(InventoryArchivePanel, { target: document.body, props: { workspace: { repository, files: { async save() {} } }, scope: { tenantId: 'home', inventoryId } } });
 }
 describe('archive tasks', () => {
+  it('keeps published restores pending without offering cancellation or navigation', async () => {
+    const repository = new Repository();
+    repository.jobs = [{ ...job, kind: 'restore', state: 'queued', phase: 'finalization', destinationInventoryId: 'restored' }];
+    render(repository); await settle();
+    expect(document.body.textContent).toContain('Restoring');
+    expect([...document.querySelectorAll('button')].some(b => b.textContent?.trim() === 'Cancel job')).toBe(false);
+    expect(document.querySelector('a')).toBeNull();
+  });
   it('reuses the creation key after a lost response and never cancels the job on exit', async () => {
     const repository = new Repository(); repository.fail = true; render(repository, 'main'); await settle();
     button('Create archive').click(); await settle(); expect(document.querySelector('[role="alert"]')).not.toBeNull();

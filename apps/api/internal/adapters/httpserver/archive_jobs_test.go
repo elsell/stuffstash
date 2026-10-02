@@ -30,6 +30,7 @@ func TestArchiveJobHTTPBoundary(t *testing.T) {
 }
 func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage, adversarial bool) {
 	ctx := context.Background()
+	clock := &archiveBoundaryClock{now: (ports.SystemClock{}).Now()}
 	must := func(err error) {
 		t.Helper()
 		if err != nil {
@@ -50,7 +51,7 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	must(authorizer.GrantInventoryOwner(ctx, owner, "home", "inventory"))
 	must(authorizer.GrantInventoryViewer(ctx, viewer, "home", "inventory"))
 	readAudit := &archiveReadAuditFailure{AuditRepository: store}
-	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: store, Audit: readAudit, Plans: inventoryarchive.PlanCodec{}, MaxMetadataBytes: 1 << 16, MaxRecords: 100, Authorizer: authorizer, Inventories: store, Tenants: store, IDs: idgen.NewULIDGenerator(), Clock: ports.SystemClock{}, Storage: blobstore.NewFileSystemStore(t.TempDir()), Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second})
+	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: store, Audit: readAudit, Plans: inventoryarchive.PlanCodec{}, MaxMetadataBytes: 1 << 16, MaxRecords: 100, Authorizer: authorizer, Inventories: store, Tenants: store, IDs: idgen.NewULIDGenerator(), Clock: clock, Storage: blobstore.NewFileSystemStore(t.TempDir()), Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second})
 	must(err)
 	server := NewServerWithOptions(":0", newTestAppWithAuthorizer(nil, authorizer), Options{Archives: &service, MaxJSONBodyBytes: 512})
 	if coverage != nil {
@@ -137,7 +138,7 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	if pending.Code != 409 {
 		t.Fatalf("pending download: %d %s", pending.Code, pending.Body.String())
 	}
-	worker, err := dataportability.NewArchiveWorker(dataportability.ArchiveWorkerDependencies{Service: service, Snapshots: store, Metadata: inventoryarchive.MetadataCodec{}, Packages: inventoryarchive.PackageCodec{}, Readers: inventoryarchive.PackageCodec{}, Plans: inventoryarchive.PlanCodec{}, Fields: store, Types: store, Publisher: gormstore.NewArchiveRestorePublisher(store, ports.SystemClock{}, 100), Limits: ports.ArchivePackageLimits{CompressedBytes: 1 << 20, ExpandedBytes: 1 << 20, MetadataBytes: 1 << 16, EntryBytes: 1 << 20, Entries: 100}, MaxRecords: 100, LeaseDuration: time.Minute, HeartbeatInterval: time.Second})
+	worker, err := dataportability.NewArchiveWorker(dataportability.ArchiveWorkerDependencies{Service: service, Snapshots: store, Metadata: inventoryarchive.MetadataCodec{}, Packages: inventoryarchive.PackageCodec{}, Readers: inventoryarchive.PackageCodec{}, Plans: inventoryarchive.PlanCodec{}, Fields: store, Types: store, Publisher: gormstore.NewArchiveRestorePublisher(store, clock, 100), Limits: ports.ArchivePackageLimits{CompressedBytes: 1 << 20, ExpandedBytes: 1 << 20, MetadataBytes: 1 << 16, EntryBytes: 1 << 20, Entries: 100}, MaxRecords: 100, LeaseDuration: time.Minute, HeartbeatInterval: time.Second})
 	must(err)
 	exportJob, found, err := store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home", SourceInventoryID: "inventory"}, job.Data.ID)
 	must(err)
@@ -216,6 +217,30 @@ func runArchiveJobHTTPBoundary(t *testing.T, coverage *executedScenarioCoverage,
 	}
 	restoreJob, _, err = store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
 	must(err)
+	must(worker.RunJob(ctx, restoreJob))
+	publishedStatus := performRequest(server, http.MethodGet, restorePath, "Bearer dev:owner", nil)
+	if publishedStatus.Code != 200 || !strings.Contains(publishedStatus.Body.String(), "finalization") || strings.Contains(publishedStatus.Body.String(), `"state":"ready"`) {
+		t.Fatalf("published restore exposed ready: %s", publishedStatus.Body.String())
+	}
+	cancelPublished := performRequest(server, http.MethodDelete, restorePath, "Bearer dev:owner", nil)
+	if cancelPublished.Code != http.StatusConflict {
+		t.Fatal("cancelled published restore")
+	}
+	restoreJob, _, err = store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
+	must(err)
+	must(worker.RunJob(ctx, restoreJob)) // delayed outbox must not complete or republish
+	events, err := store.ClaimPendingAuthorizationOutboxEvents(ctx, "restore-grants", 100, clock.Now(), clock.Now().Add(time.Minute))
+	must(err)
+	for _, event := range events {
+		if event.ID != restoreJob.OwnerGrantEventID {
+			continue
+		}
+		must(authorizer.GrantInventoryOwner(ctx, owner, event.TenantID, event.InventoryID))
+		must(store.MarkAuthorizationOutboxEventProcessed(ctx, event.ID, event.ClaimID))
+	}
+	restoreJob, _, err = store.ArchiveJobByID(ctx, ports.ArchiveJobScope{TenantID: "home"}, restore.Data.ID)
+	must(err)
+	clock.now = clock.now.Add(time.Second)
 	must(worker.RunJob(ctx, restoreJob))
 	completed := performRequest(server, http.MethodGet, restorePath, "Bearer dev:owner", nil)
 	if completed.Code != 200 || !strings.Contains(completed.Body.String(), "ready") {
@@ -305,3 +330,7 @@ func (a *archiveReadAuditFailure) SaveAuditRecord(ctx context.Context, record au
 	}
 	return a.AuditRepository.SaveAuditRecord(ctx, record)
 }
+
+type archiveBoundaryClock struct{ now time.Time }
+
+func (c *archiveBoundaryClock) Now() time.Time { return c.now }

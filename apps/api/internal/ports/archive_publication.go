@@ -14,4 +14,6 @@ type ArchiveRestorePublication struct {
 }
 type ArchiveRestoreUnitOfWork interface {
 	PublishArchiveRestore(context.Context, ArchiveRestorePublication) (archivejob.Record, error)
+	// Read the exact, scoped grant receipt; never write authorization on this path.
+	ArchiveRestoreGrantProcessed(context.Context, archivejob.Record) (bool, error)
 }

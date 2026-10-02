@@ -49,7 +49,7 @@ func TestArchivePublicationIsAtomicAndFenced(t *testing.T) {
 				}
 				return
 			}
-			if err != nil || !found || done.State != archivejob.Ready {
+			if err != nil || !found || done.State != archivejob.Queued || done.Phase != archivejob.Finalization {
 				t.Fatalf("publish: %v", err)
 			}
 			item, found, err := s.AssetByID(ctx, "tenant", "restored", "child")

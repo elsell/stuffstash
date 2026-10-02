@@ -16,6 +16,7 @@ type archiveJobModel struct {
 	UpdatedAt         time.Time   `gorm:"column:updated_at;not null"`
 	ExpiresAt         time.Time   `gorm:"column:expires_at;not null;index"`
 	LeaseUntil        time.Time   `gorm:"column:lease_until;not null;index:idx_archive_job_queue,priority:2"`
+	NextAttemptAt     time.Time   `gorm:"column:next_attempt_at;not null;index"`
 	Tenant            tenantModel `gorm:"foreignKey:TenantID;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 
