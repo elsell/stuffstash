@@ -86,6 +86,8 @@ else.
 
 ## Import And Export
 
-Import brings existing records into Stuff Stash. [Export](../export-inventory/)
-downloads an inventory as JSON or CSV, including archived assets and schema
-metadata. Exports do not contain photo/file bytes and do not replace server backups.
+Import brings existing records into Stuff Stash. [Export and restore](../export-inventory/)
+lets you move an inventory between Stuff Stash instances as a ZIP, including the
+original photos and files you select. Restore creates a new inventory and reconnects
+its internal relationships. JSON and CSV downloads remain available for other tools;
+they do not include file contents. Inventory archives do not replace server backups.

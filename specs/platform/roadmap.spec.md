@@ -6,52 +6,42 @@ A first-class CLI takes priority over further MCP work. MCP remains a supported
 secondary integration. This changes future sequencing only; the complete portable
 archive and restore flow remains the immediate delivery priority.
 
-## Next priority — portable archive and restore, October 2
+## Current delivery — portable archive and restore, October 2
 
-The user confirmed CSV export works after production was upgraded from v0.24.0
-to v0.27.5 (infra commit `a9adf2e`). They now require a complete instance-to-instance
-archive/restore flow. Implement A1 durable archive export, A2 validated new-inventory
-restore, and A3 mobile/web controls and connected round-trip acceptance as specified
-in [portable archive](../data-portability/portable-archive.spec.md). This is the next
-delivery priority within the audit goal, not an export-only scope reduction.
-Preserve prior unresolved native/physical evidence; do not let it block independent
-archive implementation. Production GitOps deployment is part of release completion.
+PR #244 merged at `514a4f37`. It delivers A1 durable ZIP export with selected
+original media, A2 validated and explicitly approved restore into a new inventory,
+and A3 mobile/web controls and connected round-trip acceptance. The binding scope
+is [portable archive](../data-portability/portable-archive.spec.md).
 
-Draft PR #244 implements the archive format, durable jobs, metadata validation,
-immutable previews, atomic publication, artifact retention, runtime scheduling,
-authenticated HTTP operations and generated client. API/security tests and the
-operation coverage registry passed in CI `37022447393`; that run stopped later at
-web primitive enforcement. Web uses the existing form primitives after that finding.
-The macOS job generated the new local transfer module's Podfile.lock registration;
-that exact patch is now applied. Native compilation and runtime remain unverified.
+Restore publishes data atomically, then waits for the durable ownership grant and
+confirms destination access before offering Open inventory. Delayed finalization
+survives worker restarts without republishing data or spinning. Published originals
+remain intact after job expiry or a finalization permission failure.
 
-Web and mobile export/restore controls are implemented, including restore into an
-empty household. Mobile review precedes approval, loaded-job pagination survives
-creation races, and closing cancels local transfers/selection without cancelling
-server jobs. Twenty-seven relevant mobile tests, type checking and code-critic
-review passed; the existing browser export fixture passed before primitive reuse.
-Connected archive UI acceptance remains unverified. CI `37029867844` restores
-metadata and a real photo but still exposes Open inventory before the ownership
-outbox grant makes the destination visible. Refreshing the web inventory snapshot
-alone is insufficient. Durable authorization finalization is now implemented before Ready. Migration64
-adds delayed retry eligibility, preventing tight loops while grants are pending.
-Reclaims preserve the publication; permission failures retain original blobs and
-never regrant access. Domain/application, GORM and real HTTP archive tests passed
-on Paul, including DELETE rejection after publication. Four mobile and four web
-archive tests, mobile type checking and web checking passed; code review passed.
-The mobile structural check passed; Go-backed hooks remain delegated to CI.
-The earlier 92 web tests covered stale-snapshot and refresh-error regressions.
+Evidence:
+- CI `37032804605` passed at `3609065f`, including required checks and the real
+  OIDC/PostgreSQL/Garage/SpiceDB browser journey: ZIP download, upload, review,
+  approval, immediate opening and reload. The original photo bytes matched after
+  restore, with fresh asset and attachment IDs. Its `connected-browser-evidence`
+  artifact retains the fixture ZIP, state sequence and screenshots.
+- Domain/application, persistence and real HTTP archive tests cover delayed grants,
+  recovery, cancellation after publication, permission failures and scoped access.
+  Focused mobile/web tests, type checks and code-critic review passed.
+- Native run `37027352935` passed archive upload integrity, rejection/cancellation
+  and restore-review/keyboard cases on iPhone17 and iPad mini. iPad legacy JSON
+  sharing/cleanup also passed. The iPhone legacy share assertion timed out despite
+  the correct file appearing in the system share sheet; phone dismissal/cleanup
+  was not reached and remains unverified.
+- Android debug build `37027458024` passed. Android runtime and physical document
+  provider/recipient behavior remain unverified; simulator evidence does not close
+  these obligations.
 
-Native run `37027352935` passed the new upload byte-integrity, rejection/cancellation
-and restore-review/keyboard cases on iPhone17 and iPad mini. The iPad run also
-passed legacy export sharing/cleanup. The iPhone legacy share assertion timed out;
-its retained screenshot shows the correct JSON file in the system share sheet,
-but phone dismissal/cleanup was not reached. Track that remaining observation
-separately; do not rerun the already passing archive cases without a relevant
-change. Android build `37027458024` is now able to run after the native job.
-Remaining delivery work: authorization finalization, connected restored-original
-acceptance, Android build results, release and production deployment. This draft
-has not shipped.
+Release `37033608570` is in progress. Its success gates the prepared GitOps update
+on Paul, including migration/API/web image pins and ingress limits matching the
+1 GiB archive upload and 30-minute transfer defaults. Release/TestFlight completion
+and the production rollout are not yet verified. Production remains v0.27.5 until
+that update succeeds. Preserve the separate native/physical evidence gaps without
+reopening the passing archive checks.
 
 ## Current objective — October 1, 2026
 
