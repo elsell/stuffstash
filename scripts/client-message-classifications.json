@@ -102,5 +102,17 @@
       "apps/mobile/src/ui/screens/useHomeReturnActions.ts: failure notices",
       "apps/mobile/src/ui/screens/AssetDetailRouteScreen.tsx: checkout failure notice"
     ]
+  },
+  {
+    "file": "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts",
+    "strings": [
+      "Discovery cancelled."
+    ],
+    "classification": "technical-diagnostic",
+    "reason": "Cancellation control flow is suppressed by query/task lifecycle handling; discovery and selection failures now use catalog guidance.",
+    "evidence": [
+      "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts: load abort callback",
+      "apps/mobile/src/ui/serverState/useMobileInventoryServerQuery.ts"
+    ]
   }
 ]

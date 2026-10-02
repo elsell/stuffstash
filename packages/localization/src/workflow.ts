@@ -178,6 +178,7 @@ export const workflowMessages = {
   "recovery.cameraRequired": "Camera access is required to take a photo. Allow camera access for Stuff Stash in device settings, then try again. You can also choose a photo from your library.",
   "recovery.photoFormat": "Choose JPEG, PNG, or WebP photos. This selection includes an unsupported image format.",
   "recovery.sharingUnavailable": "File sharing is unavailable on this device.",
+  "recovery.inventoryDiscovery": "Could not load your inventories. Try again.",
   "recovery.invitationPage": "Stuff Stash returned an invalid invitation page.",
   "recovery.invitationLink": "Stuff Stash did not return the one-time invitation link.",
   "recovery.invitationResponse": "Stuff Stash returned an invalid invitation response.",

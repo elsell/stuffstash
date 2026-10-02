@@ -64,6 +64,14 @@ The fixes preserve recovery state, command dispatch and English wording. Focused
 onboarding/checkout/localization checks pass locally; release and native acceptance
 are not yet established. Other residual candidates remain unreviewed.
 
+## Next frozen batch — inventory discovery recovery
+
+Three gaps: G6 unavailable selection guidance uses the existing typed/cataloged
+error; G6 repeated or over-limit discovery pages use cataloged retry guidance;
+D2 residual-copy inventory distinguishes the remaining cancellation control-flow
+literal. Preserve selected inventory, request limits, cancellation and tenancy.
+This batch is separate from PR #249 delivery and connected-native acceptance.
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in
