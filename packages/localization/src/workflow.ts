@@ -1,5 +1,7 @@
 /** Complete workflow messages, including variable-derived notices. */
 export const workflowMessages = {
+  "recovery.browseContinuation": "Could not load more items. Try again.",
+  "recovery.locationUnavailable": "This location is no longer available in this inventory.",
   "recovery.checkoutUnavailable": "Asset checkout is not available.",
   "recovery.returnUnavailable": "Asset return is not available.",
   "recovery.returnDetailsUnavailable": "Asset return details are not available.",

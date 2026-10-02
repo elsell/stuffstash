@@ -281,3 +281,11 @@ inventory must use the same typed unavailable error as reading a removed selecti
 without changing the previously selected inventory. Repeated continuation cursors
 and the bounded page limit must fail with cataloged recovery, preserving their
 existing request bounds. Cancellation remains control flow, not recovery copy.
+
+### Browse and location recovery
+
+List and search pagination that cannot safely continue (missing or repeated
+continuation cursor) must stop at the existing guard and show cataloged retry
+guidance, without exposing cursor diagnostics. A location missing from the
+selected inventory must show cataloged unavailability guidance. Preserve selected
+inventory scope, user-authored names, cancellation and existing request bounds.
