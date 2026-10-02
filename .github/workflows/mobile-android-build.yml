@@ -1,0 +1,41 @@
+name: Mobile Android build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-android-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24.17.0'
+  PNPM_VERSION: '11.0.7'
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '17.0.17+10'
+      - name: Install pinned workspace dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+          pnpm install --frozen-lockfile
+      - name: Generate Android project from pinned Expo SDK
+        working-directory: apps/mobile
+        run: pnpm exec expo prebuild --platform android --no-install
+      - name: Compile native modules and application
+        working-directory: apps/mobile/android
+        run: |
+          ./gradlew :app:assembleDebug --no-daemon --console=plain

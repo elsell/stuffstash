@@ -103,7 +103,7 @@ private final class ArchiveUpload: NSObject, URLSessionDataDelegate, URLSessionT
     self.session = nil
     finished()
     if exceededLimit { promise.reject("ERR_ARCHIVE_RESPONSE", "Archive response exceeded its size limit."); return }
-    if let error { promise.reject("ERR_ARCHIVE_TRANSFER", "Archive upload failed.", error); return }
+    if error != nil { promise.reject("ERR_ARCHIVE_TRANSFER", "Archive upload failed."); return }
     guard let response else { promise.reject("ERR_ARCHIVE_RESPONSE", "Missing archive response."); return }
     promise.resolve(["status": response.statusCode, "body": String(data: body, encoding: .utf8) ?? ""])
   }

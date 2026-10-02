@@ -11,3 +11,9 @@ android {
     versionName '1.0.0'
   }
 }
+
+dependencies {
+  // Resolved to the app's pinned React Native version by its Gradle plugin.
+  // ExpoModulesCore's implementation dependency is not exported to this module.
+  implementation 'com.facebook.react:react-android'
+}

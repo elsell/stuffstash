@@ -383,3 +383,9 @@ and SHA-256/length of a one-MiB file sent through the production native upload
 adapter. The same native journey rejects redirects and oversized responses and
 cancels an upload immediately after dispatch. This proves native transport against
 a controlled peer, not production authentication or system document-picker behavior.
+
+The local Android transfer module explicitly depends on react-android, resolved by
+the app's pinned React Native Gradle plugin; this exposes the already-used OkHttp
+API without introducing another version. A dispatch-only Android build generates
+the project from the locked Expo SDK and compiles the application on a hosted
+runner. Build success is compilation evidence, not Android runtime acceptance.
