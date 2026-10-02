@@ -1,3 +1,4 @@
+import { t } from '$lib/presentation/localization';
 import type { ArchiveFileDelivery } from '$lib/ports/inventoryArchive';
 
 const blobDownloadLimit = 128 * 1024 * 1024;
@@ -9,7 +10,7 @@ export class BrowserArchiveFileDelivery implements ArchiveFileDelivery {
     const picker = window as SavePickerWindow;
     if (picker.showSaveFilePicker) {
       // Acquire the destination during the click gesture, before any network await.
-      const handle = await picker.showSaveFilePicker({ suggestedName: 'stuff-stash-inventory.zip', types: [{ description: 'Stuff Stash archive', accept: { 'application/zip': ['.zip'] } }] });
+      const handle = await picker.showSaveFilePicker({ suggestedName: 'stuff-stash-inventory.zip', types: [{ description: t('archive.fileType'), accept: { 'application/zip': ['.zip'] } }] });
       signal.throwIfAborted();
       const output = await handle.createWritable();
       try {

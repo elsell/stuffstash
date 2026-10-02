@@ -1,5 +1,6 @@
 /** Portable archive task copy shared by web and mobile. */
 export const archiveMessages = {
+  'archive.fileType': 'Stuff Stash archive',
   'archive.export': 'Export archive',
   'archive.restore': 'Restore inventory',
   'archive.description': 'An archive contains complete inventory data and the photos and files you include.',
