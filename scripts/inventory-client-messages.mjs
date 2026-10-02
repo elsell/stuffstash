@@ -44,6 +44,9 @@ function componentCandidates(source, filename) {
       }
       return;
     }
+    if (node.type === 'EachBlock') {
+      count += scriptCandidates(source.slice(node.expression.start, node.expression.end), `${filename}.ts`);
+    }
     if (node.type === 'Text') { if (human(node.data.trim())) count++; return; }
     if (node.type === 'ExpressionTag') {
       count += scriptCandidates(source.slice(node.expression.start, node.expression.end), `${filename}.ts`);
