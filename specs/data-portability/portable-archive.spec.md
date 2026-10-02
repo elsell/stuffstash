@@ -67,6 +67,25 @@ commits may land separately but must not advertise unavailable restore behavior.
   On restore, omitted media is reported as an explicit source selection, and no
   attachment row pointing to a nonexistent blob is created.
 
+## Inventory metadata version 2
+
+Archive `inventory.json` uses schemaVersion 2, with explicit projections rather
+than serialized persistence/domain objects. The document contains source tenant
+and inventory IDs, inventory name, export time, assets, tags, custom asset types,
+and custom field definitions. All four collections are required, including when
+empty. Attachments are nested under their owning asset; current checkout includes
+its original creation/update times and actor as provenance. No storage key is
+accepted in the input. Unknown or duplicate JSON keys, malformed records and
+unsupported versions fail before approval.
+
+Schema keys are unique within each source definition family, including inherited
+and archived definitions. Restore preserves source display names and values. If
+an existing destination household definition reserves a source key, allocate a
+fresh valid local key and remap every custom-field value to it; never overwrite
+or reuse destination definitions merely because a name or key matches. Preview
+reports these key remappings. Revalidate destination reservations atomically at
+publication; a new conflict fails safely rather than changing approved meaning.
+
 ## Consistency, resources and failure
 
 - Capture metadata in a coherent repository snapshot through a dedicated port.
@@ -115,6 +134,8 @@ fail publication. Retry from failure retains the immutable source and approved
 destination identity. Validation failures return to validation; approved restore
 failures retry execution without silently choosing a different inventory.
 Job updates increment revision rather than relying on timestamp precision.
+- Job timestamps use UTC microsecond precision so PostgreSQL indexed timestamps and the serialized aggregate agree. Repository updates must validate a complete domain transition against the persisted predecessor under revision fencing, including immutable request, creation/expiry, and approved destination fields.
+
 
 ## Critical acceptance and release
 
@@ -137,4 +158,14 @@ Job updates increment revision rather than relying on timestamp precision.
    `paul:~/code/local-k8s/infra` and verifying rollout is part of this delivery,
    alongside TestFlight upload and changelog. Tag publication alone is not deployment.
 
-- Job timestamps use UTC microsecond precision so PostgreSQL indexed timestamps and the serialized aggregate agree. Repository updates must validate a complete domain transition against the persisted predecessor under revision fencing, including immutable request, creation/expiry, and approved destination fields.
+### Snapshot adapter boundary
+
+Archive collection runs within a read-only repeatable-read transaction on PostgreSQL
+(or the equivalent SQLite snapshot). A snapshot port supplies repositories bound
+to that transaction to the existing bounded export collector. Scope IDs remain
+explicit on every collection call. Authorization is checked by the job service
+before collection and before publication; the snapshot adapter does not authorize
+users. No transaction stays open while streaming blob data or waiting for approval.
+
+The required PostgreSQL CI job verifies a concurrent mutation stays outside the
+archive snapshot and exercises migration-backed job timestamp/revision fencing.

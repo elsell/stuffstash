@@ -1,5 +1,11 @@
 # Roadmap Spec
 
+## Integration priority clarification — October 2, 2026
+
+A first-class CLI takes priority over further MCP work. MCP remains a supported
+secondary integration. This changes future sequencing only; the complete portable
+archive and restore flow remains the immediate delivery priority.
+
 ## Next priority — portable archive and restore, October 2
 
 The user confirmed CSV export works after production was upgraded from v0.24.0
