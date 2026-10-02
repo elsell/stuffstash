@@ -50,7 +50,7 @@ Documentation follow-up #245 also carries the v0.28.0 self-host image pins from
 file picking and restored-photo opening have been requested from the user on162.1.
 Keep those results, Android runtime and broader audit acceptance open until verified.
 
-## Frozen follow-up batch — recovery copy and triage
+## Delivered recovery copy and triage
 
 Three scoped gaps follow the archive release: G6 household partial-success guidance
 still bypassed the catalog; G6 checkout/return/details/undo availability errors
@@ -61,28 +61,55 @@ fixed-clock regression proves cancellation must preserve the other invitation;
 monotonic invitation IDs remove the test's timing dependency. This repairs the
 batch's evidence gate without changing production invitation generation.
 The fixes preserve recovery state, command dispatch and English wording. Focused
-onboarding/checkout/localization checks pass locally; release and native acceptance
-are not yet established. Other residual candidates remain unreviewed.
+onboarding/checkout/localization checks pass locally. PR #249 merged at
+5961748e after CI37049355677 and Docs37049355682 passed. Release37049926510
+succeeded: v0.28.1, TestFlight164.1, changelog readback verified by job110989637980.
+Native acceptance remains separate; other residual candidates remain unreviewed.
 
-## Next frozen batch — inventory discovery recovery
+## Inventory discovery recovery delivery
 
 Three gaps: G6 unavailable selection guidance uses the existing typed/cataloged
 error; G6 repeated or over-limit discovery pages use cataloged retry guidance;
 D2 residual-copy inventory distinguishes the remaining cancellation control-flow
 literal. Preserve selected inventory, request limits, cancellation and tenancy.
-This batch is separate from PR #249 delivery and connected-native acceptance.
+PR #251 merged at de87e4ae after CI37052298874 passed. Release37053212190
+succeeded as v0.28.2 with TestFlight publication and verified changelog. This is
+not connected-native acceptance.
 
-## Confirmed mobile archive request failure — immediate fix
+## Archive request compatibility and ZIP security
 
-Physical build165.1 reaches the deployed archive API: job listing returned200,
-archive creation returned400, and native restore upload returned201. The mobile
-archive control path forwards React Native Request to Expo fetch, which reads a
-missing public `body` property and drops JSON. A regression using React Native's
-actual Request/Headers implementation reproduces the missing body. Freeze this
-batch around create request bodies, restore approval request bodies, and streaming/
-authentication regression coverage. Bridge explicit URL/init into Expo fetch;
-retain native upload and streaming downloads. This takes priority over the
-independent connected sign-in verification draft; do not gate this fix on it.
+PR #254 merged at `9f09b902`. Real React Native Request/Headers regression tests
+reproduced JSON bodies being lost when forwarded directly to Expo fetch. The
+bridge now passes explicit request options for archive creation and restore
+approval, preserving authentication, cancellation and streaming downloads.
+Release [37058610946](https://github.com/elsell/stuffstash/actions/runs/37058610946)
+succeeded for **v0.28.3**, including TestFlight upload and changelog verification
+(job111020203512). Physical archive creation, recipient saving and approved
+restore on this build still require acceptance; upload success alone is not proof.
+
+PR #255 merged at `a2b2fd15`. ZIP restore does not extract entry names onto the
+filesystem and generates fresh destination attachment keys. Adversarial tests
+cover traversal names, special files, conflicting local/central headers, and
+rejection before restore approval. Required checks job111013509667 in
+run37059638237 passed, including archive adapter, HTTP and application packages.
+The unrelated conversation-browser job was cancelled and remains unverified.
+Release37062636881 is pending; these changes add tests, not a parser behavior fix.
+
+## Connected native acceptance — investigation stopped
+
+Draft PR #253 compiled the production iPhone client and isolated test target with
+real local Dex, SpiceDB and API services. Run37055754739 at `f3759700` passed
+startup and anonymous tenant-discovery rejection, then failed while locating the
+system authentication browser. It does not distinguish connection failure from
+an incorrect system-surface query. Sign-in, persistence, relaunch and second-user
+isolation are unverified. The investigation budget is exhausted: no unchanged
+hosted retries. Resume only with interactive observation or specific new evidence
+that distinguishes those causes. [Durable scoped evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected-native/README.md).
+
+These three reconciliations close stale delivery status for recovery batches,
+archive compatibility/security, and connected-native investigation. They do not
+close residual G6 copy migration or V1 physical, connected-native, assistive,
+directional-layout and broader performance obligations.
 
 ## Current objective — October 1, 2026
 
