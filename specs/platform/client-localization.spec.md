@@ -290,6 +290,14 @@ Do not interpret collection IDs or arbitrary source values as display copy. Brow
 List/Map labels and tenant/inventory grouping headings for asset types and custom
 fields must use complete catalog messages, preserving user names as parameters.
 
+### Complete paged-read recovery
+
+Map hierarchy, inventory tag selection and Home checked-out reads must show
+cataloged retry guidance when their shared pagination guard rejects a missing or
+repeated continuation or reaches its page limit. Preserve the guard's existing
+request bounds and initial-cursor tracking. Shared consumers, including photo
+and search reads, retain their existing fallback and cancellation behavior.
+
 ### Browse and location recovery
 
 List and search pagination that cannot safely continue (missing or repeated

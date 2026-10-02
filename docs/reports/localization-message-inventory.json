@@ -334,10 +334,6 @@
       "candidates": 2
     },
     {
-      "file": "apps/mobile/src/adapters/shared/ReadPageGuard.ts",
-      "candidates": 2
-    },
-    {
       "file": "apps/mobile/src/app/expiration-filters.tsx",
       "candidates": 2
     },

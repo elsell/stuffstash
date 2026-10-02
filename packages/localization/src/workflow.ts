@@ -210,6 +210,7 @@ export const workflowMessages = {
   "sharing.invitation.title": "Share Stuff Stash invitation",
   "sharing.export.title": "Export inventory",
   "notifications.channel.expiration": "Expiration reminders",
+  "recovery.pagedRead": "Could not finish loading. Try again.",
   "inventory.loaded": "Loaded from API",
   "inventory.locationAsset": "Location asset",
   "inventory.root": "Inventory root",
