@@ -1,7 +1,46 @@
 ---
-title: Export an inventory
-description: Download your inventory as JSON or CSV.
+title: Export and restore an inventory
+description: Move inventories between instances, or download data for other tools.
 ---
+
+## Back up or move an inventory
+
+In inventory settings, choose **Export archive**. Inventory data is always
+included. Leave **Photos** and **Other files** selected for a complete inventory
+backup, then choose **Create archive**. The server prepares a ZIP in the background;
+you can leave the screen and return to download it. Mobile opens the system share
+sheet so you can save the ZIP to Files or another app.
+
+The ZIP contains a JSON inventory document and the original attachments you
+selected. Turning off either attachment option makes a partial backup. CSV is for
+spreadsheets, not backup or restore.
+
+To restore on another Stuff Stash instance, sign in there first. On mobile, open
+the household/inventory switcher and choose **Restore inventory** beside
+**New inventory**. On the web, open the destination household's settings. You must
+have permission to create inventories in that household; it can be empty.
+
+1. Choose the ZIP and select **Upload and validate**.
+2. Choose **Review restore** to check its contents and any omitted attachments.
+3. Enter a name and choose **Restore inventory**.
+4. When it finishes, choose **Open inventory**.
+
+Restore creates a new inventory with new IDs and reconnects its internal
+relationships. It never overwrites an existing inventory. Conflicting custom
+definition keys are renamed and reported in the review. Selecting or validating a
+file alone does not create an inventory.
+
+Jobs are private to the person who started them. Leaving the screen cancels a
+local file transfer, but does not cancel work already accepted by the server.
+Use a job's **Cancel** action to cancel server work, or **Retry** after a failure.
+Download availability expires after 24 hours by default; the job shows its expiry.
+Restored inventory data remains after the job expires.
+
+An inventory archive is not a server backup. It does not transfer accounts,
+credentials, sharing access, provider configuration, or audit history. Keep separate
+database and blob-storage backups for disaster recovery.
+
+## Download JSON or CSV
 
 In the web or mobile app, open **Settings**, choose your inventory, then choose
 **Export inventory**. Anyone who can view the inventory can export it.

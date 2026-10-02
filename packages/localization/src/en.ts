@@ -1,3 +1,4 @@
+import { archiveMessages } from './archive';
 import { workflowMessages } from './workflow';
 import { mobileMessages } from './mobile';
 import { webMessages } from './web';
@@ -5,6 +6,7 @@ import type { Catalog } from './translator';
 
 /** English source catalog. Keys describe presentation context, never wire values. */
 export const en = {
+  ...archiveMessages,
   ...workflowMessages,
   ...mobileMessages,
   ...webMessages,

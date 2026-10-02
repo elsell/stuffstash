@@ -40,6 +40,9 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionArchiveJobViewed                          Action = "archive_job.viewed"
+	ActionArchiveJobCreated                         Action = "archive_job.created"
+	ActionArchiveJobUpdated                         Action = "archive_job.updated"
 	ActionNotificationDeviceUpdated                 Action = "notification_device.updated"
 	ActionNotificationDeviceRevoked                 Action = "notification_device.revoked"
 	ActionNotificationDeviceViewed                  Action = "notification_device.viewed"
@@ -151,7 +154,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,
@@ -286,6 +289,7 @@ func (s Source) String() string {
 type TargetType string
 
 const (
+	TargetArchiveJob                 TargetType = "archive_job"
 	TargetNotificationDevice         TargetType = "notification_device"
 	TargetNotification               TargetType = "notification"
 	TargetNotificationPreferences    TargetType = "notification_preferences"
@@ -310,7 +314,7 @@ const (
 func NewTargetType(value string) (TargetType, bool) {
 	targetType := TargetType(strings.TrimSpace(value))
 	switch targetType {
-	case TargetNotificationDevice, TargetNotification, TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
+	case TargetArchiveJob, TargetNotificationDevice, TargetNotification, TargetNotificationPreferences, TargetTenant, TargetInventory, TargetInventoryAccessGrant, TargetInventoryInvitation, TargetCustomAssetType, TargetCustomFieldDefinition, TargetAsset, TargetAssetTag, TargetAttachment, TargetAuditRecord, TargetUndoableOperation, TargetProviderProfile, TargetImportJob, TargetConversationWorkflow, TargetConversationEvaluationCase, TargetConversationEvaluationRun:
 		return targetType, true
 	default:
 		return "", false

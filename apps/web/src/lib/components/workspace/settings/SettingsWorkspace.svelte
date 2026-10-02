@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
+  import { canCreateInventory } from '$lib/domain/inventory';
+  import InventoryArchivePanel from './InventoryArchivePanel.svelte';
+  const archives = getContext<InventoryArchiveWorkspace | undefined>(inventoryArchiveContext);
   import { t } from '$lib/presentation/localization';
   import './settings-management.css';
   import { inventoryExportContext } from '$lib/ports/inventoryExport';
@@ -70,6 +74,11 @@
     <Button.Root href="/settings" variant="ghost" class="settings-back" onclick={(event) => navigate(event, '/settings')}><ArrowLeft /> {t('web.SettingsWorkspace.settings')}</Button.Root>
     <header class="settings-management-heading"><p class="settings-eyebrow">{levelLabel}</p><h1 id="settings-level-title">{levelTitle}</h1>{#if inventory}<p>{t('web.SettingsWorkspace.belongsToFull', { name: inventory.name, name2: tenant.name })}</p>{:else}<p>{t('web.SettingsWorkspace.settingsSharedWithThisTenantSInventories')}</p>{/if}</header>
     <SettingsDestinationList label={t('web.SettingsWorkspace.settings2', { levelTitle: String(levelTitle) })} destinations={route.settingsLevel === 'tenant' ? tenantSettingsDestinations(tenant) : inventorySettingsDestinations(inventory!)} {onNavigate} />
+    {#if archives && ((route.settingsLevel === 'inventory' && inventory) || (route.settingsLevel === 'tenant' && canCreateInventory(tenant)))}
+      {#key JSON.stringify([principal.id, tenant.id, route.settingsLevel, inventory?.id])}
+        <InventoryArchivePanel workspace={archives} scope={{ tenantId: tenant.id, inventoryId: route.settingsLevel === 'inventory' ? inventory!.id : undefined }} />
+      {/key}
+    {/if}
     {#if route.settingsLevel === 'inventory' && inventory && exportCommand}
       {#key JSON.stringify([principal.id, tenant.id, inventory.id])}
         <InventoryExportAction command={exportCommand} scope={{ tenantId: tenant.id, inventoryId: inventory.id }} />

@@ -118,3 +118,23 @@ func TestCORSAllowsEveryPublishedAPIMethod(t *testing.T) {
 		t.Fatal("contract no longer exercises PUT")
 	}
 }
+
+func TestArchiveCORSAllowsIdempotentBrowserTransfers(t *testing.T) {
+	server := NewServerWithOptions(":0", newTestApp(&fakeObserver{}, "unused-id"), Options{CORSAllowedOrigins: []string{"https://stash.example"}})
+	for _, path := range []string{"/tenants/home/archive-jobs", "/tenants/home/archive-restores"} {
+		for _, origin := range []string{"https://stash.example", "https://untrusted.example"} {
+			response := performRequestWithHeaders(server, http.MethodOptions, path, "", map[string]string{"Origin": origin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization, content-type, idempotency-key"}, nil)
+			if response.Code != http.StatusNoContent {
+				t.Fatalf("archive preflight: %d", response.Code)
+			}
+			allowed := response.Header().Get("Access-Control-Allow-Origin")
+			if origin == "https://stash.example" {
+				if allowed != origin || !strings.Contains(response.Header().Get("Access-Control-Allow-Headers"), "Idempotency-Key") {
+					t.Fatal("archive browser request rejected")
+				}
+			} else if allowed != "" {
+				t.Fatal("untrusted origin allowed")
+			}
+		}
+	}
+}

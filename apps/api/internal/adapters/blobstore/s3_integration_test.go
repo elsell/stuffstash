@@ -55,6 +55,7 @@ func TestS3StoreAgainstGarage(t *testing.T) {
 	if !bytes.Equal(read, content) {
 		t.Fatalf("expected %q, got %q", string(content), string(read))
 	}
+	verifyS3ArchiveStreams(t, ctx, store)
 	if err := store.DeleteBlob(ctx, key); err != nil {
 		t.Fatalf("delete blob: %v", err)
 	}
@@ -170,4 +171,36 @@ func postDirectUploadForm(ctx context.Context, uploadURL string, fields map[stri
 		return response.StatusCode, "", err
 	}
 	return response.StatusCode, string(responseBody), nil
+}
+
+func verifyS3ArchiveStreams(t *testing.T, ctx context.Context, store S3Store) {
+	t.Helper()
+	key := storageKey(t, "tenant/job/archive-stream-test")
+	defer store.DeleteBlob(context.WithoutCancel(ctx), key)
+	data := bytes.Repeat([]byte("archive"), 200)
+	input := ports.BlobStreamWrite{Key: key, ContentType: "application/zip", Content: bytes.NewReader(data), SizeBytes: int64(len(data)), MaxBytes: 2048}
+	if err := store.PutBlobStream(ctx, input); err != nil {
+		t.Fatal(err)
+	}
+	stream, size, err := store.OpenBlobStream(ctx, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	part := make([]byte, 3)
+	if n, err := stream.ReadAt(part, 2); err != nil || n != 3 || string(part) != "chi" || size != int64(len(data)) {
+		t.Fatalf("stream range read: %q %v", part, err)
+	}
+	stream.Close()
+	stale, _, err := store.OpenBlobStream(ctx, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stale.Close()
+	input.Content = bytes.NewReader(bytes.Repeat([]byte("changed"), 200))
+	if err := store.PutBlobStream(ctx, input); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.ReadAll(stale); err == nil {
+		t.Fatal("read mixed object versions")
+	}
 }

@@ -1,3 +1,9 @@
+import { ArchiveClient } from '@stuff-stash/api-client';
+import { requireNativeModule } from 'expo';
+import type { InventoryArchiveWorkspace } from '../application/archives/InventoryArchive';
+import { ApiInventoryArchiveRepository } from '../adapters/archives/ApiInventoryArchiveRepository';
+import { ExpoArchiveFiles } from '../adapters/archives/ExpoArchiveFiles';
+import { NativeArchiveUpload, type ArchiveUploadModule } from '../adapters/archives/NativeArchiveUpload';
 import { ExportInventoryCommand, type InventoryExportObserver } from '../application/exports/InventoryExport';
 import { ApiInventoryExportRepository } from '../adapters/exports/ApiInventoryExportRepository';
 import { ExpoExportTemporaryFiles } from '../adapters/exports/ExpoExportTemporaryFiles';
@@ -181,6 +187,7 @@ export type MobileComposition = {
   readonly acceptInventoryInvitationCommand: AcceptInventoryInvitationCommand;
   readonly settingsQuery: SettingsQuery;
   readonly exportInventoryCommand: ExportInventoryCommand;
+  readonly inventoryArchive: InventoryArchiveWorkspace;
   readonly inventoryAssetTypesQuery: InventoryAssetTypesQuery;
   readonly customizationContextQuery: CustomizationContextQuery;
   readonly customizationCollectionQuery: CustomizationCollectionQuery;
@@ -273,6 +280,20 @@ export function createMobileComposition(
   const exportFiles = new ExpoExportTemporaryFiles(exportObserver);
   void exportFiles.sweep().catch(() => exportObserver.record({ name: 'inventory_export.cleanup_failed' }));
   const exportInventoryCommand = new ExportInventoryCommand(new ApiInventoryExportRepository(client.exports), new NativeExportFileDelivery(exportFiles, new ExpoExportFileShare(), Platform.OS === 'ios' ? 'ios' : 'android', exportObserver));
+  const archiveFiles = new ExpoArchiveFiles(exportObserver);
+  const archiveModule = () => requireNativeModule<ArchiveUploadModule>('StuffStashArchiveTransfer');
+  const inventoryArchive: InventoryArchiveWorkspace = {
+    repository: new ApiInventoryArchiveRepository(new ArchiveClient({
+      baseUrl: profile.apiBaseUrl,
+      tokenProvider: () => validIdTokenForProfile(profile, sessionOptions),
+      fetch: async (input, init) => (await import('expo/fetch')).fetch(input, init)
+    }), new NativeArchiveUpload({
+      upload: (...args) => archiveModule().upload(...args),
+      cancel: id => archiveModule().cancel(id)
+    }, Crypto.randomUUID)),
+    files: archiveFiles,
+    newRequestKey: Crypto.randomUUID
+  };
   const serviceScopeId = createServiceScopeId();
   const queryClient = createMobileQueryClient();
   const config = toRuntimeConfig(profile);
@@ -372,6 +393,7 @@ export function createMobileComposition(
     acceptInventoryInvitationCommand: new AcceptInventoryInvitationCommand(inventoryInvitations),
     settingsQuery,
     exportInventoryCommand,
+    inventoryArchive,
     inventoryAssetTypesQuery: new InventoryAssetTypesQuery(customizationContextQuery, customizationCollectionQuery),
     customizationContextQuery,
     customizationCollectionQuery,

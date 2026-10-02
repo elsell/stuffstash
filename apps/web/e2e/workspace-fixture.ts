@@ -180,6 +180,10 @@ async function routeApiRequest(route: Route, state: WorkspaceApiState): Promise<
     return;
   }
 
+  if (method === 'GET' && (path === '/tenants/tenant-home/archive-jobs' || path === '/tenants/tenant-cabin/archive-jobs')) {
+    await fulfill(route, []);
+    return;
+  }
   if (method === 'GET' && path === '/me') {
     await fulfill(route, { id: 'principal-owner', email: 'owner@example.com' });
     return;

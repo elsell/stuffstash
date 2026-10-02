@@ -12,7 +12,7 @@ This spec covers initial import and export requirements.
 
 This spec covers the first legacy Homebox import workflow and the durable import-job direction for production-scale imports.
 
-This spec does not define the final Stuff Stash-native CSV columns, final Stuff Stash-native JSON schema, backup packaging, media export packaging, newer Homebox entity import behavior, permanent source-link management UI, or all future import conflict resolution modes.
+This spec does not define newer Homebox entity import behavior, permanent source-link management UI, or all future import conflict resolution modes. The inventory export v1 section defines the current JSON/CSV contract. [Portable archive and restore](portable-archive.spec.md) defines the newly authorized backup packaging, optional binary media and Stuff Stash-to-Stuff Stash restore workflow; that separate contract is not yet satisfied by v1 export.
 
 ## Requirements
 

@@ -39,6 +39,7 @@ func startObservability(ctx context.Context, local ports.Observer) (*observabili
 func observeRepositories(value repositories, telemetry ports.Telemetry) repositories {
 	value.audit = observability.ObserveAudit(value.audit, telemetry)
 	value.blobs = observability.ObserveBlobs(value.blobs, telemetry)
+	value.archiveBlobs = observability.ObserveBlobStreams(value.archiveBlobs, telemetry)
 	value.imageProcessor = observability.ObserveImages(value.imageProcessor, telemetry)
 	value.imageBatch = observability.ObserveImageBatch(value.imageBatch, telemetry)
 	value.directUploads = observability.ObserveUploads(value.directUploads, telemetry)

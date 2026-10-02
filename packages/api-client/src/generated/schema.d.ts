@@ -108,6 +108,125 @@ export interface paths {
         patch: operations["patch-tenants-by-tenant-id-archive"];
         trace?: never;
     };
+    "/tenants/{tenantId}/archive-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID archive jobs */
+        get: operations["get-tenants-by-tenant-id-archive-jobs"];
+        put?: never;
+        /** Post tenants by tenant ID archive jobs */
+        post: operations["post-tenants-by-tenant-id-archive-jobs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID archive jobs by job ID */
+        get: operations["get-tenants-by-tenant-id-archive-jobs-by-job-id"];
+        put?: never;
+        post?: never;
+        /** Delete tenants by tenant ID archive jobs by job ID */
+        delete: operations["delete-tenants-by-tenant-id-archive-jobs-by-job-id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-jobs/{jobId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID archive jobs by job ID approve */
+        post: operations["post-tenants-by-tenant-id-archive-jobs-by-job-id-approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-jobs/{jobId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download-inventory-archive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-jobs/{jobId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get tenants by tenant ID archive jobs by job ID preview */
+        get: operations["get-tenants-by-tenant-id-archive-jobs-by-job-id-preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-jobs/{jobId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post tenants by tenant ID archive jobs by job ID retry */
+        post: operations["post-tenants-by-tenant-id-archive-jobs-by-job-id-retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenants/{tenantId}/archive-restores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["upload-archive-restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tenants/{tenantId}/audit-records": {
         parameters: {
             query?: never;
@@ -1777,6 +1896,53 @@ export interface components {
             /** Format: int64 */
             expectedRevision: number;
         };
+        ApproveArchiveInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ApproveArchiveInputBody.json
+             */
+            readonly $schema?: string;
+            name: string;
+        };
+        ArchiveJob: {
+            /** Format: date-time */
+            createdAt: string;
+            destinationInventoryId?: string;
+            /** Format: date-time */
+            expiresAt: string;
+            failure?: string;
+            id: string;
+            inventoryId?: string;
+            kind: string;
+            otherFiles: boolean;
+            phase: string;
+            photos: boolean;
+            state: string;
+        };
+        ArchiveKeyRemapping: {
+            destinationKey: string;
+            family: string;
+            sourceKey: string;
+        };
+        ArchivePreview: {
+            /** Format: int64 */
+            assets: number;
+            /** Format: int64 */
+            customAssetTypes: number;
+            /** Format: int64 */
+            customFields: number;
+            inventoryName: string;
+            keyRemappings: components["schemas"]["ArchiveKeyRemapping"][] | null;
+            /** Format: int64 */
+            omittedAttachments: number;
+            /** Format: int64 */
+            otherFiles: number;
+            /** Format: int64 */
+            photos: number;
+            /** Format: int64 */
+            tags: number;
+        };
         AssetActivityChangeResponse: {
             currentValue?: string;
             /** @enum {string} */
@@ -1958,6 +2124,17 @@ export interface components {
             displayName: string;
             id: string;
             key: string;
+        };
+        CreateArchiveInputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CreateArchiveInputBody.json
+             */
+            readonly $schema?: string;
+            inventoryId: string;
+            otherFiles: boolean;
+            photos: boolean;
         };
         CreateAssetBody: {
             /**
@@ -2946,6 +3123,26 @@ export interface components {
             data: components["schemas"]["Accepted"];
             meta: components["schemas"]["Meta"];
         };
+        SuccessEnvelopeArchiveJob: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeArchiveJob.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ArchiveJob"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeArchivePreview: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeArchivePreview.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ArchivePreview"];
+            meta: components["schemas"]["Meta"];
+        };
         SuccessEnvelopeAssetCheckoutResponse: {
             /**
              * Format: uri
@@ -3144,6 +3341,16 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationResponse"];
+            meta: components["schemas"]["Meta"];
+        };
+        SuccessEnvelopeListArchiveJob: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuccessEnvelopeListArchiveJob.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ArchiveJob"][] | null;
             meta: components["schemas"]["Meta"];
         };
         SuccessEnvelopeListAssetActivityResponse: {
@@ -4008,6 +4215,480 @@ export interface operations {
             };
             /** @description Error */
             default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-archive-jobs": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+                after?: string;
+                limit?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeListArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-archive-jobs": {
+        parameters: {
+            query?: never;
+            header: {
+                Authorization?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateArchiveInputBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-archive-jobs-by-job-id": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "delete-tenants-by-tenant-id-archive-jobs-by-job-id": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-archive-jobs-by-job-id-approve": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveArchiveInputBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "download-inventory-archive": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: never;
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portable inventory ZIP */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "get-tenants-by-tenant-id-archive-jobs-by-job-id-preview": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchivePreview"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "post-tenants-by-tenant-id-archive-jobs-by-job-id-retry": {
+        parameters: {
+            query?: {
+                inventoryId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                tenantId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    "upload-archive-restore": {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                tenantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/zip": string;
+            };
+        };
+        responses: {
+            /** @description Restore uploaded for validation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelopeArchiveJob"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request Entity Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

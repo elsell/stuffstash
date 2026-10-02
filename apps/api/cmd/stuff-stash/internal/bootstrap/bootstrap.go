@@ -75,12 +75,21 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	if err := replayLocalDevelopmentAuthorization(ctx, cfg, authorizer, repositories); err != nil {
 		return err
 	}
+	archiveConfig, err := config.LoadArchives(cfg.RepositoryMode)
+	if err != nil {
+		return err
+	}
+	archiveService, archiveWorker, err := buildArchiveRuntime(archiveConfig, repositories, authorizer, observer)
+	if err != nil {
+		return err
+	}
 	mcpHandler, err := buildMCPHandler(cfg, application, observer)
 	if err != nil {
 		return err
 	}
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
-		MCPHandler:         mcpHandler,
+		MCPHandler: mcpHandler,
+		Archives:   archiveService, ArchiveTransferTimeout: archiveConfig.TransferTimeout,
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MobileAuth: httpserver.MobileAuthOptions{
 			Issuer:      cfg.OIDCIssuer,
@@ -112,6 +121,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 	defer stopNotifications()
 	stopPush := startNotificationPushWorker(ctx, application.Notifications(), observer, pushConfig)
 	defer stopPush()
+	stopArchives := startArchiveWorkers(ctx, archiveWorker, archiveService, observer, archiveConfig)
+	defer stopArchives()
 	startOutboxWorkers(ctx, application, observer, cfg)
 	stopThumbnails := startThumbnailWorkers(ctx, thumbnailWorker, observer, thumbnailConfig)
 	defer stopThumbnails()

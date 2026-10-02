@@ -11,6 +11,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/stuffstash/stuff-stash/internal/adapters/httpserver/shared"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
 	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
@@ -21,6 +22,8 @@ func init() {
 }
 
 type Options struct {
+	Archives                     *dataportability.ArchiveService
+	ArchiveTransferTimeout       time.Duration
 	MCPHandler                   http.Handler
 	CORSAllowedOrigins           []string
 	MobileAuth                   MobileAuthOptions
@@ -68,7 +71,7 @@ func NewServerWithOptions(addr string, application app.App, options Options) *ht
 	}
 
 	api := humago.New(mux, config)
-	registerRoutes(api, application)
+	registerRoutes(api, application, options.Archives, options.ArchiveTransferTimeout)
 
 	maxJSONBodyBytes := options.MaxJSONBodyBytes
 	if maxJSONBodyBytes <= 0 {

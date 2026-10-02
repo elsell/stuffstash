@@ -3653,6 +3653,43 @@ final class FixtureAuditTests: XCTestCase {
     capture("appearance-in-place-dark")
   }
 
+  func testArchiveNativeUploadPreservesBytesAndRejectsUnsafeResponses() {
+    guard openFixtureURL("audit-archive-transfer") else { return }
+    let verify = app.buttons["Verify native upload"].firstMatch
+    XCTAssertTrue(verify.waitForExistence(timeout: 10)); verify.tap()
+    XCTAssertTrue(app.staticTexts["Native upload verified"].waitForExistence(timeout: 30), app.debugDescription)
+    capture("archive-native-upload-verified")
+  }
+
+  func testArchiveRestoreRequiresReviewAndKeepsCompletionReachable() {
+    guard openFixtureURL("audit-inventory-archive") else { return }
+    let choose = app.buttons["Choose archive"].firstMatch
+    XCTAssertTrue(choose.waitForExistence(timeout: 10)); choose.tap()
+    let upload = app.buttons["Upload and validate"].firstMatch
+    XCTAssertTrue(upload.isHittable); XCTAssertTrue(upload.isEnabled); upload.tap()
+    let review = app.buttons["Review restore"].firstMatch
+    XCTAssertTrue(review.waitForExistence(timeout: 5))
+    for _ in 0..<4 where !review.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(review.isHittable); review.tap()
+    let name = app.textFields["Inventory name"].firstMatch
+    XCTAssertTrue(name.waitForExistence(timeout: 5))
+    XCTAssertEqual(name.value as? String, "Camping equipment")
+    capture("archive-restore-review")
+    let restore = app.buttons["Restore inventory"].firstMatch
+    XCTAssertTrue(restore.isHittable); XCTAssertTrue(restore.isEnabled)
+    name.tap()
+    XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue(restore.isHittable, "The completion action remains above the keyboard")
+    capture("archive-restore-keyboard")
+    restore.tap()
+    let open = app.buttons["Open inventory"].firstMatch
+    XCTAssertTrue(open.waitForExistence(timeout: 5))
+    for _ in 0..<4 where !open.isHittable { app.scrollViews.firstMatch.swipeUp() }
+    XCTAssertTrue(open.isHittable); open.tap()
+    XCTAssertTrue(app.staticTexts["Restored: Camping equipment"].waitForExistence(timeout: 5))
+    capture("archive-restored-destination")
+  }
+
   func testInventoryExportUsesSystemShareAndRemovesTemporaryFiles() {
     guard openFixtureURL("audit-inventory-export") else { return }
     let export = app.buttons["Export inventory"].firstMatch

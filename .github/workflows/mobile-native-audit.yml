@@ -36,6 +36,8 @@ on:
           - settings-overview
           - settings-commands
           - inventory-export
+          - inventory-archive
+          - android-build
           - image-telemetry
           - localization
           - release-corrections
@@ -97,6 +99,7 @@ env:
 
 jobs:
   ios:
+    if: inputs.test_case != 'android-build'
     name: iOS ${{ matrix.suite }} (${{ matrix.device }})${{ inputs.test_case && inputs.test_case != 'all' && format(' [{0}]', inputs.test_case) || '' }}
     runs-on: macos-26
     timeout-minutes: 120
@@ -116,6 +119,7 @@ jobs:
       EXPO_PUBLIC_STUFF_STASH_TENANT_ID: ''
       EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ''
       EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: 'false'
+      EXPO_PUBLIC_STUFF_STASH_ARCHIVE_AUDIT_URL: 'http://127.0.0.1:18889'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -148,6 +152,15 @@ jobs:
       - name: Install isolated fixture routes
         if: matrix.suite == 'fixtures'
         run: python3 scripts/prepare-mobile-audit-fixtures.py
+      - name: Start loopback archive transfer peer
+        if: matrix.suite == 'fixtures' && (inputs.test_case == 'inventory-archive' || inputs.test_case == 'all')
+        run: |
+          python3 scripts/native-archive-transfer-server.py --port 18889 > "$RUNNER_TEMP/archive-transfer-peer.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:18889/health > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
       - name: Run native interaction audit
         env:
           AUDIT_DEVICE: ${{ matrix.device }}
@@ -618,6 +631,14 @@ jobs:
                 '-only-testing:StuffStashAuditTests/FixtureAuditTests/testNativeGalleryReportsImageLoadAndFailure'
               )
               ;;
+            inventory-archive)
+              test "$AUDIT_SUITE" = fixtures || exit 1
+              audit_test_args=(
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testArchiveNativeUploadPreservesBytesAndRejectsUnsafeResponses'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testArchiveRestoreRequiresReviewAndKeepsCompletionReachable'
+                '-only-testing:StuffStashAuditTests/FixtureAuditTests/testInventoryExportUsesSystemShareAndRemovesTemporaryFiles'
+              )
+              ;;
             inventory-export)
               test "$AUDIT_SUITE" = fixtures || exit 1
               audit_test_args=(
@@ -748,3 +769,29 @@ jobs:
           path: ${{ runner.temp }}/native-audit
           retention-days: 14
           if-no-files-found: warn
+
+  android:
+    if: inputs.test_case == 'android-build'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '17.0.17+10'
+      - name: Install pinned workspace dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+          pnpm install --frozen-lockfile
+      - name: Generate Android project from pinned Expo SDK
+        working-directory: apps/mobile
+        run: pnpm exec expo prebuild --platform android --no-install
+      - name: Compile native modules and application
+        working-directory: apps/mobile/android
+        run: |
+          ./gradlew :app:assembleDebug --no-daemon --console=plain

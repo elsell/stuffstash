@@ -5,6 +5,10 @@ import "context"
 type EventName string
 
 const (
+	EventArchiveWorkerFailed                       EventName = "archive_worker.failed"
+	EventArchiveJobCreated                         EventName = "archive_job.created"
+	EventArchiveJobUpdated                         EventName = "archive_job.updated"
+	EventArchiveArtifactCleanupFailed              EventName = "archive_artifact.cleanup_failed"
 	EventMCPToolCompleted                          EventName = "mcp_tool.completed"
 	EventNotificationDeliverySettled               EventName = "notification_delivery.settled"
 	EventNotificationWorkerFailed                  EventName = "notification_worker.failed"

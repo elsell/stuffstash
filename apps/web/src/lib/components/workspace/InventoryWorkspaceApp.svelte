@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { inventoryArchiveContext, type InventoryArchiveWorkspace } from '$lib/ports/inventoryArchive';
   import { t } from '$lib/presentation/localization';
   import InventoryConversationPanel from './InventoryConversationPanel.svelte';
   import type { InventoryConversationTransport } from '$lib/ports/inventoryConversation';
@@ -108,7 +109,7 @@
 
   let {
     repository,
-    exportCommand, conversations, inventoryConversation,
+    archives, exportCommand, conversations, inventoryConversation,
     notifications,
     expiration,
     observer = { record: () => {} },
@@ -117,6 +118,7 @@
     onSessionExpired = onSignOut
   }: {
     repository: InventoryRepository & InventoryBrowseRepository & InventoryAccessRepository & InventoryAuditRepository & InventoryCustomizationRepository & InventoryTagRepository & AssetThumbnailLoader;
+    archives?: InventoryArchiveWorkspace;
     exportCommand?: ExportInventory;
     inventoryConversation?: InventoryConversationTransport;
     conversations?: ConversationWorkspaceRepositories;
@@ -130,6 +132,8 @@
 
   // svelte-ignore state_referenced_locally -- dependencies are fixed for the mounted authenticated workspace.
   setContext(inventoryExportContext, exportCommand);
+  // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
+  setContext(inventoryArchiveContext, archives);
   // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
   setContext(conversationWorkspaceContext, conversations);
   // svelte-ignore state_referenced_locally -- fixed authenticated-session dependency.
@@ -1061,7 +1065,22 @@
       }
 
       if (route.inventoryId && route.inventoryId !== data.context.selectedInventoryId) {
-        const inventory = findRouteInventory(data, route);
+        let inventory = findRouteInventory(data, route);
+        if (!inventory && data.context.selectedTenantId) {
+          // Restore and other sessions can add inventories after this snapshot.
+          // Refresh through the authorized repository before rejecting the route.
+          try {
+            data = await repository.selectAssetLifecycle(
+              data.context.selectedTenantId,
+              data.context.selectedInventoryId,
+              data.context.assetLifecycleState
+            );
+          } catch (caught) {
+            if (!handleSessionExpired(caught)) showUnavailableRoute(t('web.InventoryWorkspaceApp.actionFailed'));
+            return;
+          }
+          inventory = findRouteInventory(data, route);
+        }
         if (inventory) {
           await selectInventory(inventory.tenantId, inventory.id);
         } else {
