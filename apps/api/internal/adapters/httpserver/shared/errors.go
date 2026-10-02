@@ -6,6 +6,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/domain/archivejob"
+	"github.com/stuffstash/stuff-stash/internal/ports"
 )
 
 type ErrorEnvelope struct {
@@ -48,6 +50,12 @@ func ToHumaError(err error) error {
 	var importSourceInvalidInput app.ImportSourceInvalidInputError
 	var importSourceChanged app.ImportSourceChangedAfterPreviewError
 	switch {
+	case errors.Is(err, archivejob.ErrTransition), errors.Is(err, ports.ErrArchiveJobConflict):
+		return huma.Error409Conflict("This archive job changed or is not ready for that action.")
+	case errors.Is(err, archivejob.ErrInvalid), errors.Is(err, ports.ErrArchiveJobScope):
+		return huma.Error400BadRequest("Invalid archive request.")
+	case errors.Is(err, ports.ErrBlobStreamSize):
+		return huma.Error413RequestEntityTooLarge("Archive exceeds the configured size limit.")
 	case errors.Is(err, app.ErrInvitationInvalid):
 		return newCodedErrorEnvelope(http.StatusNotFound, "invitation_invalid", "This invitation link is invalid.")
 	case errors.Is(err, app.ErrInvitationEmailMismatch):

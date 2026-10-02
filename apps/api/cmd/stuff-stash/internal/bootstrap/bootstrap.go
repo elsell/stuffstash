@@ -88,7 +88,8 @@ func Run(ctx context.Context, cfg config.Config, observer ports.Observer) error 
 		return err
 	}
 	server := httpserver.NewServerWithOptions(cfg.HTTPAddr, application, httpserver.Options{
-		MCPHandler:         mcpHandler,
+		MCPHandler: mcpHandler,
+		Archives:   archiveService, ArchiveTransferTimeout: archiveConfig.TransferTimeout,
 		CORSAllowedOrigins: cfg.CORSAllowedOrigins,
 		MobileAuth: httpserver.MobileAuthOptions{
 			Issuer:      cfg.OIDCIssuer,

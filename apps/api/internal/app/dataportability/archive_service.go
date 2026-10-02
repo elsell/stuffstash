@@ -14,20 +14,24 @@ import (
 )
 
 type ArchiveDependencies struct {
-	Observer        ports.Observer
-	Jobs            ports.ArchiveJobRepository
-	Artifacts       ports.ArchiveArtifactRepository
-	Commands        ports.ArchiveJobCommands
-	Authorizer      ports.Authorizer
-	Inventories     ports.InventoryRepository
-	Tenants         ports.TenantRepository
-	IDs             ports.IDGenerator
-	Clock           ports.Clock
-	Storage         ports.StreamingBlobStorage
-	Scratch         ports.ArchiveScratchSpace
-	MaxArchiveBytes int64
-	Retention       time.Duration
-	CleanupTimeout  time.Duration
+	Observer         ports.Observer
+	Audit            ports.AuditRepository
+	Plans            ports.ArchivePlanCodec
+	MaxMetadataBytes int64
+	MaxRecords       int
+	Jobs             ports.ArchiveJobRepository
+	Artifacts        ports.ArchiveArtifactRepository
+	Commands         ports.ArchiveJobCommands
+	Authorizer       ports.Authorizer
+	Inventories      ports.InventoryRepository
+	Tenants          ports.TenantRepository
+	IDs              ports.IDGenerator
+	Clock            ports.Clock
+	Storage          ports.StreamingBlobStorage
+	Scratch          ports.ArchiveScratchSpace
+	MaxArchiveBytes  int64
+	Retention        time.Duration
+	CleanupTimeout   time.Duration
 }
 type ArchiveService struct{ deps ArchiveDependencies }
 type ArchiveAccess struct {
@@ -37,7 +41,7 @@ type ArchiveAccess struct {
 }
 
 func NewArchiveService(d ArchiveDependencies) (ArchiveService, error) {
-	if d.Jobs == nil || d.Artifacts == nil || d.Commands == nil || d.Authorizer == nil || d.Inventories == nil || d.Tenants == nil || d.IDs == nil || d.Clock == nil || d.Storage == nil || d.Scratch == nil || d.MaxArchiveBytes <= 0 || d.MaxArchiveBytes > ports.MaxSinglePutBytes || d.Retention <= 0 || d.CleanupTimeout <= 0 {
+	if d.Audit == nil || d.Plans == nil || d.MaxRecords <= 0 || d.MaxMetadataBytes <= 0 || d.MaxMetadataBytes > d.MaxArchiveBytes || d.Jobs == nil || d.Artifacts == nil || d.Commands == nil || d.Authorizer == nil || d.Inventories == nil || d.Tenants == nil || d.IDs == nil || d.Clock == nil || d.Storage == nil || d.Scratch == nil || d.MaxArchiveBytes <= 0 || d.MaxArchiveBytes > ports.MaxSinglePutBytes || d.Retention <= 0 || d.CleanupTimeout <= 0 {
 		return ArchiveService{}, apperrors.ErrInvalidInput
 	}
 	return ArchiveService{deps: d}, nil
@@ -82,13 +86,23 @@ func (s ArchiveService) Job(ctx context.Context, a ArchiveAccess, id string) (ar
 	if !found || job.PrincipalID != a.Principal.ID.String() {
 		return archivejob.Record{}, apperrors.ErrNotFound
 	}
+	if err = s.auditArchiveRead(ctx, a, id, "get"); err != nil {
+		return archivejob.Record{}, err
+	}
 	return job, nil
 }
 func (s ArchiveService) List(ctx context.Context, a ArchiveAccess, after string, limit int) ([]archivejob.Record, error) {
 	if err := s.authorize(ctx, a); err != nil {
 		return nil, err
 	}
-	return s.deps.Jobs.ListArchiveJobs(ctx, a.scope(), after, limit)
+	jobs, err := s.deps.Jobs.ListArchiveJobs(ctx, a.scope(), after, limit)
+	if err != nil {
+		return nil, err
+	}
+	if err = s.auditArchiveRead(ctx, a, "", "list"); err != nil {
+		return nil, err
+	}
+	return jobs, nil
 }
 func (s ArchiveService) CreateExport(ctx context.Context, a ArchiveAccess, key string, photos, files bool) (archivejob.Record, error) {
 	if a.InventoryID == "" {

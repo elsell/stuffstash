@@ -132,7 +132,7 @@ func validateArchiveMediaSet(doc ports.InventoryExportDocument, archive ports.Ar
 	return nil
 }
 func (w ArchiveWorker) stageRestore(ctx context.Context, job archivejob.Record) (ports.ArchiveRestorePlan, error) {
-	plan, err := w.loadRestorePlan(ctx, job)
+	plan, err := w.deps.Service.loadRestorePlan(ctx, job)
 	if err != nil {
 		return plan, err
 	}
@@ -147,41 +147,6 @@ func (w ArchiveWorker) stageRestore(ctx context.Context, job archivejob.Record) 
 				return plan, err
 			}
 		}
-	}
-	return plan, nil
-}
-func (w ArchiveWorker) loadRestorePlan(ctx context.Context, job archivejob.Record) (ports.ArchiveRestorePlan, error) {
-	empty := ports.ArchiveRestorePlan{}
-	key, ok := media.NewStorageKey(job.PlanArtifactID)
-	if !ok {
-		return empty, ErrArchiveMetadata
-	}
-	stream, size, err := w.deps.Service.deps.Storage.OpenBlobStream(ctx, key)
-	if err != nil {
-		return empty, err
-	}
-	defer stream.Close()
-	if size <= 0 || size > w.deps.Limits.MetadataBytes {
-		return empty, ports.ErrBlobStreamSize
-	}
-	data, err := io.ReadAll(io.LimitReader(archiveInputReader{ctx: ctx, reader: stream}, size+1))
-	if err != nil {
-		return empty, err
-	}
-	hash := sha256.Sum256(data)
-	if int64(len(data)) != size || hex.EncodeToString(hash[:]) != job.PlanSHA256 {
-		return empty, ErrArchiveMetadata
-	}
-	plan, err := w.deps.Plans.DecodePlan(ctx, data, int(w.deps.Limits.MetadataBytes))
-	if err != nil {
-		return empty, err
-	}
-	if plan.Document.TenantID != job.TenantID || plan.Document.InventoryID != job.DestinationInventoryID {
-		return empty, ErrArchiveMetadata
-	}
-	plan.Document.InventoryName = job.DestinationName
-	if err = ValidateArchiveDocument(ctx, plan.Document, w.deps.MaxRecords); err != nil {
-		return empty, err
 	}
 	return plan, nil
 }

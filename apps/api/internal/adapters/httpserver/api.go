@@ -1,8 +1,11 @@
 package httpserver
 
 import (
+	"time"
+
 	"github.com/danielgtaylor/huma/v2"
 	accessroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/access/routes"
+	archiveroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/archives/routes"
 	assetroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/assets/routes"
 	attachmentroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/attachments/routes"
 	auditroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/audit/routes"
@@ -23,9 +26,11 @@ import (
 	tenantroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/tenants/routes"
 	undoableoperationroutes "github.com/stuffstash/stuff-stash/internal/adapters/httpserver/undoableoperations/routes"
 	"github.com/stuffstash/stuff-stash/internal/app"
+	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
 )
 
-func registerRoutes(api huma.API, application app.App) {
+func registerRoutes(api huma.API, application app.App, archives *dataportability.ArchiveService, archiveTimeout time.Duration) {
+	archiveroutes.Register(api, application, archives, archiveTimeout)
 	exportroutes.Register(api, application)
 	notificationroutes.Register(api, application)
 	clienttelemetryroutes.Register(api, application)

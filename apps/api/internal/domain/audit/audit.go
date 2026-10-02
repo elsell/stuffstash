@@ -40,6 +40,7 @@ func (id PrincipalID) String() string {
 type Action string
 
 const (
+	ActionArchiveJobViewed                          Action = "archive_job.viewed"
 	ActionArchiveJobCreated                         Action = "archive_job.created"
 	ActionArchiveJobUpdated                         Action = "archive_job.updated"
 	ActionNotificationDeviceUpdated                 Action = "notification_device.updated"
@@ -153,7 +154,7 @@ const (
 func NewAction(value string) (Action, bool) {
 	action := Action(strings.TrimSpace(value))
 	switch action {
-	case ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
+	case ActionArchiveJobViewed, ActionArchiveJobCreated, ActionArchiveJobUpdated, ActionNotificationUnread, ActionNotificationDeviceUpdated, ActionNotificationDeviceRevoked, ActionNotificationDeviceViewed, ActionNotificationCreated, ActionNotificationRead, ActionNotificationListed, ActionNotificationPreferencesViewed, ActionNotificationPreferencesUpdated, ActionTenantCreated,
 		ActionTenantViewed,
 		ActionTenantListed,
 		ActionTenantUpdated,

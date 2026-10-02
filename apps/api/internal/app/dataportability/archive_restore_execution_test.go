@@ -44,7 +44,7 @@ func verifyArchiveRestoreOnFreshInstance(t *testing.T, archive []byte, original 
 			must(auth.GrantTenantOwner(ctx, principal, "destination"))
 			storage := blobstore.NewFileSystemStore(t.TempDir())
 			clock := &archiveAdvancingClock{}
-			deps := dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Commands: store, Authorizer: auth, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: clock, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second}
+			deps := dataportability.ArchiveDependencies{Jobs: store, Artifacts: store, Audit: store, Plans: inventoryarchive.PlanCodec{}, MaxMetadataBytes: 1 << 16, MaxRecords: 100, Commands: store, Authorizer: auth, Inventories: store, Tenants: store, IDs: &archiveTestIDs{}, Clock: clock, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: t.TempDir()}, MaxArchiveBytes: 1 << 20, Retention: time.Hour, CleanupTimeout: time.Second}
 			service, err := dataportability.NewArchiveService(deps)
 			must(err)
 			publisher := gormstore.NewArchiveRestorePublisher(store, clock, 100)

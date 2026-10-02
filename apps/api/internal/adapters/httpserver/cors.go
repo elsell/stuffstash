@@ -21,7 +21,7 @@ func withCORS(next http.Handler, allowedOrigins []string) http.Handler {
 		if _, ok := allowed[origin]; ok {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", browserAllowedMethods)
-			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-ID, Mcp-Protocol-Version, Mcp-Method, Mcp-Name")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Idempotency-Key, X-Request-ID, Mcp-Protocol-Version, Mcp-Method, Mcp-Name")
 			w.Header().Set("Access-Control-Max-Age", "600")
 			if r.URL.Path == "/mcp" {
 				w.Header().Set("Access-Control-Expose-Headers", "WWW-Authenticate")
@@ -52,7 +52,7 @@ func validCORSPreflight(r *http.Request) bool {
 			continue
 		}
 		switch requestedHeader {
-		case "Authorization", "Content-Type", "X-Request-Id", "Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name":
+		case "Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id", "Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name":
 		default:
 			return false
 		}

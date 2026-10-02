@@ -2,13 +2,14 @@ package bootstrap
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/stuffstash/stuff-stash/internal/adapters/blobstore"
 	"github.com/stuffstash/stuff-stash/internal/adapters/idgen"
 	"github.com/stuffstash/stuff-stash/internal/adapters/inventoryarchive"
 	"github.com/stuffstash/stuff-stash/internal/app/dataportability"
 	"github.com/stuffstash/stuff-stash/internal/config"
 	"github.com/stuffstash/stuff-stash/internal/ports"
-	"os"
 )
 
 func buildArchiveRuntime(cfg config.ArchiveConfig, repos repositories, authorizer ports.Authorizer, observer ports.Observer) (*dataportability.ArchiveService, *dataportability.ArchiveWorker, error) {
@@ -26,7 +27,7 @@ func buildArchiveRuntime(cfg config.ArchiveConfig, repos repositories, authorize
 		return nil, nil, err
 	}
 	clock := ports.SystemClock{}
-	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: repos.archiveJobs, Artifacts: repos.archiveArtifacts, Commands: repos.archiveCommands, Authorizer: authorizer, Inventories: repos.inventories, Tenants: repos.tenants, IDs: idgen.NewULIDGenerator(), Clock: clock, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: cfg.ScratchDirectory}, MaxArchiveBytes: cfg.MaxBytes, Retention: cfg.Retention, CleanupTimeout: cfg.CleanupInterval, Observer: observer})
+	service, err := dataportability.NewArchiveService(dataportability.ArchiveDependencies{Jobs: repos.archiveJobs, Artifacts: repos.archiveArtifacts, Commands: repos.archiveCommands, Audit: repos.audit, Plans: inventoryarchive.PlanCodec{}, MaxMetadataBytes: cfg.MetadataBytes, MaxRecords: cfg.MaxRecords, Authorizer: authorizer, Inventories: repos.inventories, Tenants: repos.tenants, IDs: idgen.NewULIDGenerator(), Clock: clock, Storage: storage, Scratch: blobstore.ScratchSpace{Directory: cfg.ScratchDirectory}, MaxArchiveBytes: cfg.MaxBytes, Retention: cfg.Retention, CleanupTimeout: cfg.CleanupInterval, Observer: observer})
 	if err != nil {
 		return nil, nil, err
 	}

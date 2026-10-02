@@ -284,3 +284,24 @@ them there is a startup error. Runtime settings use `STUFF_STASH_ARCHIVE_` varia
 fail startup. At most eight workers execute concurrently. Worker shutdown cancels
 and joins active work before closing repositories. A separate cleanup loop uses
 the same cancellation lifecycle. Blob deletion continues through its existing queue.
+
+### REST job resources
+
+`/tenants/{tenantId}/archive-jobs` lists private jobs (GET) and creates an export
+(POST with inventoryId, photos, otherFiles). Creation requires Idempotency-Key.
+`/tenants/{tenantId}/archive-restores` accepts a streamed application/zip POST with
+that header. Both return a job resource. `archive-jobs/{jobId}` supports GET and
+DELETE (cancel); POST subresources `retry` and `approve` retry or approve the new
+inventory name. GET subresources `preview` and `content` return validated preview
+counts/remappings or stream a ready ZIP download. Export job reads/actions carry
+inventoryId as a query parameter; restore jobs use household scope without it.
+Scope must exactly match the job. Listings are cursor-paginated and principal-filtered.
+
+All boundaries authenticate first and require current authorization. Responses use
+standard envelopes and safe fields only: no artifact keys, checksums, lease tokens,
+or principal IDs. Read/list/preview/download accesses record archive_job.viewed
+with an operation label; failure to persist that audit prevents disclosure. Invalid
+state transitions return conflict; expired downloads and previews are unavailable.
+
+Configured browser origins permit the `Idempotency-Key` request header for archive
+creation and ZIP upload. Unconfigured origins receive no CORS grant.
