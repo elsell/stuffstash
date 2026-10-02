@@ -52,3 +52,8 @@ test('checks direct Svelte option objects and preserves literal source offsets',
   const [issue] = issues;
   assert.equal(source.slice(issue.offset, issue.offset + 14), "'Use defaults'");
 });
+
+test('checks each-block collection display properties and leaves protocol values intact', () => {
+  const source = '<script>let local = [];</script>{#each level === "inventory" ? [{ value: "List", label: "List", title: `From ${tenant.name}` }] : [{ value: "Map", label: t("browse.map"), title: t("group", { name: inventory.name }) }] as option}<span>{option.label}</span>{/each}';
+  assert.deepEqual(embeddedDisplayMessages(source, 'Example.svelte').map(x => x.text), ['List', 'From {value}']);
+});

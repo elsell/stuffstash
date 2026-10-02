@@ -607,3 +607,11 @@ it('loads voice identity without asset, tag or attachment reads', async () => {
   expect(client.listAssetTagRequests).toEqual([]);
   expect(client.listAttachmentRequests).toEqual([]);
 });
+
+it('offers recovery when a location is missing without crossing inventory boundaries', async () => {
+  const client = new FakeInventoryApiClient();
+  const repository = new ApiInventorySummaryRepository(client, 'tenant-home');
+  await expect(repository.getLocationAssetsSnapshot('missing-location'))
+    .rejects.toThrow('This location is no longer available in this inventory.');
+  expect(client.listAssetRequests.every(request => request.inventoryId === 'inventory-home')).toBe(true);
+});
