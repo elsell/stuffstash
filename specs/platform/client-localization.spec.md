@@ -289,3 +289,11 @@ continuation cursor) must stop at the existing guard and show cataloged retry
 guidance, without exposing cursor diagnostics. A location missing from the
 selected inventory must show cataloged unavailability guidance. Preserve selected
 inventory scope, user-authored names, cancellation and existing request bounds.
+
+### Closed-state messages
+
+Workspace creation failures, invitation copy/share failure titles, and active/
+archived settings loading labels use complete messages for each closed state.
+Do not interpolate internal kind, action or lifecycle identifiers into translated
+sentences. Preserve English recovery meaning, draft retention, privacy of transport
+errors, and command behavior. User-authored names remain verbatim parameters.
