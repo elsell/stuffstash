@@ -1,5 +1,16 @@
 # Roadmap Spec
 
+## Next priority — portable archive and restore, October 2
+
+The user confirmed CSV export works after production was upgraded from v0.24.0
+to v0.27.5 (infra commit `a9adf2e`). They now require a complete instance-to-instance
+archive/restore flow. Implement A1 durable archive export, A2 validated new-inventory
+restore, and A3 mobile/web controls and connected round-trip acceptance as specified
+in [portable archive](../data-portability/portable-archive.spec.md). This is the next
+delivery priority within the audit goal, not an export-only scope reduction.
+Preserve prior unresolved native/physical evidence; do not let it block independent
+archive implementation. Production GitOps deployment is part of release completion.
+
 ## Current objective — October 1, 2026
 
 Close the documentation, implementation and verification gaps in
