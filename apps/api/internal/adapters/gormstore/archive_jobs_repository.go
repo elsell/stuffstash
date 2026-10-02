@@ -117,6 +117,9 @@ func (s Store) ListRunnableArchiveJobs(ctx context.Context, now time.Time, limit
 	return readArchiveJobs(q.Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}}).Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}}).Limit(limit))
 }
 func archiveJobQuery(db *gorm.DB, scope ports.ArchiveJobScope) *gorm.DB {
+	if scope.PrincipalID != "" {
+		db = db.Where(clause.Eq{Column: "principal_id", Value: scope.PrincipalID})
+	}
 	return db.Where(clause.Eq{Column: "tenant_id", Value: scope.TenantID}).Where(clause.Eq{Column: "source_inventory_id", Value: scope.SourceInventoryID})
 }
 func readArchiveJobs(q *gorm.DB) ([]archivejob.Record, error) {

@@ -11,7 +11,7 @@ import (
 var ErrArchiveJobConflict = errors.New("archive job changed or request conflicts")
 var ErrArchiveJobScope = errors.New("archive job scope is required")
 
-type ArchiveJobScope struct{ TenantID, SourceInventoryID string }
+type ArchiveJobScope struct{ TenantID, SourceInventoryID, PrincipalID string }
 
 // Restore jobs have an empty SourceInventoryID and are tenant-owned. Export
 // reads require the exact source inventory as well as the tenant.

@@ -214,3 +214,20 @@ allocated destination inventory ID to the job. Approval supplies only the new
 inventory name; it cannot replace the plan or destination ID. A repeated restore
 upload with the same principal/request key and byte checksum reuses the existing
 job and discards its redundant private object. Different bytes conflict.
+
+### Job authorization and audit
+
+Only the requesting principal can inspect or control a job or fetch its private
+artifacts, even when another principal can view the same inventory. Every request
+also requires current source-inventory view permission for exports or household
+inventory-creation permission for restores. Scope and principal mismatches return
+not found. Listings are principal-filtered before pagination. Requests must carry
+an idempotency key; creation and user approval/cancellation/retry are audited
+atomically with the job mutation. Lease heartbeats are operational updates, not
+individual user-history entries. Audit records use archive_job.created and
+archive_job.updated, target archive_job, and safe state/kind metadata only.
+
+If job creation returns an uncertain commit outcome, retain the private upload.
+Only a confirmed redundant upload may be deleted immediately; unreferenced
+artifacts are reclaimed by retention cleanup after reconciliation. A lost commit
+acknowledgment must never destroy a queued restore job’s source.
