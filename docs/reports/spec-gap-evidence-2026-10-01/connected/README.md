@@ -60,3 +60,31 @@ migration. PR #222 merged `39700a21`; main now requires the connected browser
 check. Release run36913294557 succeeded as v0.26.2, including TestFlight upload;
 that delivery result is separate from runtime acceptance.
 This does not verify saving exports into a physical iOS receiving application.
+
+
+## October 2 connected everyday web workflows
+
+Tested the isolated Paul server with normal English text in Chromium 1228 at
+1440×1000 and 390×844. Server images were the pinned v0.27.3 API
+`5d07b3ea41cb2236ed335b79816683c356c0d2a21536ee41da53e46edba0bfed` and web
+`402aac247ff17a6debe72bbee482f0a31e60a794ca9564142611f264dfe69630`.
+Signed in through real Dex; no injected session or intercepted API responses.
+The browser trusted the exact server certificate public key after verification
+against the isolated server's CA. No general TLS-verification bypass was used.
+Only synthetic inventory data was changed.
+
+Observed: search and Availability filtering returned the item; editing its name
+survived reload; moving it to Inventory root and back to a searched location
+survived reload; Map search revealed the containing location and item. Inspected
+[Filters](paul-filters-narrow.png) and [Move](paul-move-narrow.png) at narrow width
+show reachable footer actions. This does not establish large-text, assistive,
+physical-mobile or connected native acceptance.
+
+**Finding awaiting user decision:** [filtered Browse](paul-filtered-browse.png)
+→ item → Move → Cancel → item Back ends at [Home](paul-detail-back-home.png),
+not the originating filtered results. This was reproduced twice. Returning to
+Browse through navigation subsequently showed an empty search query. Source
+`assetDetailBackHref` deliberately falls back to Home when no location is selected;
+the current tests assert that fallback. The observation is not a flaky selector
+or a failed Move persistence operation. No fix has been applied pending the user's
+requested confirmation of newly observed UI problems.

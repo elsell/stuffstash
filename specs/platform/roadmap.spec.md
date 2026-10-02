@@ -106,6 +106,16 @@ Current priority is normal-English everyday use: broken actions or lost work,
 Browse/Details/Edit/Move and filters, then hierarchy and reachable controls.
 RTL and broader adaptation remain obligations but do not lead the work queue.
 
+PR #238 merged `30db241f` and shipped v0.27.4, TestFlight build159.1, in
+release36954278739. Upload and changelog readback succeeded. The user accepted
+the unresolved Sharing keyboard issue for release; #239 owns its follow-up.
+
+October 2 real-browser checks on Paul's isolated v0.27.3 server verified
+Browse search/filtering, persisted edits and moves, and Map lookup at normal text.
+A newly observed return-context issue awaits user confirmation: Details Back after
+cancelling Move returns filtered Browse users to Home and loses their query.
+[Current connected evidence](../../docs/reports/spec-gap-evidence-2026-10-01/connected/README.md).
+
 Normal-text run36941858463 at main `47b43d39` passed Details and Sharing footer
 checks on iPhone17 and iPad mini. Inspected Details captures show final content
 above the voice accessory and persistent tabs. Sharing captures likewise show the final invitation and footer above
