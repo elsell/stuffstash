@@ -39,7 +39,10 @@ process exit reclaims storage; the revised behavior test awaits CI. Native audit
 new archive catalog. The script now discovers production catalog modules; its
 three-locale test passes locally. A connected OIDC archive journey now verifies
 ZIP download, validation-before-approval and the actual restored inventory URL
-after reload; CI execution is pending. Native transfer workflows remain unverified.
+after reload. CI `37024865442` reached archive download but timed out before
+restore review; safe HTTP/job-state capture now distinguishes upload rejection,
+validation failure and UI refresh on the next run. Native archive review/keyboard
+and real loopback upload cases are implemented; native execution remains unverified.
 
 ## Current objective — October 1, 2026
 

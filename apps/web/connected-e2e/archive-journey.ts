@@ -1,8 +1,8 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 /** Real API/job/ZIP flow using the portable browser download fallback. */
-export async function verifyArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo) {
+async function runArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo) {
   // Playwright cannot operate the OS file-save picker. Exercise the supported
   // bounded download fallback, without intercepting any archive HTTP operation.
   await page.addInitScript(() => { Object.defineProperty(window, 'showSaveFilePicker', { value: undefined, configurable: true }); });
@@ -46,4 +46,25 @@ export async function verifyArchiveJourney(page: Page, tenantId: string, invento
     await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     await page.screenshot({ path: info.outputPath('connected-archive-restored.png'), fullPage: true });
   } finally { await archive.delete(); }
+}
+
+export async function verifyArchiveJourney(page: Page, tenantId: string, inventoryId: string, title: string, info: TestInfo) {
+  const states: { status: number; state?: string; failure?: string; error?: string }[] = [];
+  const pending: Promise<void>[] = [];
+  const observe = (response: import('@playwright/test').Response) => {
+    if (!response.url().includes('/archive-') || response.url().includes('/content')) return;
+    pending.push((async () => {
+      try {
+        const body = await response.json();
+        states.push({ status: response.status(), state: body.data?.state, failure: body.data?.failure, error: body.error?.code });
+      } catch { states.push({ status: response.status() }); }
+    })());
+  };
+  page.on('response', observe);
+  try { await runArchiveJourney(page, tenantId, inventoryId, title, info); }
+  catch (error) { await page.screenshot({ path: info.outputPath('connected-archive-failure.png'), fullPage: true }); throw error; }
+  finally {
+    page.off('response', observe); await Promise.all(pending);
+    await writeFile(info.outputPath('connected-archive-state.json'), JSON.stringify(states));
+  }
 }
