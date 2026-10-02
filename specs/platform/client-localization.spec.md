@@ -55,6 +55,17 @@ locale, parameter safety, independent translators and pseudolocales. Representat
 browser and native workflows verify expanded labels, search, approval and return.
 Do not create a separate test for every extracted label.
 
+### Archive review counts
+
+Both clients must render restore-review counts using shared locale-aware plural
+messages: item/tag/photo/file totals, custom-type/field totals, and complete
+omission/remapping notices. Zero, one and many must select the appropriate form.
+Keep summary ordering in catalog templates; never concatenate an English noun to
+a formatted number. A shared presentation formatter accepts only preview counts,
+not transport/domain objects or user titles. Critical tests cover singular and
+mixed totals, zero/many notices and expanded-locale output. This changes wording,
+not archive selection, validation or approval.
+
 ## References
 
 - [ECMA-402 internationalization API](https://402.ecma-international.org/)

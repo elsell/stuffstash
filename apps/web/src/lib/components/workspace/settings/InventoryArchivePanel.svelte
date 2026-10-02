@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatArchiveReview } from '@stuff-stash/localization';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
@@ -86,6 +87,7 @@
     if (job.state === 'running') return t(job.kind === 'export' ? 'archive.running' : job.phase === 'validation' ? 'archive.validating' : 'archive.restoring');
     return t(`archive.${job.state}`);
   }
+  const reviewCopy = $derived(review ? formatArchiveReview(t, review.preview) : undefined);
 </script>
 
 <section class="settings-resource-group archive-task" aria-label={t(scope.inventoryId ? 'archive.export' : 'archive.restore')}>
@@ -108,10 +110,10 @@
   {#if review}
     <section class="archive-review" aria-label={t('archive.review')}>
       <h3>{t('archive.review')}</h3><p>{t('archive.newInventory')}</p>
-      <p>{t('archive.counts', { assets: review.preview.assets, tags: review.preview.tags, photos: review.preview.photos, files: review.preview.otherFiles })}</p>
-      <p>{t('archive.definitions', { types: review.preview.customAssetTypes, fields: review.preview.customFields })}</p>
-      {#if review.preview.omittedAttachments}<p>{t('archive.omitted', { count: review.preview.omittedAttachments })}</p>{/if}
-      {#if review.preview.keyRemappings.length}<p>{t('archive.remappings', { count: review.preview.keyRemappings.length })}</p>{/if}
+      <p>{reviewCopy?.content}</p>
+      <p>{reviewCopy?.schema}</p>
+      {#if review.preview.omittedAttachments}<p>{reviewCopy?.omitted}</p>{/if}
+      {#if review.preview.keyRemappings.length}<p>{reviewCopy?.remappings}</p>{/if}
       <Label class="flex flex-wrap items-center gap-2">{t('archive.name')}<Input name="inventoryName" bind:value={name} maxlength={200} disabled={pending} /></Label>
       <div class="archive-actions"><Button.Root disabled={pending || !name.trim()} onclick={approve}>{t('archive.restore')}</Button.Root><Button.Root variant="outline" disabled={pending} onclick={() => { review = undefined; }}>{t('archive.closeReview')}</Button.Root></div>
     </section>
