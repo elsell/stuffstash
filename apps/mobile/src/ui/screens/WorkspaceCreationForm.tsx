@@ -27,7 +27,7 @@ export function WorkspaceCreationForm({ task, command, onCancel, onCreated, onBu
         : { kind: 'inventory' as const, value: await command.inventory(task.household.id, name) };
       if (alive.current) onCreated(result);
     } catch {
-      if (alive.current) setError(t('mobile.WorkspaceCreationForm.couldNotCreateCheckYourAccessAndConnectionThen', { kind: String(task.kind) }));
+      if (alive.current) setError(t(`workspace.creationFailed.${task.kind}`));
     } finally {
       pending.current = false;
       if (alive.current) { setSaving(false); onBusy(false); }

@@ -1,0 +1,23 @@
+{
+  "viewport": {
+    "width": 320,
+    "height": 800
+  },
+  "observations": [
+    {
+      "key": "Shift+Tab",
+      "insideDialog": true,
+      "label": "Save"
+    },
+    {
+      "key": "Shift+Tab",
+      "insideDialog": true,
+      "label": "Cancel"
+    }
+  ],
+  "geometry": {
+    "width": 319,
+    "contentWidth": 319
+  },
+  "cancelledWithoutSaving": true
+}
