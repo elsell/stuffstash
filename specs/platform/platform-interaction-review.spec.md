@@ -145,6 +145,9 @@ A pending, unexpired invitation exposes a trailing native ellipsis menu beside
 its recipient and status. The menu contains the destructive Cancel invitation
 command; repeated large destructive buttons must not dominate the invitation list.
 This October 2 user-approved pattern supersedes the previous direct-button choice.
+After invitation submission settles, the iOS email field must release native
+focus even when creation fails. Preserve the submitted email on failure while
+resetting the field session so opening a row menu cannot restore the keyboard.
 Name the recipient in the menu's accessibility label. Use NativeActionMenu; keep
 its trigger separate from the flexible text column so long addresses can wrap.
 Keep destructive confirmation naming the recipient, permission/scope ownership,

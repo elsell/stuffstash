@@ -108,7 +108,8 @@ it('chooses access in place and preserves the submitted draft while creation fai
     await h.changeText(h.byLabel('Invitee email'), 'replacement@example.test');
     await h.run(() => rejectCreate?.(new Error('offline')));
     expect(h.allText()).toContain('Could not create invitation');
-    expect(h.byLabel('Invitee email')).toBe(emailField);
+    if (Platform.OS === 'ios') expect(h.byLabel('Invitee email')).not.toBe(emailField);
+    else expect(h.byLabel('Invitee email')).toBe(emailField);
     expect(h.byLabel('Invitee email')?.props.editable).toBe(true);
     expect(h.byLabel('Choose invitation access')?.props.disabled).toBe(false);
   } finally { await h.unmount(); client.clear(); }
@@ -192,7 +193,8 @@ it('refreshes safe metadata and shows link-unavailable recovery inside the shari
     while (parent && parent.type !== 'ScrollView') parent = parent.parent;
     expect(parent?.type).toBe('ScrollView');
     expect(h.allText()).toContain('second@example.test');
-    expect(h.byLabel('Invitee email')).toBe(emailField);
+    if (Platform.OS === 'ios') expect(h.byLabel('Invitee email')).not.toBe(emailField);
+    else expect(h.byLabel('Invitee email')).toBe(emailField);
     expect(h.byLabel('Complete invitation link')).toBeUndefined();
     expect(h.allText()).not.toContain('Could not create invitation');
   } finally { await h.unmount(); client.clear(); }
@@ -361,7 +363,10 @@ it.each(['ios','android'] as const)('preserves %s email draft and resets after s
   expect(field?.props.value).toBe(platform === 'ios' ? undefined : '');
   expect(field?.props.defaultValue).toBe(platform === 'ios' ? '' : undefined);
   await h.changeText(field,'audit@example.invalid');await h.press(h.byLabel('Create Invitation'));await settle(h);
-  expect(h.byLabel('Invitee email')).toBe(field);
+  if(platform === 'ios'){
+   expect(h.byLabel('Invitee email')).not.toBe(field);
+   expect(h.byLabel('Invitee email')?.props.defaultValue).toBe('audit@example.invalid');
+  }else expect(h.byLabel('Invitee email')).toBe(field);
   denied=true;await h.run(()=>client.invalidateQueries({queryKey:mobileQueryKeys.invitations('scope','tenant','inventory')}));await settle(h);
   expect(h.byLabel('Invitee email')).toBeUndefined();
   denied=false;await h.run(()=>client.invalidateQueries({queryKey:mobileQueryKeys.invitations('scope','tenant','inventory')}));await settle(h);
