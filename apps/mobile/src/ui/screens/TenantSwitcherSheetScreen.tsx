@@ -29,6 +29,7 @@ import { useNativeHeaderActionOptions } from '../components/useNativeHeaderActio
 import { useMobileServerStateScopeId } from '../navigation/MobileServerStateProvider';
 
 type TenantSwitcherSheetScreenProps = {
+  readonly onRestore?: (tenantId: string) => void;
   readonly createWorkspace?: CreateWorkspace;
   readonly dashboardQuery: HomeDashboardQuery;
   readonly selectInventoryCommand: SelectInventoryCommand;
@@ -42,7 +43,8 @@ export function TenantSwitcherSheetScreen(props: TenantSwitcherSheetScreenProps)
 function TenantSwitcherVisit({
   dashboardQuery,
   selectInventoryCommand,
-  createWorkspace
+  createWorkspace,
+  onRestore
 }: TenantSwitcherSheetScreenProps) {
   const styles = useStyles();
   const [creation, setCreation] = useState<WorkspaceCreationTask>();
@@ -116,6 +118,7 @@ function TenantSwitcherVisit({
       {selectionError ? <Text accessibilityRole="alert" style={styles.errorMessage}>{selectionError}</Text> : null}
       {displayed ? (
         <TenantSwitcher
+          onRestore={onRestore}
           dashboard={displayed}
           preferredTenantId={preferredTenantId}
           onCreate={createWorkspace ? task => { if (visit?.active && !pending.current) setCreation(task); } : undefined}
@@ -133,8 +136,10 @@ function TenantSwitcher({
   selecting,
   onSelectInventory,
   preferredTenantId,
-  onCreate
+  onCreate,
+  onRestore
 }: {
+  readonly onRestore?: (tenantId: string) => void;
   readonly preferredTenantId?: string;
   readonly onCreate?: (task: WorkspaceCreationTask) => void;
   readonly dashboard: HomeDashboardViewModel;
@@ -173,6 +178,7 @@ function TenantSwitcher({
           <Text style={styles.sectionLabel}>{t('mobile.TenantSwitcherSheetScreen.inventories')}</Text>
           {onCreate && selectedTenant?.canCreateInventory ? <NativeActionRow label={t('mobile.TenantSwitcherSheetScreen.newInventory')} disabled={selecting}
             onPress={() => onCreate({ kind: 'inventory', household: selectedTenant })} /> : null}
+          {onRestore && selectedTenant?.canCreateInventory ? <NativeActionRow label={t('archive.restore')} disabled={selecting} onPress={() => onRestore(selectedTenant.id)} /> : null}
           {selectedTenantInventories.length === 0 ? <Text style={styles.stateText}>{t('mobile.TenantSwitcherSheetScreen.noInventoriesAreAvailableInThisHousehold')}</Text> : null}
 
           {selectedTenantInventories.map((inventory, index) => {

@@ -37,6 +37,7 @@ export const archiveMessages = {
   'archive.definitions': '{types} custom types · {fields} custom fields',
   'archive.omitted': '{count} attachments omitted',
   'archive.remappings': '{count} conflicting definition keys will be renamed.',
+  'archive.close': 'Close',
   'archive.closeReview': 'Close review',
   'archive.more': 'Load more',
   'archive.streamingRequired': 'For archives over 128 MiB, use a browser with direct file saving, such as Chrome or Edge on desktop, or use the mobile app.',
