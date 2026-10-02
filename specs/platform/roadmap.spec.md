@@ -35,8 +35,11 @@ native transfer/runtime verification, connected
 cross-instance acceptance, release and production deployment. Do not treat this
 draft as shipped. Scratch buffers now unlink their private file before use so
 process exit reclaims storage; the revised behavior test awaits CI. Native audit
-`37023979794` targets `833489ca` for compilation and existing export regression;
-it does not yet establish the new archive transfer workflows.
+`37023979794` stopped before compilation because label preparation omitted the
+new archive catalog. The script now discovers production catalog modules; its
+three-locale test passes locally. A connected OIDC archive journey now verifies
+ZIP download, validation-before-approval and the actual restored inventory URL
+after reload; CI execution is pending. Native transfer workflows remain unverified.
 
 ## Current objective — October 1, 2026
 
