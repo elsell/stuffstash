@@ -116,6 +116,44 @@
         "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts: load abort callback",
         "apps/mobile/src/ui/serverState/useMobileInventoryServerQuery.ts"
       ]
+    },
+    {
+      "file": "apps/web/src/lib/runtimeConfig.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Runtime configuration exceptions feed auth failure categories or callback recovery; startup and callback surfaces render cataloged guidance rather than raw configuration errors.",
+      "evidence": [
+        "apps/web/src/routes/+page.svelte: initialize catch and authFailure",
+        "apps/web/src/routes/callback/+page.svelte: failedSignInCallbackPresentation",
+        "apps/web/src/lib/application/signInCallbackPresentation.ts"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/auth.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Sign-in exceptions are handled by the sign-in and callback presentation paths. The OIDC scope string is protocol data, not UI copy.",
+      "evidence": [
+        "apps/web/src/routes/+page.svelte: signIn catch",
+        "apps/web/src/routes/callback/+page.svelte: callback catch",
+        "apps/web/src/lib/application/signInCallbackPresentation.ts"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationInbox.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Local incomplete-pagination errors are ordinary Error values, not safeForUser messages. NotificationInbox replaces them with cataloged load recovery through safeWorkspaceErrorMessage.",
+      "evidence": [
+        "apps/web/src/lib/components/workspace/NotificationInbox.svelte: load catch",
+        "apps/web/src/lib/application/workspaceSafeError.ts"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/application/notificationInboxBatch.ts",
+      "classification": "technical-diagnostic",
+      "reason": "Local batch validation errors are ordinary Error values. NotificationInbox supplies cataloged mark-all recovery; these diagnostics do not define rendered notification labels.",
+      "evidence": [
+        "apps/web/src/lib/components/workspace/NotificationInbox.svelte: markAll catch",
+        "apps/web/src/lib/application/workspaceSafeError.ts"
+      ]
     }
   ],
   "files": [
