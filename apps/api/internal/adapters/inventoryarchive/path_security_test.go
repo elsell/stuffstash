@@ -15,6 +15,10 @@ func TestArchiveRejectsPathAliasesAndSpecialFiles(t *testing.T) {
 	if err := Write(context.Background(), &valid, []byte(`{"assets":[]}`), Selection{}, testTime(), nil, nil, limits()); err != nil {
 		t.Fatal(err)
 	}
+	positive := rewriteInventoryEntry(t, valid.Bytes(), inventoryName, 0600)
+	if _, err := Read(context.Background(), bytes.NewReader(positive), int64(len(positive)), limits()); err != nil {
+		t.Fatalf("unchanged reconstructed archive must be accepted: %v", err)
+	}
 	names := []string{
 		"../inventory.json", "media/../../inventory.json", "/inventory.json",
 		`..\inventory.json`, `C:\inventory.json`, `C:inventory.json`, `\\server\share\inventory.json`,
