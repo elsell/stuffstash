@@ -275,3 +275,9 @@ retry so localization cannot cause duplicate household creation.
 Unavailable checkout, return, return-details and undo commands produce cataloged
 guidance because Home and Details display these command errors. Keep unsupported
 command identifiers as developer diagnostics and preserve action dispatch and IDs.
+
+Inventory discovery recovery must use catalog guidance. Selecting an unavailable
+inventory must use the same typed unavailable error as reading a removed selection,
+without changing the previously selected inventory. Repeated continuation cursors
+and the bounded page limit must fail with cataloged recovery, preserving their
+existing request bounds. Cancellation remains control flow, not recovery copy.

@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import { assertReadActive } from '../../application/shared/ReadRequest';
 import type { Inventory, Page, StuffStashClient, Tenant } from '@stuff-stash/api-client';
 import { SelectedInventoryUnavailableError } from '../../application/shared/SelectedInventoryUnavailableError';
@@ -34,7 +35,7 @@ export class ApiInventoryDirectory {
   async select(id: string, signal?: AbortSignal): Promise<void> {
     let directory = await this.load(signal);
     if (!directory.availableInventories.some(item => item.inventory.id === id)) directory = await this.load(signal, true);
-    if (!directory.availableInventories.some(item => item.inventory.id === id)) throw new Error('Selected inventory is not available in the configured tenant.');
+    if (!directory.availableInventories.some(item => item.inventory.id === id)) throw new SelectedInventoryUnavailableError();
     assertReadActive(signal);
     this.selectedId = id;
     this.selectedIdentity = directory.availableInventories.find(item => item.inventory.id === id);
@@ -99,8 +100,8 @@ async function collectPages<T>(read: (cursor?: string) => Promise<Page<T>>, sign
     rows.push(...page.items);
     cursor = page.pagination.nextCursor ?? undefined;
     if (!cursor) return rows;
-    if (cursors.has(cursor)) throw new Error('Invalid inventory discovery cursor.');
+    if (cursors.has(cursor)) throw new Error(t('recovery.inventoryDiscovery'));
     cursors.add(cursor);
   }
-  throw new Error('Inventory discovery exceeded the page limit.');
+  throw new Error(t('recovery.inventoryDiscovery'));
 }
