@@ -1,0 +1,50 @@
+name: Local provider acceptance
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/local-provider-acceptance.yml'
+      - 'scripts/local-provider/**'
+      - 'apps/api/internal/adapters/voice/compatible*.go'
+permissions:
+  contents: read
+jobs:
+  local-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      LOCAL_MODEL_IMAGE: ollama/ollama:0.9.5@sha256:64fcc2a7c48ae920f5317264031d86414e30417269631822858c6d23f61100b0
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version: '1.25.8'
+          cache-dependency-path: apps/api/go.sum
+      - name: Start isolated pinned runtime
+        run: |
+          docker volume create local-model-acceptance
+          docker run -d --name local-model-acceptance --memory=3g --cpus=2 \
+            -p 127.0.0.1:11434:11434 -v local-model-acceptance:/root/.ollama \
+            -e OLLAMA_NUM_PARALLEL=1 -e OLLAMA_CONTEXT_LENGTH=2048 "$LOCAL_MODEL_IMAGE"
+      - name: Verify pinned model and prepare bounded inference
+        run: python3 scripts/local-provider/prepare.py
+      - name: Verify production adapter with real synthetic inference
+        env:
+          STUFF_STASH_LOCAL_MODEL_ACCEPTANCE: '1'
+          STUFF_STASH_LOCAL_MODEL_EVIDENCE: ${{ github.workspace }}/local-model-evidence/stages.json
+        run: go test -count=1 -timeout=4m ./apps/api/internal/adapters/voice -run '^TestCompatibleLocalModelAcceptance$'
+      - name: Retain allowlisted evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: local-model-evidence
+          path: |
+            local-model-evidence/runtime.json
+            local-model-evidence/stages.json
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Remove isolated runtime and weights
+        if: always()
+        run: |
+          docker rm -f local-model-acceptance || true
+          docker volume rm local-model-acceptance || true
