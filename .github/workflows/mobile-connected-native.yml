@@ -1,0 +1,52 @@
+name: Connected native journey
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  iphone:
+    runs-on: macos-26
+    timeout-minutes: 110
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      NODE_ENV: production
+      AUDIT_SUITE: connected
+      EX_DEV_CLIENT_NETWORK_INSPECTOR: 'false'
+      STUFF_STASH_MOBILE_GENERAL_DISTRIBUTION_BUILD: 'true'
+      EXPO_PUBLIC_STUFF_STASH_API_BASE_URL: ''
+      EXPO_PUBLIC_STUFF_STASH_TENANT_ID: ''
+      EXPO_PUBLIC_STUFF_STASH_INVITATION_ORIGIN: ''
+      EXPO_PUBLIC_STUFF_STASH_UI_LOCALE: en
+      EXPO_PUBLIC_STUFF_STASH_VOICE_DIAGNOSTICS_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version-file: apps/api/go.mod
+          cache: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24.17.0'
+      - name: Install pinned service binaries
+        run: scripts/connected-native/install-services.sh
+      - name: Prepare production client and isolated XCTest target
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.0.7 --activate
+          pnpm install --frozen-lockfile
+          test "$(xcodebuild -version | sed -n '1p')" = 'Xcode 26.6'
+          test "$(pod --version)" = '1.17.0'
+          (cd apps/mobile/ios && pod install --deployment)
+          ruby scripts/prepare-ios-audit-target.rb
+      - name: Run real sign-in, persistence and isolation
+        run: python3 scripts/connected-native/runtime.py bash scripts/connected-native/run-ios.sh
+      - name: Retain only post-authentication evidence
+        if: always()
+        run: python3 scripts/connected-native/export-evidence.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: connected-native-evidence
+          path: ${{ runner.temp }}/connected-native/evidence/
+          retention-days: 7
+          if-no-files-found: error

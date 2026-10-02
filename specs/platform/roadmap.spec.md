@@ -71,6 +71,16 @@ error; G6 repeated or over-limit discovery pages use cataloged retry guidance;
 D2 residual-copy inventory distinguishes the remaining cancellation control-flow
 literal. Preserve selected inventory, request limits, cancellation and tenancy.
 This batch is separate from PR #249 delivery and connected-native acceptance.
+## Next verification batch — connected native
+
+The next bounded batch implements real native sign-in/persistence, cross-principal
+isolation, and allowlisted evidence under
+[connected native acceptance](connected-native-acceptance.spec.md). It runs Dex,
+SpiceDB and the API on the hosted Mac's loopback interface with SQLite/filesystem
+storage, avoiding reusable tunnel credentials and any production-server mutation.
+Source review and local process/evidence tests pass; the first hosted attempt must
+still establish compilation, startup, system-auth behavior and persisted state.
+No connected-native acceptance is claimed from the harness implementation.
 
 ## Current objective — October 1, 2026
 
