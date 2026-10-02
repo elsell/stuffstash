@@ -195,3 +195,16 @@ Original blob reads and archive reads expose streams/random access rather than
 byte slices. S3 reads bind to the observed ETag so a changed object fails instead
 of mixing bytes from different versions. Filesystem writes stage privately and
 rename only after a complete, size-checked copy.
+
+### Atomic restore publication
+
+A dedicated restore unit-of-work inserts the new inventory, localized schema,
+assets, assignments, included attachments and open checkouts in one transaction.
+It uses create-only inserts, never upserts existing user resources. Parent links
+are applied after all assets exist inside that same transaction. Preserved archived
+references are valid restore state; ordinary interactive creation restrictions must
+not silently discard them. The transaction records audit history and enqueues the
+inventory owner grant together with the successful job transition. It locks the
+expected job revision, checks its live lease before work and again immediately
+before completing, using an injected clock. Failure at any step rolls everything
+back. Existing schema key guards remain active to reject concurrent conflicts.
