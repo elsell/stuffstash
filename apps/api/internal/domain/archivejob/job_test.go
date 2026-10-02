@@ -52,14 +52,14 @@ func TestRestoreRequiresApprovalAndRetainsDestinationOnRetry(t *testing.T) {
 	if _, err = claim.Complete("validate", now, "inventory"); err == nil {
 		t.Fatal("validation bypassed approval")
 	}
-	preview, err := claim.PreviewReady("validate", now)
+	preview, err := claim.PreviewReady("validate", now, "plan", r.SourceSHA256, "new-inventory")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err = preview.Claim("restore", now, now.Add(time.Minute)); err == nil {
 		t.Fatal("unapproved restore started")
 	}
-	approved, err := preview.Approve("new-inventory", "My inventory", now)
+	approved, err := preview.Approve("My inventory", now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,5 +102,34 @@ func TestCancellationAndExpiryFencePublication(t *testing.T) {
 	}
 	if _, err = expired.Retry(now.Add(time.Hour)); err == nil {
 		t.Fatal("expired job retried")
+	}
+}
+
+func TestApprovalCannotReplaceValidatedPlan(t *testing.T) {
+	now := startTime()
+	r := Request{RequestKey: "request", ID: "job", TenantID: "tenant", PrincipalID: "owner", Kind: Restore, SourceArtifactID: "source", SourceSHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+	job, err := New(r, now, now.Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	running, err := job.Claim("validator", now, now.Add(time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := running.PreviewReady("validator", now, "plan", r.SourceSHA256, "new-inventory")
+	if err != nil {
+		t.Fatal(err)
+	}
+	approved, err := preview.Approve("Restored", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if approved.PlanArtifactID != "plan" || approved.PlanSHA256 != r.SourceSHA256 || approved.DestinationInventoryID != "new-inventory" {
+		t.Fatal("approval replaced validated plan")
+	}
+	tampered := approved
+	tampered.PlanArtifactID = "different-plan"
+	if err := ValidateSuccessor(preview, tampered); err == nil {
+		t.Fatal("plan substitution accepted")
 	}
 }

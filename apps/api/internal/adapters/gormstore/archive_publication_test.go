@@ -121,8 +121,8 @@ func createRestoreClaimFor(t *testing.T, s Store, now time.Time, tid, iid, id st
 		job = next
 	}
 	persist(job.Claim("validate", now, now.Add(time.Minute)))
-	persist(job.PreviewReady("validate", now))
-	persist(job.Approve(iid, "Restored", now))
+	persist(job.PreviewReady("validate", now, "plan", strings.Repeat("b", 64), iid))
+	persist(job.Approve("Restored", now))
 	persist(job.Claim("publish", now, now.Add(time.Minute)))
 	return job
 }

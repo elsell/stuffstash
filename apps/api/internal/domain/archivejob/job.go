@@ -72,6 +72,8 @@ type Record struct {
 	Attempts               int
 	DestinationInventoryID string
 	DestinationName        string
+	PlanArtifactID         string
+	PlanSHA256             string
 	ResultArtifactID       string
 	Failure                Failure
 }
@@ -119,19 +121,21 @@ func (r Record) Heartbeat(token string, now, until time.Time) (Record, error) {
 	r.LeaseUntil = until.UTC().Truncate(time.Microsecond)
 	return r.changed(now), nil
 }
-func (r Record) PreviewReady(token string, now time.Time) (Record, error) {
-	if !r.owns(token, now) || r.Kind != Restore || r.Phase != Validation {
+func (r Record) PreviewReady(token string, now time.Time, planArtifactID, planSHA256, inventoryID string) (Record, error) {
+	if !r.owns(token, now) || r.Kind != Restore || r.Phase != Validation || strings.TrimSpace(planArtifactID) == "" || !validHash(planSHA256) || strings.TrimSpace(inventoryID) == "" {
 		return Record{}, ErrTransition
 	}
+	r.PlanArtifactID = planArtifactID
+	r.PlanSHA256 = planSHA256
+	r.DestinationInventoryID = inventoryID
 	r.State = AwaitingApproval
 	r.clearLease()
 	return r.changed(now), nil
 }
-func (r Record) Approve(inventoryID, name string, now time.Time) (Record, error) {
-	if !r.current(now) || r.State != AwaitingApproval || r.Kind != Restore || strings.TrimSpace(inventoryID) == "" || strings.TrimSpace(name) == "" {
+func (r Record) Approve(name string, now time.Time) (Record, error) {
+	if !r.current(now) || r.State != AwaitingApproval || r.Kind != Restore || r.DestinationInventoryID == "" || r.PlanArtifactID == "" || !validHash(r.PlanSHA256) || strings.TrimSpace(name) == "" {
 		return Record{}, ErrTransition
 	}
-	r.DestinationInventoryID = inventoryID
 	r.DestinationName = name
 	r.Phase = Execution
 	r.State = Queued
@@ -231,10 +235,10 @@ func ValidateSuccessor(previous, next Record) error {
 			expected, err = previous.Claim(next.LeaseToken, next.UpdatedAt, next.LeaseUntil)
 		}
 	case AwaitingApproval:
-		expected, err = previous.PreviewReady(previous.LeaseToken, next.UpdatedAt)
+		expected, err = previous.PreviewReady(previous.LeaseToken, next.UpdatedAt, next.PlanArtifactID, next.PlanSHA256, next.DestinationInventoryID)
 	case Queued:
 		if previous.State == AwaitingApproval {
-			expected, err = previous.Approve(next.DestinationInventoryID, next.DestinationName, next.UpdatedAt)
+			expected, err = previous.Approve(next.DestinationName, next.UpdatedAt)
 		} else {
 			expected, err = previous.Retry(next.UpdatedAt)
 		}

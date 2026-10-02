@@ -113,3 +113,37 @@ func TestArchiveJobRejectsMutationOutsideTransition(t *testing.T) {
 		t.Fatalf("valid claim rejected: %v", err)
 	}
 }
+
+func TestArchiveRestoreUploadRetryReusesSameBytes(t *testing.T) {
+	ctx := context.Background()
+	s := newTestStore(t, ctx)
+	saveTenant(t, ctx, s, "tenant", "Home")
+	now := time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC)
+	request := archivejob.Request{RequestKey: "upload-request", ID: "first", TenantID: "tenant", PrincipalID: "owner", Kind: archivejob.Restore, SourceArtifactID: "private-first", SourceSHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+	first, err := archivejob.New(request, now, now.Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.CreateArchiveJob(ctx, first); err != nil {
+		t.Fatal(err)
+	}
+	request.ID = "second"
+	request.SourceArtifactID = "private-second"
+	second, err := archivejob.New(request, now, now.Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	same, err := s.CreateArchiveJob(ctx, second)
+	if err != nil || same.ID != first.ID || same.SourceArtifactID != first.SourceArtifactID {
+		t.Fatalf("same-byte retry duplicated source: %v", err)
+	}
+	request.ID = "different"
+	request.SourceSHA256 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	different, err := archivejob.New(request, now, now.Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.CreateArchiveJob(ctx, different); err == nil {
+		t.Fatal("different bytes replaced original upload")
+	}
+}

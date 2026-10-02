@@ -44,6 +44,9 @@ func (s Store) CreateArchiveJob(ctx context.Context, r archivejob.Record) (archi
 	}
 	sameRequest := r.Request
 	sameRequest.ID = previous.ID
+	if sameRequest.Kind == archivejob.Restore && sameRequest.SourceSHA256 == previous.SourceSHA256 {
+		sameRequest.SourceArtifactID = previous.SourceArtifactID
+	}
 	if previous.Request != sameRequest {
 		return archivejob.Record{}, ports.ErrArchiveJobConflict
 	}

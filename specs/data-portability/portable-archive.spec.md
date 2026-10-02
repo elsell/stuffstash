@@ -208,3 +208,9 @@ inventory owner grant together with the successful job transition. It locks the
 expected job revision, checks its live lease before work and again immediately
 before completing, using an injected clock. Failure at any step rolls everything
 back. Existing schema key guards remain active to reject concurrent conflicts.
+
+Preview completion binds a private restore-plan artifact, its SHA-256, and the
+allocated destination inventory ID to the job. Approval supplies only the new
+inventory name; it cannot replace the plan or destination ID. A repeated restore
+upload with the same principal/request key and byte checksum reuses the existing
+job and discards its redundant private object. Different bytes conflict.
