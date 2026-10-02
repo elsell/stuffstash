@@ -119,6 +119,11 @@ diagnostic and lookup-argument contract with pinned Ollama 0.9.5/Qwen3 0.6B.
 Cleanup passed; final-answer replay was not reached. Keep this deployment
 unverified, retain the [bounded failure evidence](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/README.md),
 and do not retry unchanged or gate unrelated releases on it.
+The single Qwen3 4B comparison at `3d0ec491` passed the profile diagnostic
+(24,886 ms) but failed the required lookup assertion (47,558 ms); tool-result
+replay and final answer were not reached. Run37078513169 completed cleanup.
+The comparison is stopped with [its evidence retained](../../docs/reports/spec-gap-evidence-2026-10-01/local-provider/capacity-4b/README.md).
+Local conversation acceptance remains open.
 
 ## Android archive acceptance — stopped setup attempt
 
