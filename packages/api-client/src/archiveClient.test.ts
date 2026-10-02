@@ -26,6 +26,17 @@ describe('archive transport', () => {
     expect(requests.every(r => r.redirect === 'error')).toBe(true);
   });
 
+  it('authenticates a native file upload through the generated operation without buffering the file', async () => {
+    let request: Request | undefined;
+    const client = new ArchiveClient({ baseUrl: 'https://api.example.test', tokenProvider: () => 'current', fetch: async () => { throw new Error('Unexpected ordinary transport'); } });
+    await client.uploadFromFile('home', 'stable', async incoming => { request = incoming; return Response.json({ data: { id: 'native-job' }, meta: {} }); });
+    expect(request!.url).toBe('https://api.example.test/tenants/home/archive-restores');
+    expect(request!.headers.get('Authorization')).toBe('Bearer current');
+    expect(request!.headers.get('Idempotency-Key')).toBe('stable');
+    expect(request!.method).toBe('POST'); expect(await request!.text()).toBe('');
+    expect(request!.redirect).toBe('error');
+  });
+
   it('preserves denial and conflict errors instead of delivering their bodies as files', async () => {
     for (const status of [401, 403, 404, 409, 413, 500]) {
       const client = new ArchiveClient({ baseUrl: 'https://api.example.test', tokenProvider: () => 'token', fetch: async () => Response.json({ error: { code: 'archive_unavailable', message: 'Unavailable.' } }, { status }) });

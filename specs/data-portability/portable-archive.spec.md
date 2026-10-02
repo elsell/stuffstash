@@ -342,3 +342,17 @@ file saving streams directly when the platform offers a writable file picker; th
 portable Blob download fallback is capped at 128 MiB and reports the limitation
 instead of exhausting memory. Larger files require a browser with streaming save
 or native sharing. The server archive limit remains independently configured.
+
+### Native archive transfers
+
+Expo SDK 55's fetch normalizes file uploads into a complete byte array. Archive
+uploads therefore use a focused local Expo native adapter: URLSession upload from
+file on iOS and a streamed OkHttp request on Android (the pinned React Native dependency). This is a concrete
+bounded-memory limitation, not a custom UI control. The shared generated client
+still constructs the upload operation, current bearer header, request key and abort
+signal; the native adapter transports that request without redirect following,
+cookie persistence, TLS overrides or base-URL substitution. Responses are capped at
+64 KiB, transfers have a 30-minute deadline, and leaving the owning task cancels the
+local transfer. Download uses Expo's response stream into a private temporary file,
+then existing system sharing semantics. Native verification must exercise both
+platform adapters; web tests do not establish native file transfer behavior.

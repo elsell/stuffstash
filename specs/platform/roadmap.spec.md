@@ -24,8 +24,14 @@ and security tests passed in `37017505855`; that run failed its separate operati
 coverage registry, now wired to the same journey in `0f8b8a66` (CI pending).
 The generated API client and web export/restore settings flow are implemented:
 73 client tests, six focused web tests and TypeScript/Svelte checks pass locally.
-Rendered/browser acceptance is not yet established. Remaining delivery work:
-stale scratch-file recovery, mobile controls, connected cross-instance acceptance,
+The browser export fixture now passes with archive job listing; connected archive
+acceptance remains unverified. Native upload/file adapters and task cancellation/
+idempotency are implemented, with four SDK and seven mobile critical tests, mobile
+type checking and code-critic review passing. Native compilation, CocoaPods lock
+registration and runtime file-transfer evidence remain pending. CI `37019361609`
+stopped at a localization check and missing browser fixture; both are corrected.
+Remaining delivery work: stale scratch-file recovery, mobile controls, native
+transfer verification, connected cross-instance acceptance,
 release and production deployment. Do not treat this draft as shipped.
 
 ## Current objective — October 1, 2026

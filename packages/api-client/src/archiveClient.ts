@@ -46,6 +46,14 @@ export class ArchiveClient {
     });
     return unwrap(result).data;
   }
+  async uploadFromFile(tenantId: string, requestKey: string, transfer: (request: Request) => Promise<Response>, signal?: AbortSignal): Promise<ArchiveJob> {
+    const result = await this.transport.POST('/tenants/{tenantId}/archive-restores', {
+      params: { path: { tenantId }, header: { 'Idempotency-Key': requestKey } },
+      headers: { 'Content-Type': 'application/zip' }, body: '', bodySerializer: () => undefined, signal,
+      fetch: input => transfer(new Request(input))
+    });
+    return unwrap(result).data;
+  }
   async download(scope: ArchiveScope, jobId: string, signal?: AbortSignal): Promise<ReadableStream<Uint8Array>> {
     const result = await this.transport.GET(`${jobPath}/content`, { params: parameters(scope, jobId), parseAs: 'stream', signal });
     return unwrap(result);
