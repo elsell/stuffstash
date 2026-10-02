@@ -1,0 +1,263 @@
+{
+  "date": "2026-10-02",
+  "browser": "Chromium 149.0.7827.55",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "server": "isolated Paul v0.27.3",
+  "method": "Real Dex sign-in, then keyboard Tab/Space/Enter/Escape without locator focus or click for Browse/filter/detail/edit interactions. DOM reads observe focus; reload verifies persistence.",
+  "homeToBrowse": [
+    {
+      "tag": "BUTTON",
+      "text": "Mobile audit inventory Mobile audit household",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "Home Recent assets and places",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "Browse Find and explore your inventory",
+      "label": null
+    }
+  ],
+  "browseToSearch": [
+    {
+      "tag": "A",
+      "text": "Import Bring in outside data",
+      "label": null,
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Account owner@example.com",
+      "label": "Account menu for owner@example.com",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "label": "Ask Stuff Stash",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "label": "Notifications, 0 unread",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Add",
+      "label": null,
+      "placeholder": null
+    },
+    {
+      "tag": "A",
+      "text": "List",
+      "label": null,
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": "Search Browse",
+      "placeholder": "Search this inventory"
+    }
+  ],
+  "searchToFilters": [
+    {
+      "tag": "BUTTON",
+      "text": "Search",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "All",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "Expiring soon",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "Expired",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "All dates",
+      "label": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Filters",
+      "label": null
+    }
+  ],
+  "filterEntry": {
+    "text": "Active",
+    "inside": true
+  },
+  "filterCycle": [
+    {
+      "text": "Archived",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "All",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Any",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Available",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Checked out",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Reset",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Cancel",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Apply filters",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Close",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Active",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "Archived",
+      "label": null,
+      "inside": true
+    },
+    {
+      "text": "All",
+      "label": null,
+      "inside": true
+    }
+  ],
+  "filterEscapeReturn": "Filters",
+  "filterApplied": "availability=available&q=flashlight",
+  "browseToDetail": [
+    {
+      "tag": "BUTTON",
+      "text": "Availability: Available×"
+    },
+    {
+      "tag": "A",
+      "text": "Connected audit flashlightItem"
+    }
+  ],
+  "detailToEdit": [
+    {
+      "tag": "A",
+      "text": "Back",
+      "label": null
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": "Choose photo"
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": "Choose file"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Add photo",
+      "label": null
+    },
+    {
+      "tag": "A",
+      "text": "Edit",
+      "label": null
+    }
+  ],
+  "editEntry": {
+    "tag": "INPUT",
+    "value": "Connected audit flashlight",
+    "inside": true
+  },
+  "editCycle": [
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": null,
+      "inside": true
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": "",
+      "label": null,
+      "inside": true
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": null,
+      "inside": true
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": null,
+      "inside": true
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "label": "Pick new tag color",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "Cancel",
+      "label": null,
+      "inside": true
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save",
+      "label": null,
+      "inside": true
+    }
+  ],
+  "descriptionPersistedAfterReload": true,
+  "limits": [
+    "No screen reader or physical-device interaction",
+    "Single desktop viewport",
+    "No full-app accessibility certification"
+  ]
+}

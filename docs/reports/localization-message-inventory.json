@@ -722,10 +722,6 @@
       "candidates": 1
     },
     {
-      "file": "apps/web/src/lib/components/workspace/InventoryWorkspaceRouteContent.svelte",
-      "candidates": 1
-    },
-    {
       "file": "apps/web/src/lib/components/workspace/ParentTargetPicker.svelte",
       "candidates": 1
     },

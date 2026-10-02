@@ -119,3 +119,24 @@ There is no cold-cache label, load test, production percentile, physical-device
 claim, telemetry correlation or before/after optimization comparison. The earlier
 production HTTP comparison remains separate. These samples extend evidence beyond
 isolated lifecycle callbacks without closing the remaining native/physical gates.
+
+## October 2 connected keyboard workflow
+
+On the same v0.27.3 server, Chromium version and desktop viewport, a fresh real
+Dex sign-in preceded keyboard-only Home → Browse → search → Filters → Details →
+Edit interaction. Tab, Space, Enter and Escape drove the workflow; no locator
+focus or click supplied those interactions. DOM reads observed the active element.
+[Retained focus sequence](paul-keyboard-workflow.json).
+
+Filters initially focused Active, kept focus inside the dialog through a full
+forward cycle, and returned focus to Filters after Escape. Selecting Available
+and applying retained the typed `flashlight` query and availability in the URL.
+Tab reached the matching asset and Edit. Edit initially focused Name; Description,
+tag controls, Cancel and Save were reachable. A keyboard-entered description
+saved and remained visible after reload. The [Edit screenshot](paul-keyboard-edit.png)
+shows the complete form and reachable footer; it does not independently prove
+which element had focus or whether every focus indicator was visible.
+
+This is one connected desktop keyboard sequence, not a screen-reader audit,
+physical-device check, reverse-tab/reflow review or whole-app accessibility claim.
+No new product defect or UI change is established by this evidence.

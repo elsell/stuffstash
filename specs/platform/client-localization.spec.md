@@ -262,3 +262,7 @@ for user-entered values. A stale XCTest element must not be treated as loss of
 input when the current hierarchy retains it. Diagnostic header probes must expose
 React state separately from native title state, distinguishing missed interaction
 from presentation updates without changing production behavior on inconclusive evidence.
+
+Browse's inventory-name fallback must use the existing inventory catalog label
+when no selected inventory record is available. A real inventory name remains
+verbatim; this fallback does not change navigation or selection behavior.
