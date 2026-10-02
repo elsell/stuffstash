@@ -91,7 +91,9 @@ mergedb3b2a9c3 after approved pull-request checks passed. This batch delivered:
   Native search-placement run36923519340 completed seven of eight tests on each
   device; [scoped results and current diagnosis](../../docs/reports/spec-gap-evidence-2026-10-01/native-search/README.md).
 
-Current verification/documentation batch, PR #233:
+PR #233 merged at `47b43d39`; required CI passed. Release36940409190
+succeeded with image/TestFlight publication skipped because this batch changed
+verification and documentation only. Its three gaps were:
 - V1 native search observation and scoped acceptance evidence.
 - V1 pending-proposal preservation across close and cancelled reset.
 - G6 production-catalog expectations preserving user text and system controls.
@@ -100,12 +102,26 @@ run36933539569 passed all three on iPhone and static search on iPad; iPad tag an
 expiration launch failed before product assertions. Track those unverified
 workflows in [issue #236](https://github.com/elsell/stuffstash/issues/236).
 
-Per the user's decision, assess #233 against its verification/documentation scope,
-code review and required CI. Product fixes already shipped in v0.27.3. Repeated
-runner launch failures and missing RTL/physical evidence stay explicit acceptance
-obligations; they are not indefinite merge/release gates for this PR. Stop unchanged
-retries. Any later runner investigation must state competing causes, an outcome-
-dependent decision and a fixed run budget before starting.
+Current priority is normal-English everyday use: broken actions or lost work,
+Browse/Details/Edit/Move and filters, then hierarchy and reachable controls.
+RTL and broader adaptation remain obligations but do not lead the work queue.
+
+Normal-text run36941858463 at main `47b43d39` passed Details and Sharing footer
+checks on iPhone17 and iPad mini. Inspected Details captures show final content
+above the voice accessory and persistent tabs. Sharing captures likewise show the final invitation and footer above
+the voice accessory, with the device's tabs visible. These are controlled native fixtures, not authenticated production
+journeys. [Current evidence](../../docs/reports/spec-gap-evidence-2026-10-01/core-workflows/README.md).
+
+No new task-blocking defect was established by the focused review. The proposed
+Sharing row-menu change is awaiting user confirmation; do not implement it merely
+to fill a batch. Physical export recipient saving, connected native sign-in,
+assistive checks and production performance evidence remain outstanding.
+
+The already-running RTL run36936112035 completed successfully on both devices;
+no further run was started. Its test result does not imply new visual acceptance.
+Issue #236 retains the separate iPad tag/expiration launch evidence gap. Stop
+unchanged retries; any later runner investigation needs an outcome-dependent
+decision and fixed budget. Product fixes already shipped in v0.27.3.
 
 G8 source review found no further concrete root-policy ownership violation after
 #228; construction, cross-domain composition and compatibility facades remain

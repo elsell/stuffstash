@@ -57,5 +57,6 @@ the file-content and audit assertions, not the screenshot, prove exported data.
 
 The earlier HTTP500 was caused by the missing PostgreSQL audit-action constraint
 migration. PR #222 merged `39700a21`; main now requires the connected browser
-check. Release run36913294557 is separate delivery evidence and is still pending.
+check. Release run36913294557 succeeded as v0.26.2, including TestFlight upload;
+that delivery result is separate from runtime acceptance.
 This does not verify saving exports into a physical iOS receiving application.
