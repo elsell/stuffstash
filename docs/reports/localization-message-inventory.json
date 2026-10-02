@@ -236,10 +236,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
-      "candidates": 3
-    },
-    {
       "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
       "candidates": 3
     },
@@ -284,6 +280,10 @@
       "candidates": 3
     },
     {
+      "file": "apps/web/src/lib/components/workspace/expiration/ExpirationBrowseEntry.svelte",
+      "candidates": 3
+    },
+    {
       "file": "apps/web/src/lib/components/workspace/settings/TagSettingsManager.svelte",
       "candidates": 3
     },
@@ -292,7 +292,7 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetBrowse.ts",
+      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
       "candidates": 2
     },
     {

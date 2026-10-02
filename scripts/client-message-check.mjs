@@ -60,6 +60,9 @@ export function embeddedDisplayMessages(source, filename) {
       }
       return;
     }
+    if (node.type === 'EachBlock') {
+      script(source.slice(node.expression.start, node.expression.end), node.expression.start, true, false);
+    }
     if (node.type === 'Text') { add(node.data, node.start); return; }
     if (node.type === 'ExpressionTag') { script(source.slice(node.expression.start, node.expression.end), node.expression.start, true); return; }
     if (node.type === 'Comment') return;

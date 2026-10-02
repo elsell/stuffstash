@@ -251,6 +251,8 @@ jobs:
             apps/web/test-results/connected/**/connected-archive-fixture.zip
             apps/web/test-results/connected/**/connected-browse.png
             apps/web/test-results/connected/**/connected-edited-asset.png
+            apps/web/test-results/connected/**/connected-edit-narrow.png
+            apps/web/test-results/connected/**/connected-edit-keyboard.json
             apps/web/test-results/connected/**/connected-export-*.png
           retention-days: 7
 

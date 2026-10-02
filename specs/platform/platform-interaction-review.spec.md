@@ -1820,3 +1820,14 @@ changed title, reload the item and verify the persisted title in both JSON and C
 exports. Verify unauthenticated and other-principal asset reads are denied.
 Retain a screenshot of the reloaded detail. This is connected browser evidence,
 not physical mobile or visual acceptance of unrelated surfaces.
+
+## Connected web edit keyboard and reflow acceptance
+
+Extend the isolated real-OIDC browser journey with three bounded observations:
+reverse Tab remains inside the Edit dialog and reaches Cancel; keyboard Cancel
+returns to the existing asset without saving; at a 320 CSS-pixel viewport, the
+editor has no horizontal overflow and its Save and Cancel controls can be reached
+without horizontal scrolling. Use normal text size and real production components.
+Retain only post-login synthetic-content screenshots and geometry/focus results.
+This establishes sampled browser keyboard/reflow evidence, not screen-reader,
+physical mobile, visual-design acceptance, or a whole-app accessibility pass.
