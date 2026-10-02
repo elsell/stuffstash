@@ -37,6 +37,6 @@ describe('DirectUploadPolicy', () => {
     expect(directUploadMethod('post')).toBe('POST');
     expect(directUploadMethod(' PUT ')).toBe('PUT');
     expect(directUploadMethod('PATCH')).toBe('PATCH');
-    expect(() => directUploadMethod('DELETE')).toThrow('Unsupported direct attachment upload method.');
+    expect(() => directUploadMethod('DELETE')).toThrow('Could not start the upload. Check your server settings and try again.');
   });
 });

@@ -240,10 +240,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/uploads/ExpoDirectUploadTransport.ts",
-      "candidates": 3
-    },
-    {
       "file": "apps/mobile/src/application/archives/ArchiveTask.ts",
       "candidates": 3
     },
@@ -412,19 +408,11 @@
       "candidates": 1
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetCommands.ts",
-      "candidates": 1
-    },
-    {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetPhotos.ts",
       "candidates": 1
     },
     {
       "file": "apps/mobile/src/adapters/inventories/ApiInventoryDirectory.ts",
-      "candidates": 1
-    },
-    {
-      "file": "apps/mobile/src/adapters/uploads/DirectUploadPolicy.ts",
       "candidates": 1
     },
     {

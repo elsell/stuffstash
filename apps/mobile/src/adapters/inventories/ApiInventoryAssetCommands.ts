@@ -1,3 +1,4 @@
+import { t } from '../../presentation/localization';
 import {
   type InventoryMutationKind,
   type InventoryMutationObserver
@@ -119,7 +120,7 @@ export class ApiInventoryAssetCommands {
         sizeBytes: input.sizeBytes
       });
       if (!isDirectUploadTargetSupported(directUpload.url, this.directUploadPolicy)) {
-        throw new Error('Unsupported direct attachment upload target.');
+        throw new Error(t('recovery.uploadConfiguration'));
       }
       const uploaded = await this.directUploadTransport.upload({
         upload: directUpload,

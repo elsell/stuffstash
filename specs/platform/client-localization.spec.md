@@ -282,6 +282,17 @@ without changing the previously selected inventory. Repeated continuation cursor
 and the bounded page limit must fail with cataloged recovery, preserving their
 existing request bounds. Cancellation remains control flow, not recovery copy.
 
+### Attachment upload recovery
+
+Mobile attachment upload recovery must use complete catalog messages for three
+failure groups: invalid target or method, failed upload response, and missing
+local file content. Invalid targets and methods must fail before loading or
+calling native upload code; they must not trigger JSON fallback or completion.
+Keep HTTPS/local-development policy, permitted methods and successful upload
+behavior unchanged. Missing file guidance must ask the user to choose it again.
+Keep native file transfer injectable at the transport adapter so rejection and
+completion behavior can be checked without replacing native modules.
+
 ### Svelte collection expressions
 
 The rendered-copy gate must inspect display properties inside Svelte each-block
