@@ -292,7 +292,7 @@ export class ApiInventorySummaryRepository implements InventorySummaryRepository
       candidate.id === locationIdValue && candidate.kind === 'location'
     );
     if (!location) {
-      throw new Error('Location is not available in the selected inventory.');
+      throw new Error(t('recovery.locationUnavailable'));
     }
     const containedAssets = assets.filter((candidate) =>
       candidate.id !== location.id &&

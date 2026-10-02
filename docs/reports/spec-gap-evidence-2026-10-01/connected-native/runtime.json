@@ -1,0 +1,12 @@
+{
+  "revision": "f37597002cd1673488dfd4b6bc42891b48d7215d",
+  "dex": "2dce75009acfcd9df77d57f2d144aae999a4c569",
+  "spicedb": "1.47.1",
+  "storage": "SQLite/filesystem",
+  "stage": "native-journey",
+  "outcome": "failed",
+  "anonymousStatus": 401,
+  "exitedServices": [
+    "bash"
+  ]
+}

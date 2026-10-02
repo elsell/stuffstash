@@ -236,10 +236,6 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
-      "candidates": 3
-    },
-    {
       "file": "apps/mobile/src/adapters/notifications/ExpoPushRegistrationJournal.ts",
       "candidates": 3
     },
@@ -296,7 +292,7 @@
       "candidates": 3
     },
     {
-      "file": "apps/mobile/src/adapters/inventories/ApiInventoryAssetBrowse.ts",
+      "file": "apps/mobile/src/adapters/inventories/ApiInventorySummaryRepository.ts",
       "candidates": 2
     },
     {

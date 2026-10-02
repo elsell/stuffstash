@@ -289,3 +289,11 @@ collection expressions, including conditional arrays and template-valued heading
 Do not interpret collection IDs or arbitrary source values as display copy. Browse
 List/Map labels and tenant/inventory grouping headings for asset types and custom
 fields must use complete catalog messages, preserving user names as parameters.
+
+### Browse and location recovery
+
+List and search pagination that cannot safely continue (missing or repeated
+continuation cursor) must stop at the existing guard and show cataloged retry
+guidance, without exposing cursor diagnostics. A location missing from the
+selected inventory must show cataloged unavailability guidance. Preserve selected
+inventory scope, user-authored names, cancellation and existing request bounds.
